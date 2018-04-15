@@ -1,0 +1,232 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="../../include/jitcat/TwoCharTokenSubTypes.h" />
+    <ClCompile Include="../../src/jitcat/ASTNodeParser.cpp" />
+    <ClCompile Include="../../src/jitcat/AutoCompletion.cpp" />
+    <ClCompile Include="../../src/jitcat/CatArgumentList.cpp" />
+    <ClCompile Include="../../src/jitcat/CatArrayIndex.cpp" />
+    <ClCompile Include="../../src/jitcat/CatError.cpp" />
+    <ClCompile Include="../../src/jitcat/CatFunctionCall.cpp" />
+    <ClCompile Include="../../src/jitcat/CatGenericType.cpp" />
+    <ClCompile Include="../../src/jitcat/CatIdentifier.cpp" />
+    <ClCompile Include="../../src/jitcat/CatInfixOperator.cpp" />
+    <ClCompile Include="../../src/jitcat/CatInfixOperatorType.cpp" />
+    <ClCompile Include="../../src/jitcat/CatLinkNode.cpp" />
+    <ClCompile Include="../../src/jitcat/CatLiteral.cpp" />
+    <ClCompile Include="../../src/jitcat/CatLog.cpp" />
+    <ClCompile Include="../../src/jitcat/CatMemberAccess.cpp" />
+    <ClCompile Include="../../src/jitcat/CatMemberFunctionCall.cpp" />
+    <ClCompile Include="../../src/jitcat/CatPrefixOperator.cpp" />
+    <ClCompile Include="../../src/jitcat/CatRuntimeContext.cpp" />
+    <ClCompile Include="../../src/jitcat/CatScopeRoot.cpp" />
+    <ClCompile Include="../../src/jitcat/CatType.cpp" />
+    <ClCompile Include="../../src/jitcat/CatValue.cpp" />
+    <ClCompile Include="../../src/jitcat/ContainerType.cpp" />
+    <ClCompile Include="../../src/jitcat/CustomTypeInfo.cpp" />
+    <ClCompile Include="../../src/jitcat/CustomTypeInstance.cpp" />
+    <ClCompile Include="../../src/jitcat/ErrorContext.cpp" />
+    <ClCompile Include="../../src/jitcat/ExpressionAny.cpp" />
+    <ClCompile Include="../../src/jitcat/ExpressionErrorManager.cpp" />
+    <ClCompile Include="../../src/jitcat/ExpressionHelperFunctions.cpp" />
+    <ClCompile Include="../../src/jitcat/ExpressionTools.cpp" />
+    <ClCompile Include="../../src/jitcat/InfixOperatorOptimizer.cpp" />
+    <ClCompile Include="../../src/jitcat/MemberInfo.cpp" />
+    <ClCompile Include="../../src/jitcat/MemberReference.cpp" />
+    <ClCompile Include="../../src/jitcat/MemberReferencePtr.cpp" />
+    <ClCompile Include="../../src/jitcat/OptimizationHelper.cpp" />
+    <ClCompile Include="../../src/jitcat/Reflectable.cpp" />
+    <ClCompile Include="../../src/jitcat/ReflectableHandle.cpp" />
+    <ClCompile Include="../../src/jitcat/SLRParseResult.cpp" />
+    <ClCompile Include="../../src/jitcat/CatGrammar.cpp" />
+    <ClCompile Include="../../src/jitcat/CatTokenizer.cpp" />
+    <ClCompile Include="../../src/jitcat/CommentToken.cpp" />
+    <ClCompile Include="../../src/jitcat/ErrorToken.cpp" />
+    <ClCompile Include="../../src/jitcat/IdentifierToken.cpp" />
+    <ClCompile Include="../../src/jitcat/ParseHelper.cpp" />
+    <ClCompile Include="../../src/jitcat/ConstantToken.cpp" />
+    <ClCompile Include="../../src/jitcat/DFAState.cpp" />
+    <ClCompile Include="../../src/jitcat/Document.cpp" />
+    <ClCompile Include="../../src/jitcat/Grammar.cpp" />
+    <ClCompile Include="../../src/jitcat/Item.cpp" />
+    <ClCompile Include="../../src/jitcat/JitCat.cpp" />
+    <ClCompile Include="../../src/jitcat/Lexeme.cpp" />
+    <ClCompile Include="../../src/jitcat/OneCharToken.cpp" />
+    <ClCompile Include="../../src/jitcat/Production.cpp" />
+    <ClCompile Include="../../src/jitcat/ProductionEpsilonToken.cpp" />
+    <ClCompile Include="../../src/jitcat/ProductionNonTerminalToken.cpp" />
+    <ClCompile Include="../../src/jitcat/ProductionRule.cpp" />
+    <ClCompile Include="../../src/jitcat/ProductionTerminalToken.cpp" />
+    <ClCompile Include="../../src/jitcat/ProductionToken.cpp" />
+    <ClCompile Include="../../src/jitcat/ProductionTokenSet.cpp" />
+    <ClCompile Include="../../src/jitcat/ProductionTokenSetMember.cpp" />
+    <ClCompile Include="../../src/jitcat/SLRParser.cpp" />
+    <ClCompile Include="../../src/jitcat/SpecificMemberType.cpp" />
+    <ClCompile Include="../../src/jitcat/StackItemProduction.cpp" />
+    <ClCompile Include="../../src/jitcat/ParseToken.cpp" />
+    <ClCompile Include="../../src/jitcat/Tokenizer.cpp" />
+    <ClCompile Include="../../src/jitcat/Tools.cpp" />
+    <ClCompile Include="../../src/jitcat/TwoCharToken.cpp" />
+    <ClCompile Include="../../src/jitcat/TypeInfo.cpp" />
+    <ClCompile Include="../../src/jitcat/TypeRegistry.cpp" />
+    <ClCompile Include="../../src/jitcat/WhitespaceToken.cpp" />
+    <ClCompile Include="../../src/jitcat/XMLHelper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="../../include/jitcat/ASTNode.h" />
+    <ClInclude Include="../../include/jitcat/ASTNodeParser.h" />
+    <ClInclude Include="../../include/jitcat/AutoCompletion.h" />
+    <ClInclude Include="../../include/jitcat/BasicTypeMemberReference.h" />
+    <ClInclude Include="../../include/jitcat/BasicTypeMemberReferenceHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/CatArgumentList.h" />
+    <ClInclude Include="../../include/jitcat/CatArrayIndex.h" />
+    <ClInclude Include="../../include/jitcat/CatASTNode.h" />
+    <ClInclude Include="../../include/jitcat/CatASTNodes.h" />
+    <ClInclude Include="../../include/jitcat/CatASTNodeType.h" />
+    <ClInclude Include="../../include/jitcat/CatError.h" />
+    <ClInclude Include="../../include/jitcat/CatExpression.h" />
+    <ClInclude Include="../../include/jitcat/CatFunctionCall.h" />
+    <ClInclude Include="../../include/jitcat/CatGenericType.h" />
+    <ClInclude Include="../../include/jitcat/CatGrammar.h" />
+    <ClInclude Include="../../include/jitcat/CatIdentifier.h" />
+    <ClInclude Include="../../include/jitcat/CatInfixOperator.h" />
+    <ClInclude Include="../../include/jitcat/CatInfixOperatorHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/CatInfixOperatorType.h" />
+    <ClInclude Include="../../include/jitcat/CatLinkNode.h" />
+    <ClInclude Include="../../include/jitcat/CatLiteral.h" />
+    <ClInclude Include="../../include/jitcat/CatLog.h" />
+    <ClInclude Include="../../include/jitcat/CatMemberAccess.h" />
+    <ClInclude Include="../../include/jitcat/CatMemberFunctionCall.h" />
+    <ClInclude Include="../../include/jitcat/CatPrefixOperator.h" />
+    <ClInclude Include="../../include/jitcat/CatRuntimeContext.h" />
+    <ClInclude Include="../../include/jitcat/CatScopeRoot.h" />
+    <ClInclude Include="../../include/jitcat/CatTokenizer.h" />
+    <ClInclude Include="../../include/jitcat/CatType.h" />
+    <ClInclude Include="../../include/jitcat/CatTypedExpression.h" />
+    <ClInclude Include="../../include/jitcat/CatValue.h" />
+    <ClInclude Include="../../include/jitcat/CommentToken.h" />
+    <ClInclude Include="../../include/jitcat/ContainerMemberReference.h" />
+    <ClInclude Include="../../include/jitcat/ContainerMemberReferenceHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/ContainerType.h" />
+    <ClInclude Include="../../include/jitcat/CustomTypeInfo.h" />
+    <ClInclude Include="../../include/jitcat/CustomTypeInstance.h" />
+    <ClInclude Include="../../include/jitcat/CustomTypeMemberInfo.h" />
+    <ClInclude Include="../../include/jitcat/ErrorContext.h" />
+    <ClInclude Include="../../include/jitcat/ErrorToken.h" />
+    <ClInclude Include="../../include/jitcat/Expression.h" />
+    <ClInclude Include="../../include/jitcat/ExpressionAny.h" />
+    <ClInclude Include="../../include/jitcat/ExpressionBase.h" />
+    <ClInclude Include="../../include/jitcat/ExpressionErrorManager.h" />
+    <ClInclude Include="../../include/jitcat/ExpressionHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/ExpressionHelperFunctions.h" />
+    <ClInclude Include="../../include/jitcat/ExpressionTools.h" />
+    <ClInclude Include="../../include/jitcat/InfixOperatorOptimizer.h" />
+    <ClInclude Include="../../include/jitcat/MemberFunctionInfo.h" />
+    <ClInclude Include="../../include/jitcat/IdentifierToken.h" />
+    <ClInclude Include="../../include/jitcat/MemberInfo.h" />
+    <ClInclude Include="../../include/jitcat/MemberInfoHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/MemberReference.h" />
+    <ClInclude Include="../../include/jitcat/MemberReferencePtr.h" />
+    <ClInclude Include="../../include/jitcat/MemberTypeFlags.h" />
+    <ClInclude Include="../../include/jitcat/ObjectMemberReference.h" />
+    <ClInclude Include="../../include/jitcat/ObjectMemberReferenceHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/OptimizationHelper.h" />
+    <ClInclude Include="../../include/jitcat/ParseHelper.h" />
+    <ClInclude Include="../../include/jitcat/Reflectable.h" />
+    <ClInclude Include="../../include/jitcat/ReflectableHandle.h" />
+    <ClInclude Include="../../include/jitcat/CommentTokenSubTypes.h" />
+    <ClInclude Include="../../include/jitcat/ConstantToken.h" />
+    <ClInclude Include="../../include/jitcat/ConstantTokenSubTypes.h" />
+    <ClInclude Include="../../include/jitcat/DFAState.h" />
+    <ClInclude Include="../../include/jitcat/Document.h" />
+    <ClInclude Include="../../include/jitcat/Grammar.h" />
+    <ClInclude Include="../../include/jitcat/IdentifierTokenSubTypes.h" />
+    <ClInclude Include="../../include/jitcat/Item.h" />
+    <ClInclude Include="../../include/jitcat/JitCat.h" />
+    <ClInclude Include="../../include/jitcat/Lexeme.h" />
+    <ClInclude Include="../../include/jitcat/OneCharToken.h" />
+    <ClInclude Include="../../include/jitcat/OneCharTokenSubTypes.h" />
+    <ClInclude Include="../../include/jitcat/Production.h" />
+    <ClInclude Include="../../include/jitcat/ProductionEpsilonToken.h" />
+    <ClInclude Include="../../include/jitcat/ProductionNonTerminalToken.h" />
+    <ClInclude Include="../../include/jitcat/ProductionRule.h" />
+    <ClInclude Include="../../include/jitcat/ProductionTerminalToken.h" />
+    <ClInclude Include="../../include/jitcat/ProductionToken.h" />
+    <ClInclude Include="../../include/jitcat/ProductionTokenSet.h" />
+    <ClInclude Include="../../include/jitcat/ProductionTokenSetMember.h" />
+    <ClInclude Include="../../include/jitcat/ProductionTokenType.h" />
+    <ClInclude Include="../../include/jitcat/RootTypeSource.h" />
+    <ClInclude Include="../../include/jitcat/RuntimeContext.h" />
+    <ClInclude Include="../../include/jitcat/SLRParser.h" />
+    <ClInclude Include="../../include/jitcat/SLRParseResult.h" />
+    <ClInclude Include="../../include/jitcat/SpecificMemberType.h" />
+    <ClInclude Include="../../include/jitcat/StackItem.h" />
+    <ClInclude Include="../../include/jitcat/StackItemProduction.h" />
+    <ClInclude Include="../../include/jitcat/StackItemToken.h" />
+    <ClInclude Include="../../include/jitcat/ParseToken.h" />
+    <ClInclude Include="../../include/jitcat/CatTokenIds.h" />
+    <ClInclude Include="../../include/jitcat/TokenFlag.h" />
+    <ClInclude Include="../../include/jitcat/Tokenizer.h" />
+    <ClInclude Include="../../include/jitcat/Tools.h" />
+    <ClInclude Include="../../include/jitcat/ToolsHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/TwoCharToken.h" />
+    <ClInclude Include="../../include/jitcat/TypeInfo.h" />
+    <ClInclude Include="../../include/jitcat/TypeInfoHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/TypeRegistry.h" />
+    <ClInclude Include="../../include/jitcat/TypeTraits.h" />
+    <ClInclude Include="../../include/jitcat/TypeTraitsHeaderImplementation.h" />
+    <ClInclude Include="../../include/jitcat/VariableEnumerator.h" />
+    <ClInclude Include="../../include/jitcat/WhitespaceToken.h" />
+    <ClInclude Include="../../include/jitcat/XMLHelper.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Tokenizer">
+      <UniqueIdentifier>{19247603-33aa-423e-9d3e-5c88798430dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tokenizer\Tokens">
+      <UniqueIdentifier>{5a7977f9-42ad-4a9c-b9ec-a13d70dabf56}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Parser">
+      <UniqueIdentifier>{ba900414-24e4-47bb-afbc-08c86808ef54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Grammar">
+      <UniqueIdentifier>{8fb91526-3ef7-488e-8703-37199c9aa76f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat">
+      <UniqueIdentifier>{5d07efae-a6a9-4783-90bf-3689fbc49960}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools">
+      <UniqueIdentifier>{c020bbd5-8fd8-4cba-913b-5d0cf2521f6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat\Expression">
+      <UniqueIdentifier>{b0d05cad-32cc-4c19-80d5-ab9357e0407a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection">
+      <UniqueIdentifier>{23ad48fc-1421-48a3-81e7-d7f52ad33255}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection\Enums">
+      <UniqueIdentifier>{8d6beb1c-9bad-42df-86f9-c0da3c0860b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection\MemberReference">
+      <UniqueIdentifier>{6722b782-e24b-4ab4-bf37-768cd870d858}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection\TypeInfo">
+      <UniqueIdentifier>{1a7c5302-79be-4ad7-a410-d53307a5fe98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat\ASTNodes">
+      <UniqueIdentifier>{8d6c58fa-68e7-4c73-8634-422e33bfda00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat\Expression\Autocompletion">
+      <UniqueIdentifier>{e0919eac-90ba-4e39-bf0b-c09805307e29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat\ASTNodes\ASTOptimization">
+      <UniqueIdentifier>{23de3e4f-b821-4291-9503-0179192be08f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat\Expression\Errors">
+      <UniqueIdentifier>{8bec71b2-e749-4362-a881-14d74269e729}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Reflection\Serialisation">
+      <UniqueIdentifier>{7feed090-26f1-4350-8f40-ee0fa3232d9b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
