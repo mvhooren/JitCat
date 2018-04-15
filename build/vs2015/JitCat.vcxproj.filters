@@ -25,7 +25,6 @@
     <ClCompile Include="../../src/jitcat/ContainerType.cpp" />
     <ClCompile Include="../../src/jitcat/CustomTypeInfo.cpp" />
     <ClCompile Include="../../src/jitcat/CustomTypeInstance.cpp" />
-    <ClCompile Include="../../src/jitcat/ErrorContext.cpp" />
     <ClCompile Include="../../src/jitcat/ExpressionAny.cpp" />
     <ClCompile Include="../../src/jitcat/ExpressionErrorManager.cpp" />
     <ClCompile Include="../../src/jitcat/ExpressionHelperFunctions.cpp" />
@@ -34,7 +33,6 @@
     <ClCompile Include="../../src/jitcat/MemberInfo.cpp" />
     <ClCompile Include="../../src/jitcat/MemberReference.cpp" />
     <ClCompile Include="../../src/jitcat/MemberReferencePtr.cpp" />
-    <ClCompile Include="../../src/jitcat/OptimizationHelper.cpp" />
     <ClCompile Include="../../src/jitcat/Reflectable.cpp" />
     <ClCompile Include="../../src/jitcat/ReflectableHandle.cpp" />
     <ClCompile Include="../../src/jitcat/SLRParseResult.cpp" />
@@ -46,7 +44,6 @@
     <ClCompile Include="../../src/jitcat/ParseHelper.cpp" />
     <ClCompile Include="../../src/jitcat/ConstantToken.cpp" />
     <ClCompile Include="../../src/jitcat/DFAState.cpp" />
-    <ClCompile Include="../../src/jitcat/Document.cpp" />
     <ClCompile Include="../../src/jitcat/Grammar.cpp" />
     <ClCompile Include="../../src/jitcat/Item.cpp" />
     <ClCompile Include="../../src/jitcat/JitCat.cpp" />
@@ -70,7 +67,18 @@
     <ClCompile Include="../../src/jitcat/TypeInfo.cpp" />
     <ClCompile Include="../../src/jitcat/TypeRegistry.cpp" />
     <ClCompile Include="../../src/jitcat/WhitespaceToken.cpp" />
-    <ClCompile Include="../../src/jitcat/XMLHelper.cpp" />
+    <ClCompile Include="../../src/jitcat/ErrorContext.cpp">
+      <Filter>Cat\Expression\Errors</Filter>
+    </ClCompile>
+    <ClCompile Include="../../src/jitcat/Document.cpp">
+      <Filter>Tokenizer</Filter>
+    </ClCompile>
+    <ClCompile Include="../../src/jitcat/OptimizationHelper.cpp">
+      <Filter>Cat\ASTNodes\ASTOptimization</Filter>
+    </ClCompile>
+    <ClCompile Include="../../src/jitcat/XMLHelper.cpp">
+      <Filter>Reflection\Serialisation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../../include/jitcat/ASTNode.h" />
@@ -138,7 +146,6 @@
     <ClInclude Include="../../include/jitcat/ConstantToken.h" />
     <ClInclude Include="../../include/jitcat/ConstantTokenSubTypes.h" />
     <ClInclude Include="../../include/jitcat/DFAState.h" />
-    <ClInclude Include="../../include/jitcat/Document.h" />
     <ClInclude Include="../../include/jitcat/Grammar.h" />
     <ClInclude Include="../../include/jitcat/IdentifierTokenSubTypes.h" />
     <ClInclude Include="../../include/jitcat/Item.h" />
@@ -178,6 +185,9 @@
     <ClInclude Include="../../include/jitcat/VariableEnumerator.h" />
     <ClInclude Include="../../include/jitcat/WhitespaceToken.h" />
     <ClInclude Include="../../include/jitcat/XMLHelper.h" />
+    <ClInclude Include="../../include/jitcat/Document.h">
+      <Filter>Tokenizer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Tokenizer">
