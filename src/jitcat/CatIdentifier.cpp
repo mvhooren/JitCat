@@ -20,15 +20,17 @@ CatIdentifier::CatIdentifier(const std::string& name, CatRuntimeContext* context
 	type(CatType::Error)
 {
 	std::string lowerName = Tools::toLowerCase(name);
-
-	//First check if the variable name is a custom local
-	findIdentifier(context->getCustomThisType(), RootTypeSource::CustomThis, lowerName);
-	//Next, if the variable is not a custom local, check if the variable name is a normal local (via reflection)
-	findIdentifier(context->getThisType(), RootTypeSource::This, lowerName);
-	//Next, if the variable is not a local, check if the variable name is a custom global
-	findIdentifier(context->getCustomGlobalsType(), RootTypeSource::CustomGlobals, lowerName);
-	//Lastly, if the variable is not a local, check if the variable name is a global
-	findIdentifier(context->getGlobalType(), RootTypeSource::Global, lowerName);
+	if (context != nullptr)
+	{
+		//First check if the variable name is a custom local
+		findIdentifier(context->getCustomThisType(), RootTypeSource::CustomThis, lowerName);
+		//Next, if the variable is not a custom local, check if the variable name is a normal local (via reflection)
+		findIdentifier(context->getThisType(), RootTypeSource::This, lowerName);
+		//Next, if the variable is not a local, check if the variable name is a custom global
+		findIdentifier(context->getCustomGlobalsType(), RootTypeSource::CustomGlobals, lowerName);
+		//Lastly, if the variable is not a local, check if the variable name is a global
+		findIdentifier(context->getGlobalType(), RootTypeSource::Global, lowerName);
+	}
 
 	if (memberInfo != nullptr)
 	{
