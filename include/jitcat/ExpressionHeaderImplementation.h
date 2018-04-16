@@ -123,7 +123,11 @@ void Expression<T>::compile(CatRuntimeContext* context)
 	//Success var can change based on typechecking
 	if (!parseResult->success)
 	{
-		std::string contextName = context->getContextName().c_str();
+		std::string contextName = "";
+		if (context != nullptr)
+		{
+			contextName = context->getContextName().c_str();
+		}
 		std::string errorMessage;
 		if (contextName != "")
 		{
@@ -137,11 +141,14 @@ void Expression<T>::compile(CatRuntimeContext* context)
 		{
 			errorMessage = Tools::append(errorMessage, " Offset: ", parseResult->errorPosition);
 		}
-		context->getErrorManager()->compiledWithError(errorMessage, this);
+		if (context != nullptr)
+		{
+			context->getErrorManager()->compiledWithError(errorMessage, this);
+		}
 		expressionIsLiteral = false;
 		expressionAST = nullptr;
 	}
-	else
+	else if (context != nullptr)
 	{
 		context->getErrorManager()->compiledWithoutErrors(this);
 	}
@@ -151,7 +158,10 @@ void Expression<T>::compile(CatRuntimeContext* context)
 template<typename T>
 SLRParseResult* Expression<T>::parse(CatRuntimeContext* context)
 {
-	errorManagerHandle = context->getErrorManager();
+	if (context != nullptr)
+	{
+		errorManagerHandle = context->getErrorManager();
+	}
 	isConstant = false;
 	Document document(expression.c_str(), expression.length());
 	parseResult.reset(JitCat::get()->parse(&document, context));
