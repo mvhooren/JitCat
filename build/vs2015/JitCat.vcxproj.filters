@@ -188,9 +188,6 @@
     <ClCompile Include="../../src/jitcat/TwoCharToken.cpp">
       <Filter>Tokenizer\Tokens</Filter>
     </ClCompile>
-    <ClCompile Include="../../include/jitcat/TwoCharTokenSubTypes.h">
-      <Filter>Tokenizer\Tokens</Filter>
-    </ClCompile>
     <ClCompile Include="../../src/jitcat/WhitespaceToken.cpp">
       <Filter>Tokenizer\Tokens</Filter>
     </ClCompile>
@@ -523,6 +520,10 @@
     </ClInclude>
     <ClInclude Include="../../include/jitcat/CatLog.h">
       <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="../../include/jitcat/TwoCharTokenSubTypes.h" />
+    <ClInclude Include="..\..\include\jitcat\MemberTypeInfoCreator.h">
+      <Filter>Reflection\TypeInfo</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

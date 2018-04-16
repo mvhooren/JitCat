@@ -160,7 +160,7 @@ JITCATVALIDATOR_API int codeCompleteExpression(const char* expression, int curso
 
 JITCATVALIDATOR_API void destroyCompletionResult(CodeCompletionSuggestions* result)
 {
-	for (int i = 0; i < result->numSuggestions; i ++)
+	for (std::size_t i = 0; i < result->numSuggestions; i ++)
 	{
 		delete[] result->suggestions[i]->autoCompletionValue;
 		delete[] result->suggestions[i]->newExpression;

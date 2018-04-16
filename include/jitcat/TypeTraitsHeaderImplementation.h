@@ -117,7 +117,7 @@ std::map<std::string, ItemType>& TypeTraits<std::map<std::string, ItemType> >::g
 {
 	if (value != nullptr
 		&& value->getCatType() == CatType::Object
-		&& value->getContainerType() == ContainerType::RstringMap
+		&& value->getContainerType() == ContainerType::StringMap
 		&& value->getCustomTypeName() == TypeTraits<ItemType>::getTypeName())
 	{
 		ContainerMemberReference<std::map<std::string, ItemType> >* containerReference = static_cast<ContainerMemberReference<std::map<std::string, ItemType> >*>(value);
@@ -134,4 +134,4 @@ std::map<std::string, ItemType>& TypeTraits<std::map<std::string, ItemType> >::g
 template <typename ItemType>
 CatGenericType TypeTraits<std::vector<ItemType>>::toGenericType() { return CatGenericType(ContainerType::Vector, TypeRegistry::get()->registerType<ItemType>()); }
 template <typename ItemType>
-CatGenericType TypeTraits<std::map<std::string, ItemType>>::toGenericType() { return CatGenericType(ContainerType::RstringMap, TypeTraits<ItemType>::getTypeInfo()); }
+CatGenericType TypeTraits<std::map<std::string, ItemType>>::toGenericType() { return CatGenericType(ContainerType::StringMap, TypeTraits<ItemType>::getTypeInfo()); }

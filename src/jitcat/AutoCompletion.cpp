@@ -145,7 +145,7 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 	std::vector<IdentifierToken*> subExpressions;
 	if (startingToken->getTokenID() == IdentifierToken::getID()
 		|| (startingToken->getTokenID() == OneCharToken::getID() 
-		   && startingToken->getTokenSubType() == static_cast<std::underlying_type<OneChar>::type>(OneChar::Dot)))
+		   && startingToken->getTokenSubType() == static_cast<typename std::underlying_type<OneChar>::type>(OneChar::Dot)))
 	{
 
 		int currentUnmatchedCloseBrackets = 0;

@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 			int error = codeCompleteExpression(expression.c_str(), cursorPos, globalTypeName.c_str(), localTypeName.c_str(), customLocalsTypeName.c_str(), customGlobalsTypeName.c_str(), &results);
 			if (error == 1)
 			{
-				for (int i = 0; i < results.numSuggestions; i++)
+				for (std::size_t i = 0; i < results.numSuggestions; i++)
 				{
 					std::cout << results.suggestions[i]->autoCompletionValue << "\n";
 					std::cout << results.suggestions[i]->newExpression << "\n";

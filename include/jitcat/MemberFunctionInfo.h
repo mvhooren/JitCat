@@ -24,7 +24,7 @@ struct MemberFunctionInfo
 	virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
 
 	template<typename X>
-	void addParameterTypeInfo()
+	inline void addParameterTypeInfo()
 	{
 		argumentTypes.push_back(TypeTraits<typename std::decay<X>::type >::toGenericType());
 	}

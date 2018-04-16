@@ -5,8 +5,6 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#pragma once
-
 #include "XMLHelper.h"
 #include "TypeInfo.h"
 #include "MemberInfo.h"

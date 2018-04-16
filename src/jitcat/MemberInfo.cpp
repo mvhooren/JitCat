@@ -6,6 +6,7 @@
 */
 
 #include "MemberInfo.h"
+#include "TypeInfo.h"
 
 #include <sstream>
 

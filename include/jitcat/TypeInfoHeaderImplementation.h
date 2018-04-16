@@ -9,7 +9,7 @@
 #include "MemberFunctionInfo.h"
 #include "Tools.h"
 #include "TypeRegistry.h"
-#include "TypeTraits.h"
+#include "MemberTypeInfoCreator.h"
 
 
 template <typename T, typename U>
@@ -19,7 +19,7 @@ TypeInfo& TypeInfo::addMember(const std::string& identifier_, U T::* member, uns
 	bool isConst = (flags & MTF_IS_CONST) != 0
 				    || (flags & MTF_IS_STATIC_CONST) != 0;
 	bool isWritable = (flags & MTF_IS_WRITABLE) != 0;
-	TypeMemberInfo* memberInfo = TypeTraits<U>::getMemberInfo(identifier_, member, isConst, isWritable);
+	TypeMemberInfo* memberInfo = MemberTypeInfoCreator<U>::getMemberInfo(identifier_, member, isConst, isWritable);
 	if (memberInfo != nullptr)
 	{
 		members[identifier] = memberInfo;

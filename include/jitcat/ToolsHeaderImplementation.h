@@ -88,7 +88,7 @@ inline std::string Tools::makeString(const T& content)
 template<typename EnumT>
 inline constexpr int Tools::enumToInt(EnumT enumValue)
 {
-	return static_cast<std::underlying_type<EnumT>::type>(enumValue);
+	return static_cast<typename std::underlying_type<EnumT>::type>(enumValue);
 }
 
 

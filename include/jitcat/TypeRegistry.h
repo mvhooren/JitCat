@@ -49,15 +49,14 @@ public:
 
 private:
 	void exportGenericType(const CatGenericType& genericType, std::ofstream& xmlFile, const char* linePrefixCharacters);
-	
+	static TypeInfo* createTypeInfo(const char* typeName);
+
 private:
 	std::map<std::string, TypeInfo*> types;
 
 	static TypeRegistry* instance;
 };
 
-
-#include "TypeInfo.h"
 
 template<typename T>
 inline TypeInfo* TypeRegistry::registerType()
@@ -72,7 +71,7 @@ inline TypeInfo* TypeRegistry::registerType()
 	}
 	else
 	{
-		typeInfo = new TypeInfo(typeName);
+		typeInfo = createTypeInfo(typeName);
 		types[typeName] = typeInfo;
 		T::reflect(*typeInfo);
 		return typeInfo;

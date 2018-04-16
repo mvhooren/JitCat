@@ -9,7 +9,9 @@
 
 #include "CatGenericType.h"
 #include "CatType.h"
+#include "CatValue.h"
 #include "Tools.h"
+#include "TypeRegistry.h"
 
 #include <map>
 #include <memory>
@@ -34,13 +36,6 @@ public:
 	static CatValue getCatValue(const T& value);
 	static T* getValue(const CatValue& value)  { return TypeTraits<T>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<T>();}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, T ClassType::* member, bool isConst, bool isWritable) 
-	{
-		static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
-		TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
-		return new ClassObjectMemberInfo<ClassType, T>(memberName, member, nestedType, isConst, isWritable);
-	}
 
 	typedef T type;
 };
@@ -64,8 +59,7 @@ public:
 	{
 		return "void"; 
 	}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, int ClassType::* member, bool isConst, bool isWritable) { return nullptr;}
+
 
 	typedef void type;
 };
@@ -92,11 +86,6 @@ public:
 			return value->getFloat();
 		}
 		return 0.0f;
-	}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, float ClassType::* member, bool isConst, bool isWritable) 
-	{
-		return new BasicTypeMemberInfo<ClassType, float>(memberName, member, CatType::Float, isConst, isWritable);
 	}
 
 	typedef float type;
@@ -125,11 +114,6 @@ public:
 		}
 		return 0;
 	}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, int ClassType::* member, bool isConst, bool isWritable) 
-	{
-		return new BasicTypeMemberInfo<ClassType, int>(memberName, member, CatType::Int, isConst, isWritable);
-	}
 
 	typedef int type;
 };
@@ -156,11 +140,6 @@ public:
 			return value->getBool();
 		}
 		return false;
-	}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, bool ClassType::* member, bool isConst, bool isWritable) 
-	{
-		return new BasicTypeMemberInfo<ClassType, bool>(memberName, member, CatType::Bool, isConst, isWritable);
 	}
 
 	typedef bool type;
@@ -189,11 +168,6 @@ public:
 		}
 		return "";
 	}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::string ClassType::* member, bool isConst, bool isWritable) 
-	{
-		return new BasicTypeMemberInfo<ClassType, std::string>(memberName, member, CatType::String, isConst, isWritable);
-	}
 
 	typedef std::string type;
 };
@@ -212,12 +186,6 @@ public:
 	static inline U* getValueFromMemberReference(MemberReference* value);
 	static U* getPointer(std::unique_ptr<U>& value);
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<U>();}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<U> ClassType::* member, bool isConst, bool isWritable) 
-	{
-		TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-		return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, nestedType, isConst, isWritable);
-	}
 
 	typedef U type;
 };
@@ -236,12 +204,6 @@ public:
 	static U* getPointer(U* value) {return value;};
 	static inline U* getValueFromMemberReference(MemberReference* value);
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<U>();}
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, U* ClassType::* member, bool isConst, bool isWritable) 
-	{
-		TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-		return new ClassPointerMemberInfo<ClassType, U>(memberName, member, nestedType, isConst, isWritable);
-	}
 
 	typedef U type;
 };
@@ -258,12 +220,6 @@ public:
 	static CatValue getCatValue(void) { return CatValue();}
 	static std::vector<ItemType>& getValue(const CatValue& value) { return TypeTraits<std::vector<ItemType>>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
 	static inline std::vector<ItemType>& getValueFromMemberReference(MemberReference* value);
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType> ClassType::* member, bool isConst, bool isWritable) 
-	{
-		TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-		return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, ContainerType::Vector, nestedType, isConst);
-	}
 
 	typedef ItemType type;
 };
@@ -280,12 +236,6 @@ public:
 	static CatValue getCatValue(void) { return CatValue();}
 	static std::map<std::string, ItemType>& getValue(const CatValue& value) { return TypeTraits<std::map<std::string, ItemType>>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
 	static inline std::map<std::string, ItemType>& getValueFromMemberReference(MemberReference* value);
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<std::string, ItemType> ClassType::* member, bool isConst, bool isWritable) 
-	{
-		TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-		return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType> >(memberName, member, ContainerType::StringMap, nestedType, isConst);
-	}
 
 	typedef ItemType type;
 };

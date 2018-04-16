@@ -6,6 +6,7 @@
 */
 
 #include "TypeRegistry.h"
+#include "TypeInfo.h"
 #include "XMLHelper.h"
 
 
@@ -346,6 +347,12 @@ void TypeRegistry::exportGenericType(const CatGenericType& genericType, std::ofs
 		xmlFile << linePrefixCharacters << "<Type>None</Type>\n";		
 	}
 
+}
+
+
+TypeInfo* TypeRegistry::createTypeInfo(const char* typeName)
+{
+	return new TypeInfo(typeName);
 }
 
 

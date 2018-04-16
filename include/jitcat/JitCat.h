@@ -14,6 +14,7 @@ class Document;
 class SLRParser;
 struct SLRParseResult;
 
+
 class JitCat
 {
 	JitCat();

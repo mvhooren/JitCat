@@ -74,7 +74,7 @@ template<typename EnumT>
 inline void Grammar::rule(EnumT productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action)
 {
 	static_assert(std::is_enum<EnumT>::value, "Expected an enum.");
-	rule(static_cast<std::underlying_type<EnumT>::type>(productionId), tokens, action);
+	rule(static_cast<typename std::underlying_type<EnumT>::type>(productionId), tokens, action);
 }
 
 
@@ -83,7 +83,7 @@ inline ProductionToken* Grammar::term(TokenEnumT tokenId, TokenSubTypeEnumT toke
 {
 	static_assert(std::is_enum<TokenEnumT>::value, "Expected an enum.");
 	static_assert(std::is_enum<TokenSubTypeEnumT>::value, "Expected an enum.");
-	return term(static_cast<std::underlying_type<TokenEnumT>::type>(tokenId), static_cast<std::underlying_type<TokenSubTypeEnumT>::type>(tokenSubType));
+	return term(static_cast<typename std::underlying_type<TokenEnumT>::type>(tokenId), static_cast<typename std::underlying_type<TokenSubTypeEnumT>::type>(tokenSubType));
 }
 
 
@@ -91,7 +91,7 @@ template<typename EnumT>
 inline ProductionToken* Grammar::term(int tokenId, EnumT tokenSubType)
 {
 	static_assert(std::is_enum<EnumT>::value, "Expected an enum:");
-	return term(tokenId, static_cast<std::underlying_type<EnumT>::type>(tokenSubType));
+	return term(tokenId, static_cast<typename std::underlying_type<EnumT>::type>(tokenSubType));
 }
 
 
@@ -99,7 +99,7 @@ template<typename EnumT>
 inline ProductionToken * Grammar::prod(EnumT productionId)
 {
 	static_assert(std::is_enum<EnumT>::value, "Expected an enum:");
-	return prod(static_cast<std::underlying_type<EnumT>::type>(productionId));
+	return prod(static_cast<typename std::underlying_type<EnumT>::type>(productionId));
 }
 
 
@@ -107,5 +107,5 @@ template<typename EnumT>
 inline void Grammar::setRootProduction(EnumT productionId, ProductionToken* eofToken)
 {
 	static_assert(std::is_enum<EnumT>::value, "Expected an enum:");
-	return setRootProduction(static_cast<std::underlying_type<EnumT>::type>(productionId), eofToken);
+	return setRootProduction(static_cast<typename std::underlying_type<EnumT>::type>(productionId), eofToken);
 }

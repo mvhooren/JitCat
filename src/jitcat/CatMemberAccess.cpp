@@ -9,6 +9,7 @@
 #include "CatLiteral.h"
 #include "CatLog.h"
 #include "MemberInfo.h"
+#include "TypeInfo.h"
 
 
 CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName):

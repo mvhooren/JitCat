@@ -133,6 +133,7 @@
     <ClInclude Include="../../include/jitcat/VariableEnumerator.h" />
     <ClInclude Include="../../include/jitcat/WhitespaceToken.h" />
     <ClInclude Include="../../include/jitcat/XMLHelper.h" />
+    <ClInclude Include="..\..\include\jitcat\MemberTypeInfoCreator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="../../src/jitcat/ASTNodeParser.cpp" />

@@ -7,7 +7,8 @@
 
 #include "Document.h"
 
-#include <string>
+#include <string.h>
+
 
 Document::Document(const char* fileData, std::size_t fileSize):
 	size(fileSize)

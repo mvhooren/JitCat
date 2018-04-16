@@ -6,3 +6,7 @@ bin
 /build/vs2015/Intermediate_JitCatValidatorTool
 /build/vs2015/.vs
 /build/vs2015/*.user
+/build/cmake/CMakeFiles
+/build/cmake/*.cmake
+/build/cmake/CMakeCache.txt
+/build/cmake/Makefile

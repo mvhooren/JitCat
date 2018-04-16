@@ -8,6 +8,7 @@
 #pragma once
 
 #include "ObjectMemberReference.h"
+#include "TypeTraits.h"
 
 
 template <typename U>
@@ -46,7 +47,7 @@ inline MemberReferencePtr ContainerMemberReference<std::vector<U> >::getArrayIte
 template <typename U>
 const std::string ContainerMemberReference<std::vector<U> >::getValueAsString() const
 {
-	if (parentObject.getIsValid()) { return Tools::append(container.size(), "x", itemTypeInfo->getTypeName()); }
+	if (parentObject.getIsValid()) { return Tools::append(container.size(), "x", getTypeName(itemTypeInfo)); }
 	else { return "invalid"; }
 }
 
@@ -54,7 +55,7 @@ const std::string ContainerMemberReference<std::vector<U> >::getValueAsString() 
 template <typename U>
 inline const char* ContainerMemberReference<std::vector<U> >::getCustomTypeName() const 
 {
-	return itemTypeInfo->getTypeName(); 
+	return getTypeName(itemTypeInfo); 
 
 }
 
@@ -101,7 +102,7 @@ inline MemberReferencePtr ContainerMemberReference<std::map<std::string, U> >::g
 template<typename U>
 const std::string ContainerMemberReference<std::map<std::string, U> >::getValueAsString() const
 {
-	if (parentObject.getIsValid()) { return Tools::append(container.size(), "x", itemTypeInfo->getTypeName()); }
+	if (parentObject.getIsValid()) { return Tools::append(container.size(), "x", getTypeName(itemTypeInfo)); }
 	else { return "invalid"; }
 }
 
@@ -109,5 +110,5 @@ const std::string ContainerMemberReference<std::map<std::string, U> >::getValueA
 template <typename U>
 inline const char* ContainerMemberReference<std::map<std::string, U> >::getCustomTypeName() const 
 { 
-	return itemTypeInfo->getTypeName(); 
+	return getTypeName(itemTypeInfo); 
 }

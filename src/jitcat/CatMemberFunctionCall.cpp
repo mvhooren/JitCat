@@ -10,6 +10,7 @@
 #include "CatLog.h"
 #include "MemberInfo.h"
 #include "OptimizationHelper.h"
+#include "TypeInfo.h"
 
 
 CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments):

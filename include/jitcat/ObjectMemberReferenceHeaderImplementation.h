@@ -8,17 +8,16 @@
 #pragma once
 
 #include "ObjectMemberReference.h"
-#include "TypeInfo.h"
 
 
 template<typename T>
 inline MemberReferencePtr ObjectMemberReference<T>::getMemberReference(const std::string& memberOrIndex)
 {
 	//Indexed container
-	if (object.get() != nullptr && typeInfo != nullptr)
+	if (object.get() != nullptr )
 	{
 		MemberReferencePtr thisRef(this);
-		return typeInfo->getMemberReference(thisRef, memberOrIndex);
+		return getMember(typeInfo, thisRef, memberOrIndex);
 	}
 	else
 	{
@@ -30,5 +29,5 @@ inline MemberReferencePtr ObjectMemberReference<T>::getMemberReference(const std
 template<typename T>
 inline const char* ObjectMemberReference<T>::getCustomTypeName() const
 {
-	 return typeInfo->getTypeName();
+	 return getTypeName(typeInfo);
 }

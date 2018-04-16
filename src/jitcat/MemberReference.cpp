@@ -7,6 +7,8 @@
 
 #include "MemberReference.h"
 #include "MemberInfo.h"
+#include "TypeInfo.h"
+
 
 CatGenericType MemberReference::getGenericType() const
 {
@@ -37,4 +39,24 @@ bool MemberReference::decrementReferenceCounter()
 TypeMemberInfo* MemberReference::getMemberInfo() const
 {
 	return memberInfo;
+}
+
+
+MemberReferencePtr MemberReference::getMember(TypeInfo* typeInfo, MemberReferencePtr thisRef, const std::string& memberOrIndex)
+{
+	//Indexed container
+	if (typeInfo != nullptr)
+	{
+		return typeInfo->getMemberReference(thisRef, memberOrIndex);
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+
+const char* MemberReference::getTypeName(TypeInfo* typeInfo)
+{
+	return typeInfo->getTypeName();
 }

@@ -76,6 +76,11 @@ public:
 	TypeMemberInfo* getMemberInfo() const;
 
 protected:
+	//These two functions exist to prevent circular includes in templated child classes of this class that would otherwise have to include TypeInfo
+	static MemberReferencePtr getMember(TypeInfo* typeInfo, MemberReferencePtr thisRef, const std::string& memberOrIndex);
+	static const char* getTypeName(TypeInfo* typeInfo);
+
+protected:
 	TypeMemberInfo* memberInfo;
 
 private:
