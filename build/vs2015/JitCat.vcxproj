@@ -124,7 +124,7 @@
     <ClInclude Include="../../include/jitcat/Tools.h" />
     <ClInclude Include="../../include/jitcat/ToolsHeaderImplementation.h" />
     <ClInclude Include="../../include/jitcat/TwoCharToken.h" />
-    <ClCompile Include="../../include/jitcat/TwoCharTokenSubTypes.h" />
+    <ClInclude Include="../../include/jitcat/TwoCharTokenSubTypes.h" />
     <ClInclude Include="../../include/jitcat/TypeInfo.h" />
     <ClInclude Include="../../include/jitcat/TypeInfoHeaderImplementation.h" />
     <ClInclude Include="../../include/jitcat/TypeRegistry.h" />
