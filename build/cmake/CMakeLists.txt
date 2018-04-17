@@ -10,7 +10,7 @@ endif ()
 
 if(FORCE32)
     set(CMAKE_C_FLAGS "-m32")
-    set(CMAKE_CXX_FLAGS "-m32 -fvisibility=hidden -fpermissive")
+    set(CMAKE_CXX_FLAGS "-m32 -fpermissive")
 endif()
 
 if(CMAKE_SIZEOF_VOID_P MATCHES "8" AND NOT(FORCE32))
@@ -32,7 +32,7 @@ add_library(JitCat STATIC ${JITCAT_SOURCE})
 
 set_target_properties(JitCat
     PROPERTIES
-    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-unused-function -fPIC"
+    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-switch -Wno-unused-function -fPIC"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
 )
 

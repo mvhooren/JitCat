@@ -18,7 +18,7 @@ target_link_libraries(JitCatValidatorTool JitCatValidator)
 
 set_target_properties(JitCatValidatorTool
     PROPERTIES
-    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-unused-function"
+    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-switch -Wno-unused-function"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
 	INSTALL_RPATH "./"
 )

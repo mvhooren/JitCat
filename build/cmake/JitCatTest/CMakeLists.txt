@@ -18,7 +18,7 @@ target_link_libraries(JitCatTest JitCat)
 
 set_target_properties(JitCatTest
     PROPERTIES
-    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-unused-function"
+    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-switch -Wno-unused-function"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
 )
 

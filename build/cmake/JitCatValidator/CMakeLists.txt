@@ -19,7 +19,7 @@ target_link_libraries(JitCatValidator PRIVATE JitCat)
 
 set_target_properties(JitCatValidator
     PROPERTIES
-    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-unused-function -fPIC"
+    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-switch -Wno-unused-function -fPIC"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
 )
 
