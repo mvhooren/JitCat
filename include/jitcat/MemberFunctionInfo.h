@@ -79,7 +79,7 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) 
+	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) override
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});

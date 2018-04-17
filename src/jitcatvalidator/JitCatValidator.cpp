@@ -39,10 +39,10 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* g
 	TypeInfo* localsType = TypeRegistry::get()->getTypeInfo(localsTypeName);
 	TypeInfo* customLocalsType = TypeRegistry::get()->getTypeInfo(customLocalsTypeName);
 	TypeInfo* customGlobalsType = TypeRegistry::get()->getTypeInfo(customGlobalsTypeName);
-	if (globalsType == nullptr && strlen(globalsTypeName) != 0
-		|| localsType == nullptr && strlen(localsTypeName) != 0
-		|| customLocalsType == nullptr && strlen(customLocalsTypeName) != 0
-		|| customGlobalsType == nullptr && strlen(customGlobalsTypeName) != 0)
+	if ((globalsType == nullptr && strlen(globalsTypeName) != 0)
+		|| (localsType == nullptr && strlen(localsTypeName) != 0)
+		|| (customLocalsType == nullptr && strlen(customLocalsTypeName) != 0)
+		|| (customGlobalsType == nullptr && strlen(customGlobalsTypeName) != 0))
 	{
 		return -2;
 	}
@@ -121,15 +121,15 @@ JITCATVALIDATOR_API int codeCompleteExpression(const char* expression, int curso
 	TypeInfo* localsType = TypeRegistry::get()->getTypeInfo(localsTypeName);
 	TypeInfo* customLocalsType = TypeRegistry::get()->getTypeInfo(customLocalsTypeName);
 	TypeInfo* customGlobalsType = TypeRegistry::get()->getTypeInfo(customGlobalsTypeName);
-	if (globalsType == nullptr && strlen(globalsTypeName) != 0
-		|| localsType == nullptr && strlen(localsTypeName) != 0
-		|| customLocalsType == nullptr && strlen(customLocalsTypeName) != 0
-		|| customGlobalsType == nullptr && strlen(customGlobalsTypeName) != 0)
+	if ((globalsType == nullptr && strlen(globalsTypeName) != 0)
+		|| (localsType == nullptr && strlen(localsTypeName) != 0)
+		|| (customLocalsType == nullptr && strlen(customLocalsTypeName) != 0)
+		|| (customGlobalsType == nullptr && strlen(customGlobalsTypeName) != 0))
 	{
 		return -2;
 	}
 	CatRuntimeContext context(globalsType, localsType, customLocalsType, customGlobalsType, "Completion", false, nullptr);
-	auto& suggestions = AutoCompletion::autoComplete(expression, cursorPosition, &context);
+	const auto& suggestions = AutoCompletion::autoComplete(expression, cursorPosition, &context);
 	if (suggestions.size() > 0)
 	{
 		std::vector<CodeCompletionSuggestion*> suggestionsToReturn;

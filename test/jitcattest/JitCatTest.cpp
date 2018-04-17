@@ -31,7 +31,12 @@
 #include "WhitespaceToken.h"
 
 #include <string>
-#include <tchar.h>
+#ifdef WIN32
+	#include <tchar.h>
+	#define MAIN _tmain
+#else
+	#define MAIN main
+#endif
 #include <vector>
 #include <iostream>
 
@@ -45,7 +50,7 @@ public:
 };
 
 
-int _tmain(int argc, _TCHAR* argv[])
+int MAIN(int argc, char* argv[])
 {
 	TypeRegistry::get()->registerType<ReflectionTestRoot>();
 	TypeRegistry::get()->registerType<ReflectionTestObject>();

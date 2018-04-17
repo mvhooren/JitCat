@@ -4,7 +4,7 @@
   Copyright (C) Machiel van Hooren 2018
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
-
+#ifdef WIN32
 #include <Windows.h>
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -22,4 +22,5 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	}
 	return TRUE;
 }
+#endif
 

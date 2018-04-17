@@ -70,7 +70,7 @@ CatGenericType CatInfixOperator::getType() const
 			return CatType::Error;
 		case CatInfixOperatorType::Equals:
 		case CatInfixOperatorType::NotEquals:
-			if (isScalar(lhsType) && isScalar(rhsType)
+			if ((isScalar(lhsType) && isScalar(rhsType))
 				|| lhsType == rhsType)
 			{
 				return CatType::Bool;
