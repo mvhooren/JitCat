@@ -39,12 +39,13 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	{
 		startingTokenIndex--;
 	}
-	std::vector<IdentifierToken*> subExpression = getSubExpressionToAutoComplete(tokens, startingTokenIndex);
-
+	std::string expressionTailEnd = "";
+	std::vector<IdentifierToken*> subExpression = getSubExpressionToAutoComplete(tokens, startingTokenIndex, expressionTailEnd);
 
 	std::vector<AutoCompletion::AutoCompletionEntry> results;
 	int last = (int)subExpression.size() - 1;
 	TypeMemberInfo* currentMemberInfo = nullptr;
+	MemberFunctionInfo* currentFunctionInfo = nullptr;
 	bool foundValidAutoCompletion = false;
 	if (last >= 0)
 	{
@@ -59,7 +60,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			}
 			else if (i > 0)
 			{
-				identifierOffset = subExpression[i - 1]->getLexeme()->offset + subExpression[i - 1]->getLexeme()->length + 1;
+				identifierOffset = subExpression[i - 1]->getLexeme()->offset + subExpression[i - 1]->getLexeme()->length;
 			}
 			else
 			{
@@ -69,38 +70,67 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			{
 				std::string memberPrefix = lowercaseIdentifier;
 				foundValidAutoCompletion = true;
-				if (currentMemberInfo == nullptr)
+				std::size_t completionOffset = identifierOffset + expressionTailEnd.size();
+				if (currentMemberInfo == nullptr && currentFunctionInfo == nullptr)
 				{
 					if (i == 0)
 					{
 						//search in the runtime context
-						addOptionsFromTypeInfo(context->getCustomThisType(), results, memberPrefix, expression, identifierOffset);
-						addOptionsFromTypeInfo(context->getThisType(), results, memberPrefix, expression, identifierOffset);
-						addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, memberPrefix, expression, identifierOffset);
-						addOptionsFromTypeInfo(context->getGlobalType(), results, memberPrefix, expression, identifierOffset);
-						addOptionsFromBuiltIn(results, memberPrefix, expression, identifierOffset);
+						addOptionsFromTypeInfo(context->getCustomThisType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+						addOptionsFromTypeInfo(context->getThisType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+						addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+						addOptionsFromTypeInfo(context->getGlobalType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+						addOptionsFromBuiltIn(results, memberPrefix, expression, completionOffset);
 					}
 				}
-				else if (currentMemberInfo->catType == CatType::Object)
+				else if (currentMemberInfo != nullptr && currentMemberInfo->catType == CatType::Object)
 				{
-					addOptionsFromTypeInfo(currentMemberInfo->nestedType, results, memberPrefix, expression, identifierOffset);
+					addOptionsFromTypeInfo(currentMemberInfo->nestedType, results, memberPrefix, expression, completionOffset, expressionTailEnd);
+				}
+				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.getCatType() == CatType::Object)
+				{
+					addOptionsFromTypeInfo(currentFunctionInfo->returnType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
 				else
 				{
 					//Failed
 				}
 			}
-			else if (currentMemberInfo == nullptr)
+			else if (currentMemberInfo == nullptr && currentFunctionInfo == nullptr)
 			{
 				currentMemberInfo = context->findIdentifier(lowercaseIdentifier);
+				if (currentMemberInfo == nullptr)
+				{
+					RootTypeSource source;
+					currentFunctionInfo = context->findFunction(lowercaseIdentifier, source);
+				}
 			}
-			else if (currentMemberInfo->catType == CatType::Object)
+			else if (currentMemberInfo != nullptr && currentMemberInfo->catType == CatType::Object)
 			{
+				TypeMemberInfo* currentMember = currentMemberInfo;
 				currentMemberInfo = currentMemberInfo->nestedType->getMemberInfo(lowercaseIdentifier);
 				if (currentMemberInfo == nullptr)
 				{
-					//failed
-					break;
+					currentFunctionInfo = currentMember->nestedType->getMemberFunctionInfo(lowercaseIdentifier);
+					if (currentFunctionInfo == nullptr)
+					{
+						//failed
+						break;
+					}
+				}
+			}
+			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.getCatType() == CatType::Object)
+			{
+				MemberFunctionInfo* currentFunction = currentFunctionInfo;
+				currentFunctionInfo = currentFunctionInfo->returnType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
+				if (currentFunctionInfo == nullptr)
+				{
+					currentMemberInfo = currentFunction->returnType.getObjectType()->getMemberInfo(lowercaseIdentifier);
+					if (currentMemberInfo == nullptr)
+					{
+						//failed
+						break;
+					}
 				}
 			}
 			else
@@ -112,10 +142,10 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	}
 	if (!foundValidAutoCompletion && isGlobalScopeAutoCompletable(tokens, startingTokenIndex))
 	{
-		addOptionsFromTypeInfo(context->getCustomThisType(), results, "", expression, cursorPosition);
-		addOptionsFromTypeInfo(context->getThisType(), results, "", expression, cursorPosition);
-		addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, "", expression, cursorPosition);
-		addOptionsFromTypeInfo(context->getGlobalType(), results, "", expression, cursorPosition);
+		addOptionsFromTypeInfo(context->getCustomThisType(), results, "", expression, cursorPosition, expressionTailEnd);
+		addOptionsFromTypeInfo(context->getThisType(), results, "", expression, cursorPosition, expressionTailEnd);
+		addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, "", expression, cursorPosition, expressionTailEnd);
+		addOptionsFromTypeInfo(context->getGlobalType(), results, "", expression, cursorPosition, expressionTailEnd);
 		addOptionsFromBuiltIn(results, "", expression, cursorPosition);
 	}
 	std::sort(std::begin(results), std::end(results), [](const AutoCompletion::AutoCompletionEntry& a, const AutoCompletion::AutoCompletionEntry& b) 
@@ -133,8 +163,9 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 }
 
 
-std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<ParseToken*>& tokens, int startingTokenIndex)
+std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<ParseToken*>& tokens, int startingTokenIndex, std::string& expressionTailEnd)
 {
+	bool readTailEnd = false;
 	//Tokenize the entire expression, then find the token at the cursorPosition, then backtrack from there to find the 
 	//list of consecutive member dereferences/scopes
 	if (startingTokenIndex < 0)
@@ -147,7 +178,6 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 		|| (startingToken->getTokenID() == OneCharToken::getID() 
 		   && startingToken->getTokenSubType() == static_cast<typename std::underlying_type<OneChar>::type>(OneChar::Dot)))
 	{
-
 		int currentUnmatchedCloseBrackets = 0;
 		int currentUnmatchedCloseParenthesis = 0;
 		bool skipping = false;
@@ -155,6 +185,17 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 		bool backtrackingDone = false;
 		for (int i = startingTokenIndex; i >= 0 && !backtrackingDone; i--)
 		{
+			if (!readTailEnd)
+			{
+				if (tokens[i]->getTokenID() == IdentifierToken::getID() && currentUnmatchedCloseBrackets == 0 && currentUnmatchedCloseParenthesis == 0)
+				{
+					readTailEnd = true;
+				}
+				else
+				{
+					expressionTailEnd = tokens[i]->getLexeme()->toString() + expressionTailEnd;
+				}
+			}
 			if (tokens[i]->getTokenID() == OneCharToken::getID())
 			{
 				switch (static_cast<OneChar>(tokens[i]->getTokenSubType()))
@@ -167,7 +208,7 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 						}
 						break;
 					case OneChar::ParenthesesClose:
-						currentUnmatchedCloseBrackets++;
+						currentUnmatchedCloseParenthesis++;
 						break;
 					case OneChar::BracketOpen:
 						currentUnmatchedCloseBrackets--;
@@ -244,7 +285,7 @@ int AutoCompletion::findStartTokenIndex(int cursorPosition, const std::vector<Pa
 
 
 void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<AutoCompletion::AutoCompletionEntry>& results, 
-											const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset)
+											const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset, const std::string& expressionTailEnd)
 {
 	if (typeInfo != nullptr)
 	{
@@ -257,8 +298,8 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 			{
 				std::string newExpression = originalExpression;
 				std::string replacement = iter.second->memberName;
-				int numberOfCharactersToAdd = (int)iter.second->memberName.size();
-				if (iter.second->specificType == SpecificMemberType::ContainerType)
+				int numberOfCharactersToAdd = (int)replacement.size();
+				if (expressionTailEnd.size() == 0 && iter.second->specificType == SpecificMemberType::ContainerType)
 				{
 					numberOfCharactersToAdd++;
 					replacement += "[";
@@ -273,8 +314,13 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 			if (findLocation != iter.first.npos)
 			{
 				std::string newExpression = originalExpression;
-				newExpression.replace(prefixOffset, lowercasePrefix.size(), iter.second->memberFunctionName + "(");
-				results.push_back(AutoCompletionEntry(newExpression, iter.second->memberFunctionName  + "(", findLocation == 0, prefixOffset + iter.second->memberFunctionName.size() + 1));
+				std::string parenthesesToAdd = "(";
+				if (iter.second->getNumberOfArguments() == 0)
+				{
+					parenthesesToAdd = "()";
+				}
+				newExpression.replace(prefixOffset, lowercasePrefix.size(), iter.second->memberFunctionName + parenthesesToAdd);
+				results.push_back(AutoCompletionEntry(newExpression, iter.second->memberFunctionName  + parenthesesToAdd, findLocation == 0, prefixOffset + iter.second->memberFunctionName.size() + parenthesesToAdd.size()));
 			}
 		}
 	}

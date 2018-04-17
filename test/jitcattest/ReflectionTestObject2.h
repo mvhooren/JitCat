@@ -19,6 +19,8 @@ public:
 	static void reflect(TypeInfo& typeInfo);
 	static const char* getTypeName();
 
+	std::string getWhat();
+
 public:
 	std::string what;
 	float aLot;

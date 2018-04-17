@@ -38,12 +38,12 @@ public:
 	static std::vector<AutoCompletionEntry> autoComplete(const std::string& expression, std::size_t cursorPosition, CatRuntimeContext* context);
 
 private:
-	static std::vector<IdentifierToken*> getSubExpressionToAutoComplete(const std::vector<ParseToken*>& tokens, int startingTokenIndex);
+	static std::vector<IdentifierToken*> getSubExpressionToAutoComplete(const std::vector<ParseToken*>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
 
 	static int findStartTokenIndex(int cursorPosition, const std::vector<ParseToken*>& tokens);
 
 	static void addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<AutoCompletion::AutoCompletionEntry>& results, 
-									   const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
+									   const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset, const std::string& expressionTailEnd);
 	static void addOptionsFromBuiltIn(std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
 	static void addIfPartialMatch(const std::string& text, std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
 

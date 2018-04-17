@@ -30,6 +30,7 @@ ReflectionTestObject::ReflectionTestObject(std::string text):
 void ReflectionTestObject::reflect(TypeInfo& typeInfo)
 {
 	typeInfo.addMember("text", &ReflectionTestObject::text);
+	typeInfo.addMember("getTest2", &ReflectionTestObject::getTest2);
 	typeInfo.addMember("theInt", &ReflectionTestObject::theInt, MTF_IS_CONST);
 	typeInfo.addMember("test2", &ReflectionTestObject::test2);
 	typeInfo.addMember("list", &ReflectionTestObject::testObjects);
@@ -48,6 +49,12 @@ const char* ReflectionTestObject::getTypeName()
 int ReflectionTestObject::getRandomInt()
 {
 	return rand();
+}
+
+
+ReflectionTestObject2* ReflectionTestObject::getTest2()
+{
+	return test2;
 }
 
 

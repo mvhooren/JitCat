@@ -23,6 +23,7 @@ public:
 	static const char* getTypeName();
 
 	int getRandomInt();
+	ReflectionTestObject2* getTest2();
 
 	std::string addToString(const std::string& text, float number);
 

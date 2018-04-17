@@ -19,6 +19,7 @@ ReflectionTestObject2::ReflectionTestObject2():
 void ReflectionTestObject2::reflect(TypeInfo& typeInfo)
 {
 	typeInfo.addMember("what", &ReflectionTestObject2::what);
+	typeInfo.addMember("getWhat", &ReflectionTestObject2::getWhat);
 	typeInfo.addMember("aLot", &ReflectionTestObject2::aLot);
 }
 
@@ -26,4 +27,9 @@ void ReflectionTestObject2::reflect(TypeInfo& typeInfo)
 const char* ReflectionTestObject2::getTypeName()
 {
 	return "Test2";
+}
+
+std::string ReflectionTestObject2::getWhat()
+{
+	return what;
 }
