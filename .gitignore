@@ -12,3 +12,15 @@ bin
 /build/cmake/Makefile
 /build/cmake/install_manifest.txt
 /build/cmake/*.a
+/build/cmake/JitCatTest/CMakeFiles
+/build/cmake/JitCatTest/*.cmake
+/build/cmake/JitCatTest/JitCatTest
+/build/cmake/JitCatTest/Makefile
+/build/cmake/JitCatValidator/CMakeFiles
+/build/cmake/JitCatValidator/*.cmake
+/build/cmake/JitCatValidator/libJitCatValidator.so
+/build/cmake/JitCatValidator/Makefile
+/build/cmake/JitCatValidatorTool/CMakeFiles
+/build/cmake/JitCatValidatorTool/*.cmake
+/build/cmake/JitCatValidatorTool/JitCatValidatorTool
+/build/cmake/JitCatValidatorTool/Makefile
