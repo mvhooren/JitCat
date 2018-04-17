@@ -1,6 +1,8 @@
 # JitCat
 A C++11 library for parsing and executing expressions. Allows easy exposure of variables and functions from C++ through built-in reflection functionality.
 
+[Get it on github](https://github.com/mvhooren/JitCat).
+
 ## Features
 * Supports floating point, integer, boolean, string and object pointer typed expressions as well as void typed and any typed expressions. More types to come.
 * Expose variables for use in expressions through reflection of C++ classes as well as the runtime creation of custom structs.
