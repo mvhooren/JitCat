@@ -206,6 +206,24 @@
     <ClCompile Include="../../src/jitcat/CatLog.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\LLVMCodeGenerator.cpp">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\LLVMJit.cpp">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\LLVMCodeGeneratorHelper.cpp">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\LLVMTypes.cpp">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\LLVMCompileTimeContext.cpp">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\TypeTraits.cpp">
+      <Filter>Cat\Expression</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../../include/jitcat/JitCat.h" />
@@ -521,9 +539,41 @@
     <ClInclude Include="../../include/jitcat/CatLog.h">
       <Filter>Tools</Filter>
     </ClInclude>
-    <ClInclude Include="../../include/jitcat/TwoCharTokenSubTypes.h" />
     <ClInclude Include="..\..\include\jitcat\MemberTypeInfoCreator.h">
       <Filter>Reflection\TypeInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMCodeGenerator.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMJit.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMJitHeaderImplementation.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\CatASTNodesDeclares.h">
+      <Filter>Cat\ASTNodes</Filter>
+    </ClInclude>
+    <ClInclude Include="../../include/jitcat/TwoCharTokenSubTypes.h">
+      <Filter>Tokenizer\Tokens</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\CatBuiltInFunctionType.h">
+      <Filter>Cat\ASTNodes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMCodeGeneratorHelper.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMForwardDeclares.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMTypes.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\CustomTypeMemberInfoHeaderImplementation.h">
+      <Filter>Reflection\TypeInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMCompileTimeContext.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -575,5 +625,14 @@
     <Filter Include="Reflection\Serialisation">
       <UniqueIdentifier>{7feed090-26f1-4350-8f40-ee0fa3232d9b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Cat\CodeGeneration">
+      <UniqueIdentifier>{593012d7-06b3-4213-9298-1844789b299d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Cat\CodeGeneration\LLVM">
+      <UniqueIdentifier>{2a98e884-78d4-4d73-bae5-d43ca5b0a9c4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\..\..\llvm\utils\LLVMVisualizers\llvm.natvis" />
   </ItemGroup>
 </Project>

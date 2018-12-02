@@ -40,7 +40,7 @@ CatASTNodeType CatFunctionCall::getNodeType()
 CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 {
 	std::size_t numArgumentsSupplied = arguments->arguments.size();
-	if (function >= BuiltInFunction::Count)
+	if (function >= CatBuiltInFunctionType::Count)
 	{
 		return CatError(std::string("function not found: ") + name);
 	}
@@ -49,7 +49,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		//At most 3 arguments, check for errors
 		CatValue argumentValues[3];
 		std::size_t numArgumentsToEvaluate = numArgumentsSupplied;
-		if (function == BuiltInFunction::Select)
+		if (function == CatBuiltInFunctionType::Select)
 		{
 			numArgumentsToEvaluate = 1;
 		}
@@ -63,11 +63,11 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		}
 		switch (function)
 		{
-			case BuiltInFunction::ToInt:		return CatValue(argumentValues[0].toIntValue());
-			case BuiltInFunction::ToFloat:		return CatValue(argumentValues[0].toFloatValue());
-			case BuiltInFunction::ToBool:		return CatValue(argumentValues[0].toBoolValue());
-			case BuiltInFunction::ToString:		return CatValue(argumentValues[0].toStringValue());
-			case BuiltInFunction::ToPrettyString:
+			case CatBuiltInFunctionType::ToInt:		return CatValue(argumentValues[0].toIntValue());
+			case CatBuiltInFunctionType::ToFloat:		return CatValue(argumentValues[0].toFloatValue());
+			case CatBuiltInFunctionType::ToBool:		return CatValue(argumentValues[0].toBoolValue());
+			case CatBuiltInFunctionType::ToString:		return CatValue(argumentValues[0].toStringValue());
+			case CatBuiltInFunctionType::ToPrettyString:
 			{
 				if (argumentValues[0].getValueType() != CatType::Int)
 				{
@@ -98,7 +98,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 					return CatValue(result);
 				}
 			}
-			case BuiltInFunction::ToFixedLengthString:
+			case CatBuiltInFunctionType::ToFixedLengthString:
 			{
 				if (argumentValues[0].getValueType() != CatType::Int
 					|| argumentValues[1].getValueType() != CatType::Int)
@@ -115,7 +115,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 					return CatValue(numberString);
 				}
 			}
-			case BuiltInFunction::Sin:
+			case CatBuiltInFunctionType::Sin:
 				if (isScalar(argumentValues[0].getValueType()))
 				{
 					return CatValue(std::sin(argumentValues[0].toFloatValue()));
@@ -124,7 +124,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("sin: expected a number as argument.");
 				}
-			case BuiltInFunction::Cos:
+			case CatBuiltInFunctionType::Cos:
 				if (isScalar(argumentValues[0].getValueType()))
 				{
 					return CatValue(std::cos(argumentValues[0].toFloatValue()));
@@ -133,7 +133,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("cos: expected a number as argument.");
 				}
-			case BuiltInFunction::Tan:
+			case CatBuiltInFunctionType::Tan:
 				if (isScalar(argumentValues[0].getValueType()))
 				{
 					return CatValue(std::tan(argumentValues[0].toFloatValue()));
@@ -142,8 +142,8 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("tan: expected a number as argument.");
 				}
-			case BuiltInFunction::Random:		return CatValue(static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX));
-			case BuiltInFunction::RandomRange:
+			case CatBuiltInFunctionType::Random:		return CatValue(static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX));
+			case CatBuiltInFunctionType::RandomRange:
 			{
 				if (argumentValues[0].getValueType() == CatType::Bool
 					&& argumentValues[1].getValueType() == CatType::Bool)
@@ -185,7 +185,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 					return CatError("rand: invalid argument type.");
 				}
 			}
-			case BuiltInFunction::Round:
+			case CatBuiltInFunctionType::Round:
 				if (argumentValues[0].getValueType() == CatType::Float
 					&& isScalar(argumentValues[1].getValueType()))
 				{
@@ -196,7 +196,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("round: can only round floating point numbers to integer number of decimals.");
 				}
-			case BuiltInFunction::StringRound:
+			case CatBuiltInFunctionType::StringRound:
 				if (argumentValues[0].getValueType() == CatType::Float
 					&& isScalar(argumentValues[1].getValueType()))
 				{
@@ -232,7 +232,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("stringRound: can only round floating point numbers to integer number of decimals.");
 				}
-			case BuiltInFunction::Abs:
+			case CatBuiltInFunctionType::Abs:
 				if (argumentValues[0].getValueType() == CatType::Float)
 				{
 					return CatValue(std::abs(argumentValues[0].getFloatValue()));
@@ -245,7 +245,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("abs: expected a number as argument.");
 				}
-			case BuiltInFunction::Cap:
+			case CatBuiltInFunctionType::Cap:
 				if (isScalar(argumentValues[1].getValueType())
 					&& isScalar(argumentValues[2].getValueType()))
 				{
@@ -280,7 +280,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("cap: range must consist of 2 numbers.");
 				}
-			case BuiltInFunction::Min:
+			case CatBuiltInFunctionType::Min:
 				if (argumentValues[0].getValueType() == CatType::Float
 					&& isScalar(argumentValues[1].getValueType()))
 				{
@@ -295,7 +295,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("min: expected two numbers as arguments.");
 				}
-			case BuiltInFunction::Max:
+			case CatBuiltInFunctionType::Max:
 				if (argumentValues[0].getValueType() == CatType::Float
 					&& isScalar(argumentValues[1].getValueType()))
 				{
@@ -310,7 +310,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("max: expected two numbers as arguments.");
 				}
-			case BuiltInFunction::Log:
+			case CatBuiltInFunctionType::Log:
 				if (isScalar(argumentValues[0].getValueType()))
 				{
 					return CatValue(std::log10(argumentValues[0].toFloatValue()));
@@ -319,7 +319,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("log: expected a number as argument.");
 				}
-			case BuiltInFunction::Sqrt:
+			case CatBuiltInFunctionType::Sqrt:
 				if (isScalar(argumentValues[0].getValueType()))
 				{
 					return CatValue(std::sqrt(argumentValues[0].toFloatValue()));
@@ -328,7 +328,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("sqrt: expected a number as argument.");
 				}
-			case BuiltInFunction::Pow:
+			case CatBuiltInFunctionType::Pow:
 				if (argumentValues[0].getValueType() == CatType::Float
 					|| (argumentValues[1].getValueType() == CatType::Float 
 						&& argumentValues[0].getValueType() == CatType::Int))
@@ -344,7 +344,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("pow: expected two numbers as arguments.");
 				}
-			case BuiltInFunction::Ceil:
+			case CatBuiltInFunctionType::Ceil:
 				if (isScalar(argumentValues[0].getValueType()))
 				{
 					return CatValue(std::ceil(argumentValues[0].toFloatValue()));
@@ -353,7 +353,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("ceil: expected a number as argument.");
 				}
-			case BuiltInFunction::Floor:
+			case CatBuiltInFunctionType::Floor:
 				if (isScalar(argumentValues[0].getValueType()))
 				{
 					return CatValue(std::floor(argumentValues[0].toFloatValue()));
@@ -362,7 +362,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("floor: expected a number as argument.");
 				}
-			case BuiltInFunction::FindInString:
+			case CatBuiltInFunctionType::FindInString:
 				if (isBasicType(argumentValues[0].getValueType())
 					&& isBasicType(argumentValues[1].getValueType()))
 				{
@@ -384,7 +384,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("findInString: invalid argument.");
 				}
-			case BuiltInFunction::ReplaceInString:
+			case CatBuiltInFunctionType::ReplaceInString:
 				if (isBasicType(argumentValues[0].getValueType())
 					&& isBasicType(argumentValues[1].getValueType())
 					&& isBasicType(argumentValues[2].getValueType()))
@@ -407,7 +407,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("replaceInString: invalid argument.");
 				}
-			case BuiltInFunction::StringLength:
+			case CatBuiltInFunctionType::StringLength:
 				if (isBasicType(argumentValues[0].getValueType()))
 				{
 					return CatValue((int)argumentValues[0].toStringValue().size());
@@ -416,7 +416,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("stringLength: invalid argument.");
 				}
-			case BuiltInFunction::SubString:
+			case CatBuiltInFunctionType::SubString:
 				if (isBasicType(argumentValues[0].getValueType())
 					&& isScalar(argumentValues[1].getValueType())
 					&& isScalar(argumentValues[2].getValueType()))
@@ -440,7 +440,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("subString: invalid argument.");
 				}
-			case BuiltInFunction::Select:
+			case CatBuiltInFunctionType::Select:
 			{
 				if (argumentValues[0].getValueType() == CatType::Bool)
 				{
@@ -468,8 +468,8 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				}
 			}
 			default:
-			case BuiltInFunction::Count:
-			case BuiltInFunction::Invalid:
+			case CatBuiltInFunctionType::Count:
+			case CatBuiltInFunctionType::Invalid:
 				return CatError(std::string("function not found: ") + name);
 		}
 	}
@@ -485,7 +485,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 CatGenericType CatFunctionCall::typeCheck()
 {
 	std::size_t numArgumentsSupplied = arguments->arguments.size();
-	if (function >= BuiltInFunction::Count)
+	if (function >= CatBuiltInFunctionType::Count)
 	{
 		return CatGenericType(Tools::append("function not found: ", name));
 	}
@@ -507,12 +507,12 @@ CatGenericType CatFunctionCall::typeCheck()
 
 		switch (function)
 		{
-			case BuiltInFunction::ToInt:			return CatGenericType(CatType::Int);
-			case BuiltInFunction::ToFloat:			return CatGenericType(CatType::Float);
-			case BuiltInFunction::ToBool:			return CatGenericType(CatType::Bool);
-			case BuiltInFunction::ToString:			return CatGenericType(CatType::String);
-			case BuiltInFunction::ToPrettyString:	return CatGenericType(CatType::String);
-			case BuiltInFunction::ToFixedLengthString:
+			case CatBuiltInFunctionType::ToInt:			return CatGenericType(CatType::Int);
+			case CatBuiltInFunctionType::ToFloat:			return CatGenericType(CatType::Float);
+			case CatBuiltInFunctionType::ToBool:			return CatGenericType(CatType::Bool);
+			case CatBuiltInFunctionType::ToString:			return CatGenericType(CatType::String);
+			case CatBuiltInFunctionType::ToPrettyString:	return CatGenericType(CatType::String);
+			case CatBuiltInFunctionType::ToFixedLengthString:
 				if (argumentTypes[0].isIntType() && argumentTypes[1].isIntType())
 				{
 					return CatGenericType(CatType::String);
@@ -521,9 +521,9 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType(Tools::append(name, ": expected an int."));
 				}
-			case BuiltInFunction::Sin:
-			case BuiltInFunction::Cos:
-			case BuiltInFunction::Tan:
+			case CatBuiltInFunctionType::Sin:
+			case CatBuiltInFunctionType::Cos:
+			case CatBuiltInFunctionType::Tan:
 				if (argumentTypes[0].isScalarType())
 				{
 					return CatGenericType(CatType::Float);
@@ -532,8 +532,8 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType(Tools::append(name, ": expected a number as argument."));
 				}
-			case BuiltInFunction::Random:		return CatGenericType(CatType::Float);
-			case BuiltInFunction::RandomRange:
+			case CatBuiltInFunctionType::Random:		return CatGenericType(CatType::Float);
+			case CatBuiltInFunctionType::RandomRange:
 			{
 				if (argumentTypes[0].isBoolType()
 					&& argumentTypes[1].isBoolType())
@@ -555,7 +555,7 @@ CatGenericType CatFunctionCall::typeCheck()
 					return CatGenericType(Tools::append(name, ": invalid argument types."));
 				}
 			}
-			case BuiltInFunction::Round:
+			case CatBuiltInFunctionType::Round:
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
@@ -565,7 +565,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("round: can only round floating point numbers to integer number of decimals.");
 				}
-			case BuiltInFunction::StringRound:
+			case CatBuiltInFunctionType::StringRound:
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
@@ -575,7 +575,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("stringRound: can only round floating point numbers to integer number of decimals.");
 				}
-			case BuiltInFunction::Abs:
+			case CatBuiltInFunctionType::Abs:
 				if (argumentTypes[0].isFloatType())
 				{
 					return CatGenericType(CatType::Float);
@@ -588,7 +588,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("abs: expected a number as argument.");
 				}
-			case BuiltInFunction::Cap:
+			case CatBuiltInFunctionType::Cap:
 				if (argumentTypes[1].isScalarType()
 					&& argumentTypes[2].isScalarType())
 				{
@@ -609,8 +609,8 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("cap: range must consist of 2 numbers.");
 				}
-			case BuiltInFunction::Min:
-			case BuiltInFunction::Max:
+			case CatBuiltInFunctionType::Min:
+			case CatBuiltInFunctionType::Max:
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
@@ -625,10 +625,10 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType(Tools::append(name, ": expected two numbers as arguments."));
 				}
-			case BuiltInFunction::Log:
-			case BuiltInFunction::Sqrt:
-			case BuiltInFunction::Ceil:
-			case BuiltInFunction::Floor:
+			case CatBuiltInFunctionType::Log:
+			case CatBuiltInFunctionType::Sqrt:
+			case CatBuiltInFunctionType::Ceil:
+			case CatBuiltInFunctionType::Floor:
 				if (argumentTypes[0].isScalarType())
 				{
 					return CatGenericType(CatType::Float);
@@ -637,7 +637,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType(Tools::append(name, ": expected a number as argument."));
 				}
-			case BuiltInFunction::Pow:
+			case CatBuiltInFunctionType::Pow:
 				if (argumentTypes[0].isFloatType()
 					|| (argumentTypes[1].isFloatType()
 						&& argumentTypes[0].isIntType()))
@@ -653,7 +653,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("pow: expected two numbers as arguments.");
 				}
-			case BuiltInFunction::FindInString:
+			case CatBuiltInFunctionType::FindInString:
 				if (argumentTypes[0].isBasicType()
 					&& argumentTypes[1].isBasicType())
 				{
@@ -663,7 +663,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("findInString: invalid argument.");
 				}
-			case BuiltInFunction::ReplaceInString:
+			case CatBuiltInFunctionType::ReplaceInString:
 				if (argumentTypes[0].isBasicType()
 					&& argumentTypes[1].isBasicType()
 					&& argumentTypes[2].isBasicType())
@@ -674,7 +674,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("replaceInString: invalid argument.");
 				}
-			case BuiltInFunction::StringLength:
+			case CatBuiltInFunctionType::StringLength:
 				if (argumentTypes[0].isBasicType())
 				{
 					return CatGenericType(CatType::Int);
@@ -683,7 +683,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("stringLength: invalid argument.");
 				}
-			case BuiltInFunction::SubString:
+			case CatBuiltInFunctionType::SubString:
 				if (argumentTypes[0].isBasicType()
 					&& argumentTypes[1].isScalarType()
 					&& argumentTypes[2].isScalarType())
@@ -694,7 +694,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType("subString: invalid argument.");
 				}
-			case BuiltInFunction::Select:
+			case CatBuiltInFunctionType::Select:
 			{
 				if (argumentTypes[0].isBoolType())
 				{
@@ -714,8 +714,8 @@ CatGenericType CatFunctionCall::typeCheck()
 				}
 			}
 			default:
-			case BuiltInFunction::Count:
-			case BuiltInFunction::Invalid:
+			case CatBuiltInFunctionType::Count:
+			case CatBuiltInFunctionType::Invalid:
 				return CatGenericType(std::string("function not found: ") + name);
 		}
 	}
@@ -730,39 +730,39 @@ CatGenericType CatFunctionCall::getType() const
 		{
 			default:
 				return CatType::Error;
-			case BuiltInFunction::ToInt:
-			case BuiltInFunction::StringLength:
-			case BuiltInFunction::Round:
-			case BuiltInFunction::FindInString:
+			case CatBuiltInFunctionType::ToInt:
+			case CatBuiltInFunctionType::StringLength:
+			case CatBuiltInFunctionType::Round:
+			case CatBuiltInFunctionType::FindInString:
 				return CatType::Int;
-			case BuiltInFunction::ToBool:
+			case CatBuiltInFunctionType::ToBool:
 				return CatType::Bool;
-			case BuiltInFunction::RandomRange:
-			case BuiltInFunction::Abs:
-			case BuiltInFunction::Cap:
-			case BuiltInFunction::Min:
-			case BuiltInFunction::Max:
+			case CatBuiltInFunctionType::RandomRange:
+			case CatBuiltInFunctionType::Abs:
+			case CatBuiltInFunctionType::Cap:
+			case CatBuiltInFunctionType::Min:
+			case CatBuiltInFunctionType::Max:
 				return arguments->arguments[0]->getType();
-			case BuiltInFunction::Select:
+			case CatBuiltInFunctionType::Select:
 				return arguments->arguments[1]->getType();
-			case BuiltInFunction::ToFloat:
-			case BuiltInFunction::Sin:
-			case BuiltInFunction::Cos:
-			case BuiltInFunction::Tan:
-			case BuiltInFunction::Random:
-			case BuiltInFunction::Log:
-			case BuiltInFunction::Sqrt:
-			case BuiltInFunction::Ceil:
-			case BuiltInFunction::Floor:
+			case CatBuiltInFunctionType::ToFloat:
+			case CatBuiltInFunctionType::Sin:
+			case CatBuiltInFunctionType::Cos:
+			case CatBuiltInFunctionType::Tan:
+			case CatBuiltInFunctionType::Random:
+			case CatBuiltInFunctionType::Log:
+			case CatBuiltInFunctionType::Sqrt:
+			case CatBuiltInFunctionType::Ceil:
+			case CatBuiltInFunctionType::Floor:
 				return CatType::Float;
-			case BuiltInFunction::SubString:
-			case BuiltInFunction::ToString:
-			case BuiltInFunction::ToPrettyString:
-			case BuiltInFunction::ToFixedLengthString:
-			case BuiltInFunction::StringRound:
-			case BuiltInFunction::ReplaceInString:
+			case CatBuiltInFunctionType::SubString:
+			case CatBuiltInFunctionType::ToString:
+			case CatBuiltInFunctionType::ToPrettyString:
+			case CatBuiltInFunctionType::ToFixedLengthString:
+			case CatBuiltInFunctionType::StringRound:
+			case CatBuiltInFunctionType::ReplaceInString:
 				return CatType::String;
-			case BuiltInFunction::Pow:
+			case CatBuiltInFunctionType::Pow:
 				return arguments->arguments[0]->getType() == CatType::Int ? arguments->arguments[1]->getType() : arguments->arguments[0]->getType();
 		}
 	}
@@ -810,7 +810,7 @@ CatTypedExpression* CatFunctionCall::constCollapse(CatRuntimeContext* compileTim
 	{
 		return new CatLiteral(execute(compileTimeContext));
 	}
-	else if (function == BuiltInFunction::Select
+	else if (function == CatBuiltInFunctionType::Select
 			 && arguments->arguments[0]->isConst())
 	{
 		bool value = arguments->arguments[0]->execute(compileTimeContext).toBoolValue();
@@ -827,9 +827,27 @@ CatTypedExpression* CatFunctionCall::constCollapse(CatRuntimeContext* compileTim
 }
 
 
+CatBuiltInFunctionType CatFunctionCall::getFunctionType() const
+{
+	return function;
+}
+
+
+const std::string& CatFunctionCall::getFunctionName() const
+{
+	return name;
+}
+
+
+CatArgumentList* CatFunctionCall::getArgumentList() const
+{
+	return arguments.get();
+}
+
+
 bool CatFunctionCall::isBuiltInFunction(const char* functionName, int numArguments)
 {
-	return toFunction(functionName, numArguments) != BuiltInFunction::Invalid;
+	return toFunction(functionName, numArguments) != CatBuiltInFunctionType::Invalid;
 }
 
 
@@ -841,8 +859,8 @@ const std::vector<std::string>& CatFunctionCall::getAllBuiltInFunctions()
 
 bool CatFunctionCall::isDeterministic() const
 {
-	return function != BuiltInFunction::Random 
-		   && function != BuiltInFunction::RandomRange;
+	return function != CatBuiltInFunctionType::Random 
+		   && function != CatBuiltInFunctionType::RandomRange;
 }
 
 
@@ -851,89 +869,89 @@ bool CatFunctionCall::checkArgumentCount(std::size_t count) const
 	switch (function)
 	{
 		default:
-		case BuiltInFunction::Random:
+		case CatBuiltInFunctionType::Random:
 			return count == 0;
-		case BuiltInFunction::ToInt:
-		case BuiltInFunction::ToString:
-		case BuiltInFunction::ToPrettyString:
-		case BuiltInFunction::StringLength:
-		case BuiltInFunction::ToBool:
-		case BuiltInFunction::Abs:
-		case BuiltInFunction::ToFloat:
-		case BuiltInFunction::Sin:
-		case BuiltInFunction::Cos:
-		case BuiltInFunction::Tan:
-		case BuiltInFunction::Log:
-		case BuiltInFunction::Sqrt:
-		case BuiltInFunction::Ceil:
-		case BuiltInFunction::Floor:
+		case CatBuiltInFunctionType::ToInt:
+		case CatBuiltInFunctionType::ToString:
+		case CatBuiltInFunctionType::ToPrettyString:
+		case CatBuiltInFunctionType::StringLength:
+		case CatBuiltInFunctionType::ToBool:
+		case CatBuiltInFunctionType::Abs:
+		case CatBuiltInFunctionType::ToFloat:
+		case CatBuiltInFunctionType::Sin:
+		case CatBuiltInFunctionType::Cos:
+		case CatBuiltInFunctionType::Tan:
+		case CatBuiltInFunctionType::Log:
+		case CatBuiltInFunctionType::Sqrt:
+		case CatBuiltInFunctionType::Ceil:
+		case CatBuiltInFunctionType::Floor:
 			return count == 1;
-		case BuiltInFunction::Round:
-		case BuiltInFunction::RandomRange:
-		case BuiltInFunction::StringRound:
-		case BuiltInFunction::Min:
-		case BuiltInFunction::Max:
-		case BuiltInFunction::Pow:
-		case BuiltInFunction::FindInString:
-		case BuiltInFunction::ToFixedLengthString:
+		case CatBuiltInFunctionType::Round:
+		case CatBuiltInFunctionType::RandomRange:
+		case CatBuiltInFunctionType::StringRound:
+		case CatBuiltInFunctionType::Min:
+		case CatBuiltInFunctionType::Max:
+		case CatBuiltInFunctionType::Pow:
+		case CatBuiltInFunctionType::FindInString:
+		case CatBuiltInFunctionType::ToFixedLengthString:
 			return count == 2;
-		case BuiltInFunction::Cap:
-		case BuiltInFunction::SubString:
-		case BuiltInFunction::ReplaceInString:
-		case BuiltInFunction::Select:
+		case CatBuiltInFunctionType::Cap:
+		case CatBuiltInFunctionType::SubString:
+		case CatBuiltInFunctionType::ReplaceInString:
+		case CatBuiltInFunctionType::Select:
 			return count == 3;
 	}
 }
 
 
-CatFunctionCall::BuiltInFunction CatFunctionCall::toFunction(const char* functionName, int numArguments)
+CatBuiltInFunctionType CatFunctionCall::toFunction(const char* functionName, int numArguments)
 {
-	for (unsigned int i = 0; i < (unsigned int)BuiltInFunction::Count; i++)
+	for (unsigned int i = 0; i < (unsigned int)CatBuiltInFunctionType::Count; i++)
 	{
 		if (Tools::equalsWhileIgnoringCase(functionTable[i], functionName))
 		{
-			BuiltInFunction functionType = (BuiltInFunction)i;
-			if (functionType == BuiltInFunction::Random)
+			CatBuiltInFunctionType functionType = (CatBuiltInFunctionType)i;
+			if (functionType == CatBuiltInFunctionType::Random)
 			{
 				if (numArguments == 2)
 				{
-					return BuiltInFunction::RandomRange;
+					return CatBuiltInFunctionType::RandomRange;
 				}
 			}
 			return functionType;
 		}
 	}
-	return BuiltInFunction::Invalid;
+	return CatBuiltInFunctionType::Invalid;
 }
 
 
 std::vector<std::string> CatFunctionCall::functionTable = 	
 {
-	 "toInt",				//BuiltInFunction::ToInt
-	 "toFloat",				//BuiltInFunction::ToFloat
-	 "toBool",				//BuiltInFunction::ToBool
-	 "toString",			//BuiltInFunction::ToString
-	 "toPrettyString",		//BuiltInFunction::ToPrettyString
-	 "toFixedLengthString",	//BuiltInFunction::ToFixedLengthString
-	 "sin",					//BuiltInFunction::Sin
-	 "cos",					//BuiltInFunction::Cos
-	 "tan",					//BuiltInFunction::Tan
-	 "rand",				//BuiltInFunction::Random
-	 "rand",				//BuiltInFunction::RandomRange
-	 "round",				//BuiltInFunction::Round
-	 "stringRound",			//BuiltInFunction::StringRound
-	 "abs",					//BuiltInFunction::Abs
-	 "cap",					//BuiltInFunction::Cap
-	 "min",					//BuiltInFunction::Min 
-	 "max",					//BuiltInFunction::Max
-	 "log",					//BuiltInFunction::Log
-	 "sqrt",				//BuiltInFunction::Sqrt
-	 "pow",					//BuiltInFunction::Pow
-	 "ceil",				//BuiltInFunction::Ceil
-	 "floor",				//BuiltInFunction::Floor
-	 "findInString",		//BuiltInFunction::FindInString,
-	 "replaceInString",		//BuiltInFunction::ReplaceInString,
-	 "stringLength",		//BuiltInFunction::StringLength
-	 "subString",			//BuiltInFunction::SubString
-	 "select"				//BuiltInFunction::Select
+	 "toInt",				//CatBuiltInFunctionType::ToInt
+	 "toFloat",				//CatBuiltInFunctionType::ToFloat
+	 "toBool",				//CatBuiltInFunctionType::ToBool
+	 "toString",			//CatBuiltInFunctionType::ToString
+	 "toPrettyString",		//CatBuiltInFunctionType::ToPrettyString
+	 "toFixedLengthString",	//CatBuiltInFunctionType::ToFixedLengthString
+	 "sin",					//CatBuiltInFunctionType::Sin
+	 "cos",					//CatBuiltInFunctionType::Cos
+	 "tan",					//CatBuiltInFunctionType::Tan
+	 "rand",				//CatBuiltInFunctionType::Random
+	 "rand",				//CatBuiltInFunctionType::RandomRange
+	 "round",				//CatBuiltInFunctionType::Round
+	 "stringRound",			//CatBuiltInFunctionType::StringRound
+	 "abs",					//CatBuiltInFunctionType::Abs
+	 "cap",					//CatBuiltInFunctionType::Cap
+	 "min",					//CatBuiltInFunctionType::Min 
+	 "max",					//CatBuiltInFunctionType::Max
+	 "log",					//CatBuiltInFunctionType::Log
+	 "sqrt",				//CatBuiltInFunctionType::Sqrt
+	 "pow",					//CatBuiltInFunctionType::Pow
+	 "ceil",				//CatBuiltInFunctionType::Ceil
+	 "floor",				//CatBuiltInFunctionType::Floor
+	 "findInString",		//CatBuiltInFunctionType::FindInString,
+	 "replaceInString",		//CatBuiltInFunctionType::ReplaceInString,
+	 "stringLength",		//CatBuiltInFunctionType::StringLength
+	 "subString",			//CatBuiltInFunctionType::SubString
+	 "select"				//CatBuiltInFunctionType::Select
 };

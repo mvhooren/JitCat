@@ -113,6 +113,18 @@ CatGenericType CatIdentifier::typeCheck()
 }
 
 
+RootTypeSource CatIdentifier::getSource() const
+{
+	return source;
+}
+
+
+const TypeMemberInfo* CatIdentifier::getMemberInfo() const
+{
+	return memberInfo;
+}
+
+
 void CatIdentifier::findIdentifier(TypeInfo* typeInfo, RootTypeSource typeSource, const std::string& lowercaseName)
 {
 	if (memberInfo == nullptr && typeInfo != nullptr)

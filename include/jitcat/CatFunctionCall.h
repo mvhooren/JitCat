@@ -8,6 +8,7 @@
 #pragma once
 
 class CatArgumentList;
+#include "CatBuiltInFunctionType.h"
 #include "CatTypedExpression.h"
 
 #include <memory>
@@ -16,39 +17,6 @@ class CatArgumentList;
 
 class CatFunctionCall: public CatTypedExpression
 {
-private:
-	enum class BuiltInFunction
-	{
-		ToInt,
-		ToFloat,
-		ToBool,
-		ToString,
-		ToPrettyString,
-		ToFixedLengthString,
-		Sin,
-		Cos,
-		Tan,
-		Random,
-		RandomRange,
-		Round,
-		StringRound,
-		Abs,
-		Cap,
-		Min,
-		Max,
-		Log,
-		Sqrt,
-		Pow,
-		Ceil,
-		Floor,
-		FindInString,
-		ReplaceInString,
-		StringLength,
-		SubString,
-		Select,
-		Count,
-		Invalid
-	};
 public:
 	CatFunctionCall(const std::string& name, CatArgumentList* arguments);
 	CatFunctionCall(const CatFunctionCall&) = delete;
@@ -59,6 +27,10 @@ public:
 	virtual CatGenericType getType() const override final;
 	virtual bool isConst() const override final;
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+	CatBuiltInFunctionType getFunctionType() const;
+
+	const std::string& getFunctionName() const;
+	CatArgumentList* getArgumentList() const;
 
 	static bool isBuiltInFunction(const char* functionName, int numArguments);
 	static const std::vector<std::string>& getAllBuiltInFunctions();
@@ -66,11 +38,11 @@ public:
 private:
 	bool isDeterministic() const;
 	bool checkArgumentCount(std::size_t count) const;
-	static BuiltInFunction toFunction(const char* functionName, int numArguments);
+	static CatBuiltInFunctionType toFunction(const char* functionName, int numArguments);
 	static std::vector<std::string> functionTable;
 
 private:
 	std::unique_ptr<CatArgumentList> arguments;
 	const std::string name;
-	BuiltInFunction function;
+	CatBuiltInFunctionType function;
 };

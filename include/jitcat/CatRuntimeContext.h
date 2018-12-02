@@ -31,7 +31,7 @@ public:
 	virtual void onContextDestroyed(CatRuntimeContext* context) const = 0;
 };
 
-
+//TODO: Split CatRuntimeContext up, adding a CatCompileTimeContext. CatRuntimeContext can be significantly simplified (maybe even just an array of "this" pointers).
 class CatRuntimeContext: public RuntimeContext
 {
 public:

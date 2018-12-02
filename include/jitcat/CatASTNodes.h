@@ -20,3 +20,4 @@
 #include "CatMemberFunctionCall.h"
 #include "CatMemberAccess.h"
 #include "CatArrayIndex.h"
+#include "CatScopeRoot.h"

@@ -76,3 +76,9 @@ CatTypedExpression* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeCo
 {
 	return this;
 }
+
+
+RootTypeSource CatScopeRoot::getSource() const
+{
+	return source;
+}

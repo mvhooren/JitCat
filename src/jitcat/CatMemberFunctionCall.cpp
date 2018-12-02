@@ -134,3 +134,20 @@ CatTypedExpression* CatMemberFunctionCall::constCollapse(CatRuntimeContext* comp
 	}
 	return this;
 }
+
+
+MemberFunctionInfo* CatMemberFunctionCall::getMemberFunctionInfo() const
+{
+	return memberFunctionInfo;
+}
+
+
+CatTypedExpression* CatMemberFunctionCall::getBase() const
+{
+	return base.get();
+}
+
+CatArgumentList* CatMemberFunctionCall::getArguments() const
+{
+	return arguments.get();
+}

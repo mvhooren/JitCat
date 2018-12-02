@@ -27,6 +27,9 @@ public:
 	virtual bool isConst() const override final;
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 
+	CatTypedExpression* getBase() const;
+	CatTypedExpression* getIndex() const;
+
 private:
 	std::unique_ptr<CatTypedExpression> base;
 	std::unique_ptr<CatTypedExpression> index;

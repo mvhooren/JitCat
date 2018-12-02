@@ -26,6 +26,8 @@ public:
 	virtual bool isConst() const override;
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override;
 
+	RootTypeSource getSource() const;
+
 private:
 	RootTypeSource source;
 	CatGenericType type;

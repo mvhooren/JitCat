@@ -22,6 +22,7 @@ struct MemberFunctionInfo
 	virtual ~MemberFunctionInfo() {}
 	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) { return CatValue(); }
 	virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
+	inline virtual uintptr_t getFunctionAddress() const {return 0;}
 
 	template<typename X>
 	inline void addParameterTypeInfo()
@@ -101,9 +102,17 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	virtual std::size_t getNumberOfArguments() const override 
+	virtual std::size_t getNumberOfArguments() const override final
 	{ 
 		return sizeof...(TFunctionArguments);
+	}
+
+	inline virtual uintptr_t getFunctionAddress() const override final
+	{
+		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		uintptr_t pointer = 0;
+		memcpy(&pointer, &function, sizeof(uintptr_t));
+		return pointer;
 	}
 
 	U (T::*function)(TFunctionArguments...);
@@ -146,9 +155,17 @@ struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	virtual std::size_t getNumberOfArguments() const override 
+	virtual std::size_t getNumberOfArguments() const override final
 	{ 
 		return sizeof...(TFunctionArguments);
+	}
+
+	inline virtual uintptr_t getFunctionAddress() const  override final
+	{
+		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		uintptr_t pointer = 0;
+		memcpy(&pointer, &function, sizeof(uintptr_t));
+		return pointer;
 	}
 
 	void (T::*function)(TFunctionArguments...);
@@ -191,9 +208,17 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	virtual std::size_t getNumberOfArguments() const override 
+	virtual std::size_t getNumberOfArguments() const override final
 	{ 
 		return sizeof...(TFunctionArguments);
+	}
+
+	inline virtual uintptr_t getFunctionAddress() const override final
+	{
+		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		uintptr_t pointer = 0;
+		memcpy(&pointer, &function, sizeof(uintptr_t));
+		return pointer;
 	}
 
 	U (T::*function)(TFunctionArguments...) const;
@@ -236,9 +261,18 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	virtual std::size_t getNumberOfArguments() const override 
+	virtual std::size_t getNumberOfArguments() const override final
 	{ 
 		return sizeof...(TFunctionArguments);
+	}
+
+
+	inline virtual uintptr_t getFunctionAddress() const override final
+	{
+		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		uintptr_t pointer = 0;
+		memcpy(&pointer, &function, sizeof(uintptr_t));
+		return pointer;
 	}
 
 	void (T::*function)(TFunctionArguments...) const;

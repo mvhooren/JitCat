@@ -11,6 +11,7 @@
 #include "MemberInfo.h"
 #include "TypeInfo.h"
 
+#include <cassert>
 
 CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName):
 	base(base),
@@ -33,6 +34,14 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 		{
 			type = memberInfo->toGenericType();
 		}
+		else
+		{
+			assert(false);
+		}
+	}
+	else
+	{
+		assert(false);
 	}
 }
 
@@ -125,4 +134,16 @@ CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTim
 		return new CatLiteral(execute(compileTimeContext));
 	}
 	return this;
+}
+
+
+CatTypedExpression* CatMemberAccess::getBase() const
+{
+	return base.get();
+}
+
+
+TypeMemberInfo* CatMemberAccess::getMemberInfo() const
+{
+	return memberInfo;
 }

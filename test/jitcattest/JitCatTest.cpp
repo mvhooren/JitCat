@@ -19,6 +19,8 @@
 #include "Expression.h"
 #include "IdentifierToken.h"
 #include "Lexeme.h"
+#include "LLVMCodeGenerator.h"
+#include "LLVMCompileTimeContext.h"
 #include "ObjectMemberReference.h"
 #include "OneCharToken.h"
 #include "SLRParser.h"
@@ -78,14 +80,18 @@ int MAIN(int argc, char* argv[])
 	const char* customTypeName = "MyType";
 	CustomTypeInfo* customTypeGlobals = new CustomTypeInfo(customTypeName);
 	TypeRegistry::get()->registerType(customTypeName, customTypeGlobals);
-	customTypeGlobals->addFloatMember("globalFloat", 66.0f);
-	customTypeGlobals->addIntMember("globalInt", 2);
+	customTypeGlobals->addFloatMember("globalFloat", 666.0f);
+	customTypeGlobals->addIntMember("globalInt", 43);
 	customTypeGlobals->addStringMember("globalString", "ThisIsAString");
 	CustomTypeInstance* typeGlobalsInstance = customTypeGlobals->createInstance();
+	globalsRoot->addIntMember("globalInt", 42);
+	globalsRoot->addFloatMember("globalFloat", 66.0f);
 	globalsRoot->addObjectMember(customTypeName, customTypeName,
 								 new ObjectMemberReference<CustomTypeInstance>(typeGlobalsInstance, nullptr, customTypeGlobals));
 	
-	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName);
+	const char* customTypeName2 = "MyType2";
+	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName2);
+	TypeRegistry::get()->registerType(customTypeName2, customType);
 	customType->addFloatMember("floaty", 0.001f);
 	customType->addIntMember("anInt", 54321);
 	customType->addStringMember("aString", "lolel");
@@ -93,8 +99,6 @@ int MAIN(int argc, char* argv[])
 	customType->addObjectMember("anObject", ReflectionTestObject2::getTypeName(), 
 								new ObjectMemberReference<ReflectionTestObject2>(localObject, nullptr, TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName())));
 	CustomTypeInstance* typeInstance = customType->createInstance();
-
-
 
 	CatRuntimeContext context(TypeRegistry::get()->getTypeInfo("Root"), nullptr, customType, globalsRoot, "myObject", true, nullptr);
 	context.setCustomThisReference(new ObjectMemberReference<CustomTypeInstance>(typeInstance, nullptr, customType));
@@ -141,6 +145,10 @@ int MAIN(int argc, char* argv[])
 				CatTypedExpression* expression = static_cast<CatTypedExpression*>(result->astRootNode);
 				expression->print();
 				std::cout << "\n\n";
+				LLVMCodeGenerator generator;
+				LLVMCompileTimeContext llvmContext(&context);
+				generator.generateAndDump(expression, &llvmContext);
+				generator.compileAndTest(&context);
 				//std::cout << "Expression type check: " << expression->typeCheck() << "\n";
 				std::cout << "Expression const: " << expression->isConst() << "\n";
 				std::cout << "Const collapsed:\n";

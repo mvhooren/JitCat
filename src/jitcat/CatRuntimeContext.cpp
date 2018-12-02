@@ -136,6 +136,7 @@ MemberReferencePtr CatRuntimeContext::getThisReference() const
 	return thisReference;
 }
 
+
 MemberReferencePtr CatRuntimeContext::getCustomThisReference() const
 {
 	return customThisReference;

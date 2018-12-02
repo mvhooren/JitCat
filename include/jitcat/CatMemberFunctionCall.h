@@ -27,6 +27,10 @@ public:
 	virtual CatGenericType getType() const override final;
 	virtual bool isConst() const override final;
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+	
+	MemberFunctionInfo* getMemberFunctionInfo() const;
+	CatTypedExpression* getBase() const;
+	CatArgumentList* getArguments() const;
 
 private:
 	MemberFunctionInfo* memberFunctionInfo;

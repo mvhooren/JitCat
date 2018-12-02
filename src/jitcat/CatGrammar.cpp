@@ -157,7 +157,6 @@ bool CatGrammar::isTypedExpression(CatASTNodeType node)
 }
 
 
-
 ASTNode* CatGrammar::pass(const ASTNodeParser& nodeParser)
 {
 	return nodeParser.getASTNodeByIndex(0);

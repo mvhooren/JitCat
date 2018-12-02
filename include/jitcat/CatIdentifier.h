@@ -24,6 +24,8 @@ public:
 	virtual CatASTNodeType getNodeType() override final;
 	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
 	virtual CatGenericType typeCheck() override final;
+	RootTypeSource getSource() const;
+	const TypeMemberInfo* getMemberInfo() const;
 
 private:
 	void findIdentifier(TypeInfo* typeInfo, RootTypeSource typeSource, const std::string& lowercaseName);

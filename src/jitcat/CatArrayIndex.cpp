@@ -148,3 +148,15 @@ CatTypedExpression* CatArrayIndex::constCollapse(CatRuntimeContext* compileTimeC
 	OptimizationHelper::updatePointerIfChanged(index, index->constCollapse(compileTimeContext));
 	return this;
 }
+
+
+CatTypedExpression* CatArrayIndex::getBase() const
+{
+	return base.get();
+}
+
+
+CatTypedExpression* CatArrayIndex::getIndex() const
+{
+	return index.get();
+}

@@ -23,6 +23,8 @@ public:
 	static const char* getTypeName();
 
 	int getRandomInt();
+	float getAFloat();
+	float addEleven(float value);
 	ReflectionTestObject2* getTest2();
 
 	std::string addToString(const std::string& text, float number);
@@ -30,6 +32,7 @@ public:
 private:
 	std::string text;
 	int theInt;
+	float aFloat;
 	ReflectionTestObject2* test2;
 	std::vector<ReflectionTestObject2*> testObjects;
 	std::map<std::string, ReflectionTestObject2*> mapObjects;

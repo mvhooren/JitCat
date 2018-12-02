@@ -24,7 +24,8 @@ Expression<T>::Expression():
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	getValue(&getDefaultValue)
 {
 }
 
@@ -35,7 +36,8 @@ inline Expression<T>::Expression(const char* expression):
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	getValue(&getDefaultValue)
 {
 }
 
@@ -46,7 +48,8 @@ Expression<T>::Expression(const std::string& expression):
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	getValue(&getDefaultValue)
 {
 }
 
@@ -57,7 +60,8 @@ Expression<T>::Expression(CatRuntimeContext* compileContext, const std::string& 
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	getValue(&getDefaultValue)
 {
 	compile(compileContext);
 }
@@ -250,7 +254,7 @@ std::string&  Expression<T>::getExpressionForSerialisation()
 }
 
 
-template<typename T>
+/*QQQtemplate<typename T>
 const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 {
 	if (isConstant)
@@ -266,7 +270,7 @@ const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 	{
 		return T();
 	}
-}
+}*/
 
 
 template<typename T>
@@ -327,5 +331,12 @@ inline T Expression<T>::getActualValue(const CatValue& catValue)
 		MemberReference* object = objectPtr.getPointer();
 		return TypeTraits<T>::getValueFromMemberReference(object);
 	}
+	return T();
+}
+
+
+template<typename T>
+inline const T Expression<T>::getDefaultValue(CatRuntimeContext*)
+{
 	return T();
 }

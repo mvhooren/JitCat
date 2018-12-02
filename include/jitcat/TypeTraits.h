@@ -78,15 +78,8 @@ public:
 	{
 		return "float"; 
 	}
-	static float getValueFromMemberReference(MemberReference* value) 
-	{ 
-		if (value != nullptr
-			&& value->getCatType() == CatType::Float)
-		{
-			return value->getFloat();
-		}
-		return 0.0f;
-	}
+	static float getValueFromMemberReference(MemberReference* value); 
+
 
 	typedef float type;
 };
@@ -105,15 +98,7 @@ public:
 	{
 		return "int";
 	}
-	static int getValueFromMemberReference(MemberReference* value)
-	{
-		if (value != nullptr
-			&& value->getCatType() == CatType::Int)
-		{
-			return value->getInt();
-		}
-		return 0;
-	}
+	static int getValueFromMemberReference(MemberReference* value);
 
 	typedef int type;
 };
@@ -132,15 +117,7 @@ public:
 	{
 		return "bool";
 	}
-	static bool getValueFromMemberReference(MemberReference* value)
-	{
-		if (value != nullptr
-			&& value->getCatType() == CatType::Bool)
-		{
-			return value->getBool();
-		}
-		return false;
-	}
+	static bool getValueFromMemberReference(MemberReference* value);
 
 	typedef bool type;
 };
@@ -159,15 +136,7 @@ public:
 	{
 		return "string";
 	}
-	static std::string getValueFromMemberReference(MemberReference* value)
-	{
-		if (value != nullptr
-			&& value->getCatType() == CatType::String)
-		{
-			return value->getString();
-		}
-		return "";
-	}
+	static std::string getValueFromMemberReference(MemberReference* value);
 
 	typedef std::string type;
 };

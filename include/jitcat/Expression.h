@@ -50,7 +50,7 @@ public:
 
 	//Executes the expression and returns the value.
 	//If isConst() == true then context may be nullptr, otherwise a context needs to be provided
-	const T getValue(CatRuntimeContext* runtimeContext);
+	const T (*getValue)(CatRuntimeContext* runtimeContext);
 
 	virtual void compile(CatRuntimeContext* context) override final;
 	SLRParseResult* parse(CatRuntimeContext* context);//TTT test parsing without directly printing errors.
@@ -63,6 +63,8 @@ public:
 private:
 	CatType getCatType() const;
 	inline T getActualValue(const CatValue& catValue);
+
+	static const T getDefaultValue(CatRuntimeContext*);
 
 private:
 	std::string expression;
