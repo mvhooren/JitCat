@@ -33,9 +33,11 @@ struct CustomTypeObjectMemberInfo: public TypeMemberInfo
 {
 	CustomTypeObjectMemberInfo(const std::string& memberName, unsigned int memberOffset, TypeInfo* type, bool isConst): TypeMemberInfo(memberName, type, isConst, false), memberOffset(memberOffset) {}
 
+	inline static Reflectable* getReflectable(MemberReferencePtr& reference);
+
 	inline virtual MemberReferencePtr getMemberReference(MemberReferencePtr& base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const override final;
-
+	
 	void assign(MemberReferencePtr& base, MemberReferencePtr valueToSet);
 	
 	unsigned int memberOffset;

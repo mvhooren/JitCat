@@ -224,6 +224,15 @@
     <ClCompile Include="..\..\src\jitcat\TypeTraits.cpp">
       <Filter>Cat\Expression</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\LLVMCatIntrinsics.cpp">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\PCExecutable.cpp">
+      <Filter>Cat\CodeGeneration</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\jitcat\Timer.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../../include/jitcat/JitCat.h" />
@@ -574,6 +583,15 @@
     </ClInclude>
     <ClInclude Include="..\..\include\jitcat\LLVMCompileTimeContext.h">
       <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMCatIntrinsics.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\PCExecutable.h">
+      <Filter>Cat\CodeGeneration</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\Timer.h">
+      <Filter>Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

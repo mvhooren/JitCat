@@ -38,10 +38,10 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned int offset = 0;
 	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset);
-	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer);
-	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset);
-	return generatorHelper->convertToPointer(addressValue);
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
+	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
+	return generatorHelper->convertToPointer(addressValue, memberName + "_Ptr");
 }
 
 
@@ -92,15 +92,15 @@ template<typename T, typename U>
 template<typename ContainerItemType>
 inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::string, ContainerItemType>* map, llvm::Value* containerPtr, llvm::Value* index, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	if (generatorHelper->isPointer(index))
+	if (generatorHelper->isStringPointer(index))
 	{
 		static auto functionPointer = &ContainerMemberInfo<T, U>::getMapStringIndex<ContainerItemType>;
-		return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index});
+		return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_StringPtr, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapStringIndex");
 	}
 	else
 	{
 		static auto functionPointer = &ContainerMemberInfo<T, U>::getMapIntIndex<ContainerItemType>;
-		return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index});
+		return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapIntIndex");
 	}
 }
 
@@ -110,7 +110,7 @@ template<typename ContainerItemType>
 inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVMCodeGeneratorHelper* generatorHelper) const
 {
 	static auto functionPointer = &ContainerMemberInfo<T, U>::getVectorIndex<ContainerItemType>;
-	return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index});
+	return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getVectorIndex");
 }
 
 
@@ -146,10 +146,10 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned int offset = 0;
 	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset);
-	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer);
-	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset);
-	return generatorHelper->loadPointerAtAddress(addressValue);
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
+	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
+	return generatorHelper->loadPointerAtAddress(addressValue, memberName);
 }
 
 
@@ -174,10 +174,10 @@ inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::V
 	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned int offset = 0;
 	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset);
-	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer);
-	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset);
-	return generatorHelper->convertToPointer(addressValue);
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
+	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_Ptr");
+	return generatorHelper->convertToPointer(addressValue, memberName);
 }
 
 
@@ -207,13 +207,13 @@ inline MemberReferencePtr ClassUniquePtrMemberInfo<T, U>::getMemberReference(Mem
 template<typename T, typename U>
 inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	llvm::Value* thisPointerAsInt = generatorHelper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this));
+	llvm::Value* thisPointerAsInt = generatorHelper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr");
 	if (!generatorHelper->isPointer(parentObjectPointer))
 	{
-		parentObjectPointer = generatorHelper->convertToPointer(parentObjectPointer);
+		parentObjectPointer = generatorHelper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr");
 	}
-	llvm::Value* thisPointer = generatorHelper->convertToPointer(thisPointerAsInt);
-	return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer});
+	llvm::Value* thisPointer = generatorHelper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
+	return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
 }
 
 
@@ -240,17 +240,17 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned int offset = 0;
 	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset);
-	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer);
-	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset);
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
+	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 	if constexpr (std::is_same<U, std::string>::value)
 	{
 		//std::string case (returns a pointer to the std::string)
-		return generatorHelper->convertToPointer(addressValue);
+		return generatorHelper->convertToPointer(addressValue, memberName, LLVMTypes::stringPtrType);
 	}
 	else
 	{
 		//int, bool, float case	(returns by value)
-		return generatorHelper->loadBasicType(generatorHelper->toLLVMType(catType), addressValue);
+		return generatorHelper->loadBasicType(generatorHelper->toLLVMType(catType), addressValue, memberName);
 	}
 }

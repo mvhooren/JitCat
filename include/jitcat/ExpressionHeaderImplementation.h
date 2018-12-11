@@ -12,11 +12,15 @@
 #include "Document.h"
 #include "ExpressionErrorManager.h"
 #include "JitCat.h"
+#include "LLVMCodeGenerator.h"
+#include "LLVMCompileTimeContext.h"
 #include "MemberReference.h"
 #include "MemberReferencePtr.h"
 #include "SLRParseResult.h"
 #include "Tools.h"
 #include "TypeTraits.h"
+
+#include <cassert>
 
 
 template<typename T>
@@ -124,7 +128,6 @@ template<typename T>
 void Expression<T>::compile(CatRuntimeContext* context)
 {
 	parse(context);
-	//Success var can change based on typechecking
 	if (!parseResult->success)
 	{
 		std::string contextName = "";
@@ -154,6 +157,16 @@ void Expression<T>::compile(CatRuntimeContext* context)
 	}
 	else if (context != nullptr)
 	{
+		LLVMCompileTimeContext llvmCompileContext(context);
+		intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+		if (functionAddress != 0)
+		{
+			getValue = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
+		}
+		else
+		{
+			assert(false);
+		}
 		context->getErrorManager()->compiledWithoutErrors(this);
 	}
 }
@@ -204,36 +217,66 @@ SLRParseResult* Expression<T>::parse(CatRuntimeContext* context)
 		{
 			parseResult->success = false;
 			parseResult->errorMessage = resultType.getErrorMessage();
+			getValue = &getDefaultValue;
 		}
-		else if (getCatType() == CatType::Object)
-		{
-			const std::string typeName = TypeTraits<T>::getTypeName();
-			if (!resultType.isObjectType())
+		else 
+		{	
+			if (getCatType() == CatType::Object)
 			{
-				parseResult->success = false;
-				parseResult->errorMessage = Tools::append("Expected a ", typeName);
+				const std::string typeName = TypeTraits<T>::getTypeName();
+				if (!resultType.isObjectType())
+				{
+					parseResult->success = false;
+					parseResult->errorMessage = Tools::append("Expected a ", typeName);
+				}
+				else if (resultType.getObjectTypeName() != typeName)
+				{
+					parseResult->success = false;
+					parseResult->errorMessage = Tools::append("Expected a ", typeName, ", got a ", resultType.getObjectTypeName());
+				}
 			}
-			else if (resultType.getObjectTypeName() != typeName)
+			else if (!resultType.isEqualToBasicCatType(getCatType()))
 			{
-				parseResult->success = false;
-				parseResult->errorMessage = Tools::append("Expected a ", typeName, ", got a ", resultType.getObjectTypeName());
+				if (isScalar(getCatType()) && resultType.isScalarType())
+				{
+					//Insert an automatic type conversion if the scalar types do not match.
+					CatArgumentList* arguments = new CatArgumentList();
+					arguments->arguments.emplace_back(static_cast<CatTypedExpression*>(parseResult->astRootNode));
+					switch (getCatType())
+					{
+						case CatType::Float:	expressionAST = new CatFunctionCall("toFloat", arguments);		break;
+						case CatType::Int:		expressionAST = new CatFunctionCall("toInt", arguments);		break;
+						default:				assert(false);	//Missing a conversion here?
+					}
+					parseResult->astRootNode = expressionAST;
+				}
+				else
+				{
+					parseResult->success = false;
+					parseResult->errorMessage = std::string(Tools::append("Expected a ", toString(getCatType())));
+				}
 			}
-			else if (expressionAST->isConst())
+			if (parseResult->success)
 			{
-				isConstant = true;
-				cachedValue = getActualValue(expressionAST->execute(context));
+				if (expressionAST->isConst())
+				{
+					isConstant = true;
+					cachedValue = getActualValue(expressionAST->execute(context));
+					/*auto cachedFunction = [cachedValue](CatRuntimeContext*){return cachedValue;};
+					interpretedResultFunction = cachedFunction;
+					getValue = cachedFunction;*/
+				}
+				else
+				{
+					/*auto interpreterFunction = [expressionAST](CatRuntimeContext* runtimeContext)
+												{
+													CatValue value = expressionAST->execute(runtimeContext);
+													return getActualValue(value);
+												};
+					interpretedResultFunction = interpreterFunction;
+					getValue = interpreterFunction;*/
+				}
 			}
-		}
-		else if (!resultType.isEqualToBasicCatType(getCatType())
-			&& !(isScalar(getCatType()) && resultType.isScalarType()))
-		{
-			parseResult->success = false;
-			parseResult->errorMessage = std::string(Tools::append("Expected a ", toString(getCatType())));
-		}
-		else if (expressionAST->isConst())
-		{
-			isConstant = true;
-			cachedValue = getActualValue(expressionAST->execute(context));
 		}
 	}
 	return parseResult.get();
@@ -254,8 +297,22 @@ std::string&  Expression<T>::getExpressionForSerialisation()
 }
 
 
-/*QQQtemplate<typename T>
-const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
+template<typename T>
+inline const T Expression<T>::getValue2(CatRuntimeContext* runtimeContext)
+{
+	if (isConstant)
+	{
+		return cachedValue;
+	}
+	else
+	{
+		return getValue(runtimeContext);
+	}
+}
+
+
+template<typename T>
+inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeContext)
 {
 	if (isConstant)
 	{
@@ -270,7 +327,7 @@ const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 	{
 		return T();
 	}
-}*/
+}
 
 
 template<typename T>
@@ -280,58 +337,36 @@ CatType Expression<T>::getCatType() const
 }
 
 
-template<>
-inline float Expression<float>::getActualValue(const CatValue& catValue)
-{
-	if (catValue.getValueType() == CatType::Int)
-	{
-		return (float)catValue.getIntValue();
-	}
-	else 
-	{
-		return catValue.getFloatValue();
-	}
-}
-
-
-template<>
-inline int Expression<int>::getActualValue(const CatValue& catValue)
-{
-	if (catValue.getValueType() == CatType::Float)
-	{
-		return (int)catValue.getFloatValue();
-	}
-	else 
-	{
-		return catValue.getIntValue();
-	}
-}
-
-
-template<>
-inline bool Expression<bool>::getActualValue(const CatValue& catValue)
-{
-	return catValue.getBoolValue();
-}
-
-
-template<>
-inline std::string Expression<std::string>::getActualValue(const CatValue& catValue)
-{
-	return catValue.getStringValue();
-}
-
-
 template<typename T>
 inline T Expression<T>::getActualValue(const CatValue& catValue)
 {
-	if (catValue.getValueType() == CatType::Object)
+	if constexpr (std::is_same<T, float>::value)
 	{
-		MemberReferencePtr objectPtr = catValue.getCustomTypeValue();
-		MemberReference* object = objectPtr.getPointer();
-		return TypeTraits<T>::getValueFromMemberReference(object);
+		return catValue.getFloatValue();
 	}
-	return T();
+	else if constexpr (std::is_same<T, int>::value)
+	{
+		return catValue.getIntValue();
+	}
+	else if constexpr (std::is_same<T, bool>::value)
+	{
+		return catValue.getBoolValue();
+	}
+	else if constexpr (std::is_same<T, std::string>::value)
+	{
+		return catValue.getStringValue();
+	}
+	else
+	{
+		if (catValue.getValueType() == CatType::Object)
+		{
+			MemberReferencePtr objectPtr = catValue.getCustomTypeValue();
+			MemberReference* object = objectPtr.getPointer();
+			return TypeTraits<T>::getValueFromMemberReference(object);
+		}
+		return T();
+	}
+	
 }
 
 

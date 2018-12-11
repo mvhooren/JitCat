@@ -17,6 +17,7 @@ class Reflectable;
 #include "RootTypeSource.h"
 
 #include <memory>
+#include <string>
 
 //A code generator for the LLVM backend. 
 //Create one code generator per module / translation unit.
@@ -30,12 +31,15 @@ public:
 	llvm::Value* generate(CatTypedExpression* expression, LLVMCompileTimeContext* context);
 	
 	//Wraps an expression into a function that returns the expression's computed value.
-	//The function has one parameter, the CatRuntimeContext
-	llvm::Function* generateExpressionFunction(CatTypedExpression* expression, LLVMCompileTimeContext* context);
+	//The function has one parameter, the CatRuntimeContext. 
+	//If the function returns a string, it will have 2 parameters where the first parameter is a pointer to a pre-allocated string. (marked sret)
+	llvm::Function* generateExpressionFunction(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
 	
-	void generateAndDump(CatTypedExpression* expression, LLVMCompileTimeContext* context);
+	intptr_t generateAndGetFunctionAddress(CatTypedExpression* expression, LLVMCompileTimeContext* context);
 
-	void compileAndTest(CatRuntimeContext* context);
+	void generateAndDump(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& functionName);
+
+	void compileAndTest(CatRuntimeContext* context, const std::string& functionName);
 
 private:
 	llvm::Value* generate(CatIdentifier* identifier, LLVMCompileTimeContext* context);

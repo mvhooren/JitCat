@@ -9,6 +9,7 @@
 #include "CustomTypeInfo.h"
 #include "ErrorContext.h"
 #include "ExpressionErrorManager.h"
+#include "LLVMCodeGenerator.h"
 
 #include <cassert>
 #include <sstream>
@@ -25,7 +26,9 @@ CatRuntimeContext::CatRuntimeContext(TypeInfo* globalType, TypeInfo* thisType,
 	customThisType(customThisType),
 	customGlobalsType(customGlobalsType),
 	errorManager(errorManager),
-	ownsErrorManager(false)
+	ownsErrorManager(false),
+	codeGenerator(new LLVMCodeGenerator()),
+	nextFunctionIndex(0)
 {
 	if (errorManager == nullptr)
 	{
@@ -235,6 +238,18 @@ MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercase
 	findFunctionIdentifier(getGlobalType(), lowercaseName, RootTypeSource::Global, memberFunctionInfo, source);
 
 	return memberFunctionInfo;
+}
+
+
+LLVMCodeGenerator* CatRuntimeContext::getCodeGenerator() const
+{
+	return codeGenerator.get();
+}
+
+
+int CatRuntimeContext::getNextFunctionIndex()
+{
+	return nextFunctionIndex++;
 }
 
 

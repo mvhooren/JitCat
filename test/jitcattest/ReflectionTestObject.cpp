@@ -25,6 +25,7 @@ ReflectionTestObject::ReflectionTestObject(std::string text):
 	testObjects.push_back(bla);
 	mapObjects["first"] = bla;
 	mapObjects["second"] = test2;
+	mapObjects["yeah!"] = test2;
 }
 
 

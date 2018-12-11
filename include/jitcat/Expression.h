@@ -51,20 +51,23 @@ public:
 	//Executes the expression and returns the value.
 	//If isConst() == true then context may be nullptr, otherwise a context needs to be provided
 	const T (*getValue)(CatRuntimeContext* runtimeContext);
+	
+	const T getValue2(CatRuntimeContext* runtimeContext);
+
+	const T getInterpretedValue(CatRuntimeContext* runtimeContext);
 
 	virtual void compile(CatRuntimeContext* context) override final;
 	SLRParseResult* parse(CatRuntimeContext* context);//TTT test parsing without directly printing errors.
 
 	virtual CatType getType() const override final;
 
-	//Returns the expression string (this allows serialisation without calling transSerialise on this class, saving one XML open and end tag.
+	//Returns the expression string
 	virtual std::string& getExpressionForSerialisation() override final;
 
 private:
 	CatType getCatType() const;
-	inline T getActualValue(const CatValue& catValue);
-
-	static const T getDefaultValue(CatRuntimeContext*);
+	static inline T getActualValue(const CatValue& catValue);
+	static inline const T getDefaultValue(CatRuntimeContext*);
 
 private:
 	std::string expression;
@@ -74,6 +77,7 @@ private:
 	bool isConstant;
 	//If the expression is a constant, then the value is cached for performance;
 	T cachedValue;
+
 	//Not owned
 	CatTypedExpression* expressionAST;
 	ReflectableHandle errorManagerHandle;

@@ -10,6 +10,7 @@
 
 class LLVMCodeGenerator;
 class LLVMJit;
+
 //QQQ not portable, fix
 #pragma warning(push, 0)        
 	//Disable warnings from llvm includes

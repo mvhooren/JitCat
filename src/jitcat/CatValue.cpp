@@ -10,6 +10,8 @@
 #include "MemberReference.h"
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
+
 
 CatValue::CatValue(const CatValue& other):
 	memberReference(nullptr)
@@ -367,7 +369,15 @@ void CatValue::printValue() const
 					case CatType::Int:		CatLog::log(memberReference->getInt());	break;
 					case CatType::Bool:	CatLog::log(memberReference->getBool() ? "true" : "false"); break;
 					case CatType::String:	CatLog::log("\""); CatLog::log(memberReference->getString()); CatLog::log("\""); break;
-					case CatType::Object:	CatLog::log(memberReference->getCustomTypeName()); break;
+					case CatType::Object:
+					{
+						CatLog::log(memberReference->getCustomTypeName()); 
+						CatLog::log(":");
+						std::stringstream stream;
+						stream << std::hex << memberReference->getParentObject();
+						CatLog::log(stream.str());
+						break;
+					}
 					default:		CatLog::log("?"); break;
 				}
 			}

@@ -135,6 +135,7 @@
     <ClInclude Include="../../include/jitcat/XMLHelper.h" />
     <ClInclude Include="..\..\include\jitcat\CatASTNodesDeclares.h" />
     <ClInclude Include="..\..\include\jitcat\CatBuiltInFunctionType.h" />
+    <ClInclude Include="..\..\include\jitcat\LLVMCatIntrinsics.h" />
     <ClInclude Include="..\..\include\jitcat\LLVMCompileTimeContext.h" />
     <ClInclude Include="..\..\include\jitcat\CustomTypeMemberInfoHeaderImplementation.h" />
     <ClInclude Include="..\..\include\jitcat\LLVMCodeGenerator.h" />
@@ -144,6 +145,8 @@
     <ClInclude Include="..\..\include\jitcat\LLVMJitHeaderImplementation.h" />
     <ClInclude Include="..\..\include\jitcat\LLVMTypes.h" />
     <ClInclude Include="..\..\include\jitcat\MemberTypeInfoCreator.h" />
+    <ClInclude Include="..\..\include\jitcat\PCExecutable.h" />
+    <ClInclude Include="..\..\include\jitcat\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="../../src/jitcat/ASTNodeParser.cpp" />
@@ -215,11 +218,14 @@
     <ClCompile Include="../../src/jitcat/TypeRegistry.cpp" />
     <ClCompile Include="../../src/jitcat/WhitespaceToken.cpp" />
     <ClCompile Include="../../src/jitcat/XMLHelper.cpp" />
+    <ClCompile Include="..\..\src\jitcat\LLVMCatIntrinsics.cpp" />
     <ClCompile Include="..\..\src\jitcat\LLVMCompileTimeContext.cpp" />
     <ClCompile Include="..\..\src\jitcat\LLVMCodeGenerator.cpp" />
     <ClCompile Include="..\..\src\jitcat\LLVMCodeGeneratorHelper.cpp" />
     <ClCompile Include="..\..\src\jitcat\LLVMJit.cpp" />
     <ClCompile Include="..\..\src\jitcat\LLVMTypes.cpp" />
+    <ClCompile Include="..\..\src\jitcat\PCExecutable.cpp" />
+    <ClCompile Include="..\..\src\jitcat\Timer.cpp" />
     <ClCompile Include="..\..\src\jitcat\TypeTraits.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -351,7 +357,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level2</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;_DEBUG;_LIB;DEBUG_GRAMMAR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;_DEBUG;_LIB;NO_DEBUG_GRAMMAR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\jitcat;$(LLVM_INCLUDE);D:\llvm\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
@@ -506,11 +512,10 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>
-      </AdditionalDependencies>
+      <AdditionalDependencies>LLVMAggressiveInstCombine.lib;LLVMAnalysis.lib;LLVMAsmPrinter.lib;LLVMBinaryFormat.lib;LLVMBitReader.lib;LLVMBitWriter.lib;LLVMCodeGen.lib;LLVMCore.lib;LLVMDebugInfoCodeView.lib;LLVMExecutionEngine.lib;LLVMGlobalISel.lib;LLVMInstCombine.lib;LLVMMC.lib;LLVMMCDisassembler.lib;LLVMMCParser.lib;LLVMObject.lib;LLVMOrcJIT.lib;LLVMProfileData.lib;LLVMRuntimeDyld.lib;LLVMScalarOpts.lib;LLVMSelectionDAG.lib;LLVMSupport.lib;LLVMTarget.lib;LLVMTransformUtils.lib;LLVMX86AsmParser.lib;LLVMX86AsmPrinter.lib;LLVMX86CodeGen.lib;LLVMX86Desc.lib;LLVMX86Disassembler.lib;LLVMX86Info.lib;LLVMX86Utils.lib</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\llvm\build\Release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
     </Lib>
   </ItemDefinitionGroup>

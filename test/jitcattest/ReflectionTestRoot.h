@@ -22,6 +22,8 @@ public:
 	static void reflect(TypeInfo& typeInfo);
 	static const char* getTypeName();
 
+	float getPi() const;
+
 private:
 	ReflectionTestObject* testObject;
 	ReflectionTestObject testObject2;

@@ -19,25 +19,6 @@ LLVMJit::LLVMJit():
 	executionSession(new llvm::orc::ExecutionSession()),
 	dataLayout(new llvm::DataLayout(targetMachineBuilder.getDefaultDataLayoutForTarget().get())),
 	mangler(new llvm::orc::MangleAndInterner(*executionSession, *dataLayout)),
-	/*symbolResolver(
-		llvm::orc::createLegacyLookupResolver(
-            [this](const std::string &name) -> llvm::JITSymbol 
-			{
-				if (auto symbol = compileLayer->findSymbol(name, false))
-				{
-					return symbol;
-				}
-				else if (auto error = symbol.takeError())
-				{
-					return std::move(error);
-				}
-				if (auto symbolAddress = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name))
-				{
-					return llvm::JITSymbol(symbolAddress, llvm::JITSymbolFlags::Exported);
-				}
-				return nullptr;
-            },
-            [](llvm::Error error) { llvm::cantFail(std::move(error), "lookupFlags failed"); })),*/
 	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession,
 															[]() {	return llvm::make_unique<llvm::SectionMemoryManager>();})),
 	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(targetMachineBuilder)))
@@ -59,6 +40,10 @@ LLVMJit::LLVMJit():
 	}
 	LLVMTypes::voidType = llvm::Type::getVoidTy(*context->getContext());
 
+	std::vector<llvm::Type*> structMembers = {llvm::ArrayType::get(llvm::Type::getInt8Ty(*context->getContext()), sizeof(std::string))};
+	LLVMTypes::stringType = llvm::StructType::create(structMembers, "std::string");
+	LLVMTypes::stringPtrType = llvm::PointerType::get(LLVMTypes::stringType, 0);
+
 	{
 		std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType};
 		LLVMTypes::functionRetPtrArgPtr = llvm::FunctionType::get(LLVMTypes::pointerType, parameters, false);
@@ -72,6 +57,11 @@ LLVMJit::LLVMJit():
 	{
 		std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType, LLVMTypes::intType};
 		LLVMTypes::functionRetPtrArgPtr_Int = llvm::FunctionType::get(LLVMTypes::pointerType, parameters, false);
+	}
+
+	{
+		std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType, LLVMTypes::stringPtrType};
+		LLVMTypes::functionRetPtrArgPtr_StringPtr = llvm::FunctionType::get(LLVMTypes::pointerType, parameters, false);
 	}
 }
 
@@ -115,12 +105,14 @@ void LLVMJit::addModule(std::unique_ptr<llvm::Module>& module)
 
 llvm::Expected<llvm::JITEvaluatedSymbol> LLVMJit::findSymbol(const std::string& name) const
 {
+	//std::cout << "findSymbol: " << name << "\n";
 	return executionSession->lookup({&executionSession->getMainJITDylib()}, mangler->operator()(name));
 }
 
 
 llvm::JITTargetAddress LLVMJit::getSymbolAddress(const std::string& name) const
 {
+	//std::cout << "getSymbolAddress: " << name << "\n";
 	return findSymbol(name).get().getAddress();
 }
 

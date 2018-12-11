@@ -28,10 +28,12 @@
 #include "ReflectionTestObject.h"
 #include "ReflectionTestObject2.h"
 #include "ReflectionTestRoot.h"
+#include "Timer.h"
 #include "Tools.h"
 #include "TypeRegistry.h"
 #include "WhitespaceToken.h"
 
+#include <iomanip>
 #include <string>
 #ifdef WIN32
 	#include <tchar.h>
@@ -50,6 +52,59 @@ public:
 		std::cout << message;
 	}
 };
+
+template<typename T>
+void testExpression(CatRuntimeContext& context, const std::string& expression)
+{
+	Expression<T> testFloatExpression(&context, expression);
+	T value = testFloatExpression.getValue(&context);
+	T valueInterpreted = testFloatExpression.getInterpretedValue(&context);
+
+	const int iterations = 10000;
+	Timer timer;
+	timer.getTimeSincePreviousCall();
+	for (int i = 0; i < iterations; i++)
+	{
+		valueInterpreted = testFloatExpression.getInterpretedValue(&context);
+		if (valueInterpreted != value)
+		{
+			assert(false);
+			std::cout << "ERROR!\n";
+		}
+	}
+	float interpretedTime = timer.getTimeSincePreviousCall();
+	for (int i = 0; i < iterations; i++)
+	{
+		value = testFloatExpression.getValue(&context);
+		if (valueInterpreted != value)
+		{
+			assert(false);
+			std::cout << "ERROR!\n";
+		}
+	}
+	float nativeTime = timer.getTimeSincePreviousCall();
+	for (int i = 0; i < iterations; i++)
+	{
+		value = testFloatExpression.getValue2(&context);
+		if (valueInterpreted != value)
+		{
+			assert(false);
+			std::cout << "ERROR!\n";
+		}
+	}
+	float nativeTime2 = timer.getTimeSincePreviousCall();
+	std::cout << "Testing '" << expression << "': native: " << value << " interpreted: " << valueInterpreted << " " << iterations << " iterations, native time: " << std::setprecision(9) << nativeTime << " interpreted time: " << std::setprecision(9) << interpretedTime << " (" << interpretedTime / nativeTime <<  "x) native2 time: " << std::setprecision(9) << nativeTime2 << " (" << interpretedTime / nativeTime2 <<  "x)\n";
+
+
+	if (value == valueInterpreted)
+	{
+		std::cout << "PASSED\n";
+	}
+	else
+	{
+		std::cout << "FAILED\n";
+	}
+}
 
 
 int MAIN(int argc, char* argv[])
@@ -100,7 +155,8 @@ int MAIN(int argc, char* argv[])
 								new ObjectMemberReference<ReflectionTestObject2>(localObject, nullptr, TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName())));
 	CustomTypeInstance* typeInstance = customType->createInstance();
 
-	CatRuntimeContext context(TypeRegistry::get()->getTypeInfo("Root"), nullptr, customType, globalsRoot, "myObject", true, nullptr);
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context(TypeRegistry::get()->getTypeInfo("Root"), nullptr, customType, globalsRoot, "myObject", true, &errorManager);
 	context.setCustomThisReference(new ObjectMemberReference<CustomTypeInstance>(typeInstance, nullptr, customType));
 	context.setCustomGlobalsReference(new ObjectMemberReference<CustomTypeInstance>(globalsInstance, nullptr, globalsRoot));
 
@@ -113,6 +169,24 @@ int MAIN(int argc, char* argv[])
 	delete result;
 	delete document;
 	Tools::deleteElements(tokens);
+	
+	int functionNr = 0;
+	testExpression<float>(context, "pi");
+	testExpression<float>(context, "floaty");
+	testExpression<float>(context, "pi * 2.0f");
+	testExpression<float>(context, "42.0f");
+	testExpression<float>(context, "test.aFloat + test2.list[0].aLot");
+	testExpression<std::string>(context, "\"test\"");
+	testExpression<std::string>(context, "test.list[0].what + \" \" + test.text");
+	testExpression<std::string>(context, "\"hello \" + hello");
+	testExpression<std::string>(context, "test3.getTest2().getWhat()");
+	testExpression<std::string>(context, "test.map[test2.test2.getWhat()].what");
+	testExpression<bool>(context, "no || (yes && amITrue)");
+	testExpression<int>(context, "two + anInt - test.theInt");
+	testExpression<float>(context, "test.map[\"second\"].aLot");
+	testExpression<float>(context, "test.map[0].aLot");
+	
+	
 	
 	while (true)
 	{
@@ -141,14 +215,10 @@ int MAIN(int argc, char* argv[])
 			result = parser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), &context);
 			if (result->success)
 			{
-				std::cout << "\nSuccess!\n\n";
+				std::cout << "\nParse Success!\n\n";
 				CatTypedExpression* expression = static_cast<CatTypedExpression*>(result->astRootNode);
 				expression->print();
 				std::cout << "\n\n";
-				LLVMCodeGenerator generator;
-				LLVMCompileTimeContext llvmContext(&context);
-				generator.generateAndDump(expression, &llvmContext);
-				generator.compileAndTest(&context);
 				//std::cout << "Expression type check: " << expression->typeCheck() << "\n";
 				std::cout << "Expression const: " << expression->isConst() << "\n";
 				std::cout << "Const collapsed:\n";
@@ -165,9 +235,16 @@ int MAIN(int argc, char* argv[])
 
 				std::cout << "\tType:" << valueType.toString() << "\n\tValue: ";
 				expression->print();
-				
+				std::cout << "\n";
 				if (valueType.isValidType())
 				{
+					LLVMCodeGenerator generator;
+					LLVMCompileTimeContext llvmContext(&context);
+					std::string functionName = Tools::append("test", functionNr);
+					generator.generateAndDump(expression, &llvmContext, functionName);
+					generator.compileAndTest(&context, functionName);
+					functionNr++;
+
 					std::cout << "\nExecute:\n";
 					CatValue result = expression->execute(&context);
 					std::cout << "\tType:" << toString(result.getValueType()) << "\n\tValue: ";

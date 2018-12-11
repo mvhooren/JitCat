@@ -2,6 +2,7 @@
 
 class CatRuntimeContext;
 
+#include <functional>
 #include "LLVMForwardDeclares.h"
 
 
@@ -9,8 +10,8 @@ struct LLVMCompileTimeContext
 {
 	LLVMCompileTimeContext(CatRuntimeContext* catContext);
 
-	LLVMCompileTimeContext* getPointer();
-
 	CatRuntimeContext* catContext;
 	llvm::Function* currentFunction;
+
+	std::vector<std::function<llvm::Value*()>> blockDestructorGenerators;
 };

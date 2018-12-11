@@ -38,6 +38,7 @@ CatGenericType CatInfixOperator::getType() const
 			{
 				return CatType::String;
 			}
+			//Intentional fall-through
 		case CatInfixOperatorType::Minus:
 		case CatInfixOperatorType::Multiply:
 		case CatInfixOperatorType::Divide:

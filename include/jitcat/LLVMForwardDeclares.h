@@ -14,6 +14,7 @@ namespace llvm
 	class FunctionType;
 	class Module;
 	class Value;
+	class CallInst;
 	class ConstantFolder;
 	class IRBuilderDefaultInserter;
 	template<typename T = ConstantFolder, typename Inserter = IRBuilderDefaultInserter>

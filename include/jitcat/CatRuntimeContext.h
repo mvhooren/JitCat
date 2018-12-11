@@ -12,6 +12,7 @@ class CatRuntimeContext;
 class CustomTypeInfo;
 class ErrorContext;
 class ExpressionErrorManager;
+class LLVMCodeGenerator;
 struct MemberFunctionInfo;
 class MemberReference;
 class TypeInfo;
@@ -70,11 +71,15 @@ public:
 	TypeMemberInfo* findIdentifier(const std::string& lowercaseName);
 	MemberFunctionInfo* findFunction(const std::string& lowercaseName, RootTypeSource& source);
 
+	LLVMCodeGenerator* getCodeGenerator() const;
+	int getNextFunctionIndex();
+
 private:
 	void findIdentifier(TypeInfo* typeInfo, const std::string& lowercaseName, TypeMemberInfo*& memberInfo);
 	void findFunctionIdentifier(TypeInfo* typeInfo, const std::string& lowercaseName, RootTypeSource source, MemberFunctionInfo*& functionInfo, RootTypeSource& sourceToSet);
 
 private:
+	int nextFunctionIndex;
 	//These are not owned here
 	TypeInfo* globalType;
 	MemberReferencePtr globalReference;
@@ -92,6 +97,8 @@ private:
 
 	std::string contextName;
 	mutable std::vector<const CatRuntimeContextDestructionListener*> destructionListeners;
+
+	std::unique_ptr<LLVMCodeGenerator> codeGenerator;
 
 	std::vector<ErrorContext*> errorContextStack;
 };
