@@ -95,12 +95,12 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::strin
 	if (generatorHelper->isStringPointer(index))
 	{
 		static auto functionPointer = &ContainerMemberInfo<T, U>::getMapStringIndex<ContainerItemType>;
-		return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_StringPtr, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapStringIndex");
+		return generatorHelper->createCall(LLVMTypes::functionRetPtrArgPtr_StringPtr, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapStringIndex");
 	}
 	else
 	{
 		static auto functionPointer = &ContainerMemberInfo<T, U>::getMapIntIndex<ContainerItemType>;
-		return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapIntIndex");
+		return generatorHelper->createCall(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapIntIndex");
 	}
 }
 
@@ -110,7 +110,7 @@ template<typename ContainerItemType>
 inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVMCodeGeneratorHelper* generatorHelper) const
 {
 	static auto functionPointer = &ContainerMemberInfo<T, U>::getVectorIndex<ContainerItemType>;
-	return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getVectorIndex");
+	return generatorHelper->createCall(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getVectorIndex");
 }
 
 
@@ -213,7 +213,7 @@ inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm
 		parentObjectPointer = generatorHelper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr");
 	}
 	llvm::Value* thisPointer = generatorHelper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
-	return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
+	return generatorHelper->createCall(LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
 }
 
 

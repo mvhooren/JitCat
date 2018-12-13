@@ -9,15 +9,13 @@
 #include "CatASTNodes.h"
 #include "LLVMCodeGeneratorHelper.h"
 #include "LLVMCompileTimeContext.h"
+#include "LLVMCatIntrinsics.h"
 #include "LLVMJit.h"
 #include "LLVMTypes.h"
 #include "MemberFunctionInfo.h"
 #include "MemberReference.h"
 #include "MemberInfo.h"
 
-//QQQ not portable, fix
-#pragma warning(push, 0)        
-//Disable warnings from llvm includes
 #include <llvm\IR\Constant.h>
 #include <llvm\IR\Function.h>
 #include <llvm\IR\LegacyPassManager.h>
@@ -27,10 +25,10 @@
 #include <llvm\IR\Value.h>
 #include <llvm\IR\Verifier.h>
 #include <llvm\Support\raw_ostream.h>
-#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm\Transforms\InstCombine\InstCombine.h>
 #include <llvm\Transforms\Scalar.h>
 #include <llvm\Transforms\Scalar\GVN.h>
-#pragma warning(pop)
+
 
 #include <iostream>
 
@@ -128,7 +126,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 	llvm::Value* expressionValue = generate(expression, context);
 	if (expressionType == CatType::String)
 	{
-		helper->intrinsics->callStringCopy(function->arg_begin(), expressionValue);
+		helper->createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {function->arg_begin(), expressionValue}, "stringCopyConstruct");
 		helper->generateBlockDestructors(context);
 		builder->CreateRetVoid();
 	}
@@ -335,7 +333,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 				llvm::Value* convertedMin = helper->convertType(minValue, LLVMTypes::intType, context);
 				llvm::Value* convertedMax = helper->convertType(maxValue, LLVMTypes::intType, context);
 				llvm::Value* smallerThanMin = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SLT, value, convertedMin);
-				llvm::Value* greaterThanMax = builder->CreateFCmp(llvm::CmpInst::Predicate::ICMP_SGT, value, convertedMax);
+				llvm::Value* greaterThanMax = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SGT, value, convertedMax);
 				llvm::Value* cappedToMin = builder->CreateSelect(smallerThanMin, convertedMin, value);
 				llvm::Value* cappedToMax = builder->CreateSelect(greaterThanMax, convertedMax, cappedToMin);
 				return cappedToMax;
@@ -359,7 +357,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 			else if (arguments->arguments[0]->getType() == CatType::Int)
 			{
 				llvm::Value* convertedValue2 = helper->convertType(value2, LLVMTypes::intType, context);
-				llvm::Value* lessThan = builder->CreateFCmp(llvm::CmpInst::Predicate::ICMP_SLT, value1, convertedValue2);
+				llvm::Value* lessThan = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SLT, value1, convertedValue2);
 				return builder->CreateSelect(lessThan, value1, convertedValue2);
 			}
 			else
@@ -381,7 +379,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 			else if (arguments->arguments[0]->getType() == CatType::Int)
 			{
 				llvm::Value* convertedValue2 = helper->convertType(value2, LLVMTypes::intType, context);
-				llvm::Value* greaterThan = builder->CreateFCmp(llvm::CmpInst::Predicate::ICMP_SGT, value1, convertedValue2);
+				llvm::Value* greaterThan = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SGT, value1, convertedValue2);
 				return builder->CreateSelect(greaterThan, value1, convertedValue2);
 			}
 			else
@@ -391,17 +389,92 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 			}
 		}
 		case CatBuiltInFunctionType::FindInString:
+		{
+			llvm::Value* text = helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::stringPtrType, context);
+			llvm::Value* textToFind = helper->convertType(generate(arguments->arguments[1].get(), context), LLVMTypes::stringPtrType, context);
+			return helper->createCall(context, &LLVMCatIntrinsics::findInString, {text, textToFind}, "findInString");
+		}
 		case CatBuiltInFunctionType::ReplaceInString:
+		{
+			llvm::Value* sourceString = helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::stringPtrType, context);
+			llvm::Value* stringToFind = helper->convertType(generate(arguments->arguments[1].get(), context), LLVMTypes::stringPtrType, context);
+			llvm::Value* replacementString = helper->convertType(generate(arguments->arguments[2].get(), context), LLVMTypes::stringPtrType, context);
+			return helper->createCall(context, &LLVMCatIntrinsics::replaceInString, {sourceString, stringToFind, replacementString}, "replaceInString");
+		}
 		case CatBuiltInFunctionType::StringLength:
+		{
+			llvm::Value* string = helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::stringPtrType, context);
+			return helper->createCall(context, &LLVMCatIntrinsics::stringLength, {string}, "stringLength");
+		}
 		case CatBuiltInFunctionType::SubString:
+		{
+			llvm::Value* sourceString = helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::stringPtrType, context);
+			llvm::Value* offset = helper->convertType(generate(arguments->arguments[1].get(), context), LLVMTypes::intType, context);
+			llvm::Value* length = helper->convertType(generate(arguments->arguments[2].get(), context), LLVMTypes::intType, context);
+			return helper->createCall(context, &LLVMCatIntrinsics::subString, {sourceString, offset, length}, "subString");
+		}
 		case CatBuiltInFunctionType::ToString:
+		{
+			return helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::stringPtrType, context);
+		}
 		case CatBuiltInFunctionType::ToPrettyString:
+		{
+			if (arguments->arguments[0]->getType().isIntType())
+			{
+				return helper->createCall(context, &LLVMCatIntrinsics::intToPrettyString, {generate(arguments->arguments[0].get(), context)}, "intToPrettyString");
+			}
+			else
+			{
+				return helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::stringPtrType, context);
+			}
+		}
 		case CatBuiltInFunctionType::ToFixedLengthString:
+		{
+			llvm::Value* number = helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::intType, context);
+			llvm::Value* length = helper->convertType(generate(arguments->arguments[1].get(), context), LLVMTypes::intType, context);
+			return helper->createCall(context, &LLVMCatIntrinsics::intToFixedLengthString, {number, length}, "intToFixedLengthString");
+		}
 		case CatBuiltInFunctionType::Random:
+		{
+			return helper->createCall(context, &LLVMCatIntrinsics::getRandomFloat, {}, "getRandomFloat");
+		}
 		case CatBuiltInFunctionType::RandomRange:
+		{
+			llvm::Value* left = generate(arguments->arguments[0].get(), context);
+			llvm::Value* right = generate(arguments->arguments[1].get(), context);
+			if (arguments->arguments[0]->getType().isBoolType()
+				&& arguments->arguments[1]->getType().isBoolType())
+			{
+				return helper->createCall(context, &LLVMCatIntrinsics::getRandomBoolean, {left, right}, "getRandomBoolean");
+			}
+			else if (arguments->arguments[0]->getType().isIntType()
+					 && arguments->arguments[1]->getType().isIntType())
+			{
+				return helper->createCall(context, &LLVMCatIntrinsics::getRandomInt, {left, right}, "getRandomInt");
+			}
+			else				
+			{
+				llvm::Value* leftFloat = helper->convertType(left, LLVMTypes::floatType, context);
+				llvm::Value* rightFloat = helper->convertType(right, LLVMTypes::floatType, context);
+				return helper->createCall(context, &LLVMCatIntrinsics::getRandomFloatRange, {leftFloat, rightFloat}, "getRandomFloat");
+			}
+		}
 		case CatBuiltInFunctionType::Round:
+		{
+			llvm::Value* left = generate(arguments->arguments[0].get(), context);
+			llvm::Value* right = generate(arguments->arguments[1].get(), context);
+			llvm::Value* leftFloat = helper->convertType(left, LLVMTypes::floatType, context);
+			llvm::Value* rightInt = helper->convertType(right, LLVMTypes::intType, context);
+			return helper->createCall(context, &LLVMCatIntrinsics::roundFloat, {leftFloat, rightInt}, "roundFloat");
+		}
 		case CatBuiltInFunctionType::StringRound:
-
+		{
+			llvm::Value* left = generate(arguments->arguments[0].get(), context);
+			llvm::Value* right = generate(arguments->arguments[1].get(), context);
+			llvm::Value* leftFloat = helper->convertType(left, LLVMTypes::floatType, context);
+			llvm::Value* rightInt = helper->convertType(right, LLVMTypes::intType, context);
+			return helper->createCall(context, &LLVMCatIntrinsics::roundFloatToString, {leftFloat, rightInt}, "roundFloatToString");
+		}
 		default:
 		{
 			// Look up the name in the global module table.
@@ -438,20 +511,6 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 	llvm::Value* left = generate(infixOperator->lhs.get(), context);
 	llvm::Value* right = generate(infixOperator->rhs.get(), context);
 	assert(left != nullptr && right != nullptr);
-	/*if (left->getType()->isArrayTy()
-		|| right->getType()->isArrayTy())
-	{
-		assert(false);
-		return LLVMJit::logError("ERROR: String operations not yet supported.");
-	}
-	if (!(left->getType() == LLVMTypes::intType || left->getType() == LLVMTypes::boolType || left->getType() == LLVMTypes::floatType)
-		|| !(right->getType() == LLVMTypes::intType || right->getType() == LLVMTypes::boolType || right->getType() == LLVMTypes::floatType))
-	{
-		assert(false);
-		return LLVMJit::logError("ERROR: Type not yet supported for infix operators.");
-	}*/
-
-
 
 	if (infixOperator->oper == CatInfixOperatorType::LogicalOr)
 	{
@@ -522,9 +581,9 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 	{
 		switch (infixOperator->oper)
 		{
-			case CatInfixOperatorType::Plus:				return helper->intrinsics->callStringAppend(left, right, context);				
-			case CatInfixOperatorType::Equals:				return helper->intrinsics->callStringEquals(left, right);			
-			case CatInfixOperatorType::NotEquals:			return helper->intrinsics->callStringNotEquals(left, right);		
+		case CatInfixOperatorType::Plus:				return helper->createCall(context, &LLVMCatIntrinsics::stringAppend, {left, right}, "stringAppend");
+			case CatInfixOperatorType::Equals:			return helper->createCall(context, &LLVMCatIntrinsics::stringEquals, {left, right}, "stringEquals");
+			case CatInfixOperatorType::NotEquals:		return helper->createCall(context, &LLVMCatIntrinsics::stringNotEquals, {left, right}, "stringNotEquals");
 		}
 	}
 	assert(false);
@@ -582,7 +641,9 @@ llvm::Value* LLVMCodeGenerator::generate(CatMemberFunctionCall* memberFunctionCa
 	{
 		llvm::Type* returnLLVMType = helper->toLLVMType(returnType.getCatType());
 		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-		return helper->callFunction(functionType, functionInfo->getFunctionAddress(), argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName);
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(helper->createCall(functionType, functionInfo->getFunctionAddress(), argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName));
+		call->setCallingConv(llvm::CallingConv::X86_ThisCall);
+		return call;
 	}
 	else if (returnType.getCatType() == CatType::String)
 	{
@@ -590,7 +651,8 @@ llvm::Value* LLVMCodeGenerator::generate(CatMemberFunctionCall* memberFunctionCa
 		argumentTypes.insert(++(argumentTypes.begin()), LLVMTypes::stringPtrType);
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
 		argumentList.insert(++(argumentList.begin()), stringObjectAllocation);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(helper->callFunction(functionType, functionInfo->getFunctionAddress(), argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName));
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(helper->createCall(functionType, functionInfo->getFunctionAddress(), argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName));
+		call->setCallingConv(llvm::CallingConv::X86_ThisCall);
 		call->addParamAttr(1, llvm::Attribute::AttrKind::StructRet);
 		call->addDereferenceableAttr(2, sizeof(std::string));
 		return stringObjectAllocation;
@@ -671,13 +733,13 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(RootTypeSource source, LLVMCompil
 		{
 			MemberReferencePtr ref = context->catContext->getGlobalReference();
 			Reflectable* object = ref->getParentObject();
-			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, reinterpret_cast<std::size_t>(object), false));
+			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
 		} break;
 		case RootTypeSource::CustomGlobals:
 		{
 			MemberReferencePtr ref = context->catContext->getRootReference(RootTypeSource::CustomGlobals);
 			Reflectable* object = ref->getParentObject();
-			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, reinterpret_cast<std::size_t>(object), false));
+			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
 		} break;
 		case RootTypeSource::This:
 		case RootTypeSource::CustomThis:
@@ -695,12 +757,12 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(RootTypeSource source, LLVMCompil
 			llvm::Value* address = nullptr;
 			if (source == RootTypeSource::This)
 			{
-				address = helper->intrinsics->callGetThisPointer(argument); 
+				address = helper->createCall(context, &LLVMCatIntrinsics::getThisPointerFromContext, {argument}, "getThisPointerFromContext"); 
 				
 			}
 			else if (source == RootTypeSource::CustomThis)
 			{
-				address = helper->intrinsics->callGetCustomThisPointer(argument);
+				address = helper->createCall(context, &LLVMCatIntrinsics::getCustomThisPointerFromContext, {argument}, "getCustomThisPointerFromContext"); 
 			}
 			assert(address != nullptr);
 			parentObjectAddress = helper->convertToIntPtr(address, "CustomThis_IntPtr");

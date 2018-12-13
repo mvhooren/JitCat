@@ -158,6 +158,7 @@ void Expression<T>::compile(CatRuntimeContext* context)
 	else if (context != nullptr)
 	{
 		LLVMCompileTimeContext llvmCompileContext(context);
+		llvmCompileContext.options.enableDereferenceNullChecks = true;
 		intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
 		if (functionAddress != 0)
 		{

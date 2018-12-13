@@ -116,7 +116,7 @@ bool MemberReferencePtr::operator!=(const MemberReferencePtr & other) const
 }
 
 
-bool MemberReferencePtr::operator!=(const MemberReference * otherInstance) const
+bool MemberReferencePtr::operator!=(const MemberReference* otherInstance) const
 {
 	return instance != otherInstance;
 }

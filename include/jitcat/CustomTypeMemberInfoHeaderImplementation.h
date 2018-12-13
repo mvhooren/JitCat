@@ -151,7 +151,7 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Va
 	//Pointer to a MemberReferencePtr
 	llvm::Value* memberReferencePtr = generatorHelper->loadPointerAtAddress(addressValue, "MemberReferencePtr");
 	//Call function that gets the member
-	return generatorHelper->callFunction(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&getReflectable), {memberReferencePtr}, "getReflectable");
+	return generatorHelper->createCall(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&getReflectable), {memberReferencePtr}, "getReflectable");
 }
 
 

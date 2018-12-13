@@ -240,6 +240,7 @@ int MAIN(int argc, char* argv[])
 				{
 					LLVMCodeGenerator generator;
 					LLVMCompileTimeContext llvmContext(&context);
+					llvmContext.options.enableDereferenceNullChecks = true;
 					std::string functionName = Tools::append("test", functionNr);
 					generator.generateAndDump(expression, &llvmContext, functionName);
 					generator.compileAndTest(&context, functionName);

@@ -3,6 +3,7 @@
 class CatRuntimeContext;
 
 #include <functional>
+#include "LLVMCompileOptions.h"
 #include "LLVMForwardDeclares.h"
 
 
@@ -14,4 +15,6 @@ struct LLVMCompileTimeContext
 	llvm::Function* currentFunction;
 
 	std::vector<std::function<llvm::Value*()>> blockDestructorGenerators;
+
+	LLVMCompileOptions options;
 };

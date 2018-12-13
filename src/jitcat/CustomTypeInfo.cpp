@@ -118,7 +118,8 @@ TypeMemberInfo* CustomTypeInfo::addFloatMember(const std::string& memberName, fl
 	}
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<float>(memberName, offset, CatType::Float, isConst, isWritable);
-	members[Tools::toLowerCase(memberName)] = memberInfo;
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	members[lowerCaseMemberName] = memberInfo;
 	return memberInfo;
 }
 
@@ -140,7 +141,8 @@ TypeMemberInfo* CustomTypeInfo::addIntMember(const std::string& memberName, int 
 	}
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<int>(memberName, offset, CatType::Int, isConst, isWritable);
-	members[Tools::toLowerCase(memberName)] = memberInfo;
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	members[lowerCaseMemberName] = memberInfo;
 	return memberInfo;
 }
 
@@ -162,7 +164,8 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 	}
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<bool>(memberName, offset, CatType::Bool, isConst, isWritable);
-	members[Tools::toLowerCase(memberName)] = memberInfo;
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	members[lowerCaseMemberName] = memberInfo;
 	return memberInfo;
 }
 
@@ -187,7 +190,8 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 	std::string* newString = new std::string(defaultValue);
 	memcpy(data, &newString, sizeof(std::string*));
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<std::string>(memberName, offset, CatType::String, isConst, isWritable);
-	members[Tools::toLowerCase(memberName)] = memberInfo;
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	members[lowerCaseMemberName] = memberInfo;
 	return memberInfo;
 }
 
@@ -217,7 +221,8 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, c
 
 		memcpy(data, &memberReference, sizeof(MemberReferencePtr*));
 		TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, TypeRegistry::get()->getOrCreateTypeInfo(defaultValue->getCustomTypeName()), isConst);
-		members[Tools::toLowerCase(memberName)] = memberInfo;
+		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+		members[lowerCaseMemberName] = memberInfo;
 		return memberInfo;
 	}
 	return nullptr;
@@ -245,7 +250,8 @@ void CustomTypeInfo::renameMember(const std::string& oldMemberName, const std::s
 		TypeMemberInfo* memberInfo = iter->second;
 		memberInfo->memberName = newMemberName;
 		members.erase(iter);
-		members[Tools::toLowerCase(newMemberName)] = memberInfo;
+		std::string lowerCaseMemberName = Tools::toLowerCase(newMemberName);
+		members[lowerCaseMemberName] = memberInfo;
 	}
 }
 

@@ -17,7 +17,9 @@ class LLVMCodeGeneratorHelper
 public:
 	LLVMCodeGeneratorHelper(llvm::IRBuilder<>* builder, llvm::Module* module);
 
-	llvm::Value* callFunction(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName);
+	template<typename T, typename ... Args>
+	llvm::Value* createCall(LLVMCompileTimeContext* context, T (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
+	llvm::Value* createCall(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName);
 
 	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameterType, llvm::Value* argument, LLVMCompileTimeContext* context);
 	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameter1Type, CatType parameter2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
@@ -47,11 +49,51 @@ public:
 	llvm::LLVMContext& getContext();
 	llvm::IRBuilder<>* getBuilder();
 
-public:
-	std::unique_ptr<LLVMCatIntrinsics> intrinsics;
+	static llvm::FunctionType* createFunctionType(llvm::Type* returnType, const std::vector<llvm::Type*>& argumentTypes);
+
+private:
+	llvm::Value* generateCall(LLVMCompileTimeContext* context, uintptr_t functionAddress, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isStructRet, const std::string& name);
 
 private:
 	llvm::LLVMContext& llvmContext;
 	llvm::IRBuilder<>* builder;
 	llvm::Module* currentModule;
 };
+
+
+
+template<typename TReturnType, typename ...TFunctionArguments>
+class LLVMFunctionTypeGenerator
+{
+	LLVMFunctionTypeGenerator();
+	~LLVMFunctionTypeGenerator() = delete;
+public:
+	static llvm::FunctionType* getType(bool& isStructRet)
+	{
+		llvm::Type* returnType = LLVMTypes::getLLVMType<TReturnType>();
+		std::vector<llvm::Type*> argumentTypes;
+		if (returnType == LLVMTypes::stringPtrType)
+		{
+			isStructRet = true;
+			argumentTypes.push_back(returnType);
+			returnType = LLVMTypes::voidType;
+		}
+		int dummy[] = { 0, ( (void) addArgumentType<TFunctionArguments>(argumentTypes), 0) ... };
+		return LLVMCodeGeneratorHelper::createFunctionType(returnType, argumentTypes);
+	}
+
+	template<typename TArgumentType>
+	static void addArgumentType(std::vector<llvm::Type*>& argumentTypes)
+	{
+		argumentTypes.push_back(LLVMTypes::getLLVMType<TArgumentType>());
+	}
+};
+
+
+template<typename T, typename ...Args>
+inline llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context, T(*functionPointer)(Args...), const std::vector<llvm::Value*>& arguments, const std::string& name)
+{
+	bool isStructRet = false;
+	llvm::FunctionType* functionType = LLVMFunctionTypeGenerator<T, Args...>::getType(isStructRet);
+	return generateCall(context, reinterpret_cast<uintptr_t>(functionPointer), functionType, arguments, isStructRet, name);
+}

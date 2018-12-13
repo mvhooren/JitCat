@@ -7,7 +7,7 @@ Timer::Timer()
 }
 
 
-inline double Timer::getTimeSincePreviousCall()
+double Timer::getTimeSincePreviousCall()
 {
 	std::chrono::high_resolution_clock::time_point newTime = Clock::now();
 	long long diff = std::chrono::duration_cast<std::chrono::nanoseconds>(newTime - timer).count();

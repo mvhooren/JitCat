@@ -11,35 +11,34 @@
 class LLVMCodeGenerator;
 class LLVMJit;
 
-//QQQ not portable, fix
-#pragma warning(push, 0)        
-	//Disable warnings from llvm includes
-	#include <llvm\ExecutionEngine\ExecutionEngine.h>
-	#include <llvm\ExecutionEngine\ObjectCache.h>
-	#include <llvm\IR\LegacyPassManager.h>
-	#include <llvm\IR\LLVMContext.h>
-	#include <llvm\IR\Mangler.h>
-	#include <llvm\IR\Value.h>
-	#include <llvm\ExecutionEngine\RTDyldMemoryManager.h>
-	#include <llvm\ExecutionEngine\SectionMemoryManager.h>
-	#include "llvm/ExecutionEngine/Orc/CompileUtils.h"
-	#include "llvm/ExecutionEngine/Orc/Core.h"
-	#include "llvm/ExecutionEngine/Orc/ExecutionUtils.h"
-	#include "llvm/ExecutionEngine/Orc/IRCompileLayer.h"
-	#include "llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h"
-	#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
-	#include <llvm\Object\Binary.h>
-	#include <llvm\Object\ObjectFile.h>
-	#include <llvm\Support\DynamicLibrary.h>
-	#include <llvm\Support\Error.h>
-	#include <llvm\Support\ErrorHandling.h>
-	#include <llvm\Support\MemoryBuffer.h>
-	#include <llvm\Support\SmallVectorMemoryBuffer.h>
-	#include <llvm\Support\raw_ostream.h>
-	#include <llvm\Support\TargetSelect.h>
-	#include <llvm\Target\TargetMachine.h>
-#pragma warning(pop)
+#include <llvm\ExecutionEngine\ExecutionEngine.h>
+#include <llvm\ExecutionEngine\ObjectCache.h>
+#include <llvm\IR\Constants.h>
+#include <llvm\IR\LegacyPassManager.h>
+#include <llvm\IR\LLVMContext.h>
+#include <llvm\IR\Mangler.h>
+#include <llvm\IR\Value.h>
+#include <llvm\ExecutionEngine\RTDyldMemoryManager.h>
+#include <llvm\ExecutionEngine\SectionMemoryManager.h>
+#include <llvm\ExecutionEngine\Orc\CompileUtils.h>
+#include <llvm\ExecutionEngine\Orc\Core.h>
+#include <llvm\ExecutionEngine\Orc\ExecutionUtils.h>
+#include <llvm\ExecutionEngine\Orc\IRCompileLayer.h>
+#include <llvm\ExecutionEngine\Orc\JITTargetMachineBuilder.h>
+#include <llvm\ExecutionEngine\Orc\RTDyldObjectLinkingLayer.h>
+#include <llvm\Object\Binary.h>
+#include <llvm\Object\ObjectFile.h>
+#include <llvm\Support\DynamicLibrary.h>
+#include <llvm\Support\Error.h>
+#include <llvm\Support\ErrorHandling.h>
+#include <llvm\Support\MemoryBuffer.h>
+#include <llvm\Support\SmallVectorMemoryBuffer.h>
+#include <llvm\Support\raw_ostream.h>
+#include <llvm\Support\TargetSelect.h>
+#include <llvm\Target\TargetMachine.h>
+#include <llvm\Transforms\Scalar.h>
 
+#include <map>
 #include <memory>
 
 class LLVMJitInitializer

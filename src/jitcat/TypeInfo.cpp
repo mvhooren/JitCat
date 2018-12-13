@@ -27,13 +27,15 @@ TypeInfo::~TypeInfo()
 
 void TypeInfo::addDeserializedMember(TypeMemberInfo* memberInfo)
 {
-	members[Tools::toLowerCase(memberInfo->memberName)] = memberInfo;
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberInfo->memberName);
+	members[lowerCaseMemberName] = memberInfo;
 }
 
 
 void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 {
-	memberFunctions[Tools::toLowerCase(memberFunction->memberFunctionName)] = memberFunction;
+	std::string lowerCaseMemberFunctionName = Tools::toLowerCase(memberFunction->memberFunctionName);
+	memberFunctions[lowerCaseMemberFunctionName] = memberFunction;
 }
 
 

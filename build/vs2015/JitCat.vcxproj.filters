@@ -227,9 +227,6 @@
     <ClCompile Include="..\..\src\jitcat\LLVMCatIntrinsics.cpp">
       <Filter>Cat\CodeGeneration\LLVM</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\jitcat\PCExecutable.cpp">
-      <Filter>Cat\CodeGeneration</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\jitcat\Timer.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -587,11 +584,11 @@
     <ClInclude Include="..\..\include\jitcat\LLVMCatIntrinsics.h">
       <Filter>Cat\CodeGeneration\LLVM</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\jitcat\PCExecutable.h">
-      <Filter>Cat\CodeGeneration</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\jitcat\Timer.h">
       <Filter>Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\LLVMCompileOptions.h">
+      <Filter>Cat\CodeGeneration\LLVM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

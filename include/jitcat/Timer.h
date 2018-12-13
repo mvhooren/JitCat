@@ -10,5 +10,5 @@ class Timer
 public:
 	Timer();
 
-	inline double getTimeSincePreviousCall();
+	double getTimeSincePreviousCall();
 };

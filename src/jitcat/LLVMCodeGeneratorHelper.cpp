@@ -5,9 +5,6 @@
 #include "CatRuntimeContext.h"
 #include "MemberReference.h"
 
-//QQQ not portable, fix
-#pragma warning(push, 0)        
-//Disable warnings from llvm includes
 #include <llvm\IR\Constant.h>
 #include <llvm\IR\Function.h>
 #include <llvm\IR\LegacyPassManager.h>
@@ -20,7 +17,6 @@
 #include <llvm\Support\raw_ostream.h>
 #include <llvm\Transforms\Scalar.h>
 #include <llvm\Transforms\Scalar\GVN.h>
-#pragma warning(pop)
 
 
 LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(llvm::IRBuilder<>* builder, llvm::Module* module):
@@ -28,11 +24,10 @@ LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(llvm::IRBuilder<>* builder, llv
 	builder(builder),
 	currentModule(module)
 {
-	intrinsics.reset(new LLVMCatIntrinsics(&llvmContext, this, module));
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callFunction(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName)
+llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName)
 {
 	llvm::Value* functionAddressConstant = createIntPtrConstant(functionAddress, functionName + "_Address");
 	functionAddressConstant->setName(functionName + "_IntPtr");
@@ -147,11 +142,11 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		}
 		else if (valueToConvert->getType() == LLVMTypes::floatType)
 		{
-			return intrinsics->callFloatToString(valueToConvert, context);
+			return createCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString");
 		}
 		else if (valueToConvert->getType() == LLVMTypes::intType)
 		{
-			return intrinsics->callIntToString(valueToConvert, context);
+			return createCall(context, &LLVMCatIntrinsics::intToString, {valueToConvert}, "intToString");
 		}
 
 	}
@@ -256,7 +251,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext*
 {
 	llvm::AllocaInst* stringObjectAllocation = builder->CreateAlloca(LLVMTypes::stringType, 0, nullptr);
 	stringObjectAllocation->setName(name);
-	context->blockDestructorGenerators.push_back([=](){return intrinsics->callStringDestruct(stringObjectAllocation);});
+	context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");});
 	return stringObjectAllocation;
 }
 
@@ -279,4 +274,46 @@ llvm::LLVMContext& LLVMCodeGeneratorHelper::getContext()
 llvm::IRBuilder<>* LLVMCodeGeneratorHelper::getBuilder()
 {
 	return builder;
+}
+
+
+llvm::FunctionType* LLVMCodeGeneratorHelper::createFunctionType(llvm::Type* returnType, const std::vector<llvm::Type*>& argumentTypes)
+{
+	return llvm::FunctionType::get(returnType, argumentTypes, false);
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::generateCall(LLVMCompileTimeContext* context, uintptr_t functionAddress, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isStructRet, const std::string& name)
+{
+	std::vector<llvm::Value*> finalArguments(arguments);
+	llvm::Value* structRetValue = nullptr;
+	if (isStructRet)
+	{
+		structRetValue = createStringAllocA(context, name + "_Result");
+		finalArguments.insert(finalArguments.begin(), structRetValue);
+	}
+	llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, functionAddress, finalArguments, name));
+
+	unsigned int derefAttributeIndex = 1;
+	auto iter = functionType->param_begin();
+	if (isStructRet) ++iter;
+	for (iter; iter != functionType->param_end(); ++iter)
+	{
+		if (*iter == LLVMTypes::stringPtrType)
+		{
+			call->addDereferenceableAttr(derefAttributeIndex, sizeof(std::string));
+		}
+		derefAttributeIndex++;
+	}
+
+	if (isStructRet)
+	{
+		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
+		call->addParamAttr(0, llvm::Attribute::AttrKind::NoAlias);
+		return structRetValue;
+	}
+	else
+	{
+		return call;
+	}
 }
