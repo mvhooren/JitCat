@@ -15,7 +15,7 @@ struct LLVMCompileTimeContext;
 class LLVMCodeGeneratorHelper
 {
 public:
-	LLVMCodeGeneratorHelper(llvm::IRBuilder<>* builder, llvm::Module* module);
+	LLVMCodeGeneratorHelper(llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder, llvm::Module* module);
 
 	template<typename T, typename ... Args>
 	llvm::Value* createCall(LLVMCompileTimeContext* context, T (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
@@ -47,7 +47,7 @@ public:
 	void generateBlockDestructors(LLVMCompileTimeContext* context);
 
 	llvm::LLVMContext& getContext();
-	llvm::IRBuilder<>* getBuilder();
+	llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* getBuilder();
 
 	static llvm::FunctionType* createFunctionType(llvm::Type* returnType, const std::vector<llvm::Type*>& argumentTypes);
 
@@ -56,7 +56,7 @@ private:
 
 private:
 	llvm::LLVMContext& llvmContext;
-	llvm::IRBuilder<>* builder;
+	llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder;
 	llvm::Module* currentModule;
 };
 

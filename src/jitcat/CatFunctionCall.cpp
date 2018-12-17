@@ -14,6 +14,7 @@
 #include "Tools.h"
 
 #include <algorithm>
+#include <cmath>
 
 
 CatFunctionCall::CatFunctionCall(const std::string& name, CatArgumentList* arguments):

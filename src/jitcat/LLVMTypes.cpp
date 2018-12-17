@@ -1,13 +1,7 @@
 #include "LLVMTypes.h"
 #include "LLVMJit.h"
 
-//QQQ not portable, fix
-#pragma warning(push, 0)        
-//Disable warnings from llvm includes
-#include <llvm\IR\Type.h>
-
-#pragma warning(pop)
-
+#include <llvm/IR/Type.h>
 
 llvm::Type* LLVMTypes::floatType = nullptr;
 llvm::Type* LLVMTypes::intType = nullptr;

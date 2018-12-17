@@ -590,6 +590,7 @@
     <ClInclude Include="..\..\include\jitcat\LLVMCompileOptions.h">
       <Filter>Cat\CodeGeneration\LLVM</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\jitcat\Configuration.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Tokenizer">

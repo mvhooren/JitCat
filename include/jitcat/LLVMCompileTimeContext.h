@@ -6,6 +6,8 @@ class CatRuntimeContext;
 #include "LLVMCompileOptions.h"
 #include "LLVMForwardDeclares.h"
 
+#include <vector>
+
 
 struct LLVMCompileTimeContext
 {

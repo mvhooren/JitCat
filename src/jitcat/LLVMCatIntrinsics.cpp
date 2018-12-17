@@ -3,6 +3,8 @@
 #include "MemberReference.h"
 #include "Tools.h"
 
+#include <cmath>
+
 
 Reflectable* LLVMCatIntrinsics::getThisPointerFromContext(CatRuntimeContext* context)
 {

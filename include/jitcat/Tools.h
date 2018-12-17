@@ -45,6 +45,8 @@ public:
 	static bool equalsWhileIgnoringCase(const char* text1, const std::string& text2);
 	static bool equalsWhileIgnoringCase(const char* text1, const char* text2);
 
+	static std::string toHexBytes(const unsigned char* data, int length);
+
 	template <typename EnumT>
 	static constexpr int enumToInt(EnumT enumValue);
 

@@ -9,11 +9,28 @@
 
 #include "CatGenericType.h"
 #include "CatValue.h"
+#include "Configuration.h"
 #include "MemberReferencePtr.h"
+#include "Tools.h"
 #include "TypeTraits.h"
 
 #include <string>
 #include <vector>
+
+struct MemberFunctionCallData
+{
+	MemberFunctionCallData(): staticFunctionAddress(0), memberFunctionAddress(0), functionInfoStructAddress(0), makeDirectCall(false) {}
+	MemberFunctionCallData(uintptr_t staticFunctionAddress, uintptr_t memberFunctionAddress, uintptr_t functionInfoStructAddress, bool makeDirectCall): 
+		staticFunctionAddress(staticFunctionAddress), 
+		memberFunctionAddress(memberFunctionAddress), 
+		functionInfoStructAddress(functionInfoStructAddress), 
+		makeDirectCall(makeDirectCall) 
+	{}
+	uintptr_t staticFunctionAddress;
+	uintptr_t memberFunctionAddress;
+	uintptr_t functionInfoStructAddress;
+	bool makeDirectCall;
+};
 
 
 struct MemberFunctionInfo
@@ -22,7 +39,7 @@ struct MemberFunctionInfo
 	virtual ~MemberFunctionInfo() {}
 	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) { return CatValue(); }
 	virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
-	inline virtual uintptr_t getFunctionAddress() const {return 0;}
+	inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
 
 	template<typename X>
 	inline void addParameterTypeInfo()
@@ -107,12 +124,19 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 		return sizeof...(TFunctionArguments);
 	}
 
-	inline virtual uintptr_t getFunctionAddress() const override final
+
+	static U staticExecute(T* base, MemberFunctionInfoWithArgs<T, U, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
 	{
-		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		U (T::*function)(TFunctionArguments...) = functionInfo->function;;
+		return (base->*function)(args...);
+	}
+
+
+	inline virtual MemberFunctionCallData getFunctionAddress() const override final
+	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return pointer;
+		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
 	}
 
 	U (T::*function)(TFunctionArguments...);
@@ -160,12 +184,19 @@ struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 		return sizeof...(TFunctionArguments);
 	}
 
-	inline virtual uintptr_t getFunctionAddress() const  override final
+
+	static void staticExecute(T* base, MemberVoidFunctionInfoWithArgs<T, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
 	{
-		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		void (T::*function)(TFunctionArguments...) = functionInfo->function;
+		(base->*function)(args...);
+	}
+
+
+	inline virtual MemberFunctionCallData getFunctionAddress() const  override final
+	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return pointer;
+		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
 	}
 
 	void (T::*function)(TFunctionArguments...);
@@ -213,12 +244,19 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 		return sizeof...(TFunctionArguments);
 	}
 
-	inline virtual uintptr_t getFunctionAddress() const override final
+
+	static U staticExecute(T* base, ConstMemberFunctionInfoWithArgs<T, U, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
 	{
-		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		U (T::*function)(TFunctionArguments...) const = functionInfo->function;;
+		return (base->*function)(args...);
+	}
+
+
+	inline virtual MemberFunctionCallData getFunctionAddress() const override final
+	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return pointer;
+		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
 	}
 
 	U (T::*function)(TFunctionArguments...) const;
@@ -267,12 +305,18 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual uintptr_t getFunctionAddress() const override final
+	static void staticExecute(T* base, ConstMemberVoidFunctionInfoWithArgs<T, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
 	{
-		static_assert(sizeof(function) == sizeof(uintptr_t), "Expected function pointer to be of uintptr_t size. Function pointer may contain virtual metadata.");
+		void (T::*function)(TFunctionArguments...) const = functionInfo->function;
+		(base->*function)(args...);
+	}
+
+
+	inline virtual MemberFunctionCallData getFunctionAddress() const override final
+	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return pointer;
+		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
 	}
 
 	void (T::*function)(TFunctionArguments...) const;

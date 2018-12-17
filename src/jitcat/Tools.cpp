@@ -197,4 +197,20 @@ bool Tools::equalsWhileIgnoringCase(const char* text1, const char* text2)
 }
 
 
+std::string Tools::toHexBytes(const unsigned char* data, int length)
+{
+	std::stringstream stream;
+	for (int i = 0; i < length; i++)
+	{
+		int byteValue = (int)data[i];
+		if (byteValue <= 0xf)
+		{
+			stream << "0";
+		}
+		stream << std::hex << byteValue  << " ";
+	}
+	return stream.str();
+}
+
+
 const std::string Tools::empty = "";

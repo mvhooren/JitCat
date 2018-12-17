@@ -35,10 +35,19 @@ inline MemberReferencePtr ContainerMemberInfo<T, U>::getMemberReference(MemberRe
 template<typename T, typename U>
 inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned int offset = 0;
-	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
+	unsigned long long offset = 0;
+	if constexpr (sizeof(memberPointer) == 4)
+	{
+		unsigned int smallOffset = 0;
+		memcpy(&smallOffset, &memberPointer, 4);
+		offset = smallOffset;
+	}
+	else
+	{
+		memcpy(&offset, &memberPointer, 8);
+	}
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 	return generatorHelper->convertToPointer(addressValue, memberName + "_Ptr");
@@ -143,10 +152,19 @@ inline MemberReferencePtr ClassPointerMemberInfo<T, U>::getMemberReference(Membe
 template<typename T, typename U>
 inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned int offset = 0;
-	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
+	unsigned long long offset = 0;
+	if constexpr (sizeof(memberPointer) == 4)
+	{
+		unsigned int smallOffset = 0;
+		memcpy(&smallOffset, &memberPointer, 4);
+		offset = smallOffset;
+	}
+	else
+	{
+		memcpy(&offset, &memberPointer, 8);
+	}
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 	return generatorHelper->loadPointerAtAddress(addressValue, memberName);
@@ -171,10 +189,19 @@ inline MemberReferencePtr ClassObjectMemberInfo<T, U>::getMemberReference(Member
 template<typename T, typename U>
 inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned int offset = 0;
-	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
+	unsigned long long offset = 0;
+	if constexpr (sizeof(memberPointer) == 4)
+	{
+		unsigned int smallOffset = 0;
+		memcpy(&smallOffset, &memberPointer, 4);
+		offset = smallOffset;
+	}
+	else
+	{
+		memcpy(&offset, &memberPointer, 8);
+	}
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_Ptr");
 	return generatorHelper->convertToPointer(addressValue, memberName);
@@ -237,10 +264,20 @@ inline MemberReferencePtr BasicTypeMemberInfo<T, U>::getMemberReference(MemberRe
 template<typename T, typename U>
 inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	static_assert(sizeof(memberPointer) == 4, "Expected a 4 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned int offset = 0;
-	memcpy(&offset, &memberPointer, 4);
-	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant((unsigned long long)offset, "offsetTo_" + memberName);
+	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
+	unsigned long long offset = 0;
+	if constexpr (sizeof(memberPointer) == 4)
+	{
+		unsigned int smallOffset = 0;
+		memcpy(&smallOffset, &memberPointer, 4);
+		offset = smallOffset;
+	}
+	else
+	{
+		memcpy(&offset, &memberPointer, 8);
+	}
+	
+	llvm::Value* memberOffset = generatorHelper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 	llvm::Value* parentObjectPointerInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 	llvm::Value* addressValue = generatorHelper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 	if constexpr (std::is_same<U, std::string>::value)

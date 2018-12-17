@@ -5,21 +5,21 @@
 #include "CatRuntimeContext.h"
 #include "MemberReference.h"
 
-#include <llvm\IR\Constant.h>
-#include <llvm\IR\Function.h>
-#include <llvm\IR\LegacyPassManager.h>
-#include <llvm\IR\PassManager.h>
-#include <llvm\IR\Intrinsics.h>
-#include <llvm\IR\IRBuilder.h>
-#include <llvm\IR\Module.h>
-#include <llvm\IR\Value.h>
-#include <llvm\IR\Verifier.h>
-#include <llvm\Support\raw_ostream.h>
-#include <llvm\Transforms\Scalar.h>
-#include <llvm\Transforms\Scalar\GVN.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/PassManager.h>
+#include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
 
 
-LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(llvm::IRBuilder<>* builder, llvm::Module* module):
+LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder, llvm::Module* module):
 	llvmContext(LLVMJit::get().getContext()),
 	builder(builder),
 	currentModule(module)

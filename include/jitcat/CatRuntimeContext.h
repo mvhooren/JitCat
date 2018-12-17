@@ -22,6 +22,7 @@ struct TypeMemberInfo;
 #include "RootTypeSource.h"
 #include "RuntimeContext.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 

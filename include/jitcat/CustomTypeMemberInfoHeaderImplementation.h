@@ -37,13 +37,23 @@ inline MemberReferencePtr CustomBasicTypeMemberInfo<T>::getMemberReference(Membe
 template<typename T>
 inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	unsigned int dataPointerOffset = 0;
+	unsigned long long dataPointerOffset = 0;
 	//Get the offset to a the "data" member of the CustomTypeInstance object that is pointed to by parentObjectPointer.
 	unsigned char* CustomTypeInstance::* dataMemberPointer = &CustomTypeInstance::data;
-	memcpy(&dataPointerOffset, &dataMemberPointer, 4);
-	static_assert(sizeof(dataMemberPointer) == 4);
+	static_assert(sizeof(dataMemberPointer) == 4 || sizeof(dataMemberPointer) == 8);
+	if constexpr (sizeof(dataMemberPointer) == 4)
+	{
+		unsigned int memberPointer = 0;
+		memcpy(&memberPointer, &dataMemberPointer, 4);
+		dataPointerOffset = memberPointer;
+	}
+	else if constexpr (sizeof(dataMemberPointer) == 8)
+	{
+		memcpy(&dataPointerOffset, &dataMemberPointer, 8);
+	}
+	
 	//Create an llvm constant that contains the offset to "data"
-	llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data" );
+	llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant(dataPointerOffset, "offsetTo_CustomTypeInstance.data" );
 	//Convert pointer to int so it can be used in createAdd
 	llvm::Value* dataPointerAddressInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 	//Add the offset to the address of the CustomTypeInstance object
@@ -131,11 +141,24 @@ inline MemberReferencePtr CustomTypeObjectMemberInfo::getMemberReference(MemberR
 
 inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
 {
-	unsigned int dataPointerOffset = 0;
+	unsigned long long dataPointerOffset = 0;
 	//Get the offset to a the "data" member of the CustomTypeInstance object that is pointed to by parentObjectPointer.
 	unsigned char* CustomTypeInstance::* dataMemberPointer = &CustomTypeInstance::data;
-	memcpy(&dataPointerOffset, &dataMemberPointer, 4);
-	static_assert(sizeof(dataMemberPointer) == 4);
+	
+	static_assert(sizeof(dataMemberPointer) == 4 || sizeof(dataMemberPointer) == 8);
+
+	if constexpr (sizeof(dataMemberPointer) == 4)
+	{
+		unsigned int memberPointer = 0;
+		memcpy(&memberPointer, &dataMemberPointer, 4);
+		dataPointerOffset = memberPointer;
+	}
+	else if constexpr (sizeof(dataMemberPointer) == 8)
+	{
+		memcpy(&dataPointerOffset, &dataMemberPointer, 8);
+	}
+
+
 	//Create an llvm constant that contains the offset to "data"
 	llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
 	//Add the offset to the address of the CustomTypeInstance object

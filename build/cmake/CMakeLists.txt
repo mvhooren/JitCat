@@ -32,8 +32,55 @@ add_library(JitCat STATIC ${JITCAT_SOURCE})
 
 set_target_properties(JitCat
     PROPERTIES
-    COMPILE_FLAGS "-std=c++11 -Wno-write-strings -Wno-switch -Wno-unused-function -fPIC"
+    COMPILE_FLAGS "-std=c++17 -Wno-write-strings -Wno-switch -Wno-unused-function -fPIC"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
+)
+
+set(LLVM_INCLUDES "" CACHE PATH "LLVM include path.")
+set(LLVM_LIBS "" CACHE PATH "LLVM libraries path.")
+link_directories(${LLVM_LIBS})
+include_directories(${LLVM_INCLUDES})
+link_libraries(
+	LLVMX86Disassembler
+	LLVMX86CodeGen
+	LLVMX86AsmParser
+	LLVMX86Desc
+	LLVMX86Info
+	LLVMX86AsmPrinter
+	LLVMX86Utils
+	LLVMSelectionDAG
+	LLVMOrcJIT
+	LLVMMCDisassembler
+	LLVMGlobalISel
+	LLVMExecutionEngine
+	LLVMRuntimeDyld
+	LLVMAsmPrinter
+	LLVMCodeGen
+	LLVMScalarOpts
+	LLVMInstCombine
+	LLVMBitWriter
+	LLVMAggressiveInstCombine
+	LLVMTransformUtils
+	LLVMTarget
+	LLVMAnalysis
+	LLVMProfileData
+	LLVMObject
+	LLVMMCParser
+	LLVMMC
+	LLVMDebugInfoCodeView
+	LLVMDebugInfoMSF
+	LLVMBitReader
+	LLVMCore
+	LLVMBinaryFormat
+	LLVMSupport
+	LLVMDemangle
+	z
+	rt
+	dl
+	tinfo
+	pthread
+	m
+	xml2
 )
 
 add_subdirectory(JitCatTest)

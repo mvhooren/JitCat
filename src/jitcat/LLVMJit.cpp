@@ -5,26 +5,30 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-
 #include "LLVMJit.h"
+#include "Configuration.h"
 #include "LLVMTypes.h"
+
 
 #include <iostream>
 
 
 LLVMJit::LLVMJit():
 	context(new llvm::orc::ThreadSafeContext(llvm::make_unique<llvm::LLVMContext>())),
-	targetMachineBuilder(llvm::orc::JITTargetMachineBuilder::detectHost().get()),
-	targetMachine(std::move(targetMachineBuilder.createTargetMachine().get())),
+	targetMachineBuilder(llvm::cantFail(llvm::orc::JITTargetMachineBuilder::detectHost())),
+	targetMachine(std::move(llvm::cantFail(targetMachineBuilder.createTargetMachine()))),
 	executionSession(new llvm::orc::ExecutionSession()),
-	dataLayout(new llvm::DataLayout(targetMachineBuilder.getDefaultDataLayoutForTarget().get())),
+	dataLayout(new llvm::DataLayout(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),
 	mangler(new llvm::orc::MangleAndInterner(*executionSession, *dataLayout)),
 	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession,
 															[]() {	return llvm::make_unique<llvm::SectionMemoryManager>();})),
 	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(targetMachineBuilder)))
 {
-	objectLinkLayer->setAutoClaimResponsibilityForObjectSymbols(true);
-	objectLinkLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+	if constexpr (Configuration::enableSymbolSearchWorkaround)
+	{
+		objectLinkLayer->setAutoClaimResponsibilityForObjectSymbols(true);
+		objectLinkLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+	}
     executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
 	LLVMTypes::floatType = llvm::Type::getFloatTy(*context->getContext());
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
@@ -113,7 +117,7 @@ llvm::Expected<llvm::JITEvaluatedSymbol> LLVMJit::findSymbol(const std::string& 
 llvm::JITTargetAddress LLVMJit::getSymbolAddress(const std::string& name) const
 {
 	//std::cout << "getSymbolAddress: " << name << "\n";
-	return findSymbol(name).get().getAddress();
+	return llvm::cantFail(findSymbol(name)).getAddress();
 }
 
 

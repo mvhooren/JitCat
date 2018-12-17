@@ -53,11 +53,10 @@ private:
 	llvm::Value* generate(CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
 
 	llvm::Value* getBaseAddress(RootTypeSource source, LLVMCompileTimeContext* context);
-
 private:
 	llvm::LLVMContext& llvmContext;
 	std::unique_ptr<llvm::Module> currentModule;
-	std::unique_ptr<llvm::IRBuilder<>> builder;
+	std::unique_ptr<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>> builder;
 	std::unique_ptr<llvm::legacy::FunctionPassManager> passManager;
 	std::unique_ptr<LLVMCodeGeneratorHelper> helper;
 };

@@ -7,6 +7,7 @@
 
 #include "LLVMCodeGenerator.h"
 #include "CatASTNodes.h"
+#include "Configuration.h"
 #include "LLVMCodeGeneratorHelper.h"
 #include "LLVMCompileTimeContext.h"
 #include "LLVMCatIntrinsics.h"
@@ -16,18 +17,18 @@
 #include "MemberReference.h"
 #include "MemberInfo.h"
 
-#include <llvm\IR\Constant.h>
-#include <llvm\IR\Function.h>
-#include <llvm\IR\LegacyPassManager.h>
-#include <llvm\IR\PassManager.h>
-#include <llvm\IR\IRBuilder.h>
-#include <llvm\IR\Module.h>
-#include <llvm\IR\Value.h>
-#include <llvm\IR\Verifier.h>
-#include <llvm\Support\raw_ostream.h>
-#include <llvm\Transforms\InstCombine\InstCombine.h>
-#include <llvm\Transforms\Scalar.h>
-#include <llvm\Transforms\Scalar\GVN.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/PassManager.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
 
 
 #include <iostream>
@@ -35,7 +36,7 @@
 
 LLVMCodeGenerator::LLVMCodeGenerator():
 	currentModule(new llvm::Module("JitCat", LLVMJit::get().getContext())),
-	builder(new llvm::IRBuilder<>(LLVMJit::get().getContext())),
+	builder(new llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>(LLVMJit::get().getContext())),
 	llvmContext(LLVMJit::get().getContext()),
 	helper(new LLVMCodeGeneratorHelper(builder.get(), currentModule.get()))
 {
@@ -136,9 +137,10 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 		builder->CreateRet(expressionValue);
 	}
 	context->currentFunction = nullptr;
-#ifdef _DEBUG //QQQ
-	function->dump();
-#endif
+	if constexpr (Configuration::dumpFunctionIR)
+	{
+		function->dump();
+	}
 	if (!llvm::verifyFunction(*function, &llvm::outs()))
 	{
 		passManager->run(*function);
@@ -173,12 +175,13 @@ void LLVMCodeGenerator::generateAndDump(CatTypedExpression* expression, LLVMComp
 	if (expression->getType().isValidType())
 	{
 		llvm::Function* generatedValue = generateExpressionFunction(expression, context, functionName.c_str());
-		#ifdef _DEBUG //QQQ
-		if (generatedValue != nullptr)
+		if constexpr (Configuration::dumpFunctionIR)
 		{
-			generatedValue->dump();
+			if (generatedValue != nullptr)
+			{
+				generatedValue->dump();
+			}
 		}
-		#endif
 	}
 }
 
@@ -625,6 +628,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatMemberFunctionCall* memberFunctionCa
 	CatTypedExpression* base = memberFunctionCall->getBase();
 	CatArgumentList* arguments = memberFunctionCall->getArguments();
 	CatGenericType& returnType = functionInfo->returnType;
+	MemberFunctionCallData callData = functionInfo->getFunctionAddress();
 
 	llvm::Value* baseObject = generate(base, context);
 	std::vector<llvm::Value*> argumentList;
@@ -632,29 +636,57 @@ llvm::Value* LLVMCodeGenerator::generate(CatMemberFunctionCall* memberFunctionCa
 	argumentList.push_back(functionThis);
 	std::vector<llvm::Type*> argumentTypes;
 	argumentTypes.push_back(LLVMTypes::pointerType);
+	if (!callData.makeDirectCall)
+	{
+		//Add an argument that contains a pointer to a MemberFunctionInfo object.
+		llvm::Value* memberFunctionAddressValue = helper->createIntPtrConstant(callData.functionInfoStructAddress, "MemberFunctionInfo_IntPtr");
+		llvm::Value* memberFunctionPtrValue = helper->convertToPointer(memberFunctionAddressValue, "MemberFunctionInfo_Ptr");
+		argumentList.push_back(memberFunctionPtrValue);
+		argumentTypes.push_back(LLVMTypes::pointerType);
+	}
+
 	for (auto& iter : arguments->arguments)
 	{
 		argumentList.push_back(generate(iter.get(), context));
 		argumentTypes.push_back(argumentList.back()->getType());
 	}
+
+	uintptr_t functionAddress = callData.makeDirectCall ? callData.memberFunctionAddress : callData.staticFunctionAddress;
+
 	if (returnType.getCatType() != CatType::String && !returnType.isContainerType())
 	{
 		llvm::Type* returnLLVMType = helper->toLLVMType(returnType.getCatType());
 		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(helper->createCall(functionType, functionInfo->getFunctionAddress(), argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName));
-		call->setCallingConv(llvm::CallingConv::X86_ThisCall);
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName));
+		if (Configuration::useThisCall && callData.makeDirectCall)
+		{
+			call->setCallingConv(llvm::CallingConv::X86_ThisCall);
+		}
 		return call;
 	}
 	else if (returnType.getCatType() == CatType::String)
 	{
 		llvm::Value* stringObjectAllocation = helper->createStringAllocA(context, memberFunctionCall->getMemberFunctionInfo()->memberFunctionName + "_Result");
-		argumentTypes.insert(++(argumentTypes.begin()), LLVMTypes::stringPtrType);
+		auto sretTypeInsertPoint = argumentTypes.begin();
+		if (!Configuration::sretBeforeThis && callData.makeDirectCall)
+		{
+			sretTypeInsertPoint++;
+		}
+		argumentTypes.insert(sretTypeInsertPoint, LLVMTypes::stringPtrType);
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
-		argumentList.insert(++(argumentList.begin()), stringObjectAllocation);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(helper->createCall(functionType, functionInfo->getFunctionAddress(), argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName));
-		call->setCallingConv(llvm::CallingConv::X86_ThisCall);
-		call->addParamAttr(1, llvm::Attribute::AttrKind::StructRet);
-		call->addDereferenceableAttr(2, sizeof(std::string));
+		auto sretInsertPoint = argumentList.begin();
+		if (!Configuration::sretBeforeThis && callData.makeDirectCall)
+		{
+			sretInsertPoint++;
+		}
+		argumentList.insert(sretInsertPoint, stringObjectAllocation);
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunctionCall->getMemberFunctionInfo()->memberFunctionName));
+		if (Configuration::useThisCall && callData.makeDirectCall)
+		{
+			call->setCallingConv(llvm::CallingConv::X86_ThisCall);
+		}
+		call->addParamAttr(Configuration::sretBeforeThis ? 0 : 1, llvm::Attribute::AttrKind::StructRet);
+		call->addDereferenceableAttr(Configuration::sretBeforeThis ? 1 : 2, sizeof(std::string));
 		return stringObjectAllocation;
 	}
 	else

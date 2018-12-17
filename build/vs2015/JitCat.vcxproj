@@ -135,6 +135,7 @@
     <ClInclude Include="../../include/jitcat/XMLHelper.h" />
     <ClInclude Include="..\..\include\jitcat\CatASTNodesDeclares.h" />
     <ClInclude Include="..\..\include\jitcat\CatBuiltInFunctionType.h" />
+    <ClInclude Include="..\..\include\jitcat\Configuration.h" />
     <ClInclude Include="..\..\include\jitcat\LLVMCatIntrinsics.h" />
     <ClInclude Include="..\..\include\jitcat\LLVMCompileOptions.h" />
     <ClInclude Include="..\..\include\jitcat\LLVMCompileTimeContext.h" />
