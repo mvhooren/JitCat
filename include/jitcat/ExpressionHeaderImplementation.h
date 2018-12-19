@@ -29,7 +29,7 @@ Expression<T>::Expression():
 	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
-	getValue(&getDefaultValue)
+	getValueFunc(&getDefaultValue)
 {
 }
 
@@ -41,7 +41,7 @@ inline Expression<T>::Expression(const char* expression):
 	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
-	getValue(&getDefaultValue)
+	getValueFunc(&getDefaultValue)
 {
 }
 
@@ -53,7 +53,7 @@ Expression<T>::Expression(const std::string& expression):
 	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
-	getValue(&getDefaultValue)
+	getValueFunc(&getDefaultValue)
 {
 }
 
@@ -65,7 +65,7 @@ Expression<T>::Expression(CatRuntimeContext* compileContext, const std::string& 
 	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
-	getValue(&getDefaultValue)
+	getValueFunc(&getDefaultValue)
 {
 	compile(compileContext);
 }
@@ -157,16 +157,19 @@ void Expression<T>::compile(CatRuntimeContext* context)
 	}
 	else if (context != nullptr)
 	{
-		LLVMCompileTimeContext llvmCompileContext(context);
-		llvmCompileContext.options.enableDereferenceNullChecks = true;
-		intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
-		if (functionAddress != 0)
+		if (!isConstant)
 		{
-			getValue = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
-		}
-		else
-		{
-			assert(false);
+			LLVMCompileTimeContext llvmCompileContext(context);
+			llvmCompileContext.options.enableDereferenceNullChecks = true;
+			intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+			if (functionAddress != 0)
+			{
+				getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
+			}
+			else
+			{
+				assert(false);
+			}
 		}
 		context->getErrorManager()->compiledWithoutErrors(this);
 	}
@@ -218,7 +221,7 @@ SLRParseResult* Expression<T>::parse(CatRuntimeContext* context)
 		{
 			parseResult->success = false;
 			parseResult->errorMessage = resultType.getErrorMessage();
-			getValue = &getDefaultValue;
+			getValueFunc = &getDefaultValue;
 		}
 		else 
 		{	
@@ -263,19 +266,6 @@ SLRParseResult* Expression<T>::parse(CatRuntimeContext* context)
 				{
 					isConstant = true;
 					cachedValue = getActualValue(expressionAST->execute(context));
-					/*auto cachedFunction = [cachedValue](CatRuntimeContext*){return cachedValue;};
-					interpretedResultFunction = cachedFunction;
-					getValue = cachedFunction;*/
-				}
-				else
-				{
-					/*auto interpreterFunction = [expressionAST](CatRuntimeContext* runtimeContext)
-												{
-													CatValue value = expressionAST->execute(runtimeContext);
-													return getActualValue(value);
-												};
-					interpretedResultFunction = interpreterFunction;
-					getValue = interpreterFunction;*/
 				}
 			}
 		}
@@ -299,7 +289,7 @@ std::string&  Expression<T>::getExpressionForSerialisation()
 
 
 template<typename T>
-inline const T Expression<T>::getValue2(CatRuntimeContext* runtimeContext)
+inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 {
 	if (isConstant)
 	{
@@ -307,7 +297,7 @@ inline const T Expression<T>::getValue2(CatRuntimeContext* runtimeContext)
 	}
 	else
 	{
-		return getValue(runtimeContext);
+		return getValueFunc(runtimeContext);
 	}
 }
 

@@ -76,11 +76,6 @@ void testExpression(CatRuntimeContext& context, const std::string& expression)
 		value = testFloatExpression.getValue(&context);
 	}
 	float nativeTime = timer.getTimeSincePreviousCall();
-	for (int i = 0; i < iterations; i++)
-	{
-		value = testFloatExpression.getValue2(&context);
-	}
-	float nativeTime2 = timer.getTimeSincePreviousCall();
 
 	std::cout << "Results:\n";
 	std::cout << "native code: " << value << "\n";
@@ -88,7 +83,6 @@ void testExpression(CatRuntimeContext& context, const std::string& expression)
 	std::cout << iterations << " iterations:\n";
 	std::cout << "interpreted time: " << std::setprecision(9) << interpretedTime << "\n"; 
 	std::cout << "native time     : " << std::setprecision(9) << nativeTime << " (" << interpretedTime / nativeTime <<  "x faster than interpreter)\n";;
-	std::cout << "native2 time    : " << std::setprecision(9) << nativeTime2 << " (" << interpretedTime / nativeTime2 <<  "x faster than interpreter)\n";
 
 	if (value == valueInterpreted)
 	{

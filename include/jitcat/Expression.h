@@ -50,9 +50,7 @@ public:
 
 	//Executes the expression and returns the value.
 	//If isConst() == true then context may be nullptr, otherwise a context needs to be provided
-	const T (*getValue)(CatRuntimeContext* runtimeContext);
-	
-	const T getValue2(CatRuntimeContext* runtimeContext);
+	const T getValue(CatRuntimeContext* runtimeContext);
 
 	const T getInterpretedValue(CatRuntimeContext* runtimeContext);
 
@@ -70,6 +68,8 @@ private:
 	static inline const T getDefaultValue(CatRuntimeContext*);
 
 private:
+	const T (*getValueFunc)(CatRuntimeContext* runtimeContext);
+
 	std::string expression;
 	std::unique_ptr<SLRParseResult> parseResult;
 	bool expressionIsLiteral;

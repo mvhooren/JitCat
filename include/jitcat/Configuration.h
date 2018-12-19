@@ -22,7 +22,7 @@ public:
 
 	static constexpr bool dumpFunctionIR = 
 #ifdef _DEBUG
-		true;
+		false;
 #else
 		false;
 #endif
