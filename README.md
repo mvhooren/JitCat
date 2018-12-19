@@ -1,5 +1,5 @@
 # JitCat
-A C++11 library for parsing and executing expressions. Allows easy exposure of variables and functions from C++ through built-in reflection functionality.
+A C++17 library for parsing and executing expressions. Allows easy exposure of variables and functions from C++ through built-in reflection functionality.
 
 [Get it on github](https://github.com/mvhooren/JitCat).
 
@@ -18,7 +18,7 @@ A C++11 library for parsing and executing expressions. Allows easy exposure of v
 * Graceful error handling with human-readable error messages, though this area can use improvement.
 * Can export reflected types to a XML file for use with the JitCatValidator shared library to validate and code-complete expressions outside of the main C++ application. 
 * No external dependencies besides the C++11 standard library.
-* CMake as well as Visual Studio 2015+ project files. Tested to compile using clang (3.8), gcc (5.4), VS2015 and VS2017.
+* CMake as well as Visual Studio 2017+ project files. Tested to compile using clang (3.8), gcc (5.4) and VS2017.
 * Built-in functionality for code completion of expressions.
 * Has been used and tested in production, but do expect breaking changes in the near-term.
 * Not much documentation as of yet, unfortunately. See the JitCatTest code int /test for basic usage. Improvements to documentation coming soon.
