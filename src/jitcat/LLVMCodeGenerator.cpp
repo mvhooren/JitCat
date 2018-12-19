@@ -41,7 +41,6 @@ LLVMCodeGenerator::LLVMCodeGenerator():
 	helper(new LLVMCodeGeneratorHelper(builder.get(), currentModule.get()))
 {
 	std::string targetTriple = LLVMJit::get().getTargetMachine().getTargetTriple().str();
-	std::cout << "Constructed code generator for target: " << targetTriple << "\n";
 	currentModule->setTargetTriple(targetTriple);
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
 	helper->setCurrentModule(currentModule.get());
