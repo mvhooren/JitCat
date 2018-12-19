@@ -85,22 +85,42 @@ std::string LLVMCatIntrinsics::intToFixedLengthString(int number, int stringLeng
 }
 
 
-void LLVMCatIntrinsics::stringCopyConstruct(std::string* destination, const std::string& string)
+void LLVMCatIntrinsics::stringEmptyConstruct(std::string* destination)
 {
-	new (destination) std::string(string);
+	new (destination) std::string();
+}
+
+
+void LLVMCatIntrinsics::stringCopyConstruct(std::string* destination, const std::string* string)
+{
+	if (string != nullptr)
+	{
+		new (destination) std::string(*string);
+	}
+	else
+	{
+		new (destination) std::string("");
+	}
 }
 
 
 void LLVMCatIntrinsics::stringDestruct(std::string* target)
 {
-	target->~basic_string();
+	if (target != nullptr)
+	{
+		target->~basic_string();
+	}
 }
 
 
-int LLVMCatIntrinsics::findInString(const std::string& text, const std::string& textToFind)
+int LLVMCatIntrinsics::findInString(const std::string* text, const std::string* textToFind)
 {
-	std::size_t pos = text.find(textToFind);
-	if (pos == text.npos)
+	if (text == nullptr || textToFind == nullptr)
+	{
+		return -1;
+	}
+	std::size_t pos = text->find(*textToFind);
+	if (pos == text->npos)
 	{
 		return -1;
 	}
@@ -111,38 +131,49 @@ int LLVMCatIntrinsics::findInString(const std::string& text, const std::string& 
 }
 
 
-std::string LLVMCatIntrinsics::replaceInString(const std::string& text, const std::string& textToFind, const std::string& replacement)
+std::string LLVMCatIntrinsics::replaceInString(const std::string* text, const std::string* textToFind, const std::string* replacement)
 {
-	if (text != "")
-	{
-		std::string newString = text;
-		size_t startPosition = 0;
-		while ((startPosition = newString.find(textToFind, startPosition)) != std::string::npos)
-		{
-			newString.replace(startPosition, textToFind.length(), replacement);
-			startPosition += replacement.length(); 
-		}
-		return newString;
-	}
-	return text;
-}
-
-
-int LLVMCatIntrinsics::stringLength(const std::string& text)
-{
-	return (int)text.size();
-}
-
-
-std::string LLVMCatIntrinsics::subString(const std::string& text, int start, int length)
-{
-	if (text.size() == 0)
+	if (text == nullptr || textToFind == nullptr || replacement == nullptr)
 	{
 		return "";
 	}
-	else if ((int)text.size() > start && start >= 0)
+	if (*text != "")
 	{
-		return text.substr((unsigned int)start, (unsigned int)length);
+		std::string newString = *text;
+		size_t startPosition = 0;
+		while ((startPosition = newString.find(*textToFind, startPosition)) != std::string::npos)
+		{
+			newString.replace(startPosition, textToFind->length(), *replacement);
+			startPosition += replacement->length(); 
+		}
+		return newString;
+	}
+	return *text;
+}
+
+
+int LLVMCatIntrinsics::stringLength(const std::string* text)
+{
+	if (text != nullptr)
+	{
+		return (int)text->size();
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+
+std::string LLVMCatIntrinsics::subString(const std::string* text, int start, int length)
+{
+	if (text == nullptr || text->size() == 0)
+	{
+		return "";
+	}
+	else if ((int)text->size() > start && start >= 0)
+	{
+		return text->substr((unsigned int)start, (unsigned int)length);
 	}
 	else
 	{

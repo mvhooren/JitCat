@@ -48,25 +48,10 @@ LLVMJit::LLVMJit():
 	LLVMTypes::stringType = llvm::StructType::create(structMembers, "std::string");
 	LLVMTypes::stringPtrType = llvm::PointerType::get(LLVMTypes::stringType, 0);
 
-	{
-		std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType};
-		LLVMTypes::functionRetPtrArgPtr = llvm::FunctionType::get(LLVMTypes::pointerType, parameters, false);
-	}
-
-	{
-		std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType, LLVMTypes::pointerType};
-		LLVMTypes::functionRetPtrArgPtr_Ptr = llvm::FunctionType::get(LLVMTypes::pointerType, parameters, false);
-	}
-
-	{
-		std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType, LLVMTypes::intType};
-		LLVMTypes::functionRetPtrArgPtr_Int = llvm::FunctionType::get(LLVMTypes::pointerType, parameters, false);
-	}
-
-	{
-		std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType, LLVMTypes::stringPtrType};
-		LLVMTypes::functionRetPtrArgPtr_StringPtr = llvm::FunctionType::get(LLVMTypes::pointerType, parameters, false);
-	}
+	LLVMTypes::functionRetPtrArgPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType}, false);
+	LLVMTypes::functionRetPtrArgPtr_Ptr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::pointerType}, false);
+	LLVMTypes::functionRetPtrArgPtr_Int = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::intType}, false);
+	LLVMTypes::functionRetPtrArgPtr_StringPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::stringPtrType}, false);
 }
 
 

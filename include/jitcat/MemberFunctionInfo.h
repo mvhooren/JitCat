@@ -115,7 +115,7 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 			//std::decay removes const and & from the type.
 			return TypeTraits<U>::getCatValue((baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...));
 		}
-		return CatValue();
+		return CatValue(CatError("Parent of function call is null."));
 	}
 
 
@@ -175,7 +175,7 @@ struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 			//std::decay removes const and & from the type.
 			(baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...);
 		}
-		return CatValue();
+		return CatValue(CatError("Parent of function call is null."));
 	}
 
 
@@ -235,7 +235,7 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 			//std::decay removes const and & from the type.
 			return TypeTraits<U>::getCatValue((baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...));
 		}
-		return CatValue();
+		return CatValue(CatError("Parent of function call is null."));
 	}
 
 
@@ -295,7 +295,7 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 			//std::decay removes const and & from the type.
 			(baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...);
 		}
-		return CatValue();
+		return CatValue(CatError("Parent of function call is null."));
 	}
 
 

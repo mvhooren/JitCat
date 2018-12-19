@@ -7,6 +7,8 @@
 
 #pragma once
 
+struct LLVMCompileTimeContext;
+
 #include "BasicTypeMemberReference.h"
 #include "CustomTypeInstance.h"
 #include "LLVMForwardDeclares.h"
@@ -20,7 +22,7 @@ struct CustomBasicTypeMemberInfo: public TypeMemberInfo
 	CustomBasicTypeMemberInfo(const std::string& memberName, unsigned int memberOffset, CatType type, bool isConst, bool isWritable): TypeMemberInfo(memberName, type, isConst, isWritable), memberOffset(memberOffset) {}
 
 	inline virtual MemberReferencePtr getMemberReference(MemberReferencePtr& base) override final;
-	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const override final;
+	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 
 	void assign(MemberReferencePtr& base, const T& valueToSet);
 
@@ -36,7 +38,7 @@ struct CustomTypeObjectMemberInfo: public TypeMemberInfo
 	inline static Reflectable* getReflectable(MemberReferencePtr& reference);
 
 	inline virtual MemberReferencePtr getMemberReference(MemberReferencePtr& base) override final;
-	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const override final;
+	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 	
 	void assign(MemberReferencePtr& base, MemberReferencePtr valueToSet);
 	

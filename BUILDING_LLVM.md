@@ -1,10 +1,16 @@
 This document describes how to configure a LLVM http://llvm.org/ build for use with JitCat.
 
+Important: 
+Due to an issue issue with LLVM, before building, we need to apply a small workaround to the llvm code when building LLVM for Windows/MSVC:
+Find MCAsmInfoCOFF.cpp and change HasCOFFComdatConstants to false.
+See this issue on the LLVM bugzilla: https://bugs.llvm.org/show_bug.cgi?id=40074
+
+
 JitCat uses some of the latest features of LLVM, some of which are not yet included in an official LLVM release.
 Therefore, you will have to build LLVM from source. Check out the trunk using SVN:
 http://llvm.org/svn/llvm-project/llvm/trunk
 JitCat will track the trunk as much as possible, but it can happen that updates to LLVM will break a JitCat build.
-At the time of writing, JitCat is built against revision 349060.
+At the time of writing, JitCat is built against revision 349475.
 Once a stable LLVM version is released that includes everything JitCat needs, JitCat will target that version.
 
 

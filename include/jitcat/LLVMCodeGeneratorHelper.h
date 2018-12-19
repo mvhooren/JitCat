@@ -8,6 +8,7 @@ struct LLVMCompileTimeContext;
 #include "LLVMForwardDeclares.h"
 #include "LLVMTypes.h"
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -20,6 +21,8 @@ public:
 	template<typename T, typename ... Args>
 	llvm::Value* createCall(LLVMCompileTimeContext* context, T (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
 	llvm::Value* createCall(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName);
+	llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, llvm::Type* resultType, LLVMCompileTimeContext* context); 
+	llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context); 
 
 	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameterType, llvm::Value* argument, LLVMCompileTimeContext* context);
 	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameter1Type, CatType parameter2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
@@ -40,6 +43,8 @@ public:
 	llvm::Value* createConstant(int constant);
 	llvm::Value* createConstant(float constant);
 	llvm::Value* createConstant(bool constant);
+	llvm::Value* createPtrConstant(unsigned long long address, const std::string& name, llvm::Type* pointerType = LLVMTypes::pointerType);
+	llvm::Value* createEmptyStringPtrConstant();
 
 	void setCurrentModule(llvm::Module* module);
 
@@ -51,6 +56,7 @@ public:
 
 	static llvm::FunctionType* createFunctionType(llvm::Type* returnType, const std::vector<llvm::Type*>& argumentTypes);
 
+
 private:
 	llvm::Value* generateCall(LLVMCompileTimeContext* context, uintptr_t functionAddress, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isStructRet, const std::string& name);
 
@@ -58,6 +64,8 @@ private:
 	llvm::LLVMContext& llvmContext;
 	llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder;
 	llvm::Module* currentModule;
+
+	static const std::string emptyString;
 };
 
 

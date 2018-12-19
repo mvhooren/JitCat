@@ -1,5 +1,5 @@
 #include "CustomTypeMemberInfo.h"
-
+#include "LLVMCompileTimeContext.h"
 
 template<>
 inline MemberReferencePtr CustomBasicTypeMemberInfo<std::string>::getMemberReference(MemberReferencePtr& base)
@@ -35,7 +35,7 @@ inline MemberReferencePtr CustomBasicTypeMemberInfo<T>::getMemberReference(Membe
 }
 
 template<typename T>
-inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
+inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
 	unsigned long long dataPointerOffset = 0;
 	//Get the offset to a the "data" member of the CustomTypeInstance object that is pointed to by parentObjectPointer.
@@ -51,31 +51,36 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::
 	{
 		memcpy(&dataPointerOffset, &dataMemberPointer, 8);
 	}
-	
-	//Create an llvm constant that contains the offset to "data"
-	llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant(dataPointerOffset, "offsetTo_CustomTypeInstance.data" );
-	//Convert pointer to int so it can be used in createAdd
-	llvm::Value* dataPointerAddressInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
-	//Add the offset to the address of the CustomTypeInstance object
-	llvm::Value* dataPointerAddressValue = generatorHelper->createAdd(dataPointerAddressInt, dataPointerOffsetValue, "dataIntPtrPtr");
-	//Load the data pointer stored inside the CustomTypeInstance object
-	llvm::Value* dataPointer = generatorHelper->loadPointerAtAddress(dataPointerAddressValue, "dataPtr");
-	//Convert to int so we can add the offset
-	llvm::Value* dataPointerAsInt = generatorHelper->convertToIntPtr(dataPointer, "dataIntPtr");
-	//Create a constant with the offset of this member relative to the the data pointer
-	llvm::Value* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
-	//Add the offset to the data pointer.
-	llvm::Value* addressValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
-	if constexpr (std::is_same<T, std::string>::value)
+
+	bool loadString = std::is_same<T, std::string>::value;
+
+	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
-		//std::string case (returns a pointer to the std::string)
-		return generatorHelper->loadPointerAtAddress(addressValue, memberName, LLVMTypes::stringPtrType);
-	}
-	else
-	{
-		//int, bool, float case	(returns by value)
-		return generatorHelper->loadBasicType(generatorHelper->toLLVMType(catType), addressValue, memberName);
-	}
+		LLVMCodeGeneratorHelper* generatorHelper = compileContext->helper;
+		//Create an llvm constant that contains the offset to "data"
+		llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant(dataPointerOffset, "offsetTo_CustomTypeInstance.data" );
+		//Convert pointer to int so it can be used in createAdd
+		llvm::Value* dataPointerAddressInt = generatorHelper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
+		//Add the offset to the address of the CustomTypeInstance object
+		llvm::Value* dataPointerAddressValue = generatorHelper->createAdd(dataPointerAddressInt, dataPointerOffsetValue, "dataIntPtrPtr");
+		//Load the data pointer stored inside the CustomTypeInstance object
+		llvm::Value* dataPointer = generatorHelper->loadPointerAtAddress(dataPointerAddressValue, "dataPtr");
+		//Convert to int so we can add the offset
+		llvm::Value* dataPointerAsInt = generatorHelper->convertToIntPtr(dataPointer, "dataIntPtr");
+		//Create a constant with the offset of this member relative to the the data pointer
+		llvm::Value* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		//Add the offset to the data pointer.
+		llvm::Value* addressValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
+		if (loadString)
+		{
+			return generatorHelper->loadPointerAtAddress(addressValue, memberName, LLVMTypes::stringPtrType);
+		}
+		else
+		{
+			return generatorHelper->loadBasicType(generatorHelper->toLLVMType(catType), addressValue, memberName);
+		}
+	};
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);
 }
 
 
@@ -139,7 +144,7 @@ inline MemberReferencePtr CustomTypeObjectMemberInfo::getMemberReference(MemberR
 }
 
 
-inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCodeGeneratorHelper* generatorHelper) const
+inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
 	unsigned long long dataPointerOffset = 0;
 	//Get the offset to a the "data" member of the CustomTypeInstance object that is pointed to by parentObjectPointer.
@@ -159,22 +164,26 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Va
 	}
 
 
-	//Create an llvm constant that contains the offset to "data"
-	llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
-	//Add the offset to the address of the CustomTypeInstance object
-	llvm::Value* dataPointerAddressValue = generatorHelper->createAdd(parentObjectPointer, dataPointerOffsetValue, "dataPtr_IntPtr");
-	//Load the data pointer stored inside the CustomTypeInstance object
-	llvm::Value* dataPointer = generatorHelper->loadPointerAtAddress(dataPointerAddressValue, "data_Ptr");
-	//Convert to int so we can add the offset
-	llvm::Value* dataPointerAsInt = generatorHelper->convertToIntPtr(dataPointer, "data_IntPtr");
-	//Create a constant with the offset of this member relative to the the data pointer
-	llvm::Value* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
-	//Add the offset to the data pointer.
-	llvm::Value* addressValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
-	//Pointer to a MemberReferencePtr
-	llvm::Value* memberReferencePtr = generatorHelper->loadPointerAtAddress(addressValue, "MemberReferencePtr");
-	//Call function that gets the member
-	return generatorHelper->createCall(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&getReflectable), {memberReferencePtr}, "getReflectable");
+	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	{
+		//Create an llvm constant that contains the offset to "data"
+		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
+		//Add the offset to the address of the CustomTypeInstance object
+		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentObjectPointer, dataPointerOffsetValue, "dataPtr_IntPtr");
+		//Load the data pointer stored inside the CustomTypeInstance object
+		llvm::Value* dataPointer = context->helper->loadPointerAtAddress(dataPointerAddressValue, "data_Ptr");
+		//Convert to int so we can add the offset
+		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(dataPointer, "data_IntPtr");
+		//Create a constant with the offset of this member relative to the the data pointer
+		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		//Add the offset to the data pointer.
+		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
+		//Pointer to a MemberReferencePtr
+		llvm::Value* memberReferencePtr = context->helper->loadPointerAtAddress(addressValue, "MemberReferencePtr");
+		//Call function that gets the member
+		return context->helper->createCall(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&getReflectable), {memberReferencePtr}, "getReflectable");
+	};
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
 }
 
 

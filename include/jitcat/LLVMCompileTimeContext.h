@@ -1,7 +1,7 @@
 #pragma once
 
 class CatRuntimeContext;
-
+class LLVMCodeGeneratorHelper;
 #include <functional>
 #include "LLVMCompileOptions.h"
 #include "LLVMForwardDeclares.h"
@@ -16,7 +16,9 @@ struct LLVMCompileTimeContext
 	CatRuntimeContext* catContext;
 	llvm::Function* currentFunction;
 
+	LLVMCodeGeneratorHelper* helper;
 	std::vector<std::function<llvm::Value*()>> blockDestructorGenerators;
+
 
 	LLVMCompileOptions options;
 };

@@ -28,12 +28,13 @@ public:
 	static std::string intToString(int number);
 	static std::string intToPrettyString(int number);
 	static std::string intToFixedLengthString(int number, int stringLength);
-	static void stringCopyConstruct(std::string* destination, const std::string& string);
+	static void stringEmptyConstruct(std::string* destination);
+	static void stringCopyConstruct(std::string* destination, const std::string* string);
 	static void stringDestruct(std::string* target);
-	static int findInString(const std::string& text, const std::string& textToFind);
-	static std::string replaceInString(const std::string& text, const std::string& textToFind, const std::string& replacement);
-	static int stringLength(const std::string& text);
-	static	std::string subString(const std::string& text, int start, int length);
+	static int findInString(const std::string* text, const std::string* textToFind);
+	static std::string replaceInString(const std::string* text, const std::string* textToFind, const std::string* replacement);
+	static int stringLength(const std::string* text);
+	static	std::string subString(const std::string* text, int start, int length);
 	static float getRandomFloat();
 	static bool getRandomBoolean(bool first, bool second);
 	static int getRandomInt(int min, int max);

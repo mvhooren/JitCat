@@ -56,45 +56,39 @@ public:
 template<typename T>
 void testExpression(CatRuntimeContext& context, const std::string& expression)
 {
+	std::cout << "\n###########################################################################\n\n";
+	std::cout << "Testing '" << expression << "'\n\n";
 	Expression<T> testFloatExpression(&context, expression);
 	T value = testFloatExpression.getValue(&context);
 	T valueInterpreted = testFloatExpression.getInterpretedValue(&context);
 
-	const int iterations = 10000;
+	const int iterations = 100000;
 	Timer timer;
 	timer.getTimeSincePreviousCall();
+	bool hasError = false;
 	for (int i = 0; i < iterations; i++)
 	{
 		valueInterpreted = testFloatExpression.getInterpretedValue(&context);
-		if (valueInterpreted != value)
-		{
-			assert(false);
-			std::cout << "ERROR!\n";
-		}
 	}
 	float interpretedTime = timer.getTimeSincePreviousCall();
 	for (int i = 0; i < iterations; i++)
 	{
 		value = testFloatExpression.getValue(&context);
-		if (valueInterpreted != value)
-		{
-			assert(false);
-			std::cout << "ERROR!\n";
-		}
 	}
 	float nativeTime = timer.getTimeSincePreviousCall();
 	for (int i = 0; i < iterations; i++)
 	{
 		value = testFloatExpression.getValue2(&context);
-		if (valueInterpreted != value)
-		{
-			assert(false);
-			std::cout << "ERROR!\n";
-		}
 	}
 	float nativeTime2 = timer.getTimeSincePreviousCall();
-	std::cout << "Testing '" << expression << "': native: " << value << " interpreted: " << valueInterpreted << " " << iterations << " iterations, native time: " << std::setprecision(9) << nativeTime << " interpreted time: " << std::setprecision(9) << interpretedTime << " (" << interpretedTime / nativeTime <<  "x) native2 time: " << std::setprecision(9) << nativeTime2 << " (" << interpretedTime / nativeTime2 <<  "x)\n";
 
+	std::cout << "Results:\n";
+	std::cout << "native code: " << value << "\n";
+	std::cout << "interpreter: " << valueInterpreted << "\n";
+	std::cout << iterations << " iterations:\n";
+	std::cout << "interpreted time: " << std::setprecision(9) << interpretedTime << "\n"; 
+	std::cout << "native time     : " << std::setprecision(9) << nativeTime << " (" << interpretedTime / nativeTime <<  "x faster than interpreter)\n";;
+	std::cout << "native2 time    : " << std::setprecision(9) << nativeTime2 << " (" << interpretedTime / nativeTime2 <<  "x faster than interpreter)\n";
 
 	if (value == valueInterpreted)
 	{

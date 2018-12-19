@@ -322,7 +322,14 @@ inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeCont
 	else if (expressionAST != nullptr)
 	{
 		CatValue value = expressionAST->execute(runtimeContext);
-		return getActualValue(value);
+		if (value.getValueType() != CatType::Error)
+		{
+			return getActualValue(value);
+		}
+		else
+		{
+			return T();
+		}
 	}
 	else
 	{

@@ -11,6 +11,7 @@
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Verifier.h>
@@ -39,6 +40,83 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionTyp
 		callInstruction->setName(functionName);
 	}
 	return callInstruction;
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, llvm::Type* resultType, LLVMCompileTimeContext* context)
+{
+	if (context->options.enableDereferenceNullChecks)
+	{
+		auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
+		{
+			if (resultType == LLVMTypes::boolType)			return createConstant(false);
+			else if (resultType == LLVMTypes::floatType)	return createConstant(0.0f);
+			else if (resultType == LLVMTypes::intType)		return createConstant(0);
+			else if (resultType == LLVMTypes::stringPtrType)return createPtrConstant(0, "nullString", LLVMTypes::stringPtrType);
+			else if (resultType == LLVMTypes::pointerType)	return createPtrConstant(0, "nullptr");
+			else
+			{
+				assert(false);
+				return (llvm::Value*)nullptr;
+			}
+		};
+		return createOptionalNullCheckSelect(valueToCheck, codeGenIfNotNull, codeGenIfNull, context);
+	}
+	else
+	{
+		return codeGenIfNotNull(context);
+	}
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context)
+{
+	if (context->options.enableDereferenceNullChecks)
+	{
+		llvm::Value* isNotNull = nullptr;
+		if (valueToCheck->getType() != LLVMTypes::boolType)
+		{
+			isNotNull = builder->CreateIsNotNull(valueToCheck, "IsNotNull");
+		}
+		else
+		{
+			isNotNull = valueToCheck;
+		}
+		llvm::Function* currentFunction = builder->GetInsertBlock()->getParent();
+
+		llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(llvmContext, "thenIsNotNull", currentFunction);
+		llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(llvmContext, "elseIsNull");
+		llvm::BasicBlock* continuationBlock = llvm::BasicBlock::Create(llvmContext, "ifcont");
+		llvm::BranchInst* branchInst = builder->CreateCondBr(isNotNull, thenBlock, elseBlock);
+
+		llvm::MDBuilder metadataBuilder(llvmContext);
+		llvm::MDNode* branchPredictNode = metadataBuilder.createBranchWeights(2000, 1);
+		branchInst->setMetadata(llvm::LLVMContext::MD_prof, branchPredictNode);
+
+		//branchInst->setMetadata(, 
+		builder->SetInsertPoint(thenBlock);
+		llvm::Value* thenResult = codeGenIfNotNull(context);
+		builder->CreateBr(continuationBlock);
+		thenBlock = builder->GetInsertBlock();
+
+		currentFunction->getBasicBlockList().push_back(elseBlock);
+		builder->SetInsertPoint(elseBlock);
+		llvm::Value* elseResult = codeGenIfNull(context);
+		builder->CreateBr(continuationBlock);
+		// codegen of 'Else' can change the current block, update ElseBB for the PHI.
+		elseBlock = builder->GetInsertBlock();
+		currentFunction->getBasicBlockList().push_back(continuationBlock);
+		builder->SetInsertPoint(continuationBlock);
+		llvm::PHINode* phiNode = builder->CreatePHI(thenResult->getType(), 2, "ifResult");
+
+		phiNode->addIncoming(thenResult, thenBlock);
+		phiNode->addIncoming(elseResult, elseBlock);
+		return phiNode;
+	}
+	else
+	{
+		return codeGenIfNotNull(context);
+	}
 }
 
 
@@ -73,7 +151,7 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(CatType type)
 		case CatType::Float:	return LLVMTypes::floatType;
 		case CatType::Int:		return LLVMTypes::intType;
 		case CatType::Bool:		return LLVMTypes::boolType;
-		case CatType::String:	return LLVMTypes::stringType;
+		case CatType::String:	return LLVMTypes::stringPtrType;
 		case CatType::Object:	return LLVMTypes::pointerType;
 		default:
 		case CatType::Void:		return LLVMTypes::voidType;
@@ -231,13 +309,26 @@ llvm::Value* LLVMCodeGeneratorHelper::createConstant(int constant)
 
 llvm::Value* LLVMCodeGeneratorHelper::createConstant(float constant)
 {
-	return llvm::ConstantFP::get(llvmContext, llvm::APFloat(constant));													
+	return llvm::ConstantFP::get(llvmContext, llvm::APFloat(constant));
 }
 
 
 llvm::Value* LLVMCodeGeneratorHelper::createConstant(bool constant)
 {
 	return constant ? llvm::ConstantInt::getTrue(llvmContext) : llvm::ConstantInt::getFalse(llvmContext);
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::createPtrConstant(unsigned long long address, const std::string& name, llvm::Type* pointerType)
+{
+	llvm::Value* constant = createIntPtrConstant(address, Tools::append(name, "_IntPtr"));
+	return convertToPointer(constant, Tools::append(name, "_Ptr"), pointerType); 
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::createEmptyStringPtrConstant()
+{
+	return createPtrConstant(reinterpret_cast<uintptr_t>(&emptyString), "EmptyString", LLVMTypes::stringPtrType);
 }
 
 
@@ -249,9 +340,23 @@ void LLVMCodeGeneratorHelper::setCurrentModule(llvm::Module* module)
 
 llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext* context, const std::string& name)
 {
+	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
+	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
+	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
 	llvm::AllocaInst* stringObjectAllocation = builder->CreateAlloca(LLVMTypes::stringType, 0, nullptr);
+	createCall(context, &LLVMCatIntrinsics::stringEmptyConstruct, {stringObjectAllocation}, "stringEmptyConstruct");
 	stringObjectAllocation->setName(name);
+
+	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
 	context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");});
+	if (currentBlockIsEntryBlock)
+	{
+		builder->SetInsertPoint(updatedBlock);
+	}
+	else
+	{
+		builder->SetInsertPoint(previousInsertBlock);
+	}
 	return stringObjectAllocation;
 }
 
@@ -317,3 +422,6 @@ llvm::Value* LLVMCodeGeneratorHelper::generateCall(LLVMCompileTimeContext* conte
 		return call;
 	}
 }
+
+
+const std::string LLVMCodeGeneratorHelper::emptyString = "";

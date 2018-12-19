@@ -3,6 +3,7 @@
 
 LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):
 	catContext(catContext),
-	currentFunction(nullptr)
+	currentFunction(nullptr),
+	helper(nullptr)
 {
 }
