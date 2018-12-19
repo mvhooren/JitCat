@@ -1,11 +1,12 @@
+# Building LLVM for use with JitCat
 This document describes how to configure a LLVM http://llvm.org/ build for use with JitCat.
 
-Important: 
+## Important
 Due to an issue issue with LLVM, before building, we need to apply a small workaround to the llvm code when building LLVM for Windows/MSVC:
 Find MCAsmInfoCOFF.cpp and change HasCOFFComdatConstants to false.
 See this issue on the LLVM bugzilla: https://bugs.llvm.org/show_bug.cgi?id=40074
 
-
+## Introduction
 JitCat uses some of the latest features of LLVM, some of which are not yet included in an official LLVM release.
 Therefore, you will have to build LLVM from source. Check out the trunk using SVN:
 http://llvm.org/svn/llvm-project/llvm/trunk
@@ -13,16 +14,16 @@ JitCat will track the trunk as much as possible, but it can happen that updates 
 At the time of writing, JitCat is built against revision 349475.
 Once a stable LLVM version is released that includes everything JitCat needs, JitCat will target that version.
 
-
+## Read the documentation
 For building LLVM first of all refer to LLVM build documentation:
 Getting started https://llvm.org/docs/GettingStarted.html
 Building LLVM with Cmake https://llvm.org/docs/CMake.html
 Getting Started with the LLVM System using Microsoft Visual Studio https://llvm.org/docs/GettingStartedVS.html
 
-Non-Windows/MSVC platforms:
+## Non-Windows/MSVC platforms
 The default CMake configuration of LLVM will work fine, but it is possible to reduce build time and diskspace usage of the LLVM build by disabling certain features (see below).
 
-Windows / Visual Studio:
+## Windows / Visual Studio
 Use CMake to generate your Visual Studio project files. (I highly recommend using the CMake gui.)
 Make sure you select the proper project generator for your use case. There are separate generators for 64 bit and 32 bit projects.
 
@@ -43,7 +44,7 @@ CMAKE_C_FLAGS_MINSIZEREL
 CMAKE_C_FLAGS_RELWITHDEBINFO
 
 
-Reducing LLVM build time (all platforms):
+## Reducing LLVM build time (all platforms)
 
 LLVM is a huge project and JitCat only needs part of it.
 In order to minimize build time, a lot of things can be disabled.

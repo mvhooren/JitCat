@@ -94,7 +94,7 @@ template<typename T, typename U>
 template<typename ContainerItemType>
 inline ContainerItemType ContainerMemberInfo<T, U>::getVectorIndex(std::vector<ContainerItemType>* vector, int index)
 {
-	if (index >= 0 && index < vector->size())
+	if (index >= 0 && index < (int)vector->size())
 	{
 		return vector->operator[](index);
 	}

@@ -62,7 +62,7 @@ void testExpression(CatRuntimeContext& context, const std::string& expression)
 	T value = testFloatExpression.getValue(&context);
 	T valueInterpreted = testFloatExpression.getInterpretedValue(&context);
 
-	const int iterations = 100000;
+	const int iterations = 10000;
 	Timer timer;
 	timer.getTimeSincePreviousCall();
 	bool hasError = false;

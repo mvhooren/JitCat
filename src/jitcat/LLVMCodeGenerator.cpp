@@ -169,7 +169,7 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(CatTypedExpression* ex
 	llvm::Function* function = generateExpressionFunction(expression, context, functionName);
 	assert(function != nullptr);
 	LLVMJit::get().addModule(currentModule);
-	return LLVMJit::get().getSymbolAddress(functionName.c_str());
+	return (intptr_t)LLVMJit::get().getSymbolAddress(functionName.c_str());
 }
 
 
