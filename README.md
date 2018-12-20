@@ -57,7 +57,6 @@ if (anyValue.getGenericType().isVectorType())
 JitCat is under active development. These are some of the major features that can be expected in the future:
 * Documentation and examples
 * Support for more types.
-* Optional compilation of expressions to native code using LLVM jit compilation.
 * Extending the language beyond simple expressions.
 
 ## License
