@@ -27,7 +27,7 @@ CatRuntimeContext::CatRuntimeContext(TypeInfo* globalType, TypeInfo* thisType,
 	customGlobalsType(customGlobalsType),
 	errorManager(errorManager),
 	ownsErrorManager(false),
-	codeGenerator(new LLVMCodeGenerator()),
+	codeGenerator(new LLVMCodeGenerator(contextName)),
 	nextFunctionIndex(0)
 {
 	if (errorManager == nullptr)

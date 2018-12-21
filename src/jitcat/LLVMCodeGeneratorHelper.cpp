@@ -178,7 +178,6 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0));
 			return builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero");
 		}
-
 	}
 	else if (type == LLVMTypes::intType)
 	{
@@ -194,6 +193,10 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		else if (valueToConvert->getType() == LLVMTypes::floatType)
 		{
 			return builder->CreateFPToSI(valueToConvert, LLVMTypes::intType, "FloatToInt");
+		}
+		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
+		{
+			return createCall(context, &LLVMCatIntrinsics::stringToInt, {valueToConvert}, "stringToInt");
 		}
 	}
 	else if (type == LLVMTypes::floatType)
@@ -211,10 +214,18 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		{
 			return builder->CreateSIToFP(valueToConvert, LLVMTypes::floatType, "IntToFloat");
 		}
+		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
+		{
+			return createCall(context, &LLVMCatIntrinsics::stringToFloat, {valueToConvert}, "stringToFloat");
+		}
 	}
 	else if (type == LLVMTypes::stringPtrType)
 	{
-		if (valueToConvert->getType() == LLVMTypes::stringPtrType)
+		if (valueToConvert->getType() == LLVMTypes::boolType)
+		{
+			return builder->CreateSelect(valueToConvert, createOneStringPtrConstant(), createZeroStringPtrConstant(), "boolToString");
+		}
+		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
 		{
 			return valueToConvert;
 		}
@@ -424,4 +435,18 @@ llvm::Value* LLVMCodeGeneratorHelper::generateCall(LLVMCompileTimeContext* conte
 }
 
 
+llvm::Value* LLVMCodeGeneratorHelper::createZeroStringPtrConstant()
+{
+	return createPtrConstant(reinterpret_cast<uintptr_t>(&zeroString), "ZeroString", LLVMTypes::stringPtrType);
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::createOneStringPtrConstant()
+{
+	return createPtrConstant(reinterpret_cast<uintptr_t>(&oneString), "OneString", LLVMTypes::stringPtrType);
+}
+
+
 const std::string LLVMCodeGeneratorHelper::emptyString = "";
+const std::string LLVMCodeGeneratorHelper::zeroString = "0";
+const std::string LLVMCodeGeneratorHelper::oneString = "1";

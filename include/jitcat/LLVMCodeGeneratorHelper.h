@@ -59,6 +59,8 @@ public:
 
 private:
 	llvm::Value* generateCall(LLVMCompileTimeContext* context, uintptr_t functionAddress, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isStructRet, const std::string& name);
+	llvm::Value* createZeroStringPtrConstant();
+	llvm::Value* createOneStringPtrConstant();
 
 private:
 	llvm::LLVMContext& llvmContext;
@@ -66,6 +68,8 @@ private:
 	llvm::Module* currentModule;
 
 	static const std::string emptyString;
+	static const std::string oneString;
+	static const std::string zeroString;
 };
 
 

@@ -237,7 +237,7 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 			case CatInfixOperatorType::Modulo:
 				if (isScalar(catType) && isScalar(rCatType))
 				{
-					return CatGenericType(CatType::Int);
+					return CatGenericType(catType);
 				}
 				break;
 			case CatInfixOperatorType::Greater:

@@ -15,10 +15,10 @@ struct LLVMCompileTimeContext
 
 	CatRuntimeContext* catContext;
 	llvm::Function* currentFunction;
+	llvm::orc::JITDylib* currentDyLib;
 
 	LLVMCodeGeneratorHelper* helper;
 	std::vector<std::function<llvm::Value*()>> blockDestructorGenerators;
-
-
+	
 	LLVMCompileOptions options;
 };

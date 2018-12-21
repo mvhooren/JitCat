@@ -42,9 +42,21 @@ std::string LLVMCatIntrinsics::floatToString(float number)
 }
 
 
+float LLVMCatIntrinsics::stringToFloat(const std::string& string)
+{
+	return Tools::convert<float>(string);
+}
+
+
 std::string LLVMCatIntrinsics::intToString(int number)
 {
 	return Tools::makeString(number);
+}
+
+
+int LLVMCatIntrinsics::stringToInt(const std::string& string)
+{
+	return Tools::convert<int>(string);
 }
 
 

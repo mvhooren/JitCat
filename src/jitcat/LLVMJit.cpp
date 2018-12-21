@@ -8,6 +8,7 @@
 #include "LLVMJit.h"
 #include "Configuration.h"
 #include "LLVMTypes.h"
+#include "Tools.h"
 
 
 #include <iostream>
@@ -22,14 +23,15 @@ LLVMJit::LLVMJit():
 	mangler(new llvm::orc::MangleAndInterner(*executionSession, *dataLayout)),
 	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession,
 															[]() {	return llvm::make_unique<llvm::SectionMemoryManager>();})),
-	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(targetMachineBuilder)))
+	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(targetMachineBuilder))),
+	nextDyLibIndex(0)
 {
 	if constexpr (Configuration::enableSymbolSearchWorkaround)
 	{
 		objectLinkLayer->setAutoClaimResponsibilityForObjectSymbols(true);
 		objectLinkLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
 	}
-    executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
+    //executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
 	LLVMTypes::floatType = llvm::Type::getFloatTy(*context->getContext());
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
 	LLVMTypes::boolType = llvm::Type::getInt1Ty(*context->getContext());
@@ -52,6 +54,21 @@ LLVMJit::LLVMJit():
 	LLVMTypes::functionRetPtrArgPtr_Ptr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::pointerType}, false);
 	LLVMTypes::functionRetPtrArgPtr_Int = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::intType}, false);
 	LLVMTypes::functionRetPtrArgPtr_StringPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::stringPtrType}, false);
+
+	
+	llvm::orc::SymbolMap intrinsicSymbols;
+	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary", false);
+
+	llvm::JITSymbolFlags functionFlags(llvm::JITSymbolFlags::Callable);
+	functionFlags |= llvm::JITSymbolFlags::Exported;
+	functionFlags |= llvm::JITSymbolFlags::Absolute;
+	//float (*remainderFloat)(float, float) = &remainder;
+	//executionSession->
+	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
+
+	
+	runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols));
+
 }
 
 
@@ -85,24 +102,32 @@ const llvm::DataLayout& LLVMJit::getDataLayout() const
 }
 
 
-void LLVMJit::addModule(std::unique_ptr<llvm::Module>& module)
+llvm::orc::JITDylib& LLVMJit::createDyLib(const std::string& name)
+{
+	llvm::orc::JITDylib& dylib = executionSession->createJITDylib(Tools::append(name, "_", nextDyLibIndex++), false);
+	dylib.addToSearchOrder(*runtimeLibraryDyLib, false);
+	return dylib;
+}
+
+
+void LLVMJit::addModule(std::unique_ptr<llvm::Module>& module, llvm::orc::JITDylib& dyLib)
 {
     // Add the module to the JIT with a new VModuleKey.
-	llvm::cantFail(compileLayer->add(executionSession->getMainJITDylib(), llvm::orc::ThreadSafeModule(std::move(module), *context.get())));
+	llvm::cantFail(compileLayer->add(dyLib, llvm::orc::ThreadSafeModule(std::move(module), *context.get())));
 }
 
 
-llvm::Expected<llvm::JITEvaluatedSymbol> LLVMJit::findSymbol(const std::string& name) const
+llvm::Expected<llvm::JITEvaluatedSymbol> LLVMJit::findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const
 {
 	//std::cout << "findSymbol: " << name << "\n";
-	return executionSession->lookup({&executionSession->getMainJITDylib()}, mangler->operator()(name));
+	return executionSession->lookup({&dyLib}, mangler->operator()(name));
 }
 
 
-llvm::JITTargetAddress LLVMJit::getSymbolAddress(const std::string& name) const
+llvm::JITTargetAddress LLVMJit::getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const
 {
 	//std::cout << "getSymbolAddress: " << name << "\n";
-	return llvm::cantFail(findSymbol(name)).getAddress();
+	return llvm::cantFail(findSymbol(name, dyLib)).getAddress();
 }
 
 
@@ -118,5 +143,5 @@ LLVMJitInitializer::LLVMJitInitializer()
 	llvm::InitializeNativeTarget();
 	llvm::InitializeNativeTargetAsmPrinter();
 	llvm::InitializeNativeTargetAsmParser();
-	llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
+	//llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }

@@ -508,11 +508,11 @@ CatGenericType CatFunctionCall::typeCheck()
 
 		switch (function)
 		{
-			case CatBuiltInFunctionType::ToInt:			return CatGenericType(CatType::Int);
-			case CatBuiltInFunctionType::ToFloat:			return CatGenericType(CatType::Float);
-			case CatBuiltInFunctionType::ToBool:			return CatGenericType(CatType::Bool);
-			case CatBuiltInFunctionType::ToString:			return CatGenericType(CatType::String);
-			case CatBuiltInFunctionType::ToPrettyString:	return CatGenericType(CatType::String);
+			case CatBuiltInFunctionType::ToInt:				return argumentTypes[0].isBasicType() ? CatGenericType(CatType::Int) : CatGenericType(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToFloat:			return argumentTypes[0].isBasicType() ? CatGenericType(CatType::Float) : CatGenericType(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToBool:			return argumentTypes[0].isBasicType() ? CatGenericType(CatType::Bool) : CatGenericType(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToString:			return argumentTypes[0].isBasicType() ? CatGenericType(CatType::String) : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToPrettyString:	return argumentTypes[0].isBasicType() ? CatGenericType(CatType::String) : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
 			case CatBuiltInFunctionType::ToFixedLengthString:
 				if (argumentTypes[0].isIntType() && argumentTypes[1].isIntType())
 				{

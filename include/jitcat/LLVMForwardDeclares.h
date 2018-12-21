@@ -21,4 +21,8 @@ namespace llvm
 	class IRBuilder;
 	class Type;
 	class CallInst;
+	namespace orc
+	{
+		class JITDylib;
+	};
 };

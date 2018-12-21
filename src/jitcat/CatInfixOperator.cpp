@@ -42,6 +42,7 @@ CatGenericType CatInfixOperator::getType() const
 		case CatInfixOperatorType::Minus:
 		case CatInfixOperatorType::Multiply:
 		case CatInfixOperatorType::Divide:
+		case CatInfixOperatorType::Modulo:
 			if (isScalar(lhsType) && isScalar(rhsType))
 			{
 				if (lhsType == CatType::Int && rhsType == CatType::Int)
@@ -52,12 +53,6 @@ CatGenericType CatInfixOperator::getType() const
 				{
 					return CatType::Float;
 				}
-			}
-			return CatType::Error;
-		case CatInfixOperatorType::Modulo:
-			if (isScalar(lhsType) && isScalar(rhsType))
-			{
-				return CatType::Int;
 			}
 			return CatType::Error;
 		case CatInfixOperatorType::Greater:

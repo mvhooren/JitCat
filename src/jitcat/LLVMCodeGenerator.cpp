@@ -34,10 +34,11 @@
 #include <iostream>
 
 
-LLVMCodeGenerator::LLVMCodeGenerator():
+LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	currentModule(new llvm::Module("JitCat", LLVMJit::get().getContext())),
 	builder(new llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>(LLVMJit::get().getContext())),
 	llvmContext(LLVMJit::get().getContext()),
+	dylib(&LLVMJit::get().createDyLib(name)),
 	helper(new LLVMCodeGeneratorHelper(builder.get(), currentModule.get()))
 {
 	std::string targetTriple = LLVMJit::get().getTargetMachine().getTargetTriple().str();
@@ -69,6 +70,7 @@ LLVMCodeGenerator::~LLVMCodeGenerator()
 llvm::Value* LLVMCodeGenerator::generate(CatTypedExpression* expression, LLVMCompileTimeContext* context)
 {
 	context->helper = helper.get();
+	context->currentDyLib = dylib;
 	switch (expression->getNodeType())
 	{
 		case CatASTNodeType::Literal:				return generate(static_cast<CatLiteral*>(expression), context);			
@@ -89,6 +91,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatTypedExpression* expression, LLVMCom
 llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name)
 {
 	context->helper = helper.get();
+	context->currentDyLib = dylib;
 	//This parameter represents the CatRuntimeContext*
 	std::vector<llvm::Type*> parameters;
 	llvm::FunctionType* functionType = nullptr;
@@ -150,6 +153,9 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 	}
 	else
 	{
+#ifdef _DEBUG
+		function->dump();
+#endif
 		assert(false);
 		LLVMJit::logError("Function contains errors.");
 		return nullptr;
@@ -160,6 +166,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(CatTypedExpression* expression, LLVMCompileTimeContext* context)
 {
 	context->helper = helper.get();
+	context->currentDyLib = dylib;
 	currentModule.reset(new llvm::Module(context->catContext->getContextName(), llvmContext));
 	currentModule->setTargetTriple(LLVMJit::get().getTargetMachine().getTargetTriple().str());
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
@@ -167,14 +174,15 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(CatTypedExpression* ex
 	std::string functionName = Tools::append("expression_", context->catContext->getContextName(), "_", context->catContext->getNextFunctionIndex());
 	llvm::Function* function = generateExpressionFunction(expression, context, functionName);
 	assert(function != nullptr);
-	LLVMJit::get().addModule(currentModule);
-	return (intptr_t)LLVMJit::get().getSymbolAddress(functionName.c_str());
+	LLVMJit::get().addModule(currentModule, *dylib);
+	return (intptr_t)LLVMJit::get().getSymbolAddress(functionName.c_str(), *dylib);
 }
 
 
 void LLVMCodeGenerator::generateAndDump(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& functionName)
 {
 	context->helper = helper.get();
+	context->currentDyLib = dylib;
 	if (expression->getType().isValidType())
 	{
 		llvm::Function* generatedValue = generateExpressionFunction(expression, context, functionName.c_str());
@@ -209,9 +217,9 @@ void LLVMCodeGenerator::compileAndTest(CatRuntimeContext* context, const std::st
 		returnType = function->getReturnType();
 	}
 	//function is destructed after addModule
-	LLVMJit::get().addModule(currentModule);
+	LLVMJit::get().addModule(currentModule, *dylib);
 	
-	llvm::JITTargetAddress address = LLVMJit::get().getSymbolAddress(functionName.c_str());
+	llvm::JITTargetAddress address = LLVMJit::get().getSymbolAddress(functionName.c_str(), *dylib);
 	if (address == 0)
 	{
 		return;

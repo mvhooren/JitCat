@@ -159,7 +159,7 @@ int MAIN(int argc, char* argv[])
 	Tools::deleteElements(tokens);
 	
 	int functionNr = 0;
-	testExpression<float>(context, "pi");
+	/*testExpression<float>(context, "pi");
 	testExpression<float>(context, "floaty");
 	testExpression<float>(context, "pi * 2.0f");
 	testExpression<float>(context, "42.0f");
@@ -172,7 +172,7 @@ int MAIN(int argc, char* argv[])
 	testExpression<bool>(context, "no || (yes && amITrue)");
 	testExpression<int>(context, "two + anInt - test.theInt");
 	testExpression<float>(context, "test.map[\"second\"].aLot");
-	testExpression<float>(context, "test.map[0].aLot");
+	testExpression<float>(context, "test.map[0].aLot");*/
 	
 	
 	
@@ -226,7 +226,7 @@ int MAIN(int argc, char* argv[])
 				std::cout << "\n";
 				if (valueType.isValidType())
 				{
-					LLVMCodeGenerator generator;
+					LLVMCodeGenerator generator("Test");
 					LLVMCompileTimeContext llvmContext(&context);
 					llvmContext.options.enableDereferenceNullChecks = true;
 					std::string functionName = Tools::append("test", functionNr);

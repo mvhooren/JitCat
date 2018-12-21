@@ -4,6 +4,7 @@
 LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):
 	catContext(catContext),
 	currentFunction(nullptr),
-	helper(nullptr)
+	helper(nullptr),
+	currentDyLib(nullptr)
 {
 }

@@ -9,6 +9,7 @@
 
 #include "CatRuntimeContext.h"
 
+#include <cmath>
 #include <string>
 #include <sstream>
 
@@ -132,13 +133,13 @@ inline CatValue CatInfixOperator::calculateScalarExpression(const T& lValue, con
 				return CatValue(CatError("Division by zero."));
 			}
 		case CatInfixOperatorType::Modulo:
-			if ((int)rValue != 0)
+			if constexpr (std::is_same<T, float>::value || std::is_same<U, float>::value)
 			{
-				return CatValue((int)lValue % (int)rValue);
+				return CatValue((float)fmodf((float)lValue, (float)rValue));
 			}
 			else
 			{
-				return lValue;
+				return CatValue((int)lValue % (int)rValue);
 			}
 	}
 	return CatValue(CatError(std::string("Invalid operation: ") + lhs->getType().toString() + " " + toString(oper) + " " + rhs->getType().toString()));

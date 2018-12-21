@@ -66,10 +66,12 @@ public:
 	llvm::TargetMachine& getTargetMachine() const;
 	const llvm::DataLayout& getDataLayout() const;
 
-	void addModule(std::unique_ptr<llvm::Module>& module);
+	llvm::orc::JITDylib& createDyLib(const std::string& name);
 
-	llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name) const;
-	llvm::JITTargetAddress getSymbolAddress(const std::string& name) const;
+	void addModule(std::unique_ptr<llvm::Module>& module, llvm::orc::JITDylib& dyLib);
+
+	llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
+	llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 
 	//void removeModule(llvm::orc::VModuleKey moduleKey);
 
@@ -93,6 +95,10 @@ private:
 	std::unique_ptr<llvm::orc::RTDyldObjectLinkingLayer> objectLinkLayer;
 	//Takes an LLVM IR module and creates an object file that is linked into the JIT using the objectLinkLayer
 	std::unique_ptr<llvm::orc::IRCompileLayer> compileLayer;
+	//The runtime library dylib
+	llvm::orc::JITDylib* runtimeLibraryDyLib;
+
+	int nextDyLibIndex;
 };
 
 

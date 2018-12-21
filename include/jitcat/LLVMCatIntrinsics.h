@@ -25,7 +25,9 @@ public:
 	static bool stringNotEquals(const std::string& left, const std::string& right);
 	static std::string stringAppend(const std::string& left, const std::string& right);
 	static std::string floatToString(float number);
+	static float stringToFloat(const std::string& string);
 	static std::string intToString(int number);
+	static int stringToInt(const std::string& string);
 	static std::string intToPrettyString(int number);
 	static std::string intToFixedLengthString(int number, int stringLength);
 	static void stringEmptyConstruct(std::string* destination);
