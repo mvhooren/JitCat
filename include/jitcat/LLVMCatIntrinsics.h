@@ -23,6 +23,7 @@ public:
 	static Reflectable* getCustomThisPointerFromContext(CatRuntimeContext* context);
 	static bool stringEquals(const std::string& left, const std::string& right);
 	static bool stringNotEquals(const std::string& left, const std::string& right);
+	static bool stringToBoolean(const std::string& value);
 	static std::string stringAppend(const std::string& left, const std::string& right);
 	static std::string floatToString(float number);
 	static float stringToFloat(const std::string& string);

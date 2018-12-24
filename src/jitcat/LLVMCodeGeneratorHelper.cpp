@@ -175,8 +175,12 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		}
 		else if (valueToConvert->getType() == LLVMTypes::floatType)
 		{
-			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0));
+			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0f));
 			return builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero");
+		}
+		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
+		{
+			return createCall(context, &LLVMCatIntrinsics::stringToBoolean, {valueToConvert}, "stringToBoolean");
 		}
 	}
 	else if (type == LLVMTypes::intType)

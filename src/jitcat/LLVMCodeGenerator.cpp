@@ -582,12 +582,12 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 			case CatInfixOperatorType::Minus:				return builder->CreateSub(left, right, "subtracted");			
 			case CatInfixOperatorType::Multiply:			return builder->CreateMul(left, right, "multiplied");			
 			case CatInfixOperatorType::Divide:				return builder->CreateSDiv(left, right, "divided");			
-			case CatInfixOperatorType::Modulo:				return builder->CreateSRem(left, right, "modulo");			
+			case CatInfixOperatorType::Modulo:				return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSRem(left, right, "modulo"));			
 			case CatInfixOperatorType::Greater:				return builder->CreateICmpSGT(left, right, "greater");		
 			case CatInfixOperatorType::Smaller:				return builder->CreateICmpSLT(left, right, "smaller");		
 			case CatInfixOperatorType::GreaterOrEqual:		return builder->CreateICmpSGE(left, right, "greaterOrEqual");	
 			case CatInfixOperatorType::SmallerOrEqual:		return builder->CreateICmpSLE(left, right, "smallerOrEqual");	
-			case CatInfixOperatorType::Equals:				return builder->CreateICmpEQ(left, right, "equal");			
+			case CatInfixOperatorType::Equals:				return builder->CreateICmpEQ(left, right, "equal");
 			case CatInfixOperatorType::NotEquals:			return builder->CreateICmpNE(left, right, "notEqual");		
 		}
 	}

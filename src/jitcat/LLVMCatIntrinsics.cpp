@@ -30,6 +30,12 @@ bool LLVMCatIntrinsics::stringNotEquals(const std::string& left, const std::stri
 }
 
 
+bool LLVMCatIntrinsics::stringToBoolean(const std::string& value)
+{
+	return value == "true" || atoi(value.c_str()) > 0;
+}
+
+
 std::string LLVMCatIntrinsics::stringAppend(const std::string& left, const std::string& right)
 {
 	return left + right;

@@ -139,7 +139,14 @@ inline CatValue CatInfixOperator::calculateScalarExpression(const T& lValue, con
 			}
 			else
 			{
-				return CatValue((int)lValue % (int)rValue);
+				if ((int)rValue != 0)
+				{
+					return CatValue((int)lValue % (int)rValue);
+				}
+				else
+				{
+					return CatValue(0);
+				}
 			}
 	}
 	return CatValue(CatError(std::string("Invalid operation: ") + lhs->getType().toString() + " " + toString(oper) + " " + rhs->getType().toString()));

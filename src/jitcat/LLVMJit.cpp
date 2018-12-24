@@ -65,6 +65,8 @@ LLVMJit::LLVMJit():
 	//float (*remainderFloat)(float, float) = &remainder;
 	//executionSession->
 	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
+	intrinsicSymbols[executionSession->intern("sinf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::sinf), functionFlags);
+	intrinsicSymbols[executionSession->intern("cosf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::cosf), functionFlags);
 
 	
 	runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols));

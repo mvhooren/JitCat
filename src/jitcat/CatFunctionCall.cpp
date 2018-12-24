@@ -10,6 +10,7 @@
 #include "CatLiteral.h"
 #include "CatLog.h"
 #include "JitCat.h"
+#include "LLVMCatIntrinsics.h"
 #include "OptimizationHelper.h"
 #include "Tools.h"
 
@@ -64,7 +65,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		}
 		switch (function)
 		{
-			case CatBuiltInFunctionType::ToInt:		return CatValue(argumentValues[0].toIntValue());
+			case CatBuiltInFunctionType::ToInt:			return CatValue(argumentValues[0].toIntValue());
 			case CatBuiltInFunctionType::ToFloat:		return CatValue(argumentValues[0].toFloatValue());
 			case CatBuiltInFunctionType::ToBool:		return CatValue(argumentValues[0].toBoolValue());
 			case CatBuiltInFunctionType::ToString:		return CatValue(argumentValues[0].toStringValue());
@@ -76,27 +77,7 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				}
 				else
 				{
-					std::string numberString = argumentValues[0].toStringValue();
-					size_t numberLength = numberString.length();
-					int numParts = (((int)numberLength - 1) / 3) + 1;	// so that 1-3 results in 1, 4-6 in 2, etc
-					std::string result = "";
-					std::string separator = "";// to skip first space, cleaner result
-
-					for (int i = 0; i < numParts; ++i)
-					{
-						int substringFirstIndex = (int)numberLength - (3 * (i + 1));
-						int substringLength = 3;
-						if (substringFirstIndex < 0)
-						{
-							// if only 2 digits are left, substringFirstIndex will be -1, and substringLength will need to be 2
-							// if only 1 digit is left, substringFirstIndex is -2, and substringLength will need to be 1
-							substringLength += substringFirstIndex;
-							substringFirstIndex = 0;
-						}
-						result = numberString.substr((unsigned int)substringFirstIndex, (unsigned int)substringLength) + separator + result;
-						separator = ",";
-					}
-					return CatValue(result);
+					return CatValue(LLVMCatIntrinsics::intToPrettyString(argumentValues[0].getIntValue()));
 				}
 			}
 			case CatBuiltInFunctionType::ToFixedLengthString:
