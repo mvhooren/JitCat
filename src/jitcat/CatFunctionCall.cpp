@@ -310,17 +310,10 @@ CatValue CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return CatError("sqrt: expected a number as argument.");
 				}
-			case CatBuiltInFunctionType::Pow:
-				if (argumentValues[0].getValueType() == CatType::Float
-					|| (argumentValues[1].getValueType() == CatType::Float 
-						&& argumentValues[0].getValueType() == CatType::Int))
+			case CatBuiltInFunctionType::Pow:		
+				if (isScalar(argumentValues[0].getValueType()) && isScalar(argumentValues[1].getValueType()))
 				{
 					return CatValue(std::pow(argumentValues[0].toFloatValue(), argumentValues[1].toFloatValue()));
-				}
-				else if (argumentValues[0].getValueType() == CatType::Int
-						 && argumentValues[1].getValueType() == CatType::Int)
-				{
-					return CatValue((int)std::pow((float)argumentValues[0].getIntValue(), (float)argumentValues[1].getIntValue()));
 				}
 				else
 				{
@@ -620,16 +613,9 @@ CatGenericType CatFunctionCall::typeCheck()
 					return CatGenericType(Tools::append(name, ": expected a number as argument."));
 				}
 			case CatBuiltInFunctionType::Pow:
-				if (argumentTypes[0].isFloatType()
-					|| (argumentTypes[1].isFloatType()
-						&& argumentTypes[0].isIntType()))
+				if (argumentTypes[0].isScalarType() && argumentTypes[1].isScalarType())
 				{
 					return CatGenericType(CatType::Float);
-				}
-				else if (argumentTypes[0].isIntType()
-						 && argumentTypes[1].isIntType())
-				{
-					return CatGenericType(CatType::Int);
 				}
 				else
 				{
@@ -714,7 +700,6 @@ CatGenericType CatFunctionCall::getType() const
 				return CatType::Error;
 			case CatBuiltInFunctionType::ToInt:
 			case CatBuiltInFunctionType::StringLength:
-			case CatBuiltInFunctionType::Round:
 			case CatBuiltInFunctionType::FindInString:
 				return CatType::Int;
 			case CatBuiltInFunctionType::ToBool:
@@ -728,11 +713,13 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::Select:
 				return arguments->arguments[1]->getType();
 			case CatBuiltInFunctionType::ToFloat:
+			case CatBuiltInFunctionType::Round:
 			case CatBuiltInFunctionType::Sin:
 			case CatBuiltInFunctionType::Cos:
 			case CatBuiltInFunctionType::Tan:
 			case CatBuiltInFunctionType::Random:
 			case CatBuiltInFunctionType::Log:
+			case CatBuiltInFunctionType::Pow:
 			case CatBuiltInFunctionType::Sqrt:
 			case CatBuiltInFunctionType::Ceil:
 			case CatBuiltInFunctionType::Floor:
@@ -744,8 +731,6 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::StringRound:
 			case CatBuiltInFunctionType::ReplaceInString:
 				return CatType::String;
-			case CatBuiltInFunctionType::Pow:
-				return arguments->arguments[0]->getType() == CatType::Int ? arguments->arguments[1]->getType() : arguments->arguments[0]->getType();
 		}
 	}
 	else

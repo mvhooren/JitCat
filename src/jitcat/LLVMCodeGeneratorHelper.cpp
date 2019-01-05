@@ -131,6 +131,18 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 }
 
 
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext * context)
+{
+	std::vector<llvm::Type *> paramaterTypes;
+	paramaterTypes.push_back(toLLVMType(overload1Type));
+	std::vector<llvm::Value*> arguments;
+	arguments.push_back(convertType(argument1, toLLVMType(overload1Type), context));
+	arguments.push_back(convertType(argument2, toLLVMType(overload1Type), context));
+	llvm::Function* fun = llvm::Intrinsic::getDeclaration(currentModule, intrinsic, paramaterTypes);
+	return builder->CreateCall(fun, arguments);
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameter1Type, CatType parameter2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context)
 {
 	std::vector<llvm::Type *> paramaterTypes;

@@ -308,19 +308,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 		case CatBuiltInFunctionType::Sqrt:	return helper->callIntrinsic(llvm::Intrinsic::sqrt, CatType::Float, generate(arguments->arguments[0].get(), context), context);
 		case CatBuiltInFunctionType::Pow:
 		{
-			if (arguments->arguments[1]->getType() == CatType::Float)
-			{
-				return helper->convertType(helper->callIntrinsic(llvm::Intrinsic::pow, CatType::Float, CatType::Float, generate(arguments->arguments[0].get(), context), generate(arguments->arguments[1].get(), context), context), helper->toLLVMType(arguments->arguments[0]->getType().getCatType()), context);
-			}
-			else if (arguments->arguments[1]->getType() == CatType::Int)
-			{
-				return helper->convertType(helper->callIntrinsic(llvm::Intrinsic::powi, CatType::Float, CatType::Int, generate(arguments->arguments[0].get(), context), generate(arguments->arguments[1].get(), context), context), helper->toLLVMType(arguments->arguments[0]->getType().getCatType()), context);
-			}
-			else
-			{
-				assert(false);
-				return nullptr;
-			}
+			return helper->callIntrinsic(llvm::Intrinsic::pow, CatType::Float, generate(arguments->arguments[0].get(), context), generate(arguments->arguments[1].get(), context), context);
 		}
 		case CatBuiltInFunctionType::Sin:		return helper->callIntrinsic(llvm::Intrinsic::sin, CatType::Float, generate(arguments->arguments[0].get(), context), context);
 		case CatBuiltInFunctionType::Cos:		return helper->callIntrinsic(llvm::Intrinsic::cos, CatType::Float, generate(arguments->arguments[0].get(), context), context);
@@ -336,20 +324,26 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 			{
 				llvm::Value* convertedMin = helper->convertType(minValue, LLVMTypes::floatType, context);
 				llvm::Value* convertedMax = helper->convertType(maxValue, LLVMTypes::floatType, context);
-				llvm::Value* smallerThanMin = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OLT, value, convertedMin);
-				llvm::Value* greaterThanMax = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OGT, value, convertedMax);
-				llvm::Value* cappedToMin = builder->CreateSelect(smallerThanMin, convertedMin, value);
-				llvm::Value* cappedToMax = builder->CreateSelect(greaterThanMax, convertedMax, cappedToMin);
+				llvm::Value* maxSmallerThanMin = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OLT, convertedMax, convertedMin);
+				llvm::Value* finalMin = builder->CreateSelect(maxSmallerThanMin, convertedMax, convertedMin);
+				llvm::Value* finalMax = builder->CreateSelect(maxSmallerThanMin, convertedMin, convertedMax);
+				llvm::Value* smallerThanMin = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OLT, value, finalMin);
+				llvm::Value* greaterThanMax = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OGT, value, finalMax);
+				llvm::Value* cappedToMin = builder->CreateSelect(smallerThanMin, finalMin, value);
+				llvm::Value* cappedToMax = builder->CreateSelect(greaterThanMax, finalMax, cappedToMin);
 				return cappedToMax;
 			}
 			else if (arguments->arguments[0]->getType() == CatType::Int)
 			{
 				llvm::Value* convertedMin = helper->convertType(minValue, LLVMTypes::intType, context);
 				llvm::Value* convertedMax = helper->convertType(maxValue, LLVMTypes::intType, context);
-				llvm::Value* smallerThanMin = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SLT, value, convertedMin);
-				llvm::Value* greaterThanMax = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SGT, value, convertedMax);
-				llvm::Value* cappedToMin = builder->CreateSelect(smallerThanMin, convertedMin, value);
-				llvm::Value* cappedToMax = builder->CreateSelect(greaterThanMax, convertedMax, cappedToMin);
+				llvm::Value* maxSmallerThanMin = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SLT, convertedMax, convertedMin);
+				llvm::Value* finalMin = builder->CreateSelect(maxSmallerThanMin, convertedMax, convertedMin);
+				llvm::Value* finalMax = builder->CreateSelect(maxSmallerThanMin, convertedMin, convertedMax);
+				llvm::Value* smallerThanMin = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SLT, value, finalMin);
+				llvm::Value* greaterThanMax = builder->CreateICmp(llvm::CmpInst::Predicate::ICMP_SGT, value, finalMax);
+				llvm::Value* cappedToMin = builder->CreateSelect(smallerThanMin, finalMin, value);
+				llvm::Value* cappedToMax = builder->CreateSelect(greaterThanMax, finalMax, cappedToMin);
 				return cappedToMax;
 			}
 			else
@@ -564,8 +558,8 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 			case CatInfixOperatorType::Plus:				return builder->CreateFAdd(left, right, "added");				
 			case CatInfixOperatorType::Minus:				return builder->CreateFSub(left, right, "subtracted");		
 			case CatInfixOperatorType::Multiply:			return builder->CreateFMul(left, right, "multiplied");		
-			case CatInfixOperatorType::Divide:				return builder->CreateFDiv(left, right, "divided");			
-			case CatInfixOperatorType::Modulo:				return builder->CreateFRem(left, right, "modulo");			
+			case CatInfixOperatorType::Divide:				return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFDiv(left, right, "divided"));			
+			case CatInfixOperatorType::Modulo:				return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFRem(left, right, "divided"));
 			case CatInfixOperatorType::Greater:				return builder->CreateFCmpUGT(left, right, "greater");		
 			case CatInfixOperatorType::Smaller:				return builder->CreateFCmpULT(left, right, "smaller");		
 			case CatInfixOperatorType::GreaterOrEqual:		return builder->CreateFCmpUGE(left, right, "greaterOrEqual");	
@@ -581,7 +575,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 			case CatInfixOperatorType::Plus:				return builder->CreateAdd(left, right, "added");				
 			case CatInfixOperatorType::Minus:				return builder->CreateSub(left, right, "subtracted");			
 			case CatInfixOperatorType::Multiply:			return builder->CreateMul(left, right, "multiplied");			
-			case CatInfixOperatorType::Divide:				return builder->CreateSDiv(left, right, "divided");			
+			case CatInfixOperatorType::Divide:				return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSDiv(left, right, "divided"));					 
 			case CatInfixOperatorType::Modulo:				return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSRem(left, right, "modulo"));			
 			case CatInfixOperatorType::Greater:				return builder->CreateICmpSGT(left, right, "greater");		
 			case CatInfixOperatorType::Smaller:				return builder->CreateICmpSLT(left, right, "smaller");		

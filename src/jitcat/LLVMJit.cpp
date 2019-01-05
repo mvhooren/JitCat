@@ -59,16 +59,20 @@ LLVMJit::LLVMJit():
 	llvm::orc::SymbolMap intrinsicSymbols;
 	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary", false);
 
-	llvm::JITSymbolFlags functionFlags(llvm::JITSymbolFlags::Callable);
+	llvm::JITSymbolFlags functionFlags;
+	functionFlags |= llvm::JITSymbolFlags::Callable;
 	functionFlags |= llvm::JITSymbolFlags::Exported;
 	functionFlags |= llvm::JITSymbolFlags::Absolute;
-	//float (*remainderFloat)(float, float) = &remainder;
-	//executionSession->
-	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
+
+	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::fmodf), functionFlags);
 	intrinsicSymbols[executionSession->intern("sinf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::sinf), functionFlags);
 	intrinsicSymbols[executionSession->intern("cosf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::cosf), functionFlags);
-
+	intrinsicSymbols[executionSession->intern("log10f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::log10f), functionFlags);
+	intrinsicSymbols[executionSession->intern("powf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::powf), functionFlags);
+	intrinsicSymbols[executionSession->intern("ceilf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::ceilf), functionFlags);
+	intrinsicSymbols[executionSession->intern("floorf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&std::floorf), functionFlags);
 	
+
 	runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols));
 
 }
@@ -121,14 +125,12 @@ void LLVMJit::addModule(std::unique_ptr<llvm::Module>& module, llvm::orc::JITDyl
 
 llvm::Expected<llvm::JITEvaluatedSymbol> LLVMJit::findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const
 {
-	//std::cout << "findSymbol: " << name << "\n";
 	return executionSession->lookup({&dyLib}, mangler->operator()(name));
 }
 
 
 llvm::JITTargetAddress LLVMJit::getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const
 {
-	//std::cout << "getSymbolAddress: " << name << "\n";
 	return llvm::cantFail(findSymbol(name, dyLib)).getAddress();
 }
 
@@ -145,5 +147,4 @@ LLVMJitInitializer::LLVMJitInitializer()
 	llvm::InitializeNativeTarget();
 	llvm::InitializeNativeTargetAsmPrinter();
 	llvm::InitializeNativeTargetAsmParser();
-	//llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }

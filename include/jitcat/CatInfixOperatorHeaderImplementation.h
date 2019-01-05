@@ -135,7 +135,14 @@ inline CatValue CatInfixOperator::calculateScalarExpression(const T& lValue, con
 		case CatInfixOperatorType::Modulo:
 			if constexpr (std::is_same<T, float>::value || std::is_same<U, float>::value)
 			{
-				return CatValue((float)fmodf((float)lValue, (float)rValue));
+				if ((float)rValue != 0)
+				{
+					return CatValue((float)fmodf((float)lValue, (float)rValue));
+				}
+				else
+				{
+					return CatValue(0.0f);
+				}
 			}
 			else
 			{
