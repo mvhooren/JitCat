@@ -585,6 +585,14 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 			case CatInfixOperatorType::NotEquals:			return builder->CreateICmpNE(left, right, "notEqual");		
 		}
 	}
+	else if (left->getType() == LLVMTypes::boolType)
+	{
+		switch (infixOperator->oper)
+		{
+			case CatInfixOperatorType::Equals:				return builder->CreateICmpEQ(left, right, "equal");
+			case CatInfixOperatorType::NotEquals:			return builder->CreateICmpNE(left, right, "notEqual");		
+		}
+	}
 	else if (left->getType() == LLVMTypes::stringPtrType)
 	{
 		llvm::Value* stringNullCheck = nullptr;

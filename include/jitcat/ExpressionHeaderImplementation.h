@@ -239,6 +239,11 @@ SLRParseResult* Expression<T>::parse(CatRuntimeContext* context)
 					parseResult->errorMessage = Tools::append("Expected a ", typeName, ", got a ", resultType.getObjectTypeName());
 				}
 			}
+			else if (getCatType() == CatType::Void && resultType.isVoidType())
+			{
+				parseResult->success = true;
+				parseResult->astRootNode = expressionAST;
+			}
 			else if (!resultType.isEqualToBasicCatType(getCatType()))
 			{
 				if (isScalar(getCatType()) && resultType.isScalarType())
@@ -265,7 +270,10 @@ SLRParseResult* Expression<T>::parse(CatRuntimeContext* context)
 				if (expressionAST->isConst())
 				{
 					isConstant = true;
-					cachedValue = getActualValue(expressionAST->execute(context));
+					if constexpr (!std::is_same<void, T>::value)
+					{
+						cachedValue = getActualValue(expressionAST->execute(context));
+					}
 				}
 			}
 		}
@@ -293,7 +301,14 @@ inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 {
 	if (isConstant)
 	{
-		return cachedValue;
+		if constexpr (!std::is_same<void, T>::value)
+		{
+			return cachedValue;
+		}
+		else
+		{
+			return;
+		}
 	}
 	else
 	{

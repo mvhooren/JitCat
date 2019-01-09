@@ -34,14 +34,6 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 		{
 			type = memberInfo->toGenericType();
 		}
-		else
-		{
-			assert(false);
-		}
-	}
-	else
-	{
-		assert(false);
 	}
 }
 

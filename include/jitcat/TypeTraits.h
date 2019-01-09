@@ -38,6 +38,7 @@ public:
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<T>();}
 
 	typedef T type;
+	typedef T cachedType;
 };
 
 
@@ -62,6 +63,7 @@ public:
 
 
 	typedef void type;
+	typedef int cachedType;
 };
 
 
@@ -82,6 +84,7 @@ public:
 
 
 	typedef float type;
+	typedef float cachedType;
 };
 
 
@@ -101,6 +104,7 @@ public:
 	static int getValueFromMemberReference(MemberReference* value);
 
 	typedef int type;
+	typedef int cachedType;
 };
 
 
@@ -120,6 +124,7 @@ public:
 	static bool getValueFromMemberReference(MemberReference* value);
 
 	typedef bool type;
+	typedef bool cachedType;
 };
 
 
@@ -139,6 +144,7 @@ public:
 	static std::string getValueFromMemberReference(MemberReference* value);
 
 	typedef std::string type;
+	typedef std::string cachedType;
 };
 
 
@@ -157,6 +163,7 @@ public:
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<U>();}
 
 	typedef U type;
+	typedef U* cachedType;
 };
 
 
@@ -175,6 +182,7 @@ public:
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<U>();}
 
 	typedef U type;
+	typedef U* cachedType;
 };
 
 
@@ -191,6 +199,7 @@ public:
 	static inline std::vector<ItemType>& getValueFromMemberReference(MemberReference* value);
 
 	typedef ItemType type;
+	typedef std::vector<ItemType> cachedType;
 };
 
 
@@ -207,6 +216,7 @@ public:
 	static inline std::map<std::string, ItemType>& getValueFromMemberReference(MemberReference* value);
 
 	typedef ItemType type;
+	typedef std::map<std::string, ItemType> cachedType;
 };
 
 #include "TypeTraitsHeaderImplementation.h"

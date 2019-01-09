@@ -54,6 +54,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 			else if (resultType == LLVMTypes::intType)		return createConstant(0);
 			else if (resultType == LLVMTypes::stringPtrType)return createPtrConstant(0, "nullString", LLVMTypes::stringPtrType);
 			else if (resultType == LLVMTypes::pointerType)	return createPtrConstant(0, "nullptr");
+			else if (resultType == LLVMTypes::voidType)		return (llvm::Value*)nullptr;
 			else
 			{
 				assert(false);
@@ -93,7 +94,6 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 		llvm::MDNode* branchPredictNode = metadataBuilder.createBranchWeights(2000, 1);
 		branchInst->setMetadata(llvm::LLVMContext::MD_prof, branchPredictNode);
 
-		//branchInst->setMetadata(, 
 		builder->SetInsertPoint(thenBlock);
 		llvm::Value* thenResult = codeGenIfNotNull(context);
 		builder->CreateBr(continuationBlock);
@@ -101,17 +101,29 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 
 		currentFunction->getBasicBlockList().push_back(elseBlock);
 		builder->SetInsertPoint(elseBlock);
-		llvm::Value* elseResult = codeGenIfNull(context);
-		builder->CreateBr(continuationBlock);
-		// codegen of 'Else' can change the current block, update ElseBB for the PHI.
-		elseBlock = builder->GetInsertBlock();
-		currentFunction->getBasicBlockList().push_back(continuationBlock);
-		builder->SetInsertPoint(continuationBlock);
-		llvm::PHINode* phiNode = builder->CreatePHI(thenResult->getType(), 2, "ifResult");
+		if (thenResult->getType() != LLVMTypes::voidType)
+		{
+			llvm::Value* elseResult = codeGenIfNull(context);
+			builder->CreateBr(continuationBlock);
+			// codegen of 'Else' can change the current block, update ElseBB for the PHI.
+			elseBlock = builder->GetInsertBlock();
+			currentFunction->getBasicBlockList().push_back(continuationBlock);
+			builder->SetInsertPoint(continuationBlock);
+			llvm::PHINode* phiNode = builder->CreatePHI(thenResult->getType(), 2, "ifResult");
 
-		phiNode->addIncoming(thenResult, thenBlock);
-		phiNode->addIncoming(elseResult, elseBlock);
-		return phiNode;
+			phiNode->addIncoming(thenResult, thenBlock);
+			phiNode->addIncoming(elseResult, elseBlock);
+			return phiNode;
+		}
+		else
+		{
+			builder->CreateBr(continuationBlock);
+			// codegen of 'Else' can change the current block, update ElseBB for the PHI.
+			elseBlock = builder->GetInsertBlock();
+			currentFunction->getBasicBlockList().push_back(continuationBlock);
+			builder->SetInsertPoint(continuationBlock);
+			return nullptr;
+		}
 	}
 	else
 	{

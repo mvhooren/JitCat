@@ -15,6 +15,7 @@ struct SLRParseResult;
 #include "CatType.h"
 #include "CatValue.h"
 #include "ReflectableHandle.h"
+#include "TypeTraits.h"
 
 #include <memory>
 #include <string>
@@ -76,7 +77,7 @@ private:
 
 	bool isConstant;
 	//If the expression is a constant, then the value is cached for performance;
-	T cachedValue;
+	typename TypeTraits<T>::cachedType cachedValue;
 
 	//Not owned
 	CatTypedExpression* expressionAST;
