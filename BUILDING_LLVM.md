@@ -11,7 +11,7 @@ JitCat uses some of the latest features of LLVM, some of which are not yet inclu
 Therefore, you will have to build LLVM from source. Check out the trunk using SVN:  
 http://llvm.org/svn/llvm-project/llvm/trunk  
 JitCat will track the trunk as much as possible, but it can happen that updates to LLVM will break a JitCat build.  
-At the time of writing, JitCat is built against revision 349475.  
+The last time this document was updated, JitCat was built against revision 350712.  
 Once a stable LLVM version is released that includes everything JitCat needs, JitCat will target that version.  
 
 ## Read the documentation
@@ -60,5 +60,5 @@ LLVM_INCLUDE_UTILS
   
 LLVM can generate code for many target platforms, but we only need one.  
 For JitCat, select the same target for which you are building JitCat.  
-Most likely, this will be X86 for 32 bit builds or X86_64 for 64 bit builds.  
+Most likely, this should be X86.  
 Change LLVM_TARGETS_TO_BUILD from 'all' to your target platform.  
