@@ -61,7 +61,7 @@ target_link_libraries(JitCatValidatorTool
 
 set_target_properties(JitCatValidatorTool
     PROPERTIES
-    COMPILE_FLAGS "-std=c++17 -Wno-write-strings -Wno-switch -Wno-unused-function"
+    COMPILE_FLAGS "-std=c++17 -Wno-write-strings -Wno-switch -Wno-unused-function -fno-rtti"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
 	INSTALL_RPATH "./"
 )

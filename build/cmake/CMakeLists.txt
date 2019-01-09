@@ -32,7 +32,7 @@ add_library(JitCat STATIC ${JITCAT_SOURCE})
 
 set_target_properties(JitCat
     PROPERTIES
-    COMPILE_FLAGS "-std=c++17 -Wno-write-strings -Wno-switch -Wno-unused-function -fPIC"
+    COMPILE_FLAGS "-std=c++17 -Wno-write-strings -Wno-switch -Wno-unused-function -fPIC -fno-rtti"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
 )
 
