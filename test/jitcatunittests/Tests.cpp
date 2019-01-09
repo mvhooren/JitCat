@@ -1,4 +1,4 @@
-#include <catch2\catch.hpp>
+#include <catch2/catch.hpp>
 #include "CatRuntimeContext.h"
 #include "Expression.h"
 #include "LLVMCatIntrinsics.h"
@@ -1106,32 +1106,32 @@ TEST_CASE("Builtin functions test: Sin", "[builtins][sin]" )
 	SECTION("Sin_Constant")
 	{
 		Expression<float> testExpression(&context, "sin(42.0f)");
-		doChecks(sin(42.0f), false, true, false, testExpression, context);
+		doChecks<float>(sin(42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Sin_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "sin(-42.0f)");
-		doChecks(sin(-42.0f), false, true, false, testExpression, context);
+		doChecks<float>(sin(-42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Sin_IntConstant")
 	{
 		Expression<float> testExpression(&context, "sin(3)");
-		doChecks(sin((float)3), false, true, false, testExpression, context);
+		doChecks<float>(sin((float)3), false, true, false, testExpression, context);
 	}
 	SECTION("Sin_Variable")
 	{
 		Expression<float> testExpression(&context, "sin(aFloat)");
-		doChecks(sin(reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(sin(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Sin_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "sin(-aFloat)");
-		doChecks(sin(-reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(sin(-reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Sin_IntVariable")
 	{
 		Expression<float> testExpression(&context, "sin(theInt)");
-		doChecks(sin((float)reflectedObject.theInt), false, false, false, testExpression, context);
+		doChecks<float>(sin((float)reflectedObject.theInt), false, false, false, testExpression, context);
 	}
 	SECTION("Sin_string")
 	{
@@ -1167,32 +1167,32 @@ TEST_CASE("Builtin functions test: Cos", "[builtins][cos]" )
 	SECTION("Cos_Constant")
 	{
 		Expression<float> testExpression(&context, "cos(42.0f)");
-		doChecks(cos(42.0f), false, true, false, testExpression, context);
+		doChecks<float>(cos(42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Cos_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "cos(-42.0f)");
-		doChecks(cos(-42.0f), false, true, false, testExpression, context);
+		doChecks<float>(cos(-42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Cos_IntConstant")
 	{
 		Expression<float> testExpression(&context, "cos(3)");
-		doChecks(cos((float)3), false, true, false, testExpression, context);
+		doChecks<float>(cos((float)3), false, true, false, testExpression, context);
 	}
 	SECTION("Cos_Variable")
 	{
 		Expression<float> testExpression(&context, "cos(aFloat)");
-		doChecks(cos(reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(cos(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Cos_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "cos(-aFloat)");
-		doChecks(cos(-reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(cos(-reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Cos_IntVariable")
 	{
 		Expression<float> testExpression(&context, "cos(theInt)");
-		doChecks(cos((float)reflectedObject.theInt), false, false, false, testExpression, context);
+		doChecks<float>(cos((float)reflectedObject.theInt), false, false, false, testExpression, context);
 	}
 	SECTION("Cos_string")
 	{
@@ -1228,32 +1228,32 @@ TEST_CASE("Builtin functions test: Tan", "[builtins][tan]" )
 	SECTION("Tan_Constant")
 	{
 		Expression<float> testExpression(&context, "tan(42.0f)");
-		doChecks(tan(42.0f), false, true, false, testExpression, context);
+		doChecks<float>(tan(42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Tan_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "tan(-42.0f)");
-		doChecks(tan(-42.0f), false, true, false, testExpression, context);
+		doChecks<float>(tan(-42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Tan_IntConstant")
 	{
 		Expression<float> testExpression(&context, "tan(3)");
-		doChecks(tan((float)3), false, true, false, testExpression, context);
+		doChecks<float>(tan((float)3), false, true, false, testExpression, context);
 	}
 	SECTION("Tan_Variable")
 	{
 		Expression<float> testExpression(&context, "tan(aFloat)");
-		doChecks(tan(reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(tan(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Tan_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "tan(-aFloat)");
-		doChecks(tan(-reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(tan(-reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Tan_IntVariable")
 	{
 		Expression<float> testExpression(&context, "tan(theInt)");
-		doChecks(tan((float)reflectedObject.theInt), false, false, false, testExpression, context);
+		doChecks<float>(tan((float)reflectedObject.theInt), false, false, false, testExpression, context);
 	}
 	SECTION("Tan_string")
 	{
@@ -1289,12 +1289,12 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 	SECTION("Abs_Constant")
 	{
 		Expression<float> testExpression(&context, "abs(42.0f)");
-		doChecks(abs(42.0f), false, true, false, testExpression, context);
+		doChecks<float>(abs(42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Abs_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "abs(-42.0f)");
-		doChecks(abs(-42.0f), false, true, false, testExpression, context);
+		doChecks<float>(abs(-42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Abs_IntConstant")
 	{
@@ -1314,7 +1314,7 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 	SECTION("Abs_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "abs(-aFloat)");
-		doChecks(abs(-reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(abs(-reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Abs_Zero Variable")
 	{
@@ -1365,7 +1365,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_Constant")
 	{
 		Expression<float> testExpression(&context, "sqrt(42.0f)");
-		doChecks(sqrt(42.0f), false, true, false, testExpression, context);
+		doChecks<float>(sqrt(42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Sqrt_Negative Constant")
 	{
@@ -1375,7 +1375,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_IntConstant")
 	{
 		Expression<float> testExpression(&context, "sqrt(3)");
-		doChecks(sqrt(3.0f), false, true, false, testExpression, context);
+		doChecks<float>(sqrt(3.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Sqrt_Negative IntConstant")
 	{
@@ -1390,7 +1390,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_Variable")
 	{
 		Expression<float> testExpression(&context, "sqrt(aFloat)");
-		doChecks(sqrt(reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(sqrt(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Sqrt_Negative Variable")
 	{
@@ -1400,7 +1400,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_IntVariable")
 	{
 		Expression<float> testExpression(&context, "sqrt(theInt)");
-		doChecks(sqrt((float)reflectedObject.theInt), false, false, false, testExpression, context);
+		doChecks<float>(sqrt((float)reflectedObject.theInt), false, false, false, testExpression, context);
 	}
 	SECTION("Sqrt_Negative IntVariable")
 	{
@@ -2144,7 +2144,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	SECTION("Pow_cc1")
 	{
 		Expression<float> testExpression(&context, "pow(11.1f, 1)");
-		doChecks(pow(11.1f, 1), false, true, false, testExpression, context);
+		doChecks<float>(pow(11.1f, 1), false, true, false, testExpression, context);
 	}
 	SECTION("Pow_cc2")
 	{
@@ -2159,7 +2159,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	SECTION("Pow_cc4")
 	{
 		Expression<float> testExpression(&context, "pow(-11.1f, 999.0f)");
-		doChecks(pow(-11.1f, 999.0f), false, true, false, testExpression, context);
+		doChecks<float>(pow(-11.1f, 999.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Pow_float1")
 	{
@@ -2169,7 +2169,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	SECTION("Pow_float2")
 	{
 		Expression<float> testExpression(&context, "pow(aFloat, 1000.0f)");
-		doChecks(pow(reflectedObject.aFloat, 1000.0f), false, false, false, testExpression, context);
+		doChecks<float>(pow(reflectedObject.aFloat, 1000.0f), false, false, false, testExpression, context);
 	}
 	SECTION("Pow_float3")
 	{
@@ -2240,22 +2240,22 @@ TEST_CASE("Builtin functions test: Ceil", "[builtins][ceil]" )
 	SECTION("Ceil_Constant")
 	{
 		Expression<float> testExpression(&context, "ceil(42.1f)");
-		doChecks(ceil(42.1f), false, true, false, testExpression, context);
+		doChecks<float>(ceil(42.1f), false, true, false, testExpression, context);
 	}
 	SECTION("Ceil_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "ceil(-42.1f)");
-		doChecks(ceil(-42.1f), false, true, false, testExpression, context);
+		doChecks<float>(ceil(-42.1f), false, true, false, testExpression, context);
 	}
 	SECTION("Ceil_IntConstant")
 	{
 		Expression<float> testExpression(&context, "ceil(3)");
-		doChecks(ceil(3.0f), false, true, false, testExpression, context);
+		doChecks<float>(ceil(3.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Ceil_Negative IntConstant")
 	{
 		Expression<float> testExpression(&context, "ceil(-3)");
-		doChecks(ceil(-3.0f), false, true, false, testExpression, context);
+		doChecks<float>(ceil(-3.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Ceil_Zero Variable")
 	{
@@ -2265,12 +2265,12 @@ TEST_CASE("Builtin functions test: Ceil", "[builtins][ceil]" )
 	SECTION("Ceil_Variable")
 	{
 		Expression<float> testExpression(&context, "ceil(aFloat)");
-		doChecks(ceil(reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(ceil(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Ceil_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "ceil(-aFloat)");
-		doChecks(ceil(-reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(ceil(-reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Ceil_IntVariable")
 	{
@@ -2316,22 +2316,22 @@ TEST_CASE("Builtin functions test: Floor", "[builtins][floor]" )
 	SECTION("Floor_Constant")
 	{
 		Expression<float> testExpression(&context, "floor(42.1f)");
-		doChecks(floor(42.1f), false, true, false, testExpression, context);
+		doChecks<float>(floor(42.1f), false, true, false, testExpression, context);
 	}
 	SECTION("Floor_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "floor(-42.1f)");
-		doChecks(floor(-42.1f), false, true, false, testExpression, context);
+		doChecks<float>(floor(-42.1f), false, true, false, testExpression, context);
 	}
 	SECTION("Floor_IntConstant")
 	{
 		Expression<float> testExpression(&context, "floor(3)");
-		doChecks(floor(3.0f), false, true, false, testExpression, context);
+		doChecks<float>(floor(3.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Floor_Negative IntConstant")
 	{
 		Expression<float> testExpression(&context, "floor(-3)");
-		doChecks(floor(-3.0f), false, true, false, testExpression, context);
+		doChecks<float>(floor(-3.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Floor_Zero Variable")
 	{
@@ -2341,12 +2341,12 @@ TEST_CASE("Builtin functions test: Floor", "[builtins][floor]" )
 	SECTION("Floor_Variable")
 	{
 		Expression<float> testExpression(&context, "floor(aFloat)");
-		doChecks(floor(reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(floor(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Floor_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "floor(-aFloat)");
-		doChecks(floor(-reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(floor(-reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Floor_IntVariable")
 	{

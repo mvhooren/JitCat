@@ -80,7 +80,7 @@ LLVMJit::LLVMJit():
 	intrinsicSymbols[executionSession->intern("_floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorl), functionFlags);
 	
 
-	runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols));
+	llvm::cantFail(runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
 
 }
 
