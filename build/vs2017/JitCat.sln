@@ -20,6 +20,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JitCatValidatorTool", "JitC
 		{6F4C0D6B-BADA-42C7-B503-BDCB8F18C3BA} = {6F4C0D6B-BADA-42C7-B503-BDCB8F18C3BA}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JitCatUnitTests", "JitCatUnitTests.vcxproj", "{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BF1F237B-9307-4628-9D0F-23D0304C4DEA} = {BF1F237B-9307-4628-9D0F-23D0304C4DEA}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -78,6 +83,18 @@ Global
 		{4DF30BD0-220D-40BE-82D0-E82049773320}.ReleaseOptimized|Win32.Build.0 = ReleaseOptimized|Win32
 		{4DF30BD0-220D-40BE-82D0-E82049773320}.ReleaseOptimized|x64.ActiveCfg = ReleaseOptimized|x64
 		{4DF30BD0-220D-40BE-82D0-E82049773320}.ReleaseOptimized|x64.Build.0 = ReleaseOptimized|x64
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Debug|Win32.Build.0 = Debug|Win32
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Debug|x64.ActiveCfg = Debug|x64
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Debug|x64.Build.0 = Debug|x64
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Release|Win32.ActiveCfg = Release|Win32
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Release|Win32.Build.0 = Release|Win32
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Release|x64.ActiveCfg = Release|x64
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.Release|x64.Build.0 = Release|x64
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.ReleaseOptimized|Win32.ActiveCfg = Release|Win32
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.ReleaseOptimized|Win32.Build.0 = Release|Win32
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.ReleaseOptimized|x64.ActiveCfg = Release|x64
+		{FC693F73-2FCA-4AC7-8E94-29E18A731BC9}.ReleaseOptimized|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
