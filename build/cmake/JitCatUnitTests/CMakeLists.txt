@@ -59,7 +59,7 @@ target_link_libraries(JitCatUnitTests
 	m
 	xml2
 )
-set_target_properties(JitCatUntTests
+set_target_properties(JitCatUnitTests
     PROPERTIES
     COMPILE_FLAGS "-std=c++17 -Wno-write-strings -Wno-switch -Wno-unused-function"
     LINK_FLAGS_RELEASE "-Wl,-s,-x"
