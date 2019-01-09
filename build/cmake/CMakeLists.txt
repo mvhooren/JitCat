@@ -86,6 +86,7 @@ link_libraries(
 )
 
 add_subdirectory(JitCatTest)
+add_subdirectory(JitCatUnitTests)
 add_subdirectory(JitCatValidator)
 add_subdirectory(JitCatValidatorTool)
 
