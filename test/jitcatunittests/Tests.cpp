@@ -67,8 +67,8 @@ void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, 
 	{
 		if constexpr (std::is_same<T, float>::value)
 		{
-			CHECK(expression.getValue(&context) == Approx(expectedValue));
-			CHECK(expression.getInterpretedValue(&context) == Approx(expectedValue));
+			CHECK(expression.getValue(&context) == Approx(expectedValue).epsilon(0.001f));
+			CHECK(expression.getInterpretedValue(&context) == Approx(expectedValue).epsilon(0.001f));
 		}
 		else
 		{
