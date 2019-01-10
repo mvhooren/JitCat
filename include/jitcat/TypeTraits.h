@@ -51,6 +51,7 @@ public:
 	static bool isSerialisableContainer() { return false; }
 	template <typename U>
 	static CatValue getCatValue(const U& param) { return CatValue();}
+	static inline void getValueFromMemberReference(MemberReference* value) {return;};
 	//static CatValue getCatValue(int) { return CatValue();}
 
 	static void getValue() { return;}

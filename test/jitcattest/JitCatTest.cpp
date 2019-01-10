@@ -19,8 +19,6 @@
 #include "Expression.h"
 #include "IdentifierToken.h"
 #include "Lexeme.h"
-#include "LLVMCodeGenerator.h"
-#include "LLVMCompileTimeContext.h"
 #include "ObjectMemberReference.h"
 #include "OneCharToken.h"
 #include "SLRParser.h"
@@ -226,6 +224,7 @@ int MAIN(int argc, char* argv[])
 				std::cout << "\n";
 				if (valueType.isValidType())
 				{
+#ifdef ENABLE_LLVM
 					LLVMCodeGenerator generator("Test");
 					LLVMCompileTimeContext llvmContext(&context);
 					llvmContext.options.enableDereferenceNullChecks = true;
@@ -233,7 +232,7 @@ int MAIN(int argc, char* argv[])
 					generator.generateAndDump(expression, &llvmContext, functionName);
 					generator.compileAndTest(&context, functionName);
 					functionNr++;
-
+#endif
 					std::cout << "\nExecute:\n";
 					CatValue result = expression->execute(&context);
 					std::cout << "\tType:" << toString(result.getValueType()) << "\n\tValue: ";

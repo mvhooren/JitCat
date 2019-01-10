@@ -98,8 +98,8 @@ private:
 
 	std::string contextName;
 	mutable std::vector<const CatRuntimeContextDestructionListener*> destructionListeners;
-
+#ifdef ENABLE_LLVM
 	std::unique_ptr<LLVMCodeGenerator> codeGenerator;
-
+#endif
 	std::vector<ErrorContext*> errorContextStack;
 };

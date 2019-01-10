@@ -1,7 +1,4 @@
 #include "LLVMTypes.h"
-#include "LLVMJit.h"
-
-#include <llvm/IR/Type.h>
 
 llvm::Type* LLVMTypes::floatType = nullptr;
 llvm::Type* LLVMTypes::intType = nullptr;

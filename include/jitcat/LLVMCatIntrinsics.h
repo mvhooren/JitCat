@@ -44,7 +44,5 @@ public:
 	static float getRandomFloatRange(float min, float max);
 	static float roundFloat(float number, int decimals);
 	static std::string roundFloatToString(float number, int decimals);
-	//static	round:
-	//static	stringRound:
 };
 

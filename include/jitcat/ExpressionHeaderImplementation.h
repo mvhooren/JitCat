@@ -9,11 +9,14 @@
 #include "CatASTNodes.h"
 #include "CatGenericType.h"
 #include "CatType.h"
+#include "Configuration.h"
 #include "Document.h"
 #include "ExpressionErrorManager.h"
 #include "JitCat.h"
+#ifdef ENABLE_LLVM
 #include "LLVMCodeGenerator.h"
 #include "LLVMCompileTimeContext.h"
+#endif
 #include "MemberReference.h"
 #include "MemberReferencePtr.h"
 #include "SLRParseResult.h"
@@ -157,20 +160,22 @@ void Expression<T>::compile(CatRuntimeContext* context)
 	}
 	else if (context != nullptr)
 	{
-		if (!isConstant)
-		{
-			LLVMCompileTimeContext llvmCompileContext(context);
-			llvmCompileContext.options.enableDereferenceNullChecks = true;
-			intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
-			if (functionAddress != 0)
+#ifdef ENABLE_LLVM
+			if (!isConstant)
 			{
-				getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
+				LLVMCompileTimeContext llvmCompileContext(context);
+				llvmCompileContext.options.enableDereferenceNullChecks = true;
+				intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+				if (functionAddress != 0)
+				{
+					getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
+				}
+				else
+				{
+					assert(false);
+				}
 			}
-			else
-			{
-				assert(false);
-			}
-		}
+#endif //ENABLE_LLVM
 		context->getErrorManager()->compiledWithoutErrors(this);
 	}
 }
@@ -312,7 +317,29 @@ inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 	}
 	else
 	{
-		return getValueFunc(runtimeContext);
+		if constexpr (Configuration::enableLLVM)
+		{
+			return getValueFunc(runtimeContext);
+		}
+		else
+		{
+			if (expressionAST != nullptr)
+			{
+				CatValue value = expressionAST->execute(runtimeContext);
+				if (value.getValueType() != CatType::Error)
+				{
+					return getActualValue(value);
+				}
+				else
+				{
+					return T();
+				}
+			}
+			else
+			{
+				return T();
+			}
+		}
 	}
 }
 

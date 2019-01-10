@@ -33,4 +33,11 @@ public:
 #else
 		false;
 #endif
+
+	static constexpr bool enableLLVM =
+#ifdef ENABLE_LLVM
+		true;
+#else
+		false;
+#endif
 };

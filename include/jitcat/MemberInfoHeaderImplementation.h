@@ -36,6 +36,7 @@ inline MemberReferencePtr ContainerMemberInfo<T, U>::getMemberReference(MemberRe
 template<typename T, typename U>
 inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
 	if constexpr (sizeof(memberPointer) == 4)
@@ -56,6 +57,9 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 		return context->helper->convertToPointer(addressValue, memberName + "_Ptr");
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+#else 
+	return nullptr;
+#endif // ENABLE_LLVM
 }
 
 
@@ -106,6 +110,7 @@ template<typename T, typename U>
 template<typename ContainerItemType>
 inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::string, ContainerItemType>* map, llvm::Value* containerPtr, llvm::Value* index, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	if (context->helper->isStringPointer(index))
 	{
 		auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
@@ -124,6 +129,9 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::strin
 		};
 		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVMTypes::getLLVMType<ContainerItemType>(), context);
 	}
+#else
+	return nullptr;
+#endif //ENABLE_LLVM
 }
 
 
@@ -131,12 +139,16 @@ template<typename T, typename U>
 template<typename ContainerItemType>
 inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
 		static auto functionPointer = &ContainerMemberInfo<T, U>::getVectorIndex<ContainerItemType>;
 		return compileContext->helper->createCall(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getVectorIndex");
 	};
 	return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVMTypes::getLLVMType<ContainerItemType>(), context);
+#else
+	return nullptr;
+#endif //ENABLE_LLVM
 }
 
 
@@ -169,6 +181,7 @@ inline MemberReferencePtr ClassPointerMemberInfo<T, U>::getMemberReference(Membe
 template<typename T, typename U>
 inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
 	if constexpr (sizeof(memberPointer) == 4)
@@ -189,6 +202,9 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 		return context->helper->loadPointerAtAddress(addressValue, memberName);
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+#else 
+	return nullptr;
+#endif // ENABLE_LLVM
 }
 
 
@@ -210,6 +226,7 @@ inline MemberReferencePtr ClassObjectMemberInfo<T, U>::getMemberReference(Member
 template<typename T, typename U>
 inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
 	if constexpr (sizeof(memberPointer) == 4)
@@ -230,6 +247,9 @@ inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::V
 		return context->helper->convertToPointer(addressValue, memberName);
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+#else 
+	return nullptr;
+#endif // ENABLE_LLVM
 }
 
 
@@ -259,6 +279,7 @@ inline MemberReferencePtr ClassUniquePtrMemberInfo<T, U>::getMemberReference(Mem
 template<typename T, typename U>
 inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	llvm::Value* thisPointerAsInt = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr");
 	if (!context->helper->isPointer(parentObjectPointer))
 	{
@@ -270,6 +291,9 @@ inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm
 		return context->helper->createCall(LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+#else 
+	return nullptr;
+#endif // ENABLE_LLVM
 }
 
 
@@ -293,6 +317,7 @@ inline MemberReferencePtr BasicTypeMemberInfo<T, U>::getMemberReference(MemberRe
 template<typename T, typename U>
 inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
 	if constexpr (sizeof(memberPointer) == 4)
@@ -322,4 +347,7 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 		}
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);
+#else 
+	return nullptr;
+#endif // ENABLE_LLVM
 }

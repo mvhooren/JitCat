@@ -37,6 +37,7 @@ inline MemberReferencePtr CustomBasicTypeMemberInfo<T>::getMemberReference(Membe
 template<typename T>
 inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	unsigned long long dataPointerOffset = 0;
 	//Get the offset to a the "data" member of the CustomTypeInstance object that is pointed to by parentObjectPointer.
 	unsigned char* CustomTypeInstance::* dataMemberPointer = &CustomTypeInstance::data;
@@ -81,6 +82,9 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::
 		}
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);
+#else 
+	return nullptr;
+#endif //ENABLE_LLVM
 }
 
 
@@ -146,6 +150,7 @@ inline MemberReferencePtr CustomTypeObjectMemberInfo::getMemberReference(MemberR
 
 inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
 	unsigned long long dataPointerOffset = 0;
 	//Get the offset to a the "data" member of the CustomTypeInstance object that is pointed to by parentObjectPointer.
 	unsigned char* CustomTypeInstance::* dataMemberPointer = &CustomTypeInstance::data;
@@ -184,6 +189,9 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Va
 		return context->helper->createCall(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&getReflectable), {memberReferencePtr}, "getReflectable");
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+#else 
+	return nullptr;
+#endif //ENABLE_LLVM
 }
 
 
