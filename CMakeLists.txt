@@ -29,6 +29,9 @@ endif()
 
 set(JitCatIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/include/jitcat)
 set(JitCatValidatorIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/include/jitcatvalidator)
+set(JitCatValidatorToolIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/tools/jitcatvalidatortool)
+set(JitCatTestIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/test/jitcattest)
+set(JitCatUnitTestsIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/test/jitcatunittests)
 set(DependenciesIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/dependencies)
 
 #This disables debug output of the parser generator. TODO: Change this to DEBUG_GRAMMAR, update code accordingly and add a CMake option.
@@ -173,6 +176,11 @@ if(BUILD_VALIDATOR_TOOL)
 	add_subdirectory(tools/jitcatvalidatortool)
 endif()
 
+#Set C++ 17 standard on all targets
+set_target_properties(${AllTargets} PROPERTIES CXX_STANDARD 17)
+if (NOT MSVC)
+	set_target_properties(${AllTargets} PROPERTIES LINK_FLAGS_RELEASE "-Wl,-s,-x")	
+endif()
 
 install(TARGETS ${AllTargets}
 		RUNTIME DESTINATION bin/JitCat${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE}

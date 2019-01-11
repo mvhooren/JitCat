@@ -2,7 +2,7 @@ project(JitCatTest)
 
 include_directories(
     ${JitCatIncludePath}
-	../../test/jitcattest
+	${JitCatTestIncludePath}
 )
 
 
@@ -32,16 +32,5 @@ add_executable(JitCatTest
 )
 
 add_dependencies(JitCatTest JitCat)
-link_directories(${CMAKE_SOURCE_DIR}/../../lib/${CMAKE_SYSTEM_NAME}${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE})
-target_link_libraries(JitCatTest 
-					  JitCat)
-					  
-#Set C++ 17 standard					  
-set_property(TARGET JitCatTest PROPERTY CXX_STANDARD 17)			  
 
-if(UNIX)			  
-set_target_properties(JitCatTest
-    PROPERTIES
-    LINK_FLAGS_RELEASE "-Wl,-s,-x"
-)
-endif()
+target_link_libraries(JitCatTest JitCat)

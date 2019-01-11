@@ -313,12 +313,3 @@ add_library(JitCat STATIC
 	${Source_Tools}
 )
 
-#Set C++ 17 standard
-set_property(TARGET JitCat PROPERTY CXX_STANDARD 17)
-
-if(UNIX)
-set_target_properties(JitCat
-    PROPERTIES
-    LINK_FLAGS_RELEASE "-Wl,-s,-x")
-	
-endif()
