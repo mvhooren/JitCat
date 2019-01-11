@@ -1,104 +1,23 @@
 project(JitCat)
 
-include_directories(
-    ${JitCatIncludePath}
-)
+include_directories(${JitCatIncludePath})
 
-file(GLOB JitCatHeaderFiles 
-    ${JitCatIncludePath}/*.h
-)
+file(GLOB JitCatHeaderFiles ${JitCatIncludePath}/*.h)
 
 if (JitCatHeaderFiles)
 	set_source_files_properties(${JitCatHeaderFiles} PROPERTIES HEADER_FILE_ONLY ON)
 endif()
 
-set(JitCatSourceFiles  
-	XMLHelper.cpp
-	ASTNodeParser.cpp
-	AutoCompletion.cpp
-	CatArgumentList.cpp
-	CatArrayIndex.cpp
-	CatError.cpp
-	CatFunctionCall.cpp
-	CatGenericType.cpp
-	CatGrammar.cpp
-	CatIdentifier.cpp
-	CatInfixOperator.cpp
-	CatInfixOperatorType.cpp
-	CatLinkNode.cpp
-	CatLiteral.cpp
-	CatLog.cpp
-	CatMemberAccess.cpp
-	CatMemberFunctionCall.cpp
-	CatPrefixOperator.cpp
-	CatRuntimeContext.cpp
-	CatScopeRoot.cpp
-	CatTokenizer.cpp
-	CatType.cpp
-	CatValue.cpp
-	CommentToken.cpp
-	ConstantToken.cpp
-	ContainerType.cpp
-	CustomTypeInfo.cpp
-	CustomTypeInstance.cpp
-	DFAState.cpp
-	Document.cpp
-	ErrorContext.cpp
-	ErrorToken.cpp
-	ExpressionAny.cpp
-	ExpressionErrorManager.cpp
-	ExpressionHelperFunctions.cpp
-	ExpressionTools.cpp
-	Grammar.cpp
-	IdentifierToken.cpp
-	InfixOperatorOptimizer.cpp
-	Item.cpp
+#Create a list variable for every virtual folder of source files.
+#These lists are then used in source_group and add_library
+
+set(Source_Root
+	${JitCatIncludePath}/Configuration.h
 	JitCat.cpp
-	Lexeme.cpp
-	LLVMCatIntrinsics.cpp
-	LLVMTypes.cpp
-	MemberInfo.cpp
-	MemberReference.cpp
-	MemberReferencePtr.cpp
-	OneCharToken.cpp
-	OptimizationHelper.cpp
-	ParseHelper.cpp
-	ParseToken.cpp
-	Production.cpp
-	ProductionEpsilonToken.cpp
-	ProductionNonTerminalToken.cpp
-	ProductionRule.cpp
-	ProductionTerminalToken.cpp
-	ProductionToken.cpp
-	ProductionTokenSet.cpp
-	ProductionTokenSetMember.cpp
-	Reflectable.cpp
-	ReflectableHandle.cpp
-	SLRParser.cpp
-	SLRParseResult.cpp
-	SpecificMemberType.cpp
-	StackItemProduction.cpp
-	Timer.cpp
-	Tokenizer.cpp
-	Tools.cpp
-	TwoCharToken.cpp
-	TypeInfo.cpp
-	TypeRegistry.cpp
-	TypeTraits.cpp
-	WhitespaceToken.cpp
+	${JitCatIncludePath}/JitCat.h
 )
 
-
-if(LLVM_ENABLED)
-	list(APPEND JitCatSourceFiles 
-		LLVMCodeGenerator.cpp
-		LLVMCodeGeneratorHelper.cpp
-		LLVMCompileTimeContext.cpp
-		LLVMJit.cpp)	
-endif()
-
-
-source_group(Cat FILES 
+set(Source_Cat
 	CatError.cpp
 	${JitCatIncludePath}/CatError.h
 	CatGenericType.cpp
@@ -119,7 +38,7 @@ source_group(Cat FILES
 	${JitCatIncludePath}/RootTypeSource.h
 )
 
-source_group(Cat\\ASTNodes FILES 
+set(Source_Cat_ASTNodes
 	CatArgumentList.cpp 
 	${JitCatIncludePath}/CatArgumentList.h 
 	CatArrayIndex.cpp 
@@ -151,7 +70,7 @@ source_group(Cat\\ASTNodes FILES
 	${JitCatIncludePath}/CatTypedExpression.h
 )
 
-source_group(Cat\\ASTNodes\\ASTOptimization FILES
+set(Source_Cat_ASTNodes_ASTOptimization
 	${JitCatIncludePath}/CatExpression.h
 	InfixOperatorOptimizer.cpp
 	${JitCatIncludePath}/InfixOperatorOptimizer.h
@@ -159,25 +78,29 @@ source_group(Cat\\ASTNodes\\ASTOptimization FILES
 	${JitCatIncludePath}/OptimizationHelper.h
 )
 
-source_group(Cat\\CodeGeneration\\LLVM FILES
+set(Source_Cat_CodeGeneration_LLVM
 	LLVMCatIntrinsics.cpp
 	${JitCatIncludePath}/LLVMCatIntrinsics.h
-	LLVMCodeGenerator.cpp
 	${JitCatIncludePath}/LLVMCodeGenerator.h
-	LLVMCodeGeneratorHelper.cpp
 	${JitCatIncludePath}/LLVMCodeGeneratorHelper.h
 	${JitCatIncludePath}/LLVMCompileOptions.h
-	LLVMCompileTimeContext.cpp
 	${JitCatIncludePath}/LLVMCompileTimeContext.h
 	${JitCatIncludePath}/LLVMForwardDeclares.h
-	LLVMJit.cpp
 	${JitCatIncludePath}/LLVMJit.h
 	${JitCatIncludePath}/LLVMJitHeaderImplementation.h
 	LLVMTypes.cpp
 	${JitCatIncludePath}/LLVMTypes.h
 )
 
-source_group(Cat\\Expression FILES
+if(LLVM_ENABLED)
+	list(APPEND Source_Cat_CodeGeneration_LLVM 
+		LLVMCodeGenerator.cpp
+		LLVMCodeGeneratorHelper.cpp
+		LLVMCompileTimeContext.cpp
+		LLVMJit.cpp)	
+endif()
+
+set(Source_Cat_Expression
 	${JitCatIncludePath}/Expression.h
 	ExpressionAny.cpp
 	${JitCatIncludePath}/ExpressionAny.h
@@ -192,19 +115,19 @@ source_group(Cat\\Expression FILES
 	${JitCatIncludePath}/TypeTraitsHeaderImplementation.h
 )
 
-source_group(Cat\\Expression\\AutoCompletion FILES
+set(Source_Cat_Expression_Autocompletion
 	AutoCompletion.cpp
 	${JitCatIncludePath}/AutoCompletion.h
 )
 
-source_group(Cat\\Expression\\Errors FILES
+set(Source_Cat_Expression_Errors
 	ErrorContext.cpp
 	${JitCatIncludePath}/ErrorContext.h
 	ExpressionErrorManager.cpp
 	${JitCatIncludePath}/ExpressionErrorManager.h
 )
 
-source_group(Grammar FILES 
+set(Source_Grammar
 	Grammar.cpp
 	${JitCatIncludePath}/Grammar.h
 	Production.cpp
@@ -227,7 +150,7 @@ source_group(Grammar FILES
 	${JitCatIncludePath}/TokenFlag.h
 )
 
-source_group(Parser FILES 
+set(Source_Parser
 	${JitCatIncludePath}/ASTNode.h
 	ASTNodeParser.cpp
 	${JitCatIncludePath}/ASTNodeParser.h
@@ -246,7 +169,7 @@ source_group(Parser FILES
 	${JitCatIncludePath}/StackItemToken.h
 )
 
-source_group(Reflection FILES 
+set(Source_Reflection
 	Reflectable.cpp
 	${JitCatIncludePath}/Reflectable.h
 	ReflectableHandle.cpp
@@ -255,7 +178,7 @@ source_group(Reflection FILES
 	${JitCatIncludePath}/TypeRegistry.h
 )
 
-source_group(Reflection\\Enums FILES 
+set(Source_Reflection_Enums
 	ContainerType.cpp
 	${JitCatIncludePath}/ContainerType.h
 	${JitCatIncludePath}/MemberTypeFlags.h
@@ -263,7 +186,7 @@ source_group(Reflection\\Enums FILES
 	${JitCatIncludePath}/SpecificMemberType.h
 )
 
-source_group(Reflection\\MemberReference FILES
+set(Source_Reflection_MemberReference
 	${JitCatIncludePath}/BasicTypeMemberReference.h
 	${JitCatIncludePath}/BasicTypeMemberReferenceHeaderImplementation.h
 	${JitCatIncludePath}/ContainerMemberReference.h
@@ -276,12 +199,12 @@ source_group(Reflection\\MemberReference FILES
 	${JitCatIncludePath}/ObjectMemberReferenceHeaderImplementation.h
 )
 
-source_group(Reflection\\Serialisation FILES
+set(Source_Reflection_Serialisation
 	XMLHelper.cpp
 	${JitCatIncludePath}/XMLHelper.h
 )
 
-source_group(Reflection\\TypeInfo FILES	
+set(Source_Reflection_TypeInfo
 	CustomTypeInfo.cpp
 	${JitCatIncludePath}/CustomTypeInfo.h
 	CustomTypeInstance.cpp
@@ -299,7 +222,7 @@ source_group(Reflection\\TypeInfo FILES
 	${JitCatIncludePath}/VariableEnumerator.h
 )
 
-source_group(Tokenizer FILES 
+set(Source_Tokenizer
 	Document.cpp
 	${JitCatIncludePath}/Document.h
 	Lexeme.cpp
@@ -310,7 +233,7 @@ source_group(Tokenizer FILES
 	${JitCatIncludePath}/Tokenizer.h
 )
 
-source_group(Tokenizer\\Tokens FILES 
+set(Source_Tokenizer_Tokens
 	CommentToken.cpp
 	${JitCatIncludePath}/CommentToken.h
 	${JitCatIncludePath}/CommentTokenSubTypes.h
@@ -334,7 +257,7 @@ source_group(Tokenizer\\Tokens FILES
 	${JitCatIncludePath}/WhitespaceToken.h
 )
 
-source_group(Tools FILES 
+set(Source_Tools
 	CatLog.cpp
 	${JitCatIncludePath}/CatLog.h
 	Timer.cpp
@@ -344,18 +267,51 @@ source_group(Tools FILES
 	${JitCatIncludePath}/ToolsHeaderImplementation.h
 )
 
-source_group("" FILES 
-	${JitCatIncludePath}/Configuration.h
-	JitCat.cpp
-	${JitCatIncludePath}/JitCat.h
-	llvm.natvis
-)
+
+#Project file organisation
+source_group(Cat FILES ${Source_Cat})
+source_group(Cat\\ASTNodes FILES ${Source_Cat_ASTNodes})
+source_group(Cat\\ASTNodes\\ASTOptimization FILES ${Source_Cat_ASTNodes_ASTOptimization})
+source_group(Cat\\CodeGeneration\\LLVM FILES ${Source_Cat_CodeGeneration_LLVM})
+source_group(Cat\\Expression FILES ${Source_Cat_Expression})
+source_group(Cat\\Expression\\AutoCompletion FILES ${Source_Cat_Expression_Autocompletion})
+source_group(Cat\\Expression\\Errors FILES ${Source_Cat_Expression_Errors})
+source_group(Grammar FILES ${Source_Grammar})
+source_group(Parser FILES ${Source_Parser})
+source_group(Reflection FILES ${Source_Reflection})
+source_group(Reflection\\Enums FILES ${Source_Reflection_Enums})
+source_group(Reflection\\MemberReference FILES ${Source_Reflection_MemberReference})
+source_group(Reflection\\Serialisation FILES ${Source_Reflection_Serialisation})
+source_group(Reflection\\TypeInfo FILES	${Source_Reflection_TypeInfo})
+source_group(Tokenizer FILES ${Source_Tokenizer})
+source_group(Tokenizer\\Tokens FILES ${Source_Tokenizer_Tokens})
+source_group(Tools FILES ${Source_Tools})
+source_group("" FILES ${Source_Root} llvm.natvis)
 
 if(NOT MSVC)
 	add_compile_options(-fPIC)
 endif()
 
-add_library(JitCat STATIC ${JitCatHeaderFiles} ${JitCatSourceFiles})
+add_library(JitCat STATIC 
+	${Source_Root}
+	${Source_Cat}
+	${Source_Cat_ASTNodes}
+	${Source_Cat_ASTNodes_ASTOptimization}
+	${Source_Cat_CodeGeneration_LLVM}
+	${Source_Cat_Expression}
+	${Source_Cat_Expression_Autocompletion}
+	${Source_Cat_Expression_Errors}
+	${Source_Grammar}
+	${Source_Parser}
+	${Source_Reflection}
+	${Source_Reflection_Enums}
+	${Source_Reflection_MemberReference}
+	${Source_Reflection_Serialisation}
+	${Source_Reflection_TypeInfo}
+	${Source_Tokenizer}
+	${Source_Tokenizer_Tokens}
+	${Source_Tools}
+)
 
 #Set C++ 17 standard
 set_property(TARGET JitCat PROPERTY CXX_STANDARD 17)

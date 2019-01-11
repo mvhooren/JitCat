@@ -1,5 +1,8 @@
+#Requires CMake 3.12 because of add_compile_definitions 
 cmake_minimum_required(VERSION 3.12)
 
+project(JitCat)
+#These are all the options available for configuration using CMake
 option(LLVM_ENABLED "Enable the LLVM backend for JitCat." OFF)
 option(BUILD_JITCAT_LIB "Build the JitCat library." ON)
 option(BUILD_VALIDATOR_LIB "Build the JitCat validator library." ON)
@@ -17,6 +20,7 @@ else()
 	option(MSVC_EXPERIMENTAL_DISABLE_EXTERNAL_WARNINGS "Enable the experimental msvc feature to disable warnings from headers included using angle brackets <>" OFF)
 endif()
 
+#Set up some variables that are used later on
 if(CMAKE_SIZEOF_VOID_P MATCHES "8" AND NOT(FORCE32))
 	set(JITCAT_BITNESS "64")
 else()
@@ -27,6 +31,7 @@ set(JitCatIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/include/jitcat)
 set(JitCatValidatorIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/include/jitcatvalidator)
 set(DependenciesIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/dependencies)
 
+#This disables debug output of the parser generator. TODO: Change this to DEBUG_GRAMMAR, update code accordingly and add a CMake option.
 add_compile_definitions(NO_DEBUG_GRAMMAR)
 
 if(LLVM_ENABLED)
