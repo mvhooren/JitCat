@@ -117,7 +117,7 @@ if(MSVC)
 		set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT JitCatTest)
 	endif()	
 else()
-	add_compile_options(-Wno-write-strings -Wno-switch -Wno-unused-function -fno-rtti)
+	lsadd_compile_options(-Wno-write-strings -Wno-switch -Wno-unused-function -fno-rtti)
 	if(FORCE32)
 		add_compile_options("-m32")
 	endif()
@@ -127,12 +127,30 @@ set(AllTargets "")
 
 if(BUILD_JITCAT_LIB)
 	list(APPEND AllTargets JitCat) 
+	
 	add_subdirectory(src/jitcat)
+	
+	install(DIRECTORY include/jitcat 
+			DESTINATION include
+			COMPONENT jitcat-headers
+			FILES_MATCHING
+			PATTERN "*.h"
+			PATTERN ".svn" EXCLUDE
+	)	
 endif()
 
 if(BUILD_VALIDATOR_LIB)
 	list(APPEND AllTargets JitCatValidator)
+	
 	add_subdirectory(src/jitcatvalidator)
+	
+	install(DIRECTORY include/jitcatvalidator 
+			DESTINATION include
+			COMPONENT jitcatvalidator-headers
+			FILES_MATCHING
+			PATTERN "*.h"
+			PATTERN ".svn" EXCLUDE
+	)	
 endif()
 
 if(BUILD_EXAMPLES)
@@ -152,6 +170,6 @@ endif()
 
 
 install(TARGETS ${AllTargets}
-		RUNTIME DESTINATION bin/${CMAKE_SYSTEM_NAME}${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE}
-		LIBRARY DESTINATION lib/${CMAKE_SYSTEM_NAME}${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE}
-		ARCHIVE DESTINATION lib/${CMAKE_SYSTEM_NAME}${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE})
+		RUNTIME DESTINATION bin/JitCat${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE}
+		LIBRARY DESTINATION lib/JitCat${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE}
+		ARCHIVE DESTINATION lib/JitCat${JITCAT_BITNESS}/${CMAKE_BUILD_TYPE})
