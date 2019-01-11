@@ -12,8 +12,6 @@ if (JitCatHeaderFiles)
 	set_source_files_properties(${JitCatHeaderFiles} PROPERTIES HEADER_FILE_ONLY ON)
 endif()
 
-
-
 set(JitCatSourceFiles  
 	XMLHelper.cpp
 	ASTNodeParser.cpp
@@ -352,6 +350,10 @@ source_group("" FILES
 	${JitCatIncludePath}/JitCat.h
 	llvm.natvis
 )
+
+if(NOT MSVC)
+	add_compile_options(-fPIC)
+endif()
 
 add_library(JitCat STATIC ${JitCatHeaderFiles} ${JitCatSourceFiles})
 

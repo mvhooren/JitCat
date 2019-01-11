@@ -17,6 +17,10 @@ set(JitCatValidatorHeaderFiles
 
 set_source_files_properties(${JitCatValidatorHeaderFiles} PROPERTIES HEADER_FILE_ONLY ON)
 
+if(NOT MSVC)
+	add_compile_options(-fPIC)
+endif()
+
 add_library(JitCatValidator SHARED 
 	${JitCatValidatorSourceFiles}
 	${JitCatValidatorHeaderFiles}
