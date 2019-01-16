@@ -27,7 +27,10 @@ public:
 
 	bool operator== (const CatType other) const;
 	bool operator== (const CatGenericType& other) const;
+	bool operator!= (const CatType other) const;
+	bool operator!= (const CatGenericType& other) const;
 
+	bool isUnknown() const;
 	bool isValidType() const;
 	bool isBasicType() const;
 	bool isBoolType() const;

@@ -12,7 +12,7 @@ class CatTypedExpression;
 struct SLRParseResult;
 
 #include "ExpressionBase.h"
-#include "CatType.h"
+#include "CatGenericType.h"
 #include "CatValue.h"
 #include "ReflectableHandle.h"
 #include "TypeTraits.h"
@@ -35,53 +35,27 @@ public:
 	Expression(const Expression&) = delete;
 	virtual ~Expression();
 
-	//Sets the expression text for this Expression
-	//If compileContext == nullptr, compile needs to be called afterwards to compile the expression text
-	virtual void setExpression(const std::string& expression, CatRuntimeContext* compileContext) override final;
-	virtual const std::string& getExpression() const override final;
-
-	//Returns true if the expression is just a simple literal.
-	virtual bool isLiteral() const override final;
-
-	//Returns true if the expression is constant. (It is just a literal, or a combination of operators operating on constants)
-	virtual bool isConst() const override final;
-
-	//Returns true if the expression contains an error
-	virtual bool hasError() const override final;
-
 	//Executes the expression and returns the value.
 	//If isConst() == true then context may be nullptr, otherwise a context needs to be provided
+	//This will execute the native-code version of the expression if the LLVM backend is enabled, otherwise it will use the interpreter.
 	const T getValue(CatRuntimeContext* runtimeContext);
 
+	//Same as getValue but will always execute the expression using the interpreter.
+	//Should always return the same value as getValue. Used for testing the interpreter when the LLVM backend is enabled.
 	const T getInterpretedValue(CatRuntimeContext* runtimeContext);
 
 	virtual void compile(CatRuntimeContext* context) override final;
-	SLRParseResult* parse(CatRuntimeContext* context);//TTT test parsing without directly printing errors.
-
-	virtual CatType getType() const override final;
-
-	//Returns the expression string
-	virtual std::string& getExpressionForSerialisation() override final;
 
 private:
-	CatType getCatType() const;
+	CatType getExpectedCatType() const;
 	static inline T getActualValue(const CatValue& catValue);
 	static inline const T getDefaultValue(CatRuntimeContext*);
 
 private:
 	const T (*getValueFunc)(CatRuntimeContext* runtimeContext);
 
-	std::string expression;
-	std::unique_ptr<SLRParseResult> parseResult;
-	bool expressionIsLiteral;
-
-	bool isConstant;
 	//If the expression is a constant, then the value is cached for performance;
 	typename TypeTraits<T>::cachedType cachedValue;
-
-	//Not owned
-	CatTypedExpression* expressionAST;
-	ReflectableHandle errorManagerHandle;
 };
 
 #include "ExpressionHeaderImplementation.h"

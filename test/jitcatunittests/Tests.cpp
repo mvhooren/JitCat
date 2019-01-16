@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 #include "CatRuntimeContext.h"
 #include "Expression.h"
+#include "ExpressionAny.h"
 #include "LLVMCatIntrinsics.h"
 #include "TestObjects.h"
 #include "Tools.h"
@@ -11,39 +12,33 @@
 using namespace TestObjects;
 
 
-template<typename T>
-bool doCommonChecks(Expression<T>& expression, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, CatRuntimeContext& context)
+bool doCommonChecks(ExpressionBase* expression, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, CatRuntimeContext& context)
 {
 	if (!shouldHaveError)
 	{
-		REQUIRE_FALSE(expression.hasError());
+		REQUIRE_FALSE(expression->hasError());
 	}
 	else
 	{
-		REQUIRE(expression.hasError());
-		if constexpr (!std::is_same<T, void>::value)
-		{
-			//When te expression has an error, the getValue functions should return the default value
-			CHECK(expression.getValue(&context) == T());
-			CHECK(expression.getInterpretedValue(&context) == T());
-		}
+		REQUIRE(expression->hasError());
+
 		return false;
 	}
 	if (shouldBeConst)
 	{
-		CHECK(expression.isConst());
+		CHECK(expression->isConst());
 	}
 	else
 	{
-		CHECK_FALSE(expression.isConst());
+		CHECK_FALSE(expression->isConst());
 	}
 	if (shouldBeLiteral)
 	{
-		CHECK(expression.isLiteral());
+		CHECK(expression->isLiteral());
 	}
 	else
 	{
-		CHECK_FALSE(expression.isLiteral());
+		CHECK_FALSE(expression->isLiteral());
 	}
 	return true;
 }
@@ -52,10 +47,19 @@ bool doCommonChecks(Expression<T>& expression, bool shouldHaveError, bool should
 template <typename T>
 void doChecksFn(std::function<bool(const T&)> valueCheck, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, Expression<T>& expression, CatRuntimeContext& context)
 {
-	if (doCommonChecks(expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
+	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
 	{
 		CHECK(valueCheck(expression.getValue(&context)));
 		CHECK(valueCheck(expression.getInterpretedValue(&context)));
+	}
+	else if (shouldHaveError)
+	{
+		if constexpr (!std::is_same<T, void>::value)
+		{
+			//When te expression has an error, the getValue functions should return the default value
+			CHECK(expression.getValue(&context) == T());
+			CHECK(expression.getInterpretedValue(&context) == T());
+		}
 	}
 }
 
@@ -63,7 +67,7 @@ void doChecksFn(std::function<bool(const T&)> valueCheck, bool shouldHaveError, 
 template <typename T>
 void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, Expression<T>& expression, CatRuntimeContext& context)
 {
-	if (doCommonChecks(expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
+	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
 	{
 		if constexpr (std::is_same<T, float>::value)
 		{
@@ -74,6 +78,15 @@ void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, 
 		{
 			CHECK(expression.getValue(&context) == expectedValue);
 			CHECK(expression.getInterpretedValue(&context) == expectedValue);
+		}
+	}
+	else if (shouldHaveError)
+	{
+		if constexpr (!std::is_same<T, void>::value)
+		{
+			//When te expression has an error, the getValue functions should return the default value
+			CHECK(expression.getValue(&context) == T());
+			CHECK(expression.getInterpretedValue(&context) == T());
 		}
 	}
 }
@@ -3240,19 +3253,19 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<void> testExpression(&context, "doSomething()");
 		testExpression.getValue(&context);
-		doCommonChecks(testExpression, false, false, false, context);
+		doCommonChecks(&testExpression, false, false, false, context);
 	}
 	SECTION("Const void function")
 	{
 		Expression<void> testExpression(&context, "doSomethingConst()");
 		testExpression.getValue(&context);
-		doCommonChecks(testExpression, false, false, false, context);
+		doCommonChecks(&testExpression, false, false, false, context);
 	}
 	SECTION("Void function 2")
 	{
 		Expression<void> testExpression(&context, "checkTheseValues(aBoolean, theInt, text, nestedSelfObject)");
 		testExpression.getValue(&context);
-		doCommonChecks(testExpression, false, false, false, context);
+		doCommonChecks(&testExpression, false, false, false, context);
 	}
 	SECTION("string function 1")
 	{
@@ -3299,7 +3312,7 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<void> testExpression(&context, "nestedSelfObject.doSomething()");
 		testExpression.getValue(&context);
-		doCommonChecks(testExpression, false, false, false, context);
+		doCommonChecks(&testExpression, false, false, false, context);
 	}
 
 	SECTION("null base float")
@@ -3331,6 +3344,29 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<void> testExpression(&context, "nestedSelfObject.nestedSelfObject.doSomething()");
 		testExpression.getValue(&context);
-		doCommonChecks(testExpression, false, false, false, context);
+		doCommonChecks(&testExpression, false, false, false, context);
+	}
+}
+
+
+TEST_CASE("ExpressionAny", "[ExpressionAny]")
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
+	CatGenericType genericType = CatGenericType(objectTypeInfo);
+	CatRuntimeContext context(objectTypeInfo, nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
+	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
+	context.setGlobalReference(globalsReference);
+
+	SECTION("Basics")
+	{
+		ExpressionAny testExpression(&context, "nestedSelfObject");
+		doCommonChecks(&testExpression, false, false, false, context);
+		CHECK(testExpression.getType() == genericType);
+		CatValue value = testExpression.getValue(&context);
+		CHECK_FALSE(value.getCustomTypeValue().isNull());
+		CHECK(value.getCustomTypeValue().getPointer()->getGenericType() == genericType);
 	}
 }

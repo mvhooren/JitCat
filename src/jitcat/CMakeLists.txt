@@ -104,7 +104,8 @@ set(Source_Cat_Expression
 	${JitCatIncludePath}/Expression.h
 	ExpressionAny.cpp
 	${JitCatIncludePath}/ExpressionAny.h
-	${JitCatIncludePath}/ExpressionBase.h
+	ExpressionBase.cpp
+	${JitCatIncludePath}/ExpressionBase.h	
 	${JitCatIncludePath}/ExpressionHeaderImplementation.h
 	ExpressionHelperFunctions.cpp
 	${JitCatIncludePath}/ExpressionHelperFunctions.h

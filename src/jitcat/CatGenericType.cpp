@@ -82,6 +82,24 @@ bool CatGenericType::operator==(const CatGenericType& other) const
 }
 
 
+bool CatGenericType::operator!=(const CatType other) const
+{
+	return !this->operator==(other);
+}
+
+
+bool CatGenericType::operator!=(const CatGenericType& other) const
+{
+	return !this->operator==(other);
+}
+
+
+bool CatGenericType::isUnknown() const
+{
+	return catType == CatType::Unknown;
+}
+
+
 bool CatGenericType::isValidType() const
 {
 	return specificType != SpecificType::Error 
