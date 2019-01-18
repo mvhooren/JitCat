@@ -14,6 +14,10 @@
 #include "ExpressionErrorManager.h"
 #include "Document.h"
 #include "JitCat.h"
+#ifdef ENABLE_LLVM
+#include "LLVMCodeGenerator.h"
+#include "LLVMCompileTimeContext.h"
+#endif
 #include "SLRParseResult.h"
 #include "Tools.h"
 
@@ -136,6 +140,11 @@ bool ExpressionBase::parse(CatRuntimeContext* context, const CatGenericType& exp
 		typeCheck(expectedType);
 	}
 	handleParseErrors(context);
+	//typeCheck may have changed parseResult->success
+	if (parseResult->success && !isConstant)
+	{
+		compileToNativeCode(context);
+	}
 
 	return parseResult->success;
 }
@@ -274,4 +283,28 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 			errorManager->compiledWithoutErrors(this);
 		}
 	}
+}
+
+
+void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
+{
+#ifdef ENABLE_LLVM
+	if (context != nullptr)
+	{
+		if (!isConstant)
+		{
+			LLVMCompileTimeContext llvmCompileContext(context);
+			llvmCompileContext.options.enableDereferenceNullChecks = true;
+			intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+			if (functionAddress != 0)
+			{
+				handleCompiledFunction(functionAddress);
+			}
+			else
+			{
+				assert(false);
+			}
+		}
+	}
+#endif //ENABLE_LLVM
 }

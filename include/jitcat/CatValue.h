@@ -12,6 +12,9 @@
 #include "CatType.h"
 #include "MemberReferencePtr.h"
 
+#include <any>
+
+
 class CatValue
 {
 public:
@@ -44,6 +47,8 @@ public:
 	CatValue& operator= (const CatValue& other);
 
 	void printValue() const;
+
+	std::any toAny();
 
 private:
 	union

@@ -10,6 +10,7 @@
 class ExpressionGlobalContext;
 struct MemberFunctionInfo;
 class MemberReferencePtr;
+class TypeCaster;
 class TypeInfo;
 struct TypeMemberInfo;
 class VariableEnumerator;
@@ -21,7 +22,9 @@ class VariableEnumerator;
 #include "SpecificMemberType.h"
 #include "Tools.h"
 
+#include <any>
 #include <map>
+#include <memory>
 #include <vector>
 
 
@@ -51,7 +54,7 @@ class TypeInfo
 {
 public:
 	//The type name must be a static const char* because types are compared based on the pointer value of their type names.
-	TypeInfo(const char* typeName);
+	TypeInfo(const char* typeName, TypeCaster* caster);
 	virtual ~TypeInfo();
 
 	//Adds information of a member of type U inside struct/class T
@@ -99,13 +102,17 @@ public:
 	virtual bool isCustomType() const;
 
 	//Beware that these lists are case insensitive because the indices have been converted to lower case
-	const std::map<std::string, TypeMemberInfo*>& getMembers() const;
-	const std::map<std::string, MemberFunctionInfo*>& getMemberFunctions() const;
+	const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;
+	const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
+
+	//May be nullptr when type info was read from XML
+	const TypeCaster* getTypeCaster() const;
 
 protected:
 	const char* typeName;
-	std::map<std::string, TypeMemberInfo*> members;
-	std::map<std::string, MemberFunctionInfo*> memberFunctions;
+	std::unique_ptr<TypeCaster> caster;
+	std::map<std::string, std::unique_ptr<TypeMemberInfo>> members;
+	std::map<std::string, std::unique_ptr<MemberFunctionInfo>> memberFunctions;
 };
 
 

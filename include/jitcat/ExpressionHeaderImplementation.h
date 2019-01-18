@@ -13,10 +13,7 @@
 #include "Document.h"
 #include "ExpressionErrorManager.h"
 #include "JitCat.h"
-#ifdef ENABLE_LLVM
-#include "LLVMCodeGenerator.h"
-#include "LLVMCompileTimeContext.h"
-#endif
+
 #include "MemberReference.h"
 #include "MemberReferencePtr.h"
 #include "SLRParseResult.h"
@@ -80,26 +77,14 @@ void Expression<T>::compile(CatRuntimeContext* context)
 				cachedValue = getActualValue(expressionAST->execute(context));
 			}
 		}
-		if (context != nullptr)
-		{
-#ifdef ENABLE_LLVM
-			if (!isConstant)
-			{
-				LLVMCompileTimeContext llvmCompileContext(context);
-				llvmCompileContext.options.enableDereferenceNullChecks = true;
-				intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
-				if (functionAddress != 0)
-				{
-					getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
-				}
-				else
-				{
-					assert(false);
-				}
-			}
-#endif //ENABLE_LLVM
-		}
 	}
+}
+
+
+template<typename T>
+inline void Expression<T>::handleCompiledFunction(uintptr_t functionAddress)
+{
+	getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
 }
 
 

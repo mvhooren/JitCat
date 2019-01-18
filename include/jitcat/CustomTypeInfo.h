@@ -31,7 +31,7 @@ public:
 	TypeMemberInfo* addIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 	TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
 	TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
-	TypeMemberInfo* addObjectMember(const std::string& memberName, const std::string& typeName, MemberReference* defaulValue, bool isWritable = true, bool isConst = false);
+	TypeMemberInfo* addObjectMember(const std::string& memberName, const std::string& typeName, MemberReference* defaulValue, TypeInfo* objectTypeInfo, bool isWritable = true, bool isConst = false);
 
 	//This will not shrink the typeSize, only remove the member from the list.
 	//The data will only shrink after a restart of the program.
@@ -62,4 +62,6 @@ private:
 	unsigned int typeSize;
 
 	bool isTriviallyCopyable;
+
+	std::vector<std::unique_ptr<TypeMemberInfo>> removedMembers;
 };

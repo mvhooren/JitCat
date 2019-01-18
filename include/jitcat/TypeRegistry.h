@@ -10,6 +10,7 @@
 class CatGenericType;
 class TypeInfo;
 #include "Tools.h"
+#include "TypeCaster.h"
 
 #include <map>
 #include <string>
@@ -29,7 +30,7 @@ public:
 	//Returns nullptr if type wasn't found, type names are case sensitive
 	TypeInfo* getTypeInfo(const std::string& typeName);
 	//Never returns nullptr, creates a new empty TypeInfo if typeName does not exist.
-	TypeInfo* getOrCreateTypeInfo(const char* typeName);
+	TypeInfo* getOrCreateTypeInfo(const char* typeName, TypeCaster* caster);
 
 	const std::map<std::string, TypeInfo*>& getTypes() const;
 	
@@ -49,7 +50,8 @@ public:
 
 private:
 	void exportGenericType(const CatGenericType& genericType, std::ofstream& xmlFile, const char* linePrefixCharacters);
-	static TypeInfo* createTypeInfo(const char* typeName);
+	//This function exists to prevent circular includes via TypeInfo.h
+	static TypeInfo* createTypeInfo(const char* typeName, TypeCaster* typeCaster);
 
 private:
 	std::map<std::string, TypeInfo*> types;
@@ -71,7 +73,7 @@ inline TypeInfo* TypeRegistry::registerType()
 	}
 	else
 	{
-		typeInfo = createTypeInfo(typeName);
+		typeInfo = createTypeInfo(typeName, new ObjectTypeCaster<T>());
 		types[typeName] = typeInfo;
 		T::reflect(*typeInfo);
 		return typeInfo;

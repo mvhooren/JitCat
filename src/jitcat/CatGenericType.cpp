@@ -319,3 +319,29 @@ TypeInfo* CatGenericType::getObjectType() const
 	return nestedType;
 }
 
+
+std::any CatGenericType::createAnyOfType(void* pointer)
+{
+	switch (specificType)
+	{
+		case SpecificType::CatType:
+		{
+			switch (catType)
+			{
+				case CatType::Int:		return std::any(reinterpret_cast<int*>(pointer));
+				case CatType::Float:	return std::any(reinterpret_cast<float*>(pointer));
+				case CatType::Bool:		return std::any(reinterpret_cast<bool*>(pointer));
+				case CatType::String:	return std::any(reinterpret_cast<std::string*>(pointer));
+			}
+		} break;
+		case SpecificType::ObjectType:
+		{
+
+		} break;
+		case SpecificType::ContainerType:
+		{
+		} break;
+	}
+	return std::any();
+}
+

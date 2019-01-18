@@ -7,35 +7,36 @@
 
 #include "TypeInfo.h"
 #include "Tools.h"
+#include "TypeCaster.h"
 #include "TypeRegistry.h"
 #include "VariableEnumerator.h"
 
 #include <sstream>
 
 
-TypeInfo::TypeInfo(const char* typeName):
-	typeName(typeName)
+TypeInfo::TypeInfo(const char* typeName, TypeCaster* caster):
+	typeName(typeName),
+	caster(caster)
 {
 }
 
 
 TypeInfo::~TypeInfo()
 {
-	Tools::deleteSecondElementsAndClear(members);
 }
 
 
 void TypeInfo::addDeserializedMember(TypeMemberInfo* memberInfo)
 {
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberInfo->memberName);
-	members[lowerCaseMemberName] = memberInfo;
+	members.emplace(lowerCaseMemberName,  memberInfo);
 }
 
 
 void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 {
 	std::string lowerCaseMemberFunctionName = Tools::toLowerCase(memberFunction->memberFunctionName);
-	memberFunctions[lowerCaseMemberFunctionName] = memberFunction;
+	memberFunctions.emplace(lowerCaseMemberFunctionName, memberFunction);
 }
 
 
@@ -52,10 +53,10 @@ CatType TypeInfo::getType(const std::vector<std::string>& indirectionList, int o
 	int indirectionListSize = (int)indirectionList.size();
 	if (indirectionListSize > 0)
 	{
-		std::map<std::string, TypeMemberInfo*>::const_iterator iter = members.find(indirectionList[offset]);
+		std::map<std::string, std::unique_ptr<TypeMemberInfo>>::const_iterator iter = members.find(indirectionList[offset]);
 		if (iter != members.end())
 		{
-			TypeMemberInfo* memberInfo = iter->second;
+			TypeMemberInfo* memberInfo = iter->second.get();
 			switch (memberInfo->specificType)
 			{
 				case SpecificMemberType::CatType:
@@ -107,10 +108,10 @@ CatType TypeInfo::getType(const std::vector<std::string>& indirectionList, int o
 
 TypeMemberInfo* TypeInfo::getMemberInfo(const std::string& identifier) const
 {
-	std::map<std::string, TypeMemberInfo*>::const_iterator iter = members.find(Tools::toLowerCase(identifier));
+	auto iter = members.find(Tools::toLowerCase(identifier));
 	if (iter != members.end())
 	{
-		return iter->second;
+		return iter->second.get();
 	}
 	else
 	{
@@ -121,10 +122,10 @@ TypeMemberInfo* TypeInfo::getMemberInfo(const std::string& identifier) const
 
 MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifier) const
 {
-	std::map<std::string, MemberFunctionInfo*>::const_iterator iter = memberFunctions.find(Tools::toLowerCase(identifier));
+	auto iter = memberFunctions.find(Tools::toLowerCase(identifier));
 	if (iter != memberFunctions.end())
 	{
-		return iter->second;
+		return iter->second.get();
 	}
 	else
 	{
@@ -135,10 +136,10 @@ MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifie
 
 MemberReferencePtr TypeInfo::getMemberReference(MemberReferencePtr& derefBase, const std::string& identifier)
 {
-	std::map<std::string, TypeMemberInfo*>::iterator iter = members.find(Tools::toLowerCase(identifier));
+	auto iter = members.find(Tools::toLowerCase(identifier));
 	if (iter != members.end())
 	{
-		TypeMemberInfo* member = iter->second;
+		TypeMemberInfo* member = iter->second.get();
 		return MemberReferencePtr(member->getMemberReference(derefBase));
 	}
 	else
@@ -180,8 +181,8 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 		enumerator->addFunction(iter.second->memberFunctionName, result.str());
 	}
 
-	std::map<std::string, TypeMemberInfo*>::const_iterator last = members.end();
-	for (std::map<std::string, TypeMemberInfo*>::const_iterator iter = members.begin(); iter != last; ++iter)
+	auto last = members.end();
+	for (auto iter = members.begin(); iter != last; ++iter)
 	{
 		switch(iter->second->specificType)
 		{
@@ -233,13 +234,20 @@ bool TypeInfo::isCustomType() const
 }
 
 
-const std::map<std::string, TypeMemberInfo*>& TypeInfo::getMembers() const
+const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& TypeInfo::getMembers() const
 {
 	return members;
 }
 
 
-const std::map<std::string, MemberFunctionInfo*>& TypeInfo::getMemberFunctions() const
+const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& TypeInfo::getMemberFunctions() const
 {
 	return memberFunctions;
 }
+
+
+const TypeCaster* TypeInfo::getTypeCaster() const
+{
+	return caster.get();
+}
+

@@ -56,12 +56,12 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 }
 
 
-TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName)
+TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, TypeCaster* caster)
 {
 	std::map<std::string, TypeInfo*>::iterator iter = types.find(typeName);
 	if (iter == types.end())
 	{
-		TypeInfo* typeInfo = new TypeInfo(typeName);
+		TypeInfo* typeInfo = new TypeInfo(typeName, caster);
 		types[typeName] = typeInfo;
 		return typeInfo;
 	}
@@ -350,9 +350,9 @@ void TypeRegistry::exportGenericType(const CatGenericType& genericType, std::ofs
 }
 
 
-TypeInfo* TypeRegistry::createTypeInfo(const char* typeName)
+TypeInfo* TypeRegistry::createTypeInfo(const char* typeName, TypeCaster* typeCaster)
 {
-	return new TypeInfo(typeName);
+	return new TypeInfo(typeName, typeCaster);
 }
 
 

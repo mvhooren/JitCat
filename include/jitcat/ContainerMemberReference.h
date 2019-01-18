@@ -19,7 +19,7 @@ class ContainerMemberReference: public MemberReference
 {
 public:
 	ContainerMemberReference(T& container, TypeMemberInfo* memberInfo, Reflectable* baseObject, TypeInfo* itemTypeInfo): MemberReference(memberInfo) {};
-	virtual MemberReferencePtr getMemberReference(const std::string& index) { return nullptr; }
+	virtual MemberReferencePtr getMemberReference(const std::string& index) override final { return nullptr; }
 };
 
 
@@ -29,11 +29,22 @@ class ContainerMemberReference<std::vector<U> >: public MemberReference
 public:
 	ContainerMemberReference(std::vector<U>& container, TypeMemberInfo* memberInfo, Reflectable* parentObject, TypeInfo* itemTypeInfo): MemberReference(memberInfo), container(container), parentObject(parentObject), itemTypeInfo(itemTypeInfo) {};
 
-	inline virtual SpecificMemberType getType() const { return SpecificMemberType::ContainerType; }
-	inline virtual const char* getCustomTypeName() const;
-	inline virtual CatType getCatType() const { return CatType::Object; }
-	inline virtual ContainerType getContainerType() const { return ContainerType::Vector; }
-	inline virtual std::size_t getContainerSize() const
+	inline virtual std::any getAny() const override final 
+	{
+		if (parentObject.getIsValid())
+		{
+			return &container;
+		}
+		else 
+		{
+			return (std::vector<U>*)nullptr;
+		}
+	}
+	inline virtual SpecificMemberType getType() const override final { return SpecificMemberType::ContainerType; }
+	inline virtual const char* getCustomTypeName() const override final;
+	inline virtual CatType getCatType() const override final{ return CatType::Object; }
+	inline virtual ContainerType getContainerType() const override final{ return ContainerType::Vector; }
+	inline virtual std::size_t getContainerSize() const override final
 	{
 		if (parentObject.getIsValid())
 		{
@@ -45,13 +56,13 @@ public:
 		}
 	}
 
-	virtual MemberReferencePtr getMemberReference(const std::string& index);
+	virtual MemberReferencePtr getMemberReference(const std::string& index) override final;
 
-	inline virtual MemberReferencePtr getArrayItemReference(int index);
+	inline virtual MemberReferencePtr getArrayItemReference(int index) override final;
 
-	inline virtual Reflectable* getParentObject() const { return parentObject.get(); }
+	inline virtual Reflectable* getParentObject() const override final { return parentObject.get(); }
 	
-	inline virtual const std::string getValueAsString() const;
+	inline virtual const std::string getValueAsString() const override final;
 
 	//Handle to parent object is stored so we can check if it still exists (vectors cant be Reflectable).
 	ReflectableHandle parentObject;
@@ -66,11 +77,22 @@ class ContainerMemberReference<std::map<std::string, U> >: public MemberReferenc
 public:
 	ContainerMemberReference(std::map<std::string, U>& container, TypeMemberInfo* memberInfo, Reflectable* parentObject, TypeInfo* itemTypeInfo): MemberReference(memberInfo), container(container), parentObject(parentObject), itemTypeInfo(itemTypeInfo) {};
 
-	inline virtual SpecificMemberType getType() const { return SpecificMemberType::ContainerType; }
-	inline virtual const char* getCustomTypeName() const;
-	inline virtual CatType getCatType() const { return CatType::Object; }
-	inline virtual ContainerType getContainerType() const { return ContainerType::StringMap; }
-	inline virtual std::size_t getContainerSize() const
+	inline virtual std::any getAny() const override final 
+	{
+		if (parentObject.getIsValid())
+		{
+			return &container;
+		}
+		else 
+		{
+			return (std::map<std::string, U>*)nullptr;
+		}
+	}
+	inline virtual SpecificMemberType getType() const override final { return SpecificMemberType::ContainerType; }
+	inline virtual const char* getCustomTypeName() const override final;
+	inline virtual CatType getCatType() const override final { return CatType::Object; }
+	inline virtual ContainerType getContainerType() const override final { return ContainerType::StringMap; }
+	inline virtual std::size_t getContainerSize() const override final
 	{
 		if (parentObject.getIsValid())
 		{
@@ -83,7 +105,7 @@ public:
 	}
 
 
-	inline virtual std::string getMapIndexName(unsigned int index) const
+	inline virtual std::string getMapIndexName(unsigned int index) const override final
 	{
 		if (parentObject.getIsValid())
 		{
@@ -102,15 +124,15 @@ public:
 	}
 
 
-	inline virtual MemberReferencePtr getMemberReference(const std::string& index);
+	inline virtual MemberReferencePtr getMemberReference(const std::string& index) override final;
 
 
-	inline virtual MemberReferencePtr getArrayItemReference(int index);
+	inline virtual MemberReferencePtr getArrayItemReference(int index) override final;
 
 
-	inline virtual Reflectable* getParentObject() const { return parentObject.get(); }
+	inline virtual Reflectable* getParentObject() const override final { return parentObject.get(); }
 
-	inline virtual const std::string getValueAsString() const;
+	inline virtual const std::string getValueAsString() const override final;
 
 	ReflectableHandle parentObject;
 	std::map<std::string, U>& container;

@@ -46,6 +46,9 @@ public:
 
 	virtual void compile(CatRuntimeContext* context) override final;
 
+protected:
+	virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
+
 private:
 	CatType getExpectedCatType() const;
 	static inline T getActualValue(const CatValue& catValue);

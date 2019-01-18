@@ -175,6 +175,7 @@ set(Source_Reflection
 	${JitCatIncludePath}/Reflectable.h
 	ReflectableHandle.cpp
 	${JitCatIncludePath}/ReflectableHandle.h
+	${JitCatIncludePath}/TypeCaster.h
 	TypeRegistry.cpp
 	${JitCatIncludePath}/TypeRegistry.h
 )

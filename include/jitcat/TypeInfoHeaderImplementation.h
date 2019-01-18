@@ -22,7 +22,7 @@ TypeInfo& TypeInfo::addMember(const std::string& identifier_, U T::* member, uns
 	TypeMemberInfo* memberInfo = MemberTypeInfoCreator<U>::getMemberInfo(identifier_, member, isConst, isWritable);
 	if (memberInfo != nullptr)
 	{
-		members[identifier] = memberInfo;
+		members.emplace(identifier, memberInfo);
 	}
 	return *this;
 }
@@ -32,7 +32,7 @@ template <typename T, typename ... Args>
 TypeInfo& TypeInfo::addMember(const std::string& identifier_, void (T::*function)(Args...))
 {
 	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions[identifier] = new MemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function);
+	memberFunctions.emplace(identifier, new MemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function));
 	return *this;
 }
 
@@ -41,7 +41,7 @@ template <typename T, typename U, typename ... Args>
 TypeInfo& TypeInfo::addMember(const std::string& identifier_, U (T::*function)(Args...))
 {
 	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions[identifier] = new MemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function);
+	memberFunctions.emplace(identifier, new MemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function));
 	return *this;
 }
 
@@ -50,7 +50,7 @@ template <typename T, typename ... Args>
 TypeInfo& TypeInfo::addMember(const std::string& identifier_, void (T::*function)(Args...) const)
 {
 	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions[identifier] = new ConstMemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function);
+	memberFunctions.emplace(identifier, new ConstMemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function));
 	return *this;
 }
 
@@ -59,6 +59,6 @@ template <typename T, typename U, typename ... Args>
 TypeInfo& TypeInfo::addMember(const std::string& identifier_, U (T::*function)(Args...) const)
 {
 	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions[identifier] = new ConstMemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function);
+	memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function));
 	return *this;
 }

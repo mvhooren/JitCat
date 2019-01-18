@@ -19,6 +19,9 @@
 #include "Expression.h"
 #include "IdentifierToken.h"
 #include "Lexeme.h"
+#ifdef ENABLE_LLVM
+#include "LLVMCodeGenerator.h"
+#endif
 #include "ObjectMemberReference.h"
 #include "OneCharToken.h"
 #include "SLRParser.h"
@@ -128,7 +131,7 @@ int MAIN(int argc, char* argv[])
 	globalsRoot->addIntMember("globalInt", 42);
 	globalsRoot->addFloatMember("globalFloat", 66.0f);
 	globalsRoot->addObjectMember(customTypeName, customTypeName,
-								 new ObjectMemberReference<CustomTypeInstance>(typeGlobalsInstance, nullptr, customTypeGlobals));
+								 new ObjectMemberReference<CustomTypeInstance>(typeGlobalsInstance, nullptr, customTypeGlobals), customTypeGlobals);
 	
 	const char* customTypeName2 = "MyType2";
 	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName2);
@@ -138,7 +141,7 @@ int MAIN(int argc, char* argv[])
 	customType->addStringMember("aString", "lolel");
 	customType->addBoolMember("amItrue", true);
 	customType->addObjectMember("anObject", ReflectionTestObject2::getTypeName(), 
-								new ObjectMemberReference<ReflectionTestObject2>(localObject, nullptr, TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName())));
+								new ObjectMemberReference<ReflectionTestObject2>(localObject, nullptr, TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName())), TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName()));
 	CustomTypeInstance* typeInstance = customType->createInstance();
 
 	ExpressionErrorManager errorManager;

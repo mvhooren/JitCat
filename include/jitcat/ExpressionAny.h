@@ -12,6 +12,7 @@ struct SLRParseResult;
 #include "CatGenericType.h"
 #include "ExpressionBase.h"
 
+#include <any>
 #include <string>
 
 
@@ -26,9 +27,15 @@ public:
 	ExpressionAny(const ExpressionAny& other) = delete;
 
 	// Executes the expression and returns the value.
-	const CatValue getValue(CatRuntimeContext* runtimeContext);
+	// To get the actual value contained in std::any, cast it using std::any_cast based this expression's type (getType()) .
+	const std::any getValue(CatRuntimeContext* runtimeContext);
+
 	virtual void compile(CatRuntimeContext* context) override final;
 
+protected:
+	virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
+
 private:
-	CatValue cachedValue;
+	std::any cachedValue;
+	uintptr_t nativeFunctionAddress;
 };

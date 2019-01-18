@@ -9,11 +9,12 @@
 #include "CustomTypeMemberInfo.h"
 #include "MemberReference.h"
 #include "Tools.h"
+#include "TypeCaster.h"
 #include "TypeRegistry.h"
 
 
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
-	TypeInfo(typeName),
+	TypeInfo(typeName, new ObjectTypeCaster<CustomTypeInstance>()),
 	defaultData(nullptr),
 	typeSize(0),
 	isTriviallyCopyable(true),
@@ -79,20 +80,20 @@ void CustomTypeInfo::instanceDestructor(CustomTypeInstance* instance)
 
 void CustomTypeInfo::instanceDestructor(unsigned char* data)
 {
-	std::map<std::string, TypeMemberInfo*>::iterator end = members.end();
-	for (std::map<std::string, TypeMemberInfo*>::iterator iter = members.begin(); iter != end; ++iter)
+	auto end = members.end();
+	for (auto iter = members.begin(); iter != end; ++iter)
 	{
 		if (iter->second->catType == CatType::String)
 		{
 			std::string* string;
-			unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second)->memberOffset;
+			unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
 			memcpy(&string, &data[offset], sizeof(std::string*));
 			delete string;
 		}
 		else if (iter->second->catType == CatType::Object)
 		{
 			MemberReferencePtr* reference;
-			unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second)->memberOffset;
+			unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
 			memcpy(&reference, &data[offset], sizeof(MemberReferencePtr*));
 			delete reference;
 		}
@@ -119,7 +120,7 @@ TypeMemberInfo* CustomTypeInfo::addFloatMember(const std::string& memberName, fl
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<float>(memberName, offset, CatType::Float, isConst, isWritable);
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members[lowerCaseMemberName] = memberInfo;
+	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
@@ -142,7 +143,7 @@ TypeMemberInfo* CustomTypeInfo::addIntMember(const std::string& memberName, int 
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<int>(memberName, offset, CatType::Int, isConst, isWritable);
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members[lowerCaseMemberName] = memberInfo;
+	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
@@ -165,7 +166,7 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<bool>(memberName, offset, CatType::Bool, isConst, isWritable);
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members[lowerCaseMemberName] = memberInfo;
+	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
@@ -191,12 +192,12 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 	memcpy(data, &newString, sizeof(std::string*));
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<std::string>(memberName, offset, CatType::String, isConst, isWritable);
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members[lowerCaseMemberName] = memberInfo;
+	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
 
-TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, const std::string& memberTypeName, MemberReference* defaultValue, bool isWritable, bool isConst)
+TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, const std::string& memberTypeName, MemberReference* defaultValue, TypeInfo* objectTypeInfo, bool isWritable, bool isConst)
 {
 	if (defaultValue != nullptr
 		&& Tools::toLowerCase(defaultValue->getCustomTypeName()) == Tools::toLowerCase(memberTypeName))
@@ -220,9 +221,9 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, c
 		}
 
 		memcpy(data, &memberReference, sizeof(MemberReferencePtr*));
-		TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, TypeRegistry::get()->getOrCreateTypeInfo(defaultValue->getCustomTypeName()), isConst);
+		TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, objectTypeInfo, isConst);
 		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-		members[lowerCaseMemberName] = memberInfo;
+		members.emplace(lowerCaseMemberName, memberInfo);
 		return memberInfo;
 	}
 	return nullptr;
@@ -231,12 +232,10 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, c
 
 void CustomTypeInfo::removeMember(const std::string& memberName)
 {
-	std::map<std::string, TypeMemberInfo*>::iterator iter = members.find(Tools::toLowerCase(memberName));
+	auto iter = members.find(Tools::toLowerCase(memberName));
 	if (iter != members.end())
 	{
-		//TypeMemberInfo is leaked here, but this is an easy way to prevent previous versions from crashing so it is acceptable.
-		//Removing members is rare anyway.
-		//Maybe make TypeMemberInfos reference counted in the future.
+		removedMembers.push_back(std::move(iter->second));
 		members.erase(iter);
 	}
 }
@@ -244,14 +243,14 @@ void CustomTypeInfo::removeMember(const std::string& memberName)
 
 void CustomTypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
 {
-	std::map<std::string, TypeMemberInfo*>::iterator iter = members.find(Tools::toLowerCase(oldMemberName));
+	auto iter = members.find(Tools::toLowerCase(oldMemberName));
 	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end())
 	{
-		TypeMemberInfo* memberInfo = iter->second;
+		std::unique_ptr<TypeMemberInfo> memberInfo = std::move(iter->second);
 		memberInfo->memberName = newMemberName;
 		members.erase(iter);
 		std::string lowerCaseMemberName = Tools::toLowerCase(newMemberName);
-		members[lowerCaseMemberName] = memberInfo;
+		members.emplace(lowerCaseMemberName, std::move(memberInfo));
 	}
 }
 
@@ -312,13 +311,13 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData)
 		memcpy(instanceData, otherData, typeSize);
 		if (!isTriviallyCopyable)
 		{
-			std::map<std::string, TypeMemberInfo*>::iterator end = members.end();
-			for (std::map<std::string, TypeMemberInfo*>::iterator iter = members.begin(); iter != end; ++iter)
+			auto end = members.end();
+			for (auto iter = members.begin(); iter != end; ++iter)
 			{
 				if (iter->second->catType == CatType::String)
 				{
 					std::string* originalString;
-					unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second)->memberOffset;
+					unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
 					memcpy(&originalString, &otherData[offset], sizeof(std::string*));
 					std::string* stringCopy = new std::string(*originalString);
 					memcpy(instanceData + offset, &stringCopy, sizeof(std::string*));
@@ -326,7 +325,7 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData)
 				else if (iter->second->catType == CatType::Object)
 				{
 					MemberReferencePtr* originalReference;
-					unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second)->memberOffset;
+					unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
 					memcpy(&originalReference, &otherData[offset], sizeof(MemberReferencePtr*));
 					MemberReferencePtr* copy = new MemberReferencePtr(originalReference->getPointer());
 					copy->setOriginalReference(copy);

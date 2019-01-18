@@ -396,3 +396,32 @@ void CatValue::printValue() const
 			break;
 	}
 }
+
+
+std::any CatValue::toAny()
+{
+	switch (type)
+	{
+		case CatType::Int:		return intValue;
+		case CatType::Float:	return floatValue;
+		case CatType::Bool:		return boolValue;
+		case CatType::String:	return *stringValue;
+		case CatType::Error:	return *errorValue;
+		case CatType::Object:
+		{
+			if (!memberReference.isNull())
+			{
+				return memberReference->getAny();
+			}
+			else
+			{
+				return std::any();
+			}
+		}
+		default:
+		case CatType::Unknown:
+		case CatType::Void:		return std::any();
+
+	}
+	
+}

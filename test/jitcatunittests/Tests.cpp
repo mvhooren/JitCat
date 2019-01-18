@@ -1,5 +1,7 @@
 #include <catch2/catch.hpp>
 #include "CatRuntimeContext.h"
+#include "CustomTypeInfo.h"
+#include "CustomTypeInstance.h"
 #include "Expression.h"
 #include "ExpressionAny.h"
 #include "LLVMCatIntrinsics.h"
@@ -3360,13 +3362,216 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
 	context.setGlobalReference(globalsReference);
 
-	SECTION("Basics")
+	SECTION("Literal Float")
+	{
+		ExpressionAny testExpression(&context, "1.1f");
+		doCommonChecks(&testExpression, false, true, true, context);
+		CHECK(testExpression.getType().isFloatType());
+		std::any value = testExpression.getValue(&context);
+		float castValue = std::any_cast<float>(value);
+		REQUIRE(castValue == 1.1f);
+	}
+	SECTION("Literal Int")
+	{
+		ExpressionAny testExpression(&context, "11");
+		doCommonChecks(&testExpression, false, true, true, context);
+		CHECK(testExpression.getType().isIntType());
+		std::any value = testExpression.getValue(&context);
+		int castValue = std::any_cast<int>(value);
+		REQUIRE(castValue == 11);
+	}
+	SECTION("Literal Boolean true")
+	{
+		ExpressionAny testExpression(&context, "true");
+		doCommonChecks(&testExpression, false, true, true, context);
+		CHECK(testExpression.getType().isBoolType());
+		std::any value = testExpression.getValue(&context);
+		bool castValue = std::any_cast<bool>(value);
+		REQUIRE(castValue == true);
+	}
+	SECTION("Literal Boolean false")
+	{
+		ExpressionAny testExpression(&context, "false");
+		doCommonChecks(&testExpression, false, true, true, context);
+		CHECK(testExpression.getType().isBoolType());
+		std::any value = testExpression.getValue(&context);
+		bool castValue = std::any_cast<bool>(value);
+		REQUIRE(castValue == false);
+	}
+	SECTION("Literal String")
+	{
+		ExpressionAny testExpression(&context, "\"test\"");
+		doCommonChecks(&testExpression, false, true, true, context);
+		CHECK(testExpression.getType().isStringType());
+		std::any value = testExpression.getValue(&context);
+		std::string castValue = std::any_cast<std::string>(value);
+		REQUIRE(castValue == "test");
+	}
+	SECTION("Float Variable")
+	{
+		ExpressionAny testExpression(&context, "aFloat");
+		doCommonChecks(&testExpression, false, false, false, context);
+		CHECK(testExpression.getType().isFloatType());
+		std::any value = testExpression.getValue(&context);
+		float castValue = std::any_cast<float>(value);
+		REQUIRE(castValue == 999.9f);
+	}
+	SECTION("Int Variable")
+	{
+		ExpressionAny testExpression(&context, "theInt");
+		doCommonChecks(&testExpression, false, false, false, context);
+		CHECK(testExpression.getType().isIntType());
+		std::any value = testExpression.getValue(&context);
+		int castValue = std::any_cast<int>(value);
+		REQUIRE(castValue == 42);
+	}
+	SECTION("Boolean Variable true")
+	{
+		ExpressionAny testExpression(&context, "aBoolean");
+		doCommonChecks(&testExpression, false, false, false, context);
+		CHECK(testExpression.getType().isBoolType());
+		std::any value = testExpression.getValue(&context);
+		bool castValue = std::any_cast<bool>(value);
+		REQUIRE(castValue == true);
+	}
+	SECTION("Boolean Variable false")
+	{
+		ExpressionAny testExpression(&context, "no");
+		doCommonChecks(&testExpression, false, false, false, context);
+		CHECK(testExpression.getType().isBoolType());
+		std::any value = testExpression.getValue(&context);
+		bool castValue = std::any_cast<bool>(value);
+		REQUIRE(castValue == false);
+	}
+	SECTION("String Variable")
+	{
+		ExpressionAny testExpression(&context, "text");
+		doCommonChecks(&testExpression, false, false, false, context);
+		CHECK(testExpression.getType().isStringType());
+		std::any value = testExpression.getValue(&context);
+		std::string castValue = std::any_cast<std::string>(value);
+		REQUIRE(castValue == "Hello!");
+	}
+	SECTION("Object Variable")
 	{
 		ExpressionAny testExpression(&context, "nestedSelfObject");
 		doCommonChecks(&testExpression, false, false, false, context);
 		CHECK(testExpression.getType() == genericType);
-		CatValue value = testExpression.getValue(&context);
-		CHECK_FALSE(value.getCustomTypeValue().isNull());
-		CHECK(value.getCustomTypeValue().getPointer()->getGenericType() == genericType);
+		std::any value = testExpression.getValue(&context);
+		ReflectedObject* castValue = std::any_cast<ReflectedObject*>(value);
+		REQUIRE_FALSE(castValue == nullptr);
+		CHECK(castValue == reflectedObject.nestedSelfObject);
+	}
+	SECTION("Vector Variable")
+	{
+		ExpressionAny testExpression(&context, "reflectableObjectsVector");
+		doCommonChecks(&testExpression, false, false, false, context);
+		REQUIRE(testExpression.getType().isVectorType());
+		REQUIRE(testExpression.getType().getContainerItemType().isObjectType());
+		std::any value = testExpression.getValue(&context);
+		std::vector<NestedReflectedObject*>* castValue = std::any_cast<std::vector<NestedReflectedObject*>*>(value);
+		REQUIRE_FALSE(castValue == nullptr);
+		CHECK(castValue->size() == 2);
+	}
+	SECTION("Map Variable")
+	{
+		ExpressionAny testExpression(&context, "reflectableObjectsMap");
+		doCommonChecks(&testExpression, false, false, false, context);
+		REQUIRE(testExpression.getType().isMapType());
+		REQUIRE(testExpression.getType().getContainerItemType().isObjectType());
+		std::any value = testExpression.getValue(&context);
+		std::map<std::string, NestedReflectedObject*>* castValue = std::any_cast<std::map<std::string, NestedReflectedObject*>*>(value);
+		REQUIRE_FALSE(castValue == nullptr);
+		CHECK(castValue->size() == 2);
+	}
+	SECTION("Void")
+	{
+		ExpressionAny testExpression(&context, "doSomething()");
+		doCommonChecks(&testExpression, false, false, false, context);
+		REQUIRE(testExpression.getType().isVoidType());
+		std::any value = testExpression.getValue(&context);
+		CHECK_FALSE(value.has_value());
+	}
+}
+
+TEST_CASE("Custom Types", "[customtypes]")
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
+	CatGenericType genericType = CatGenericType(objectTypeInfo);
+	TypeRegistry::get()->removeType("MyType2");
+	const char* customTypeName2 = "MyType2";
+	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName2);
+	TypeRegistry::get()->registerType(customTypeName2, customType);
+	customType->addFloatMember("myFloat", 0.001f);
+	customType->addIntMember("myInt", 54321);
+	customType->addStringMember("myString", "foo");
+	customType->addBoolMember("myBoolean", true);
+	customType->addObjectMember("myObject", ReflectedObject::getTypeName(), 
+								new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, objectTypeInfo), objectTypeInfo);
+	CustomTypeInstance* typeInstance = customType->createInstance();
+
+	CatRuntimeContext context(objectTypeInfo, nullptr, customType, nullptr, "builtinTests_Select", true, &errorManager);
+	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
+	context.setGlobalReference(globalsReference);
+	context.setCustomThisReference(new ObjectMemberReference<CustomTypeInstance>(typeInstance, nullptr, customType));
+
+	SECTION("Float Variable")
+	{
+		Expression<float> testExpression(&context, "myFloat");
+		doChecks(0.001f, false, false, false, testExpression, context);
+	}
+	SECTION("Int Variable")
+	{
+		Expression<int> testExpression(&context, "myInt");
+		doChecks(54321, false, false, false, testExpression, context);
+	}
+	SECTION("String Variable")
+	{
+		Expression<std::string> testExpression(&context, "myString");
+		doChecks(std::string("foo"), false, false, false, testExpression, context);
+	}
+	SECTION("Boolean Variable")
+	{
+		Expression<bool> testExpression(&context, "myBoolean");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Object Variable")
+	{
+		Expression<ReflectedObject*> testExpression(&context, "myObject");
+		doChecks(&reflectedObject, false, false, false, testExpression, context);
+	}
+	SECTION("Added Float Variable")
+	{
+		customType->addFloatMember("anotherFloat", 1.234f);
+		Expression<float> testExpression(&context, "anotherFloat");
+		doChecks(1.234f, false, false, false, testExpression, context);
+	}
+	SECTION("Added Int Variable")
+	{
+		customType->addIntMember("anotherInt", 12345);
+		Expression<int> testExpression(&context, "anotherInt");
+		doChecks(12345, false, false, false, testExpression, context);
+	}
+	SECTION("Added String Variable")
+	{
+		customType->addStringMember("anotherString", "bar");
+		Expression<std::string> testExpression(&context, "anotherString");
+		doChecks(std::string("bar"), false, false, false, testExpression, context);
+	}
+	SECTION("Added Boolean Variable")
+	{
+		customType->addBoolMember("anotherBoolean", false);
+		Expression<bool> testExpression(&context, "anotherBoolean");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Added Object Variable")
+	{
+		customType->addObjectMember("anotherObject", ReflectedObject::getTypeName(), 
+									new ObjectMemberReference<ReflectedObject>(reflectedObject.nestedSelfObject, nullptr, objectTypeInfo), objectTypeInfo);
+		Expression<ReflectedObject*> testExpression(&context, "anotherObject");
+		doChecks(reflectedObject.nestedSelfObject, false, false, false, testExpression, context);
 	}
 }

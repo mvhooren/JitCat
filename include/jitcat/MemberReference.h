@@ -18,6 +18,7 @@ struct TypeMemberInfo;
 #include "SpecificMemberType.h"
 #include "Tools.h"
 
+#include <any>
 #include <string>
 #include <map>
 
@@ -48,6 +49,7 @@ public:
 	inline virtual MemberReferencePtr getMemberReference(const std::string& memberOrIndex) { return nullptr; };
 	inline virtual MemberReferencePtr getArrayItemReference(int index) { return nullptr; };
 	inline virtual Reflectable* getParentObject() const { return nullptr; };
+	inline virtual std::any getAny() const {return std::any();}
 	inline virtual float getFloat() const { return 0.0f; }
 	inline virtual int getInt() const { return 0; }
 	inline virtual bool getBool() const { return false; }
@@ -66,6 +68,8 @@ public:
 	inline virtual ContainerType getContainerType() const { return ContainerType::None; }
 	inline virtual std::size_t getContainerSize() const { return 0; }
 	inline virtual std::string getMapIndexName(unsigned int index) const { return ""; }
+
+	
 
 	CatGenericType getGenericType() const;
 

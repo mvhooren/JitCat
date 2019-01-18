@@ -13,6 +13,7 @@ class TypeInfo;
 #include "ContainerType.h"
 
 
+#include <any>
 #include <string>
 
 
@@ -56,6 +57,9 @@ public:
 	std::string toString() const;
 
 	TypeInfo* getObjectType() const;
+
+	//This will cast the pointer to the C++ type associated with this CatGenericType and returns it as a std::any
+	std::any createAnyOfType(void* pointer);
 
 private:
 	enum class SpecificType

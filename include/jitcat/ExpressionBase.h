@@ -52,11 +52,13 @@ public:
 
 protected:
 	bool parse(CatRuntimeContext* context, const CatGenericType& expectedType);
+	virtual void handleCompiledFunction(uintptr_t functionAddress) = 0;
 
 private:
 	void constCollapse(CatRuntimeContext* context);
 	void typeCheck(const CatGenericType& expectedType);
 	void handleParseErrors(CatRuntimeContext* context);
+	void compileToNativeCode(CatRuntimeContext* context);
 
 protected:
 	std::string expression;

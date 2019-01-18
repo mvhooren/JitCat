@@ -282,7 +282,7 @@ bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType
 }
 
 
-TypeInfo* XMLHelper::findOrCreateTypeInfo(const std::string & typeName, std::map<std::string, TypeInfo*>& typeInfos)
+TypeInfo* XMLHelper::findOrCreateTypeInfo(const std::string& typeName, std::map<std::string, TypeInfo*>& typeInfos)
 {
 	if (typeInfos.find(typeName) != typeInfos.end())
 	{
@@ -293,7 +293,7 @@ TypeInfo* XMLHelper::findOrCreateTypeInfo(const std::string & typeName, std::map
 		char* name = (char*)malloc(typeName.size() + 1);
 		memcpy(name, typeName.c_str(), typeName.size() + 1);
 		staticNames.push_back(name);
-		TypeInfo* newInfo = new TypeInfo(name);
+		TypeInfo* newInfo = new TypeInfo(name, nullptr);
 		typeInfos[name] = newInfo;
 		return newInfo;
 	}
