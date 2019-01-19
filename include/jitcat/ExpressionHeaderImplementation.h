@@ -111,14 +111,7 @@ inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 			if (expressionAST != nullptr)
 			{
 				std::any value = expressionAST->execute(runtimeContext);
-				if (value.getValueType() != CatType::Error)
-				{
-					return getActualValue(value);
-				}
-				else
-				{
-					return T();
-				}
+				return getActualValue(value);
 			}
 			else
 			{

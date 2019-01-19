@@ -3549,7 +3549,9 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType2->addObjectMember("myNullObject3", ReflectedObject::getTypeName(), &reflectedObject, objectTypeInfo);
 
 	//The case where the pointer is set to null manually
-	static_cast<CustomTypeObjectMemberInfo*>(typeInstance->typeInfo->getMemberInfo("myNullObject"))->assign(std::any((Reflectable*)typeInstance), std::any((Reflectable*)nullptr));
+	std::any instanceAny((Reflectable*)typeInstance);
+	std::any nullAny((Reflectable*)nullptr);
+	static_cast<CustomTypeObjectMemberInfo*>(typeInstance->typeInfo->getMemberInfo("myNullObject"))->assign(instanceAny, nullAny);
 	//The case where the reflectable handle is set to null through deletion of the observed object.
 	objectUniquePtr.reset(nullptr);
 
