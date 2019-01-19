@@ -82,8 +82,8 @@ std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
 		Reflectable* rootObject = runtimeContext->getRootReference(source);
-
-		return memberInfo->getMemberReference(std::any(rootObject));
+		std::any rootAny(rootObject);
+		return memberInfo->getMemberReference(rootAny);
 	}
 	assert(false);
 	return std::any();
