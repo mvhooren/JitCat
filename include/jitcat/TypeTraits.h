@@ -33,7 +33,7 @@ public:
 	static const char* getTypeName() { return T::getTypeName(); }
 	static std::any getCatValue(void) { return std::any();}
 	static std::any getCatValue(const T& value);
-	static T* getValue(const std::any& value)  { return TypeTraits<T>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
+	static T* getValue(const std::any& value)  { return static_cast<T*>(std::any_cast<Reflectable*>(value));}
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<T>();}
 
 	typedef T type;
@@ -187,7 +187,7 @@ public:
 	static bool isSerialisableContainer() { return true; }
 	static const char* getTypeName() { return ""; }
 	static std::any getCatValue(void) { return std::any();}
-	static std::vector<ItemType>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType>*>(value)}
+	static std::vector<ItemType>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType>*>(value); }
 
 	typedef ItemType type;
 	typedef std::vector<ItemType> cachedType;
