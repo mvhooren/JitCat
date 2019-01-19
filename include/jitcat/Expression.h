@@ -13,7 +13,6 @@ struct SLRParseResult;
 
 #include "ExpressionBase.h"
 #include "CatGenericType.h"
-#include "CatValue.h"
 #include "ReflectableHandle.h"
 #include "TypeTraits.h"
 
@@ -51,7 +50,7 @@ protected:
 
 private:
 	CatType getExpectedCatType() const;
-	static inline T getActualValue(const CatValue& catValue);
+	static inline T getActualValue(const std::any& catValue);
 	static inline const T getDefaultValue(CatRuntimeContext*);
 
 private:

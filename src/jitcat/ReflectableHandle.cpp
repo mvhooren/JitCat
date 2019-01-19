@@ -9,8 +9,24 @@
 #include "Reflectable.h"
 
 
+ReflectableHandle::ReflectableHandle():
+	reflectable(nullptr)
+{
+}
+
+
 ReflectableHandle::ReflectableHandle(Reflectable* reflectable):
 	reflectable(reflectable)
+{
+	if (reflectable != nullptr)
+	{
+		reflectable->addObserver(this);
+	}
+}
+
+
+ReflectableHandle::ReflectableHandle(const ReflectableHandle& other):
+	reflectable(other.reflectable)
 {
 	if (reflectable != nullptr)
 	{
@@ -40,7 +56,43 @@ bool ReflectableHandle::getIsValid() const
 }
 
 
+ReflectableHandle& ReflectableHandle::operator=(const ReflectableHandle& other)
+{
+	if (reflectable != nullptr)
+	{
+		reflectable->removeObserver(this);
+	}
+	reflectable = other.reflectable;
+	if (reflectable != nullptr)
+	{
+		reflectable->addObserver(this);
+	}
+	return *this;
+}
+
+
+ReflectableHandle& ReflectableHandle::operator=(Reflectable* other)
+{
+	if (reflectable != nullptr)
+	{
+		reflectable->removeObserver(this);
+	}
+	reflectable = other;
+	if (reflectable != nullptr)
+	{
+		reflectable->addObserver(this);
+	}
+	return *this;
+}
+
+
 void ReflectableHandle::notifyDeletion()
 {
 	reflectable = nullptr;
+}
+
+
+Reflectable* ReflectableHandle::staticGet(const ReflectableHandle& handle)
+{
+	return handle.get();
 }

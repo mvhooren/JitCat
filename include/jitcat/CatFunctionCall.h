@@ -10,6 +10,7 @@
 class CatArgumentList;
 #include "CatBuiltInFunctionType.h"
 #include "CatTypedExpression.h"
+#include "CatGenericType.h"
 
 #include <memory>
 #include <vector>
@@ -22,7 +23,7 @@ public:
 	CatFunctionCall(const CatFunctionCall&) = delete;
 	virtual void print() const override final;
 	virtual CatASTNodeType getNodeType() override final;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
+	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 	virtual CatGenericType typeCheck() override final;
 	virtual CatGenericType getType() const override final;
 	virtual bool isConst() const override final;
@@ -43,6 +44,7 @@ private:
 
 private:
 	std::unique_ptr<CatArgumentList> arguments;
+	std::vector<CatGenericType> argumentTypes;
 	const std::string name;
 	CatBuiltInFunctionType function;
 };

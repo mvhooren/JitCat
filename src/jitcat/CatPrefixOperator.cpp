@@ -11,6 +11,8 @@
 #include "OptimizationHelper.h"
 #include "Tools.h"
 
+#include <cassert>
+
 const char* CatPrefixOperator::conversionTable[] = {"!", "-"};
 
 
@@ -28,7 +30,7 @@ CatGenericType CatPrefixOperator::getType() const
 	}
 	else
 	{
-		return CatType::Error;
+		return CatGenericType("Invalid use of operator.");
 	}
 }
 
@@ -44,13 +46,13 @@ CatTypedExpression* CatPrefixOperator::constCollapse(CatRuntimeContext* compileT
 	OptimizationHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
 	if (rhs->isConst())
 	{
-		return new CatLiteral(calculateExpression(compileTimeContext));
+		return new CatLiteral(calculateExpression(compileTimeContext), getType());
 	}
 	return this;
 }
 
 
-CatValue CatPrefixOperator::execute(CatRuntimeContext* runtimeContext)
+std::any CatPrefixOperator::execute(CatRuntimeContext* runtimeContext)
 {
 	return calculateExpression(runtimeContext);
 }
@@ -97,26 +99,24 @@ void CatPrefixOperator::print() const
 }
 
 
-inline CatValue CatPrefixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
+inline std::any CatPrefixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
 {
-	CatValue rValue = rhs->execute(runtimeContext);
-	if (rValue.getValueType() == CatType::Bool
+	std::any rValue = rhs->execute(runtimeContext);
+	if (rhs->getType().isBoolType()
 		&& oper == Operator::Not)
 	{
-		return CatValue(!rValue.getBoolValue());
+		return std::any(!std::any_cast<bool>(rValue));
 	}
-	else if (rhs->getType() == CatType::Float
+	else if (rhs->getType().isFloatType()
 				&& oper == Operator::Minus)
 	{
-		return CatValue(-rValue.getFloatValue());
+		return std::any(-std::any_cast<float>(rValue));
 	}
-	else if (rhs->getType() == CatType::Int
+	else if (rhs->getType().isIntType()
 				&& oper == Operator::Minus)
 	{
-		return CatValue(-rValue.getIntValue());
+		return std::any(-std::any_cast<int>(rValue));
 	}
-	else
-	{
-		return CatValue(CatError(std::string("Error: invalid operation: ") + conversionTable[(unsigned int)oper] + toString(rhs->getType().getCatType()) ));
-	}
+	assert(false);
+	return std::any();
 }

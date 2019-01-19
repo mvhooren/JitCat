@@ -31,7 +31,7 @@ class VariableEnumerator;
 //TypeInfo stores a tree of type member information about a class or struct.
 //This allows members to be accessed by string. (For example Root.Member[10].Member().Member)
 //Each member is described by a class that inherits from TypeMemberInfo. (See TypeMemberInfo.h)
-//Going from a string to a reference is done by calling dereference on a TypeInfo. This will return a MemberReference object.
+//Going from a string to a reference is done by calling dereference on a TypeInfo. This will return a std::any object.
 //See TypeDereferencer.h
 
 //The TypeInfo system can store information about the following types:
@@ -87,10 +87,6 @@ public:
 
 	//Gets the type information of a member function given its name.
 	MemberFunctionInfo* getMemberFunctionInfo(const std::string& identifier) const;
-
-	//Gets a reference to the member given the name of the member and a reference to the base object.
-	//derefBase should contain a reference to an object of the type that is described by this class.
-	MemberReferencePtr getMemberReference(MemberReferencePtr& derefBase, const std::string& identifier);
 
 	//Returns the type name of the class/struct
 	const char* getTypeName() const;

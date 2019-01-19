@@ -27,24 +27,24 @@ public:
 	virtual CatASTNodeType getNodeType() override final {return CatASTNodeType::InfixOperator;}
 
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
+	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 
 	virtual CatGenericType typeCheck() override final;
 
 	virtual void print() const override final;
 
 private:
-	inline CatValue calculateExpression(CatRuntimeContext* runtimeContext);
+	inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
 
 	template<typename T, typename U, typename V>
-	inline CatValue calculateScalarExpression(const T& lValue, const U& rValue, bool allowDivideByZero);
+	inline std::any calculateScalarExpression(const T& lValue, const U& rValue, bool allowDivideByZero);
 	
 	template<typename T, typename U>
-	inline CatValue calculateStringExpression(const T& lValue, const U& rValue);
+	inline std::any calculateStringExpression(const T& lValue, const U& rValue);
 
-	inline CatValue calculateStringExpression(const std::string& lValue, const std::string& rValue);
+	inline std::any calculateStringExpression(const std::string& lValue, const std::string& rValue);
 
-	inline CatValue calculateBooleanExpression(bool lValue, bool rValue);
+	inline std::any calculateBooleanExpression(bool lValue, bool rValue);
 };
 
 

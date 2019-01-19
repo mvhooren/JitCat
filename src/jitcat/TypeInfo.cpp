@@ -102,7 +102,7 @@ CatType TypeInfo::getType(const std::vector<std::string>& indirectionList, int o
 			}
 		}
 	}
-	return CatType::Error;
+	return CatType::Void;
 }
 
 
@@ -126,21 +126,6 @@ MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifie
 	if (iter != memberFunctions.end())
 	{
 		return iter->second.get();
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
-
-MemberReferencePtr TypeInfo::getMemberReference(MemberReferencePtr& derefBase, const std::string& identifier)
-{
-	auto iter = members.find(Tools::toLowerCase(identifier));
-	if (iter != members.end())
-	{
-		TypeMemberInfo* member = iter->second.get();
-		return MemberReferencePtr(member->getMemberReference(derefBase));
 	}
 	else
 	{

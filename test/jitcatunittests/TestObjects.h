@@ -78,6 +78,7 @@ namespace TestObjects
 		bool no;
 
 		ReflectedObject* nestedSelfObject;
+		ReflectedObject* nullObject;
 
 		NestedReflectedObject nestedObject;
 		NestedReflectedObject* nestedObjectPointer;

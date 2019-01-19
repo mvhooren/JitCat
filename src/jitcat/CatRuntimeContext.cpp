@@ -44,7 +44,6 @@ CatRuntimeContext::CatRuntimeContext(TypeInfo* globalType, TypeInfo* thisType,
 
 CatRuntimeContext::~CatRuntimeContext()
 {
-	//unsigned int numListeners = destructionListeners.size();
 	for (unsigned int i = 0; i < destructionListeners.size(); i++)
 	{
 		destructionListeners[i]->onContextDestroyed(this);
@@ -132,56 +131,69 @@ TypeInfo* CatRuntimeContext::getCustomGlobalsType() const
 }
 
 
-MemberReferencePtr CatRuntimeContext::getGlobalReference() const
+Reflectable* CatRuntimeContext::getGlobalReference() const
 {
-	return globalReference;
+	return globalReference.get();
 }
 
 
-MemberReferencePtr CatRuntimeContext::getThisReference() const
+Reflectable* CatRuntimeContext::getThisReference() const
 {
-	return thisReference;
+	return thisReference.get();
 }
 
 
-MemberReferencePtr CatRuntimeContext::getCustomThisReference() const
+Reflectable* CatRuntimeContext::getCustomThisReference() const
 {
-	return customThisReference;
+	return customThisReference.get();
 }
 
 
-MemberReferencePtr CatRuntimeContext::getRootReference(RootTypeSource source) const
+Reflectable* CatRuntimeContext::getRootReference(RootTypeSource source) const
 {
 	switch (source)
 	{
-		case RootTypeSource::Global:		return globalReference;
-		case RootTypeSource::This:			return thisReference;
-		case RootTypeSource::CustomThis:	return customThisReference;
-		case RootTypeSource::CustomGlobals:return customGlobalsReference;
+		case RootTypeSource::Global:		return globalReference.get();
+		case RootTypeSource::This:			return thisReference.get();
+		case RootTypeSource::CustomThis:	return customThisReference.get();
+		case RootTypeSource::CustomGlobals:return customGlobalsReference.get();
 	}
-	return MemberReferencePtr();
+	return nullptr;
 }
 
 
-void CatRuntimeContext::setGlobalReference(MemberReferencePtr globalReference_)
+TypeInfo* CatRuntimeContext::getRootType(RootTypeSource source) const
+{
+	switch (source)
+	{
+		case RootTypeSource::Global:		return globalType;
+		case RootTypeSource::This:			return thisType;
+		case RootTypeSource::CustomThis:	return customThisType;
+		case RootTypeSource::CustomGlobals:return customGlobalsType;
+	}
+	return nullptr;
+}
+
+
+void CatRuntimeContext::setGlobalReference(Reflectable* globalReference_)
 {
 	globalReference = globalReference_;
 }
 
 
-void CatRuntimeContext::setThisReference(MemberReferencePtr thisReference_)
+void CatRuntimeContext::setThisReference(Reflectable* thisReference_)
 {
 	thisReference = thisReference_;
 }
 
 
-void CatRuntimeContext::setCustomThisReference(MemberReferencePtr customThisReference_)
+void CatRuntimeContext::setCustomThisReference(Reflectable* customThisReference_)
 {
 	customThisReference = customThisReference_;
 }
 
 
-void CatRuntimeContext::setCustomGlobalsReference(MemberReferencePtr customGlobalsReference_)
+void CatRuntimeContext::setCustomGlobalsReference(Reflectable* customGlobalsReference_)
 {
 	customGlobalsReference = customGlobalsReference_;
 }

@@ -1,37 +1,32 @@
 #include "CustomTypeMemberInfo.h"
 #include "LLVMCompileTimeContext.h"
+#include "ReflectableHandle.h"
 
 template<>
-inline MemberReferencePtr CustomBasicTypeMemberInfo<std::string>::getMemberReference(MemberReferencePtr& base)
+inline std::any CustomBasicTypeMemberInfo<std::string>::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			std::string* stringPointer;
-			memcpy(&stringPointer, &baseObject->data[memberOffset], sizeof(std::string*));
-			std::string& value = *stringPointer;
-			return new BasicTypeMemberReference<std::string>(value, this, baseObject, isWritable);
-		}
+		std::string* stringPointer;
+		memcpy(&stringPointer, &baseObject->data[memberOffset], sizeof(std::string*));
+		std::string& value = *stringPointer;
+		return value;
 	}
-	return nullptr;
+	return std::string("");
 }
 
 
 template<typename T>
-inline MemberReferencePtr CustomBasicTypeMemberInfo<T>::getMemberReference(MemberReferencePtr& base)
+inline std::any CustomBasicTypeMemberInfo<T>::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			T& value = *reinterpret_cast<T*>(&baseObject->data[memberOffset]);
-			return new BasicTypeMemberReference<T>(value, this, baseObject, isWritable);
-		}
+		T& value = *reinterpret_cast<T*>(&baseObject->data[memberOffset]);
+		return value;
 	}
-	return nullptr;
+	return T();
 }
 
 template<typename T>
@@ -89,62 +84,39 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::
 
 
 template<>
-inline void CustomBasicTypeMemberInfo<std::string>::assign(MemberReferencePtr& base, const std::string& valueToSet)
+inline void CustomBasicTypeMemberInfo<std::string>::assign(std::any& base, const std::string& valueToSet)
 {
-	if (!base.isNull())
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			std::string*& value = *reinterpret_cast<std::string**>(&baseObject->data[memberOffset]);
-			*value = valueToSet;
-		}
+		std::string*& value = *reinterpret_cast<std::string**>(&baseObject->data[memberOffset]);
+		*value = valueToSet;
 	}
 }
 
 
 template<typename T>
-inline void CustomBasicTypeMemberInfo<T>::assign(MemberReferencePtr& base, const T& valueToSet)
+inline void CustomBasicTypeMemberInfo<T>::assign(std::any& base, const T& valueToSet)
 {
-	if (!base.isNull())
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			T& value = *reinterpret_cast<T*>(&baseObject->data[memberOffset]);
-			value = valueToSet;
-		}
+		T& value = *reinterpret_cast<T*>(&baseObject->data[memberOffset]);
+		value = valueToSet;
 	}
 }
 
 
-inline Reflectable* CustomTypeObjectMemberInfo::getReflectable(MemberReferencePtr& reference)
-{
-	MemberReference* memberReference = reference.getPointer();
-	if (memberReference != nullptr)
-	{
-		return memberReference->getParentObject();
-	}
-	else
-	{
-		return nullptr;
-	}
-}
 
-
-inline MemberReferencePtr CustomTypeObjectMemberInfo::getMemberReference(MemberReferencePtr& base)
+inline std::any CustomTypeObjectMemberInfo::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			MemberReferencePtr* objectPointer;
-			memcpy(&objectPointer, &baseObject->data[memberOffset], sizeof(MemberReferencePtr*));
-			return MemberReferencePtr(*objectPointer, objectPointer);
-		}
+		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseObject->data[memberOffset]);
+		return objectPointer->get();
 	}
-	return nullptr;
+	return (Reflectable*)nullptr;
 }
 
 
@@ -183,10 +155,10 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Va
 		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
-		//Pointer to a MemberReferencePtr
-		llvm::Value* memberReferencePtr = context->helper->loadPointerAtAddress(addressValue, "MemberReferencePtr");
+		//Pointer to a ReflectableHandle
+		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
 		//Call function that gets the member
-		return context->helper->createCall(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&getReflectable), {memberReferencePtr}, "getReflectable");
+		return context->helper->createCall(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), {reflectableHandle}, "getReflectable");
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
 #else 
@@ -195,16 +167,12 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Va
 }
 
 
-inline void CustomTypeObjectMemberInfo::assign(MemberReferencePtr& base, MemberReferencePtr valueToSet)
+inline void CustomTypeObjectMemberInfo::assign(std::any& base, std::any& valueToSet)
 {
-	if (!base.isNull())
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			MemberReferencePtr*& value = *reinterpret_cast<MemberReferencePtr**>(&baseObject->data[memberOffset]);
-			*value = valueToSet;
-			value->setOriginalReference(value);
-		}
+		ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(baseObject->data + memberOffset);
+		*handle = ReflectableHandle(std::any_cast<Reflectable*>(valueToSet));
 	}
 }

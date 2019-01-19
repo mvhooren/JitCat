@@ -41,7 +41,7 @@ CatASTNodeType CatScopeRoot::getNodeType()
 }
 
 
-CatValue CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
+std::any CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
 {
 	return runtimeContext->getRootReference(source);
 }

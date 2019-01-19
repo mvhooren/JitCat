@@ -6,6 +6,7 @@
 */
 
 #include "InfixOperatorOptimizer.h"
+#include "CatGenericType.h"
 #include "CatTypedExpression.h"
 #include "CatLiteral.h"
 
@@ -80,7 +81,14 @@ bool InfixOperatorOptimizer::typedExpressionEqualsConstant(CatTypedExpression* e
 	if (expression->getNodeType() == CatASTNodeType::Literal)
 	{
 		CatLiteral* literalExpression = static_cast<CatLiteral*>(expression);
-		return literalExpression->toFloatValue() == constant;
+		if (literalExpression->getType().isScalarType())
+		{
+			return CatGenericType::convertToFloat(literalExpression->getValue(), literalExpression->getType()) == constant;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	else
 	{
@@ -94,10 +102,10 @@ bool InfixOperatorOptimizer::typedExpressionEqualsConstant(CatTypedExpression* e
 	if (expression->getNodeType() == CatASTNodeType::Literal)
 	{
 		CatLiteral* literalExpression = static_cast<CatLiteral*>(expression);
-		return literalExpression->toBoolValue() == constant;
+		if (literalExpression->getType().isBoolType())
+		{
+			return std::any_cast<bool>(literalExpression->getValue()) == constant;
+		}
 	}
-	else
-	{
-		return false;
-	}
+	return false;
 }

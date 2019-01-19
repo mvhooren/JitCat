@@ -7,10 +7,12 @@
 
 #include "CustomTypeInfo.h"
 #include "CustomTypeMemberInfo.h"
-#include "MemberReference.h"
+#include "ReflectableHandle.h"
 #include "Tools.h"
 #include "TypeCaster.h"
 #include "TypeRegistry.h"
+
+#include <cassert>
 
 
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
@@ -50,7 +52,7 @@ CustomTypeInstance* CustomTypeInfo::createInstanceCopy(CustomTypeInstance* sourc
 {
 	if (!isConstType)
 	{
-		CustomTypeInstance* instance = new CustomTypeInstance(createDataCopy(source->data), this);
+		CustomTypeInstance* instance = new CustomTypeInstance(createDataCopy(source->data, typeSize), this);
 		instances.insert(instance);
 		return instance;
 	}
@@ -63,7 +65,7 @@ CustomTypeInstance* CustomTypeInfo::createInstanceCopy(CustomTypeInstance* sourc
 
 unsigned char* CustomTypeInfo::instanceConstructor()
 {
-	return createDataCopy(defaultData);
+	return createDataCopy(defaultData, typeSize);
 }
 
 
@@ -92,10 +94,9 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 		}
 		else if (iter->second->catType == CatType::Object)
 		{
-			MemberReferencePtr* reference;
-			unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
-			memcpy(&reference, &data[offset], sizeof(MemberReferencePtr*));
-			delete reference;
+			unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
+			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(data + offset);
+			handle->~ReflectableHandle();
 		}
 	}
 	delete[] data;
@@ -197,15 +198,13 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 }
 
 
-TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, const std::string& memberTypeName, MemberReference* defaultValue, TypeInfo* objectTypeInfo, bool isWritable, bool isConst)
+TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, const std::string& memberTypeName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, bool isWritable, bool isConst)
 {
 	if (defaultValue != nullptr
-		&& Tools::toLowerCase(defaultValue->getCustomTypeName()) == Tools::toLowerCase(memberTypeName))
+		&& Tools::toLowerCase(objectTypeInfo->getTypeName()) == Tools::toLowerCase(memberTypeName))
 	{
 		isTriviallyCopyable = false;
-		MemberReferencePtr* memberReference = new MemberReferencePtr(defaultValue);
-		memberReference->setOriginalReference(memberReference);
-		unsigned char* data = increaseDataSize(sizeof(MemberReferencePtr*));
+		unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
 		unsigned int offset = (unsigned int)(data - defaultData);
 		if (defaultData == nullptr)
 		{
@@ -215,12 +214,9 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, c
 		std::set<CustomTypeInstance*>::iterator end = instances.end();
 		for (std::set<CustomTypeInstance*>::iterator iter = instances.begin(); iter != end; ++iter)
 		{
-			MemberReferencePtr* newReference = new MemberReferencePtr(defaultValue);
-			newReference->setOriginalReference(newReference);
-			memcpy((*iter)->data + offset, &newReference, sizeof(MemberReferencePtr*));
+			new ((*iter)->data + offset) ReflectableHandle(defaultValue);
 		}
-
-		memcpy(data, &memberReference, sizeof(MemberReferencePtr*));
+		new (data) ReflectableHandle(defaultValue);
 		TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, objectTypeInfo, isConst);
 		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 		members.emplace(lowerCaseMemberName, memberInfo);
@@ -289,25 +285,29 @@ void CustomTypeInfo::increaseDataSize(unsigned char*& data, unsigned int amount,
 	unsigned char* oldData = data;
 	unsigned int oldSize = currentSize;
 	unsigned int newSize = oldSize + amount;
-	data = new unsigned char[newSize];
+
 	if (oldData != nullptr
 		&& oldSize != 0)
 	{
-		memcpy(data, oldData, oldSize);
+		data = createDataCopy(oldData, newSize);
+		instanceDestructor(oldData);
 	}
-	//Initialise memory to zero
+	else
+	{
+		data = new unsigned char[newSize];
+	}
+	//Initialise the additional memory to zero
 	memset(data + oldSize, 0, amount);
-	delete[] oldData;
-
 }
 
 
-unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData)
+unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy)
 {
+	assert(sizeOfCopy >= typeSize);
 	//Create copies of strings and member references
 	if (otherData != nullptr)
 	{
-		unsigned char* instanceData = new unsigned char[typeSize];
+		unsigned char* instanceData = new unsigned char[sizeOfCopy];
 		memcpy(instanceData, otherData, typeSize);
 		if (!isTriviallyCopyable)
 		{
@@ -324,12 +324,9 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData)
 				}
 				else if (iter->second->catType == CatType::Object)
 				{
-					MemberReferencePtr* originalReference;
 					unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
-					memcpy(&originalReference, &otherData[offset], sizeof(MemberReferencePtr*));
-					MemberReferencePtr* copy = new MemberReferencePtr(originalReference->getPointer());
-					copy->setOriginalReference(copy);
-					memcpy(instanceData + offset, &copy, sizeof(MemberReferencePtr*));
+					ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(&otherData[offset]);
+					new (instanceData + offset) ReflectableHandle(handle->get());
 				}
 			}
 		}

@@ -34,11 +34,11 @@ public:
 	virtual CatASTNodeType getNodeType() override final {return CatASTNodeType::PrefixOperator;}
 
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
+	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 	virtual CatGenericType typeCheck() override final;
 
 	virtual void print() const override final;
 
 private:
-	inline CatValue calculateExpression(CatRuntimeContext* runtimeContext);
+	inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
 };

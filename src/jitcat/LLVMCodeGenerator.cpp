@@ -14,7 +14,6 @@
 #include "LLVMJit.h"
 #include "LLVMTypes.h"
 #include "MemberFunctionInfo.h"
-#include "MemberReference.h"
 #include "MemberInfo.h"
 
 #include <llvm/IR/Constant.h>
@@ -625,21 +624,22 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 
 llvm::Value* LLVMCodeGenerator::generate(CatLiteral* literal, LLVMCompileTimeContext* context)
 {
-	switch (literal->getValueType())
+	switch (literal->getType().getCatType())
 	{
-		case CatType::Int:			return helper->createConstant(literal->getIntValue());
-		case CatType::Float:		return helper->createConstant(literal->getFloatValue());
+		case CatType::Int:			return helper->createConstant(std::any_cast<int>(literal->getValue()));
+		case CatType::Float:		return helper->createConstant(std::any_cast<float>(literal->getValue()));
 		case CatType::String:
 		{
-			llvm::Value* stringObjectAddress = helper->createIntPtrConstant(reinterpret_cast<std::uintptr_t>(&literal->getStringValue()), "stringLiteralAddress");
+			const std::string& stringReference = std::any_cast<const std::string&>(literal->getValue());
+			llvm::Value* stringObjectAddress = helper->createIntPtrConstant(reinterpret_cast<std::uintptr_t>(&stringReference), "stringLiteralAddress");
 			return builder->CreateIntToPtr(stringObjectAddress, LLVMTypes::stringPtrType);													
 		}
-		case CatType::Bool:			return helper->createConstant(literal->getBoolValue());
+		case CatType::Bool:			return helper->createConstant(std::any_cast<bool>(literal->getValue()));
 		default:
 		case CatType::Void:
 		case CatType::Object:
 		case CatType::Unknown:
-		case CatType::Error:		assert(false); return LLVMJit::logError("ERROR: Not a basic type."); 
+			assert(false); return LLVMJit::logError("ERROR: Not a basic type."); 
 	}
 }
 
@@ -797,14 +797,12 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(RootTypeSource source, LLVMCompil
 	{
 		case RootTypeSource::Global:
 		{
-			MemberReferencePtr ref = context->catContext->getGlobalReference();
-			Reflectable* object = ref->getParentObject();
+			Reflectable* object = context->catContext->getGlobalReference();
 			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
 		} break;
 		case RootTypeSource::CustomGlobals:
 		{
-			MemberReferencePtr ref = context->catContext->getRootReference(RootTypeSource::CustomGlobals);
-			Reflectable* object = ref->getParentObject();
+			Reflectable* object = context->catContext->getRootReference(RootTypeSource::CustomGlobals);
 			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
 		} break;
 		case RootTypeSource::This:

@@ -22,7 +22,6 @@
 #ifdef ENABLE_LLVM
 #include "LLVMCodeGenerator.h"
 #endif
-#include "ObjectMemberReference.h"
 #include "OneCharToken.h"
 #include "SLRParser.h"
 #include "ParseToken.h"
@@ -130,8 +129,7 @@ int MAIN(int argc, char* argv[])
 	CustomTypeInstance* typeGlobalsInstance = customTypeGlobals->createInstance();
 	globalsRoot->addIntMember("globalInt", 42);
 	globalsRoot->addFloatMember("globalFloat", 66.0f);
-	globalsRoot->addObjectMember(customTypeName, customTypeName,
-								 new ObjectMemberReference<CustomTypeInstance>(typeGlobalsInstance, nullptr, customTypeGlobals), customTypeGlobals);
+	globalsRoot->addObjectMember(customTypeName, customTypeName,typeGlobalsInstance, customTypeGlobals);
 	
 	const char* customTypeName2 = "MyType2";
 	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName2);
@@ -140,18 +138,16 @@ int MAIN(int argc, char* argv[])
 	customType->addIntMember("anInt", 54321);
 	customType->addStringMember("aString", "lolel");
 	customType->addBoolMember("amItrue", true);
-	customType->addObjectMember("anObject", ReflectionTestObject2::getTypeName(), 
-								new ObjectMemberReference<ReflectionTestObject2>(localObject, nullptr, TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName())), TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName()));
+	customType->addObjectMember("anObject", ReflectionTestObject2::getTypeName(), localObject, TypeRegistry::get()->getTypeInfo(ReflectionTestObject2::getTypeName()));
 	CustomTypeInstance* typeInstance = customType->createInstance();
 
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->getTypeInfo("Root"), nullptr, customType, globalsRoot, "myObject", true, &errorManager);
-	context.setCustomThisReference(new ObjectMemberReference<CustomTypeInstance>(typeInstance, nullptr, customType));
-	context.setCustomGlobalsReference(new ObjectMemberReference<CustomTypeInstance>(globalsInstance, nullptr, globalsRoot));
+	context.setCustomThisReference(typeInstance);
+	context.setCustomGlobalsReference(globalsInstance);
 
 	ReflectionTestRoot root;
-	ObjectMemberReference<ReflectionTestRoot>* rootReference = new ObjectMemberReference<ReflectionTestRoot>(&root, nullptr, TypeRegistry::get()->getTypeInfo("Root"));
-	context.setGlobalReference(rootReference);
+	context.setGlobalReference(&root);
 
 	SLRParser* parser = grammar.createSLRParser();
 	
@@ -237,9 +233,9 @@ int MAIN(int argc, char* argv[])
 					functionNr++;
 #endif
 					std::cout << "\nExecute:\n";
-					CatValue result = expression->execute(&context);
-					std::cout << "\tType:" << toString(result.getValueType()) << "\n\tValue: ";
-					result.printValue();
+					std::any result = expression->execute(&context);
+					std::cout << "\tType:" << expression->getType().toString() << "\n\tValue: ";
+					
 				}
 				std::cout << "\n\n";
 			}

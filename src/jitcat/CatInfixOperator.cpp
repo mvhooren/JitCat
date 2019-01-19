@@ -11,19 +11,13 @@
 #include "InfixOperatorOptimizer.h"
 #include "OptimizationHelper.h"
 
+#include <cassert>
+
 
 CatGenericType CatInfixOperator::getType() const 
 {
 	CatType lhsType = lhs->getType().getCatType();
-	if (lhsType == CatType::Error)
-	{
-		return CatType::Error;
-	}
 	CatType rhsType = rhs->getType().getCatType();
-	if (rhsType == CatType::Error)
-	{
-		return CatType::Error;
-	}
 
 	switch (oper)
 	{
@@ -54,7 +48,7 @@ CatGenericType CatInfixOperator::getType() const
 					return CatType::Float;
 				}
 			}
-			return CatType::Error;
+			return CatGenericType("Expected scalar parameters.");
 		case CatInfixOperatorType::Greater:
 		case CatInfixOperatorType::Smaller:
 		case CatInfixOperatorType::GreaterOrEqual:
@@ -63,7 +57,7 @@ CatGenericType CatInfixOperator::getType() const
 			{
 				return CatType::Bool;
 			}
-			return CatType::Error;
+			return CatGenericType("Expected scalar parameters.");
 		case CatInfixOperatorType::Equals:
 		case CatInfixOperatorType::NotEquals:
 			if ((isScalar(lhsType) && isScalar(rhsType))
@@ -71,7 +65,7 @@ CatGenericType CatInfixOperator::getType() const
 			{
 				return CatType::Bool;
 			}
-			return CatType::Error;
+			return CatGenericType("Parameters cannot be compared.");
 		case CatInfixOperatorType::LogicalAnd:
 		case CatInfixOperatorType::LogicalOr:
 			if (lhsType == CatType::Bool
@@ -79,9 +73,10 @@ CatGenericType CatInfixOperator::getType() const
 			{
 				return CatType::Bool;
 			}
-			return CatType::Error;
+			return CatGenericType("Expected boolean parameters.");
 	}
-	return CatType::Error;
+	assert(false);
+	return CatGenericType("Unexpected error.");
 }
 
 
@@ -114,7 +109,7 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 			 || lhsType == CatType::Bool)
 			&& oper != CatInfixOperatorType::Assign)
 		{
-			return new CatLiteral(calculateExpression(compileTimeContext));
+			return new CatLiteral(calculateExpression(compileTimeContext), getType());
 		}
 	}
 	else
@@ -129,7 +124,7 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 }
 
 
-CatValue CatInfixOperator::execute(CatRuntimeContext* runtimeContext)
+std::any CatInfixOperator::execute(CatRuntimeContext* runtimeContext)
 {
 	return calculateExpression(runtimeContext);
 }

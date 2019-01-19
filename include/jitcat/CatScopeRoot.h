@@ -20,7 +20,7 @@ public:
 	// Inherited via CatTypedExpression
 	virtual void print() const override;
 	virtual CatASTNodeType getNodeType() override;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override;
+	virtual std::any execute(CatRuntimeContext* runtimeContext) override;
 	virtual CatGenericType typeCheck() override;
 	virtual CatGenericType getType() const override;
 	virtual bool isConst() const override;

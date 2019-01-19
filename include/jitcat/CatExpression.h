@@ -9,12 +9,14 @@
 
 class CatRuntimeContext;
 #include "CatASTNode.h"
-#include "CatValue.h"
+#include "CatGenericType.h"
+
+#include <any>
 
 
 class CatExpression: public CatASTNode
 {
 public:
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) = 0;
+	virtual std::any execute(CatRuntimeContext* runtimeContext) = 0;
 	virtual CatGenericType typeCheck() = 0;
 };

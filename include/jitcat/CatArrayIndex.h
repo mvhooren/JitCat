@@ -20,7 +20,7 @@ public:
 	CatArrayIndex(const CatArrayIndex&) = delete;
 	virtual void print() const override final;
 	virtual CatASTNodeType getNodeType() override final;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
+	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 	virtual CatGenericType typeCheck() override final;
 
 	virtual CatGenericType getType() const override final;
@@ -31,7 +31,9 @@ public:
 	CatTypedExpression* getIndex() const;
 
 private:
-	std::unique_ptr<CatTypedExpression> base;
+	CatGenericType arrayType;
+	std::unique_ptr<CatTypedExpression> array;
+	CatGenericType indexType;
 	std::unique_ptr<CatTypedExpression> index;
-	CatGenericType memberInfo;
+	CatGenericType containerItemType;
 };

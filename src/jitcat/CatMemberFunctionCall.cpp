@@ -12,6 +12,8 @@
 #include "OptimizationHelper.h"
 #include "TypeInfo.h"
 
+#include <cassert>
+
 
 CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments):
 	functionName(name),
@@ -49,24 +51,20 @@ CatASTNodeType CatMemberFunctionCall::getNodeType()
 }
 
 
-CatValue CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
+std::any CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
 {
-	CatValue baseValue = base->execute(runtimeContext);
-	if (baseValue.getValueType() == CatType::Error)
-	{
-		return baseValue;
-	}
+	std::any baseValue = base->execute(runtimeContext);
 	if (memberFunctionInfo != nullptr && runtimeContext != nullptr)
 	{
-		std::vector<CatValue> argumentValues;
+		std::vector<std::any> argumentValues;
 		for (std::unique_ptr<CatTypedExpression>& argument : arguments->arguments)
 		{
 			argumentValues.push_back(argument->execute(runtimeContext));
 		}
-		MemberReferencePtr rootReference = baseValue.getCustomTypeValue();
-		return memberFunctionInfo->call(rootReference, argumentValues);
+		return memberFunctionInfo->call(baseValue, argumentValues);
 	}
-	return CatValue(CatError(std::string("Member not found: ") + functionName));
+	assert(false);
+	return std::any();
 
 }
 

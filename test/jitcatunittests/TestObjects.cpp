@@ -37,6 +37,7 @@ ReflectedObject::ReflectedObject():
 	nestedSelfObject(nullptr),
 	nestedObjectPointer(nullptr),
 	nestedObjectUniquePointer(nullptr),
+	nullObject(nullptr),
 	text("Hello!"),
 	numberString("123.4"),
 	theInt(42),
@@ -104,6 +105,7 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("no", &ReflectedObject::no)
 
 		.addMember("nestedSelfObject", &ReflectedObject::nestedSelfObject)
+		.addMember("nullObject", &ReflectedObject::nullObject)
 		.addMember("nestedObject", &ReflectedObject::nestedObject)
 		.addMember("nestedObjectPointer", &ReflectedObject::nestedObjectPointer)
 		.addMember("nestedObjectUniquePointer", &ReflectedObject::nestedObjectUniquePointer)

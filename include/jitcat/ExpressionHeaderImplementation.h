@@ -14,8 +14,6 @@
 #include "ExpressionErrorManager.h"
 #include "JitCat.h"
 
-#include "MemberReference.h"
-#include "MemberReferencePtr.h"
 #include "SLRParseResult.h"
 #include "Tools.h"
 #include "TypeTraits.h"
@@ -112,7 +110,7 @@ inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 		{
 			if (expressionAST != nullptr)
 			{
-				CatValue value = expressionAST->execute(runtimeContext);
+				std::any value = expressionAST->execute(runtimeContext);
 				if (value.getValueType() != CatType::Error)
 				{
 					return getActualValue(value);
@@ -140,15 +138,8 @@ inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeCont
 	}
 	else if (expressionAST != nullptr)
 	{
-		CatValue value = expressionAST->execute(runtimeContext);
-		if (value.getValueType() != CatType::Error)
-		{
-			return getActualValue(value);
-		}
-		else
-		{
-			return T();
-		}
+		std::any value = expressionAST->execute(runtimeContext);
+		return getActualValue(value);
 	}
 	else
 	{
@@ -165,35 +156,16 @@ CatType Expression<T>::getExpectedCatType() const
 
 
 template<typename T>
-inline T Expression<T>::getActualValue(const CatValue& catValue)
+inline T Expression<T>::getActualValue(const std::any& catValue)
 {
-	if constexpr (std::is_same<T, float>::value)
+	if constexpr (std::is_pointer<T>::value)
 	{
-		return catValue.getFloatValue();
-	}
-	else if constexpr (std::is_same<T, int>::value)
-	{
-		return catValue.getIntValue();
-	}
-	else if constexpr (std::is_same<T, bool>::value)
-	{
-		return catValue.getBoolValue();
-	}
-	else if constexpr (std::is_same<T, std::string>::value)
-	{
-		return catValue.getStringValue();
+		return static_cast<T>(std::any_cast<Reflectable*>(catValue));
 	}
 	else
 	{
-		if (catValue.getValueType() == CatType::Object)
-		{
-			MemberReferencePtr objectPtr = catValue.getCustomTypeValue();
-			MemberReference* object = objectPtr.getPointer();
-			return TypeTraits<T>::getValueFromMemberReference(object);
-		}
-		return T();
+		return std::any_cast<T>(catValue);
 	}
-	
 }
 
 

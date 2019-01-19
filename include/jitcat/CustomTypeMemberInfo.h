@@ -9,11 +9,9 @@
 
 struct LLVMCompileTimeContext;
 
-#include "BasicTypeMemberReference.h"
 #include "CustomTypeInstance.h"
 #include "LLVMForwardDeclares.h"
 #include "MemberInfo.h"
-#include "ObjectMemberReference.h"
 
 
 template<typename T>
@@ -21,10 +19,10 @@ struct CustomBasicTypeMemberInfo: public TypeMemberInfo
 {
 	CustomBasicTypeMemberInfo(const std::string& memberName, unsigned int memberOffset, CatType type, bool isConst, bool isWritable): TypeMemberInfo(memberName, type, isConst, isWritable), memberOffset(memberOffset) {}
 
-	inline virtual MemberReferencePtr getMemberReference(MemberReferencePtr& base) override final;
+	inline virtual std::any getMemberReference(std::any& base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 
-	void assign(MemberReferencePtr& base, const T& valueToSet);
+	void assign(std::any& base, const T& valueToSet);
 
 	unsigned int memberOffset;
 };
@@ -35,12 +33,10 @@ struct CustomTypeObjectMemberInfo: public TypeMemberInfo
 {
 	CustomTypeObjectMemberInfo(const std::string& memberName, unsigned int memberOffset, TypeInfo* type, bool isConst): TypeMemberInfo(memberName, type, isConst, false), memberOffset(memberOffset) {}
 
-	inline static Reflectable* getReflectable(MemberReferencePtr& reference);
-
-	inline virtual MemberReferencePtr getMemberReference(MemberReferencePtr& base) override final;
+	inline virtual std::any getMemberReference(std::any& base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 	
-	void assign(MemberReferencePtr& base, MemberReferencePtr valueToSet);
+	void assign(std::any& base, std::any& valueToSet);
 	
 	unsigned int memberOffset;
 };

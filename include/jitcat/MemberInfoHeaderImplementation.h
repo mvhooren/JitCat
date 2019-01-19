@@ -7,9 +7,6 @@
 
 #pragma once
 
-#include "BasicTypeMemberReference.h"
-#include "ContainerMemberReference.h"
-#include "ObjectMemberReference.h"
 #include "LLVMCodeGeneratorHelper.h"
 #include "LLVMCompileTimeContext.h"
 #include "LLVMTypes.h"
@@ -18,18 +15,15 @@
 
 
 template<typename T, typename U>
-inline MemberReferencePtr ContainerMemberInfo<T, U>::getMemberReference(MemberReferencePtr& base)
+inline std::any ContainerMemberInfo<T, U>::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		T* baseObject = static_cast<T*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			U& container = baseObject->*memberPointer;
-			return new ContainerMemberReference<U>(container, this, baseObject, nestedType);
-		}
+		U& container = baseObject->*memberPointer;
+		return &container;
 	}
-	return nullptr;
+	return (U*)nullptr;
 }
 
 
@@ -163,18 +157,15 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateArrayIndexCode(llvm::Valu
 
 
 template<typename T, typename U>
-inline MemberReferencePtr ClassPointerMemberInfo<T, U>::getMemberReference(MemberReferencePtr& base)
+inline std::any ClassPointerMemberInfo<T, U>::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		T* baseObject = static_cast<T*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			U* member = baseObject->*memberPointer;
-			return new ObjectMemberReference<U>(member, this, nestedType);
-		}
+		U* member = baseObject->*memberPointer;
+		return static_cast<Reflectable*>(member);
 	}
-	return nullptr;
+	return static_cast<Reflectable*>(nullptr);
 }
 
 
@@ -209,17 +200,14 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 
 
 template<typename T, typename U>
-inline MemberReferencePtr ClassObjectMemberInfo<T, U>::getMemberReference(MemberReferencePtr & base)
+inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		T* baseObject = static_cast<T*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			return new ObjectMemberReference<U>(&(baseObject->*memberPointer), this, nestedType);
-		}
+		return static_cast<Reflectable*>(&(baseObject->*memberPointer));
 	}
-	return nullptr;
+	return static_cast<Reflectable*>(nullptr);
 }
 
 
@@ -262,17 +250,14 @@ inline U* ClassUniquePtrMemberInfo<T, U>::getPointer(T* parentObject, ClassUniqu
 
 
 template<typename T, typename U>
-inline MemberReferencePtr ClassUniquePtrMemberInfo<T, U>::getMemberReference(MemberReferencePtr& base)
+inline std::any ClassUniquePtrMemberInfo<T, U>::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	if (baseObject != nullptr)
 	{
-		T* baseObject = static_cast<T*>(base->getParentObject());
-		if (baseObject != nullptr)
-		{
-			return new ObjectMemberReference<U>((baseObject->*memberPointer).get(), this, nestedType);
-		}
+		return static_cast<Reflectable*>((baseObject->*memberPointer).get());
 	}
-	return nullptr;
+	return static_cast<Reflectable*>(nullptr);
 }
 
 
@@ -298,19 +283,15 @@ inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm
 
 
 template<typename T, typename U>
-inline MemberReferencePtr BasicTypeMemberInfo<T, U>::getMemberReference(MemberReferencePtr& base)
+inline std::any BasicTypeMemberInfo<T, U>::getMemberReference(std::any& base)
 {
-	if (!base.isNull())
+	T* objectPointer = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	if (objectPointer != nullptr)
 	{
-		T* objectPointer = static_cast<T*>(base->getParentObject());
-		if (objectPointer != nullptr)
-		{
-			U& value = objectPointer->*memberPointer;
-
-			return new BasicTypeMemberReference<U>(value, this, objectPointer, isWritable);
-		}
+		U& value = objectPointer->*memberPointer;
+		return value;
 	}
-	return nullptr;
+	return U();
 }
 
 

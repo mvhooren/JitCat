@@ -16,7 +16,6 @@ enum class CatType
 	Void,
 	Object,
 	Unknown,
-	Error,
 	Count
 };
 

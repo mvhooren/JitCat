@@ -76,7 +76,7 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 		}
 		else
 		{
-			return expressionAST->execute(runtimeContext).toAny();
+			return expressionAST->execute(runtimeContext);
 		}
 	}
 	else
@@ -90,7 +90,7 @@ void ExpressionAny::compile(CatRuntimeContext* context)
 {
 	if (parse(context, CatGenericType()) && isConstant)
 	{
-		cachedValue = expressionAST->execute(context).toAny();
+		cachedValue = expressionAST->execute(context);
 	}
 }
 

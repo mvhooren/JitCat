@@ -136,8 +136,11 @@ bool ExpressionBase::parse(CatRuntimeContext* context, const CatGenericType& exp
 	if (parseResult->success)
 	{
 		expressionAST = static_cast<CatTypedExpression*>(parseResult->astRootNode);
-		constCollapse(context);
 		typeCheck(expectedType);
+		if (parseResult->success)
+		{
+			constCollapse(context);
+		}
 	}
 	handleParseErrors(context);
 	//typeCheck may have changed parseResult->success

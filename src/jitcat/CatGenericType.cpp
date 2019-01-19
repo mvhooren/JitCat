@@ -6,7 +6,11 @@
 */
 
 #include "CatGenericType.h"
+#include "CatLog.h"
+#include "Tools.h"
 #include "TypeInfo.h"
+
+#include <cassert>
 
 
 CatGenericType::CatGenericType():
@@ -47,7 +51,7 @@ CatGenericType::CatGenericType(ContainerType containerType, TypeInfo* itemType):
 
 CatGenericType::CatGenericType(const std::string& message):
 	specificType(SpecificType::Error),
-	catType(CatType::Error),
+	catType(CatType::Unknown),
 	nestedType(nullptr),
 	containerType(ContainerType::None),
 	error(message)
@@ -103,7 +107,7 @@ bool CatGenericType::isUnknown() const
 bool CatGenericType::isValidType() const
 {
 	return specificType != SpecificType::Error 
-		   && (specificType != SpecificType::CatType || catType != CatType::Error)
+		   && (specificType != SpecificType::CatType || catType != CatType::Unknown)
 		   && (specificType != SpecificType::ObjectType || nestedType != nullptr);
 }
 
@@ -320,7 +324,7 @@ TypeInfo* CatGenericType::getObjectType() const
 }
 
 
-std::any CatGenericType::createAnyOfType(void* pointer)
+std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 {
 	switch (specificType)
 	{
@@ -336,12 +340,188 @@ std::any CatGenericType::createAnyOfType(void* pointer)
 		} break;
 		case SpecificType::ObjectType:
 		{
-
+			return nestedType->getTypeCaster()->cast(pointer);
 		} break;
 		case SpecificType::ContainerType:
 		{
+			if (containerType == ContainerType::Vector)
+			{
+				return nestedType->getTypeCaster()->castToVectorOf(pointer);
+			}
+			else if (containerType == ContainerType::StringMap)
+			{
+				return nestedType->getTypeCaster()->castToStringIndexedMapOf(pointer);
+			}
 		} break;
 	}
 	return std::any();
 }
 
+
+std::any CatGenericType::createDefault() const
+{
+	switch (specificType)
+	{
+		case SpecificType::CatType:
+		{
+			switch (catType)
+			{
+				case CatType::Int:		return 0;
+				case CatType::Float:	return 0.0f;
+				case CatType::Bool:		return false;
+				case CatType::String:	return std::string();
+			}
+		} break;
+		case SpecificType::ObjectType:
+		{
+			return nestedType->getTypeCaster()->getNull();
+		} break;
+		case SpecificType::ContainerType:
+		{
+			if (containerType == ContainerType::Vector)
+			{
+				return nestedType->getTypeCaster()->getNullVector();
+			}
+			else if (containerType == ContainerType::StringMap)
+			{
+				return nestedType->getTypeCaster()->getNullStringIndexedMap();
+			}
+		} break;
+	}
+	return std::any();
+}
+
+
+std::any CatGenericType::convertToType(std::any value, const CatGenericType& valueType) const
+{
+	if (this->operator==(valueType))
+	{
+		return value;
+	}
+	else if (isBasicType() && valueType.isBasicType())
+	{
+		switch(catType)
+		{
+			case CatType::Int:
+			{
+				switch (valueType.getCatType())
+				{
+					case CatType::Float:	return (int)std::any_cast<float>(value);
+					case CatType::Bool:		return std::any_cast<bool>(value) ? 1 : 0;
+					case CatType::String:	return atoi(std::any_cast<std::string>(value).c_str());
+				}
+			} break;
+			case CatType::Float:
+			{
+				switch (valueType.getCatType())
+				{
+					case CatType::Int:		return (float)std::any_cast<int>(value);
+					case CatType::Bool:		return std::any_cast<bool>(value) ? 1.0f : 0.0f;
+					case CatType::String:	return (float)atof(std::any_cast<std::string>(value).c_str());
+				}
+			} break;
+			case CatType::Bool:
+			{
+				switch (valueType.getCatType())
+				{
+					case CatType::Float:	return std::any_cast<float>(value) > 0.0f;
+					case CatType::Int:		return std::any_cast<int>(value) > 0;
+					case CatType::String:
+					{
+						std::string strValue = std::any_cast<std::string>(value);
+						return  strValue == "true" || atoi(strValue.c_str()) > 0;
+					}
+				}
+			} break;
+			case CatType::String:
+			{
+				switch (valueType.getCatType())
+				{
+					case CatType::Float:
+					{
+						std::ostringstream ss;
+						ss << std::any_cast<float>(value);
+						return std::string(ss.str());
+					}
+					case CatType::Int:
+					{
+						std::ostringstream ss;
+						ss << std::any_cast<int>(value);
+						return std::string(ss.str());
+					}
+					case CatType::Bool:		
+					{
+						return std::any_cast<bool>(value) ? std::string("1") : std::string("0");
+					}
+				}
+			} break;
+		}
+	}
+	assert(false);
+	return createDefault();
+}
+
+
+void CatGenericType::printValue(std::any& value)
+{
+	switch (specificType)
+	{
+		case SpecificType::CatType:
+		{
+			switch (catType)
+			{
+				case CatType::Int:		CatLog::log(std::any_cast<int>(value)); break;
+				case CatType::Float:	CatLog::log(std::any_cast<float>(value)); break;
+				case CatType::Bool:		CatLog::log(std::any_cast<bool>(value) ? "true" : "false"); break;
+				case CatType::String:	CatLog::log("\""); CatLog::log(std::any_cast<std::string>(value)); CatLog::log("\""); break;
+			}
+		} break;
+		case SpecificType::ObjectType:
+		{
+			 CatLog::log(Tools::makeString(std::any_cast<Reflectable*>(value))); 		
+		} break;
+		case SpecificType::ContainerType:
+		{
+			if (containerType == ContainerType::Vector)
+			{
+				CatLog::log("Vector of ");
+				CatLog::log(getContainerItemType().toString());
+			}
+			else if (containerType == ContainerType::StringMap)
+			{
+				CatLog::log("Map of string to ");
+				CatLog::log(getContainerItemType().toString());
+			}
+		} break;
+	}
+}
+
+
+float CatGenericType::convertToFloat(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<float>(floatType.convertToType(value, valueType));
+}
+
+
+int CatGenericType::convertToInt(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<int>(intType.convertToType(value, valueType));
+}
+
+
+bool CatGenericType::convertToBoolean(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<bool>(boolType.convertToType(value, valueType));
+}
+
+
+std::string CatGenericType::convertToString(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<std::string>(stringType.convertToType(value, valueType));
+}
+
+
+const CatGenericType CatGenericType::intType = CatGenericType(CatType::Int);
+const CatGenericType CatGenericType::floatType = CatGenericType(CatType::Float);
+const CatGenericType CatGenericType::boolType = CatGenericType(CatType::Bool);
+const CatGenericType CatGenericType::stringType = CatGenericType(CatType::String);

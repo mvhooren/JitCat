@@ -16,8 +16,7 @@
 CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName):
 	base(base),
 	memberName(memberName),
-	memberInfo(nullptr),
-	type(CatType::Error)
+	memberInfo(nullptr)
 {
 	if (base != nullptr
 		&& base->getType() == CatType::Object)
@@ -52,32 +51,15 @@ CatASTNodeType CatMemberAccess::getNodeType()
 }
 
 
-CatValue CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
+std::any CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
 {
-	CatValue baseValue = base->execute(runtimeContext);
-	if (baseValue.getValueType() == CatType::Error)
-	{
-		return baseValue;
-	}
+	std::any baseValue = base->execute(runtimeContext);
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-
-		MemberReferencePtr rootReference = baseValue.getCustomTypeValue();
-		MemberReferencePtr reference = memberInfo->getMemberReference(rootReference);
-		if (!reference.isNull())
-		{
-			switch (type.getCatType())
-			{
-				case CatType::Int:		
-				case CatType::Float:	
-				case CatType::String:	
-				case CatType::Bool:	
-				case CatType::Object:	return CatValue(reference);
-				case CatType::Void:	return CatValue();
-			}
-		}
+		return memberInfo->getMemberReference(baseValue);
 	}
-	return CatValue(CatError(std::string("Member not found:") + memberName));
+	assert(false);
+	return std::any();
 }
 
 
@@ -123,7 +105,7 @@ CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTim
 {
 	if (type.isValidType() && isConst())
 	{
-		return new CatLiteral(execute(compileTimeContext));
+		return new CatLiteral(execute(compileTimeContext), getType());
 	}
 	return this;
 }

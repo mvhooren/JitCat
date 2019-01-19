@@ -24,7 +24,6 @@ const char* toString(CatType type)
 		case CatType::Bool:			return "bool";
 		case CatType::Void:			return "void";
 		case CatType::Object:		return "object";
-		case CatType::Error:		return "error";
 		default:
 		case CatType::Unknown:		return "unknown";
 	}

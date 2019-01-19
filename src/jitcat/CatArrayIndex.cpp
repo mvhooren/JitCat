@@ -9,29 +9,26 @@
 #include "CatLog.h"
 #include "MemberInfo.h"
 #include "OptimizationHelper.h"
+#include "TypeInfo.h"
 
 
 CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex):
-	base(base),
-	index(arrayIndex),
-	memberInfo(nullptr)
+	array(base),
+	index(arrayIndex)
 {
-	if ((arrayIndex->getType() == CatType::Int
-		 || arrayIndex->getType() == CatType::String)
-		&& base->getType() == CatType::Object)
+	arrayType = base->getType();
+	indexType = index->getType();
+	if ((indexType.isIntType() || indexType.isStringType())
+		 && arrayType.isContainerType())
 	{
-		CatGenericType baseType = base->getType();
-		if (baseType.isContainerType())
-		{
-			memberInfo = baseType.getContainerItemType();
-		}
+		containerItemType = arrayType.getContainerItemType();
 	}
 }
 
 
 void CatArrayIndex::print() const
 {
-	base->print();
+	array->print();
 	CatLog::log("[");
 	index->print();
 	CatLog::log("]");
@@ -44,60 +41,32 @@ CatASTNodeType CatArrayIndex::getNodeType()
 }
 
 
-CatValue CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
+std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 {
-	CatValue baseValue = base->execute(runtimeContext);
-	CatValue indexValue = index->execute(runtimeContext);
-	if (baseValue.getValueType() == CatType::Error)
+	std::any arrayValue = array->execute(runtimeContext);
+	std::any indexValue = index->execute(runtimeContext);
+	if (arrayType.isMapType())
 	{
-		return baseValue;
-	}
-	else if (indexValue.getValueType() == CatType::Error)
-	{
-		return indexValue;
-	}
-
-	if (memberInfo.isObjectType() && runtimeContext != nullptr)
-	{
-		MemberReferencePtr arrayReference = baseValue.getCustomTypeValue();
-		if (!arrayReference.isNull() 
-			&& (indexValue.getValueType() == CatType::Int || indexValue.getValueType() == CatType::String))
+		if (indexType.isIntType())
 		{
-			MemberReferencePtr itemReference;
-
-			if ((arrayReference->getContainerType() == ContainerType::Vector 
-				|| arrayReference->getContainerType() == ContainerType::StringMap)
-				&& indexValue.getValueType() == CatType::Int)
-			{
-				int arrayIndex = indexValue.getIntValue();
-				itemReference = arrayReference->getArrayItemReference(arrayIndex);
-			}
-			else if (arrayReference->getContainerType() == ContainerType::StringMap
-					 && indexValue.getValueType() == CatType::String)
-			{
-				itemReference = arrayReference->getMemberReference(indexValue.getStringValue());
-			}
-			if (!itemReference.isNull() && itemReference->getType() == SpecificMemberType::NestedType)
-			{
-				return CatValue(itemReference);
-			}
-			else if (arrayReference->getContainerType() == ContainerType::Vector)
-			{
-				return CatValue(CatError(std::string("List index out of range.")));
-			}
-			else
-			{
-				return CatValue(CatError(std::string("Map item does not exist.")));
-			}
+			return containerItemType.getObjectType()->getTypeCaster()->getItemOfStringIndexedMapOf(arrayValue, std::any_cast<int>(indexValue));
+		}
+		else if (indexType.isStringType())
+		{
+			return containerItemType.getObjectType()->getTypeCaster()->getItemOfStringIndexedMapOf(arrayValue, std::any_cast<std::string>(indexValue));
 		}
 	}
-	return CatValue(CatError(std::string("List item not found.")));
+	else if (arrayType.isVectorType())
+	{
+		return containerItemType.getObjectType()->getTypeCaster()->getItemOfVectorOf(arrayValue, std::any_cast<int>(indexValue));
+	}
+	return containerItemType.createDefault();
 }
 
 
 CatGenericType CatArrayIndex::typeCheck()
 {
-	CatGenericType baseType = base->typeCheck();
+	CatGenericType baseType = array->typeCheck();
 	CatGenericType indexType = index->typeCheck();
 	if (!baseType.isValidType())
 	{
@@ -107,7 +76,7 @@ CatGenericType CatArrayIndex::typeCheck()
 	{
 		return indexType;
 	}
-	if (memberInfo.isObjectType())
+	if (containerItemType.isObjectType())
 	{
 		if (!baseType.isContainerType())
 		{
@@ -132,7 +101,7 @@ CatGenericType CatArrayIndex::typeCheck()
 
 CatGenericType CatArrayIndex::getType() const
 {
-	return memberInfo;
+	return containerItemType;
 }
 
 
@@ -144,7 +113,7 @@ bool CatArrayIndex::isConst() const
 
 CatTypedExpression* CatArrayIndex::constCollapse(CatRuntimeContext* compileTimeContext)
 {
-	OptimizationHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext));
+	OptimizationHelper::updatePointerIfChanged(array, array->constCollapse(compileTimeContext));
 	OptimizationHelper::updatePointerIfChanged(index, index->constCollapse(compileTimeContext));
 	return this;
 }
@@ -152,7 +121,7 @@ CatTypedExpression* CatArrayIndex::constCollapse(CatRuntimeContext* compileTimeC
 
 CatTypedExpression* CatArrayIndex::getBase() const
 {
-	return base.get();
+	return array.get();
 }
 
 

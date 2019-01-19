@@ -2,6 +2,7 @@
 #include "CatRuntimeContext.h"
 #include "CustomTypeInfo.h"
 #include "CustomTypeInstance.h"
+#include "CustomTypeMemberInfo.h"
 #include "Expression.h"
 #include "ExpressionAny.h"
 #include "LLVMCatIntrinsics.h"
@@ -100,8 +101,7 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "floatTests", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Constant")
 	{
@@ -261,8 +261,7 @@ TEST_CASE("Integer Tests", "[int][operators]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "intTests", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Constant")
 	{
@@ -412,8 +411,7 @@ TEST_CASE("Boolean Tests", "[bool][operators]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "intTests", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("True Constant")
 	{
@@ -659,8 +657,8 @@ TEST_CASE("Operator precedence", "[containers][map]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
+
 	SECTION("Precedence test 1")
 	{
 		Expression<int> testExpression(&context, "3 + 5 * 11 - 8 / 2");
@@ -719,8 +717,7 @@ TEST_CASE("Builtin functions test: ToInt", "[builtins][toint]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_ToInt", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("ToInt_cc")
 	{
@@ -780,8 +777,7 @@ TEST_CASE("Builtin functions test: ToFloat", "[builtins][tofloat]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_ToFloat", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("ToFloat_cc")
 	{
@@ -841,8 +837,7 @@ TEST_CASE("Builtin functions test: ToString", "[builtins][tostring]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_ToString", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("ToString_cc")
 	{
@@ -902,8 +897,7 @@ TEST_CASE("Builtin functions test: ToPrettyString", "[builtins][toprettystring]"
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_ToPrettyString", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("ToPrettyString_cc")
 	{
@@ -963,8 +957,7 @@ TEST_CASE("Builtin functions test: ToFixedLengthString", "[builtins][tofixedleng
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_ToFixedLengthString", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("ToFixedLengthString_cc")
 	{
@@ -1024,8 +1017,7 @@ TEST_CASE("Builtin functions test: ToBool", "[builtins][tobool]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_ToBool", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("ToBool_cc")
 	{
@@ -1115,8 +1107,7 @@ TEST_CASE("Builtin functions test: Sin", "[builtins][sin]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Sin", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Sin_Constant")
 	{
@@ -1176,8 +1167,7 @@ TEST_CASE("Builtin functions test: Cos", "[builtins][cos]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Cos", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Cos_Constant")
 	{
@@ -1237,8 +1227,7 @@ TEST_CASE("Builtin functions test: Tan", "[builtins][tan]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Tan", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Tan_Constant")
 	{
@@ -1298,8 +1287,7 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Abs", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Abs_Constant")
 	{
@@ -1374,8 +1362,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Sqrt", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Sqrt_Constant")
 	{
@@ -1450,8 +1437,7 @@ TEST_CASE("Builtin functions test: Random", "[builtins][rand]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Random", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Random")
 	{
@@ -1476,8 +1462,8 @@ TEST_CASE("Builtin functions test: RandomRange", "[builtins][rand]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_RandomRange", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
+
 	SECTION("RandomRange_float_constant")
 	{
 		Expression<float> testExpression(&context, "rand(101.0f, 102.0f)");
@@ -1577,8 +1563,7 @@ TEST_CASE("Builtin functions test: Round", "[builtins][round]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Round", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Round_cc1")
 	{
@@ -1668,8 +1653,7 @@ TEST_CASE("Builtin functions test: StringRound", "[builtins][stringround]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_StringRound", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("StringRound_cc1")
 	{
@@ -1759,8 +1743,7 @@ TEST_CASE("Builtin functions test: Cap", "[builtins][cap]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Cap", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Cap_cc1")
 	{
@@ -1875,8 +1858,7 @@ TEST_CASE("Builtin functions test: Min", "[builtins][min]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Min", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Min_cc1")
 	{
@@ -1976,8 +1958,7 @@ TEST_CASE("Builtin functions test: Max", "[builtins][max]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Max", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Max_cc1")
 	{
@@ -2077,8 +2058,7 @@ TEST_CASE("Builtin functions test: Log", "[builtins][log]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Log", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Log_Constant")
 	{
@@ -2153,8 +2133,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Pow", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Pow_cc1")
 	{
@@ -2249,8 +2228,7 @@ TEST_CASE("Builtin functions test: Ceil", "[builtins][ceil]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Ceil", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Ceil_Constant")
 	{
@@ -2325,8 +2303,7 @@ TEST_CASE("Builtin functions test: Floor", "[builtins][floor]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Floor", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);	
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Floor_Constant")
 	{
@@ -2401,8 +2378,7 @@ TEST_CASE("Builtin functions test: FindInString", "[builtins][findInString]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_FindInString", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("FindInString_cc1")
 	{
@@ -2502,8 +2478,7 @@ TEST_CASE("Builtin functions test: ReplaceInString", "[builtins][replaceInString
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_ReplaceInString", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("ReplaceInString_cc1")
 	{
@@ -2603,8 +2578,7 @@ TEST_CASE("Builtin functions test: StringLength", "[builtins][stringLength]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_StringLength", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("StringLength_cc1")
 	{
@@ -2694,8 +2668,7 @@ TEST_CASE("Builtin functions test: SubString", "[builtins][subString]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_SubString", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("SubString_cc1")
 	{
@@ -2705,12 +2678,12 @@ TEST_CASE("Builtin functions test: SubString", "[builtins][subString]" )
 	SECTION("SubString_cc2")
 	{
 		Expression<std::string> testExpression(&context, "subString(0, 11.0f, 12)");
-		doChecks(std::string(""), true, true, false, testExpression, context);
+		doChecks(std::string(""), false, true, false, testExpression, context);
 	}
 	SECTION("SubString_cc3")
 	{
 		Expression<std::string> testExpression(&context, "subString(\"9\", 9, 0)");
-		doChecks(std::string(""), true, true, false, testExpression, context);
+		doChecks(std::string(""), false, true, false, testExpression, context);
 	}
 	SECTION("SubString_cc4")
 	{
@@ -2795,8 +2768,7 @@ TEST_CASE("Builtin functions test: Select", "[builtins][select]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Select_cc1")
 	{
@@ -2887,8 +2859,7 @@ TEST_CASE("Indirection tests", "[indirection]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("NestedSelfObject String")
 	{
@@ -3024,6 +2995,47 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		doChecks(0, true, false, false, testExpression, context);
 	}
 
+	SECTION("nested null object String")
+	{
+		Expression<std::string> testExpression(&context, "nullObject.text");
+		doChecks(std::string(""), false, false, false, testExpression, context);
+	}
+	SECTION("nested null object Int")
+	{
+		Expression<int> testExpression(&context, "nullObject.theInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("nested null object Boolean")
+	{
+		Expression<bool> testExpression(&context, "nullObject.no");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("nested null object Float")
+	{
+		Expression<float> testExpression(&context, "nullObject.aFloat");
+		doChecks(0.0f, false, false, false, testExpression, context);
+	}
+	SECTION("nested null object ObjectPtr")
+	{
+		Expression<ReflectedObject*> testExpression(&context, "nullObject.nullObject");
+		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("nested null object Object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.nestedObject");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("nested null object UniquePtr")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.nestedObjectUniquePointer");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("nested null object Error")
+	{
+		Expression<int> testExpression(&context, "nullObject.notAnInt");
+		doChecks(0, true, false, false, testExpression, context);
+	}
+
 	SECTION("badBaseObject Error")
 	{
 		Expression<int> testExpression(&context, "notAPointer.theInt");
@@ -3048,8 +3060,7 @@ TEST_CASE("Containers tests: Vector", "[containers][vector]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Vector get object")
 	{
@@ -3096,6 +3107,11 @@ TEST_CASE("Containers tests: Vector", "[containers][vector]" )
 		Expression<int> testExpression(&context, "reflectableObjectsVector[-theInt].someInt");
 		doChecks(0, false, false, false, testExpression, context);
 	}
+	SECTION("Null vector get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.reflectableObjectsVector[0]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
 	SECTION("Bad vector name error")
 	{
 		Expression<int> testExpression(&context, "badVectorName[0]");
@@ -3115,8 +3131,7 @@ TEST_CASE("Containers tests: Map", "[containers][map]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Map get object")
 	{
@@ -3178,6 +3193,16 @@ TEST_CASE("Containers tests: Map", "[containers][map]" )
 		Expression<int> testExpression(&context, "reflectableObjectsMap[-theInt].someInt");
 		doChecks(0, false, false, false, testExpression, context);
 	}
+	SECTION("Null map get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.reflectableObjectsMap[0]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Null map get object 2")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.reflectableObjectsMap[\"one\"]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
 	SECTION("Bad map name error")
 	{
 		Expression<int> testExpression(&context, "badMapName[\"two\"]");
@@ -3197,8 +3222,7 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context(TypeRegistry::get()->registerType<ReflectedObject>(), nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Get float")
 	{
@@ -3332,12 +3356,12 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		Expression<bool> testExpression(&context, "nestedSelfObject.nestedSelfObject.getBoolean()");
 		doChecks(false, false, false, false, testExpression, context);
 	}
-	SECTION("null base boolean")
+	SECTION("null base string")
 	{
 		Expression<std::string> testExpression(&context, "nestedSelfObject.nestedSelfObject.getString()");
 		doChecks(std::string(""), false, false, false, testExpression, context);
 	}
-	SECTION("null base boolean")
+	SECTION("null base object")
 	{
 		Expression<ReflectedObject*> testExpression(&context, "nestedSelfObject.nestedSelfObject.getObject()");
 		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);
@@ -3359,8 +3383,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	CatGenericType genericType = CatGenericType(objectTypeInfo);
 	CatRuntimeContext context(objectTypeInfo, nullptr, nullptr, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
+	context.setGlobalReference(&reflectedObject);	
 
 	SECTION("Literal Float")
 	{
@@ -3498,25 +3521,41 @@ TEST_CASE("Custom Types", "[customtypes]")
 {
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
+	std::unique_ptr<ReflectedObject> objectUniquePtr(new ReflectedObject());
 	ExpressionErrorManager errorManager;
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	CatGenericType genericType = CatGenericType(objectTypeInfo);
-	TypeRegistry::get()->removeType("MyType2");
 	const char* customTypeName2 = "MyType2";
+	TypeRegistry::get()->removeType(customTypeName2);
 	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName2);
 	TypeRegistry::get()->registerType(customTypeName2, customType);
 	customType->addFloatMember("myFloat", 0.001f);
 	customType->addIntMember("myInt", 54321);
 	customType->addStringMember("myString", "foo");
 	customType->addBoolMember("myBoolean", true);
-	customType->addObjectMember("myObject", ReflectedObject::getTypeName(), 
-								new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, objectTypeInfo), objectTypeInfo);
+	customType->addObjectMember("myObject", ReflectedObject::getTypeName(), &reflectedObject, objectTypeInfo);
+	customType->addObjectMember("myNullObject", ReflectedObject::getTypeName(), &reflectedObject, objectTypeInfo);
+	customType->addObjectMember("myNullObject2", ReflectedObject::getTypeName(), objectUniquePtr.get(), objectTypeInfo);
 	CustomTypeInstance* typeInstance = customType->createInstance();
 
-	CatRuntimeContext context(objectTypeInfo, nullptr, customType, nullptr, "builtinTests_Select", true, &errorManager);
-	ObjectMemberReference<ReflectedObject>* globalsReference = new ObjectMemberReference<ReflectedObject>(&reflectedObject, nullptr, TypeRegistry::get()->registerType<ReflectedObject>());
-	context.setGlobalReference(globalsReference);
-	context.setCustomThisReference(new ObjectMemberReference<CustomTypeInstance>(typeInstance, nullptr, customType));
+	const char* customTypeName3 = "MyType3";
+	TypeRegistry::get()->removeType(customTypeName3);
+	CustomTypeInfo* customType2 = new CustomTypeInfo(customTypeName3);
+	TypeRegistry::get()->registerType(customTypeName3, customType2);
+	customType2->addFloatMember("myNullFloat", 0.001f);
+	customType2->addIntMember("myNullInt", 54321);
+	customType2->addStringMember("myNullString", "foo");
+	customType2->addBoolMember("myNullBoolean", true);
+	customType2->addObjectMember("myNullObject3", ReflectedObject::getTypeName(), &reflectedObject, objectTypeInfo);
+
+	//The case where the pointer is set to null manually
+	static_cast<CustomTypeObjectMemberInfo*>(typeInstance->typeInfo->getMemberInfo("myNullObject"))->assign(std::any((Reflectable*)typeInstance), std::any((Reflectable*)nullptr));
+	//The case where the reflectable handle is set to null through deletion of the observed object.
+	objectUniquePtr.reset(nullptr);
+
+	CatRuntimeContext context(objectTypeInfo, customType2, customType, nullptr, "builtinTests_Select", true, &errorManager);
+	context.setGlobalReference(&reflectedObject);
+	context.setCustomThisReference(typeInstance);
 
 	SECTION("Float Variable")
 	{
@@ -3543,6 +3582,43 @@ TEST_CASE("Custom Types", "[customtypes]")
 		Expression<ReflectedObject*> testExpression(&context, "myObject");
 		doChecks(&reflectedObject, false, false, false, testExpression, context);
 	}
+	SECTION("Null object Variable")
+	{
+		Expression<ReflectedObject*> testExpression(&context, "myNullObject.nullObject");
+		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Null object Variable")
+	{
+		Expression<ReflectedObject*> testExpression(&context, "myNullObject2.nullObject");
+		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+
+	SECTION("Null base float Variable")
+	{
+		Expression<float> testExpression(&context, "myNullFloat");
+		doChecks(0.0f, false, false, false, testExpression, context);
+	}
+	SECTION("Null base int Variable")
+	{
+		Expression<int> testExpression(&context, "myNullInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Null base string Variable")
+	{
+		Expression<std::string> testExpression(&context, "myNullString");
+		doChecks(std::string(""), false, false, false, testExpression, context);
+	}
+	SECTION("Null base boolean Variable")
+	{
+		Expression<bool> testExpression(&context, "myNullBoolean");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Null base object Variable")
+	{
+		Expression<ReflectedObject*> testExpression(&context, "myNullObject3");
+		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+
 	SECTION("Added Float Variable")
 	{
 		customType->addFloatMember("anotherFloat", 1.234f);
@@ -3569,8 +3645,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	}
 	SECTION("Added Object Variable")
 	{
-		customType->addObjectMember("anotherObject", ReflectedObject::getTypeName(), 
-									new ObjectMemberReference<ReflectedObject>(reflectedObject.nestedSelfObject, nullptr, objectTypeInfo), objectTypeInfo);
+		customType->addObjectMember("anotherObject", ReflectedObject::getTypeName(), reflectedObject.nestedSelfObject, objectTypeInfo);
 		Expression<ReflectedObject*> testExpression(&context, "anotherObject");
 		doChecks(reflectedObject.nestedSelfObject, false, false, false, testExpression, context);
 	}

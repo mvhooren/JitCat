@@ -8,9 +8,7 @@
 #pragma once
 
 #include "CatGenericType.h"
-#include "CatValue.h"
 #include "Configuration.h"
-#include "MemberReferencePtr.h"
 #include "Tools.h"
 #include "TypeTraits.h"
 
@@ -37,7 +35,7 @@ struct MemberFunctionInfo
 {
 	MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): memberFunctionName(memberFunctionName), returnType(returnType) {};
 	virtual ~MemberFunctionInfo() {}
-	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) { return CatValue(); }
+	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
 	virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
 	inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
 
@@ -97,7 +95,7 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) override
+	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) override
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -105,17 +103,16 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 
 
 	template<std::size_t... Is>
-	CatValue callWithIndexed(const std::vector<CatValue>& parameters, MemberReferencePtr& base, Indices<Is...>)
+	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
 	{
-		if (!base.isNull()
-			&& base->getParentObject() != nullptr)
+		T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+		if (baseObject != nullptr)
 		{
-			T* baseObject = static_cast<T*>(base->getParentObject());
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
 			return TypeTraits<U>::getCatValue((baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...));
 		}
-		return CatValue(CatError("Parent of function call is null."));
+		return TypeTraits<U>::toGenericType().createDefault();;
 	}
 
 
@@ -157,7 +154,7 @@ struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) 
+	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) 
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -165,17 +162,16 @@ struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 
 
 	template<std::size_t... Is>
-	CatValue callWithIndexed(const std::vector<CatValue>& parameters, MemberReferencePtr& base, Indices<Is...>)
+	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
 	{
-		if (!base.isNull()
-			&& base->getParentObject() != nullptr)
+		T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+		if (baseObject != nullptr)
 		{
-			T* baseObject = static_cast<T*>(base->getParentObject());
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
 			(baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...);
 		}
-		return CatValue(CatError("Parent of function call is null."));
+		return TypeTraits<void>::toGenericType().createDefault();
 	}
 
 
@@ -217,7 +213,7 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters)
+	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters)
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -225,17 +221,16 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 
 
 	template<std::size_t... Is>
-	CatValue callWithIndexed(const std::vector<CatValue>& parameters, MemberReferencePtr& base, Indices<Is...>) const
+	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const
 	{
-		if (!base.isNull()
-			&& base->getParentObject() != nullptr)
+		T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+		if (baseObject != nullptr)
 		{
-			T* baseObject = static_cast<T*>(base->getParentObject());
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
 			return TypeTraits<U>::getCatValue((baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...));
 		}
-		return CatValue(CatError("Parent of function call is null."));
+		return TypeTraits<U>::toGenericType().createDefault();
 	}
 
 
@@ -277,7 +272,7 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual CatValue call(MemberReferencePtr& base, const std::vector<CatValue>& parameters) 
+	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) 
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -285,17 +280,17 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 
 
 	template<std::size_t... Is>
-	CatValue callWithIndexed(const std::vector<CatValue>& parameters, MemberReferencePtr& base, Indices<Is...>) const
+	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const
 	{
-		if (!base.isNull()
-			&& base->getParentObject() != nullptr)
+		T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+		if (baseObject != nullptr)
 		{
-			T* baseObject = static_cast<T*>(base->getParentObject());
+			
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
 			(baseObject->*function)(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is])...);
 		}
-		return CatValue(CatError("Parent of function call is null."));
+		return TypeTraits<void>::toGenericType().createDefault();
 	}
 
 

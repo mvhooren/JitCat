@@ -22,7 +22,7 @@ public:
 	virtual bool isConst() const override final;
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 	virtual CatASTNodeType getNodeType() override final;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
+	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 	virtual CatGenericType typeCheck() override final;
 	RootTypeSource getSource() const;
 	const TypeMemberInfo* getMemberInfo() const;

@@ -3,7 +3,7 @@
 #include "LLVMJit.h"
 #include "LLVMTypes.h"
 #include "CatRuntimeContext.h"
-#include "MemberReference.h"
+#include "Tools.h"
 
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Function.h>

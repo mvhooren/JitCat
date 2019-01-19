@@ -33,8 +33,6 @@ set(Source_Cat
 	${JitCatIncludePath}/CatTokenizer.h
 	CatType.cpp
 	${JitCatIncludePath}/CatType.h
-	CatValue.cpp
-	${JitCatIncludePath}/CatValue.h
 	${JitCatIncludePath}/RootTypeSource.h
 )
 
@@ -109,9 +107,6 @@ set(Source_Cat_Expression
 	${JitCatIncludePath}/ExpressionHeaderImplementation.h
 	ExpressionHelperFunctions.cpp
 	${JitCatIncludePath}/ExpressionHelperFunctions.h
-	ExpressionTools.cpp
-	${JitCatIncludePath}/ExpressionTools.h
-	TypeTraits.cpp
 	${JitCatIncludePath}/TypeTraits.h
 	${JitCatIncludePath}/TypeTraitsHeaderImplementation.h
 )
@@ -188,18 +183,6 @@ set(Source_Reflection_Enums
 	${JitCatIncludePath}/SpecificMemberType.h
 )
 
-set(Source_Reflection_MemberReference
-	${JitCatIncludePath}/BasicTypeMemberReference.h
-	${JitCatIncludePath}/BasicTypeMemberReferenceHeaderImplementation.h
-	${JitCatIncludePath}/ContainerMemberReference.h
-	${JitCatIncludePath}/ContainerMemberReferenceHeaderImplementation.h
-	MemberReference.cpp
-	${JitCatIncludePath}/MemberReference.h
-	MemberReferencePtr.cpp
-	${JitCatIncludePath}/MemberReferencePtr.h
-	${JitCatIncludePath}/ObjectMemberReference.h
-	${JitCatIncludePath}/ObjectMemberReferenceHeaderImplementation.h
-)
 
 set(Source_Reflection_Serialisation
 	XMLHelper.cpp
@@ -282,7 +265,6 @@ source_group(Grammar FILES ${Source_Grammar})
 source_group(Parser FILES ${Source_Parser})
 source_group(Reflection FILES ${Source_Reflection})
 source_group(Reflection\\Enums FILES ${Source_Reflection_Enums})
-source_group(Reflection\\MemberReference FILES ${Source_Reflection_MemberReference})
 source_group(Reflection\\Serialisation FILES ${Source_Reflection_Serialisation})
 source_group(Reflection\\TypeInfo FILES	${Source_Reflection_TypeInfo})
 source_group(Tokenizer FILES ${Source_Tokenizer})

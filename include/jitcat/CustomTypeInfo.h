@@ -8,7 +8,6 @@
 #pragma once
 
 class CustomTypeInstance;
-class MemberReference;
 #include "TypeInfo.h"
 
 #include <set>
@@ -31,7 +30,7 @@ public:
 	TypeMemberInfo* addIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 	TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
 	TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
-	TypeMemberInfo* addObjectMember(const std::string& memberName, const std::string& typeName, MemberReference* defaulValue, TypeInfo* objectTypeInfo, bool isWritable = true, bool isConst = false);
+	TypeMemberInfo* addObjectMember(const std::string& memberName, const std::string& typeName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, bool isWritable = true, bool isConst = false);
 
 	//This will not shrink the typeSize, only remove the member from the list.
 	//The data will only shrink after a restart of the program.
@@ -48,8 +47,8 @@ public:
 private:
 	//Returns a pointer to the start of the newly added size
 	unsigned char* increaseDataSize(unsigned int amount);
-	static void increaseDataSize(unsigned char*& data, unsigned int amount, unsigned int currentSize);
-	unsigned char* createDataCopy(unsigned char* otherData);
+	void increaseDataSize(unsigned char*& data, unsigned int amount, unsigned int currentSize);
+	unsigned char* createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy);
 
 private:
 	CustomTypeInstance* defaultInstance;

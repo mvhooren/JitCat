@@ -1,6 +1,5 @@
 #include "LLVMCatIntrinsics.h"
 #include "CatRuntimeContext.h"
-#include "MemberReference.h"
 #include "Tools.h"
 
 #include <cmath>
@@ -8,13 +7,13 @@
 
 Reflectable* LLVMCatIntrinsics::getThisPointerFromContext(CatRuntimeContext* context)
 {
-	return context->getThisReference().getPointer()->getParentObject();
+	return context->getThisReference();
 }
 
 
 Reflectable* LLVMCatIntrinsics::getCustomThisPointerFromContext(CatRuntimeContext* context)
 {
-	return context->getCustomThisReference().getPointer()->getParentObject();
+	return context->getCustomThisReference();
 }
 
 

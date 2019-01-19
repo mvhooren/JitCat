@@ -11,13 +11,14 @@
 #include "CustomTypeInfo.h"
 #include "Tools.h"
 
+#include <cassert>
+
 
 CatIdentifier::CatIdentifier(const std::string& name, CatRuntimeContext* context):
 	name(name),
 	compileTimeContext(context),
 	memberInfo(nullptr),
-	source(RootTypeSource::None),
-	type(CatType::Error)
+	source(RootTypeSource::None)
 {
 	std::string lowerName = Tools::toLowerCase(name);
 	if (context != nullptr)
@@ -76,27 +77,16 @@ CatASTNodeType CatIdentifier::getNodeType()
 }
 
 
-CatValue CatIdentifier::execute(CatRuntimeContext* runtimeContext)
+std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		MemberReferencePtr rootReference = runtimeContext->getRootReference(source);
-		MemberReferencePtr reference = memberInfo->getMemberReference(rootReference);
-		if (!reference.isNull())
-		{
-			switch (type.getCatType())
-			{
-				case CatType::Int:		
-				case CatType::Float:	
-				case CatType::String:	
-				case CatType::Bool:	
-				case CatType::Object:	return CatValue(reference);
-				case CatType::Void:
-					return CatValue();
-			}
-		}
+		Reflectable* rootObject = runtimeContext->getRootReference(source);
+
+		return memberInfo->getMemberReference(std::any(rootObject));
 	}
-	return CatValue(CatError(std::string("Variable not found:") + name));
+	assert(false);
+	return std::any();
 }
 
 

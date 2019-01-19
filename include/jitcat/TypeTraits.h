@@ -9,10 +9,10 @@
 
 #include "CatGenericType.h"
 #include "CatType.h"
-#include "CatValue.h"
 #include "Tools.h"
 #include "TypeRegistry.h"
 
+#include <any>
 #include <map>
 #include <memory>
 #include <string>
@@ -31,10 +31,9 @@ public:
 	static inline CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
 	static const char* getTypeName() { return T::getTypeName(); }
-	static inline T* getValueFromMemberReference(MemberReference* value);
-	static CatValue getCatValue(void) { return CatValue();}
-	static CatValue getCatValue(const T& value);
-	static T* getValue(const CatValue& value)  { return TypeTraits<T>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
+	static std::any getCatValue(void) { return std::any();}
+	static std::any getCatValue(const T& value);
+	static T* getValue(const std::any& value)  { return TypeTraits<T>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<T>();}
 
 	typedef T type;
@@ -50,12 +49,10 @@ public:
 	static CatGenericType toGenericType() { return CatGenericType(CatType::Void); }
 	static bool isSerialisableContainer() { return false; }
 	template <typename U>
-	static CatValue getCatValue(const U& param) { return CatValue();}
-	static inline void getValueFromMemberReference(MemberReference* value) {return;};
-	//static CatValue getCatValue(int) { return CatValue();}
+	static std::any getCatValue(const U& param) { return std::any();}
 
 	static void getValue() { return;}
-	static void getValue(const CatValue& value) { return;}
+	static void getValue(const std::any& value) { return;}
 
 	static const char* getTypeName()
 	{
@@ -75,13 +72,12 @@ public:
 	static CatType getCatType() { return CatType::Float; }
 	static CatGenericType toGenericType() { return CatGenericType(CatType::Float); }
 	static bool isSerialisableContainer() { return false; }
-	static CatValue getCatValue(float value) { return CatValue(value);}
-	static float getValue(const CatValue& value) { return value.getFloatValue();}
+	static std::any getCatValue(float value) { return std::any(value);}
+	static float getValue(const std::any& value) { return std::any_cast<float>(value);}
 	static const char* getTypeName()
 	{
 		return "float"; 
 	}
-	static float getValueFromMemberReference(MemberReference* value); 
 
 
 	typedef float type;
@@ -96,13 +92,12 @@ public:
 	static CatType getCatType() { return CatType::Int; }
 	static CatGenericType toGenericType() { return CatGenericType(CatType::Int); }
 	static bool isSerialisableContainer() { return false; }
-	static CatValue getCatValue(int value) { return CatValue(value);}
-	static int getValue(const CatValue& value) { return value.getIntValue();}
+	static std::any getCatValue(int value) { return std::any(value);}
+	static int getValue(const std::any& value) { return std::any_cast<int>(value);}
 	static const char* getTypeName()
 	{
 		return "int";
 	}
-	static int getValueFromMemberReference(MemberReference* value);
 
 	typedef int type;
 	typedef int cachedType;
@@ -116,13 +111,12 @@ public:
 	static CatType getCatType() { return CatType::Bool; }
 	static CatGenericType toGenericType() { return CatGenericType(CatType::Bool); }
 	static bool isSerialisableContainer() { return false; }
-	static CatValue getCatValue(bool value) { return CatValue(value);}
-	static bool getValue(const CatValue& value) { return value.getBoolValue();}
+	static std::any getCatValue(bool value) { return std::any(value);}
+	static bool getValue(const std::any& value) { return std::any_cast<bool>(value);}
 	static const char* getTypeName()
 	{
 		return "bool";
 	}
-	static bool getValueFromMemberReference(MemberReference* value);
 
 	typedef bool type;
 	typedef bool cachedType;
@@ -136,13 +130,12 @@ public:
 	static CatType getCatType() { return CatType::String; }
 	static CatGenericType toGenericType() { return CatGenericType(CatType::String); }
 	static bool isSerialisableContainer() { return false; }
-	static CatValue getCatValue(const std::string& value) { return CatValue(value);}
-	static std::string getValue(const CatValue& value) { return value.getStringValue();}
+	static std::any getCatValue(const std::string& value) { return std::any(value);}
+	static std::string getValue(const std::any& value) { return std::any_cast<std::string>(value);}
 	static const char* getTypeName()
 	{
 		return "string";
 	}
-	static std::string getValueFromMemberReference(MemberReference* value);
 
 	typedef std::string type;
 	typedef std::string cachedType;
@@ -157,9 +150,8 @@ public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
 	static const char* getTypeName() { return U::getTypeName(); }
-	static CatValue getCatValue(std::unique_ptr<U>& value);
-	static U* getValue(const CatValue& value) { return TypeTraits<std::unique_ptr<U>>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
-	static inline U* getValueFromMemberReference(MemberReference* value);
+	static std::any getCatValue(std::unique_ptr<U>& value);
+	static U* getValue(const std::any& value) {return static_cast<U*>(std::any_cast<Reflectable*>(value));}
 	static U* getPointer(std::unique_ptr<U>& value);
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<U>();}
 
@@ -176,10 +168,9 @@ public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
 	static const char* getTypeName() { return U::getTypeName(); }
-	static CatValue getCatValue(U* value);
-	static U* getValue(const CatValue& value) { return TypeTraits<U*>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
+	static std::any getCatValue(U* value);
+	static U* getValue(const std::any& value) {return static_cast<U*>(std::any_cast<Reflectable*>(value));}
 	static U* getPointer(U* value) {return value;};
-	static inline U* getValueFromMemberReference(MemberReference* value);
 	static TypeInfo* getTypeInfo() {return TypeRegistry::get()->registerType<U>();}
 
 	typedef U type;
@@ -195,9 +186,8 @@ public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return true; }
 	static const char* getTypeName() { return ""; }
-	static CatValue getCatValue(void) { return CatValue();}
-	static std::vector<ItemType>& getValue(const CatValue& value) { return TypeTraits<std::vector<ItemType>>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
-	static inline std::vector<ItemType>& getValueFromMemberReference(MemberReference* value);
+	static std::any getCatValue(void) { return std::any();}
+	static std::vector<ItemType>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType>*>(value)}
 
 	typedef ItemType type;
 	typedef std::vector<ItemType> cachedType;
@@ -212,12 +202,12 @@ public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return true; }
 	static const char* getTypeName() { return ""; }
-	static CatValue getCatValue(void) { return CatValue();}
-	static std::map<std::string, ItemType>& getValue(const CatValue& value) { return TypeTraits<std::map<std::string, ItemType>>::getValueFromMemberReference(value.getCustomTypeValue().getPointer());}
-	static inline std::map<std::string, ItemType>& getValueFromMemberReference(MemberReference* value);
+	static std::any getCatValue(void) { return std::any();}
+	static std::map<std::string, ItemType>& getValue(const std::any& value) { return *std::any_cast<std::map<std::string, ItemType>*>(value);}
 
 	typedef ItemType type;
 	typedef std::map<std::string, ItemType> cachedType;
 };
+
 
 #include "TypeTraitsHeaderImplementation.h"

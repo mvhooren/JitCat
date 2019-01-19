@@ -14,14 +14,15 @@ class ErrorContext;
 class ExpressionErrorManager;
 class LLVMCodeGenerator;
 struct MemberFunctionInfo;
-class MemberReference;
+class Reflectable;
 class TypeInfo;
 struct TypeMemberInfo;
 #include "CatType.h"
-#include "MemberReferencePtr.h"
+#include "ReflectableHandle.h"
 #include "RootTypeSource.h"
 #include "RuntimeContext.h"
 
+#include <any>
 #include <memory>
 #include <string>
 #include <vector>
@@ -55,15 +56,16 @@ public:
 	TypeInfo* getCustomThisType() const;
 	TypeInfo* getCustomGlobalsType() const;
 
-	MemberReferencePtr getGlobalReference() const;
-	MemberReferencePtr getThisReference() const;
-	MemberReferencePtr getCustomThisReference() const;
-	MemberReferencePtr getRootReference(RootTypeSource source) const;
+	Reflectable* getGlobalReference() const;
+	Reflectable* getThisReference() const;
+	Reflectable* getCustomThisReference() const;
+	Reflectable* getRootReference(RootTypeSource source) const;
+	TypeInfo* getRootType(RootTypeSource source) const;
 
-	void setGlobalReference(MemberReferencePtr globalReference_);
-	void setThisReference(MemberReferencePtr thisReference_);
-	void setCustomThisReference(MemberReferencePtr customThisReference_);
-	void setCustomGlobalsReference(MemberReferencePtr customGlobalsReference_);
+	void setGlobalReference(Reflectable* globalReference_);
+	void setThisReference(Reflectable* thisReference_);
+	void setCustomThisReference(Reflectable* customThisReference_);
+	void setCustomGlobalsReference(Reflectable* customGlobalsReference_);
 
 	ExpressionErrorManager* getErrorManager() const;
 	void pushErrorContext(ErrorContext* context);
@@ -83,13 +85,13 @@ private:
 	int nextFunctionIndex;
 	//These are not owned here
 	TypeInfo* globalType;
-	MemberReferencePtr globalReference;
+	ReflectableHandle globalReference;
 	TypeInfo* thisType;
-	MemberReferencePtr thisReference;
+	ReflectableHandle thisReference;
 	TypeInfo* customThisType;
-	MemberReferencePtr customThisReference;
+	ReflectableHandle customThisReference;
 	TypeInfo* customGlobalsType;
-	MemberReferencePtr customGlobalsReference;
+	ReflectableHandle customGlobalsReference;
 
 	bool ownsErrorManager;
 	ExpressionErrorManager* errorManager;

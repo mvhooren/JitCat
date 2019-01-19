@@ -12,7 +12,6 @@ class CatTypedExpression;
 struct SLRParseResult;
 #include "CatGenericType.h"
 #include "CatType.h"
-#include "CatValue.h"
 #include "ReflectableHandle.h"
 
 #include <memory>
