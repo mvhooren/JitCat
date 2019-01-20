@@ -45,7 +45,7 @@ public:
 
 	virtual std::any cast(uintptr_t pointer) const override final
 	{
-		return std::any(reinterpret_cast<ObjectT*>(pointer));
+		return std::any(static_cast<Reflectable*>(reinterpret_cast<ObjectT*>(pointer)));
 	}
 
 

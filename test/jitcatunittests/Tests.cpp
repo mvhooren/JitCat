@@ -3481,7 +3481,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 		doCommonChecks(&testExpression, false, false, false, context);
 		CHECK(testExpression.getType() == genericType);
 		std::any value = testExpression.getValue(&context);
-		ReflectedObject* castValue = std::any_cast<ReflectedObject*>(value);
+		ReflectedObject* castValue = static_cast<ReflectedObject*>(std::any_cast<Reflectable*>(value));
 		REQUIRE_FALSE(castValue == nullptr);
 		CHECK(castValue == reflectedObject.nestedSelfObject);
 	}
