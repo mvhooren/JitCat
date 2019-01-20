@@ -107,6 +107,7 @@ bool CatGenericType::isUnknown() const
 bool CatGenericType::isValidType() const
 {
 	return specificType != SpecificType::Error 
+		   && specificType != SpecificType::None 
 		   && (specificType != SpecificType::CatType || catType != CatType::Unknown)
 		   && (specificType != SpecificType::ObjectType || nestedType != nullptr);
 }

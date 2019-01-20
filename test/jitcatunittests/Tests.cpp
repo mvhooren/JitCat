@@ -3533,9 +3533,9 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType->addIntMember("myInt", 54321);
 	customType->addStringMember("myString", "foo");
 	customType->addBoolMember("myBoolean", true);
-	customType->addObjectMember("myObject", ReflectedObject::getTypeName(), &reflectedObject, objectTypeInfo);
-	customType->addObjectMember("myNullObject", ReflectedObject::getTypeName(), &reflectedObject, objectTypeInfo);
-	customType->addObjectMember("myNullObject2", ReflectedObject::getTypeName(), objectUniquePtr.get(), objectTypeInfo);
+	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
+	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
+	customType->addObjectMember("myNullObject2", objectUniquePtr.get(), objectTypeInfo);
 	CustomTypeInstance* typeInstance = customType->createInstance();
 
 	const char* customTypeName3 = "MyType3";
@@ -3546,7 +3546,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType2->addIntMember("myNullInt", 54321);
 	customType2->addStringMember("myNullString", "foo");
 	customType2->addBoolMember("myNullBoolean", true);
-	customType2->addObjectMember("myNullObject3", ReflectedObject::getTypeName(), &reflectedObject, objectTypeInfo);
+	customType2->addObjectMember("myNullObject3", &reflectedObject, objectTypeInfo);
 
 	//The case where the pointer is set to null manually
 	std::any instanceAny((Reflectable*)typeInstance);
@@ -3648,7 +3648,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	}
 	SECTION("Added Object Variable")
 	{
-		customType->addObjectMember("anotherObject", ReflectedObject::getTypeName(), reflectedObject.nestedSelfObject, objectTypeInfo);
+		customType->addObjectMember("anotherObject", reflectedObject.nestedSelfObject, objectTypeInfo);
 		Expression<ReflectedObject*> testExpression(&context, "anotherObject");
 		doChecks(reflectedObject.nestedSelfObject, false, false, false, testExpression, context);
 	}

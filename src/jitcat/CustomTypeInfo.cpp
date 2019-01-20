@@ -198,10 +198,9 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 }
 
 
-TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, const std::string& memberTypeName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, bool isWritable, bool isConst)
+TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, bool isWritable, bool isConst)
 {
-	if (defaultValue != nullptr
-		&& Tools::toLowerCase(objectTypeInfo->getTypeName()) == Tools::toLowerCase(memberTypeName))
+	if (defaultValue != nullptr)
 	{
 		isTriviallyCopyable = false;
 		unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
