@@ -110,8 +110,16 @@ inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 		{
 			if (expressionAST != nullptr)
 			{
-				std::any value = expressionAST->execute(runtimeContext);
-				return getActualValue(value);
+				if constexpr (!std::is_same<void, T>::value)
+				{
+					std::any value = expressionAST->execute(runtimeContext);
+					return getActualValue(value);
+				}
+				else
+				{
+					expressionAST->execute(runtimeContext);
+					return;
+				}
 			}
 			else
 			{

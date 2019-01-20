@@ -98,7 +98,7 @@ inline void CustomBasicTypeMemberInfo<std::string>::assign(std::any& base, const
 template<typename T>
 inline void CustomBasicTypeMemberInfo<T>::assign(std::any& base, const T& valueToSet)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base);
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
 	if (baseObject != nullptr)
 	{
 		T& value = *reinterpret_cast<T*>(&baseObject->data[memberOffset]);
@@ -110,7 +110,7 @@ inline void CustomBasicTypeMemberInfo<T>::assign(std::any& base, const T& valueT
 
 inline std::any CustomTypeObjectMemberInfo::getMemberReference(Reflectable* base)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base);
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
 	if (baseObject != nullptr)
 	{
 		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseObject->data[memberOffset]);
