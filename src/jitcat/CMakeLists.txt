@@ -28,12 +28,12 @@ set(Source_Cat
 	${JitCatIncludePath}/CatInfixOperatorType.h
 	CatRuntimeContext.cpp
 	${JitCatIncludePath}/CatRuntimeContext.h
+	${JitCatIncludePath}/CatScopeID.h
 	${JitCatIncludePath}/CatTokenIds.h
 	CatTokenizer.cpp
 	${JitCatIncludePath}/CatTokenizer.h
 	CatType.cpp
 	${JitCatIncludePath}/CatType.h
-	${JitCatIncludePath}/RootTypeSource.h
 )
 
 set(Source_Cat_ASTNodes

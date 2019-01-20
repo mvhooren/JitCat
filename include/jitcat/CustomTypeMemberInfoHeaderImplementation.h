@@ -3,9 +3,9 @@
 #include "ReflectableHandle.h"
 
 template<>
-inline std::any CustomBasicTypeMemberInfo<std::string>::getMemberReference(std::any& base)
+inline std::any CustomBasicTypeMemberInfo<std::string>::getMemberReference(Reflectable* base)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base);
 	if (baseObject != nullptr)
 	{
 		std::string* stringPointer;
@@ -18,9 +18,9 @@ inline std::any CustomBasicTypeMemberInfo<std::string>::getMemberReference(std::
 
 
 template<typename T>
-inline std::any CustomBasicTypeMemberInfo<T>::getMemberReference(std::any& base)
+inline std::any CustomBasicTypeMemberInfo<T>::getMemberReference(Reflectable* base)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base);
 	if (baseObject != nullptr)
 	{
 		T& value = *reinterpret_cast<T*>(&baseObject->data[memberOffset]);
@@ -98,7 +98,7 @@ inline void CustomBasicTypeMemberInfo<std::string>::assign(std::any& base, const
 template<typename T>
 inline void CustomBasicTypeMemberInfo<T>::assign(std::any& base, const T& valueToSet)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base);
 	if (baseObject != nullptr)
 	{
 		T& value = *reinterpret_cast<T*>(&baseObject->data[memberOffset]);
@@ -108,9 +108,9 @@ inline void CustomBasicTypeMemberInfo<T>::assign(std::any& base, const T& valueT
 
 
 
-inline std::any CustomTypeObjectMemberInfo::getMemberReference(std::any& base)
+inline std::any CustomTypeObjectMemberInfo::getMemberReference(Reflectable* base)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
+	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base);
 	if (baseObject != nullptr)
 	{
 		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseObject->data[memberOffset]);

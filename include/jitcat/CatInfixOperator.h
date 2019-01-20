@@ -37,7 +37,7 @@ private:
 	inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
 
 	template<typename T, typename U, typename V>
-	inline std::any calculateScalarExpression(const T& lValue, const U& rValue, bool allowDivideByZero);
+	inline std::any calculateScalarExpression(const T& lValue, const U& rValue);
 	
 	template<typename T, typename U>
 	inline std::any calculateStringExpression(const T& lValue, const U& rValue);

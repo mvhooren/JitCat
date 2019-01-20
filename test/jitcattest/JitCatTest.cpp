@@ -142,12 +142,11 @@ int MAIN(int argc, char* argv[])
 	CustomTypeInstance* typeInstance = customType->createInstance();
 
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context(TypeRegistry::get()->getTypeInfo("Root"), nullptr, customType, globalsRoot, "myObject", true, &errorManager);
-	context.setCustomThisReference(typeInstance);
-	context.setCustomGlobalsReference(globalsInstance);
-
+	CatRuntimeContext context("myObject", &errorManager);
+	context.addCustomTypeScope(globalsRoot, globalsInstance, true);
+	context.addCustomTypeScope(customType, typeInstance);
 	ReflectionTestRoot root;
-	context.setGlobalReference(&root);
+	context.addScope(&root, true);
 
 	SLRParser* parser = grammar.createSLRParser();
 	

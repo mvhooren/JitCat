@@ -9,8 +9,7 @@
 #include "ReflectableHandle.h"
 
 
-Reflectable::Reflectable(bool handleSetEvents):
-	handleSetEvents(handleSetEvents)
+Reflectable::Reflectable()
 {
 }
 
@@ -40,10 +39,4 @@ void Reflectable::removeObserver(ReflectableHandle* observer)
 			break;
 		}
 	}
-}
-
-
-bool Reflectable::getHandleSetEvents() const
-{
-	return handleSetEvents;
 }

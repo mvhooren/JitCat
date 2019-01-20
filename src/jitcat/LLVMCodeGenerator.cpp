@@ -255,8 +255,8 @@ void LLVMCodeGenerator::compileAndTest(CatRuntimeContext* context, const std::st
 
 llvm::Value* LLVMCodeGenerator::generate(CatIdentifier* identifier, LLVMCompileTimeContext* context)
 {
-	RootTypeSource source = identifier->getSource();
-	llvm::Value* parentObjectAddress = getBaseAddress(source, context);
+	CatScopeID scopeId = identifier->getScopeId();
+	llvm::Value* parentObjectAddress = getBaseAddress(scopeId, context);
 
 	const TypeMemberInfo* memberInfo = identifier->getMemberInfo();
 
@@ -786,52 +786,36 @@ llvm::Value* LLVMCodeGenerator::generate(CatArrayIndex* arrayIndex, LLVMCompileT
 
 llvm::Value* LLVMCodeGenerator::generate(CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context)
 {
-	return getBaseAddress(scopeRoot->getSource(), context);
+	return getBaseAddress(scopeRoot->getScopeId(), context);
 }
 
 
-llvm::Value* LLVMCodeGenerator::getBaseAddress(RootTypeSource source, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTimeContext* context)
 {
 	llvm::Value* parentObjectAddress = nullptr;
-	switch (source)
+	if (context->catContext->isStaticScope(scopeId))
 	{
-		case RootTypeSource::Global:
-		{
-			Reflectable* object = context->catContext->getGlobalReference();
-			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
-		} break;
-		case RootTypeSource::CustomGlobals:
-		{
-			Reflectable* object = context->catContext->getRootReference(RootTypeSource::CustomGlobals);
-			parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
-		} break;
-		case RootTypeSource::This:
-		case RootTypeSource::CustomThis:
-		{
-			//Get the CatRuntimeContext argument from the current function
-			assert(context->currentFunction != nullptr);
-			assert(context->currentFunction->arg_size() > 0);
-			llvm::Argument* argument = context->currentFunction->arg_begin();
-			if (context->currentFunction->arg_size() == 2)
-			{
-				argument = context->currentFunction->arg_begin() + 1;
-			}
-			assert(argument->getName() == "RuntimeContext");
-			assert(argument->getType() == LLVMTypes::pointerType);
-			llvm::Value* address = nullptr;
-			if (source == RootTypeSource::This)
-			{
-				address = helper->createCall(context, &LLVMCatIntrinsics::getThisPointerFromContext, {argument}, "getThisPointerFromContext"); 
-				
-			}
-			else if (source == RootTypeSource::CustomThis)
-			{
-				address = helper->createCall(context, &LLVMCatIntrinsics::getCustomThisPointerFromContext, {argument}, "getCustomThisPointerFromContext"); 
-			}
-			assert(address != nullptr);
-			parentObjectAddress = helper->convertToIntPtr(address, "CustomThis_IntPtr");
-		} break;
+		Reflectable* object = context->catContext->getScopeObject(scopeId);
+		parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
 	}
+	else
+	{
+		//Get the CatRuntimeContext argument from the current function
+		assert(context->currentFunction != nullptr);
+		assert(context->currentFunction->arg_size() > 0);
+		llvm::Argument* argument = context->currentFunction->arg_begin();
+		if (context->currentFunction->arg_size() == 2)
+		{
+			argument = context->currentFunction->arg_begin() + 1;
+		}
+		assert(argument->getName() == "RuntimeContext");
+		assert(argument->getType() == LLVMTypes::pointerType);
+		llvm::Value* scopeIdValue = context->helper->createConstant((int)scopeId);
+		llvm::Value* address = address = helper->createCall(context, &LLVMCatIntrinsics::getScopePointerFromContext, {argument, scopeIdValue}, "getScopePointerFromContext"); 
+		assert(address != nullptr);
+		parentObjectAddress = helper->convertToIntPtr(address, "CustomThis_IntPtr");
+	}
+
 	return parentObjectAddress;
 }
 

@@ -7,6 +7,7 @@
 
 #include "CatRuntimeContext.h"
 #include "CustomTypeInfo.h"
+#include "CustomTypeInstance.h"
 #include "ErrorContext.h"
 #include "ExpressionErrorManager.h"
 #ifdef ENABLE_LLVM
@@ -17,16 +18,8 @@
 #include <sstream>
 
 
-CatRuntimeContext::CatRuntimeContext(TypeInfo* globalType, TypeInfo* thisType, 
-									 TypeInfo* customThisType, TypeInfo* customGlobalsType,
-									 const std::string& contextName, bool isRuntimeContext, 
-									 ExpressionErrorManager* errorManager):
-	globalType(globalType),
-	thisType(thisType),
+CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionErrorManager* errorManager):
 	contextName(contextName),
-	isRuntimeContext(isRuntimeContext),
-	customThisType(customThisType),
-	customGlobalsType(customGlobalsType),
 	errorManager(errorManager),
 	ownsErrorManager(false),
 #ifdef ENABLE_LLVM
@@ -44,10 +37,6 @@ CatRuntimeContext::CatRuntimeContext(TypeInfo* globalType, TypeInfo* thisType,
 
 CatRuntimeContext::~CatRuntimeContext()
 {
-	for (unsigned int i = 0; i < destructionListeners.size(); i++)
-	{
-		destructionListeners[i]->onContextDestroyed(this);
-	}
 	if (ownsErrorManager)
 	{
 		delete errorManager;
@@ -73,129 +62,69 @@ std::string CatRuntimeContext::getContextName()
 }
 
 
-bool CatRuntimeContext::isRunTimeContext() const
+CatScopeID CatRuntimeContext::addScope(TypeInfo* typeInfo, Reflectable* scopeObject, bool isStatic)
 {
-	return isRuntimeContext;
+	return createScope(scopeObject, typeInfo, isStatic);
 }
 
 
-void CatRuntimeContext::registerDestructionListener(const CatRuntimeContextDestructionListener* destructionListener) const 
+CatScopeID CatRuntimeContext::addCustomTypeScope(CustomTypeInfo* typeInfo, CustomTypeInstance* scopeObject, bool isStatic)
 {
-	std::size_t numListeners = destructionListeners.size();
-	for (std::size_t i = 0; i < numListeners; i++)
+	assert(typeInfo != nullptr);
+	//If this is a static scope, scopeObject must not be nullptr.
+	assert(!isStatic || scopeObject != nullptr);
+	if (scopeObject != nullptr)
 	{
-		if (destructionListeners[i] == destructionListener)
-		{
-			return;
-		}
+		//The provided scopeObject must be of the same type as the typeInfo.
+		assert(scopeObject->typeInfo == typeInfo);
 	}
-	destructionListeners.push_back(destructionListener);
+	return createScope(scopeObject, typeInfo, isStatic);	
 }
 
 
-void CatRuntimeContext::deregisterDestructionListener(const CatRuntimeContextDestructionListener* destructionListener) const
+int CatRuntimeContext::getNumScopes() const
 {
-	std::size_t numListeners = destructionListeners.size();
-	for (std::size_t i = 0; i < numListeners; i++)
+	return (int)scopes.size();
+}
+
+
+void CatRuntimeContext::removeScope(CatScopeID id)
+{
+	assert(id >= 0 && id < scopes.size());
+	scopes[id].reset(nullptr);
+}
+
+
+void CatRuntimeContext::setScopeObject(CatScopeID id, Reflectable* scopeObject)
+{
+	assert(id >= 0 && id < scopes.size());
+	Scope* scope = scopes[id].get();
+	if (scope->scopeType->isCustomType())
 	{
-		if (destructionListeners[i] == destructionListener)
-		{
-			destructionListeners.erase(destructionListeners.begin() + (int)i);
-			return;
-		}
+		assert(static_cast<CustomTypeInstance*>(scopeObject)->typeInfo == scope->scopeType);
 	}
+	scope->scopeObject = scopeObject;
 }
 
 
-TypeInfo* CatRuntimeContext::getGlobalType() const
+bool CatRuntimeContext::isStaticScope(CatScopeID id) const
 {
-	return globalType;
+	assert(id >= 0 && id < scopes.size());
+	return scopes[id]->isStatic;
 }
 
 
-TypeInfo* CatRuntimeContext::getThisType() const
+Reflectable* CatRuntimeContext::getScopeObject(CatScopeID id) const
 {
-	return thisType;
+	assert(id >= 0 && id < scopes.size());
+	return scopes[id]->scopeObject.get();
 }
 
 
-TypeInfo* CatRuntimeContext::getCustomThisType() const
+TypeInfo* CatRuntimeContext::getScopeType(CatScopeID id) const
 {
-	return customThisType;
-}
-
-
-TypeInfo* CatRuntimeContext::getCustomGlobalsType() const
-{
-	return customGlobalsType;
-}
-
-
-Reflectable* CatRuntimeContext::getGlobalReference() const
-{
-	return globalReference.get();
-}
-
-
-Reflectable* CatRuntimeContext::getThisReference() const
-{
-	return thisReference.get();
-}
-
-
-Reflectable* CatRuntimeContext::getCustomThisReference() const
-{
-	return customThisReference.get();
-}
-
-
-Reflectable* CatRuntimeContext::getRootReference(RootTypeSource source) const
-{
-	switch (source)
-	{
-		case RootTypeSource::Global:		return globalReference.get();
-		case RootTypeSource::This:			return thisReference.get();
-		case RootTypeSource::CustomThis:	return customThisReference.get();
-		case RootTypeSource::CustomGlobals:return customGlobalsReference.get();
-	}
-	return nullptr;
-}
-
-
-TypeInfo* CatRuntimeContext::getRootType(RootTypeSource source) const
-{
-	switch (source)
-	{
-		case RootTypeSource::Global:		return globalType;
-		case RootTypeSource::This:			return thisType;
-		case RootTypeSource::CustomThis:	return customThisType;
-		case RootTypeSource::CustomGlobals:return customGlobalsType;
-	}
-	return nullptr;
-}
-
-
-void CatRuntimeContext::setGlobalReference(Reflectable* globalReference_)
-{
-	globalReference = globalReference_;
-}
-
-
-void CatRuntimeContext::setThisReference(Reflectable* thisReference_)
-{
-	thisReference = thisReference_;
-}
-
-
-void CatRuntimeContext::setCustomThisReference(Reflectable* customThisReference_)
-{
-	customThisReference = customThisReference_;
-}
-
-
-void CatRuntimeContext::setCustomGlobalsReference(Reflectable* customGlobalsReference_)
-{
-	customGlobalsReference = customGlobalsReference_;
+	assert(id >= 0 && id < scopes.size());
+	return scopes[id]->scopeType;
 }
 
 
@@ -225,35 +154,33 @@ void CatRuntimeContext::popErrorContext(ErrorContext* context)
 }
 
 
-TypeMemberInfo* CatRuntimeContext::findIdentifier(const std::string& lowercaseName)
+TypeMemberInfo* CatRuntimeContext::findVariable(const std::string& lowercaseName, CatScopeID& scopeId)
 {
-	TypeMemberInfo* memberInfo = nullptr;
-	//First check if the variable name is a custom local
-	findIdentifier(getCustomThisType(), lowercaseName, memberInfo);
-	//Next, if the variable is not a custom local, check if the variable name is a normal local (via reflection)
-	findIdentifier(getThisType(), lowercaseName, memberInfo);
-	//Next, if the variable is not a local, check if the variable name is a custom global
-	findIdentifier(getCustomGlobalsType(), lowercaseName, memberInfo);
-	//Lastly, if the variable is not a local, check if the variable name is a global
-	findIdentifier(getGlobalType(), lowercaseName, memberInfo);
-
-	return memberInfo;
+	for (int i = (int)scopes.size() - 1; i >= 0; i--)
+	{
+		TypeMemberInfo* memberInfo = scopes[i]->scopeType->getMemberInfo(lowercaseName);
+		if (memberInfo != nullptr)
+		{
+			scopeId = i;
+			return memberInfo;
+		}
+	}
+	return nullptr;
 }
 
 
-MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercaseName, RootTypeSource& source)
+MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercaseName, CatScopeID& scopeId)
 {
-	MemberFunctionInfo* memberFunctionInfo = nullptr;
-	//First check if the variable name is a custom local
-	findFunctionIdentifier(getCustomThisType(), lowercaseName, RootTypeSource::CustomThis, memberFunctionInfo, source);
-	//Next, if the variable is not a custom local, check if the variable name is a normal local (via reflection)
-	findFunctionIdentifier(getThisType(), lowercaseName, RootTypeSource::This, memberFunctionInfo, source);
-	//Next, if the variable is not a local, check if the variable name is a custom global
-	findFunctionIdentifier(getCustomGlobalsType(), lowercaseName, RootTypeSource::CustomGlobals, memberFunctionInfo, source);
-	//Lastly, if the variable is not a local, check if the variable name is a global
-	findFunctionIdentifier(getGlobalType(), lowercaseName, RootTypeSource::Global, memberFunctionInfo, source);
-
-	return memberFunctionInfo;
+	for (int i = (int)scopes.size() - 1; i >= 0; i--)
+	{
+		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getMemberFunctionInfo(lowercaseName);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = i;
+			return memberFunctionInfo;
+		}
+	}
+	return nullptr;
 }
 
 
@@ -273,20 +200,12 @@ int CatRuntimeContext::getNextFunctionIndex()
 }
 
 
-void CatRuntimeContext::findIdentifier(TypeInfo* typeInfo, const std::string& lowercaseName, TypeMemberInfo*& memberInfo)
+CatScopeID CatRuntimeContext::createScope(Reflectable* scopeObject, TypeInfo* type, bool isStatic)
 {
-	if (memberInfo == nullptr && typeInfo != nullptr)
-	{
-		memberInfo = typeInfo->getMemberInfo(lowercaseName);
-	}
-}
-
-
-void CatRuntimeContext::findFunctionIdentifier(TypeInfo* typeInfo, const std::string& lowercaseName, RootTypeSource source, MemberFunctionInfo*& functionInfo, RootTypeSource& sourceToSet)
-{
-	if (functionInfo == nullptr && typeInfo != nullptr)
-	{
-		sourceToSet = source;
-		functionInfo = typeInfo->getMemberFunctionInfo(lowercaseName);
-	}
+	Scope* scope = new Scope();
+	scope->isStatic = isStatic;
+	scope->scopeObject = scopeObject;
+	scope->scopeType = type;
+	scopes.emplace_back(scope);
+	return static_cast<CatScopeID>((int)scopes.size() - 1);
 }

@@ -10,13 +10,13 @@
 class CatRuntimeContext;
 class TypeInfo;
 #include "CatTypedExpression.h"
-#include "RootTypeSource.h"
+#include "CatScopeID.h"
 
 
 class CatScopeRoot: public CatTypedExpression
 {
 public:
-	CatScopeRoot(RootTypeSource source, CatRuntimeContext* context);
+	CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context);
 	// Inherited via CatTypedExpression
 	virtual void print() const override;
 	virtual CatASTNodeType getNodeType() override;
@@ -26,9 +26,9 @@ public:
 	virtual bool isConst() const override;
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override;
 
-	RootTypeSource getSource() const;
+	CatScopeID getScopeId() const;
 
 private:
-	RootTypeSource source;
+	CatScopeID scopeId;
 	CatGenericType type;
 };

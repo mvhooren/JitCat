@@ -8,11 +8,6 @@
 #pragma once
 
 
-enum class RootTypeSource
-{
-	None,
-	Global,
-	This,
-	CustomThis,
-	CustomGlobals
-};
+typedef int CatScopeID;
+
+const CatScopeID InvalidScopeID = -1;

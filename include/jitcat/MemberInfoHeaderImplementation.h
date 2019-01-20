@@ -15,9 +15,9 @@
 
 
 template<typename T, typename U>
-inline std::any ContainerMemberInfo<T, U>::getMemberReference(std::any& base)
+inline std::any ContainerMemberInfo<T, U>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	T* baseObject = static_cast<T*>(base);
 	if (baseObject != nullptr)
 	{
 		U& container = baseObject->*memberPointer;
@@ -157,9 +157,9 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateArrayIndexCode(llvm::Valu
 
 
 template<typename T, typename U>
-inline std::any ClassPointerMemberInfo<T, U>::getMemberReference(std::any& base)
+inline std::any ClassPointerMemberInfo<T, U>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	T* baseObject = static_cast<T*>(base);
 	if (baseObject != nullptr)
 	{
 		U* member = baseObject->*memberPointer;
@@ -200,9 +200,9 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 
 
 template<typename T, typename U>
-inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(std::any& base)
+inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	T* baseObject = static_cast<T*>(base);
 	if (baseObject != nullptr)
 	{
 		return static_cast<Reflectable*>(&(baseObject->*memberPointer));
@@ -250,9 +250,9 @@ inline U* ClassUniquePtrMemberInfo<T, U>::getPointer(T* parentObject, ClassUniqu
 
 
 template<typename T, typename U>
-inline std::any ClassUniquePtrMemberInfo<T, U>::getMemberReference(std::any& base)
+inline std::any ClassUniquePtrMemberInfo<T, U>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	T* baseObject = static_cast<T*>(base);
 	if (baseObject != nullptr)
 	{
 		return static_cast<Reflectable*>((baseObject->*memberPointer).get());
@@ -283,9 +283,9 @@ inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm
 
 
 template<typename T, typename U>
-inline std::any BasicTypeMemberInfo<T, U>::getMemberReference(std::any& base)
+inline std::any BasicTypeMemberInfo<T, U>::getMemberReference(Reflectable* base)
 {
-	T* objectPointer = static_cast<T*>(std::any_cast<Reflectable*>(base));
+	T* objectPointer = static_cast<T*>(base);
 	if (objectPointer != nullptr)
 	{
 		U& value = objectPointer->*memberPointer;

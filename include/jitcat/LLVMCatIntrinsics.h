@@ -19,8 +19,7 @@ class LLVMCatIntrinsics
 	~LLVMCatIntrinsics() = delete;
 
 public:
-	static Reflectable* getThisPointerFromContext(CatRuntimeContext* context);
-	static Reflectable* getCustomThisPointerFromContext(CatRuntimeContext* context);
+	static Reflectable* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
 	static bool stringEquals(const std::string& left, const std::string& right);
 	static bool stringNotEquals(const std::string& left, const std::string& right);
 	static bool stringToBoolean(const std::string& value);

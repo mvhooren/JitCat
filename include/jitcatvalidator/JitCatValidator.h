@@ -52,29 +52,27 @@ struct CodeCompletionSuggestions
 
 //Validates the expression and fills the result structure with information about the expression.
 //Type information for use of variables can be loaded using the loadTypeInfo function.
-//Various type names can be passed for variable lookup. These types should all exist in a previously loaded type info file.
+//Various type names can be passed for variable lookup by passing a space separated list of typenames to rootScopeTypeNames. 
+//These types should all exist in a previously loaded type info file.
 //Return codes:
 //1:  expression compilation succeeded
 //0:  expression compilation failed, see error message in the result structure
 //-1: result was null
 //-2: One of the provided types does not exist
-extern "C" JITCATVALIDATOR_API int validateExpression(const char* expression, const char* globalsTypeName, 
-										   const char* localsTypeName, const char* customLocalsTypeName, 
-										   const char* customGlobalsTypeName, ValidationResult* result);
+extern "C" JITCATVALIDATOR_API int validateExpression(const char* expression, const char* rootScopeTypeNames, ValidationResult* result);
 
 //Frees any memory allocated by the result
 extern "C" JITCATVALIDATOR_API void destroyValidationResult(ValidationResult* result);
 
 //Returns code completions suggestions based on an expression and a cursor position within the expression.
-//Various type names can be passed for variable lookup. These types should all exist in a previously loaded type info file.
+//Various type names can be passed for variable lookup by passing a space separated list of typenames to rootScopeTypeNames. 
+//These types should all exist in a previously loaded type info file.
 //Return codes:
 //1:  one or more code suggestions exist
 //0:  no code suggestions could be found
 //-1: results was null
 //-2: One of the provided types does not exist
-extern "C" JITCATVALIDATOR_API int codeCompleteExpression(const char* expression, int cursorPosition, const char* globalsTypeName, 
-											   const char* localsTypeName, const char* customLocalsTypeName, 
-											   const char* customGlobalsTypeName, CodeCompletionSuggestions* results);
+extern "C" JITCATVALIDATOR_API int codeCompleteExpression(const char* expression, int cursorPosition, const char* rootScopeTypeNames, CodeCompletionSuggestions* results);
 
 //Frees any memory allocated by the codeCompleteExpression function in the CodeCompletionSuggestions struct;
 extern "C" JITCATVALIDATOR_API void destroyCompletionResult(CodeCompletionSuggestions* result);

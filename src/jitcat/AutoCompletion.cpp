@@ -76,10 +76,14 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					if (i == 0)
 					{
 						//search in the runtime context
-						addOptionsFromTypeInfo(context->getCustomThisType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
-						addOptionsFromTypeInfo(context->getThisType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
-						addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
-						addOptionsFromTypeInfo(context->getGlobalType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+						for (int i = context->getNumScopes() - 1; i >= 0; i--)
+						{
+							TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
+							if (typeInfo != nullptr)
+							{
+								addOptionsFromTypeInfo(typeInfo, results, memberPrefix, expression, completionOffset, expressionTailEnd);
+							}
+						}
 						addOptionsFromBuiltIn(results, memberPrefix, expression, completionOffset);
 					}
 				}
@@ -98,11 +102,11 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			}
 			else if (currentMemberInfo == nullptr && currentFunctionInfo == nullptr)
 			{
-				currentMemberInfo = context->findIdentifier(lowercaseIdentifier);
+				CatScopeID scopeId;
+				currentMemberInfo = context->findVariable(lowercaseIdentifier, scopeId);
 				if (currentMemberInfo == nullptr)
 				{
-					RootTypeSource source;
-					currentFunctionInfo = context->findFunction(lowercaseIdentifier, source);
+					currentFunctionInfo = context->findFunction(lowercaseIdentifier, scopeId);
 				}
 			}
 			else if (currentMemberInfo != nullptr && currentMemberInfo->catType == CatType::Object)
@@ -142,10 +146,15 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	}
 	if (!foundValidAutoCompletion && isGlobalScopeAutoCompletable(tokens, startingTokenIndex))
 	{
-		addOptionsFromTypeInfo(context->getCustomThisType(), results, "", expression, cursorPosition, expressionTailEnd);
-		addOptionsFromTypeInfo(context->getThisType(), results, "", expression, cursorPosition, expressionTailEnd);
-		addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, "", expression, cursorPosition, expressionTailEnd);
-		addOptionsFromTypeInfo(context->getGlobalType(), results, "", expression, cursorPosition, expressionTailEnd);
+		//search in the runtime context
+		for (int i = context->getNumScopes() - 1; i >= 0; i--)
+		{
+			TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
+			if (typeInfo != nullptr)
+			{
+				addOptionsFromTypeInfo(typeInfo, results, "", expression, cursorPosition, expressionTailEnd);
+			}
+		}
 		addOptionsFromBuiltIn(results, "", expression, cursorPosition);
 	}
 	std::sort(std::begin(results), std::end(results), [](const AutoCompletion::AutoCompletionEntry& a, const AutoCompletion::AutoCompletionEntry& b) 

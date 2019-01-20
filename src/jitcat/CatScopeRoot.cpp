@@ -9,24 +9,10 @@
 #include "CatRuntimeContext.h"
 
 
-CatScopeRoot::CatScopeRoot(RootTypeSource source, CatRuntimeContext* context):
-	source(source)
+CatScopeRoot::CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context):
+	scopeId(scopeId)
 {
-	switch (source)
-	{
-		case RootTypeSource::Global:
-			type = CatGenericType(context->getGlobalType());
-			break;
-		case RootTypeSource::This:
-			type = CatGenericType(context->getThisType());
-			break;
-		case RootTypeSource::CustomThis:
-			type = CatGenericType(context->getCustomThisType());
-			break;
-		case RootTypeSource::CustomGlobals:
-			type = CatGenericType(context->getCustomGlobalsType());
-			break;
-	}
+	type = context->getScopeType(scopeId);
 }
 
 
@@ -43,7 +29,7 @@ CatASTNodeType CatScopeRoot::getNodeType()
 
 std::any CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
 {
-	return runtimeContext->getRootReference(source);
+	return runtimeContext->getScopeObject(scopeId);
 }
 
 
@@ -78,7 +64,7 @@ CatTypedExpression* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeCo
 }
 
 
-RootTypeSource CatScopeRoot::getSource() const
+CatScopeID CatScopeRoot::getScopeId() const
 {
-	return source;
+	return scopeId;
 }

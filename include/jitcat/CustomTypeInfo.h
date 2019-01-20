@@ -12,7 +12,11 @@ class CustomTypeInstance;
 
 #include <set>
 
-
+//Represents the type of a struct that can be defined at runtime.
+//Fields can be added to the struct using the addMember functions.
+//An instance of the struct can be created using createInstance();
+//Instances are tracked and when a member is added after instances have been created, all instances will be updated.
+//The CustomTypeInstance can then be used to provide variables for an expression by adding it to a CatRuntimeContext.
 class CustomTypeInfo: public TypeInfo
 {
 public:

@@ -56,7 +56,7 @@ std::any CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
 	std::any baseValue = base->execute(runtimeContext);
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		return memberInfo->getMemberReference(baseValue);
+		return memberInfo->getMemberReference(std::any_cast<Reflectable*>(baseValue));
 	}
 	assert(false);
 	return std::any();

@@ -9,13 +9,12 @@
 
 struct TypeMemberInfo;
 #include "CatTypedExpression.h"
-#include "RootTypeSource.h"
+#include "CatScopeID.h"
 
 
 class CatIdentifier: public CatTypedExpression
 {
 public:
-	//CatIdentifier();
 	CatIdentifier(const std::string& name, CatRuntimeContext* context);
 	virtual CatGenericType getType() const override final;
 	virtual void print() const override final;
@@ -24,16 +23,13 @@ public:
 	virtual CatASTNodeType getNodeType() override final;
 	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 	virtual CatGenericType typeCheck() override final;
-	RootTypeSource getSource() const;
+	CatScopeID getScopeId() const;
 	const TypeMemberInfo* getMemberInfo() const;
-
-private:
-	void findIdentifier(TypeInfo* typeInfo, RootTypeSource typeSource, const std::string& lowercaseName);
 
 public:
 	std::string name;
 	CatGenericType type;
 	TypeMemberInfo* memberInfo;
-	RootTypeSource source;
+	CatScopeID scopeId;
 	CatRuntimeContext* compileTimeContext;
 };

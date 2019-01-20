@@ -14,7 +14,7 @@ class Reflectable;
 #include "CatASTNodesDeclares.h"
 #include "CatType.h"
 #include "LLVMForwardDeclares.h"
-#include "RootTypeSource.h"
+#include "CatScopeID.h"
 
 #include <memory>
 #include <string>
@@ -52,7 +52,7 @@ private:
 	llvm::Value* generate(CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context);
 	llvm::Value* generate(CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
 
-	llvm::Value* getBaseAddress(RootTypeSource source, LLVMCompileTimeContext* context);
+	llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
 private:
 	llvm::LLVMContext& llvmContext;
 	std::unique_ptr<llvm::Module> currentModule;

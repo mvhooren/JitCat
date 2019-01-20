@@ -338,12 +338,12 @@ ASTNode* CatGrammar::functionCallToken(const ASTNodeParser& nodeParser)
 		CatRuntimeContext* runtimeContext = static_cast<CatRuntimeContext*>(nodeParser.getContext());
 		if (runtimeContext != nullptr)
 		{
-			RootTypeSource source = RootTypeSource::None;
+			CatScopeID scopeId = InvalidScopeID;
 			std::string lowerName = Tools::toLowerCase(functionName);
-			MemberFunctionInfo* functionInfo = runtimeContext->findFunction(lowerName, source);
+			MemberFunctionInfo* functionInfo = runtimeContext->findFunction(lowerName, scopeId);
 			if (functionInfo != nullptr)
 			{
-				return new CatMemberFunctionCall(lowerName, new CatScopeRoot(source, runtimeContext), arguments);
+				return new CatMemberFunctionCall(lowerName, new CatScopeRoot(scopeId, runtimeContext), arguments);
 			}
 		}
 		return new CatFunctionCall(functionName, arguments);

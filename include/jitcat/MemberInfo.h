@@ -9,6 +9,7 @@
 
 class LLVMCodeGeneratorHelper;
 struct LLVMCompileTimeContext;
+class Reflectable;
 class TypeInfo;
 #include "CatGenericType.h"
 #include "CatType.h"
@@ -37,7 +38,7 @@ struct TypeMemberInfo
 	TypeMemberInfo(const std::string& memberName, TypeInfo* type, bool isConst, bool isWritable): memberName(memberName), specificType(SpecificMemberType::NestedType), catType(CatType::Object), nestedType(type), containerType(ContainerType::None), isConst(isConst), isWritable(isWritable) {}
 	TypeMemberInfo(const std::string& memberName, ContainerType type, TypeInfo* itemType, bool isConst, bool isWritable): memberName(memberName), specificType(SpecificMemberType::ContainerType), catType(CatType::Object), nestedType(itemType), containerType(type), isConst(isConst), isWritable(isWritable) {}
 	virtual ~TypeMemberInfo() {};
-	inline virtual std::any getMemberReference(std::any& base) { return nullptr; }
+	inline virtual std::any getMemberReference(Reflectable* base) { return nullptr; }
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const {return nullptr;};
 	inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVMCompileTimeContext* context) const {return nullptr;};
 
@@ -64,7 +65,7 @@ struct ContainerMemberInfo: public TypeMemberInfo
 {
 	ContainerMemberInfo(const std::string& memberName, U T::* memberPointer, ContainerType type, TypeInfo* itemType, bool isConst): TypeMemberInfo(memberName, type, itemType, isConst, false), memberPointer(memberPointer) {}
 
-	inline virtual std::any getMemberReference(std::any& base) override final;
+	inline virtual std::any getMemberReference(Reflectable* base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 	
 	template<typename ContainerItemType>
@@ -91,7 +92,7 @@ struct ClassPointerMemberInfo: public TypeMemberInfo
 {
 	ClassPointerMemberInfo(const std::string& memberName, U* T::* memberPointer, TypeInfo* type, bool isConst, bool isWritable): TypeMemberInfo(memberName, type, isConst, isWritable), memberPointer(memberPointer) {}
 
-	inline virtual std::any getMemberReference(std::any& base) override final;
+	inline virtual std::any getMemberReference(Reflectable* base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 
 	U* T::* memberPointer;
@@ -103,7 +104,7 @@ struct ClassObjectMemberInfo: public TypeMemberInfo
 {
 	ClassObjectMemberInfo(const std::string& memberName, U T::* memberPointer, TypeInfo* type, bool isConst, bool isWritable): TypeMemberInfo(memberName, type, isConst, isWritable), memberPointer(memberPointer) {}
 
-	inline virtual std::any getMemberReference(std::any& base) override final;
+	inline virtual std::any getMemberReference(Reflectable* base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 
 	U T::* memberPointer;
@@ -116,7 +117,7 @@ struct ClassUniquePtrMemberInfo: public TypeMemberInfo
 {
 	ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<U> T::* memberPointer, TypeInfo* type, bool isConst, bool isWritable): TypeMemberInfo(memberName, type, isConst, isWritable), memberPointer(memberPointer) {}
 	static U* getPointer(T* parentObject, ClassUniquePtrMemberInfo<T, U>* info);
-	inline virtual std::any getMemberReference(std::any& base) override final;
+	inline virtual std::any getMemberReference(Reflectable* base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 
 	std::unique_ptr<U> T::* memberPointer;
@@ -130,7 +131,7 @@ struct BasicTypeMemberInfo: public TypeMemberInfo
 {
 	BasicTypeMemberInfo(const std::string& memberName, U T::* memberPointer, CatType type, bool isConst, bool isWritable): TypeMemberInfo(memberName, type, isConst, isWritable), memberPointer(memberPointer) {}
 	
-	inline virtual std::any getMemberReference(std::any& base) override final;
+	inline virtual std::any getMemberReference(Reflectable* base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
 
 	U T::* memberPointer;

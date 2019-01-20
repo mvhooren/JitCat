@@ -47,22 +47,21 @@ inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtime
 		std::any rValue = rhs->execute(runtimeContext);
 		CatGenericType lType = lhs->getType();
 		CatGenericType rType = rhs->getType();
-		bool allowDivisionByZero = runtimeContext == nullptr || !runtimeContext->isRunTimeContext();
 		switch (lType.getCatType())
 		{
 			case CatType::Float:
 				switch (rType.getCatType())
 				{
-					case CatType::Int:		return calculateScalarExpression<float, int, float>(std::any_cast<float>(lValue), std::any_cast<int>(rValue), allowDivisionByZero);
-					case CatType::Float:	return calculateScalarExpression<float, float, float>(std::any_cast<float>(lValue), std::any_cast<float>(rValue), allowDivisionByZero);
+					case CatType::Int:		return calculateScalarExpression<float, int, float>(std::any_cast<float>(lValue), std::any_cast<int>(rValue));
+					case CatType::Float:	return calculateScalarExpression<float, float, float>(std::any_cast<float>(lValue), std::any_cast<float>(rValue));
 					case CatType::String:	return calculateStringExpression<float, std::string>(std::any_cast<float>(lValue), std::any_cast<std::string>(rValue));
 				}
 				break;
 			case CatType::Int:
 				switch (rType.getCatType())
 				{
-					case CatType::Int:		return calculateScalarExpression<int, int, int>(std::any_cast<int>(lValue), std::any_cast<int>(rValue), allowDivisionByZero);
-					case CatType::Float:	return calculateScalarExpression<int, float, float>(std::any_cast<int>(lValue), std::any_cast<float>(rValue), allowDivisionByZero);
+					case CatType::Int:		return calculateScalarExpression<int, int, int>(std::any_cast<int>(lValue), std::any_cast<int>(rValue));
+					case CatType::Float:	return calculateScalarExpression<int, float, float>(std::any_cast<int>(lValue), std::any_cast<float>(rValue));
 					case CatType::String:	return calculateStringExpression<int, std::string>(std::any_cast<int>(lValue), std::any_cast<std::string>(rValue));
 				}
 				break;
@@ -90,7 +89,7 @@ inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtime
 
 
 template<typename T, typename U, typename V>
-inline std::any CatInfixOperator::calculateScalarExpression(const T& lValue, const U& rValue, bool allowDivideByZero)
+inline std::any CatInfixOperator::calculateScalarExpression(const T& lValue, const U& rValue)
 {
 	switch (oper)
 	{

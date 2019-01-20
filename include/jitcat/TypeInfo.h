@@ -36,7 +36,7 @@ class VariableEnumerator;
 
 //The TypeInfo system can store information about the following types:
 //- Common basic types: int, bool, float and std::string
-//- Common containers: std::vector<T>, std::map<std::string, CaseInsensitiveCompare, T> where T is itself a reflectable class/struct
+//- Common containers: std::vector<T>, std::map<std::string, T> where T is itself a reflectable class/struct
 //- Structs and classes that have been made reflectable
 
 //Any class or struct can be made reflectable as follows:

@@ -18,19 +18,12 @@ CatIdentifier::CatIdentifier(const std::string& name, CatRuntimeContext* context
 	name(name),
 	compileTimeContext(context),
 	memberInfo(nullptr),
-	source(RootTypeSource::None)
+	scopeId(-1)
 {
 	std::string lowerName = Tools::toLowerCase(name);
 	if (context != nullptr)
 	{
-		//First check if the variable name is a custom local
-		findIdentifier(context->getCustomThisType(), RootTypeSource::CustomThis, lowerName);
-		//Next, if the variable is not a custom local, check if the variable name is a normal local (via reflection)
-		findIdentifier(context->getThisType(), RootTypeSource::This, lowerName);
-		//Next, if the variable is not a local, check if the variable name is a custom global
-		findIdentifier(context->getCustomGlobalsType(), RootTypeSource::CustomGlobals, lowerName);
-		//Lastly, if the variable is not a local, check if the variable name is a global
-		findIdentifier(context->getGlobalType(), RootTypeSource::Global, lowerName);
+		memberInfo = context->findVariable(lowerName, scopeId);
 	}
 
 	if (memberInfo != nullptr)
@@ -81,9 +74,8 @@ std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		Reflectable* rootObject = runtimeContext->getRootReference(source);
-		std::any rootAny(rootObject);
-		return memberInfo->getMemberReference(rootAny);
+		Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+		return memberInfo->getMemberReference(rootObject);
 	}
 	assert(false);
 	return std::any();
@@ -103,26 +95,13 @@ CatGenericType CatIdentifier::typeCheck()
 }
 
 
-RootTypeSource CatIdentifier::getSource() const
+CatScopeID CatIdentifier::getScopeId() const
 {
-	return source;
+	return scopeId;
 }
 
 
 const TypeMemberInfo* CatIdentifier::getMemberInfo() const
 {
 	return memberInfo;
-}
-
-
-void CatIdentifier::findIdentifier(TypeInfo* typeInfo, RootTypeSource typeSource, const std::string& lowercaseName)
-{
-	if (memberInfo == nullptr && typeInfo != nullptr)
-	{
-		memberInfo = typeInfo->getMemberInfo(lowercaseName);
-		if (memberInfo != nullptr)
-		{
-			source = typeSource;
-		}
-	}
 }

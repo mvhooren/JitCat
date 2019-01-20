@@ -20,17 +20,14 @@ private:
 	//disable copying, this is usually a bad idea because of the observers list
 	Reflectable(const Reflectable& );
 public:
-	Reflectable(bool handleSetEvents = false);
+	Reflectable();
 	virtual ~Reflectable();
 
 	void addObserver(ReflectableHandle* observer);
 	void removeObserver(ReflectableHandle* observer);
 
-	bool getHandleSetEvents() const;
-	virtual void handleSet(const std::string& memberName) {}
 	virtual void copyFrom(const Reflectable* other) {}
 
 private:
 	std::vector<ReflectableHandle*> observers;
-	bool handleSetEvents;
 };

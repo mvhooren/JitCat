@@ -5,15 +5,9 @@
 #include <cmath>
 
 
-Reflectable* LLVMCatIntrinsics::getThisPointerFromContext(CatRuntimeContext* context)
+Reflectable* LLVMCatIntrinsics::getScopePointerFromContext(CatRuntimeContext* context, int scopeId)
 {
-	return context->getThisReference();
-}
-
-
-Reflectable* LLVMCatIntrinsics::getCustomThisPointerFromContext(CatRuntimeContext* context)
-{
-	return context->getCustomThisReference();
+	return context->getScopeObject((CatScopeID)scopeId);
 }
 
 
