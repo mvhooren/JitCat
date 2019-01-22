@@ -24,6 +24,7 @@
 #include "StackItemToken.h"
 #include "Tools.h"
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -427,7 +428,7 @@ bool SLRParser::isStackItemInFollowSet(StackItem* item, ProductionTokenSet* foll
 		}
 	}
 	//We should never get here
-	//QQQ error handling
+	assert(false);
 	return false;
 }
 
@@ -642,7 +643,6 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 				else
 				{
 					Tools::deleteElements(parseStack);
-					//QQQ parsing error
 					return parseResult;
 				}
 			}
@@ -650,7 +650,7 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 			{
 				Tools::deleteElements(parseStack);
 				//Should never happen
-				//QQQ error
+				assert(false);
 				return parseResult;
 			}
 		}

@@ -11,7 +11,6 @@ class CatRuntimeContext;
 class CatTypedExpression;
 struct SLRParseResult;
 #include "CatGenericType.h"
-#include "CatType.h"
 #include "ReflectableHandle.h"
 
 #include <memory>

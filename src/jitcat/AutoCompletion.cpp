@@ -87,11 +87,11 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 						addOptionsFromBuiltIn(results, memberPrefix, expression, completionOffset);
 					}
 				}
-				else if (currentMemberInfo != nullptr && currentMemberInfo->catType == CatType::Object)
+				else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isObjectType())
 				{
-					addOptionsFromTypeInfo(currentMemberInfo->nestedType, results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					addOptionsFromTypeInfo(currentMemberInfo->catType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
-				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.getCatType() == CatType::Object)
+				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isObjectType())
 				{
 					addOptionsFromTypeInfo(currentFunctionInfo->returnType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
@@ -109,13 +109,13 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					currentFunctionInfo = context->findFunction(lowercaseIdentifier, scopeId);
 				}
 			}
-			else if (currentMemberInfo != nullptr && currentMemberInfo->catType == CatType::Object)
+			else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isObjectType())
 			{
 				TypeMemberInfo* currentMember = currentMemberInfo;
-				currentMemberInfo = currentMemberInfo->nestedType->getMemberInfo(lowercaseIdentifier);
+				currentMemberInfo = currentMemberInfo->catType.getObjectType()->getMemberInfo(lowercaseIdentifier);
 				if (currentMemberInfo == nullptr)
 				{
-					currentFunctionInfo = currentMember->nestedType->getMemberFunctionInfo(lowercaseIdentifier);
+					currentFunctionInfo = currentMember->catType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
 					if (currentFunctionInfo == nullptr)
 					{
 						//failed
@@ -123,7 +123,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					}
 				}
 			}
-			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.getCatType() == CatType::Object)
+			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isObjectType())
 			{
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
 				currentFunctionInfo = currentFunctionInfo->returnType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
@@ -308,7 +308,7 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 				std::string newExpression = originalExpression;
 				std::string replacement = iter.second->memberName;
 				int numberOfCharactersToAdd = (int)replacement.size();
-				if (expressionTailEnd.size() == 0 && iter.second->specificType == SpecificMemberType::ContainerType)
+				if (expressionTailEnd.size() == 0 && iter.second->catType.isContainerType())
 				{
 					numberOfCharactersToAdd++;
 					replacement += "[";

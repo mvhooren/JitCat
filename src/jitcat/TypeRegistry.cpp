@@ -261,29 +261,10 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 			for (auto& member : iter.second->getMembers())
 			{
 				xmlFile << "\t\t\t<Member>\n";
-				xmlFile << "\t\t\t\t<Name>" << member.second->memberName << "</Name>\n";		
-				if (member.second->isConst)
-				{
-					xmlFile << "\t\t\t\t<const/>\n";
-				}
-				if (member.second->isWritable)
-				{
-					xmlFile << "\t\t\t\t<writable/>\n";
-				}
-				xmlFile << "\t\t\t\t<Type>" << toString(member.second->specificType) << "</Type>\n";		
-				if (member.second->specificType == SpecificMemberType::CatType)
-				{
-					xmlFile << "\t\t\t\t<BasicType>" << toString(member.second->catType) << "</BasicType>\n";		
-				}
-				else if (member.second->specificType == SpecificMemberType::ContainerType)
-				{
-					xmlFile << "\t\t\t\t<ContainerType>" << toString(member.second->containerType) << "</ContainerType>\n";		
-					xmlFile << "\t\t\t\t<ContainerItemTypeName>" << member.second->nestedType->getTypeName() << "</ContainerItemTypeName>\n";		
-				}
-				else if (member.second->specificType == SpecificMemberType::NestedType)
-				{
-					xmlFile << "\t\t\t\t<ObjectTypeName>" << member.second->nestedType->getTypeName() << "</ObjectTypeName>\n";		
-				}
+				xmlFile << "\t\t\t\t<Name>" << member.second->memberName << "</Name>\n";
+
+				member.second->catType.writeToXML(xmlFile, "\t\t\t\t");
+			
 				xmlFile << "\t\t\t</Member>\n";
 			}
 			xmlFile << "\t\t</Members>\n";
@@ -296,13 +277,13 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 				xmlFile << "\t\t\t<MemberFunction>\n";
 				xmlFile << "\t\t\t\t<Name>" << member.second->memberFunctionName << "</Name>\n";		
 				xmlFile << "\t\t\t\t<ReturnType>\n";
-				exportGenericType(member.second->returnType, xmlFile, "\t\t\t\t\t");
+				member.second->returnType.writeToXML(xmlFile, "\t\t\t\t\t");
 				xmlFile << "\t\t\t\t</ReturnType>\n";
 				xmlFile << "\t\t\t\t<Arguments>\n";
 				for (auto& argument : member.second->argumentTypes)
 				{
 					xmlFile << "\t\t\t\t\t<Argument>\n";
-					exportGenericType(argument, xmlFile, "\t\t\t\t\t\t");
+					argument.writeToXML(xmlFile, "\t\t\t\t\t\t");
 					xmlFile << "\t\t\t\t\t</Argument>\n";
 				}
 				xmlFile << "\t\t\t\t</Arguments>\n";
@@ -314,39 +295,6 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 	}
 	xmlFile << "</TypeRegistry>\n";
 	xmlFile.close();
-}
-
-
-void TypeRegistry::exportGenericType(const CatGenericType& genericType, std::ofstream& xmlFile, const char* linePrefixCharacters)
-{
-	if (genericType.isBasicType() || genericType.isVoidType())
-	{
-		xmlFile << linePrefixCharacters << "<Type>BasicType</Type>\n";		
-		xmlFile << linePrefixCharacters << "<BasicType>" << toString(genericType.getCatType()) << "</BasicType>\n";		
-	}
-	else if (genericType.isContainerType())
-	{
-		xmlFile << linePrefixCharacters << "<Type>ContainerType</Type>\n";		
-		if (genericType.isMapType())
-		{
-			xmlFile << linePrefixCharacters << "<ContainerType>StringMap</ContainerType>\n";		
-		}
-		else
-		{
-			xmlFile << linePrefixCharacters << "<ContainerType>Vector</ContainerType>\n";		
-		}
-		xmlFile << linePrefixCharacters << "<ContainerItemTypeName>" << genericType.getContainerItemType().getObjectTypeName() << "</ContainerItemTypeName>\n";		
-	}
-	else if (genericType.isObjectType())
-	{
-		xmlFile << linePrefixCharacters << "<Type>ObjectType</Type>\n";		
-		xmlFile << linePrefixCharacters << "<ObjectTypeName>" << genericType.getObjectTypeName() << "</ObjectTypeName>\n";		
-	}
-	else
-	{
-		xmlFile << linePrefixCharacters << "<Type>None</Type>\n";		
-	}
-
 }
 
 

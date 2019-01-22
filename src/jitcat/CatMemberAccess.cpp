@@ -19,7 +19,7 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 	memberInfo(nullptr)
 {
 	if (base != nullptr
-		&& base->getType() == CatType::Object)
+		&& base->getType().isObjectType())
 	{
 		CatGenericType baseMemberInfo = base->getType();
 		if (baseMemberInfo.isValidType()
@@ -31,7 +31,7 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 
 		if (memberInfo != nullptr)
 		{
-			type = memberInfo->toGenericType();
+			type = memberInfo->catType;
 		}
 	}
 }
@@ -76,7 +76,7 @@ CatGenericType CatMemberAccess::typeCheck()
 	}
 	else if (memberInfo != nullptr)
 	{
-		return memberInfo->toGenericType();
+		return memberInfo->catType;
 	}
 	else
 	{
@@ -95,7 +95,7 @@ bool CatMemberAccess::isConst() const
 {
 	if (memberInfo != nullptr)
 	{
-		return memberInfo->isConst && base->isConst();
+		return memberInfo->catType.isConst() && base->isConst();
 	}
 	return false;
 }

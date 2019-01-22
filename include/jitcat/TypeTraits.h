@@ -8,7 +8,6 @@
 #pragma once
 
 #include "CatGenericType.h"
-#include "CatType.h"
 #include "Tools.h"
 #include "TypeRegistry.h"
 
@@ -20,14 +19,13 @@
 
 
 //These classes use template specialization to get properties of types relevant for the reflection, serialisation and expression system.
-//It allows to translate a type T to a CatType and to check if a T is a reflectable/serialisable container.
+//It allows to translate a type T to a CatGenericType and to check if a T is a reflectable/serialisable container.
 //The top class is the default case where T is neither a basic type nor a container type.
 //All other classes are specializations for specific types.
 template <typename T>
 class TypeTraits
 {
 public:
-	static CatType getCatType() { return CatType::Object; }
 	static inline CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
 	static const char* getTypeName() { return T::getTypeName(); }
@@ -45,8 +43,7 @@ template <>
 class TypeTraits<void>
 {
 public:
-	static CatType getCatType() { return CatType::Void; }
-	static CatGenericType toGenericType() { return CatGenericType(CatType::Void); }
+	static CatGenericType toGenericType() { return CatGenericType::voidType; }
 	static bool isSerialisableContainer() { return false; }
 	template <typename U>
 	static std::any getCatValue(const U& param) { return std::any();}
@@ -69,8 +66,7 @@ template <>
 class TypeTraits<float>
 {
 public:
-	static CatType getCatType() { return CatType::Float; }
-	static CatGenericType toGenericType() { return CatGenericType(CatType::Float); }
+	static CatGenericType toGenericType() { return CatGenericType::floatType; }
 	static bool isSerialisableContainer() { return false; }
 	static std::any getCatValue(float value) { return std::any(value);}
 	static float getValue(const std::any& value) { return std::any_cast<float>(value);}
@@ -89,8 +85,7 @@ template <>
 class TypeTraits<int>
 {
 public:
-	static CatType getCatType() { return CatType::Int; }
-	static CatGenericType toGenericType() { return CatGenericType(CatType::Int); }
+	static CatGenericType toGenericType() { return CatGenericType::intType; }
 	static bool isSerialisableContainer() { return false; }
 	static std::any getCatValue(int value) { return std::any(value);}
 	static int getValue(const std::any& value) { return std::any_cast<int>(value);}
@@ -108,8 +103,7 @@ template <>
 class TypeTraits<bool>
 {
 public:
-	static CatType getCatType() { return CatType::Bool; }
-	static CatGenericType toGenericType() { return CatGenericType(CatType::Bool); }
+	static CatGenericType toGenericType() { return CatGenericType::boolType; }
 	static bool isSerialisableContainer() { return false; }
 	static std::any getCatValue(bool value) { return std::any(value);}
 	static bool getValue(const std::any& value) { return std::any_cast<bool>(value);}
@@ -127,8 +121,7 @@ template <>
 class TypeTraits<std::string>
 {
 public:
-	static CatType getCatType() { return CatType::String; }
-	static CatGenericType toGenericType() { return CatGenericType(CatType::String); }
+	static CatGenericType toGenericType() { return CatGenericType::stringType; }
 	static bool isSerialisableContainer() { return false; }
 	static std::any getCatValue(const std::string& value) { return std::any(value);}
 	static std::string getValue(const std::any& value) { return std::any_cast<std::string>(value);}
@@ -146,7 +139,6 @@ template <typename U>
 class TypeTraits<std::unique_ptr<U>>
 {
 public:
-	static CatType getCatType() { return CatType::Object; }
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
 	static const char* getTypeName() { return U::getTypeName(); }
@@ -164,7 +156,6 @@ template <typename U>
 class TypeTraits<U*>
 {
 public:
-	static CatType getCatType() { return CatType::Object; }
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
 	static const char* getTypeName() { return U::getTypeName(); }
@@ -182,7 +173,6 @@ template <typename ItemType>
 class TypeTraits<std::vector<ItemType> >
 {
 public:
-	static CatType getCatType() { return CatType::Unknown; }
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return true; }
 	static const char* getTypeName() { return ""; }
@@ -198,7 +188,6 @@ template <typename ItemType>
 class TypeTraits<std::map<std::string, ItemType> >
 {
 public:
-	static CatType getCatType() { return CatType::Unknown; }
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return true; }
 	static const char* getTypeName() { return ""; }

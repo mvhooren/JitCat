@@ -19,7 +19,7 @@ struct SLRParseResult;
 #include <memory>
 #include <string>
 
-//An expression that can evaluate to several possible types (those types defined by CatType.h)
+//An expression that can evaluate to several possible types (those types defined by CatGenericType.h)
 //This uses the JitCat compiler for parsing and executing expressions.
 //Supported operators: + - / * % || && ! == != > < >= <= ( ) 
 //The application can provide variables for the expression through a CatRuntimeContext
@@ -49,7 +49,7 @@ protected:
 	virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
 
 private:
-	CatType getExpectedCatType() const;
+	CatGenericType getExpectedCatType() const;
 	static inline T getActualValue(const std::any& catValue);
 	static inline const T getDefaultValue(CatRuntimeContext*);
 

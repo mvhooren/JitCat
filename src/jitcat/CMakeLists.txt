@@ -32,8 +32,6 @@ set(Source_Cat
 	${JitCatIncludePath}/CatTokenIds.h
 	CatTokenizer.cpp
 	${JitCatIncludePath}/CatTokenizer.h
-	CatType.cpp
-	${JitCatIncludePath}/CatType.h
 )
 
 set(Source_Cat_ASTNodes
@@ -45,6 +43,8 @@ set(Source_Cat_ASTNodes
 	${JitCatIncludePath}/CatASTNodes.h 
 	${JitCatIncludePath}/CatASTNodesDeclares.h 
 	${JitCatIncludePath}/CatASTNodeType.h 
+	${JitCatIncludePath}/CatAssignmentOperator.h 
+	CatAssignmentOperator.cpp 
 	${JitCatIncludePath}/CatBuiltInFunctionType.h
 	CatFunctionCall.cpp
 	${JitCatIncludePath}/CatFunctionCall.h
@@ -179,8 +179,6 @@ set(Source_Reflection_Enums
 	ContainerType.cpp
 	${JitCatIncludePath}/ContainerType.h
 	${JitCatIncludePath}/MemberTypeFlags.h
-	SpecificMemberType.cpp
-	${JitCatIncludePath}/SpecificMemberType.h
 )
 
 
@@ -197,7 +195,6 @@ set(Source_Reflection_TypeInfo
 	${JitCatIncludePath}/CustomTypeMemberInfo.h
 	${JitCatIncludePath}/CustomTypeMemberInfoHeaderImplementation.h
 	${JitCatIncludePath}/MemberFunctionInfo.h
-	MemberInfo.cpp
 	${JitCatIncludePath}/MemberInfo.h
 	${JitCatIncludePath}/MemberInfoHeaderImplementation.h
 	${JitCatIncludePath}/MemberTypeInfoCreator.h

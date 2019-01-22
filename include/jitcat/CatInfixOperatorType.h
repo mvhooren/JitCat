@@ -10,7 +10,6 @@
 
 enum class CatInfixOperatorType
 {
-	Assign,
 	Plus,
 	Minus,
 	Multiply,

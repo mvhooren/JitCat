@@ -11,13 +11,10 @@
 
 void CatLiteral::print() const
 {
-	switch(type.getCatType())
-	{
-		case CatType::Int:		CatLog::log(std::any_cast<int>(value)); return;
-		case CatType::Float:	CatLog::log(std::any_cast<float>(value)); return;
-		case CatType::Bool:		CatLog::log(std::any_cast<bool>(value)); return;
-		case CatType::String:	CatLog::log(std::any_cast<std::string>(value)); return;
-	}
+	if (type.isIntType())			CatLog::log(std::any_cast<int>(value));
+	else if (type.isFloatType())	CatLog::log(std::any_cast<float>(value));
+	else if (type.isBoolType())		CatLog::log(std::any_cast<bool>(value));
+	else if (type.isStringType())	CatLog::log(std::any_cast<std::string>(value));
 }
 
 

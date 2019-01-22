@@ -33,8 +33,5 @@ public:
 	static TypeInfo* findOrCreateTypeInfo(const std::string& typeName, std::map<std::string, TypeInfo*>& typeInfos);
 
 private:
-	static bool readGenericType(std::ifstream& xmlFile, const std::string& closingTag, CatGenericType& type, std::map<std::string, TypeInfo*>& typeInfos);
-
-private:
 	static std::vector<const char*> staticNames;
 };

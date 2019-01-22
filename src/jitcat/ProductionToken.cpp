@@ -27,7 +27,6 @@ bool ProductionToken::getContainsEpsilon()
 	if (containsEpsilon == TokenFlag::Unknown)
 	{
 		assert(false);
-		//QQQ ERROR LOG
 		return false;
 	}
 	else

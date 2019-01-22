@@ -15,12 +15,8 @@
 class CatInfixOperator: public CatTypedExpression
 {
 public:
-	CatInfixOperator(): oper(CatInfixOperatorType::Plus) {}
+	CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType);
 	CatInfixOperator(const CatInfixOperator&) = delete;
-
-	std::unique_ptr<CatTypedExpression> lhs;
-	CatInfixOperatorType oper;
-	std::unique_ptr<CatTypedExpression> rhs;
 
 	virtual CatGenericType getType() const override final;
 	virtual bool isConst() const override final;
@@ -32,6 +28,10 @@ public:
 	virtual CatGenericType typeCheck() override final;
 
 	virtual void print() const override final;
+
+	CatTypedExpression* getLeft() const;
+	CatTypedExpression* getRight() const;
+	CatInfixOperatorType getOperatorType() const;
 
 private:
 	inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
@@ -45,6 +45,11 @@ private:
 	inline std::any calculateStringExpression(const std::string& lValue, const std::string& rValue);
 
 	inline std::any calculateBooleanExpression(bool lValue, bool rValue);
+
+private:
+	std::unique_ptr<CatTypedExpression> lhs;
+	CatInfixOperatorType oper;
+	std::unique_ptr<CatTypedExpression> rhs;
 };
 
 

@@ -3,7 +3,7 @@
 class CatRuntimeContext;
 class Reflectable;
 struct LLVMCompileTimeContext;
-#include "CatType.h"
+#include "CatGenericType.h"
 #include "LLVMCatIntrinsics.h"
 #include "LLVMForwardDeclares.h"
 #include "LLVMTypes.h"
@@ -24,10 +24,10 @@ public:
 	llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, llvm::Type* resultType, LLVMCompileTimeContext* context); 
 	llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context); 
 
-	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameterType, llvm::Value* argument, LLVMCompileTimeContext* context);
-	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
-	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType overload1Type, CatType overload2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
-	llvm::Type* toLLVMType(CatType type);
+	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, llvm::Value* argument, LLVMCompileTimeContext* context);
+	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
+	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, const CatGenericType& overload2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
+	llvm::Type* toLLVMType(const CatGenericType& type);
 
 	llvm::Value* convertType(llvm::Value* valueToConvert, llvm::Type* type, LLVMCompileTimeContext* context);
 	llvm::Value* convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::Type* type = LLVMTypes::pointerType);

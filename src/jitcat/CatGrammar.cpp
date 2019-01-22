@@ -25,17 +25,16 @@ CatGrammar::CatGrammar(Tokenizer* tokenizer):
 	rule(Prod::Root, {prod(Prod::Expression)}, pass);
 	
 	//Expressions
-	rule(Prod::Expression, {prod(Prod::OperatorP10)}, pass);
+	rule(Prod::Expression, {prod(Prod::OperatorP11)}, pass);
 	//Operators
 	//Precedence from low precedence to high precedence (based on C++ operator precedence)
 	//See http://en.cppreference.com/w/cpp/language/operator_precedence
 
 	//= (lowest precedence)
-	//Assignment cannot work while the type checking process actually executes expressions. It should be possible to fix this now.
-	/*rule(Prod::OperatorP11, prod(Prod::OperatorP11), term(one, OneChar::Assignment), prod(Prod::OperatorP10), infixOperator);
-	rule(Prod::OperatorP11, prod(Prod::OperatorP10), pass);*/
+	rule(Prod::OperatorP11, {prod(Prod::OperatorP11), term(one, OneChar::Assignment), prod(Prod::OperatorP10)}, assignmentOperator);
+	rule(Prod::OperatorP11, {prod(Prod::OperatorP10)}, pass);
 
-	//|| (lowest precedence)
+	//|| 
 	rule(Prod::OperatorP10, {prod(Prod::OperatorP10), term(two, TwoChar::LogicalOr), prod(Prod::OperatorP9)}, infixOperator);
 	rule(Prod::OperatorP10, {prod(Prod::OperatorP9)}, pass);
 
@@ -170,11 +169,19 @@ ASTNode* CatGrammar::link(const ASTNodeParser& nodeParser)
 }
 
 
+ASTNode* CatGrammar::assignmentOperator(const ASTNodeParser & nodeParser)
+{
+	return new CatAssignmentOperator(static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0)),
+									 static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1)));
+
+}
+
+
 ASTNode* CatGrammar::infixOperator(const ASTNodeParser& nodeParser)
 {
-	CatInfixOperator* oper = new CatInfixOperator();
-	oper->lhs.reset(static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0)));
-	oper->rhs.reset(static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1)));
+	CatTypedExpression* lhs = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0));
+	CatTypedExpression* rhs = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
+	
 	const ParseToken* infix = nullptr;
 	if (nodeParser.getNumItems() <= 3)
 	{
@@ -186,37 +193,36 @@ ASTNode* CatGrammar::infixOperator(const ASTNodeParser& nodeParser)
 		//This is a parse of the form "(exp) + exp"
 		infix = nodeParser.getTerminalByIndex(2);
 	}
-	
-	oper->oper = CatInfixOperatorType::Plus;
+
+	CatInfixOperatorType operatorType = CatInfixOperatorType::Plus;
 	if (infix->getTokenID() == Cat::one)
 	{
 		switch ((OneChar)infix->getTokenSubType())
 		{
 			default:
-			case OneChar::Assignment:	oper->oper = CatInfixOperatorType::Assign;		break;
-			case OneChar::Plus:			oper->oper = CatInfixOperatorType::Plus;		break;
-			case OneChar::Minus:		oper->oper = CatInfixOperatorType::Minus;		break;			
-			case OneChar::Times:		oper->oper = CatInfixOperatorType::Multiply;	break;			
-			case OneChar::Divide:		oper->oper = CatInfixOperatorType::Divide;		break;			
-			case OneChar::Modulo:		oper->oper = CatInfixOperatorType::Modulo;		break;
-			case OneChar::Greater:		oper->oper = CatInfixOperatorType::Greater;		break;
-			case OneChar::Smaller:		oper->oper = CatInfixOperatorType::Smaller;		break;
+			case OneChar::Plus:			operatorType = CatInfixOperatorType::Plus;		break;
+			case OneChar::Minus:		operatorType = CatInfixOperatorType::Minus;		break;			
+			case OneChar::Times:		operatorType = CatInfixOperatorType::Multiply;	break;			
+			case OneChar::Divide:		operatorType = CatInfixOperatorType::Divide;		break;			
+			case OneChar::Modulo:		operatorType = CatInfixOperatorType::Modulo;		break;
+			case OneChar::Greater:		operatorType = CatInfixOperatorType::Greater;		break;
+			case OneChar::Smaller:		operatorType = CatInfixOperatorType::Smaller;		break;
 		}
 	}
 	else if (infix->getTokenID() == Cat::two)
 	{
 		switch ((TwoChar)infix->getTokenSubType())
 		{
-			case TwoChar::GreaterOrEqual:		oper->oper = CatInfixOperatorType::GreaterOrEqual;	break;
-			case TwoChar::SmallerOrEqual:		oper->oper = CatInfixOperatorType::SmallerOrEqual;	break;
-			case TwoChar::Equals:				oper->oper = CatInfixOperatorType::Equals;			break;
-			case TwoChar::NotEquals:			oper->oper = CatInfixOperatorType::NotEquals;		break;
-			case TwoChar::LogicalAnd:			oper->oper = CatInfixOperatorType::LogicalAnd;		break;
-			case TwoChar::LogicalOr:			oper->oper = CatInfixOperatorType::LogicalOr;		break;
+			case TwoChar::GreaterOrEqual:	operatorType = CatInfixOperatorType::GreaterOrEqual;	break;
+			case TwoChar::SmallerOrEqual:	operatorType = CatInfixOperatorType::SmallerOrEqual;	break;
+			case TwoChar::Equals:			operatorType = CatInfixOperatorType::Equals;			break;
+			case TwoChar::NotEquals:		operatorType = CatInfixOperatorType::NotEquals;		break;
+			case TwoChar::LogicalAnd:		operatorType = CatInfixOperatorType::LogicalAnd;		break;
+			case TwoChar::LogicalOr:		operatorType = CatInfixOperatorType::LogicalOr;		break;
 		}
 	}
 
-	return oper;
+	return new CatInfixOperator(lhs, rhs, operatorType);
 }
 
 

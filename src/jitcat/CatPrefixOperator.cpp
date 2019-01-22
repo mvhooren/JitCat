@@ -20,11 +20,11 @@ CatGenericType CatPrefixOperator::getType() const
 {
 	if (oper == Operator::Not)
 	{
-		return CatType::Bool;
+		return CatGenericType::boolType;
 	}
 	else if (oper == Operator::Minus
-			 && (rhs->getType() == CatType::Float
-			     || rhs->getType() == CatType::Int))
+			 && (rhs->getType().isFloatType()
+			     || rhs->getType().isIntType()))
 	{
 		return rhs->getType();
 	}
@@ -70,17 +70,17 @@ CatGenericType CatPrefixOperator::typeCheck()
 		if (rightType.isBoolType()
 			&& oper == Operator::Not)
 		{
-			return CatGenericType(CatType::Bool);
+			return CatGenericType::boolType;
 		}
 		else if (rightType.isFloatType()
 				 && oper == Operator::Minus)
 		{
-			return CatGenericType(CatType::Float);
+			return CatGenericType::floatType;
 		}
 		else if (rightType.isIntType()
 				 && oper == Operator::Minus)
 		{
-			return CatGenericType(CatType::Int);
+			return CatGenericType::intType;
 		}
 		else
 		{

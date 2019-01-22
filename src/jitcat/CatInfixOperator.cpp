@@ -14,38 +14,44 @@
 #include <cassert>
 
 
-CatGenericType CatInfixOperator::getType() const 
+CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType):
+	rhs(rhs),
+	lhs(lhs),
+	oper(operatorType)
 {
-	CatType lhsType = lhs->getType().getCatType();
-	CatType rhsType = rhs->getType().getCatType();
+}
+
+
+CatGenericType CatInfixOperator::getType() const
+{
+	const CatGenericType lhsType = lhs->getType();
+	const CatGenericType rhsType = rhs->getType();
 
 	switch (oper)
 	{
-		case CatInfixOperatorType::Assign:
-			return CatType::Void;
 		case CatInfixOperatorType::Plus:
-			if ((lhsType == CatType::String
-				 && (rhsType == CatType::String
-				     || isScalar(rhsType)))
-					 || (isScalar(lhsType) 
-					     && rhsType == CatType::String))
+			if ((lhsType.isStringType()
+				 && (rhsType.isStringType()
+				     || rhsType.isScalarType()))
+				|| (lhsType.isScalarType()
+					&& rhsType.isStringType()))
 			{
-				return CatType::String;
+				return CatGenericType::stringType;
 			}
 			//Intentional fall-through
 		case CatInfixOperatorType::Minus:
 		case CatInfixOperatorType::Multiply:
 		case CatInfixOperatorType::Divide:
 		case CatInfixOperatorType::Modulo:
-			if (isScalar(lhsType) && isScalar(rhsType))
+			if (lhsType.isScalarType() && rhsType.isScalarType())
 			{
-				if (lhsType == CatType::Int && rhsType == CatType::Int)
+				if (lhsType.isIntType() && rhsType.isIntType())
 				{
-					return CatType::Int;
+					return CatGenericType::intType;
 				}
 				else
 				{
-					return CatType::Float;
+					return CatGenericType::floatType;
 				}
 			}
 			return CatGenericType("Expected scalar parameters.");
@@ -53,25 +59,25 @@ CatGenericType CatInfixOperator::getType() const
 		case CatInfixOperatorType::Smaller:
 		case CatInfixOperatorType::GreaterOrEqual:
 		case CatInfixOperatorType::SmallerOrEqual:
-			if (isScalar(lhsType) && isScalar(rhsType))
+			if (lhsType.isScalarType() && rhsType.isScalarType())
 			{
-				return CatType::Bool;
+				return CatGenericType::boolType;
 			}
 			return CatGenericType("Expected scalar parameters.");
 		case CatInfixOperatorType::Equals:
 		case CatInfixOperatorType::NotEquals:
-			if ((isScalar(lhsType) && isScalar(rhsType))
+			if ((lhsType.isScalarType() && rhsType.isScalarType())
 				|| lhsType == rhsType)
 			{
-				return CatType::Bool;
+				return CatGenericType::boolType;
 			}
 			return CatGenericType("Parameters cannot be compared.");
 		case CatInfixOperatorType::LogicalAnd:
 		case CatInfixOperatorType::LogicalOr:
-			if (lhsType == CatType::Bool
-				&& rhsType == CatType::Bool)
+			if (lhsType.isBoolType()
+				&& rhsType.isBoolType())
 			{
-				return CatType::Bool;
+				return CatGenericType::boolType;;
 			}
 			return CatGenericType("Expected boolean parameters.");
 	}
@@ -82,14 +88,7 @@ CatGenericType CatInfixOperator::getType() const
 
 bool CatInfixOperator::isConst() const 
 {
-	if (oper == CatInfixOperatorType::Assign)
-	{
-		return false;
-	}
-	else
-	{
-		return lhs->isConst() && rhs->isConst();
-	}
+	return lhs->isConst() && rhs->isConst();
 }
 
 
@@ -102,12 +101,8 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 	bool rhsIsConst = rhs->isConst();
 	if (lhsIsConst && rhsIsConst)
 	{
-		CatType lhsType = lhs->getType().getCatType();
-		if ((   lhsType == CatType::Int
-			 || lhsType == CatType::Float
-			 || lhsType == CatType::String
-			 || lhsType == CatType::Bool)
-			&& oper != CatInfixOperatorType::Assign)
+		const CatGenericType lhsType = lhs->getType();
+		if (lhsType.isBasicType())
 		{
 			return new CatLiteral(calculateExpression(compileTimeContext), getType());
 		}
@@ -147,4 +142,22 @@ void CatInfixOperator::print() const
 	CatLog::log(" ");
 	rhs->print();
 	CatLog::log(")");
+}
+
+
+CatTypedExpression* CatInfixOperator::getLeft() const
+{
+	return lhs.get();
+}
+
+
+ CatTypedExpression* CatInfixOperator::getRight() const
+{
+	return rhs.get();
+}
+
+
+CatInfixOperatorType CatInfixOperator::getOperatorType() const
+{
+	return oper;
 }

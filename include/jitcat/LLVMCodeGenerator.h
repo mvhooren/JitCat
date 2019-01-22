@@ -12,7 +12,6 @@ class LLVMCodeGeneratorHelper;
 struct LLVMCompileTimeContext;
 class Reflectable;
 #include "CatASTNodesDeclares.h"
-#include "CatType.h"
 #include "LLVMForwardDeclares.h"
 #include "CatScopeID.h"
 

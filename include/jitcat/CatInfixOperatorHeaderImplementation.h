@@ -47,40 +47,29 @@ inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtime
 		std::any rValue = rhs->execute(runtimeContext);
 		CatGenericType lType = lhs->getType();
 		CatGenericType rType = rhs->getType();
-		switch (lType.getCatType())
+		if (lType.isFloatType())
 		{
-			case CatType::Float:
-				switch (rType.getCatType())
-				{
-					case CatType::Int:		return calculateScalarExpression<float, int, float>(std::any_cast<float>(lValue), std::any_cast<int>(rValue));
-					case CatType::Float:	return calculateScalarExpression<float, float, float>(std::any_cast<float>(lValue), std::any_cast<float>(rValue));
-					case CatType::String:	return calculateStringExpression<float, std::string>(std::any_cast<float>(lValue), std::any_cast<std::string>(rValue));
-				}
-				break;
-			case CatType::Int:
-				switch (rType.getCatType())
-				{
-					case CatType::Int:		return calculateScalarExpression<int, int, int>(std::any_cast<int>(lValue), std::any_cast<int>(rValue));
-					case CatType::Float:	return calculateScalarExpression<int, float, float>(std::any_cast<int>(lValue), std::any_cast<float>(rValue));
-					case CatType::String:	return calculateStringExpression<int, std::string>(std::any_cast<int>(lValue), std::any_cast<std::string>(rValue));
-				}
-				break;
-			case CatType::String:
-				switch (rType.getCatType())
-				{
-					case CatType::Int:		return calculateStringExpression<std::string, int>(std::any_cast<std::string>(lValue), std::any_cast<int>(rValue));
-					case CatType::Float:	return calculateStringExpression<std::string, float>(std::any_cast<std::string>(lValue), std::any_cast<float>(rValue));
-					case CatType::String:	return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<std::string>(rValue));
-					case CatType::Bool:	return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<bool>(rValue));
-				}
-				break;
-			case CatType::Bool:
-				switch (rType.getCatType())
-				{
-					case CatType::Bool:	return calculateBooleanExpression(std::any_cast<bool>(lValue), std::any_cast<bool>(rValue));
-					case CatType::String:	return calculateStringExpression(std::any_cast<bool>(lValue), std::any_cast<std::string>(rValue));
-				}
-				break;
+			if		(rType.isIntType())		return calculateScalarExpression<float, int, float>(std::any_cast<float>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())	return calculateScalarExpression<float, float, float>(std::any_cast<float>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isStringType())  return calculateStringExpression<float, std::string>(std::any_cast<float>(lValue), std::any_cast<std::string>(rValue));
+		}
+		else if (lType.isIntType())
+		{
+			if		(rType.isIntType())		return calculateScalarExpression<int, int, int>(std::any_cast<int>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())	return calculateScalarExpression<int, float, float>(std::any_cast<int>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isStringType())  return calculateStringExpression<int, std::string>(std::any_cast<int>(lValue), std::any_cast<std::string>(rValue));
+		}
+		else if (lType.isStringType())
+		{
+			if		(rType.isIntType())		return calculateStringExpression<std::string, int>(std::any_cast<std::string>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())	return calculateStringExpression<std::string, float>(std::any_cast<std::string>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isStringType())  return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<std::string>(rValue));
+			else if (rType.isBoolType())	return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<bool>(rValue));
+		}
+		else if (lType.isBoolType())
+		{
+			if		(rType.isBoolType())	return calculateBooleanExpression(std::any_cast<bool>(lValue), std::any_cast<bool>(rValue));
+			else if (rType.isStringType())	return calculateStringExpression(std::any_cast<bool>(lValue), std::any_cast<std::string>(rValue));
 		}
 		assert(false);
 		return std::any();

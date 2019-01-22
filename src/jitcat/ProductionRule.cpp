@@ -11,7 +11,9 @@
 #include "ProductionTokenSet.h"
 #include "Tools.h"
 
+#include <cassert>
 #include <stddef.h>
+
 
 ProductionRule::ProductionRule()
 {
@@ -40,11 +42,8 @@ void ProductionRule::pushToken(ProductionToken* token)
 
 void ProductionRule::setSemanticAction(Grammar::SemanticAction action)
 {
+	assert(action != nullptr);
 	semanticAction = action;
-	if (action == nullptr)
-	{
-		//QQQ error, not allowed
-	}
 }
 
 

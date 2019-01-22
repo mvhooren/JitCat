@@ -49,7 +49,6 @@ public:
 	void exportRegistyToXML(const std::string& filepath);
 
 private:
-	void exportGenericType(const CatGenericType& genericType, std::ofstream& xmlFile, const char* linePrefixCharacters);
 	//This function exists to prevent circular includes via TypeInfo.h
 	static TypeInfo* createTypeInfo(const char* typeName, TypeCaster* typeCaster);
 

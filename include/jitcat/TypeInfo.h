@@ -14,12 +14,11 @@ class TypeCaster;
 class TypeInfo;
 struct TypeMemberInfo;
 class VariableEnumerator;
-#include "CatType.h"
+#include "CatGenericType.h"
 #include "ContainerType.h"
 #include "MemberTypeFlags.h"
 #include "Reflectable.h"
 #include "ReflectableHandle.h"
-#include "SpecificMemberType.h"
 #include "Tools.h"
 
 #include <any>
@@ -77,10 +76,10 @@ public:
 	void addDeserializedMember(TypeMemberInfo* memberInfo);
 	void addDeserializedMemberFunction(MemberFunctionInfo* memberFunction);
 
-	//Given a dot notated string like "bla.blep.blip", returns the CatType of "blip".
-	CatType getType(const std::string& dotNotation) const;
+	//Given a dot notated string like "bla.blep.blip", returns the CatGenericType of "blip".
+	CatGenericType getType(const std::string& dotNotation) const;
 	//Similar to above, but instead it takes a vector that contains the strings splitted on "." and an offset from where to start.
-	CatType getType(const std::vector<std::string>& indirectionList, int offset) const;
+	CatGenericType getType(const std::vector<std::string>& indirectionList, int offset) const;
 	
 	//Gets the type information of a member variable given its name.
 	TypeMemberInfo* getMemberInfo(const std::string& identifier) const;

@@ -374,15 +374,15 @@ CatGenericType CatFunctionCall::typeCheck()
 
 		switch (function)
 		{
-			case CatBuiltInFunctionType::ToInt:				return argumentTypes[0].isBasicType() ? CatGenericType(CatType::Int) : CatGenericType(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToFloat:			return argumentTypes[0].isBasicType() ? CatGenericType(CatType::Float) : CatGenericType(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToBool:			return argumentTypes[0].isBasicType() ? CatGenericType(CatType::Bool) : CatGenericType(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToString:			return argumentTypes[0].isBasicType() ? CatGenericType(CatType::String) : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToPrettyString:	return argumentTypes[0].isBasicType() ? CatGenericType(CatType::String) : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToInt:				return argumentTypes[0].isBasicType() ? CatGenericType::intType : CatGenericType(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToFloat:			return argumentTypes[0].isBasicType() ? CatGenericType::floatType : CatGenericType(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToBool:			return argumentTypes[0].isBasicType() ? CatGenericType::boolType : CatGenericType(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToString:			return argumentTypes[0].isBasicType() ? CatGenericType::stringType : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToPrettyString:	return argumentTypes[0].isBasicType() ? CatGenericType::stringType : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
 			case CatBuiltInFunctionType::ToFixedLengthString:
 				if (argumentTypes[0].isIntType() && argumentTypes[1].isIntType())
 				{
-					return CatGenericType(CatType::String);
+					return CatGenericType::stringType;
 				}
 				else
 				{
@@ -393,29 +393,29 @@ CatGenericType CatFunctionCall::typeCheck()
 			case CatBuiltInFunctionType::Tan:
 				if (argumentTypes[0].isScalarType())
 				{
-					return CatGenericType(CatType::Float);
+					return CatGenericType::floatType;
 				}
 				else
 				{
 					return CatGenericType(Tools::append(name, ": expected a number as argument."));
 				}
-			case CatBuiltInFunctionType::Random:		return CatGenericType(CatType::Float);
+			case CatBuiltInFunctionType::Random:		return CatGenericType::floatType;
 			case CatBuiltInFunctionType::RandomRange:
 			{
 				if (argumentTypes[0].isBoolType()
 					&& argumentTypes[1].isBoolType())
 				{
-					return CatGenericType(CatType::Bool);
+					return CatGenericType::boolType;
 				}
 				else if (argumentTypes[0].isIntType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType(CatType::Int);
+					return CatGenericType::intType;
 				}
 				else if (argumentTypes[0].isFloatType()
 					&& argumentTypes[0].isScalarType())
 				{
-					return CatGenericType(CatType::Float);
+					return CatGenericType::floatType;
 				}
 				else
 				{
@@ -426,7 +426,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType(CatType::Float);
+					return CatGenericType::floatType;
 				}
 				else
 				{
@@ -436,7 +436,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType(CatType::String);
+					return CatGenericType::stringType;
 				}
 				else
 				{
@@ -445,11 +445,11 @@ CatGenericType CatFunctionCall::typeCheck()
 			case CatBuiltInFunctionType::Abs:
 				if (argumentTypes[0].isFloatType())
 				{
-					return CatGenericType(CatType::Float);
+					return CatGenericType::floatType;
 				}
 				else if (argumentTypes[0].isIntType())
 				{
-					return CatGenericType(CatType::Int);
+					return CatGenericType::intType;
 				}
 				else
 				{
@@ -461,11 +461,11 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					if (argumentTypes[0].isFloatType())
 					{
-						return CatGenericType(CatType::Float);
+						return CatGenericType::floatType;
 					}
 					else if (argumentTypes[0].isIntType())
 					{
-						return CatGenericType(CatType::Int);
+						return CatGenericType::intType;
 					}
 					else
 					{
@@ -481,12 +481,12 @@ CatGenericType CatFunctionCall::typeCheck()
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType(CatType::Float);
+					return CatGenericType::floatType;
 				}
 				else if (argumentTypes[0].isIntType()
 						 && argumentTypes[1].isScalarType())
 				{
-					return CatGenericType(CatType::Int);
+					return CatGenericType::intType;
 				}
 				else
 				{
@@ -498,7 +498,7 @@ CatGenericType CatFunctionCall::typeCheck()
 			case CatBuiltInFunctionType::Floor:
 				if (argumentTypes[0].isScalarType())
 				{
-					return CatGenericType(CatType::Float);
+					return CatGenericType::floatType;
 				}
 				else
 				{
@@ -507,7 +507,7 @@ CatGenericType CatFunctionCall::typeCheck()
 			case CatBuiltInFunctionType::Pow:
 				if (argumentTypes[0].isScalarType() && argumentTypes[1].isScalarType())
 				{
-					return CatGenericType(CatType::Float);
+					return CatGenericType::floatType;
 				}
 				else
 				{
@@ -517,7 +517,7 @@ CatGenericType CatFunctionCall::typeCheck()
 				if (argumentTypes[0].isBasicType()
 					&& argumentTypes[1].isBasicType())
 				{
-					return CatGenericType(CatType::Int);
+					return CatGenericType::intType;
 				}
 				else
 				{
@@ -528,7 +528,7 @@ CatGenericType CatFunctionCall::typeCheck()
 					&& argumentTypes[1].isBasicType()
 					&& argumentTypes[2].isBasicType())
 				{
-					return CatGenericType(CatType::String);
+					return CatGenericType::stringType;
 				}
 				else
 				{
@@ -537,7 +537,7 @@ CatGenericType CatFunctionCall::typeCheck()
 			case CatBuiltInFunctionType::StringLength:
 				if (argumentTypes[0].isBasicType())
 				{
-					return CatGenericType(CatType::Int);
+					return CatGenericType::intType;
 				}
 				else
 				{
@@ -548,7 +548,7 @@ CatGenericType CatFunctionCall::typeCheck()
 					&& argumentTypes[1].isScalarType()
 					&& argumentTypes[2].isScalarType())
 				{
-					return CatGenericType(CatType::String);
+					return CatGenericType::stringType;
 				}
 				else
 				{
@@ -589,13 +589,13 @@ CatGenericType CatFunctionCall::getType() const
 		switch (function)
 		{
 			default:
-				return CatGenericType("Unknown function");
+				return CatGenericType::errorType;
 			case CatBuiltInFunctionType::ToInt:
 			case CatBuiltInFunctionType::StringLength:
 			case CatBuiltInFunctionType::FindInString:
-				return CatType::Int;
+				return CatGenericType::intType;
 			case CatBuiltInFunctionType::ToBool:
-				return CatType::Bool;
+				return CatGenericType::boolType;
 			case CatBuiltInFunctionType::RandomRange:
 			case CatBuiltInFunctionType::Abs:
 			case CatBuiltInFunctionType::Cap:
@@ -615,14 +615,14 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::Sqrt:
 			case CatBuiltInFunctionType::Ceil:
 			case CatBuiltInFunctionType::Floor:
-				return CatType::Float;
+				return CatGenericType::floatType;
 			case CatBuiltInFunctionType::SubString:
 			case CatBuiltInFunctionType::ToString:
 			case CatBuiltInFunctionType::ToPrettyString:
 			case CatBuiltInFunctionType::ToFixedLengthString:
 			case CatBuiltInFunctionType::StringRound:
 			case CatBuiltInFunctionType::ReplaceInString:
-				return CatType::String;
+				return CatGenericType::stringType;
 		}
 	}
 	else

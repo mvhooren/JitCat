@@ -61,7 +61,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 		if (!valueType.isValidType())
 		{
 			parseResult->success = false;
-			parseResult->errorMessage = valueType.getErrorMessage();
+			parseResult->errorMessage = valueType.getError().getMessage();
 		}
 		else
 		{

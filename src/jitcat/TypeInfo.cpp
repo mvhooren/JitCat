@@ -40,7 +40,7 @@ void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 }
 
 
-CatType TypeInfo::getType(const std::string& dotNotation) const
+CatGenericType TypeInfo::getType(const std::string& dotNotation) const
 {
 	std::vector<std::string> indirectionList;
 	Tools::split(dotNotation, ".", indirectionList, false);
@@ -48,7 +48,7 @@ CatType TypeInfo::getType(const std::string& dotNotation) const
 }
 
 
-CatType TypeInfo::getType(const std::vector<std::string>& indirectionList, int offset) const
+CatGenericType TypeInfo::getType(const std::vector<std::string>& indirectionList, int offset) const
 {
 	int indirectionListSize = (int)indirectionList.size();
 	if (indirectionListSize > 0)
@@ -57,52 +57,43 @@ CatType TypeInfo::getType(const std::vector<std::string>& indirectionList, int o
 		if (iter != members.end())
 		{
 			TypeMemberInfo* memberInfo = iter->second.get();
-			switch (memberInfo->specificType)
+			if (memberInfo->catType.isBasicType())
 			{
-				case SpecificMemberType::CatType:
+				if (offset == indirectionListSize - 1)
 				{
-					if (offset == indirectionListSize - 1)
-					{
-						return memberInfo->catType;
-					}
-					break;
+					return memberInfo->catType;
 				}
-				case SpecificMemberType::ContainerType:
+			}
+			else if (memberInfo->catType.isContainerType())
+			{
+				if (indirectionListSize > offset + 1)
 				{
-					if (indirectionListSize > offset + 1)
+					offset++;
+					if ((memberInfo->catType.isVectorType()
+							&& Tools::isNumber(indirectionList[offset]))
+						|| memberInfo->catType.isMapType())
 					{
-						offset++;
-						if ((memberInfo->containerType == ContainerType::Vector
-							 && Tools::isNumber(indirectionList[offset]))
-						    || memberInfo->containerType == ContainerType::StringMap)
+						if (offset == indirectionListSize - 1)
 						{
-							if (memberInfo->catType != CatType::Unknown
-								&& offset == indirectionListSize - 1)
-							{
-								return memberInfo->catType;
-							}
-							else if (memberInfo->nestedType != nullptr
-									 && indirectionListSize > offset + 1)
-							{
-								return memberInfo->nestedType->getType(indirectionList, offset + 1);
-							}
+							return memberInfo->catType;
+						}
+						else if (indirectionListSize > offset + 1)
+						{
+							return memberInfo->catType.getContainerItemType().getObjectType()->getType(indirectionList, offset + 1);
 						}
 					}
-					break;
 				}
-				break;
-				case SpecificMemberType::NestedType:
+			}
+			else if (memberInfo->catType.isObjectType())
+			{
+				if (indirectionListSize > offset + 1)
 				{
-					if (indirectionListSize > offset + 1)
-					{
-						return memberInfo->nestedType->getType(indirectionList, offset + 1);
-					}
-					break;
+					return memberInfo->catType.getObjectType()->getType(indirectionList, offset + 1);
 				}
 			}
 		}
 	}
-	return CatType::Void;
+	return CatGenericType::errorType;
 }
 
 
@@ -169,45 +160,41 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 	auto last = members.end();
 	for (auto iter = members.begin(); iter != last; ++iter)
 	{
-		switch(iter->second->specificType)
+		const CatGenericType& memberType = iter->second->catType;
+		if (memberType.isBasicType())
 		{
-			case SpecificMemberType::CatType:
+			std::string catTypeName = memberType.toString();
+			enumerator->addVariable(iter->second->memberName, catTypeName, iter->second->catType.isWritable(), iter->second->catType.isConst());
+			break;
+		}
+		else if (memberType.isObjectType())
+		{
+			std::string nestedTypeName = memberType.toString();
+			if (allowEmptyStructs || memberType.getObjectType()->getMembers().size() > 0)
 			{
-				std::string catTypeName = toString(iter->second->catType);
-				enumerator->addVariable(iter->second->memberName, catTypeName, iter->second->isWritable, iter->second->isConst);
-				break;
-			}
-			case SpecificMemberType::NestedType:
-			{
-				std::string nestedTypeName = iter->second->nestedType->getTypeName();
-				if (allowEmptyStructs || iter->second->nestedType->getMembers().size() > 0)
+				enumerator->enterNameSpace(iter->second->memberName, nestedTypeName, VariableEnumerator::NT_OBJECT);
+				if (!Tools::isInList(enumerator->loopDetectionTypeStack, nestedTypeName))
 				{
-					enumerator->enterNameSpace(iter->second->memberName, nestedTypeName, VariableEnumerator::NT_OBJECT);
-					if (!Tools::isInList(enumerator->loopDetectionTypeStack, nestedTypeName))
-					{
-						enumerator->loopDetectionTypeStack.push_back(nestedTypeName);
-						iter->second->nestedType->enumerateVariables(enumerator, allowEmptyStructs);
-						enumerator->loopDetectionTypeStack.pop_back();
-					}
-					enumerator->exitNameSpace();
-					
-				}
-				break;
-			}
-			case SpecificMemberType::ContainerType:
-			{
-				std::string containerType = iter->second->containerType == ContainerType::StringMap ? "Map" : "List";
-				std::string itemType = iter->second->nestedType->getTypeName();
-				enumerator->enterNameSpace(iter->second->memberName, Tools::append(containerType, ": ", itemType), iter->second->containerType == ContainerType::StringMap ? VariableEnumerator::NT_MAP : VariableEnumerator::NT_VECTOR);
-				if (!Tools::isInList(enumerator->loopDetectionTypeStack, itemType))
-				{
-					enumerator->loopDetectionTypeStack.push_back(itemType);
-					iter->second->nestedType->enumerateVariables(enumerator, allowEmptyStructs);
+					enumerator->loopDetectionTypeStack.push_back(nestedTypeName);
+					memberType.getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
 					enumerator->loopDetectionTypeStack.pop_back();
 				}
 				enumerator->exitNameSpace();
-				break;
+					
 			}
+		}
+		else if (memberType.isContainerType())
+		{
+			std::string containerType = memberType.isMapType() ? "Map" : "List";
+			std::string itemType = memberType.getContainerItemType().toString();
+			enumerator->enterNameSpace(iter->second->memberName, Tools::append(containerType, ": ", itemType), memberType.isMapType() ? VariableEnumerator::NT_MAP : VariableEnumerator::NT_VECTOR);
+			if (!Tools::isInList(enumerator->loopDetectionTypeStack, itemType))
+			{
+				enumerator->loopDetectionTypeStack.push_back(itemType);
+				memberType.getContainerItemType().getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
+				enumerator->loopDetectionTypeStack.pop_back();
+			}
+			enumerator->exitNameSpace();
 		}
 	}
 }

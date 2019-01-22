@@ -28,7 +28,7 @@ CatIdentifier::CatIdentifier(const std::string& name, CatRuntimeContext* context
 
 	if (memberInfo != nullptr)
 	{
-		type = memberInfo->toGenericType();
+		type = memberInfo->catType;
 	}
 }
 
@@ -49,7 +49,7 @@ bool CatIdentifier::isConst() const
 {
 	if (memberInfo != nullptr)
 	{
-		return memberInfo->isConst;
+		return memberInfo->catType.isConst();
 	}
 	else
 	{

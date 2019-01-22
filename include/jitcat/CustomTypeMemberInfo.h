@@ -17,7 +17,7 @@ struct LLVMCompileTimeContext;
 template<typename T>
 struct CustomBasicTypeMemberInfo: public TypeMemberInfo
 {
-	CustomBasicTypeMemberInfo(const std::string& memberName, unsigned int memberOffset, CatType type, bool isConst, bool isWritable): TypeMemberInfo(memberName, type, isConst, isWritable), memberOffset(memberOffset) {}
+	CustomBasicTypeMemberInfo(const std::string& memberName, unsigned int memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
 
 	inline virtual std::any getMemberReference(Reflectable* base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
@@ -31,7 +31,7 @@ struct CustomBasicTypeMemberInfo: public TypeMemberInfo
 //Implements a TypeMemberInfo for class/struct types that are reflectable.
 struct CustomTypeObjectMemberInfo: public TypeMemberInfo
 {
-	CustomTypeObjectMemberInfo(const std::string& memberName, unsigned int memberOffset, TypeInfo* type, bool isConst): TypeMemberInfo(memberName, type, isConst, false), memberOffset(memberOffset) {}
+	CustomTypeObjectMemberInfo(const std::string& memberName, unsigned int memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
 
 	inline virtual std::any getMemberReference(Reflectable* base) override final;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;

@@ -54,24 +54,16 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
-			switch(valueType.getCatType())
+			if		(valueType.isIntType())		return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isFloatType())	return std::any(reinterpret_cast<float(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isBoolType())	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isStringType())	return std::any(reinterpret_cast<std::string(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isObjectType())	return valueType.getObjectType()->getTypeCaster()->cast(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isVectorType())	return valueType.getObjectType()->getTypeCaster()->castToVectorOf(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isMapType())		return valueType.getObjectType()->getTypeCaster()->castToStringIndexedMapOf(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else 
 			{
-				case CatType::Int:		return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				case CatType::Float:	return std::any(reinterpret_cast<float(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				case CatType::Bool:		return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				case CatType::String:	return std::any(reinterpret_cast<std::string(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				case CatType::Object:
-				{
-					uintptr_t objectPointer = reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext);
-
-					if (valueType.isObjectType())		return valueType.getObjectType()->getTypeCaster()->cast(objectPointer);
-					else if (valueType.isVectorType())	return valueType.getObjectType()->getTypeCaster()->castToVectorOf(objectPointer);
-					else if (valueType.isMapType())		return valueType.getObjectType()->getTypeCaster()->castToStringIndexedMapOf(objectPointer);
-					else								return  std::any();
-				}
-				default:
-				case CatType::Unknown:
-				case CatType::Void:		return std::any();
+				return std::any();
 			}
 		}
 		else

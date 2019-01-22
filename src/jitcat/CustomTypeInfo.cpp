@@ -85,14 +85,14 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 	auto end = members.end();
 	for (auto iter = members.begin(); iter != end; ++iter)
 	{
-		if (iter->second->catType == CatType::String)
+		if (iter->second->catType.isStringType())
 		{
 			std::string* string;
 			unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
 			memcpy(&string, &data[offset], sizeof(std::string*));
 			delete string;
 		}
-		else if (iter->second->catType == CatType::Object)
+		else if (iter->second->catType.isObjectType())
 		{
 			unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
 			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(data + offset);
@@ -119,7 +119,7 @@ TypeMemberInfo* CustomTypeInfo::addFloatMember(const std::string& memberName, fl
 		memcpy((*iter)->data + offset, &defaultValue, sizeof(float));
 	}
 
-	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<float>(memberName, offset, CatType::Float, isConst, isWritable);
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<float>(memberName, offset, CatGenericType::createFloatType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
@@ -142,7 +142,7 @@ TypeMemberInfo* CustomTypeInfo::addIntMember(const std::string& memberName, int 
 		memcpy((*iter)->data + offset, &defaultValue, sizeof(int));
 	}
 
-	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<int>(memberName, offset, CatType::Int, isConst, isWritable);
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<int>(memberName, offset, CatGenericType::createIntType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
@@ -165,7 +165,7 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 		memcpy((*iter)->data + offset, &defaultValue, sizeof(bool));
 	}
 
-	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<bool>(memberName, offset, CatType::Bool, isConst, isWritable);
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<bool>(memberName, offset, CatGenericType::createBoolType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
@@ -191,7 +191,7 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 
 	std::string* newString = new std::string(defaultValue);
 	memcpy(data, &newString, sizeof(std::string*));
-	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<std::string>(memberName, offset, CatType::String, isConst, isWritable);
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<std::string>(memberName, offset, CatGenericType::createStringType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
@@ -216,7 +216,7 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 			new ((*iter)->data + offset) ReflectableHandle(defaultValue);
 		}
 		new (data) ReflectableHandle(defaultValue);
-		TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, objectTypeInfo, isConst);
+		TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst));
 		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 		members.emplace(lowerCaseMemberName, memberInfo);
 		return memberInfo;
@@ -313,7 +313,7 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned
 			auto end = members.end();
 			for (auto iter = members.begin(); iter != end; ++iter)
 			{
-				if (iter->second->catType == CatType::String)
+				if (iter->second->catType.isStringType())
 				{
 					std::string* originalString;
 					unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
@@ -321,7 +321,7 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned
 					std::string* stringCopy = new std::string(*originalString);
 					memcpy(instanceData + offset, &stringCopy, sizeof(std::string*));
 				}
-				else if (iter->second->catType == CatType::Object)
+				else if (iter->second->catType.isObjectType())
 				{
 					unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
 					ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(&otherData[offset]);

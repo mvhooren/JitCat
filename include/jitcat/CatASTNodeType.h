@@ -13,6 +13,7 @@ enum class CatASTNodeType
 	Literal,
 	Identifier,
 	InfixOperator,
+	AssignmentOperator,
 	PrefixOperator,
 	ParameterList,
 	FunctionCall,

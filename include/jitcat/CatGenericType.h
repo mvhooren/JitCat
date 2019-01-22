@@ -8,27 +8,53 @@
 #pragma once
 
 class TypeInfo;
+#include "CatError.h"
 #include "CatInfixOperatorType.h"
-#include "CatType.h"
 #include "ContainerType.h"
 
-
 #include <any>
+#include <fstream>
+#include <map>
+#include <memory>
 #include <string>
 
 
 class CatGenericType
 {
+private:
+	enum class SpecificType
+	{
+		None,
+		Error,
+		Basic,
+		Object,
+		Container,
+		Count
+	};
+	
+	enum class BasicType
+	{
+		None,
+		Int,
+		Float,
+		String,
+		Bool,
+		Void,
+		Count
+	};
+
+
+	CatGenericType(BasicType catType, bool writable = false, bool constant = false);
+
 public:
 	CatGenericType();
-	CatGenericType(CatType catType);
-	CatGenericType(TypeInfo* objectType);
-	CatGenericType(ContainerType containerType, TypeInfo* itemType);
-	CatGenericType(const std::string& message);
+	CatGenericType(TypeInfo* objectType, bool writable = false, bool constant = false);
+	CatGenericType(ContainerType containerType, TypeInfo* itemType, bool writable = false, bool constant = false);
+	CatGenericType(const CatError& error);
+	CatGenericType(const CatGenericType& other);
 
-	bool operator== (const CatType other) const;
+	CatGenericType& operator=(const CatGenericType& other);
 	bool operator== (const CatGenericType& other) const;
-	bool operator!= (const CatType other) const;
 	bool operator!= (const CatGenericType& other) const;
 
 	bool isUnknown() const;
@@ -44,13 +70,14 @@ public:
 	bool isContainerType() const;
 	bool isVectorType() const;
 	bool isMapType() const;
-	bool isEqualToBasicCatType(CatType catType) const;
-	CatType getCatType() const;
+
+	bool isWritable() const;
+	bool isConst() const;
 
 	CatGenericType getContainerItemType() const;
 	const char* getObjectTypeName() const;
 
-	const std::string& getErrorMessage() const;
+	const CatError& getError() const;
 
 	CatGenericType getInfixOperatorResultType(CatInfixOperatorType oper, const CatGenericType& rightType);
 
@@ -71,30 +98,40 @@ public:
 	static int convertToInt(std::any value, const CatGenericType& valueType);
 	static bool convertToBoolean(std::any value, const CatGenericType& valueType);
 	static std::string convertToString(std::any value, const CatGenericType& valueType);
+	static CatGenericType readFromXML(std::ifstream& xmlFile, const std::string& closingTag, std::map<std::string, TypeInfo*>& typeInfos);
+	void writeToXML(std::ofstream& xmlFile, const char* linePrefixCharacters);
+
+	static CatGenericType createIntType(bool isWritable, bool isConst);
+	static CatGenericType createFloatType(bool isWritable, bool isConst);
+	static CatGenericType createBoolType(bool isWritable, bool isConst);
+	static CatGenericType createStringType(bool isWritable, bool isConst);
+
+private:
+	static const char* toString(BasicType type);
+	static BasicType toBasicType(const char* value);
+	static const char* toString(SpecificType type);
+	static SpecificType toSpecificType(const char* value);
 
 public:
 	static const CatGenericType intType;
 	static const CatGenericType floatType;
 	static const CatGenericType boolType;
 	static const CatGenericType stringType;
+	static const CatGenericType voidType;
+	static const CatGenericType errorType;
+	static const CatGenericType unknownType;
 
 private:
-	enum class SpecificType
-	{
-		None,
-		Error,
-		CatType,
-		ObjectType,
-		ContainerType
-	};
-
 	SpecificType specificType;
-	CatType catType;
+	BasicType basicType;
 	//not owned
 	TypeInfo* nestedType;
 
 	//When the member is a container, catType or nestedType will be set to the item type of the container
 	ContainerType containerType;
 
-	std::string error;
+	bool writable;
+	bool constant;
+
+	std::unique_ptr<CatError> error;
 };

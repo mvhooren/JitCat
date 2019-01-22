@@ -19,7 +19,6 @@ class Reflectable;
 class TypeInfo;
 struct TypeMemberInfo;
 #include "CatScopeID.h"
-#include "CatType.h"
 #include "ReflectableHandle.h"
 #include "RuntimeContext.h"
 

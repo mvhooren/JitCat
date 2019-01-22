@@ -132,7 +132,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameterType, llvm::Value* argument, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, llvm::Value* argument, LLVMCompileTimeContext* context)
 {
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(parameterType));
@@ -143,7 +143,7 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext * context)
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext * context)
 {
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(overload1Type));
@@ -155,7 +155,7 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, CatType parameter1Type, CatType parameter2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameter1Type, const CatGenericType& parameter2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context)
 {
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(parameter1Type));
@@ -168,18 +168,15 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 }
 
 
-llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(CatType type)
+llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 {
-	switch (type)
-	{
-		case CatType::Float:	return LLVMTypes::floatType;
-		case CatType::Int:		return LLVMTypes::intType;
-		case CatType::Bool:		return LLVMTypes::boolType;
-		case CatType::String:	return LLVMTypes::stringPtrType;
-		case CatType::Object:	return LLVMTypes::pointerType;
-		default:
-		case CatType::Void:		return LLVMTypes::voidType;
-	}
+	if		(type.isFloatType())	return LLVMTypes::floatType;
+	else if (type.isIntType())		return LLVMTypes::intType;
+	else if (type.isBoolType())		return LLVMTypes::boolType;
+	else if (type.isStringType())	return LLVMTypes::stringPtrType;
+	else if (type.isObjectType())	return LLVMTypes::pointerType;
+	else if (type.isContainerType())return LLVMTypes::pointerType;
+	else							return LLVMTypes::voidType;
 }
 
 

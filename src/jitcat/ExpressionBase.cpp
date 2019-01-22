@@ -189,7 +189,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 	if (!valueType.isValidType())
 	{
 		parseResult->success = false;
-		parseResult->errorMessage = valueType.getErrorMessage();
+		parseResult->errorMessage = valueType.getError().getMessage();
 	}
 	else 
 	{	
@@ -221,12 +221,11 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 					//Insert an automatic type conversion if the scalar types do not match.
 					CatArgumentList* arguments = new CatArgumentList();
 					arguments->arguments.emplace_back(static_cast<CatTypedExpression*>(parseResult->astRootNode));
-					switch (expectedType.getCatType())
-					{
-						case CatType::Float:	expressionAST = new CatFunctionCall("toFloat", arguments);		break;
-						case CatType::Int:		expressionAST = new CatFunctionCall("toInt", arguments);		break;
-						default:				assert(false);	//Missing a conversion here?
-					}
+
+					if		(expectedType.isFloatType())	expressionAST = new CatFunctionCall("toFloat", arguments);
+					else if (expectedType.isIntType())		expressionAST = new CatFunctionCall("toInt", arguments);
+					else assert(false);	//Missing a conversion here?
+					
 					parseResult->astRootNode = expressionAST;
 					valueType = expressionAST->getType();
 				}

@@ -4,6 +4,7 @@ class CatArrayIndex;
 class CatFunctionCall;
 class CatIdentifier;
 class CatInfixOperator;
+class AssignmentOperator;
 class CatLiteral;
 class CatMemberAccess;
 class CatMemberFunctionCall;

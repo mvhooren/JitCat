@@ -60,6 +60,7 @@ private:
 	//Semantic action
 	static ASTNode* pass(const ASTNodeParser& nodeParser);
 	static ASTNode* link(const ASTNodeParser& nodeParser);
+	static ASTNode* assignmentOperator(const ASTNodeParser& nodeParser);
 	static ASTNode* infixOperator(const ASTNodeParser& nodeParser);
 	static ASTNode* prefixOperator(const ASTNodeParser& nodeParser);
 	static ASTNode* literalToken(const ASTNodeParser& nodeParser);

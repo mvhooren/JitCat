@@ -8,7 +8,6 @@
 #include "Expression.h"
 #include "CatASTNodes.h"
 #include "CatGenericType.h"
-#include "CatType.h"
 #include "Configuration.h"
 #include "Document.h"
 #include "ExpressionErrorManager.h"
@@ -150,9 +149,9 @@ inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeCont
 
 
 template<typename T>
-CatType Expression<T>::getExpectedCatType() const
+CatGenericType Expression<T>::getExpectedCatType() const
 {
-	return TypeTraits<T>::getCatType();
+	return TypeTraits<T>::toGenericType();
 }
 
 

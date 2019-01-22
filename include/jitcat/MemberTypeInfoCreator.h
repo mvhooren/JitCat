@@ -20,7 +20,7 @@ public:
 	{
 		static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
 		TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
-		return new ClassObjectMemberInfo<ClassType, T>(memberName, member, nestedType, isConst, isWritable);
+		return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, isWritable, isConst));
 	}
 };
 
@@ -41,7 +41,7 @@ public:
 	template<typename ClassType>
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, float ClassType::* member, bool isConst, bool isWritable) 
 	{
-		return new BasicTypeMemberInfo<ClassType, float>(memberName, member, CatType::Float, isConst, isWritable);
+		return new BasicTypeMemberInfo<ClassType, float>(memberName, member, CatGenericType::createFloatType(isWritable, isConst));
 	}
 };
 
@@ -53,7 +53,7 @@ public:
 	template<typename ClassType>
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, int ClassType::* member, bool isConst, bool isWritable) 
 	{
-		return new BasicTypeMemberInfo<ClassType, int>(memberName, member, CatType::Int, isConst, isWritable);
+		return new BasicTypeMemberInfo<ClassType, int>(memberName, member, CatGenericType::createIntType(isWritable, isConst));
 	}
 };
 
@@ -65,7 +65,7 @@ public:
 	template<typename ClassType>
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, bool ClassType::* member, bool isConst, bool isWritable) 
 	{
-		return new BasicTypeMemberInfo<ClassType, bool>(memberName, member, CatType::Bool, isConst, isWritable);
+		return new BasicTypeMemberInfo<ClassType, bool>(memberName, member, CatGenericType::createBoolType(isWritable, isConst));
 	}
 };
 
@@ -77,7 +77,7 @@ public:
 	template<typename ClassType>
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::string ClassType::* member, bool isConst, bool isWritable) 
 	{
-		return new BasicTypeMemberInfo<ClassType, std::string>(memberName, member, CatType::String, isConst, isWritable);
+		return new BasicTypeMemberInfo<ClassType, std::string>(memberName, member, CatGenericType::createStringType(isWritable, isConst));
 	}
 };
 
@@ -90,7 +90,7 @@ public:
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<U> ClassType::* member, bool isConst, bool isWritable) 
 	{
 		TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-		return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, nestedType, isConst, isWritable);
+		return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst));
 	}
 };
 
@@ -103,7 +103,7 @@ public:
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, U* ClassType::* member, bool isConst, bool isWritable) 
 	{
 		TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-		return new ClassPointerMemberInfo<ClassType, U>(memberName, member, nestedType, isConst, isWritable);
+		return new ClassPointerMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst));
 	}
 };
 
@@ -116,7 +116,7 @@ public:
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType> ClassType::* member, bool isConst, bool isWritable) 
 	{
 		TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-		return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, ContainerType::Vector, nestedType, isConst);
+		return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, CatGenericType(ContainerType::Vector, nestedType, false, isConst));
 	}
 };
 
@@ -129,6 +129,6 @@ public:
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<std::string, ItemType> ClassType::* member, bool isConst, bool isWritable) 
 	{
 		TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-		return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType> >(memberName, member, ContainerType::StringMap, nestedType, isConst);
+		return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType> >(memberName, member, CatGenericType(ContainerType::StringMap, nestedType, false, isConst));
 	}
 };

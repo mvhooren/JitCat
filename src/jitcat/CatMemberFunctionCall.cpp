@@ -22,7 +22,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedEx
 	memberFunctionInfo(nullptr)
 {
 	if (base != nullptr
-		&& base->getType() == CatType::Object)
+		&& base->getType().isObjectType())
 	{
 		CatGenericType baseMemberInfo = base->getType();
 		if (baseMemberInfo.isValidType()
@@ -113,7 +113,7 @@ CatGenericType CatMemberFunctionCall::getType() const
 	}
 	else 
 	{
-		return CatType::Unknown;
+		return CatGenericType::unknownType;
 	}
 }
 

@@ -11,7 +11,7 @@ class CatRuntimeContext;
 class CatVariableInfo;
 class ExpressionBase;
 class MenuObjectInstanceLocals;
-#include "CatType.h"
+#include "CatGenericType.h"
 
 #include <map>
 #include <string>
@@ -23,9 +23,9 @@ class ExpressionHelperFunctions
 	ExpressionHelperFunctions();
 
 public:
-	static bool canBeAssigned(CatType targetType, CatType sourceType);
-	static ExpressionBase* createExpression(CatType type, const std::string& expressionText, CatRuntimeContext* compileContext);
-	static ExpressionBase* createExpression(CatType type, const std::string& expressionText);
+	static bool canBeAssigned(const CatGenericType& targetType, const CatGenericType& sourceType);
+	static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText, CatRuntimeContext* compileContext);
+	static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText);
 };
 
 

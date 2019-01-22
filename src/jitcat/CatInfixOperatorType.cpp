@@ -12,7 +12,6 @@ const char* toString(CatInfixOperatorType infixOperator)
 	switch (infixOperator)
 	{
 		default:									return "none";
-		case CatInfixOperatorType::Assign:			return "=";
 		case CatInfixOperatorType::Plus:			return "+";	
 		case CatInfixOperatorType::Minus:			return "-";
 		case CatInfixOperatorType::Multiply:		return "*";

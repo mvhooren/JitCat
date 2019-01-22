@@ -13,11 +13,19 @@ class CatError
 {
 public:
 	CatError();
+	CatError(const CatError& other);
 	CatError(const std::string& message);
+	CatError(const char* message);
 
-public:
+	CatError& operator=(const CatError& other);
+	bool operator==(const CatError& other) const;
+
+	const std::string& getMessage() const;
+
+private:
 	std::string message;
 
+public:
 	static CatError defaultError;
 };
 
