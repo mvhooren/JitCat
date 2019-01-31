@@ -822,7 +822,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 		assert(context->currentFunction != nullptr);
 		assert(context->currentFunction->arg_size() > 0);
 		llvm::Argument* argument = context->currentFunction->arg_begin();
-		if (context->currentFunction->arg_size() > 0 && context->currentFunction->hasAttribute(0, llvm::Attribute::StructRet))
+		if (context->currentFunction->arg_size() > 0 && context->currentFunction->hasAttribute(1, llvm::Attribute::StructRet))
 		{
 			argument = context->currentFunction->arg_begin() + 1;
 		}
