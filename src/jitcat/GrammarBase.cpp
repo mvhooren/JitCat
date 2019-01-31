@@ -5,28 +5,33 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Grammar.h"
-#include "CatLog.h"
-#include "Production.h"
-#include "ProductionEpsilonToken.h"
-#include "ProductionNonTerminalToken.h"
-#include "ProductionRule.h"
-#include "ProductionTerminalToken.h"
-#include "ProductionTokenSet.h"
-#include "SLRParser.h"
-#include "TokenFlag.h"
+#include "jitcat/GrammarBase.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/Production.h"
+#include "jitcat/ProductionEpsilonToken.h"
+#include "jitcat/ProductionNonTerminalToken.h"
+#include "jitcat/ProductionRule.h"
+#include "jitcat/ProductionTerminalToken.h"
+#include "jitcat/ProductionTokenSet.h"
+#include "jitcat/SLRParser.h"
+#include "jitcat/TokenFlag.h"
 #include <iostream>
 
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Grammar;
+using namespace jitcat::Parser;
+using namespace jitcat::Tokenizer;
 
 
-Grammar::Grammar(Tokenizer* tokenizer):
+GrammarBase::GrammarBase(TokenizerBase* tokenizer):
 	tokenizer(tokenizer),
 	rootProduction(nullptr),
 	epsilonInstance(nullptr)
 {}
 
 
-Grammar::~Grammar()
+GrammarBase::~GrammarBase()
 {
 	for (unsigned int i = 0; i < productions.size(); i++)
 	{
@@ -44,7 +49,7 @@ Grammar::~Grammar()
 }
 
 
-ProductionToken* Grammar::epsilon()
+ProductionToken* GrammarBase::epsilon()
 {
 	if (epsilonInstance == nullptr)
 	{
@@ -54,7 +59,7 @@ ProductionToken* Grammar::epsilon()
 }
 
 
-SLRParser* Grammar::createSLRParser() const
+SLRParser* GrammarBase::createSLRParser() const
 {
 	SLRParser* parser = new SLRParser();
 	parser->createNFA(this);
@@ -62,7 +67,7 @@ SLRParser* Grammar::createSLRParser() const
 }
 
 
-void Grammar::rule(int productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action)
+void GrammarBase::rule(int productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action)
 {
 	ProductionRule* rule = new ProductionRule();
 	for (auto iter : tokens)
@@ -74,7 +79,7 @@ void Grammar::rule(int productionId, std::initializer_list<ProductionToken*> tok
 }
 
 
-ProductionToken* Grammar::term(int tokenId, int tokenSubType)
+ProductionToken* GrammarBase::term(int tokenId, int tokenSubType)
 {
 	for (unsigned int i = 0; i < terminals.size(); i++)
 	{
@@ -90,20 +95,20 @@ ProductionToken* Grammar::term(int tokenId, int tokenSubType)
 }
 
 
-ProductionToken* Grammar::prod(int productionId)
+ProductionToken* GrammarBase::prod(int productionId)
 {
 	return new ProductionNonTerminalToken(findOrCreateProduction(productionId));
 }
 
 
-void Grammar::setRootProduction(int productionId, ProductionToken* eofToken)
+void GrammarBase::setRootProduction(int productionId, ProductionToken* eofToken)
 {
 	rootProduction = findOrCreateProduction(productionId);
 	rootProduction->getFollowSet()->addMemberIfNotPresent(eofToken);
 }
 
 
-void Grammar::build()
+void GrammarBase::build()
 {
 	buildEpsilonContainment();
 	buildFirstSets();
@@ -111,7 +116,7 @@ void Grammar::build()
 }
 
 
-Production* Grammar::findOrCreateProduction(int productionId)
+Production* GrammarBase::findOrCreateProduction(int productionId)
 {
 	Production* production;
 	if (productions.find(productionId) != productions.end())
@@ -127,7 +132,7 @@ Production* Grammar::findOrCreateProduction(int productionId)
 }
 
 
-void Grammar::buildEpsilonContainment()
+void GrammarBase::buildEpsilonContainment()
 {
 	if (rootProduction != nullptr)
 	{	
@@ -164,7 +169,7 @@ void Grammar::buildEpsilonContainment()
 }
 
 
-void Grammar::buildFirstSets()
+void GrammarBase::buildFirstSets()
 {
 	std::map<int, Production*>::iterator iter;
 	for (iter = productions.begin(); iter != productions.end(); iter++)
@@ -201,7 +206,7 @@ void Grammar::buildFirstSets()
 }
 
 
-void Grammar::buildFollowSets()
+void GrammarBase::buildFollowSets()
 {
 	std::map<int, Production*>::iterator iter;
 	for (iter = productions.begin(); iter != productions.end(); iter++)

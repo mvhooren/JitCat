@@ -7,7 +7,11 @@
 
 #pragma once
 
+namespace jitcat
+{
 
-typedef int CatScopeID;
+	typedef int CatScopeID;
 
-const CatScopeID InvalidScopeID = -1;
+	const CatScopeID InvalidScopeID = -1;
+
+} //End namespace jitcat

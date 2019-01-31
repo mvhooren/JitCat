@@ -7,13 +7,16 @@
 
 #pragma once
 
-#include "CatGenericType.h"
-#include "Configuration.h"
-#include "Tools.h"
-#include "TypeTraits.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/Configuration.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeTraits.h"
 
 #include <string>
 #include <vector>
+
+namespace jitcat::Reflection
+{
 
 struct MemberFunctionCallData
 {
@@ -316,3 +319,6 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 
 	void (T::*function)(TFunctionArguments...) const;
 };
+
+
+} //End namespace jitcat::Reflection

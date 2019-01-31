@@ -5,11 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatRuntimeContext.h"
-#include "CustomTypeInfo.h"
-#include "CustomTypeInstance.h"
-#include "Expression.h"
-#include "ExpressionAny.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeInstance.h"
+#include "jitcat/Expression.h"
+#include "jitcat/ExpressionAny.h"
 #include "ReflectionTestRoot.h"
 
 #include <string>
@@ -20,6 +20,9 @@
 	#define MAIN main
 #endif
 #include <iostream>
+
+using namespace jitcat;
+using namespace jitcat::Reflection;
 
 
 int MAIN(int argc, char* argv[])

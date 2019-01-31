@@ -5,16 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "LLVMCodeGenerator.h"
-#include "CatASTNodes.h"
-#include "Configuration.h"
-#include "LLVMCodeGeneratorHelper.h"
-#include "LLVMCompileTimeContext.h"
-#include "LLVMCatIntrinsics.h"
-#include "LLVMJit.h"
-#include "LLVMTypes.h"
-#include "MemberFunctionInfo.h"
-#include "MemberInfo.h"
+#include "jitcat/LLVMCodeGenerator.h"
+#include "jitcat/CatASTNodes.h"
+#include "jitcat/Configuration.h"
+#include "jitcat/LLVMCodeGeneratorHelper.h"
+#include "jitcat/LLVMCompileTimeContext.h"
+#include "jitcat/LLVMCatIntrinsics.h"
+#include "jitcat/LLVMJit.h"
+#include "jitcat/LLVMTypes.h"
+#include "jitcat/MemberFunctionInfo.h"
+#include "jitcat/MemberInfo.h"
 
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Function.h>
@@ -31,6 +31,11 @@
 
 
 #include <iostream>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::LLVM;
+using namespace jitcat::Reflection;
 
 
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):

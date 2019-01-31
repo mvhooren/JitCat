@@ -5,7 +5,9 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ParseHelper.h"
+#include "jitcat/ParseHelper.h"
+
+using namespace jitcat::Tokenizer;
 
 
 bool ParseHelper::isValidStringChar(const char symbol) 

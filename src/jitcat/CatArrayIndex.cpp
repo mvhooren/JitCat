@@ -5,11 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatArrayIndex.h"
-#include "CatLog.h"
-#include "MemberInfo.h"
-#include "ASTHelper.h"
-#include "TypeInfo.h"
+#include "jitcat/CatArrayIndex.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/Tools.h"
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
 
 
 CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex):

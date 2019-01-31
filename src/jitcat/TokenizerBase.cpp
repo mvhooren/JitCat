@@ -5,17 +5,20 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Tokenizer.h"
-#include "Document.h"
-#include "Lexeme.h"
-#include "ParseToken.h"
+#include "jitcat/TokenizerBase.h"
+#include "jitcat/Document.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/ParseToken.h"
 
 
-Tokenizer::Tokenizer()
+using namespace jitcat::Tokenizer;
+
+
+TokenizerBase::TokenizerBase()
 {}
 
 
-Tokenizer::~Tokenizer()
+TokenizerBase::~TokenizerBase()
 {
 	std::size_t tokenCount = tokenFactories.size();
 	for (std::size_t i = 0; i < tokenCount; i++)
@@ -26,7 +29,7 @@ Tokenizer::~Tokenizer()
 }
 
 
-bool Tokenizer::tokenize(Document* document, std::vector<ParseToken*>& tokens, ParseToken* eofToken)
+bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& tokens, ParseToken* eofToken)
 {
 	const char* data = document->getDocumentData();
 	const char* position = data;
@@ -55,7 +58,7 @@ bool Tokenizer::tokenize(Document* document, std::vector<ParseToken*>& tokens, P
 }
 
 
-void Tokenizer::registerTokenFactory(ParseToken* factory)
+void TokenizerBase::registerTokenFactory(ParseToken* factory)
 {
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{
@@ -68,7 +71,7 @@ void Tokenizer::registerTokenFactory(ParseToken* factory)
 }
 
 
-const char* Tokenizer::getTokenName(int tokenId, int tokenSubType) const
+const char* TokenizerBase::getTokenName(int tokenId, int tokenSubType) const
 {
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{
@@ -81,7 +84,7 @@ const char* Tokenizer::getTokenName(int tokenId, int tokenSubType) const
 }
 
 
-const char* Tokenizer::getTokenSymbol(int tokenId, int tokenSubType) const
+const char* TokenizerBase::getTokenSymbol(int tokenId, int tokenSubType) const
 {
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{

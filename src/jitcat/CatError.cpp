@@ -5,7 +5,9 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatError.h"
+#include "jitcat/CatError.h"
+
+using namespace jitcat;
 
 
 CatError::CatError()

@@ -9,9 +9,14 @@
 
 #include <string>
 
-class RuntimeContext
+namespace jitcat
 {
-public:
-	RuntimeContext() {};
-	virtual ~RuntimeContext() {};
-};
+
+	class RuntimeContext
+	{
+	public:
+		RuntimeContext() {};
+		virtual ~RuntimeContext() {};
+	};
+
+} // End namespace jitcat;

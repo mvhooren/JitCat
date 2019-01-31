@@ -5,32 +5,39 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "SLRParser.h"
-#include "ASTNode.h"
-#include "ASTNodeParser.h"
-#include "CatLog.h"
-#include "DFAState.h"
-#include "Grammar.h"
-#include "Lexeme.h"
-#include "Production.h"
-#include "ProductionEpsilonToken.h"
-#include "ProductionRule.h"
-#include "ProductionNonTerminalToken.h"
-#include "ProductionTerminalToken.h"
-#include "ProductionToken.h"
-#include "ProductionTokenSet.h"
-#include "SLRParseResult.h"
-#include "StackItemProduction.h"
-#include "StackItemToken.h"
-#include "Tools.h"
+#include "jitcat/SLRParser.h"
+#include "jitcat/ASTNode.h"
+#include "jitcat/ASTNodeParser.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/DFAState.h"
+#include "jitcat/GrammarBase.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/Production.h"
+#include "jitcat/ProductionEpsilonToken.h"
+#include "jitcat/ProductionRule.h"
+#include "jitcat/ProductionNonTerminalToken.h"
+#include "jitcat/ProductionTerminalToken.h"
+#include "jitcat/ProductionToken.h"
+#include "jitcat/ProductionTokenSet.h"
+#include "jitcat/SLRParseResult.h"
+#include "jitcat/StackItemProduction.h"
+#include "jitcat/StackItemToken.h"
+#include "jitcat/Tools.h"
 
 #include <cassert>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Grammar;
+using namespace jitcat::Parser;
+using namespace jitcat::Tokenizer;
+using namespace jitcat::Tools;
 
-void SLRParser::createNFA(const Grammar* grammar)
+
+void SLRParser::createNFA(const GrammarBase* grammar)
 {
 	std::vector<DFAState*>& nfa = dfa;
 	Production* prod = grammar->rootProduction;

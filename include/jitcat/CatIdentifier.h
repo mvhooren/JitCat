@@ -7,30 +7,39 @@
 
 #pragma once
 
-struct TypeMemberInfo;
-#include "CatAssignableExpression.h"
-#include "CatScopeID.h"
-
-
-class CatIdentifier: public CatAssignableExpression
+namespace jitcat::Reflection
 {
-public:
-	CatIdentifier(const std::string& name, CatRuntimeContext* context);
-	virtual CatGenericType getType() const override final;
-	virtual void print() const override final;
-	virtual bool isConst() const override final;
-	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
-	virtual CatASTNodeType getNodeType() override final;
-	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
-	virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType) override final;
-	virtual CatGenericType typeCheck() override final;
-	CatScopeID getScopeId() const;
-	const TypeMemberInfo* getMemberInfo() const;
+	struct TypeMemberInfo;
+}
+#include "jitcat/CatAssignableExpression.h"
+#include "jitcat/CatScopeID.h"
 
-public:
-	std::string name;
-	CatGenericType type;
-	TypeMemberInfo* memberInfo;
-	CatScopeID scopeId;
-	CatRuntimeContext* compileTimeContext;
-};
+namespace jitcat::AST
+{
+
+
+	class CatIdentifier: public CatAssignableExpression
+	{
+	public:
+		CatIdentifier(const std::string& name, CatRuntimeContext* context);
+		virtual CatGenericType getType() const override final;
+		virtual void print() const override final;
+		virtual bool isConst() const override final;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+		virtual CatASTNodeType getNodeType() override final;
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, Reflection::AssignableType& assignableType) override final;
+		virtual CatGenericType typeCheck() override final;
+		CatScopeID getScopeId() const;
+		const Reflection::TypeMemberInfo* getMemberInfo() const;
+
+	public:
+		std::string name;
+		CatGenericType type;
+		Reflection::TypeMemberInfo* memberInfo;
+		CatScopeID scopeId;
+		CatRuntimeContext* compileTimeContext;
+	};
+
+
+} //End namespace jitcat::AST

@@ -6,22 +6,25 @@
 */
 
 #include <catch2/catch.hpp>
-#include "CatRuntimeContext.h"
-#include "CustomTypeInfo.h"
-#include "CustomTypeInstance.h"
-#include "CustomTypeMemberInfo.h"
-#include "Expression.h"
-#include "ExpressionAny.h"
-#include "ExpressionAssignment.h"
-#include "ExpressionErrorManager.h"
-#include "LLVMCatIntrinsics.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeInstance.h"
+#include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/Expression.h"
+#include "jitcat/ExpressionAny.h"
+#include "jitcat/ExpressionAssignment.h"
+#include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/LLVMCatIntrinsics.h"
+#include "jitcat/Tools.h"
 #include "TestObjects.h"
-#include "Tools.h"
 
 #include <functional>
 #include <iostream>
 #include <cmath>
 
+using namespace jitcat;
+using namespace jitcat::LLVM;
+using namespace jitcat::Reflection;
 using namespace TestObjects;
 
 

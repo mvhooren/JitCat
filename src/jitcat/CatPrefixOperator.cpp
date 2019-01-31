@@ -5,13 +5,17 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatPrefixOperator.h"
-#include "CatLiteral.h"
-#include "CatLog.h"
-#include "ASTHelper.h"
-#include "Tools.h"
+#include "jitcat/CatPrefixOperator.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/Tools.h"
 
 #include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
 
 const char* CatPrefixOperator::conversionTable[] = {"!", "-"};
 

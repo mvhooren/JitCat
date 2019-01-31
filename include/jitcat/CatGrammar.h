@@ -7,67 +7,72 @@
 
 #pragma once
 
-#include "CatASTNodes.h"
-#include "Grammar.h"
+#include "jitcat/CatASTNodes.h"
+#include "jitcat/GrammarBase.h"
 
-class CatGrammar: public Grammar
+namespace jitcat::Grammar
 {
-	//Productions
-	enum class Prod
-	{
-		Root,
-		ClassDefinition,
-		ClassContents,
-		Declaration,
-		FunctionDefinition,
-		FunctionParameterDefinition,
-		FunctionParameterDefRepeat,
-		VariableDeclaration,
-		VariableDeclarationTail,
-		OperatorP2,
-		OperatorP3,
-		OperatorP4,
-		OperatorP5,
-		OperatorP6,
-		OperatorP7,
-		OperatorP8,
-		OperatorP9,
-		OperatorP10,
-		OperatorP11,
-		Expression,
-		ExpressionBlock,
-		ExpressionBlockContents,
-		FlowControl,
-		IfThen,
-		Else,
-		ElseBody,
-		Type,
-		FunctionCall,
-		FunctionCallArguments,
-		FunctionCallArgumentRepeat,
-		Literal,
-		Assignment,
-		ObjectMemberAccess,
-		ObjectMemberAccessAction,
-		Return
-	};
-public: 
-	CatGrammar(Tokenizer* tokenizer);
-	virtual const char* getProductionName(int production) const;
-	static bool isTypedExpression(CatASTNodeType node);
 
-private:
-	//Semantic action
-	static ASTNode* pass(const ASTNodeParser& nodeParser);
-	static ASTNode* link(const ASTNodeParser& nodeParser);
-	static ASTNode* assignmentOperator(const ASTNodeParser& nodeParser);
-	static ASTNode* infixOperator(const ASTNodeParser& nodeParser);
-	static ASTNode* prefixOperator(const ASTNodeParser& nodeParser);
-	static ASTNode* literalToken(const ASTNodeParser& nodeParser);
-	static ASTNode* identifierToken(const ASTNodeParser& nodeParser);
-	static ASTNode* argumentListToken(const ASTNodeParser& nodeParser);
-	static ASTNode* functionCallToken(const ASTNodeParser& nodeParser);
-	static ASTNode* memberAccessToken(const ASTNodeParser& nodeParser);
-	static ASTNode* memberFunctionCallToken(const ASTNodeParser& nodeParser);
-	static ASTNode* arrayIndexToken(const ASTNodeParser& nodeParser);
-};
+	class CatGrammar: public GrammarBase
+	{
+		//Productions
+		enum class Prod
+		{
+			Root,
+			ClassDefinition,
+			ClassContents,
+			Declaration,
+			FunctionDefinition,
+			FunctionParameterDefinition,
+			FunctionParameterDefRepeat,
+			VariableDeclaration,
+			VariableDeclarationTail,
+			OperatorP2,
+			OperatorP3,
+			OperatorP4,
+			OperatorP5,
+			OperatorP6,
+			OperatorP7,
+			OperatorP8,
+			OperatorP9,
+			OperatorP10,
+			OperatorP11,
+			Expression,
+			ExpressionBlock,
+			ExpressionBlockContents,
+			FlowControl,
+			IfThen,
+			Else,
+			ElseBody,
+			Type,
+			FunctionCall,
+			FunctionCallArguments,
+			FunctionCallArgumentRepeat,
+			Literal,
+			Assignment,
+			ObjectMemberAccess,
+			ObjectMemberAccessAction,
+			Return
+		};
+	public: 
+		CatGrammar(Tokenizer::TokenizerBase* tokenizer);
+		virtual const char* getProductionName(int production) const;
+		static bool isTypedExpression(AST::CatASTNodeType node);
+
+	private:
+		//Semantic action
+		static AST::ASTNode* pass(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* link(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* assignmentOperator(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* infixOperator(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* prefixOperator(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* literalToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* identifierToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* argumentListToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* functionCallToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* memberAccessToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* memberFunctionCallToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* arrayIndexToken(const Parser::ASTNodeParser& nodeParser);
+	};
+
+} //End namespace jitcat::Grammar

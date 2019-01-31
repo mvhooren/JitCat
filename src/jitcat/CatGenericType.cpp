@@ -5,11 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatGenericType.h"
-#include "CatLog.h"
-#include "Tools.h"
-#include "TypeInfo.h"
-#include "XMLHelper.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/XMLHelper.h"
 
 #include <cassert>
 #include <cctype>
@@ -17,6 +17,11 @@
 #include <iostream>
 #include <locale>
 #include <string>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
 
 
 CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, ContainerType containerType, bool writable, bool constant, const CatError* error_):

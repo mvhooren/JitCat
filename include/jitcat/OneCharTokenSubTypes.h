@@ -7,29 +7,34 @@
 
 #pragma once
 
-enum class OneChar
+namespace jitcat::Tokenizer
 {
-	Unknown,
-	BraceOpen,
-	BraceClose,
-	ParenthesesOpen,
-	ParenthesesClose,
-	BracketOpen,
-	BracketClose,
-	Assignment,
-	Plus,
-	Times,
-	Divide,
-	Minus,
-	Modulo,
-	Smaller,
-	Greater,
-	Comma,
-	Semicolon,
-	BitwiseAnd,
-	BitwiseOr,
-	BitwiseXor,
-	Not,
-	Dot,
-	Eof
-};
+
+	enum class OneChar
+	{
+		Unknown,
+		BraceOpen,
+		BraceClose,
+		ParenthesesOpen,
+		ParenthesesClose,
+		BracketOpen,
+		BracketClose,
+		Assignment,
+		Plus,
+		Times,
+		Divide,
+		Minus,
+		Modulo,
+		Smaller,
+		Greater,
+		Comma,
+		Semicolon,
+		BitwiseAnd,
+		BitwiseOr,
+		BitwiseXor,
+		Not,
+		Dot,
+		Eof
+	};
+
+} //End namespace jitcat::Tokenizer

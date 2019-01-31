@@ -5,7 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "LLVMCompileTimeContext.h"
+#include "jitcat/LLVMCompileTimeContext.h"
+
+using namespace jitcat;
+using namespace jitcat::LLVM;
 
 
 LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):

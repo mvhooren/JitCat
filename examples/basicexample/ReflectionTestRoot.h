@@ -9,17 +9,17 @@
 
 #include "ReflectionTestObject.h"
 
-#include "Reflectable.h"
+#include "jitcat/Reflectable.h"
 
 #include <memory>
 
-class ReflectionTestRoot: public Reflectable
+class ReflectionTestRoot: public jitcat::Reflection::Reflectable
 {
 public:
 	ReflectionTestRoot();
 	~ReflectionTestRoot();
 
-	static void reflect(TypeInfo& typeInfo);
+	static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
 	static const char* getTypeName();
 
 	float getPi() const;

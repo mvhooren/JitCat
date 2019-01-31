@@ -5,13 +5,18 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatIdentifier.h"
-#include "CatLog.h"
-#include "CatRuntimeContext.h"
-#include "CustomTypeInfo.h"
-#include "Tools.h"
+#include "jitcat/CatIdentifier.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/Tools.h"
 
 #include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
 
 
 CatIdentifier::CatIdentifier(const std::string& name, CatRuntimeContext* context):

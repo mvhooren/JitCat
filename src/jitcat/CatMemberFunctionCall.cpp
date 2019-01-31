@@ -5,14 +5,19 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatMemberFunctionCall.h"
-#include "CatArgumentList.h"
-#include "CatLog.h"
-#include "MemberInfo.h"
-#include "ASTHelper.h"
-#include "TypeInfo.h"
+#include "jitcat/CatMemberFunctionCall.h"
+#include "jitcat/CatArgumentList.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/TypeInfo.h"
 
 #include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
 
 
 CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments):

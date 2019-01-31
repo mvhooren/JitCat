@@ -8,21 +8,24 @@
 #pragma once
 
 #include <vector>
-#include "ProductionTokenType.h"
-class ProductionTokenSet;
-class ProductionToken;
+#include "jitcat/ProductionTokenType.h"
 
-class ProductionTokenSetMember
+namespace jitcat::Grammar
 {
-public:
-	virtual ~ProductionTokenSetMember() {}
-	virtual bool getIsSet() const = 0;
-	virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set) = 0;
-	virtual bool getIsEpsilon() const = 0;
-	virtual const char* getDescription() const = 0;
-	virtual ProductionTokenType getType() const = 0; 
-	virtual bool equals(const ProductionToken& other) const = 0;
-	bool operator== (const ProductionToken& other) const;
-};
+	class ProductionTokenSet;
+	class ProductionToken;
 
+	class ProductionTokenSetMember
+	{
+	public:
+		virtual ~ProductionTokenSetMember() {}
+		virtual bool getIsSet() const = 0;
+		virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set) = 0;
+		virtual bool getIsEpsilon() const = 0;
+		virtual const char* getDescription() const = 0;
+		virtual ProductionTokenType getType() const = 0; 
+		virtual bool equals(const ProductionToken& other) const = 0;
+		bool operator== (const ProductionToken& other) const;
+	};
 
+} //End namespace jitcat::Grammar

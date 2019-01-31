@@ -5,13 +5,19 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatMemberAccess.h"
-#include "CatLiteral.h"
-#include "CatLog.h"
-#include "MemberInfo.h"
-#include "TypeInfo.h"
+#include "jitcat/CatMemberAccess.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/TypeInfo.h"
 
 #include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
+
 
 CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName):
 	base(base),

@@ -5,13 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "LLVMJit.h"
-#include "Configuration.h"
-#include "LLVMTypes.h"
-#include "Tools.h"
+#include "jitcat/LLVMJit.h"
+#include "jitcat/Configuration.h"
+#include "jitcat/LLVMTypes.h"
+#include "jitcat/Tools.h"
 
 
 #include <iostream>
+
+using namespace jitcat;
+using namespace jitcat::LLVM;
 
 
 LLVMJit::LLVMJit():

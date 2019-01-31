@@ -7,16 +7,20 @@
 
 #pragma once
 
-class CatArrayIndex;
-class CatAssignableExpression;
-class CatAssignmentOperator;
-class CatFunctionCall;
-class CatIdentifier;
-class CatInfixOperator;
-class AssignmentOperator;
-class CatLiteral;
-class CatMemberAccess;
-class CatMemberFunctionCall;
-class CatPrefixOperator;
-class CatScopeRoot;
-class CatTypedExpression;
+namespace jitcat::AST
+{
+
+	class CatArrayIndex;
+	class CatAssignableExpression;
+	class CatAssignmentOperator;
+	class CatFunctionCall;
+	class CatIdentifier;
+	class CatInfixOperator;
+	class CatLiteral;
+	class CatMemberAccess;
+	class CatMemberFunctionCall;
+	class CatPrefixOperator;
+	class CatScopeRoot;
+	class CatTypedExpression;
+
+} //End namespace jitcat::AST

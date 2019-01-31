@@ -5,25 +5,29 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "JitCat.h"
+#include "jitcat/JitCat.h"
 
-#include "CatASTNodes.h"
-#include "CatGrammar.h"
-#include "CatTokenizer.h"
-#include "CommentToken.h"
-#include "Document.h"
-#include "IdentifierToken.h"
-#include "Lexeme.h"
-#include "OneCharToken.h"
-#include "SLRParser.h"
-#include "ParseToken.h"
-#include "Tools.h"
-#include "WhitespaceToken.h"
+#include "jitcat/CatASTNodes.h"
+#include "jitcat/CatGrammar.h"
+#include "jitcat/CatTokenizer.h"
+#include "jitcat/CommentToken.h"
+#include "jitcat/Document.h"
+#include "jitcat/IdentifierToken.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/OneCharToken.h"
+#include "jitcat/SLRParser.h"
+#include "jitcat/ParseToken.h"
+#include "jitcat/Tools.h"
+#include "jitcat/WhitespaceToken.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
 
+using namespace jitcat;
+using namespace Grammar;
+using namespace Parser;
+using namespace Tokenizer;
 
 JitCat::JitCat()
 {

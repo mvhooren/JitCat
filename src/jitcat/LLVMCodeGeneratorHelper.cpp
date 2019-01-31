@@ -5,12 +5,12 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "LLVMCodeGeneratorHelper.h"
-#include "LLVMCompileTimeContext.h"
-#include "LLVMJit.h"
-#include "LLVMTypes.h"
-#include "CatRuntimeContext.h"
-#include "Tools.h"
+#include "jitcat/LLVMCodeGeneratorHelper.h"
+#include "jitcat/LLVMCompileTimeContext.h"
+#include "jitcat/LLVMJit.h"
+#include "jitcat/LLVMTypes.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/Tools.h"
 
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Function.h>
@@ -26,6 +26,8 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
 
+using namespace jitcat;
+using namespace jitcat::LLVM;
 
 LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder, llvm::Module* module):
 	llvmContext(LLVMJit::get().getContext()),

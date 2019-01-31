@@ -5,10 +5,13 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "LLVMCatIntrinsics.h"
-#include "CustomTypeMemberInfo.h"
-#include "LLVMCompileTimeContext.h"
-#include "ReflectableHandle.h"
+#include "jitcat/LLVMCatIntrinsics.h"
+#include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/LLVMCompileTimeContext.h"
+#include "jitcat/ReflectableHandle.h"
+
+namespace jitcat::Reflection
+{
 
 template<>
 inline std::any CustomBasicTypeMemberInfo<std::string>::getMemberReference(Reflectable* base)
@@ -83,16 +86,16 @@ inline unsigned long long CustomBasicTypeMemberInfo<T>::getMemberOffset() const
 
 
 template<typename T>
-inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long dataPointerOffset = getMemberOffset();
 
 	static const bool loadString = std::is_same<T, std::string>::value;
 
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		LLVMCodeGeneratorHelper* generatorHelper = compileContext->helper;
+		LLVM::LLVMCodeGeneratorHelper* generatorHelper = compileContext->helper;
 		//Create an llvm constant that contains the offset to "data"
 		llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant(dataPointerOffset, "offsetTo_CustomTypeInstance.data" );
 		//Convert pointer to int so it can be used in createAdd
@@ -109,7 +112,7 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::
 		llvm::Value* addressValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		if constexpr (loadString)
 		{
-			return generatorHelper->loadPointerAtAddress(addressValue, memberName, LLVMTypes::stringPtrType);
+			return generatorHelper->loadPointerAtAddress(addressValue, memberName, LLVM::LLVMTypes::stringPtrType);
 		}
 		else
 		{
@@ -124,16 +127,16 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::
 
 
 template<typename T>
-inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const
+inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long dataPointerOffset = getMemberOffset();
 
 	static const bool isString = std::is_same<T, std::string>::value;
 
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		LLVMCodeGeneratorHelper* generatorHelper = compileContext->helper;
+		LLVM::LLVMCodeGeneratorHelper* generatorHelper = compileContext->helper;
 		//Create an llvm constant that contains the offset to "data"
 		llvm::Value* dataPointerOffsetValue = generatorHelper->createIntPtrConstant(dataPointerOffset, "offsetTo_CustomTypeInstance.data" );
 		//Convert pointer to int so it can be used in createAdd
@@ -150,8 +153,8 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateAssignCode(llvm::Value
 		llvm::Value* addressIntValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		if constexpr (isString)
 		{
-			llvm::Value* lValue = generatorHelper->loadPointerAtAddress(addressIntValue, memberName, LLVMTypes::stringPtrType);
-			context->helper->createCall(context, &LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "stringAssign");
+			llvm::Value* lValue = generatorHelper->loadPointerAtAddress(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
+			context->helper->createCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "stringAssign");
 		}
 		else
 		{
@@ -239,12 +242,12 @@ inline unsigned long long CustomTypeObjectMemberInfo::getMemberOffset() const
 }
 
 
-inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long dataPointerOffset = getMemberOffset();
 
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		//Create an llvm constant that contains the offset to "data"
 		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
@@ -261,21 +264,21 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Va
 		//Pointer to a ReflectableHandle
 		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
 		//Call function that gets the member
-		return context->helper->createCall(LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), {reflectableHandle}, "getReflectable");
+		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), {reflectableHandle}, "getReflectable");
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
 	return nullptr;
 #endif //ENABLE_LLVM
 }
 
 
-inline llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const
+inline llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long dataPointerOffset = getMemberOffset();
 
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		//Create an llvm constant that contains the offset to "data"
 		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
@@ -295,7 +298,7 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* 
 		context->helper->createCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "assignReflectableHandle");
 		return rValue;
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -311,3 +314,6 @@ inline void CustomTypeObjectMemberInfo::assign(std::any& base, std::any& valueTo
 		*handle = ReflectableHandle(std::any_cast<Reflectable*>(valueToSet));
 	}
 }
+
+
+} //End namespace jitcat::Reflection

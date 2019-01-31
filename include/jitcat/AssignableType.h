@@ -7,10 +7,15 @@
 
 #pragma once
 
-enum class AssignableType
+namespace jitcat::Reflection
 {
-	None,
-	Pointer,
-	PointerPointer,
-	HandlePointer
-};
+
+	enum class AssignableType
+	{
+		None,
+		Pointer,
+		PointerPointer,
+		HandlePointer
+	};
+
+} //End namespace jitcat::Reflection

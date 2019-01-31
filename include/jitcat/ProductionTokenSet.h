@@ -7,41 +7,45 @@
 
 #pragma once
 
-#include "ProductionTokenSetMember.h"
-#include "ParseToken.h"
+#include "jitcat/ProductionTokenSetMember.h"
+#include "jitcat/ParseToken.h"
 
-class Production;
 
 #include <vector>
 
-
-
-class ProductionTokenSet: public ProductionTokenSetMember
+namespace jitcat::Grammar
 {
-public:
-	ProductionTokenSet(bool disallowEpsilons);
-	virtual ~ProductionTokenSet() {}
-	void flatten();
-	virtual bool getIsSet() const;
-	virtual bool containsEpsilon() const;
-	void addMemberIfNotPresent(ProductionTokenSetMember* member);
-	virtual const char* getDescription() const;
-	std::size_t getNumMembers() const;
-	ProductionTokenSetMember* getMember(unsigned int index) const;
-	virtual bool getIsEpsilon() const;
-	bool isInSet(const ParseToken* token) const;
-	bool isInSet(const Production* production) const;
-	bool isInSet(const ProductionToken* token) const;
-	bool isInSet(const ProductionTokenSetMember* token) const;
-	//Returns true if any token in otherSet is also in this set
-	bool overlaps(const ProductionTokenSet* otherSet) const;
+	class Production;
 
-	virtual ProductionTokenType getType() const; 
-	virtual bool equals(const ProductionToken& other) const;
 
-protected:
-	virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set);
-	int findMemberIndex(ProductionTokenSetMember* member);
-	std::vector<ProductionTokenSetMember*> members;
-	bool disallowEpsilons;
-};
+	class ProductionTokenSet: public ProductionTokenSetMember
+	{
+	public:
+		ProductionTokenSet(bool disallowEpsilons);
+		virtual ~ProductionTokenSet() {}
+		void flatten();
+		virtual bool getIsSet() const;
+		virtual bool containsEpsilon() const;
+		void addMemberIfNotPresent(ProductionTokenSetMember* member);
+		virtual const char* getDescription() const;
+		std::size_t getNumMembers() const;
+		ProductionTokenSetMember* getMember(unsigned int index) const;
+		virtual bool getIsEpsilon() const;
+		bool isInSet(const Tokenizer::ParseToken* token) const;
+		bool isInSet(const Production* production) const;
+		bool isInSet(const ProductionToken* token) const;
+		bool isInSet(const ProductionTokenSetMember* token) const;
+		//Returns true if any token in otherSet is also in this set
+		bool overlaps(const ProductionTokenSet* otherSet) const;
+
+		virtual ProductionTokenType getType() const; 
+		virtual bool equals(const ProductionToken& other) const;
+
+	protected:
+		virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set);
+		int findMemberIndex(ProductionTokenSetMember* member);
+		std::vector<ProductionTokenSetMember*> members;
+		bool disallowEpsilons;
+	};
+
+} //End namespace jitcat::Grammar

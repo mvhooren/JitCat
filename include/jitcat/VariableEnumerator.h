@@ -10,24 +10,28 @@
 #include <string>
 #include <vector>
 
-
-class VariableEnumerator
+namespace jitcat::Reflection
 {
-public:
-	virtual ~VariableEnumerator() {}
 
-	enum NamespaceType
+	class VariableEnumerator
 	{
-		NT_CATEGORY,
-		NT_OBJECT,
-		NT_MAP,
-		NT_VECTOR
-	};
-	virtual void addFunction(const std::string& name, const std::string& prototype) = 0;
-	virtual void addVariable(const std::string& name, const std::string& typeName, bool isWritable, bool isConst) = 0;
-	virtual void enterNameSpace(const std::string& name, const std::string& typeName, NamespaceType namespaceType) = 0;
-	virtual void exitNameSpace() = 0;
+	public:
+		virtual ~VariableEnumerator() {}
 
-	//Used to prevent infinite loops when enumerating types
-	std::vector<std::string> loopDetectionTypeStack;
-};
+		enum NamespaceType
+		{
+			NT_CATEGORY,
+			NT_OBJECT,
+			NT_MAP,
+			NT_VECTOR
+		};
+		virtual void addFunction(const std::string& name, const std::string& prototype) = 0;
+		virtual void addVariable(const std::string& name, const std::string& typeName, bool isWritable, bool isConst) = 0;
+		virtual void enterNameSpace(const std::string& name, const std::string& typeName, NamespaceType namespaceType) = 0;
+		virtual void exitNameSpace() = 0;
+
+		//Used to prevent infinite loops when enumerating types
+		std::vector<std::string> loopDetectionTypeStack;
+	};
+
+} //End namespace jitcat::Reflection

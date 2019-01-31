@@ -5,14 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CustomTypeInfo.h"
-#include "CustomTypeMemberInfo.h"
-#include "ReflectableHandle.h"
-#include "Tools.h"
-#include "TypeCaster.h"
-#include "TypeRegistry.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/ReflectableHandle.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeCaster.h"
+#include "jitcat/TypeRegistry.h"
 
 #include <cassert>
+
+using namespace jitcat::Reflection;
 
 
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):

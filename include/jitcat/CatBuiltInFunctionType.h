@@ -7,36 +7,42 @@
 
 #pragma once
 
-enum class CatBuiltInFunctionType
+namespace jitcat::AST
 {
-	ToVoid,
-	ToInt,
-	ToFloat,
-	ToBool,
-	ToString,
-	ToPrettyString,
-	ToFixedLengthString,
-	Sin,
-	Cos,
-	Tan,
-	Random,
-	RandomRange,
-	Round,
-	StringRound,
-	Abs,
-	Cap,
-	Min,
-	Max,
-	Log,
-	Sqrt,
-	Pow,
-	Ceil,
-	Floor,
-	FindInString,
-	ReplaceInString,
-	StringLength,
-	SubString,
-	Select,
-	Count,
-	Invalid
-};
+
+	enum class CatBuiltInFunctionType
+	{
+		ToVoid,
+		ToInt,
+		ToFloat,
+		ToBool,
+		ToString,
+		ToPrettyString,
+		ToFixedLengthString,
+		Sin,
+		Cos,
+		Tan,
+		Random,
+		RandomRange,
+		Round,
+		StringRound,
+		Abs,
+		Cap,
+		Min,
+		Max,
+		Log,
+		Sqrt,
+		Pow,
+		Ceil,
+		Floor,
+		FindInString,
+		ReplaceInString,
+		StringLength,
+		SubString,
+		Select,
+		Count,
+		Invalid
+	};
+
+
+} //End namespace jitcat::AST

@@ -7,25 +7,27 @@
 
 #pragma once
 
-class CatRuntimeContext;
-class CatVariableInfo;
-class ExpressionBase;
-class MenuObjectInstanceLocals;
-#include "CatGenericType.h"
+#include "jitcat/CatGenericType.h"
 
 #include <map>
 #include <string>
 #include <vector>
 
-
-class ExpressionHelperFunctions
+namespace jitcat
 {
-	ExpressionHelperFunctions();
-
-public:
-	static bool canBeAssigned(const CatGenericType& targetType, const CatGenericType& sourceType);
-	static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText, CatRuntimeContext* compileContext);
-	static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText);
-};
+	class CatRuntimeContext;
+	class ExpressionBase;
 
 
+	class ExpressionHelperFunctions
+	{
+		ExpressionHelperFunctions();
+
+	public:
+		static bool canBeAssigned(const CatGenericType& targetType, const CatGenericType& sourceType);
+		static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText, CatRuntimeContext* compileContext);
+		static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText);
+	};
+
+
+} //End namespace jitcat

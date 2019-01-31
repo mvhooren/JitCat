@@ -7,11 +7,15 @@
 
 #pragma once
 
-#include "Tokenizer.h"
+#include "jitcat/TokenizerBase.h"
 
-
-class CatTokenizer : public Tokenizer
+namespace jitcat::Tokenizer
 {
-public:
-	CatTokenizer();
-};
+
+	class CatTokenizer : public TokenizerBase
+	{
+	public:
+		CatTokenizer();
+	};
+
+} //End namespace jitcat

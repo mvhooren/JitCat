@@ -5,15 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ContainerType.h"
+#include "jitcat/ContainerType.h"
 
 #include <algorithm>
 #include <iostream>
 #include <locale>
 #include <string>
 
+using namespace jitcat::Reflection;
 
-const char* toString(ContainerType type)
+const char* jitcat::Reflection::toString(ContainerType type)
 {
 	switch (type)
 	{
@@ -25,12 +26,12 @@ const char* toString(ContainerType type)
 }
 
 
-ContainerType toContainerType(const char* value)
+ContainerType jitcat::Reflection::toContainerType(const char* value)
 {
 	std::string str(value);
 	for (int i = 0; i < (int)ContainerType::Count; i++)
 	{
-		if (str == toString((ContainerType)i))
+		if (str == jitcat::Reflection::toString((ContainerType)i))
 		{
 			return (ContainerType)i;
 		}

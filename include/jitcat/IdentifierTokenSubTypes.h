@@ -7,37 +7,42 @@
 
 #pragma once
 
-enum class Identifier
+namespace jitcat::Tokenizer
 {
-	Identifier,
-	Class,
-	Enum,
-	Public,
-	Protected,
-	Private,
-	Const,
-	Static,
-	Virtual,
-	If,
-	Then,
-	Else,
-	While,
-	Do,
-	For,
-	Continue,
-	Break,
-	Switch,
-	Case,
-	Default,
-	Return,
-	Void,
-	Unsigned,
-	Char,
-	Int,
-	Long,
-	Float,
-	Double,
-	Vector4,
-	Matrix,
-	Last
-};
+
+	enum class Identifier
+	{
+		Identifier,
+		Class,
+		Enum,
+		Public,
+		Protected,
+		Private,
+		Const,
+		Static,
+		Virtual,
+		If,
+		Then,
+		Else,
+		While,
+		Do,
+		For,
+		Continue,
+		Break,
+		Switch,
+		Case,
+		Default,
+		Return,
+		Void,
+		Unsigned,
+		Char,
+		Int,
+		Long,
+		Float,
+		Double,
+		Vector4,
+		Matrix,
+		Last
+	};
+
+} //End namespace jitcat::Tokenizer

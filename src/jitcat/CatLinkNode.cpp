@@ -5,8 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatLinkNode.h"
-#include "CatLog.h"
+#include "jitcat/CatLinkNode.h"
+#include "jitcat/CatLog.h"
+
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
 
 
 CatLinkNode::CatLinkNode(CatASTNode* me, CatASTNode* next):

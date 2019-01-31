@@ -5,14 +5,18 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ProductionRule.h"
-#include "Production.h"
-#include "ProductionToken.h"
-#include "ProductionTokenSet.h"
-#include "Tools.h"
+#include "jitcat/ProductionRule.h"
+#include "jitcat/Production.h"
+#include "jitcat/ProductionToken.h"
+#include "jitcat/ProductionTokenSet.h"
+#include "jitcat/Tools.h"
 
 #include <cassert>
 #include <stddef.h>
+
+using namespace jitcat::AST;
+using namespace jitcat::Grammar;
+using namespace jitcat::Parser;
 
 
 ProductionRule::ProductionRule()
@@ -40,7 +44,7 @@ void ProductionRule::pushToken(ProductionToken* token)
 }
 
 
-void ProductionRule::setSemanticAction(Grammar::SemanticAction action)
+void ProductionRule::setSemanticAction(GrammarBase::SemanticAction action)
 {
 	assert(action != nullptr);
 	semanticAction = action;

@@ -5,15 +5,18 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ProductionTerminalToken.h"
-#include "ProductionTokenSet.h"
-#include "ParseToken.h"
-#include "Tokenizer.h"
+#include "jitcat/ProductionTerminalToken.h"
+#include "jitcat/ProductionTokenSet.h"
+#include "jitcat/ParseToken.h"
+#include "jitcat/TokenizerBase.h"
 
 #include <stddef.h>
 
+using namespace jitcat::Grammar;
+using namespace jitcat::Tokenizer;
 
-ProductionTerminalToken::ProductionTerminalToken(Tokenizer* tokenizer, int tokenId, int tokenSubType):
+
+ProductionTerminalToken::ProductionTerminalToken(TokenizerBase* tokenizer, int tokenId, int tokenSubType):
 	tokenizer(tokenizer),
 	tokenId(tokenId),
 	tokenSubType(tokenSubType)

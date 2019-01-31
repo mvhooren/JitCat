@@ -5,8 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "SLRParseResult.h"
-#include "ASTNode.h"
+#include "jitcat/SLRParseResult.h"
+#include "jitcat/ASTNode.h"
+
+using namespace jitcat::Parser;
 
 
 SLRParseResult::SLRParseResult():

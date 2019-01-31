@@ -7,10 +7,14 @@
 
 #pragma once
 
-
-struct LLVMCompileOptions
+namespace jitcat::LLVM
 {
-	LLVMCompileOptions(): enableDereferenceNullChecks(false) 
-	{}
-	bool enableDereferenceNullChecks;
-};
+
+	struct LLVMCompileOptions
+	{
+		LLVMCompileOptions(): enableDereferenceNullChecks(false) 
+		{}
+		bool enableDereferenceNullChecks;
+	};
+
+} //End namespace jitcat::LLVM

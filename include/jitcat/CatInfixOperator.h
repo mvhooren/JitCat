@@ -7,50 +7,60 @@
 
 #pragma once
 
-#include "CatTypedExpression.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTypedExpression.h"
 
+
+#include <cassert>
+#include <cmath>
 #include <memory>
+#include <string>
+#include <sstream>
 
-
-class CatInfixOperator: public CatTypedExpression
+namespace jitcat::AST
 {
-public:
-	CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType);
-	CatInfixOperator(const CatInfixOperator&) = delete;
 
-	virtual CatGenericType getType() const override final;
-	virtual bool isConst() const override final;
-	virtual CatASTNodeType getNodeType() override final {return CatASTNodeType::InfixOperator;}
+	class CatInfixOperator: public CatTypedExpression
+	{
+	public:
+		CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType);
+		CatInfixOperator(const CatInfixOperator&) = delete;
 
-	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
-	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+		virtual CatGenericType getType() const override final;
+		virtual bool isConst() const override final;
+		virtual CatASTNodeType getNodeType() override final {return CatASTNodeType::InfixOperator;}
 
-	virtual CatGenericType typeCheck() override final;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 
-	virtual void print() const override final;
+		virtual CatGenericType typeCheck() override final;
 
-	CatTypedExpression* getLeft() const;
-	CatTypedExpression* getRight() const;
-	CatInfixOperatorType getOperatorType() const;
+		virtual void print() const override final;
 
-private:
-	inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
+		CatTypedExpression* getLeft() const;
+		CatTypedExpression* getRight() const;
+		CatInfixOperatorType getOperatorType() const;
 
-	template<typename T, typename U, typename V>
-	inline std::any calculateScalarExpression(const T& lValue, const U& rValue);
+	private:
+		inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
+
+		template<typename T, typename U, typename V>
+		inline std::any calculateScalarExpression(const T& lValue, const U& rValue);
 	
-	template<typename T, typename U>
-	inline std::any calculateStringExpression(const T& lValue, const U& rValue);
+		template<typename T, typename U>
+		inline std::any calculateStringExpression(const T& lValue, const U& rValue);
 
-	inline std::any calculateStringExpression(const std::string& lValue, const std::string& rValue);
+		inline std::any calculateStringExpression(const std::string& lValue, const std::string& rValue);
 
-	inline std::any calculateBooleanExpression(bool lValue, bool rValue);
+		inline std::any calculateBooleanExpression(bool lValue, bool rValue);
 
-private:
-	std::unique_ptr<CatTypedExpression> lhs;
-	CatInfixOperatorType oper;
-	std::unique_ptr<CatTypedExpression> rhs;
-};
+	private:
+		std::unique_ptr<CatTypedExpression> lhs;
+		CatInfixOperatorType oper;
+		std::unique_ptr<CatTypedExpression> rhs;
+	};
 
+	#include "jitcat/CatInfixOperatorHeaderImplementation.h"
 
-#include "CatInfixOperatorHeaderImplementation.h"
+} //End namespace jitcat::AST
+

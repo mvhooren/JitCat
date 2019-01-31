@@ -6,13 +6,15 @@
 */
 
 #pragma once
-#include "Reflectable.h"
-#include "Tools.h"
+#include "jitcat/Reflectable.h"
+#include "jitcat/Tools.h"
 #include <any>
 #include <map>
 #include <string>
 #include <vector>
 
+namespace jitcat::Reflection
+{
 
 class TypeCaster
 {
@@ -154,3 +156,6 @@ public:
 	}
 
 };
+
+
+} //End namespace jitcat::Reflection

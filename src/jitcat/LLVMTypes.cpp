@@ -5,7 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "LLVMTypes.h"
+#include "jitcat/LLVMTypes.h"
+
+using namespace jitcat::LLVM;
+
 
 llvm::Type* LLVMTypes::floatType = nullptr;
 llvm::Type* LLVMTypes::intType = nullptr;

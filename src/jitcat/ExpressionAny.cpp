@@ -5,15 +5,17 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ExpressionAny.h"
-#include "ExpressionErrorManager.h"
-#include "CatASTNodes.h"
-#include "Configuration.h"
-#include "Document.h"
-#include "JitCat.h"
-#include "SLRParseResult.h"
-#include "Tools.h"
-#include "TypeInfo.h"
+#include "jitcat/ExpressionAny.h"
+#include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/CatASTNodes.h"
+#include "jitcat/Configuration.h"
+#include "jitcat/Document.h"
+#include "jitcat/JitCat.h"
+#include "jitcat/SLRParseResult.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
+
+using namespace jitcat;
 
 
 ExpressionAny::ExpressionAny():

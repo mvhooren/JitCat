@@ -5,9 +5,14 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ASTNodeParser.h"
-#include "Production.h"
-#include "StackItem.h"
+#include "jitcat/ASTNodeParser.h"
+#include "jitcat/Production.h"
+#include "jitcat/StackItem.h"
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Parser;
+using namespace jitcat::Tokenizer;
 
 
 ASTNodeParser::ASTNodeParser(const std::vector<StackItem*>& stack, std::size_t numItems, RuntimeContext* context):

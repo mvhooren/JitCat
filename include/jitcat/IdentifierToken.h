@@ -7,22 +7,27 @@
 
 #pragma once
 
-#include "ParseToken.h"
-#include "IdentifierTokenSubTypes.h"
+#include "jitcat/ParseToken.h"
+#include "jitcat/IdentifierTokenSubTypes.h"
 
-class IdentifierToken: public ParseToken
+namespace jitcat::Tokenizer
 {
-public:
-	IdentifierToken(): subType(Identifier::Identifier) {};
-	IdentifierToken(Lexeme* lexeme, Identifier subType);
-	virtual int getTokenID() const;
-	virtual const char* getTokenName() const;
-	virtual const char* getSubTypeName(int subType) const;
-	virtual const char* getSubTypeSymbol(int subType) const;
-	virtual int getTokenSubType() const;
-	virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-	static const int getID();
 
-private:
-	Identifier subType;
-};
+	class IdentifierToken: public ParseToken
+	{
+	public:
+		IdentifierToken(): subType(Identifier::Identifier) {};
+		IdentifierToken(Lexeme* lexeme, Identifier subType);
+		virtual int getTokenID() const;
+		virtual const char* getTokenName() const;
+		virtual const char* getSubTypeName(int subType) const;
+		virtual const char* getSubTypeSymbol(int subType) const;
+		virtual int getTokenSubType() const;
+		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
+		static const int getID();
+
+	private:
+		Identifier subType;
+	};
+
+} //End namespace jitcat::Tokenizer

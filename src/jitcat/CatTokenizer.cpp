@@ -5,15 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatTokenizer.h"
-#include "CommentToken.h"
-#include "ConstantToken.h"
-#include "ErrorToken.h"
-#include "IdentifierToken.h"
-#include "OneCharToken.h"
-#include "TwoCharToken.h"
-#include "WhitespaceToken.h"
+#include "jitcat/CatTokenizer.h"
+#include "jitcat/CommentToken.h"
+#include "jitcat/ConstantToken.h"
+#include "jitcat/ErrorToken.h"
+#include "jitcat/IdentifierToken.h"
+#include "jitcat/OneCharToken.h"
+#include "jitcat/TwoCharToken.h"
+#include "jitcat/WhitespaceToken.h"
 
+using namespace jitcat::Tokenizer;
 
 
 CatTokenizer::CatTokenizer()

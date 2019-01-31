@@ -5,11 +5,12 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "InfixOperatorOptimizer.h"
-#include "CatGenericType.h"
-#include "CatTypedExpression.h"
-#include "CatLiteral.h"
+#include "jitcat/InfixOperatorOptimizer.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/CatLiteral.h"
 
+using namespace jitcat::AST;
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique_ptr<CatTypedExpression>& lhs, 
 																	 std::unique_ptr<CatTypedExpression>& rhs, 

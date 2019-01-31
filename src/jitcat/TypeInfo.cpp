@@ -5,13 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "TypeInfo.h"
-#include "Tools.h"
-#include "TypeCaster.h"
-#include "TypeRegistry.h"
-#include "VariableEnumerator.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeCaster.h"
+#include "jitcat/TypeRegistry.h"
+#include "jitcat/VariableEnumerator.h"
 
 #include <sstream>
+
+using namespace jitcat;
+using namespace jitcat::Reflection;
 
 
 TypeInfo::TypeInfo(const char* typeName, TypeCaster* caster):

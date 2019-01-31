@@ -5,10 +5,13 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "DFAState.h"
-#include "ProductionToken.h"
+#include "jitcat/DFAState.h"
+#include "jitcat/ProductionToken.h"
 
 #include <sstream>
+
+using namespace jitcat::Grammar;
+using namespace jitcat::Parser;
 
 
 bool DFAState::addItem(const Item& item)

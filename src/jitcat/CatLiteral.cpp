@@ -5,8 +5,12 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatLiteral.h"
-#include "CatLog.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
 
 
 void CatLiteral::print() const

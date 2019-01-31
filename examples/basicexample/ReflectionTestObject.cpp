@@ -7,10 +7,13 @@
 
 #include "ReflectionTestObject.h"
 #include "ReflectionTestObject2.h"
-#include "Tools.h"
-#include "TypeInfo.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
 
 #include <random>
+
+using namespace jitcat;
+using namespace jitcat::Reflection;
 
 
 ReflectionTestObject::ReflectionTestObject(std::string text):

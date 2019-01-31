@@ -5,8 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CustomTypeInstance.h"
-#include "CustomTypeInfo.h"
+#include "jitcat/CustomTypeInstance.h"
+#include "jitcat/CustomTypeInfo.h"
+
+using namespace jitcat::Reflection;
 
 
 CustomTypeInstance::CustomTypeInstance(CustomTypeInfo* typeInfo):

@@ -5,9 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ProductionNonTerminalToken.h"
-#include "Production.h"
+#include "jitcat/ProductionNonTerminalToken.h"
+#include "jitcat/Production.h"
 
+using namespace jitcat::Grammar;
 
 ProductionNonTerminalToken::ProductionNonTerminalToken(Production* production):
 	production(production)

@@ -6,11 +6,13 @@
 */
 
 #include "TestObjects.h"
-#include "Tools.h"
-#include "TypeInfo.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
 
 #include <iostream>
 
+using namespace jitcat;
+using namespace jitcat::Reflection;
 using namespace TestObjects;
 
 NestedReflectedObject::NestedReflectedObject():

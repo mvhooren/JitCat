@@ -7,12 +7,10 @@
 
 #pragma once
 
-#include "TypeRegistry.h"
-
 template<typename T>
 CatGenericType TypeTraits<T>::toGenericType()
 {
-	return CatGenericType(TypeRegistry::get()->registerType<T>()); 
+	return CatGenericType(Reflection::TypeRegistry::get()->registerType<T>()); 
 }
 
 
@@ -33,25 +31,25 @@ std::any TypeTraits<U*>::getCatValue(U* value)
 template <typename U>
 CatGenericType TypeTraits<U*>::toGenericType() 
 { 
-	return CatGenericType(TypeRegistry::get()->registerType<U>()); 
+	return CatGenericType(Reflection::TypeRegistry::get()->registerType<U>()); 
 }
 
 
 template <typename U>
-std::any TypeTraits<std::unique_ptr<U>>::getCatValue(std::unique_ptr<U>& value) { return static_cast<Reflectable*>(value.get());}
+std::any TypeTraits<std::unique_ptr<U>>::getCatValue(std::unique_ptr<U>& value) { return static_cast<Reflection::Reflectable*>(value.get());}
 
 template<typename U>
 inline U* TypeTraits<std::unique_ptr<U>>::getPointer(std::unique_ptr<U>& value)
 {
-	return static_cast<Reflectable*>(value.get());
+	return static_cast<Reflection::Reflectable*>(value.get());
 }
 
 template <typename U>
-CatGenericType TypeTraits<std::unique_ptr<U>>::toGenericType() { return CatGenericType(TypeRegistry::get()->registerType<U>()); }
+CatGenericType TypeTraits<std::unique_ptr<U>>::toGenericType() { return CatGenericType(Reflection::TypeRegistry::get()->registerType<U>()); }
 
 
 template <typename ItemType>
-CatGenericType TypeTraits<std::vector<ItemType>>::toGenericType() { return CatGenericType(ContainerType::Vector, TypeRegistry::get()->registerType<ItemType>()); }
+CatGenericType TypeTraits<std::vector<ItemType>>::toGenericType() { return CatGenericType(Reflection::ContainerType::Vector, Reflection::TypeRegistry::get()->registerType<ItemType>()); }
 
 template <typename ItemType>
-CatGenericType TypeTraits<std::map<std::string, ItemType>>::toGenericType() { return CatGenericType(ContainerType::StringMap, TypeTraits<ItemType>::getTypeInfo()); }
+CatGenericType TypeTraits<std::map<std::string, ItemType>>::toGenericType() { return CatGenericType(Reflection::ContainerType::StringMap, Reflection::TypeTraits<ItemType>::getTypeInfo()); }

@@ -8,9 +8,6 @@
 
 #pragma once
 
-class LLVMCodeGenerator;
-class LLVMJit;
-
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/ObjectCache.h>
 #include <llvm/IR/Constants.h>
@@ -38,66 +35,74 @@ class LLVMJit;
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Transforms/Scalar.h>
 
+#include <iostream>
 #include <map>
 #include <memory>
 
-class LLVMJitInitializer
+namespace jitcat::LLVM
 {
-	friend class LLVMJit;
-	LLVMJitInitializer();
-};
+	class LLVMCodeGenerator;
+	class LLVMJit;
 
-class LLVMJit: private LLVMJitInitializer
-{
-private:
-	LLVMJit();
-	~LLVMJit();
-	LLVMJit(const LLVMJit&) = delete;
-	LLVMJit& operator= (const LLVMJit&) = delete;
 
-public:
-	static LLVMJit& get();
+	class LLVMJitInitializer
+	{
+		friend class LLVMJit;
+		LLVMJitInitializer();
+	};
 
-	template <typename... Arguments>
-	static llvm::Value* logError(Arguments ... arguments);
+	class LLVMJit: private LLVMJitInitializer
+	{
+	private:
+		LLVMJit();
+		~LLVMJit();
+		LLVMJit(const LLVMJit&) = delete;
+		LLVMJit& operator= (const LLVMJit&) = delete;
+
+	public:
+		static LLVMJit& get();
+
+		template <typename... Arguments>
+		static llvm::Value* logError(Arguments ... arguments);
 	
-	llvm::LLVMContext& getContext() const;
+		llvm::LLVMContext& getContext() const;
 
-	llvm::TargetMachine& getTargetMachine() const;
-	const llvm::DataLayout& getDataLayout() const;
+		llvm::TargetMachine& getTargetMachine() const;
+		const llvm::DataLayout& getDataLayout() const;
 
-	llvm::orc::JITDylib& createDyLib(const std::string& name);
+		llvm::orc::JITDylib& createDyLib(const std::string& name);
 
-	void addModule(std::unique_ptr<llvm::Module>& module, llvm::orc::JITDylib& dyLib);
+		void addModule(std::unique_ptr<llvm::Module>& module, llvm::orc::JITDylib& dyLib);
 
-	llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
-	llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
+		llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
+		llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 
-private:
-	//A thread-safe version of a LLVM Context. 
-	//LLVM functionality is isolated per context. For instance, modules and types created on different contexts cannot interact.
-	//Used for building LLVM IR modules.
-	std::unique_ptr<llvm::orc::ThreadSafeContext> context;
-	//A helper class for building the target machine information.
-	llvm::orc::JITTargetMachineBuilder targetMachineBuilder;
-	//ExecutionSession represents a running JIT program
-	std::unique_ptr<llvm::orc::ExecutionSession> executionSession;
-	//Contains all the target specific information for the machine that we are compiling for. Among other things, the target CPU type.
-	std::unique_ptr<llvm::TargetMachine> targetMachine;
-	//Specifies the layout of structs and the type of name mangling used based on the target machine as well as endianness.
-	std::unique_ptr<const llvm::DataLayout> dataLayout;
-	//std::shared_ptr<llvm::orc::SymbolResolver> symbolResolver;
-	//Mangles symbol names
-	std::unique_ptr<llvm::orc::MangleAndInterner> mangler;
-	//Can be used to add object files to the JIT.
-	std::unique_ptr<llvm::orc::RTDyldObjectLinkingLayer> objectLinkLayer;
-	//Takes an LLVM IR module and creates an object file that is linked into the JIT using the objectLinkLayer
-	std::unique_ptr<llvm::orc::IRCompileLayer> compileLayer;
-	//The runtime library dylib
-	llvm::orc::JITDylib* runtimeLibraryDyLib;
+	private:
+		//A thread-safe version of a LLVM Context. 
+		//LLVM functionality is isolated per context. For instance, modules and types created on different contexts cannot interact.
+		//Used for building LLVM IR modules.
+		std::unique_ptr<llvm::orc::ThreadSafeContext> context;
+		//A helper class for building the target machine information.
+		llvm::orc::JITTargetMachineBuilder targetMachineBuilder;
+		//ExecutionSession represents a running JIT program
+		std::unique_ptr<llvm::orc::ExecutionSession> executionSession;
+		//Contains all the target specific information for the machine that we are compiling for. Among other things, the target CPU type.
+		std::unique_ptr<llvm::TargetMachine> targetMachine;
+		//Specifies the layout of structs and the type of name mangling used based on the target machine as well as endianness.
+		std::unique_ptr<const llvm::DataLayout> dataLayout;
+		//std::shared_ptr<llvm::orc::SymbolResolver> symbolResolver;
+		//Mangles symbol names
+		std::unique_ptr<llvm::orc::MangleAndInterner> mangler;
+		//Can be used to add object files to the JIT.
+		std::unique_ptr<llvm::orc::RTDyldObjectLinkingLayer> objectLinkLayer;
+		//Takes an LLVM IR module and creates an object file that is linked into the JIT using the objectLinkLayer
+		std::unique_ptr<llvm::orc::IRCompileLayer> compileLayer;
+		//The runtime library dylib
+		llvm::orc::JITDylib* runtimeLibraryDyLib;
 
-	int nextDyLibIndex;
-};
+		int nextDyLibIndex;
+	};
 
 
-#include "LLVMJitHeaderImplementation.h"
+	#include "jitcat/LLVMJitHeaderImplementation.h"
+} //End namespace jitcat::LLVM

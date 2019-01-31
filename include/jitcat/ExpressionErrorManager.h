@@ -7,55 +7,59 @@
 
 #pragma once
 
-#include "Reflectable.h"
+#include "jitcat/Reflectable.h"
 
 #include <functional>
 #include <string>
 #include <vector>
 
-
-class ExpressionErrorManager: public Reflectable
+namespace jitcat
 {
-private:
-	ExpressionErrorManager(const ExpressionErrorManager&) = delete;
-public:
-	struct Error: public Reflectable
+
+	class ExpressionErrorManager: public Reflection::Reflectable
 	{
 	private:
-		Error(const Error&) = delete;
+		ExpressionErrorManager(const ExpressionErrorManager&) = delete;
 	public:
-		Error() {}
-		std::string message;
-		void* expression;
+		struct Error: public Reflection::Reflectable
+		{
+		private:
+			Error(const Error&) = delete;
+		public:
+			Error() {}
+			std::string message;
+			void* expression;
 
-		static void reflect(TypeInfo& typeInfo);
+			static void reflect(Reflection::TypeInfo& typeInfo);
+			static const char* getTypeName();
+
+		};
+
+		ExpressionErrorManager(std::function<void(const std::string&)> errorHandler = {});
+		~ExpressionErrorManager();
+
+		void clear();
+		//Adds an error to the list. The void* serves as a unique id so that error messages disappear once the error is fixed.
+		void compiledWithError(const std::string& errorMessage, void* expression);
+		void compiledWithoutErrors(void* expression);
+		void expressionDeleted(void* expression);
+
+		const std::vector<Error*>& getErrors() const;
+
+		//Whenever errors are added or removed, the error revision is incremented.
+		//This is used by the user interface to track changes and update the error list accordingly.
+		unsigned int getErrorsRevision() const;
+
+		static void reflect(Reflection::TypeInfo& typeInfo);
 		static const char* getTypeName();
 
+	private:
+		void deleteErrorsFromExpression(void* expression);
+
+	private:
+		std::vector<Error*> errors;
+		std::function<void(const std::string&)> errorHandler;
+		unsigned int errorsRevision;
 	};
 
-	ExpressionErrorManager(std::function<void(const std::string&)> errorHandler = {});
-	~ExpressionErrorManager();
-
-	void clear();
-	//Adds an error to the list. The void* serves as a unique id so that error messages disappear once the error is fixed.
-	void compiledWithError(const std::string& errorMessage, void* expression);
-	void compiledWithoutErrors(void* expression);
-	void expressionDeleted(void* expression);
-
-	const std::vector<Error*>& getErrors() const;
-
-	//Whenever errors are added or removed, the error revision is incremented.
-	//This is used by the user interface to track changes and update the error list accordingly.
-	unsigned int getErrorsRevision() const;
-
-	static void reflect(TypeInfo& typeInfo);
-	static const char* getTypeName();
-
-private:
-	void deleteErrorsFromExpression(void* expression);
-
-private:
-	std::vector<Error*> errors;
-	std::function<void(const std::string&)> errorHandler;
-	unsigned int errorsRevision;
-};
+} //End namespace jitcat

@@ -7,10 +7,13 @@
 
 #pragma once
 
-#include "ASTHelper.h"
-#include "CatAssignableExpression.h"
-#include "CatTypedExpression.h"
-#include "Configuration.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/CatAssignableExpression.h"
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/Configuration.h"
+
+namespace jitcat
+{
 
 
 template<typename ExpressionT>
@@ -73,11 +76,11 @@ inline bool ExpressionAssignment<ExpressionT>::assignInterpretedValue(CatRuntime
 {
 	if (expressionAST != nullptr && expressionAST->isAssignable())
 	{
-		CatAssignableExpression* assignable = static_cast<CatAssignableExpression*>(expressionAST);
+		jitcat::AST::CatAssignableExpression* assignable = static_cast<jitcat::AST::CatAssignableExpression*>(expressionAST);
 		AssignableType assignableType = AssignableType::None;
 		std::any target = assignable->executeAssignable(runtimeContext, assignableType);
 		std::any anyValue = TypeTraits<ExpressionT>::getCatValue(value);
-		ASTHelper::doAssignment(target, anyValue, getExpectedCatType(), assignableType);
+		jitcat::AST::ASTHelper::doAssignment(target, anyValue, getExpectedCatType(), assignableType);
 		return true;
 	}
 	return false;
@@ -106,3 +109,6 @@ inline CatGenericType ExpressionAssignment<ExpressionT>::getExpectedCatType() co
 {
 	return TypeTraits<ExpressionT>::toGenericType().toWritable();
 }
+
+
+} //End namespace jitcat

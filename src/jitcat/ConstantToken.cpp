@@ -5,10 +5,12 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ConstantToken.h"
-#include "Document.h"
-#include "Lexeme.h"
-#include "ParseHelper.h"
+#include "jitcat/ConstantToken.h"
+#include "jitcat/Document.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/ParseHelper.h"
+
+using namespace jitcat::Tokenizer;
 
 
 ConstantToken::ConstantToken():

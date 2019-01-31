@@ -7,6 +7,8 @@
 
 #pragma once
 
+namespace jitcat
+{
 
 class Configuration
 {
@@ -49,3 +51,5 @@ public:
 		false;
 #endif
 };
+
+} //namespace jitcat

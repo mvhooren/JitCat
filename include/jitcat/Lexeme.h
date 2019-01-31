@@ -7,29 +7,34 @@
 
 #pragma once
 
-class Document;
 #include <iostream>
 #include <string.h>
 
-//A lexeme points to a word or symbol contained in a document.
-//It is typically used to refer to the document text represented by a ParseToken.
-struct Lexeme
+namespace jitcat::Tokenizer
 {
-	Lexeme(Document* document, std::size_t offset, std::size_t length);
-	//Get a pointer to the contents of the document referred to by this Lexeme.
-	//The const char* is valid as long as the document is not edited.
-	const char* getDataPointer() const;
+	class Document;
 
-	Document* document;
-	std::size_t offset;
-	std::size_t length;
+	//A lexeme points to a word or symbol contained in a document.
+	//It is typically used to refer to the document text represented by a ParseToken.
+	struct Lexeme
+	{
+		Lexeme(Document* document, std::size_t offset, std::size_t length);
+		//Get a pointer to the contents of the document referred to by this Lexeme.
+		//The const char* is valid as long as the document is not edited.
+		const char* getDataPointer() const;
 
-	std::string toString() const;
+		Document* document;
+		std::size_t offset;
+		std::size_t length;
 
-	friend bool operator==(const Lexeme& lexeme, const char* other);
-	friend bool operator!=(const Lexeme& lexeme, const char* other);
-	friend bool operator==(const Lexeme& lexeme, const std::string& other);
-	friend bool operator!=(const Lexeme& lexeme, const std::string& other);
+		std::string toString() const;
 
-	friend std::ostream& operator<< (std::ostream& stream, const Lexeme* lexeme);
-};
+		friend bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const char* other);
+		friend bool operator!=(const jitcat::Tokenizer::Lexeme& lexeme, const char* other);
+		friend bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
+		friend bool operator!=(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
+
+		friend std::ostream& operator<< (std::ostream& stream, const jitcat::Tokenizer::Lexeme* lexeme);
+	};
+
+} //End namespace jitcat::Tokenizer

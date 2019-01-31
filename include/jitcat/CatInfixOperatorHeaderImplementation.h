@@ -7,13 +7,6 @@
 
 #pragma once
 
-#include "CatRuntimeContext.h"
-
-#include <cassert>
-#include <cmath>
-#include <string>
-#include <sstream>
-
 
 inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
 {

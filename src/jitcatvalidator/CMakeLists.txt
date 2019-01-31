@@ -1,16 +1,13 @@
 project(JitCatValidator)
 
-include_directories(
-    ${JitCatIncludePath}
-	${JitCatValidatorIncludePath}
-)
+include_directories(${JitCatIncludePath})
 
 set(JitCatValidatorSourceFiles
 	JitCatValidator.cpp
 	dllmain.cpp
 )
 
-set(JitCatValidatorHeaderFiles	${JitCatValidatorIncludePath}/JitCatValidator.h)
+set(JitCatValidatorHeaderFiles	${JitCatValidatorIncludePath}/jitcatvalidator/JitCatValidator.h)
 	
 
 set_source_files_properties(${JitCatValidatorHeaderFiles} PROPERTIES HEADER_FILE_ONLY ON)

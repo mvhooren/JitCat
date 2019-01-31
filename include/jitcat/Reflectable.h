@@ -7,27 +7,32 @@
 
 #pragma once
 
-class ReflectableHandle;
-class TypeInfo;
 
 #include <vector>
 #include <string>
 
-
-class Reflectable
+namespace jitcat::Reflection
 {
-private:
-	//disable copying, this is usually a bad idea because of the observers list
-	Reflectable(const Reflectable& );
-public:
-	Reflectable();
-	virtual ~Reflectable();
+	class ReflectableHandle;
+	class TypeInfo;
 
-	void addObserver(ReflectableHandle* observer);
-	void removeObserver(ReflectableHandle* observer);
 
-	virtual void copyFrom(const Reflectable* other) {}
+	class Reflectable
+	{
+	private:
+		//disable copying, this is usually a bad idea because of the observers list
+		Reflectable(const Reflectable& );
+	public:
+		Reflectable();
+		virtual ~Reflectable();
 
-private:
-	std::vector<ReflectableHandle*> observers;
-};
+		void addObserver(ReflectableHandle* observer);
+		void removeObserver(ReflectableHandle* observer);
+
+		virtual void copyFrom(const Reflectable* other) {}
+
+	private:
+		std::vector<ReflectableHandle*> observers;
+	};
+
+} //End namespace jitcat::Reflection

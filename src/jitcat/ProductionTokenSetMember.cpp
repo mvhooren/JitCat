@@ -5,8 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ProductionTokenSetMember.h"
-#include "ProductionToken.h"
+#include "jitcat/ProductionTokenSetMember.h"
+#include "jitcat/ProductionToken.h"
+
+using namespace jitcat::Grammar;
 
 
 bool ProductionTokenSetMember::operator== (const ProductionToken& other) const

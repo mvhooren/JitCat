@@ -7,23 +7,39 @@
 
 #pragma once
 
-class ASTNode;
-class DFAState;
-class ParseToken;
-class Production;
+namespace jitcat::AST
+{
+	class ASTNode;
+}
+namespace jitcat::Tokenizer
+{
+	class ParseToken;
+}
+namespace jitcat::Grammar
+{
+	class Production;
+}
 
 #include <stddef.h>
 
-class StackItem
+
+namespace jitcat::Parser
 {
-public:
-	StackItem():
-		state(nullptr),
-		astNode(nullptr)
-	{}
-	virtual ~StackItem() {}
-	DFAState* state;
-	ASTNode* astNode;
-	virtual const ParseToken* getTokenIfToken() const {return 0;}
-	virtual const Production* getProductionIfProduction() const {return 0;}
-};
+	class DFAState;
+
+
+	class StackItem
+	{
+	public:
+		StackItem():
+			state(nullptr),
+			astNode(nullptr)
+		{}
+		virtual ~StackItem() {}
+		DFAState* state;
+		AST::ASTNode* astNode;
+		virtual const Tokenizer::ParseToken* getTokenIfToken() const {return 0;}
+		virtual const Grammar::Production* getProductionIfProduction() const {return 0;}
+	};
+
+} //End namespace jitcat::Parser

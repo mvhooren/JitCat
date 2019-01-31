@@ -8,15 +8,15 @@
 #pragma once
 
 
-#include "Reflectable.h"
+#include "jitcat/Reflectable.h"
 
 
-class ReflectionTestObject2: public Reflectable
+class ReflectionTestObject2: public jitcat::Reflection::Reflectable
 {
 public:
 	ReflectionTestObject2();
 
-	static void reflect(TypeInfo& typeInfo);
+	static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
 	static const char* getTypeName();
 
 	std::string getWhat();

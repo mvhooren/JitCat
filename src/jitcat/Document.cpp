@@ -5,9 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Document.h"
+#include "jitcat/Document.h"
 
 #include <string.h>
+
+using namespace jitcat::Tokenizer;
 
 
 Document::Document(const char* fileData, std::size_t fileSize):

@@ -6,32 +6,38 @@
 */
 
 #pragma once
-
-class ProductionToken;
-#include "Item.h"
+namespace jitcat::Grammar
+{
+	class ProductionToken;
+}
+#include "jitcat/Item.h"
 #include <vector>
 
-
-//The state contains a set of items that define the possible moves from this state (shift or reduce)
-class DFAState
+namespace jitcat::Parser
 {
-public:
-	struct DFAStateTransition
+
+	//The state contains a set of items that define the possible moves from this state (shift or reduce)
+	class DFAState
 	{
-		ProductionToken* transitionToken;
-		DFAState* nextState;
-		Item item;
+	public:
+		struct DFAStateTransition
+		{
+			Grammar::ProductionToken* transitionToken;
+			DFAState* nextState;
+			Item item;
+		};
+
+		bool addItem(const Item& item);
+		void addTransition(Grammar::ProductionToken* token, DFAState* nextState, Item item);
+		std::string toString() const;
+		bool operator==(const DFAState& other) const;
+
+	public:
+		std::size_t stateIndex;
+		std::vector<Item> items;
+		std::vector<DFAStateTransition> transitions;
+		bool reachable;
+		bool isEpsilonClosed;
 	};
 
-	bool addItem(const Item& item);
-	void addTransition(ProductionToken* token, DFAState* nextState, Item item);
-	std::string toString() const;
-	bool operator==(const DFAState& other) const;
-
-public:
-	std::size_t stateIndex;
-	std::vector<Item> items;
-	std::vector<DFAStateTransition> transitions;
-	bool reachable;
-	bool isEpsilonClosed;
-};
+} //End namespace jitcat::Parser

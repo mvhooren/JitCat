@@ -7,25 +7,33 @@
 
 #pragma once
 
-class CatRuntimeContext;
-class LLVMCodeGeneratorHelper;
-#include <functional>
-#include "LLVMCompileOptions.h"
-#include "LLVMForwardDeclares.h"
+namespace jitcat
+{
+	class CatRuntimeContext;
+}
+#include "jitcat/LLVMCompileOptions.h"
+#include "jitcat/LLVMForwardDeclares.h"
 
+#include <functional>
 #include <vector>
 
-
-struct LLVMCompileTimeContext
+namespace jitcat::LLVM
 {
-	LLVMCompileTimeContext(CatRuntimeContext* catContext);
+	class LLVMCodeGeneratorHelper;
 
-	CatRuntimeContext* catContext;
-	llvm::Function* currentFunction;
-	llvm::orc::JITDylib* currentDyLib;
 
-	LLVMCodeGeneratorHelper* helper;
-	std::vector<std::function<llvm::Value*()>> blockDestructorGenerators;
+	struct LLVMCompileTimeContext
+	{
+		LLVMCompileTimeContext(CatRuntimeContext* catContext);
+
+		CatRuntimeContext* catContext;
+		llvm::Function* currentFunction;
+		llvm::orc::JITDylib* currentDyLib;
+
+		LLVMCodeGeneratorHelper* helper;
+		std::vector<std::function<llvm::Value*()>> blockDestructorGenerators;
 	
-	LLVMCompileOptions options;
-};
+		LLVMCompileOptions options;
+	};
+
+} //End namespace jitcat::LLVM

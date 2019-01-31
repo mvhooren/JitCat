@@ -5,7 +5,9 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Timer.h"
+#include "jitcat/Timer.h"
+
+using namespace jitcat::Tools;
 
 
 Timer::Timer()

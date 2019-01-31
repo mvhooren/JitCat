@@ -5,11 +5,13 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ExpressionHelperFunctions.h"
-#include "Expression.h"
-#include "Tools.h"
+#include "jitcat/ExpressionHelperFunctions.h"
+#include "jitcat/Expression.h"
+#include "jitcat/Tools.h"
 
 #include <string>
+
+using namespace jitcat;
 
 
 bool ExpressionHelperFunctions::canBeAssigned(const CatGenericType& targetType, const CatGenericType& sourceType) 

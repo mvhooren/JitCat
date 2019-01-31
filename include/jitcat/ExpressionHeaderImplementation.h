@@ -5,195 +5,192 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Expression.h"
-#include "CatASTNodes.h"
-#include "CatGenericType.h"
-#include "Configuration.h"
-#include "Document.h"
-#include "ExpressionErrorManager.h"
-#include "JitCat.h"
+#include "jitcat/Expression.h"
+#include "jitcat/CatASTNodes.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/Configuration.h"
+#include "jitcat/Document.h"
+#include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/JitCat.h"
 
-#include "SLRParseResult.h"
-#include "Tools.h"
-#include "TypeTraits.h"
+#include "jitcat/SLRParseResult.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeTraits.h"
 
 #include <cassert>
 
-
-template<typename T>
-Expression<T>::Expression():
-	getValueFunc(&getDefaultValue)
+namespace jitcat
 {
-}
+
+	template<typename T>
+	Expression<T>::Expression():
+		getValueFunc(&getDefaultValue)
+	{
+	}
 
 
-template<typename T>
-inline Expression<T>::Expression(const char* expression):
-	ExpressionBase(expression),
-	getValueFunc(&getDefaultValue)
-{
-}
+	template<typename T>
+	inline Expression<T>::Expression(const char* expression):
+		ExpressionBase(expression),
+		getValueFunc(&getDefaultValue)
+	{
+	}
 
 
-template<typename T>
-Expression<T>::Expression(const std::string& expression):
-	ExpressionBase(expression),
-	getValueFunc(&getDefaultValue)
-{
-}
+	template<typename T>
+	Expression<T>::Expression(const std::string& expression):
+		ExpressionBase(expression),
+		getValueFunc(&getDefaultValue)
+	{
+	}
 
 	
-template<typename T>
-Expression<T>::Expression(CatRuntimeContext* compileContext, const std::string& expression):
-	ExpressionBase(compileContext, expression),
-	getValueFunc(&getDefaultValue)
-{
-	compile(compileContext);
-}
-
-
-template<typename T>
-Expression<T>::~Expression()
-{
-
-}
-
-template<typename T>
-void Expression<T>::compile(CatRuntimeContext* context)
-{
-	if (!parse(context, TypeTraits<T>::toGenericType()))
+	template<typename T>
+	Expression<T>::Expression(CatRuntimeContext* compileContext, const std::string& expression):
+		ExpressionBase(compileContext, expression),
+		getValueFunc(&getDefaultValue)
 	{
-		getValueFunc = &getDefaultValue;
+		compile(compileContext);
 	}
-	else
+
+
+	template<typename T>
+	Expression<T>::~Expression()
+	{
+
+	}
+
+	template<typename T>
+	void Expression<T>::compile(CatRuntimeContext* context)
+	{
+		if (!parse(context, TypeTraits<T>::toGenericType()))
+		{
+			getValueFunc = &getDefaultValue;
+		}
+		else
+		{
+			if (isConstant)
+			{
+				if constexpr (!std::is_same<void, T>::value)
+				{
+					cachedValue = getActualValue(expressionAST->execute(context));
+				}
+			}
+		}
+	}
+
+
+	template<typename T>
+	inline void Expression<T>::handleCompiledFunction(uintptr_t functionAddress)
+	{
+		getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
+	}
+
+
+	template<typename T>
+	inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 	{
 		if (isConstant)
 		{
 			if constexpr (!std::is_same<void, T>::value)
 			{
-				cachedValue = getActualValue(expressionAST->execute(context));
-			}
-		}
-	}
-}
-
-
-template<typename T>
-inline void Expression<T>::handleCompiledFunction(uintptr_t functionAddress)
-{
-	getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
-}
-
-
-template<typename T>
-inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
-{
-	if (isConstant)
-	{
-		if constexpr (!std::is_same<void, T>::value)
-		{
-			return cachedValue;
-		}
-		else
-		{
-			return;
-		}
-	}
-	else
-	{
-		if constexpr (Configuration::enableLLVM)
-		{
-			if constexpr (!std::is_same<void, T>::value)
-			{
-				return getValueFunc(runtimeContext);
+				return cachedValue;
 			}
 			else
 			{
-				getValueFunc(runtimeContext);
 				return;
 			}
 		}
 		else
 		{
-			if (expressionAST != nullptr)
+			if constexpr (Configuration::enableLLVM)
 			{
 				if constexpr (!std::is_same<void, T>::value)
 				{
-					std::any value = expressionAST->execute(runtimeContext);
-					return getActualValue(value);
+					return getValueFunc(runtimeContext);
 				}
 				else
 				{
-					expressionAST->execute(runtimeContext);
+					getValueFunc(runtimeContext);
 					return;
 				}
 			}
 			else
 			{
-				return T();
+				if (expressionAST != nullptr)
+				{
+					if constexpr (!std::is_same<void, T>::value)
+					{
+						std::any value = expressionAST->execute(runtimeContext);
+						return getActualValue(value);
+					}
+					else
+					{
+						expressionAST->execute(runtimeContext);
+						return;
+					}
+				}
+				else
+				{
+					return T();
+				}
 			}
 		}
 	}
-}
 
 
-template<typename T>
-inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeContext)
-{
-	if (isConstant)
+	template<typename T>
+	inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeContext)
 	{
-		if constexpr (!std::is_same<void, T>::value)
+		if (isConstant)
 		{
-			return cachedValue;
+			if constexpr (!std::is_same<void, T>::value)
+			{
+				return cachedValue;
+			}
+			else
+			{
+				return;
+			}
+		}
+		else if (expressionAST != nullptr)
+		{
+			if constexpr (!std::is_same<void, T>::value)
+			{
+				std::any value = expressionAST->execute(runtimeContext);
+				return getActualValue(value);
+			}
+			else
+			{
+				expressionAST->execute(runtimeContext);
+				return;
+			}
 		}
 		else
 		{
-			return;
+			return T();
 		}
 	}
-	else if (expressionAST != nullptr)
+
+
+	template<typename T>
+	CatGenericType Expression<T>::getExpectedCatType() const
 	{
-		if constexpr (!std::is_same<void, T>::value)
-		{
-			std::any value = expressionAST->execute(runtimeContext);
-			return getActualValue(value);
-		}
-		else
-		{
-			expressionAST->execute(runtimeContext);
-			return;
-		}
+		return TypeTraits<T>::toGenericType();
 	}
-	else
+
+
+	template<typename T>
+	inline T Expression<T>::getActualValue(const std::any& catValue)
+	{
+		return TypeTraits<T>::getValue(catValue);
+	}
+
+
+	template<typename T>
+	inline const T Expression<T>::getDefaultValue(CatRuntimeContext*)
 	{
 		return T();
 	}
-}
 
-
-template<typename T>
-CatGenericType Expression<T>::getExpectedCatType() const
-{
-	return TypeTraits<T>::toGenericType();
-}
-
-
-template<typename T>
-inline T Expression<T>::getActualValue(const std::any& catValue)
-{
-	if constexpr (std::is_pointer<T>::value)
-	{
-		return static_cast<T>(std::any_cast<Reflectable*>(catValue));
-	}
-	else
-	{
-		return std::any_cast<T>(catValue);
-	}
-}
-
-
-template<typename T>
-inline const T Expression<T>::getDefaultValue(CatRuntimeContext*)
-{
-	return T();
-}
+}//End namespace jitcat

@@ -7,9 +7,11 @@
 
 #pragma once
 
-#include "CommentTokenSubTypes.h"
-#include "ParseToken.h"
+#include "jitcat/CommentTokenSubTypes.h"
+#include "jitcat/ParseToken.h"
 
+namespace jitcat::Tokenizer
+{
 
 class CommentToken: public ParseToken
 {
@@ -28,3 +30,6 @@ public:
 private:
 	int subType;
 };
+
+
+} //End namespace jitcat::Tokenizer

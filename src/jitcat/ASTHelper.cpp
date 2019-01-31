@@ -5,14 +5,17 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ASTHelper.h"
-#include "CatArgumentList.h"
-#include "CatFunctionCall.h"
-#include "CatTypedExpression.h"
-#include "ReflectableHandle.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/CatArgumentList.h"
+#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/ReflectableHandle.h"
 
 #include <cassert>
-#include "ASTHelper.h"
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 
 
 void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatTypedExpression* expression)

@@ -1,8 +1,12 @@
-#include "LLVMCatIntrinsics.h"
-#include "CatRuntimeContext.h"
-#include "Tools.h"
+#include "jitcat/LLVMCatIntrinsics.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/Tools.h"
 
 #include <cmath>
+
+using namespace jitcat;
+using namespace jitcat::LLVM;
+using namespace jitcat::Reflection;
 
 
 Reflectable* LLVMCatIntrinsics::getScopePointerFromContext(CatRuntimeContext* context, int scopeId)

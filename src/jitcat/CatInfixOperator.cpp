@@ -5,13 +5,17 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatInfixOperator.h"
-#include "CatLiteral.h"
-#include "CatLog.h"
-#include "InfixOperatorOptimizer.h"
-#include "ASTHelper.h"
+#include "jitcat/CatInfixOperator.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/InfixOperatorOptimizer.h"
+#include "jitcat/ASTHelper.h"
 
 #include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
 
 
 CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType):

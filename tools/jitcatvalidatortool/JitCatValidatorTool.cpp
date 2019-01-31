@@ -7,7 +7,7 @@
 
 #include <algorithm>
 #include <iostream>
-#include <JitCatValidator.h>
+#include <jitcatvalidator/JitCatValidator.h>
 #include <locale>
 #include <sstream>
 #include <string>

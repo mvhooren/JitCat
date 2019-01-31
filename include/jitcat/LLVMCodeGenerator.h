@@ -7,69 +7,77 @@
 
 #pragma once
 
-class CatRuntimeContext;
-class LLVMCodeGeneratorHelper;
-struct LLVMCompileTimeContext;
-class Reflectable;
-#include "CatASTNodesDeclares.h"
-#include "LLVMForwardDeclares.h"
-#include "CatScopeID.h"
+namespace jitcat
+{
+	class CatRuntimeContext;
+}
+#include "jitcat/CatASTNodesDeclares.h"
+#include "jitcat/LLVMForwardDeclares.h"
+#include "jitcat/CatScopeID.h"
 
 #include <memory>
 #include <string>
 
-//A code generator for the LLVM backend. 
-//Create one code generator per module / translation unit.
-//Not thread safe. Create multiple code generators for different threads instead.
-class LLVMCodeGenerator
+
+namespace jitcat::LLVM
 {
-public:
-	LLVMCodeGenerator(const std::string& name);
-	~LLVMCodeGenerator();
+	class LLVMCodeGeneratorHelper;
+	struct LLVMCompileTimeContext;
 
-	llvm::Value* generate(CatTypedExpression* expression, LLVMCompileTimeContext* context);
+	//A code generator for the LLVM backend. 
+	//Create one code generator per module / translation unit.
+	//Not thread safe. Create multiple code generators for different threads instead.
+	class LLVMCodeGenerator
+	{
+	public:
+		LLVMCodeGenerator(const std::string& name);
+		~LLVMCodeGenerator();
+
+		llvm::Value* generate(AST::CatTypedExpression* expression, LLVMCompileTimeContext* context);
 	
-	//Wraps an expression into a function that returns the expression's computed value.
-	//The function has one parameter, the CatRuntimeContext. 
-	//If the function returns a string, it will have 2 parameters where the first parameter is a pointer to a pre-allocated string. (marked sret)
-	llvm::Function* generateExpressionFunction(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
+		//Wraps an expression into a function that returns the expression's computed value.
+		//The function has one parameter, the CatRuntimeContext. 
+		//If the function returns a string, it will have 2 parameters where the first parameter is a pointer to a pre-allocated string. (marked sret)
+		llvm::Function* generateExpressionFunction(AST::CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
 
-	llvm::Function* generateExpressionAssignFunction(CatAssignableExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
+		llvm::Function* generateExpressionAssignFunction(AST::CatAssignableExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
 	
-	//Generates a function that returns the value of the expression.
-	intptr_t generateAndGetFunctionAddress(CatTypedExpression* expression, LLVMCompileTimeContext* context);
+		//Generates a function that returns the value of the expression.
+		intptr_t generateAndGetFunctionAddress(AST::CatTypedExpression* expression, LLVMCompileTimeContext* context);
 
-	//Generates a function that takes a parameter that will be assigned to the result of the expression. Expression must be of an assignable type (lValue).
-	intptr_t generateAndGetAssignFunctionAddress(CatAssignableExpression* expression, LLVMCompileTimeContext* context);
+		//Generates a function that takes a parameter that will be assigned to the result of the expression. Expression must be of an assignable type (lValue).
+		intptr_t generateAndGetAssignFunctionAddress(jitcat::AST::CatAssignableExpression* expression, LLVMCompileTimeContext* context);
 
-private:
-	llvm::Value* generate(CatIdentifier* identifier, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatFunctionCall* functionCall, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatInfixOperator* infixOperator, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatAssignmentOperator* assignmentOperator, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatLiteral* literal, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatMemberAccess* memberAccess, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatMemberFunctionCall* memberFunctionCall, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatPrefixOperator* prefixOperator, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context);
-	llvm::Value* generate(CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
+	private:
+		llvm::Value* generate(AST::CatIdentifier* identifier, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatFunctionCall* functionCall, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatInfixOperator* infixOperator, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatAssignmentOperator* assignmentOperator, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatLiteral* literal, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatMemberAccess* memberAccess, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatMemberFunctionCall* memberFunctionCall, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatPrefixOperator* prefixOperator, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context);
+		llvm::Value* generate(AST::CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
 
-	llvm::Value* generateAssign(CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);
-	llvm::Value* generateAssign(CatIdentifier* identifier, llvm::Value* rValue, LLVMCompileTimeContext* context);
-	llvm::Value* generateAssign(CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
+		llvm::Value* generateAssign(AST::CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);
+		llvm::Value* generateAssign(AST::CatIdentifier* identifier, llvm::Value* rValue, LLVMCompileTimeContext* context);
+		llvm::Value* generateAssign(AST::CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
 
-	llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
+		llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
 
-	void initContext(LLVMCompileTimeContext* context);
-	void createNewModule(LLVMCompileTimeContext* context);
-	std::string getNextFunctionName(LLVMCompileTimeContext* context);
-	llvm::Function* verifyAndOptimizeFunction(llvm::Function* function);
+		void initContext(LLVMCompileTimeContext* context);
+		void createNewModule(LLVMCompileTimeContext* context);
+		std::string getNextFunctionName(LLVMCompileTimeContext* context);
+		llvm::Function* verifyAndOptimizeFunction(llvm::Function* function);
 
-private:
-	llvm::LLVMContext& llvmContext;
-	std::unique_ptr<llvm::Module> currentModule;
-	llvm::orc::JITDylib* dylib;
-	std::unique_ptr<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>> builder;
-	std::unique_ptr<llvm::legacy::FunctionPassManager> passManager;
-	std::unique_ptr<LLVMCodeGeneratorHelper> helper;
-};
+	private:
+		llvm::LLVMContext& llvmContext;
+		std::unique_ptr<llvm::Module> currentModule;
+		llvm::orc::JITDylib* dylib;
+		std::unique_ptr<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>> builder;
+		std::unique_ptr<llvm::legacy::FunctionPassManager> passManager;
+		std::unique_ptr<LLVMCodeGeneratorHelper> helper;
+	};
+
+} //End namespace jitcat::LLVM

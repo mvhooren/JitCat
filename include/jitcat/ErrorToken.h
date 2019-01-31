@@ -7,19 +7,24 @@
 
 #pragma once
 
-#include "ParseToken.h"
+#include "jitcat/ParseToken.h"
 
-class ErrorToken: public ParseToken
+namespace jitcat::Tokenizer
 {
-public:
-	ErrorToken() {};
-	ErrorToken(Lexeme* lexeme_) {lexeme.reset(lexeme_);};
-	virtual int getTokenID() const {return getID();};
-	virtual const char* getTokenName() const {return "Error";};
-	virtual const char* getSubTypeName(int subType) const {return getTokenName();};	
-	virtual const char* getSubTypeSymbol(int subType) const {return getTokenName();};	
-	virtual int getTokenSubType() const {return 0;};
-	virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
 
-	static const int getID(){static int ID = ParseToken::getNextTokenID(); return ID;};
-};
+	class ErrorToken: public ParseToken
+	{
+	public:
+		ErrorToken() {};
+		ErrorToken(Lexeme* lexeme_) {lexeme.reset(lexeme_);};
+		virtual int getTokenID() const {return getID();};
+		virtual const char* getTokenName() const {return "Error";};
+		virtual const char* getSubTypeName(int subType) const {return getTokenName();};	
+		virtual const char* getSubTypeSymbol(int subType) const {return getTokenName();};	
+		virtual int getTokenSubType() const {return 0;};
+		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
+
+		static const int getID(){static int ID = ParseToken::getNextTokenID(); return ID;};
+	};
+
+} //End namespace jitcat::Tokenizer

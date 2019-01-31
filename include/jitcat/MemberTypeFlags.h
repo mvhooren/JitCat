@@ -7,9 +7,14 @@
 
 #pragma once
 
-enum MemberTypeFlags
+namespace jitcat::Reflection
 {
-	MTF_IS_CONST = 1,
-	MTF_IS_STATIC_CONST = 2,
-	MTF_IS_WRITABLE = 4
-};
+
+	enum MemberTypeFlags
+	{
+		MTF_IS_CONST = 1,
+		MTF_IS_STATIC_CONST = 2,
+		MTF_IS_WRITABLE = 4
+	};
+
+} //End namespace jitcat::Reflection

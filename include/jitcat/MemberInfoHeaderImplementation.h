@@ -7,12 +7,15 @@
 
 #pragma once
 
-#include "LLVMCatIntrinsics.h"
-#include "LLVMCodeGeneratorHelper.h"
-#include "LLVMCompileTimeContext.h"
-#include "LLVMTypes.h"
-#include "MemberInfo.h"
-#include "Tools.h"
+#include "jitcat/LLVMCatIntrinsics.h"
+#include "jitcat/LLVMCodeGeneratorHelper.h"
+#include "jitcat/LLVMCompileTimeContext.h"
+#include "jitcat/LLVMTypes.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/Tools.h"
+
+namespace jitcat::Reflection
+{
 
 
 template<typename T, typename U>
@@ -37,7 +40,7 @@ inline std::any ContainerMemberInfo<T, U>::getAssignableMemberReference(Reflecta
 
 
 template<typename T, typename U>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
@@ -52,14 +55,14 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 	{
 		memcpy(&offset, &memberPointer, 8);
 	}
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		return context->helper->convertToPointer(addressValue, memberName + "_Ptr");
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -111,26 +114,26 @@ inline ContainerItemType ContainerMemberInfo<T, U>::getVectorIndex(std::vector<C
 
 template<typename T, typename U>
 template<typename ContainerItemType>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::string, ContainerItemType>* map, llvm::Value* containerPtr, llvm::Value* index, LLVMCompileTimeContext* context) const
+inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::string, ContainerItemType>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	if (context->helper->isStringPointer(index))
 	{
-		auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
 			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapStringIndex<ContainerItemType>;
-			return compileContext->helper->createCall(LLVMTypes::functionRetPtrArgPtr_StringPtr, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapStringIndex");
+			return compileContext->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_StringPtr, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapStringIndex");
 		};
-		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVMTypes::getLLVMType<ContainerItemType>(), context);
+		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 	}
 	else
 	{
-		auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
 			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapIntIndex<ContainerItemType>;
-			return compileContext->helper->createCall(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapIntIndex");
+			return compileContext->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapIntIndex");
 		};
-		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVMTypes::getLLVMType<ContainerItemType>(), context);
+		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 	}
 #else
 	return nullptr;
@@ -140,15 +143,15 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::strin
 
 template<typename T, typename U>
 template<typename ContainerItemType>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVMCompileTimeContext* context) const
+inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		static auto functionPointer = &ContainerMemberInfo<T, U>::getVectorIndex<ContainerItemType>;
-		return compileContext->helper->createCall(LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getVectorIndex");
+		return compileContext->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getVectorIndex");
 	};
-	return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVMTypes::getLLVMType<ContainerItemType>(), context);
+	return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 #else
 	return nullptr;
 #endif //ENABLE_LLVM
@@ -156,7 +159,7 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<Contain
 
 
 template<typename T, typename U>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVMCompileTimeContext* context) const
+inline llvm::Value* ContainerMemberInfo<T, U>::generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 	//Index can either be an int or a string
 	//container is a pointer to a vector or a map (of type T)
@@ -211,18 +214,18 @@ inline unsigned long long ClassPointerMemberInfo<T, U>::getMemberPointerOffset()
 
 
 template<typename T, typename U>
-inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		return context->helper->loadPointerAtAddress(addressValue, memberName);
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -230,11 +233,11 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 
 
 template<typename T, typename U>
-inline llvm::Value* ClassPointerMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const
+inline llvm::Value* ClassPointerMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
@@ -243,7 +246,7 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateAssignCode(llvm::Value
 		context->helper->writeToPointer(addressValue, rValue);
 		return rValue;
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -272,7 +275,7 @@ inline std::any ClassObjectMemberInfo<T, U>::getAssignableMemberReference(Reflec
 
 
 template<typename T, typename U>
-inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
@@ -287,14 +290,14 @@ inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::V
 	{
 		memcpy(&offset, &memberPointer, 8);
 	}
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_Ptr");
 		return context->helper->convertToPointer(addressValue, memberName);
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -332,7 +335,7 @@ inline std::any ClassUniquePtrMemberInfo<T, U>::getAssignableMemberReference(Ref
 
 
 template<typename T, typename U>
-inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	llvm::Value* thisPointerAsInt = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr");
@@ -340,12 +343,12 @@ inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm
 	{
 		parentObjectPointer = context->helper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr");
 	}
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* thisPointer = context->helper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
-		return context->helper->createCall(LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
+		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -399,11 +402,11 @@ inline unsigned long long BasicTypeMemberInfo<T, U>::getMemberPointerOffset() co
 
 
 template<typename T, typename U>
-inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{	
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
@@ -411,7 +414,7 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 		if constexpr (std::is_same<U, std::string>::value)
 		{
 			//std::string case (returns a pointer to the std::string)
-			return context->helper->convertToPointer(addressValue, memberName, LLVMTypes::stringPtrType);
+			return context->helper->convertToPointer(addressValue, memberName, LLVM::LLVMTypes::stringPtrType);
 		}
 		else
 		{
@@ -427,19 +430,19 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 
 
 template<typename T, typename U>
-inline llvm::Value* BasicTypeMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const
+inline llvm::Value* BasicTypeMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{	
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		if constexpr (std::is_same<U, std::string>::value)
 		{
-			llvm::Value* lValue = context->helper->convertToPointer(addressIntValue, memberName, LLVMTypes::stringPtrType);
-			context->helper->createCall(context, &LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
+			llvm::Value* lValue = context->helper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
+			context->helper->createCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
 		}
 		else
 		{
@@ -454,3 +457,6 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateAssignCode(llvm::Value* p
 	return nullptr;
 #endif // ENABLE_LLVM
 }
+
+
+} //End namespace jitcat::Reflection

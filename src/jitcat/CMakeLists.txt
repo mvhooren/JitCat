@@ -1,8 +1,10 @@
 project(JitCat)
 
+set(JitCatHeaderPath ${JitCatIncludePath}/jitcat)
+
 include_directories(${JitCatIncludePath})
 
-file(GLOB JitCatHeaderFiles ${JitCatIncludePath}/*.h)
+file(GLOB JitCatHeaderFiles ${JitCatHeaderPath}/*.h)
 
 if (JitCatHeaderFiles)
 	set_source_files_properties(${JitCatHeaderFiles} PROPERTIES HEADER_FILE_ONLY ON)
@@ -12,83 +14,83 @@ endif()
 #These lists are then used in source_group and add_library
 
 set(Source_Root
-	${JitCatIncludePath}/Configuration.h
+	${JitCatHeaderPath}/Configuration.h
 	JitCat.cpp
-	${JitCatIncludePath}/JitCat.h
+	${JitCatHeaderPath}/JitCat.h
 )
 
 set(Source_Cat
 	CatError.cpp
-	${JitCatIncludePath}/CatError.h
+	${JitCatHeaderPath}/CatError.h
 	CatGenericType.cpp
-	${JitCatIncludePath}/CatGenericType.h
+	${JitCatHeaderPath}/CatGenericType.h
 	CatGrammar.cpp
-	${JitCatIncludePath}/CatGrammar.h
-	CatInfixOperatorType.cpp
-	${JitCatIncludePath}/CatInfixOperatorType.h
+	${JitCatHeaderPath}/CatGrammar.h
 	CatRuntimeContext.cpp
-	${JitCatIncludePath}/CatRuntimeContext.h
-	${JitCatIncludePath}/CatScopeID.h
-	${JitCatIncludePath}/CatTokenIds.h
+	${JitCatHeaderPath}/CatRuntimeContext.h
+	${JitCatHeaderPath}/CatScopeID.h
+	${JitCatHeaderPath}/CatTokenIds.h
 	CatTokenizer.cpp
-	${JitCatIncludePath}/CatTokenizer.h
+	${JitCatHeaderPath}/CatTokenizer.h
 )
 
 set(Source_Cat_ASTNodes
 	CatArgumentList.cpp 
-	${JitCatIncludePath}/CatArgumentList.h 
+	${JitCatHeaderPath}/CatArgumentList.h 
 	CatArrayIndex.cpp 
-	${JitCatIncludePath}/CatArrayIndex.h 
-	${JitCatIncludePath}/CatAssignableExpression.h
-	${JitCatIncludePath}/CatASTNode.h 
-	${JitCatIncludePath}/CatASTNodes.h 
-	${JitCatIncludePath}/CatASTNodesDeclares.h 
-	${JitCatIncludePath}/CatASTNodeType.h 
-	${JitCatIncludePath}/CatAssignmentOperator.h 
+	${JitCatHeaderPath}/CatArrayIndex.h 
+	${JitCatHeaderPath}/CatAssignableExpression.h
+	${JitCatHeaderPath}/CatASTNode.h 
+	${JitCatHeaderPath}/CatASTNodes.h 
+	${JitCatHeaderPath}/CatASTNodesDeclares.h 
+	${JitCatHeaderPath}/CatASTNodeType.h 
+	${JitCatHeaderPath}/CatAssignmentOperator.h 
 	CatAssignmentOperator.cpp 
-	${JitCatIncludePath}/CatBuiltInFunctionType.h
-	${JitCatIncludePath}/CatExpression.h
+	${JitCatHeaderPath}/CatBuiltInFunctionType.h
+	${JitCatHeaderPath}/CatExpression.h
 	CatFunctionCall.cpp
-	${JitCatIncludePath}/CatFunctionCall.h
+	${JitCatHeaderPath}/CatFunctionCall.h
 	CatIdentifier.cpp
-	${JitCatIncludePath}/CatIdentifier.h
+	${JitCatHeaderPath}/CatIdentifier.h
 	CatInfixOperator.cpp
-	${JitCatIncludePath}/CatInfixOperator.h
-	${JitCatIncludePath}/CatInfixOperatorHeaderImplementation.h
+	${JitCatHeaderPath}/CatInfixOperator.h
+	${JitCatHeaderPath}/CatInfixOperatorHeaderImplementation.h
+	CatInfixOperatorType.cpp
+	${JitCatHeaderPath}/CatInfixOperatorType.h
 	CatLinkNode.cpp
-	${JitCatIncludePath}/CatLinkNode.h
+	${JitCatHeaderPath}/CatLinkNode.h
 	CatLiteral.cpp
-	${JitCatIncludePath}/CatLiteral.h
+	${JitCatHeaderPath}/CatLiteral.h
 	CatMemberAccess.cpp
-	${JitCatIncludePath}/CatMemberAccess.h
+	${JitCatHeaderPath}/CatMemberAccess.h
 	CatMemberFunctionCall.cpp
-	${JitCatIncludePath}/CatMemberFunctionCall.h
+	${JitCatHeaderPath}/CatMemberFunctionCall.h
 	CatPrefixOperator.cpp
-	${JitCatIncludePath}/CatPrefixOperator.h
+	${JitCatHeaderPath}/CatPrefixOperator.h
 	CatScopeRoot.cpp
-	${JitCatIncludePath}/CatScopeRoot.h
-	${JitCatIncludePath}/CatTypedExpression.h
+	${JitCatHeaderPath}/CatScopeRoot.h
+	${JitCatHeaderPath}/CatTypedExpression.h
 )
 
 set(Source_Cat_ASTNodes_ASTHelper
 	InfixOperatorOptimizer.cpp
-	${JitCatIncludePath}/InfixOperatorOptimizer.h
+	${JitCatHeaderPath}/InfixOperatorOptimizer.h
 	ASTHelper.cpp
-	${JitCatIncludePath}/ASTHelper.h
+	${JitCatHeaderPath}/ASTHelper.h
 )
 
 set(Source_Cat_CodeGeneration_LLVM
 	LLVMCatIntrinsics.cpp
-	${JitCatIncludePath}/LLVMCatIntrinsics.h
-	${JitCatIncludePath}/LLVMCodeGenerator.h
-	${JitCatIncludePath}/LLVMCodeGeneratorHelper.h
-	${JitCatIncludePath}/LLVMCompileOptions.h
-	${JitCatIncludePath}/LLVMCompileTimeContext.h
-	${JitCatIncludePath}/LLVMForwardDeclares.h
-	${JitCatIncludePath}/LLVMJit.h
-	${JitCatIncludePath}/LLVMJitHeaderImplementation.h
+	${JitCatHeaderPath}/LLVMCatIntrinsics.h
+	${JitCatHeaderPath}/LLVMCodeGenerator.h
+	${JitCatHeaderPath}/LLVMCodeGeneratorHelper.h
+	${JitCatHeaderPath}/LLVMCompileOptions.h
+	${JitCatHeaderPath}/LLVMCompileTimeContext.h
+	${JitCatHeaderPath}/LLVMForwardDeclares.h
+	${JitCatHeaderPath}/LLVMJit.h
+	${JitCatHeaderPath}/LLVMJitHeaderImplementation.h
 	LLVMTypes.cpp
-	${JitCatIncludePath}/LLVMTypes.h
+	${JitCatHeaderPath}/LLVMTypes.h
 )
 
 if(LLVM_ENABLED)
@@ -100,157 +102,157 @@ if(LLVM_ENABLED)
 endif()
 
 set(Source_Cat_Expression
-	${JitCatIncludePath}/Expression.h
+	${JitCatHeaderPath}/Expression.h
 	ExpressionAny.cpp
-	${JitCatIncludePath}/ExpressionAny.h
-	${JitCatIncludePath}/ExpressionAssignment.h
-	${JitCatIncludePath}/ExpressionAssignmentHeaderImplementation.h
+	${JitCatHeaderPath}/ExpressionAny.h
+	${JitCatHeaderPath}/ExpressionAssignment.h
+	${JitCatHeaderPath}/ExpressionAssignmentHeaderImplementation.h
 	ExpressionBase.cpp
-	${JitCatIncludePath}/ExpressionBase.h	
-	${JitCatIncludePath}/ExpressionHeaderImplementation.h
+	${JitCatHeaderPath}/ExpressionBase.h	
+	${JitCatHeaderPath}/ExpressionHeaderImplementation.h
 	ExpressionHelperFunctions.cpp
-	${JitCatIncludePath}/ExpressionHelperFunctions.h
-	${JitCatIncludePath}/TypeTraits.h
-	${JitCatIncludePath}/TypeTraitsHeaderImplementation.h
+	${JitCatHeaderPath}/ExpressionHelperFunctions.h
+	${JitCatHeaderPath}/TypeTraits.h
+	${JitCatHeaderPath}/TypeTraitsHeaderImplementation.h
 )
 
 set(Source_Cat_Expression_Autocompletion
 	AutoCompletion.cpp
-	${JitCatIncludePath}/AutoCompletion.h
+	${JitCatHeaderPath}/AutoCompletion.h
 )
 
 set(Source_Cat_Expression_Errors
 	ErrorContext.cpp
-	${JitCatIncludePath}/ErrorContext.h
+	${JitCatHeaderPath}/ErrorContext.h
 	ExpressionErrorManager.cpp
-	${JitCatIncludePath}/ExpressionErrorManager.h
+	${JitCatHeaderPath}/ExpressionErrorManager.h
 )
 
 set(Source_Grammar
-	Grammar.cpp
-	${JitCatIncludePath}/Grammar.h
+	GrammarBase.cpp
+	${JitCatHeaderPath}/GrammarBase.h
 	Production.cpp
-	${JitCatIncludePath}/Production.h
+	${JitCatHeaderPath}/Production.h
 	ProductionEpsilonToken.cpp
-	${JitCatIncludePath}/ProductionEpsilonToken.h
+	${JitCatHeaderPath}/ProductionEpsilonToken.h
 	ProductionNonTerminalToken.cpp
-	${JitCatIncludePath}/ProductionNonTerminalToken.h
+	${JitCatHeaderPath}/ProductionNonTerminalToken.h
 	ProductionRule.cpp
-	${JitCatIncludePath}/ProductionRule.h
+	${JitCatHeaderPath}/ProductionRule.h
 	ProductionTerminalToken.cpp
-	${JitCatIncludePath}/ProductionTerminalToken.h
+	${JitCatHeaderPath}/ProductionTerminalToken.h
 	ProductionToken.cpp
-	${JitCatIncludePath}/ProductionToken.h
+	${JitCatHeaderPath}/ProductionToken.h
 	ProductionTokenSet.cpp
-	${JitCatIncludePath}/ProductionTokenSet.h
+	${JitCatHeaderPath}/ProductionTokenSet.h
 	ProductionTokenSetMember.cpp
-	${JitCatIncludePath}/ProductionTokenSetMember.h
-	${JitCatIncludePath}/ProductionTokenType.h
-	${JitCatIncludePath}/TokenFlag.h
+	${JitCatHeaderPath}/ProductionTokenSetMember.h
+	${JitCatHeaderPath}/ProductionTokenType.h
+	${JitCatHeaderPath}/TokenFlag.h
 )
 
 set(Source_Parser
-	${JitCatIncludePath}/ASTNode.h
+	${JitCatHeaderPath}/ASTNode.h
 	ASTNodeParser.cpp
-	${JitCatIncludePath}/ASTNodeParser.h
+	${JitCatHeaderPath}/ASTNodeParser.h
 	DFAState.cpp
-	${JitCatIncludePath}/DFAState.h
+	${JitCatHeaderPath}/DFAState.h
 	Item.cpp
-	${JitCatIncludePath}/Item.h
-	${JitCatIncludePath}/RuntimeContext.h
+	${JitCatHeaderPath}/Item.h
+	${JitCatHeaderPath}/RuntimeContext.h
 	SLRParser.cpp
-	${JitCatIncludePath}/SLRParser.h
+	${JitCatHeaderPath}/SLRParser.h
 	SLRParseResult.cpp
-	${JitCatIncludePath}/SLRParseResult.h
-	${JitCatIncludePath}/StackItem.h
+	${JitCatHeaderPath}/SLRParseResult.h
+	${JitCatHeaderPath}/StackItem.h
 	StackItemProduction.cpp
-	${JitCatIncludePath}/StackItemProduction.h
-	${JitCatIncludePath}/StackItemToken.h
+	${JitCatHeaderPath}/StackItemProduction.h
+	${JitCatHeaderPath}/StackItemToken.h
 )
 
 set(Source_Reflection
 	Reflectable.cpp
-	${JitCatIncludePath}/Reflectable.h
+	${JitCatHeaderPath}/Reflectable.h
 	ReflectableHandle.cpp
-	${JitCatIncludePath}/ReflectableHandle.h
+	${JitCatHeaderPath}/ReflectableHandle.h
 	TypeRegistry.cpp
-	${JitCatIncludePath}/TypeRegistry.h
+	${JitCatHeaderPath}/TypeRegistry.h
 )
 
 set(Source_Reflection_Enums
-	${JitCatIncludePath}/AssignableType.h
+	${JitCatHeaderPath}/AssignableType.h
 	ContainerType.cpp
-	${JitCatIncludePath}/ContainerType.h
-	${JitCatIncludePath}/MemberTypeFlags.h
+	${JitCatHeaderPath}/ContainerType.h
+	${JitCatHeaderPath}/MemberTypeFlags.h
 )
 
 
 set(Source_Reflection_Serialisation
 	XMLHelper.cpp
-	${JitCatIncludePath}/XMLHelper.h
+	${JitCatHeaderPath}/XMLHelper.h
 )
 
 set(Source_Reflection_TypeInfo
 	CustomTypeInfo.cpp
-	${JitCatIncludePath}/CustomTypeInfo.h
+	${JitCatHeaderPath}/CustomTypeInfo.h
 	CustomTypeInstance.cpp
-	${JitCatIncludePath}/CustomTypeInstance.h
-	${JitCatIncludePath}/CustomTypeMemberInfo.h
-	${JitCatIncludePath}/CustomTypeMemberInfoHeaderImplementation.h
-	${JitCatIncludePath}/MemberFunctionInfo.h
-	${JitCatIncludePath}/MemberInfo.h
-	${JitCatIncludePath}/MemberInfoHeaderImplementation.h
-	${JitCatIncludePath}/MemberTypeInfoCreator.h
-	${JitCatIncludePath}/TypeCaster.h
+	${JitCatHeaderPath}/CustomTypeInstance.h
+	${JitCatHeaderPath}/CustomTypeMemberInfo.h
+	${JitCatHeaderPath}/CustomTypeMemberInfoHeaderImplementation.h
+	${JitCatHeaderPath}/MemberFunctionInfo.h
+	${JitCatHeaderPath}/MemberInfo.h
+	${JitCatHeaderPath}/MemberInfoHeaderImplementation.h
+	${JitCatHeaderPath}/MemberTypeInfoCreator.h
+	${JitCatHeaderPath}/TypeCaster.h
 	TypeInfo.cpp
-	${JitCatIncludePath}/TypeInfo.h
-	${JitCatIncludePath}/TypeInfoHeaderImplementation.h
-	${JitCatIncludePath}/VariableEnumerator.h
+	${JitCatHeaderPath}/TypeInfo.h
+	${JitCatHeaderPath}/TypeInfoHeaderImplementation.h
+	${JitCatHeaderPath}/VariableEnumerator.h
 )
 
 set(Source_Tokenizer
 	Document.cpp
-	${JitCatIncludePath}/Document.h
+	${JitCatHeaderPath}/Document.h
 	Lexeme.cpp
-	${JitCatIncludePath}/Lexeme.h
+	${JitCatHeaderPath}/Lexeme.h
 	ParseToken.cpp
-	${JitCatIncludePath}/ParseToken.h
-	Tokenizer.cpp
-	${JitCatIncludePath}/Tokenizer.h
+	${JitCatHeaderPath}/ParseToken.h
+	TokenizerBase.cpp
+	${JitCatHeaderPath}/TokenizerBase.h
 )
 
 set(Source_Tokenizer_Tokens
 	CommentToken.cpp
-	${JitCatIncludePath}/CommentToken.h
-	${JitCatIncludePath}/CommentTokenSubTypes.h
+	${JitCatHeaderPath}/CommentToken.h
+	${JitCatHeaderPath}/CommentTokenSubTypes.h
 	ConstantToken.cpp
-	${JitCatIncludePath}/ConstantToken.h
-	${JitCatIncludePath}/ConstantTokenSubTypes.h
+	${JitCatHeaderPath}/ConstantToken.h
+	${JitCatHeaderPath}/ConstantTokenSubTypes.h
 	ErrorToken.cpp
-	${JitCatIncludePath}/ErrorToken.h
+	${JitCatHeaderPath}/ErrorToken.h
 	IdentifierToken.cpp
-	${JitCatIncludePath}/IdentifierToken.h
-	${JitCatIncludePath}/IdentifierTokenSubTypes.h
+	${JitCatHeaderPath}/IdentifierToken.h
+	${JitCatHeaderPath}/IdentifierTokenSubTypes.h
 	OneCharToken.cpp
-	${JitCatIncludePath}/OneCharToken.h
-	${JitCatIncludePath}/OneCharTokenSubTypes.h
+	${JitCatHeaderPath}/OneCharToken.h
+	${JitCatHeaderPath}/OneCharTokenSubTypes.h
 	ParseHelper.cpp
-	${JitCatIncludePath}/ParseHelper.h
+	${JitCatHeaderPath}/ParseHelper.h
 	TwoCharToken.cpp
-	${JitCatIncludePath}/TwoCharToken.h
-	${JitCatIncludePath}/TwoCharTokenSubTypes.h
+	${JitCatHeaderPath}/TwoCharToken.h
+	${JitCatHeaderPath}/TwoCharTokenSubTypes.h
 	WhitespaceToken.cpp
-	${JitCatIncludePath}/WhitespaceToken.h
+	${JitCatHeaderPath}/WhitespaceToken.h
 )
 
 set(Source_Tools
 	CatLog.cpp
-	${JitCatIncludePath}/CatLog.h
+	${JitCatHeaderPath}/CatLog.h
 	Timer.cpp
-	${JitCatIncludePath}/Timer.h
+	${JitCatHeaderPath}/Timer.h
 	Tools.cpp
-	${JitCatIncludePath}/Tools.h
-	${JitCatIncludePath}/ToolsHeaderImplementation.h
+	${JitCatHeaderPath}/Tools.h
+	${JitCatHeaderPath}/ToolsHeaderImplementation.h
 )
 
 

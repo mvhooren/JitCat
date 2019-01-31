@@ -7,13 +7,18 @@
 
 #pragma once
 
-#include "AssignableType.h"
-#include "CatTypedExpression.h"
+#include "jitcat/AssignableType.h"
+#include "jitcat/CatTypedExpression.h"
 
-
-class CatAssignableExpression: public CatTypedExpression
+namespace jitcat::AST
 {
-public:
-	virtual bool isAssignable() const override final {return true;}
-	virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType) = 0;
-};
+
+	class CatAssignableExpression: public CatTypedExpression
+	{
+	public:
+		virtual bool isAssignable() const override final {return true;}
+		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, Reflection::AssignableType& assignableType) = 0;
+	};
+
+
+} //End namespace jitcat::AST

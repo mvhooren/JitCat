@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <iostream>
-
 template<typename ...Arguments>
 inline llvm::Value* LLVMJit::logError(Arguments ...arguments)
 {

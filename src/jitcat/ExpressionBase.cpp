@@ -5,24 +5,30 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ExpressionBase.h"
-#include "CatArgumentList.h"
-#include "CatAssignableExpression.h"
-#include "CatFunctionCall.h"
-#include "CatPrefixOperator.h"
-#include "CatRuntimeContext.h"
-#include "CatTypedExpression.h"
-#include "ExpressionErrorManager.h"
-#include "Document.h"
-#include "JitCat.h"
+#include "jitcat/ExpressionBase.h"
+#include "jitcat/CatArgumentList.h"
+#include "jitcat/CatAssignableExpression.h"
+#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatPrefixOperator.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/Document.h"
+#include "jitcat/JitCat.h"
 #ifdef ENABLE_LLVM
-#include "LLVMCodeGenerator.h"
-#include "LLVMCompileTimeContext.h"
+#include "jitcat/LLVMCodeGenerator.h"
+#include "jitcat/LLVMCompileTimeContext.h"
 #endif
-#include "SLRParseResult.h"
-#include "Tools.h"
+#include "jitcat/SLRParseResult.h"
+#include "jitcat/Tools.h"
 
 #include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::LLVM;
+using namespace jitcat::Parser;
+using namespace jitcat::Tokenizer;
 
 
 ExpressionBase::ExpressionBase(bool expectAssignable):

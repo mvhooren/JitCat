@@ -7,24 +7,29 @@
 
 #pragma once
 
-#include "ParseToken.h"
-#include "TwoCharTokenSubTypes.h"
-class Document;
-struct Lexeme;
+#include "jitcat/ParseToken.h"
+#include "jitcat/TwoCharTokenSubTypes.h"
 
-class TwoCharToken: public ParseToken
+namespace jitcat::Tokenizer
 {
-public:
-	TwoCharToken();
-	TwoCharToken(Lexeme* lexeme, TwoChar subType);
-	virtual ~TwoCharToken();
-	virtual int getTokenID() const;
-	virtual const char* getTokenName() const;
-	virtual const char* getSubTypeName(int subType) const;
-	virtual const char* getSubTypeSymbol(int subType) const;
-	virtual int getTokenSubType() const;
-	virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-	static const int getID();
-private:
-	TwoChar subType;
-};
+	class Document;
+	struct Lexeme;
+
+	class TwoCharToken: public ParseToken
+	{
+	public:
+		TwoCharToken();
+		TwoCharToken(Lexeme* lexeme, TwoChar subType);
+		virtual ~TwoCharToken();
+		virtual int getTokenID() const;
+		virtual const char* getTokenName() const;
+		virtual const char* getSubTypeName(int subType) const;
+		virtual const char* getSubTypeSymbol(int subType) const;
+		virtual int getTokenSubType() const;
+		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
+		static const int getID();
+	private:
+		TwoChar subType;
+	};
+
+} //End namespace jitcat::Tokenizer

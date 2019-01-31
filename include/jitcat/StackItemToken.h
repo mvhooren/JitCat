@@ -7,15 +7,19 @@
 
 #pragma once
 
-#include "StackItem.h"
+#include "jitcat/StackItem.h"
 
-
-class StackItemToken : public StackItem
+namespace jitcat::Parser
 {
-public:
-	StackItemToken(ParseToken* token):
-		token(token) {}
-		virtual const ParseToken* getTokenIfToken() const {return token;}
-private:
-	ParseToken* token;
-};
+
+	class StackItemToken : public StackItem
+	{
+	public:
+		StackItemToken(Tokenizer::ParseToken* token):
+			token(token) {}
+			virtual const Tokenizer::ParseToken* getTokenIfToken() const {return token;}
+	private:
+		Tokenizer::ParseToken* token;
+	};
+
+} //End namespace jitcat::Parser

@@ -5,8 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ProductionEpsilonToken.h"
-#include "ProductionTokenSet.h"
+#include "jitcat/ProductionEpsilonToken.h"
+#include "jitcat/ProductionTokenSet.h"
+
+using namespace jitcat::Grammar;
 
 
 ProductionEpsilonToken::ProductionEpsilonToken()

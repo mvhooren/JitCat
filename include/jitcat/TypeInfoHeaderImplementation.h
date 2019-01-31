@@ -5,12 +5,14 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "MemberInfo.h"
-#include "MemberFunctionInfo.h"
-#include "Tools.h"
-#include "TypeRegistry.h"
-#include "MemberTypeInfoCreator.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/MemberFunctionInfo.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeRegistry.h"
+#include "jitcat/MemberTypeInfoCreator.h"
 
+namespace jitcat::Reflection
+{
 
 template <typename T, typename U>
 TypeInfo& TypeInfo::addMember(const std::string& identifier_, U T::* member, unsigned int flags)
@@ -62,3 +64,6 @@ TypeInfo& TypeInfo::addMember(const std::string& identifier_, U (T::*function)(A
 	memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function));
 	return *this;
 }
+
+
+} //End namespace jitcat::Reflection

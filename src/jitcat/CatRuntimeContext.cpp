@@ -5,18 +5,21 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatRuntimeContext.h"
-#include "CustomTypeInfo.h"
-#include "CustomTypeInstance.h"
-#include "ErrorContext.h"
-#include "ExpressionErrorManager.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeInstance.h"
+#include "jitcat/ErrorContext.h"
+#include "jitcat/ExpressionErrorManager.h"
 #ifdef ENABLE_LLVM
-#include "LLVMCodeGenerator.h"
+#include "jitcat/LLVMCodeGenerator.h"
 #endif
 
 #include <cassert>
 #include <sstream>
 
+using namespace jitcat;
+using namespace jitcat::LLVM;
+using namespace jitcat::Reflection;
 
 CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionErrorManager* errorManager):
 	contextName(contextName),

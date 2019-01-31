@@ -7,27 +7,36 @@
 
 #pragma once
 
-class ProductionRule;
+namespace jitcat::Grammar
+{
+	class Production;
+	class ProductionRule;
+}
 
-#include "StackItem.h"
+#include "jitcat/StackItem.h"
 
 #include <vector>
 
 
-class StackItemProduction : public StackItem
+namespace jitcat::Parser
 {
-public:
-	StackItemProduction(const Production* production, const ProductionRule* rule):
-		production(production),
-		rule(rule) {}
-	virtual ~StackItemProduction();
-	virtual const Production* getProductionIfProduction() const {return production;}
-	void addChildItem(StackItem* stackItem)
+
+	class StackItemProduction : public StackItem
 	{
-		children.push_back(stackItem);
-	}
-private:
-	const Production* production;
-	const ProductionRule* rule;
-	std::vector<StackItem*> children;
-};
+	public:
+		StackItemProduction(const Grammar::Production* production, const Grammar::ProductionRule* rule):
+			production(production),
+			rule(rule) {}
+		virtual ~StackItemProduction();
+		virtual const Grammar::Production* getProductionIfProduction() const {return production;}
+		void addChildItem(StackItem* stackItem)
+		{
+			children.push_back(stackItem);
+		}
+	private:
+		const Grammar::Production* production;
+		const Grammar::ProductionRule* rule;
+		std::vector<StackItem*> children;
+	};
+
+} //End namespace jitcat::Parser

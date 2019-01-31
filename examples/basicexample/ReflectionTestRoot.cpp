@@ -7,7 +7,9 @@
 
 #include "ReflectionTestRoot.h"
 #include "ReflectionTestObject.h"
-#include "TypeInfo.h"
+#include "jitcat/TypeInfo.h"
+
+using namespace jitcat::Reflection;
 
 
 ReflectionTestRoot::ReflectionTestRoot():

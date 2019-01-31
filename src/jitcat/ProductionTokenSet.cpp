@@ -5,13 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ProductionTokenSet.h"
-#include "Production.h"
-#include "ProductionNonTerminalToken.h"
-#include "ProductionTerminalToken.h"
-#include "ParseToken.h"
+#include "jitcat/ProductionTokenSet.h"
+#include "jitcat/Production.h"
+#include "jitcat/ProductionNonTerminalToken.h"
+#include "jitcat/ProductionTerminalToken.h"
+#include "jitcat/ParseToken.h"
 
 #include <stddef.h>
+
+using namespace jitcat::Grammar;
+using namespace jitcat::Tokenizer;
 
 
 ProductionTokenSet::ProductionTokenSet(bool disallowEpsilons):

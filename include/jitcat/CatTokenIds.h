@@ -7,23 +7,23 @@
 
 #pragma once
 
-#include "CommentToken.h"
-#include "ConstantToken.h"
-#include "ErrorToken.h"
-#include "IdentifierToken.h"
-#include "OneCharToken.h"
-#include "TwoCharToken.h"
-#include "WhitespaceToken.h"
+#include "jitcat/CommentToken.h"
+#include "jitcat/ConstantToken.h"
+#include "jitcat/ErrorToken.h"
+#include "jitcat/IdentifierToken.h"
+#include "jitcat/OneCharToken.h"
+#include "jitcat/TwoCharToken.h"
+#include "jitcat/WhitespaceToken.h"
 
 
 
-namespace Cat
+namespace jitcat::Cat
 {
-	int comment = CommentToken::getID();
-	int ws		= WhitespaceToken::getID();
-	int lit		= ConstantToken::getID();
-	int id		= IdentifierToken::getID();
-	int err		= ErrorToken::getID();
-	int one		= OneCharToken::getID();
-	int two		= TwoCharToken::getID();
+	int comment = Tokenizer::CommentToken::getID();
+	int ws		= Tokenizer::WhitespaceToken::getID();
+	int lit		= Tokenizer::ConstantToken::getID();
+	int id		= Tokenizer::IdentifierToken::getID();
+	int err		= Tokenizer::ErrorToken::getID();
+	int one		= Tokenizer::OneCharToken::getID();
+	int two		= Tokenizer::TwoCharToken::getID();
 };

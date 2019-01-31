@@ -5,26 +5,30 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "AutoCompletion.h"
-#include "CatFunctionCall.h"
-#include "CatRuntimeContext.h"
-#include "CatTokenizer.h"
-#include "CommentToken.h"
-#include "ConstantToken.h"
-#include "CustomTypeInfo.h"
-#include "Document.h"
-#include "ErrorToken.h"
-#include "IdentifierToken.h"
-#include "Lexeme.h"
-#include "OneCharToken.h"
-#include "Tools.h"
-#include "TypeInfo.h"
-#include "WhitespaceToken.h"
+#include "jitcat/AutoCompletion.h"
+#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTokenizer.h"
+#include "jitcat/CommentToken.h"
+#include "jitcat/ConstantToken.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/Document.h"
+#include "jitcat/ErrorToken.h"
+#include "jitcat/IdentifierToken.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/OneCharToken.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/WhitespaceToken.h"
 
 #include <algorithm>
 #include <functional>
 #include <set>
 #include <sstream>
+
+using namespace jitcat;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tokenizer;
 
 
 std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(const std::string& expression, std::size_t cursorPosition, CatRuntimeContext* context)
@@ -339,7 +343,7 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 void AutoCompletion::addOptionsFromBuiltIn(std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, 
 										   const std::string& originalExpression, std::size_t prefixOffset)
 {
-	auto& allFunctions = CatFunctionCall::getAllBuiltInFunctions();
+	auto& allFunctions = jitcat::AST::CatFunctionCall::getAllBuiltInFunctions();
 	for (auto& iter : allFunctions)
 	{
 		addIfPartialMatch(iter + "(", results, lowercasePrefix, originalExpression, prefixOffset);

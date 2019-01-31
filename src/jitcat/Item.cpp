@@ -5,14 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Item.h"
-#include "Production.h"
-#include "ProductionRule.h"
-#include "ProductionToken.h"
-#include "ProductionTokenType.h"
+#include "jitcat/Item.h"
+#include "jitcat/Production.h"
+#include "jitcat/ProductionRule.h"
+#include "jitcat/ProductionToken.h"
+#include "jitcat/ProductionTokenType.h"
 
 #include <sstream>
 
+using namespace jitcat::Grammar;
+using namespace jitcat::Parser;
 
 bool Item::operator==(const Item& other) const
 {
@@ -29,7 +31,7 @@ std::string Item::toString() const
 		{
 			stream << ".";
 		}
-		if (rule->getToken(i)->getType() == ProductionTokenType::NonTerminal)
+		if (rule->getToken(i)->getType() == Grammar::ProductionTokenType::NonTerminal)
 		{
 			stream << " " << rule->getToken(i)->getSymbol() << " ";
 		}

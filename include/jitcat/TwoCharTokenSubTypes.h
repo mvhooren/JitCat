@@ -7,24 +7,29 @@
 
 #pragma once
 
-enum class TwoChar
+namespace jitcat::Tokenizer
 {
-	Unknown,
-	Equals,
-	NotEquals,
-	SmallerOrEqual,
-	GreaterOrEqual,
-	LogicalAnd,
-	LogicalOr,
-	PlusAssign,
-	MinusAssign,
-	TimesAssign,
-	DivideAssign,
-	BitwiseOrAssign,
-	BitwiseAndAssign,
-	BitwiseXorAssign,
-	BitshiftLeft,
-	BitshiftRight,
-	Increment,
-	Decrement
-};
+
+	enum class TwoChar
+	{
+		Unknown,
+		Equals,
+		NotEquals,
+		SmallerOrEqual,
+		GreaterOrEqual,
+		LogicalAnd,
+		LogicalOr,
+		PlusAssign,
+		MinusAssign,
+		TimesAssign,
+		DivideAssign,
+		BitwiseOrAssign,
+		BitwiseAndAssign,
+		BitwiseXorAssign,
+		BitshiftLeft,
+		BitshiftRight,
+		Increment,
+		Decrement
+	};
+
+} //End namespace jitcat::Tokenizers

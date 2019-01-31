@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "Reflectable.h"
+#include "jitcat/Reflectable.h"
 
 #include <map>
 #include <memory>
@@ -17,12 +17,12 @@
 namespace TestObjects
 {
 
-	class NestedReflectedObject: public Reflectable
+	class NestedReflectedObject: public jitcat::Reflection::Reflectable
 	{
 	public:
 		NestedReflectedObject();
 
-		static void reflect(TypeInfo& typeInfo);
+		static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
 		static const char* getTypeName();
 
 		public:
@@ -34,7 +34,7 @@ namespace TestObjects
 	};
 
 
-	class ReflectedObject: public Reflectable
+	class ReflectedObject: public jitcat::Reflection::Reflectable
 	{
 	public:
 		ReflectedObject();
@@ -42,7 +42,7 @@ namespace TestObjects
 		void createNestedObjects();
 		void createNullObjects();
 
-		static void reflect(TypeInfo& typeInfo);
+		static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
 		static const char* getTypeName();
 
 		//All supported return types

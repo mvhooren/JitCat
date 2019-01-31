@@ -5,22 +5,29 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatGrammar.h"
-#include "ASTNodeParser.h"
-#include "CatASTNodes.h"
-#include "CatScopeRoot.h"
-#include "CatTokenIds.h"
-#include "ConstantToken.h"
-#include "Lexeme.h"
-#include "OneCharToken.h"
-#include "Tools.h"
+#include "jitcat/CatGrammar.h"
+#include "jitcat/ASTNodeParser.h"
+#include "jitcat/CatASTNodes.h"
+#include "jitcat/CatScopeRoot.h"
+#include "jitcat/CatTokenIds.h"
+#include "jitcat/ConstantToken.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/OneCharToken.h"
+#include "jitcat/Tools.h"
 
 #include <stdlib.h>
 
-using namespace Cat;
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Cat;
+using namespace jitcat::Grammar;
+using namespace jitcat::Parser;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tokenizer;
 
-CatGrammar::CatGrammar(Tokenizer* tokenizer):
-	Grammar(tokenizer)
+
+CatGrammar::CatGrammar(TokenizerBase* tokenizer):
+	GrammarBase(tokenizer)
 {
 	rule(Prod::Root, {prod(Prod::Expression)}, pass);
 	

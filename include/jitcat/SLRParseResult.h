@@ -7,16 +7,24 @@
 
 #pragma once
 
-class ASTNode;
+namespace jitcat::AST
+{
+	class ASTNode;
+}
 #include <string>
 
 
-struct SLRParseResult
+namespace jitcat::Parser
 {
-	SLRParseResult();
-	~SLRParseResult();
-	bool success;
-	ASTNode* astRootNode;
-	std::string errorMessage;
-	std::size_t errorPosition;
-};
+
+	struct SLRParseResult
+	{
+		SLRParseResult();
+		~SLRParseResult();
+		bool success;
+		AST::ASTNode* astRootNode;
+		std::string errorMessage;
+		std::size_t errorPosition;
+	};
+
+}

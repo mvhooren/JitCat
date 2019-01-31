@@ -7,15 +7,19 @@
 
 #pragma once
 
-#include "CatExpression.h"
-#include "CatGenericType.h"
+#include "jitcat/CatExpression.h"
+#include "jitcat/CatGenericType.h"
 
-
-class CatTypedExpression: public CatExpression
+namespace jitcat::AST
 {
-public:
-	virtual CatGenericType getType() const = 0;
-	virtual bool isConst() const = 0;
-	virtual bool isAssignable() const {return false;}
-	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) = 0;
-};
+
+	class CatTypedExpression: public CatExpression
+	{
+	public:
+		virtual CatGenericType getType() const = 0;
+		virtual bool isConst() const = 0;
+		virtual bool isAssignable() const {return false;}
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) = 0;
+	};
+
+} //End namespace jitcat::AST

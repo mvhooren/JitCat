@@ -7,19 +7,23 @@
 
 #pragma once
 
-#include "CatASTNode.h"
+#include "jitcat/CatASTNode.h"
 
 #include <memory>
 
-
-class CatLinkNode: public CatASTNode
+namespace jitcat::AST
 {
-public:
-	CatLinkNode(CatASTNode* me, CatASTNode* next);
-	CatLinkNode(const CatLinkNode&) = delete;
-	virtual void print() const override final;
-	virtual CatASTNodeType getNodeType() override final;
 
-	std::unique_ptr<CatASTNode> me;
-	std::unique_ptr<CatASTNode> next;
-};
+	class CatLinkNode: public CatASTNode
+	{
+	public:
+		CatLinkNode(CatASTNode* me, CatASTNode* next);
+		CatLinkNode(const CatLinkNode&) = delete;
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() override final;
+
+		std::unique_ptr<CatASTNode> me;
+		std::unique_ptr<CatASTNode> next;
+	};
+
+} // End namespace jitcat::AST

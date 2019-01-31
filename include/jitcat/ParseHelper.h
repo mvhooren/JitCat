@@ -7,13 +7,18 @@
 
 #pragma once
 
-class ParseHelper
+namespace jitcat::Tokenizer
 {
-public:
-	static bool isValidStringChar(const char symbol);
-	static bool isAlphaNumeric(const char symbol);
-	static bool isNumber(const char symbol);
-	static bool isNonZeroNumber(const char symbol);
-	static bool isOctNumber(const char symbol);
-	static bool isHexDigit(const char symbol);
-};
+
+	class ParseHelper
+	{
+	public:
+		static bool isValidStringChar(const char symbol);
+		static bool isAlphaNumeric(const char symbol);
+		static bool isNumber(const char symbol);
+		static bool isNonZeroNumber(const char symbol);
+		static bool isOctNumber(const char symbol);
+		static bool isHexDigit(const char symbol);
+	};
+
+} //End namespace jitcat::Tokenizer

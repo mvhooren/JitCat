@@ -5,9 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ProductionToken.h"
-#include "ProductionTokenSet.h"
+#include "jitcat/ProductionToken.h"
+#include "jitcat/ProductionTokenSet.h"
 #include <cassert>
+
+using namespace jitcat::Grammar;
 
 ProductionToken::ProductionToken() :
 	containsEpsilon(TokenFlag::Unknown)

@@ -5,9 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ReflectableHandle.h"
-#include "Reflectable.h"
+#include "jitcat/ReflectableHandle.h"
+#include "jitcat/Reflectable.h"
 
+using namespace jitcat::Reflection;
 
 ReflectableHandle::ReflectableHandle():
 	reflectable(nullptr)

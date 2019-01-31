@@ -7,26 +7,39 @@
 
 #pragma once
 
-class CatGrammar;
-class CatRuntimeContext;
-class CatTokenizer;
-class Document;
-class SLRParser;
-struct SLRParseResult;
-
-
-class JitCat
+namespace jitcat::Grammar
 {
-	JitCat();
-	~JitCat();
-public:
-	static JitCat* get();
-	SLRParseResult* parse(Document* expression, CatRuntimeContext* context) const;
-	
-private:
-	static JitCat* instance;
+	class CatGrammar;
+}
+namespace jitcat::Tokenizer
+{
+	class CatTokenizer;
+	class Document;
+}
+namespace jitcat::Parser
+{
+	class SLRParser;
+	struct SLRParseResult;
+}
 
-	CatGrammar* grammar;
-	CatTokenizer* tokenizer;
-	SLRParser* parser;
-};
+namespace jitcat
+{
+	class CatRuntimeContext;
+
+	class JitCat
+	{
+		JitCat();
+		~JitCat();
+	public:
+		static JitCat* get();
+		Parser::SLRParseResult* parse(Tokenizer::Document* expression, CatRuntimeContext* context) const;
+	
+	private:
+		static JitCat* instance;
+
+		Grammar::CatGrammar* grammar;
+		Tokenizer::CatTokenizer* tokenizer;
+		Parser::SLRParser* parser;
+	};
+
+} //End namespace jitcat

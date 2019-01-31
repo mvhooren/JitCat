@@ -9,17 +9,17 @@
 
 
 class ReflectionTestObject2;
-#include "Reflectable.h"
+#include "jitcat/Reflectable.h"
 #include <map>
 #include <vector>
 
 
-class ReflectionTestObject: public Reflectable
+class ReflectionTestObject: public jitcat::Reflection::Reflectable
 {
 public:
 	ReflectionTestObject(std::string text);
 
-	static void reflect(TypeInfo& typeInfo);
+	static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
 	static const char* getTypeName();
 
 	int getRandomInt();

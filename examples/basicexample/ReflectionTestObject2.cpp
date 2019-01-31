@@ -6,7 +6,9 @@
 */
 
 #include "ReflectionTestObject2.h"
-#include "TypeInfo.h"
+#include "jitcat/TypeInfo.h"
+
+using namespace jitcat::Reflection;
 
 
 ReflectionTestObject2::ReflectionTestObject2():

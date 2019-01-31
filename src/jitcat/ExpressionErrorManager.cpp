@@ -5,9 +5,12 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ExpressionErrorManager.h"
-#include "Tools.h"
-#include "TypeInfo.h"
+#include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
+
+using namespace jitcat;
+using namespace jitcat::Reflection;
 
 
 ExpressionErrorManager::ExpressionErrorManager(std::function<void(const std::string&)> errorHandler):

@@ -5,18 +5,23 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatFunctionCall.h"
-#include "CatArgumentList.h"
-#include "CatLiteral.h"
-#include "CatLog.h"
-#include "JitCat.h"
-#include "LLVMCatIntrinsics.h"
-#include "ASTHelper.h"
-#include "Tools.h"
+#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatArgumentList.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/JitCat.h"
+#include "jitcat/LLVMCatIntrinsics.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/Tools.h"
 
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::LLVM;
+using namespace jitcat::Tools;
 
 
 CatFunctionCall::CatFunctionCall(const std::string& name, CatArgumentList* arguments):

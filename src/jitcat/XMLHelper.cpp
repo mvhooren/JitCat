@@ -5,16 +5,18 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "XMLHelper.h"
-#include "TypeInfo.h"
-#include "MemberInfo.h"
-#include "MemberFunctionInfo.h"
+#include "jitcat/XMLHelper.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/MemberFunctionInfo.h"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
+
+using namespace jitcat::Reflection;
 
 std::string XMLHelper::readXMLLine(std::ifstream& xmlFile, XMLLineType& tagType, std::string& contents)
 {

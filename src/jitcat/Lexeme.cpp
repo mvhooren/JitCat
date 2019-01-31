@@ -5,8 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Lexeme.h"
-#include "Document.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/Document.h"
+
+using namespace jitcat::Tokenizer;
+
 
 Lexeme::Lexeme(Document* document, std::size_t offset, std::size_t length):
 	document(document),
@@ -34,7 +37,7 @@ std::string Lexeme::toString() const
 }
 
 
-bool operator==(const Lexeme& lexeme, const char* other)
+bool jitcat::Tokenizer::operator==(const Lexeme& lexeme, const char* other)
 {
 	const char* data = lexeme.getDataPointer();
 	std::size_t otherLength = strlen(other);
@@ -58,12 +61,13 @@ bool operator==(const Lexeme& lexeme, const char* other)
 }
 
 
-bool operator!=(const Lexeme & lexeme, const char * other)
+bool jitcat::Tokenizer::operator!=(const Lexeme& lexeme, const char* other)
 {
-	return !(lexeme == other);
+	return !(jitcat::Tokenizer::operator==(lexeme, other));
 }
 
-bool operator==(const Lexeme& lexeme, const std::string& other)
+
+bool jitcat::Tokenizer::operator==(const Lexeme& lexeme, const std::string& other)
 {
 	const char* data = lexeme.getDataPointer();
 	std::size_t otherLength = other.length();
@@ -87,13 +91,13 @@ bool operator==(const Lexeme& lexeme, const std::string& other)
 }
 
 
-bool operator!=(const Lexeme& lexeme, const std::string& other)
+bool jitcat::Tokenizer::operator!=(const Lexeme& lexeme, const std::string& other)
 {
-	return !(lexeme == other);
+	return !(jitcat::Tokenizer::operator==(lexeme, other));
 }
 
 
-std::ostream& operator<<(std::ostream& stream, const Lexeme* lexeme)
+std::ostream& jitcat::Tokenizer::operator<<(std::ostream& stream, const Lexeme* lexeme)
 {
 	const char* data = lexeme->getDataPointer();
 	if (data != nullptr)
@@ -117,6 +121,3 @@ std::ostream& operator<<(std::ostream& stream, const Lexeme* lexeme)
 	}
 	return stream;
 }
-
-
-

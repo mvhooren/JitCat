@@ -7,28 +7,34 @@
 
 #pragma once
 
-class CatRuntimeContext;
-class TypeInfo;
-#include "CatTypedExpression.h"
-#include "CatScopeID.h"
-
-
-class CatScopeRoot: public CatTypedExpression
+namespace jitcat
 {
-public:
-	CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context);
-	// Inherited via CatTypedExpression
-	virtual void print() const override;
-	virtual CatASTNodeType getNodeType() override;
-	virtual std::any execute(CatRuntimeContext* runtimeContext) override;
-	virtual CatGenericType typeCheck() override;
-	virtual CatGenericType getType() const override;
-	virtual bool isConst() const override;
-	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override;
+	class CatRuntimeContext;
+}
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/CatScopeID.h"
 
-	CatScopeID getScopeId() const;
+namespace jitcat::AST
+{
 
-private:
-	CatScopeID scopeId;
-	CatGenericType type;
-};
+	class CatScopeRoot: public CatTypedExpression
+	{
+	public:
+		CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context);
+		// Inherited via CatTypedExpression
+		virtual void print() const override;
+		virtual CatASTNodeType getNodeType() override;
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override;
+		virtual CatGenericType typeCheck() override;
+		virtual CatGenericType getType() const override;
+		virtual bool isConst() const override;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override;
+
+		CatScopeID getScopeId() const;
+
+	private:
+		CatScopeID scopeId;
+		CatGenericType type;
+	};
+
+} //End namespace jitcat::AST

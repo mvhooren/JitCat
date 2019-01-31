@@ -7,6 +7,9 @@
 
 #pragma once	
 
+namespace jitcat::Grammar
+{
+
 enum class ProductionTokenType
 {
 	Eof,
@@ -15,3 +18,5 @@ enum class ProductionTokenType
 	Terminal,
 	TokenSet
 };
+
+} // End namespace jitcat::Grammar

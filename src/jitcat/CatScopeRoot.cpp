@@ -5,8 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatScopeRoot.h"
-#include "CatRuntimeContext.h"
+#include "jitcat/CatScopeRoot.h"
+#include "jitcat/CatRuntimeContext.h"
+
+using namespace jitcat;
+using namespace jitcat::AST;
 
 
 CatScopeRoot::CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context):

@@ -5,21 +5,27 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "JitCatValidator.h"
+#include "jitcatvalidator/JitCatValidator.h"
 
-#include <AutoCompletion.h>
-#include <CatPrefixOperator.h>
-#include <CatRuntimeContext.h>
-#include <CatTypedExpression.h>
-#include <CustomTypeInfo.h>
-#include <Document.h>
-#include <ExpressionErrorManager.h>
-#include <JitCat.h>
+#include <jitcat/AutoCompletion.h>
+#include <jitcat/CatPrefixOperator.h>
+#include <jitcat/CatRuntimeContext.h>
+#include <jitcat/CatTypedExpression.h>
+#include <jitcat/CustomTypeInfo.h>
+#include <jitcat/Document.h>
+#include <jitcat/ExpressionErrorManager.h>
+#include <jitcat/JitCat.h>
+#include <jitcat/SLRParseResult.h>
+#include <jitcat/TypeInfo.h>
+#include <jitcat/TypeRegistry.h>
+#include <jitcat/Tools.h>
 #include <memory>
-#include <SLRParseResult.h>
-#include <TypeInfo.h>
-#include <TypeRegistry.h>
-#include <Tools.h>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Parser;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tokenizer;
 
 
 JITCATVALIDATOR_API int validateExpression(const char* expression, const char* rootScopeTypeNames, ValidationResult* result)

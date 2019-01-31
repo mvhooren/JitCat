@@ -7,31 +7,37 @@
 
 #pragma once
 
-class Document;
-#include "Lexeme.h"
+#include "jitcat/Lexeme.h"
 
 #include <memory>
 
 
-class ParseToken
+namespace jitcat::Tokenizer
 {
-public:
-	ParseToken();
-	virtual ~ParseToken();
-	virtual int getTokenID() const = 0;
-	virtual const char* getTokenName() const = 0;
-	virtual const char* getSubTypeName(int subType) const = 0;	
-	virtual const char* getSubTypeSymbol(int subType) const = 0;
-	virtual int getTokenSubType() const = 0;
-	const Lexeme* getLexeme() const;
-	virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const = 0;
+	class Document;
 
-protected:	
-	static int getNextTokenID();
 
-private:
-	static int nextTokenID;
+	class ParseToken
+	{
+	public:
+		ParseToken();
+		virtual ~ParseToken();
+		virtual int getTokenID() const = 0;
+		virtual const char* getTokenName() const = 0;
+		virtual const char* getSubTypeName(int subType) const = 0;	
+		virtual const char* getSubTypeSymbol(int subType) const = 0;
+		virtual int getTokenSubType() const = 0;
+		const Lexeme* getLexeme() const;
+		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const = 0;
 
-protected:
-	std::unique_ptr<Lexeme> lexeme;
-};
+	protected:	
+		static int getNextTokenID();
+
+	private:
+		static int nextTokenID;
+
+	protected:
+		std::unique_ptr<Lexeme> lexeme;
+	};
+
+} //End namespace jitcat::Tokenizer

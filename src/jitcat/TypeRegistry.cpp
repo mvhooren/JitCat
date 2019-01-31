@@ -5,14 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "TypeRegistry.h"
-#include "TypeInfo.h"
-#include "XMLHelper.h"
+#include "jitcat/TypeRegistry.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/XMLHelper.h"
 
 
 #include <fstream>
 #include <iostream>
 #include <stddef.h>
+
+using namespace jitcat::Reflection;
 
 
 TypeRegistry::TypeRegistry()
