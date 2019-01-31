@@ -142,13 +142,6 @@ llvm::JITTargetAddress LLVMJit::getSymbolAddress(const std::string& name, llvm::
 }
 
 
-/*void LLVMJit::removeModule(llvm::orc::VModuleKey moduleKey)
-{
-	compileLayer->
-	llvm::cantFail(compileLayer->removeModule(moduleKey));
-}*/
-
-
 LLVMJitInitializer::LLVMJitInitializer()
 {
 	llvm::InitializeNativeTarget();

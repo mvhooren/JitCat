@@ -39,6 +39,7 @@ set(Source_Cat_ASTNodes
 	${JitCatIncludePath}/CatArgumentList.h 
 	CatArrayIndex.cpp 
 	${JitCatIncludePath}/CatArrayIndex.h 
+	${JitCatIncludePath}/CatAssignableExpression.h
 	${JitCatIncludePath}/CatASTNode.h 
 	${JitCatIncludePath}/CatASTNodes.h 
 	${JitCatIncludePath}/CatASTNodesDeclares.h 
@@ -46,6 +47,7 @@ set(Source_Cat_ASTNodes
 	${JitCatIncludePath}/CatAssignmentOperator.h 
 	CatAssignmentOperator.cpp 
 	${JitCatIncludePath}/CatBuiltInFunctionType.h
+	${JitCatIncludePath}/CatExpression.h
 	CatFunctionCall.cpp
 	${JitCatIncludePath}/CatFunctionCall.h
 	CatIdentifier.cpp
@@ -68,12 +70,11 @@ set(Source_Cat_ASTNodes
 	${JitCatIncludePath}/CatTypedExpression.h
 )
 
-set(Source_Cat_ASTNodes_ASTOptimization
-	${JitCatIncludePath}/CatExpression.h
+set(Source_Cat_ASTNodes_ASTHelper
 	InfixOperatorOptimizer.cpp
 	${JitCatIncludePath}/InfixOperatorOptimizer.h
-	OptimizationHelper.cpp
-	${JitCatIncludePath}/OptimizationHelper.h
+	ASTHelper.cpp
+	${JitCatIncludePath}/ASTHelper.h
 )
 
 set(Source_Cat_CodeGeneration_LLVM
@@ -102,6 +103,8 @@ set(Source_Cat_Expression
 	${JitCatIncludePath}/Expression.h
 	ExpressionAny.cpp
 	${JitCatIncludePath}/ExpressionAny.h
+	${JitCatIncludePath}/ExpressionAssignment.h
+	${JitCatIncludePath}/ExpressionAssignmentHeaderImplementation.h
 	ExpressionBase.cpp
 	${JitCatIncludePath}/ExpressionBase.h	
 	${JitCatIncludePath}/ExpressionHeaderImplementation.h
@@ -170,12 +173,12 @@ set(Source_Reflection
 	${JitCatIncludePath}/Reflectable.h
 	ReflectableHandle.cpp
 	${JitCatIncludePath}/ReflectableHandle.h
-	${JitCatIncludePath}/TypeCaster.h
 	TypeRegistry.cpp
 	${JitCatIncludePath}/TypeRegistry.h
 )
 
 set(Source_Reflection_Enums
+	${JitCatIncludePath}/AssignableType.h
 	ContainerType.cpp
 	${JitCatIncludePath}/ContainerType.h
 	${JitCatIncludePath}/MemberTypeFlags.h
@@ -198,6 +201,7 @@ set(Source_Reflection_TypeInfo
 	${JitCatIncludePath}/MemberInfo.h
 	${JitCatIncludePath}/MemberInfoHeaderImplementation.h
 	${JitCatIncludePath}/MemberTypeInfoCreator.h
+	${JitCatIncludePath}/TypeCaster.h
 	TypeInfo.cpp
 	${JitCatIncludePath}/TypeInfo.h
 	${JitCatIncludePath}/TypeInfoHeaderImplementation.h
@@ -253,7 +257,7 @@ set(Source_Tools
 #Project file organisation
 source_group(Cat FILES ${Source_Cat})
 source_group(Cat\\ASTNodes FILES ${Source_Cat_ASTNodes})
-source_group(Cat\\ASTNodes\\ASTOptimization FILES ${Source_Cat_ASTNodes_ASTOptimization})
+source_group(Cat\\ASTNodes\\ASTHelper FILES ${Source_Cat_ASTNodes_ASTHelper})
 source_group(Cat\\CodeGeneration\\LLVM FILES ${Source_Cat_CodeGeneration_LLVM})
 source_group(Cat\\Expression FILES ${Source_Cat_Expression})
 source_group(Cat\\Expression\\AutoCompletion FILES ${Source_Cat_Expression_Autocompletion})
@@ -277,7 +281,7 @@ add_library(JitCat STATIC
 	${Source_Root}
 	${Source_Cat}
 	${Source_Cat_ASTNodes}
-	${Source_Cat_ASTNodes_ASTOptimization}
+	${Source_Cat_ASTNodes_ASTHelper}
 	${Source_Cat_CodeGeneration_LLVM}
 	${Source_Cat_Expression}
 	${Source_Cat_Expression_Autocompletion}

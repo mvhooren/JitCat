@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2018
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #include <catch2/catch.hpp>
 #include "CatRuntimeContext.h"
 #include "CustomTypeInfo.h"
@@ -5,11 +12,14 @@
 #include "CustomTypeMemberInfo.h"
 #include "Expression.h"
 #include "ExpressionAny.h"
+#include "ExpressionAssignment.h"
+#include "ExpressionErrorManager.h"
 #include "LLVMCatIntrinsics.h"
 #include "TestObjects.h"
 #include "Tools.h"
 
 #include <functional>
+#include <iostream>
 #include <cmath>
 
 using namespace TestObjects;
@@ -19,6 +29,12 @@ bool doCommonChecks(ExpressionBase* expression, bool shouldHaveError, bool shoul
 {
 	if (!shouldHaveError)
 	{
+		if (expression->hasError())
+		{
+			auto errorList = context.getErrorManager()->getErrors();
+			REQUIRE(errorList.size() > 0);
+			std::cout << errorList[0]->message << "\n";
+		}
 		REQUIRE_FALSE(expression->hasError());
 	}
 	else
@@ -94,6 +110,105 @@ void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, 
 	}
 }
 
+
+template <typename T>
+void checkAssignment(T& assignedValue, const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, Expression<void>& expression, CatRuntimeContext& context)
+{
+	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
+	{
+		T originalValue = assignedValue;
+		expression.getValue(&context);
+		CHECK(assignedValue == expectedValue);
+		assignedValue = originalValue;
+		expression.getInterpretedValue(&context);
+		CHECK(assignedValue == expectedValue);
+		assignedValue = originalValue;
+	}
+	else if (shouldHaveError)
+	{
+		if constexpr (!std::is_same<T, void>::value)
+		{
+			//When te expression has an error, the getValue functions should not crash
+			expression.getValue(&context);
+			expression.getInterpretedValue(&context);
+		}
+	}
+}
+
+
+template <typename T>
+void checkAssignmentCustom(CustomTypeInstance* instance, const std::string& memberName, const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, Expression<void>& expression, CatRuntimeContext& context)
+{
+	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context) && instance->getMemberInfo(memberName) != nullptr)
+	{
+		T originalValue = *instance->getMemberValue<T>(memberName);
+		expression.getValue(&context);
+		CHECK(*instance->getMemberValue<T>(memberName) == expectedValue);
+		instance->setMemberValue(memberName, originalValue);
+		expression.getInterpretedValue(&context);
+		CHECK(*instance->getMemberValue<T>(memberName) == expectedValue);
+		instance->setMemberValue(memberName, originalValue);
+	}
+	else if (shouldHaveError)
+	{
+		if constexpr (!std::is_same<T, void>::value)
+		{
+			//When te expression has an error, the getValue functions should not crash
+			expression.getValue(&context);
+			expression.getInterpretedValue(&context);
+		}
+	}
+}
+
+
+template <typename T>
+void checkAssignExpression(T& assignedValue, const T& newValue, bool shouldHaveError, ExpressionAssignment<T>& expression, CatRuntimeContext& context)
+{
+	if (doCommonChecks(&expression, shouldHaveError, false, false, context))
+	{
+		T originalValue = assignedValue;
+		expression.assignValue(&context, newValue);
+		CHECK(assignedValue == newValue);
+		assignedValue = originalValue;
+		expression.assignInterpretedValue(&context, newValue);
+		CHECK(assignedValue == newValue);
+		assignedValue = originalValue;
+	}
+	else if (shouldHaveError)
+	{
+		if constexpr (!std::is_same<T, void>::value)
+		{
+			//When te expression has an error, the getValue functions should not crash
+			expression.assignValue(&context, newValue);
+			expression.assignInterpretedValue(&context, newValue);
+		}
+	}
+}
+
+
+template <typename T>
+void checkAssignExpressionCustom(CustomTypeInstance* instance, const std::string& memberName, const T& newValue, bool shouldHaveError, ExpressionAssignment<T>& expression, CatRuntimeContext& context)
+{
+	if (doCommonChecks(&expression, shouldHaveError, false, false, context))
+	{
+		T originalValue = *instance->getMemberValue<T>(memberName);
+		expression.assignValue(&context, newValue);
+		CHECK(*instance->getMemberValue<T>(memberName) == newValue);
+		instance->setMemberValue(memberName, originalValue);
+		expression.assignInterpretedValue(&context, newValue);
+		CHECK(*instance->getMemberValue<T>(memberName) == newValue);
+		instance->setMemberValue(memberName, originalValue);
+	}
+	else if (shouldHaveError)
+	{
+		if constexpr (!std::is_same<T, void>::value)
+		{
+			//When te expression has an error, the getValue functions should not crash
+			expression.assignValue(&context, newValue);
+			expression.assignInterpretedValue(&context, newValue);
+		}
+	}
+}
 
 
 TEST_CASE("Floating Point Tests", "[float][operators]" ) 
@@ -2858,7 +2973,7 @@ TEST_CASE("Indirection tests", "[indirection]" )
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	CatRuntimeContext context("indirection", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("NestedSelfObject String")
@@ -3059,7 +3174,7 @@ TEST_CASE("Containers tests: Vector", "[containers][vector]" )
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	CatRuntimeContext context("vectorContainer", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Vector get object")
@@ -3125,12 +3240,220 @@ TEST_CASE("Containers tests: Vector", "[containers][vector]" )
 }
 
 
+TEST_CASE("Assign tests", "[assign]" ) 
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("Assign", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
+	const char* customTypeName = "MyType";
+	TypeRegistry::get()->removeType(customTypeName);
+	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName);
+	TypeRegistry::get()->registerType(customTypeName, customType);
+	customType->addFloatMember("myFloat", 0.001f);
+	customType->addIntMember("myInt", 54321);
+	customType->addStringMember("myString", "foo");
+	customType->addBoolMember("myBoolean", true);
+	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
+	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
+	CustomTypeInstance* typeInstance = customType->createInstance();
+	context.addCustomTypeScope(customType, typeInstance);
+
+
+	SECTION("Assign reflected int")
+	{
+		Expression<void> testExpression(&context, "theInt = -99");
+		checkAssignment(reflectedObject.theInt, -99, false, false, false, testExpression, context);
+	}
+	SECTION("Assign reflected float")
+	{
+		Expression<void> testExpression(&context, "aFloat = 11.0f");
+		checkAssignment(reflectedObject.aFloat, 11.0f, false, false, false, testExpression, context);
+	}
+	SECTION("Assign reflected bool")
+	{
+		Expression<void> testExpression(&context, "aBoolean = no");
+		checkAssignment(reflectedObject.aBoolean, false, false, false, false, testExpression, context);
+	}
+	SECTION("Assign reflected string")
+	{
+		Expression<void> testExpression(&context, "text = \"World!\"");
+		checkAssignment(reflectedObject.text, std::string("World!"), false, false, false, testExpression, context);
+	}
+	SECTION("Assign reflected object")
+	{
+		Expression<void> testExpression(&context, "nestedObjectPointer = nestedObject");
+		checkAssignment((Reflectable*&)reflectedObject.nestedObjectPointer, (Reflectable*)&reflectedObject.nestedObject, false, false, false, testExpression, context);	
+	}
+
+	SECTION("Assign nonWritable int")
+	{
+		Expression<void> testExpression(&context, "largeInt = -99");
+		checkAssignment(reflectedObject.theInt, -99, true, false, false, testExpression, context);
+	}
+	SECTION("Assign nonWritable reflected float")
+	{
+		Expression<void> testExpression(&context, "zeroFloat = 11.0f");
+		checkAssignment(reflectedObject.zeroFloat, 11.0f, true, false, false, testExpression, context);	
+	}
+	SECTION("Assign nonWritable reflected bool")
+	{
+		Expression<void> testExpression(&context, "no = true");
+		checkAssignment(reflectedObject.no, true, true, false, false, testExpression, context);		
+	}
+	SECTION("Assign nonWritable reflected string")
+	{
+		Expression<void> testExpression(&context, "numberString = \"456.7\"");
+		checkAssignment(reflectedObject.numberString, std::string("456.7"), true, false, false, testExpression, context);		
+	}
+	SECTION("Assign nonWritable reflected object")
+	{
+		Expression<void> testExpression(&context, "nestedObjectUniquePointer = nestedObject");
+		checkAssignment((Reflectable*&)reflectedObject.nestedObjectPointer, (Reflectable*)&reflectedObject.nestedObject, true, false, false, testExpression, context);	
+	}
+
+	SECTION("Assign custom int")
+	{
+		Expression<void> testExpression(&context, "myInt = -99");
+		checkAssignmentCustom(typeInstance, "myInt", -99, false, false, false, testExpression, context);
+	}
+	SECTION("Assign custom float")
+	{
+		Expression<void> testExpression(&context, "myFloat = 11.0f");
+		checkAssignmentCustom(typeInstance, "myFloat", 11.0f, false, false, false, testExpression, context);	
+	}
+	SECTION("Assign custom bool")
+	{
+		Expression<void> testExpression(&context, "myBoolean = false");
+		checkAssignmentCustom(typeInstance, "myBoolean", false, false, false, false, testExpression, context);		
+	}
+	SECTION("Assign custom string")
+	{
+		Expression<void> testExpression(&context, "myString = \"bar\"");
+		checkAssignmentCustom(typeInstance, "myString", std::string("bar"), false, false, false, testExpression, context);		
+	}
+	SECTION("Assign custom object")
+	{
+		Expression<void> testExpression(&context, "myObject = nestedSelfObject");
+		checkAssignmentCustom(typeInstance, "myObject", (Reflectable*)reflectedObject.nestedSelfObject, false, false, false, testExpression, context);		
+	}
+}
+
+
+
+
+TEST_CASE("Expression assign tests", "[assign][expressionassign]" ) 
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("Assign", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
+	const char* customTypeName = "MyType";
+	TypeRegistry::get()->removeType(customTypeName);
+	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName);
+	TypeRegistry::get()->registerType(customTypeName, customType);
+	customType->addFloatMember("myFloat", 0.001f);
+	customType->addIntMember("myInt", 54321);
+	customType->addStringMember("myString", "foo");
+	customType->addBoolMember("myBoolean", true);
+	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
+	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
+	CustomTypeInstance* typeInstance = customType->createInstance();
+	context.addCustomTypeScope(customType, typeInstance);
+
+
+	SECTION("Assign reflected int")
+	{
+		ExpressionAssignment<int> testExpression(&context, "theInt");
+		checkAssignExpression(reflectedObject.theInt, -99, false, testExpression, context);
+	}
+	SECTION("Assign reflected float")
+	{
+		ExpressionAssignment<float> testExpression(&context, "aFloat");
+		checkAssignExpression(reflectedObject.aFloat, 11.0f, false, testExpression, context);
+	}
+	SECTION("Assign reflected bool")
+	{
+		ExpressionAssignment<bool> testExpression(&context, "aBoolean");
+		checkAssignExpression(reflectedObject.aBoolean, false, false, testExpression, context);
+	}
+	SECTION("Assign reflected string")
+	{
+		ExpressionAssignment<std::string> testExpression(&context, "text");
+		checkAssignExpression(reflectedObject.text, std::string("World!"), false, testExpression, context);
+	}
+	SECTION("Assign reflected object")
+	{
+		ExpressionAssignment<NestedReflectedObject*> testExpression(&context, "nestedObjectPointer");
+		checkAssignExpression(reflectedObject.nestedObjectPointer, &reflectedObject.nestedObject, false, testExpression, context);	
+	}
+
+	SECTION("Assign nonWritable int")
+	{
+		ExpressionAssignment<int> testExpression(&context, "largeInt");
+		checkAssignExpression(reflectedObject.theInt, -99, true, testExpression, context);
+	}
+	SECTION("Assign nonWritable reflected float")
+	{
+		ExpressionAssignment<float> testExpression(&context, "zeroFloat");
+		checkAssignExpression(reflectedObject.zeroFloat, 11.0f, true, testExpression, context);	
+	}
+	SECTION("Assign nonWritable reflected bool")
+	{
+		ExpressionAssignment<bool> testExpression(&context, "no");
+		checkAssignExpression(reflectedObject.no, true, true, testExpression, context);		
+	}
+	SECTION("Assign nonWritable reflected string")
+	{
+		ExpressionAssignment<std::string> testExpression(&context, "numberString");
+		checkAssignExpression(reflectedObject.numberString, std::string("456.7"), true, testExpression, context);		
+	}
+	SECTION("Assign nonWritable reflected object")
+	{
+		ExpressionAssignment<NestedReflectedObject*> testExpression(&context, "nestedObjectUniquePointer");
+		checkAssignExpression(reflectedObject.nestedObjectPointer, &reflectedObject.nestedObject, true, testExpression, context);	
+	}
+
+	SECTION("Assign custom int")
+	{
+		ExpressionAssignment<int> testExpression(&context, "myInt");
+		checkAssignExpressionCustom(typeInstance, "myInt", -99, false, testExpression, context);
+	}
+	SECTION("Assign custom float")
+	{
+		ExpressionAssignment<float> testExpression(&context, "myFloat");
+		checkAssignExpressionCustom(typeInstance, "myFloat", 11.0f, false, testExpression, context);	
+	}
+	SECTION("Assign custom bool")
+	{
+		ExpressionAssignment<bool> testExpression(&context, "myBoolean");
+		checkAssignExpressionCustom(typeInstance, "myBoolean", false, false, testExpression, context);		
+	}
+	SECTION("Assign custom string")
+	{
+		ExpressionAssignment<std::string> testExpression(&context, "myString");
+		checkAssignExpressionCustom(typeInstance, "myString", std::string("bar"), false, testExpression, context);		
+	}
+	SECTION("Assign custom object")
+	{
+		ExpressionAssignment<ReflectedObject*> testExpression(&context, "myObject");
+		checkAssignExpressionCustom(typeInstance, "myObject", reflectedObject.nestedSelfObject, false, testExpression, context);		
+	}
+}
+
+
 TEST_CASE("Containers tests: Map", "[containers][map]" ) 
 {
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	CatRuntimeContext context("mapContainer", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Map get object")

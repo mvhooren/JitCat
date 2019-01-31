@@ -8,7 +8,7 @@
 #include "CatArrayIndex.h"
 #include "CatLog.h"
 #include "MemberInfo.h"
-#include "OptimizationHelper.h"
+#include "ASTHelper.h"
 #include "TypeInfo.h"
 
 
@@ -113,8 +113,8 @@ bool CatArrayIndex::isConst() const
 
 CatTypedExpression* CatArrayIndex::constCollapse(CatRuntimeContext* compileTimeContext)
 {
-	OptimizationHelper::updatePointerIfChanged(array, array->constCollapse(compileTimeContext));
-	OptimizationHelper::updatePointerIfChanged(index, index->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(array, array->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(index, index->constCollapse(compileTimeContext));
 	return this;
 }
 

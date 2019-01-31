@@ -7,15 +7,10 @@
 
 #pragma once
 
-#include <chrono>
-
-
-class Timer
+enum class AssignableType
 {
-	typedef std::chrono::high_resolution_clock Clock;
-	std::chrono::high_resolution_clock::time_point timer;
-public:
-	Timer();
-
-	double getTimeSincePreviousCall();
+	None,
+	Pointer,
+	PointerPointer,
+	HandlePointer
 };

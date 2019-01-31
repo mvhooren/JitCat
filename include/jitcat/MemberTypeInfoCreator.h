@@ -20,7 +20,7 @@ public:
 	{
 		static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
 		TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
-		return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, isWritable, isConst));
+		return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, false, isConst));
 	}
 };
 
@@ -90,7 +90,7 @@ public:
 	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<U> ClassType::* member, bool isConst, bool isWritable) 
 	{
 		TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-		return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst));
+		return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, false, isConst));
 	}
 };
 

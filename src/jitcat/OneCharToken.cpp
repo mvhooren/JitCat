@@ -19,7 +19,7 @@ subType(OneChar::Unknown)
 OneCharToken::OneCharToken(Lexeme* lexeme_, OneChar subType):
 subType((OneChar)subType)
 {
-	lexeme = lexeme_;
+	lexeme.reset(lexeme_);
 }
 
 

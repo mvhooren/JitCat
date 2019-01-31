@@ -44,13 +44,6 @@ bool ProductionTokenSet::getIsSet() const
 
 bool ProductionTokenSet::containsEpsilon() const
 {
-	/*for (unsigned int i = 0; i < members.size(); i++)
-	{
-		if (members[i]->containsEpsilon())
-		{
-			return true;
-		}
-	}*/
 	return false;
 }
 

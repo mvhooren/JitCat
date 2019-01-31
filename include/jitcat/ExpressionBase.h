@@ -20,10 +20,10 @@ struct SLRParseResult;
 class ExpressionBase
 {
 public:
-	ExpressionBase();
-	ExpressionBase(const char* expression);
-	ExpressionBase(const std::string& expression);
-	ExpressionBase(CatRuntimeContext* compileContext, const std::string& expression);
+	ExpressionBase(bool expectAssignable = false);
+	ExpressionBase(const char* expression, bool expectAssignable = false);
+	ExpressionBase(const std::string& expression, bool expectAssignable = false);
+	ExpressionBase(CatRuntimeContext* compileContext, const std::string& expression, bool expectAssignable = false);
 	ExpressionBase(const ExpressionBase& other) = delete;
 	virtual ~ExpressionBase();
 
@@ -65,6 +65,7 @@ protected:
 
 	bool expressionIsLiteral;
 	bool isConstant;
+	bool expectAssignable;
 
 	//Not owned
 	CatTypedExpression* expressionAST;

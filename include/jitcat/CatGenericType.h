@@ -43,7 +43,7 @@ private:
 		Count
 	};
 
-
+	CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, ContainerType containerType, bool writable, bool constant, const CatError* error);
 	CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 public:
@@ -59,6 +59,7 @@ public:
 
 	bool isUnknown() const;
 	bool isValidType() const;
+	bool isError() const;
 	bool isBasicType() const;
 	bool isBoolType() const;
 	bool isIntType() const;
@@ -73,6 +74,13 @@ public:
 
 	bool isWritable() const;
 	bool isConst() const;
+
+	//Copies the type but sets all modifiers (const, writable) to false.
+	CatGenericType toUnmodified() const;
+	//Copies the type but sets the writable flag to false.
+	CatGenericType toUnwritable() const;
+	//Copies the type but sets the writable flag to true.
+	CatGenericType toWritable() const;
 
 	CatGenericType getContainerItemType() const;
 	const char* getObjectTypeName() const;
@@ -130,6 +138,7 @@ private:
 	//When the member is a container, catType or nestedType will be set to the item type of the container
 	ContainerType containerType;
 
+	//Type modifiers/flags. These are not taken into account when comparing CatGenericType objects using operator ==.
 	bool writable;
 	bool constant;
 

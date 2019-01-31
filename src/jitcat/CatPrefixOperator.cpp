@@ -8,7 +8,7 @@
 #include "CatPrefixOperator.h"
 #include "CatLiteral.h"
 #include "CatLog.h"
-#include "OptimizationHelper.h"
+#include "ASTHelper.h"
 #include "Tools.h"
 
 #include <cassert>
@@ -26,7 +26,7 @@ CatGenericType CatPrefixOperator::getType() const
 			 && (rhs->getType().isFloatType()
 			     || rhs->getType().isIntType()))
 	{
-		return rhs->getType();
+		return rhs->getType().toUnwritable();
 	}
 	else
 	{
@@ -43,7 +43,7 @@ bool CatPrefixOperator::isConst() const
 
 CatTypedExpression* CatPrefixOperator::constCollapse(CatRuntimeContext* compileTimeContext)
 {
-	OptimizationHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
 	if (rhs->isConst())
 	{
 		return new CatLiteral(calculateExpression(compileTimeContext), getType());

@@ -27,6 +27,7 @@ public:
 	void notifyDeletion();
 
 	static Reflectable* staticGet(const ReflectableHandle& handle);
+	static void staticAssign(ReflectableHandle& handle, Reflectable* reflectable);
 
 private:
 	Reflectable* reflectable;

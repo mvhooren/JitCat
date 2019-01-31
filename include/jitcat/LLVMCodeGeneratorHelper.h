@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2018
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #pragma once
 
 class CatRuntimeContext;
@@ -28,6 +35,9 @@ public:
 	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
 	llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, const CatGenericType& overload2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
 	llvm::Type* toLLVMType(const CatGenericType& type);
+	llvm::Type* toLLVMPtrType(const CatGenericType& type);
+
+	void writeToPointer(llvm::Value* lValue, llvm::Value* rValue);
 
 	llvm::Value* convertType(llvm::Value* valueToConvert, llvm::Type* type, LLVMCompileTimeContext* context);
 	llvm::Value* convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::Type* type = LLVMTypes::pointerType);
@@ -46,6 +56,7 @@ public:
 	llvm::Value* createConstant(bool constant);
 	llvm::Value* createPtrConstant(unsigned long long address, const std::string& name, llvm::Type* pointerType = LLVMTypes::pointerType);
 	llvm::Value* createEmptyStringPtrConstant();
+
 
 	void setCurrentModule(llvm::Module* module);
 

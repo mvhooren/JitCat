@@ -96,3 +96,9 @@ Reflectable* ReflectableHandle::staticGet(const ReflectableHandle& handle)
 {
 	return handle.get();
 }
+
+
+void ReflectableHandle::staticAssign(ReflectableHandle& handle, Reflectable* reflectable)
+{
+	handle = reflectable;
+}

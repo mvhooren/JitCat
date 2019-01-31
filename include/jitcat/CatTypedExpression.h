@@ -16,5 +16,6 @@ class CatTypedExpression: public CatExpression
 public:
 	virtual CatGenericType getType() const = 0;
 	virtual bool isConst() const = 0;
+	virtual bool isAssignable() const {return false;}
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) = 0;
 };

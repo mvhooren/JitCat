@@ -33,17 +33,20 @@ public:
 	//The function has one parameter, the CatRuntimeContext. 
 	//If the function returns a string, it will have 2 parameters where the first parameter is a pointer to a pre-allocated string. (marked sret)
 	llvm::Function* generateExpressionFunction(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
+
+	llvm::Function* generateExpressionAssignFunction(CatAssignableExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
 	
+	//Generates a function that returns the value of the expression.
 	intptr_t generateAndGetFunctionAddress(CatTypedExpression* expression, LLVMCompileTimeContext* context);
 
-	void generateAndDump(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& functionName);
-
-	void compileAndTest(CatRuntimeContext* context, const std::string& functionName);
+	//Generates a function that takes a parameter that will be assigned to the result of the expression. Expression must be of an assignable type (lValue).
+	intptr_t generateAndGetAssignFunctionAddress(CatAssignableExpression* expression, LLVMCompileTimeContext* context);
 
 private:
 	llvm::Value* generate(CatIdentifier* identifier, LLVMCompileTimeContext* context);
 	llvm::Value* generate(CatFunctionCall* functionCall, LLVMCompileTimeContext* context);
 	llvm::Value* generate(CatInfixOperator* infixOperator, LLVMCompileTimeContext* context);
+	llvm::Value* generate(CatAssignmentOperator* assignmentOperator, LLVMCompileTimeContext* context);
 	llvm::Value* generate(CatLiteral* literal, LLVMCompileTimeContext* context);
 	llvm::Value* generate(CatMemberAccess* memberAccess, LLVMCompileTimeContext* context);
 	llvm::Value* generate(CatMemberFunctionCall* memberFunctionCall, LLVMCompileTimeContext* context);
@@ -51,7 +54,17 @@ private:
 	llvm::Value* generate(CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context);
 	llvm::Value* generate(CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
 
+	llvm::Value* generateAssign(CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);
+	llvm::Value* generateAssign(CatIdentifier* identifier, llvm::Value* rValue, LLVMCompileTimeContext* context);
+	llvm::Value* generateAssign(CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
+
 	llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
+
+	void initContext(LLVMCompileTimeContext* context);
+	void createNewModule(LLVMCompileTimeContext* context);
+	std::string getNextFunctionName(LLVMCompileTimeContext* context);
+	llvm::Function* verifyAndOptimizeFunction(llvm::Function* function);
+
 private:
 	llvm::LLVMContext& llvmContext;
 	std::unique_ptr<llvm::Module> currentModule;

@@ -14,7 +14,7 @@
 IdentifierToken::IdentifierToken(Lexeme* lexeme_, Identifier subType):
 	subType(subType)
 {
-	lexeme = lexeme_;
+	lexeme.reset(lexeme_);
 }
 
 

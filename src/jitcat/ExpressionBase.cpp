@@ -7,6 +7,7 @@
 
 #include "ExpressionBase.h"
 #include "CatArgumentList.h"
+#include "CatAssignableExpression.h"
 #include "CatFunctionCall.h"
 #include "CatPrefixOperator.h"
 #include "CatRuntimeContext.h"
@@ -24,41 +25,45 @@
 #include <cassert>
 
 
-ExpressionBase::ExpressionBase():
+ExpressionBase::ExpressionBase(bool expectAssignable):
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	expectAssignable(expectAssignable)
 {
 }
 
 
-ExpressionBase::ExpressionBase(const char* expression):
+ExpressionBase::ExpressionBase(const char* expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	expectAssignable(expectAssignable)
 {
 }
 
 
-ExpressionBase::ExpressionBase(const std::string& expression):
+ExpressionBase::ExpressionBase(const std::string& expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	expectAssignable(expectAssignable)
 {
 }
 
 
-ExpressionBase::ExpressionBase(CatRuntimeContext* compileContext, const std::string& expression):
+ExpressionBase::ExpressionBase(CatRuntimeContext* compileContext, const std::string& expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
 	expressionAST(nullptr),
 	isConstant(false),
-	errorManagerHandle(nullptr)
+	errorManagerHandle(nullptr),
+	expectAssignable(expectAssignable)
 {
 }
 
@@ -195,6 +200,11 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 	{	
 		if (!expectedType.isUnknown())
 		{
+			if (expectAssignable && !valueType.isWritable())
+			{
+				parseResult->success = false;
+				parseResult->errorMessage = std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), "."));
+			}
 			if (expectedType.isObjectType())
 			{
 				const std::string typeName = expectedType.getObjectTypeName();
@@ -216,7 +226,16 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 			}
 			else if (valueType != expectedType)
 			{
-				if (expectedType.isScalarType() && valueType.isScalarType())
+				if (expectedType.isVoidType())
+				{
+					//Insert an automatic type conversion to void.
+					CatArgumentList* arguments = new CatArgumentList();
+					arguments->arguments.emplace_back(static_cast<CatTypedExpression*>(parseResult->astRootNode));
+					expressionAST = new CatFunctionCall("toVoid", arguments);
+					parseResult->astRootNode = expressionAST;
+					valueType = expressionAST->getType();
+				}
+				else if (expectedType.isScalarType() && valueType.isScalarType())
 				{
 					//Insert an automatic type conversion if the scalar types do not match.
 					CatArgumentList* arguments = new CatArgumentList();
@@ -297,7 +316,15 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 		{
 			LLVMCompileTimeContext llvmCompileContext(context);
 			llvmCompileContext.options.enableDereferenceNullChecks = true;
-			intptr_t functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+			intptr_t functionAddress = 0;
+			if (!expectAssignable)
+			{
+				functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+			}
+			else if (expressionAST->isAssignable())
+			{
+				functionAddress = context->getCodeGenerator()->generateAndGetAssignFunctionAddress(static_cast<CatAssignableExpression*>(expressionAST), &llvmCompileContext);
+			}
 			if (functionAddress != 0)
 			{
 				handleCompiledFunction(functionAddress);

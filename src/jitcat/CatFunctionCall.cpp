@@ -11,7 +11,7 @@
 #include "CatLog.h"
 #include "JitCat.h"
 #include "LLVMCatIntrinsics.h"
-#include "OptimizationHelper.h"
+#include "ASTHelper.h"
 #include "Tools.h"
 
 #include <algorithm>
@@ -60,6 +60,7 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 	}
 	switch (function)
 	{
+		case CatBuiltInFunctionType::ToVoid:			return std::any();
 		case CatBuiltInFunctionType::ToInt:				return CatGenericType::convertToInt(argumentValues[0], argumentTypes[0]);
 		case CatBuiltInFunctionType::ToFloat:			return CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]);
 		case CatBuiltInFunctionType::ToBool:			return CatGenericType::convertToBoolean(argumentValues[0], argumentTypes[0]);
@@ -374,6 +375,7 @@ CatGenericType CatFunctionCall::typeCheck()
 
 		switch (function)
 		{
+			case CatBuiltInFunctionType::ToVoid:			return CatGenericType::voidType;
 			case CatBuiltInFunctionType::ToInt:				return argumentTypes[0].isBasicType() ? CatGenericType::intType : CatGenericType(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()));
 			case CatBuiltInFunctionType::ToFloat:			return argumentTypes[0].isBasicType() ? CatGenericType::floatType : CatGenericType(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()));
 			case CatBuiltInFunctionType::ToBool:			return argumentTypes[0].isBasicType() ? CatGenericType::boolType : CatGenericType(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()));
@@ -590,6 +592,8 @@ CatGenericType CatFunctionCall::getType() const
 		{
 			default:
 				return CatGenericType::errorType;
+			case CatBuiltInFunctionType::ToVoid:
+				return CatGenericType::voidType;
 			case CatBuiltInFunctionType::ToInt:
 			case CatBuiltInFunctionType::StringLength:
 			case CatBuiltInFunctionType::FindInString:
@@ -659,7 +663,7 @@ CatTypedExpression* CatFunctionCall::constCollapse(CatRuntimeContext* compileTim
 	bool allArgumentsAreConst = true;
 	for (auto& iter : arguments->arguments)
 	{
-		OptimizationHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
+		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
 		if (!iter->isConst())
 		{
 			allArgumentsAreConst = false;
@@ -730,6 +734,7 @@ bool CatFunctionCall::checkArgumentCount(std::size_t count) const
 		default:
 		case CatBuiltInFunctionType::Random:
 			return count == 0;
+		case CatBuiltInFunctionType::ToVoid:
 		case CatBuiltInFunctionType::ToInt:
 		case CatBuiltInFunctionType::ToString:
 		case CatBuiltInFunctionType::ToPrettyString:
@@ -786,6 +791,7 @@ CatBuiltInFunctionType CatFunctionCall::toFunction(const char* functionName, int
 
 std::vector<std::string> CatFunctionCall::functionTable = 	
 {
+	 "toVoid",				//CatBuiltInFunctionType::ToVoid
 	 "toInt",				//CatBuiltInFunctionType::ToInt
 	 "toFloat",				//CatBuiltInFunctionType::ToFloat
 	 "toBool",				//CatBuiltInFunctionType::ToBool

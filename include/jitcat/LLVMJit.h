@@ -73,8 +73,6 @@ public:
 	llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 	llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 
-	//void removeModule(llvm::orc::VModuleKey moduleKey);
-
 private:
 	//A thread-safe version of a LLVM Context. 
 	//LLVM functionality is isolated per context. For instance, modules and types created on different contexts cannot interact.

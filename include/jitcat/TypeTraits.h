@@ -28,6 +28,7 @@ class TypeTraits
 public:
 	static inline CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return true; }
 	static const char* getTypeName() { return T::getTypeName(); }
 	static std::any getCatValue(void) { return std::any();}
 	static std::any getCatValue(const T& value);
@@ -36,6 +37,7 @@ public:
 
 	typedef T type;
 	typedef T cachedType;
+	typedef T functionParameterType;
 };
 
 
@@ -45,6 +47,7 @@ class TypeTraits<void>
 public:
 	static CatGenericType toGenericType() { return CatGenericType::voidType; }
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return false; }
 	template <typename U>
 	static std::any getCatValue(const U& param) { return std::any();}
 
@@ -59,6 +62,7 @@ public:
 
 	typedef void type;
 	typedef int cachedType;
+	typedef int functionParameterType;
 };
 
 
@@ -68,6 +72,7 @@ class TypeTraits<float>
 public:
 	static CatGenericType toGenericType() { return CatGenericType::floatType; }
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return false; }
 	static std::any getCatValue(float value) { return std::any(value);}
 	static float getValue(const std::any& value) { return std::any_cast<float>(value);}
 	static const char* getTypeName()
@@ -78,6 +83,7 @@ public:
 
 	typedef float type;
 	typedef float cachedType;
+	typedef float functionParameterType;
 };
 
 
@@ -87,6 +93,7 @@ class TypeTraits<int>
 public:
 	static CatGenericType toGenericType() { return CatGenericType::intType; }
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return false; }
 	static std::any getCatValue(int value) { return std::any(value);}
 	static int getValue(const std::any& value) { return std::any_cast<int>(value);}
 	static const char* getTypeName()
@@ -96,6 +103,7 @@ public:
 
 	typedef int type;
 	typedef int cachedType;
+	typedef int functionParameterType;
 };
 
 
@@ -105,6 +113,7 @@ class TypeTraits<bool>
 public:
 	static CatGenericType toGenericType() { return CatGenericType::boolType; }
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return false; }
 	static std::any getCatValue(bool value) { return std::any(value);}
 	static bool getValue(const std::any& value) { return std::any_cast<bool>(value);}
 	static const char* getTypeName()
@@ -114,6 +123,7 @@ public:
 
 	typedef bool type;
 	typedef bool cachedType;
+	typedef bool functionParameterType;
 };
 
 
@@ -123,6 +133,7 @@ class TypeTraits<std::string>
 public:
 	static CatGenericType toGenericType() { return CatGenericType::stringType; }
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return false; }
 	static std::any getCatValue(const std::string& value) { return std::any(value);}
 	static std::string getValue(const std::any& value) { return std::any_cast<std::string>(value);}
 	static const char* getTypeName()
@@ -132,6 +143,7 @@ public:
 
 	typedef std::string type;
 	typedef std::string cachedType;
+	typedef const std::string& functionParameterType;
 };
 
 
@@ -141,6 +153,7 @@ class TypeTraits<std::unique_ptr<U>>
 public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return true; }
 	static const char* getTypeName() { return U::getTypeName(); }
 	static std::any getCatValue(std::unique_ptr<U>& value);
 	static U* getValue(const std::any& value) {return static_cast<U*>(std::any_cast<Reflectable*>(value));}
@@ -149,6 +162,7 @@ public:
 
 	typedef U type;
 	typedef U* cachedType;
+	typedef U* functionParameterType;
 };
 
 
@@ -158,6 +172,7 @@ class TypeTraits<U*>
 public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return false; }
+	static constexpr bool isReflectableType() { return true; }
 	static const char* getTypeName() { return U::getTypeName(); }
 	static std::any getCatValue(U* value);
 	static U* getValue(const std::any& value) {return static_cast<U*>(std::any_cast<Reflectable*>(value));}
@@ -166,6 +181,7 @@ public:
 
 	typedef U type;
 	typedef U* cachedType;
+	typedef U* functionParameterType;
 };
 
 
@@ -175,12 +191,14 @@ class TypeTraits<std::vector<ItemType> >
 public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return true; }
+	static constexpr bool isReflectableType() { return false; }
 	static const char* getTypeName() { return ""; }
 	static std::any getCatValue(void) { return std::any();}
 	static std::vector<ItemType>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType>*>(value); }
 
 	typedef ItemType type;
 	typedef std::vector<ItemType> cachedType;
+	typedef std::vector<ItemType>* functionParameterType;
 };
 
 
@@ -190,12 +208,14 @@ class TypeTraits<std::map<std::string, ItemType> >
 public:
 	static CatGenericType toGenericType();
 	static bool isSerialisableContainer() { return true; }
+	static constexpr bool isReflectableType() { return false; }
 	static const char* getTypeName() { return ""; }
 	static std::any getCatValue(void) { return std::any();}
 	static std::map<std::string, ItemType>& getValue(const std::any& value) { return *std::any_cast<std::map<std::string, ItemType>*>(value);}
 
 	typedef ItemType type;
 	typedef std::map<std::string, ItemType> cachedType;
+	typedef std::map<std::string, ItemType>* functionParameterType;
 };
 
 

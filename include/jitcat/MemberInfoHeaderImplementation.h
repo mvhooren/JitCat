@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "LLVMCatIntrinsics.h"
 #include "LLVMCodeGeneratorHelper.h"
 #include "LLVMCompileTimeContext.h"
 #include "LLVMTypes.h"
@@ -24,6 +25,14 @@ inline std::any ContainerMemberInfo<T, U>::getMemberReference(Reflectable* base)
 		return &container;
 	}
 	return (U*)nullptr;
+}
+
+
+template<typename T, typename U>
+inline std::any ContainerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+{
+	assignableType = AssignableType::Pointer;
+	return getMemberReference(base);
 }
 
 
@@ -168,11 +177,23 @@ inline std::any ClassPointerMemberInfo<T, U>::getMemberReference(Reflectable* ba
 	return static_cast<Reflectable*>(nullptr);
 }
 
+template<typename T, typename U>
+inline std::any ClassPointerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+{
+	assignableType = AssignableType::PointerPointer;
+	T* baseObject = static_cast<T*>(base);
+	if (baseObject != nullptr)
+	{
+		U** member = &(baseObject->*memberPointer);
+		return reinterpret_cast<Reflectable**>(member);
+	}
+	return static_cast<Reflectable**>(nullptr);
+}
+
 
 template<typename T, typename U>
-inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline unsigned long long ClassPointerMemberInfo<T, U>::getMemberPointerOffset() const
 {
-#ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
 	if constexpr (sizeof(memberPointer) == 4)
@@ -185,6 +206,15 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 	{
 		memcpy(&offset, &memberPointer, 8);
 	}
+	return offset;
+}
+
+
+template<typename T, typename U>
+inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+{
+#ifdef ENABLE_LLVM
+	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
@@ -200,6 +230,27 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 
 
 template<typename T, typename U>
+inline llvm::Value* ClassPointerMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const
+{
+#ifdef ENABLE_LLVM
+	unsigned long long offset = getMemberPointerOffset();
+	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	{
+		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
+		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
+		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
+		context->helper->writeToPointer(addressValue, rValue);
+		return rValue;
+	};
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVMTypes::pointerType, context);
+#else
+	return nullptr;
+#endif // ENABLE_LLVM
+}
+
+
+template<typename T, typename U>
 inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(Reflectable* base)
 {
 	T* baseObject = static_cast<T*>(base);
@@ -208,6 +259,15 @@ inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(Reflectable* bas
 		return static_cast<Reflectable*>(&(baseObject->*memberPointer));
 	}
 	return static_cast<Reflectable*>(nullptr);
+}
+
+
+template<typename T, typename U>
+inline std::any ClassObjectMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+{
+	//Not supported for now (would require implementing calling of operator= on target object)
+	assignableType = AssignableType::None;
+	return getMemberReference(base);
 }
 
 
@@ -262,6 +322,16 @@ inline std::any ClassUniquePtrMemberInfo<T, U>::getMemberReference(Reflectable* 
 
 
 template<typename T, typename U>
+inline std::any ClassUniquePtrMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+{
+	//Cannot assing unique_ptr, this would transfer ownership and potentially delete the pointer at some point. Bad idea.
+	//The pointer may for example have come from another unique_ptr.
+	assignableType = AssignableType::None;
+	return std::any((U*)nullptr);
+}
+
+
+template<typename T, typename U>
 inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
@@ -296,9 +366,22 @@ inline std::any BasicTypeMemberInfo<T, U>::getMemberReference(Reflectable* base)
 
 
 template<typename T, typename U>
-inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+inline std::any BasicTypeMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
 {
-#ifdef ENABLE_LLVM
+	assignableType = AssignableType::Pointer;
+	T* objectPointer = static_cast<T*>(base);
+	if (objectPointer != nullptr)
+	{
+		U& value = objectPointer->*memberPointer;
+		return &value;
+	}
+	return (U*)nullptr;
+}
+
+
+template<typename T, typename U>
+inline unsigned long long BasicTypeMemberInfo<T, U>::getMemberPointerOffset() const
+{
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
 	if constexpr (sizeof(memberPointer) == 4)
@@ -311,6 +394,15 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 	{
 		memcpy(&offset, &memberPointer, 8);
 	}
+	return offset;
+}
+
+
+template<typename T, typename U>
+inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const
+{
+#ifdef ENABLE_LLVM
+	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{	
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
@@ -326,6 +418,36 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 			//int, bool, float case	(returns by value)
 			return context->helper->loadBasicType(context->helper->toLLVMType(catType), addressValue, memberName);
 		}
+	};
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);
+#else 
+	return nullptr;
+#endif // ENABLE_LLVM
+}
+
+
+template<typename T, typename U>
+inline llvm::Value* BasicTypeMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const
+{
+#ifdef ENABLE_LLVM
+	unsigned long long offset = getMemberPointerOffset();
+	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	{	
+		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
+		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
+		if constexpr (std::is_same<U, std::string>::value)
+		{
+			llvm::Value* lValue = context->helper->convertToPointer(addressIntValue, memberName, LLVMTypes::stringPtrType);
+			context->helper->createCall(context, &LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
+		}
+		else
+		{
+			//int, bool, float case	(returns by value)
+			llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
+			context->helper->writeToPointer(addressValue, rValue);
+		}
+		return rValue;
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);
 #else 

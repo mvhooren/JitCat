@@ -19,7 +19,7 @@ ConstantToken::ConstantToken():
 ConstantToken::ConstantToken(Lexeme* lexeme_, ConstantType subType):
 	subType(subType)
 {
-	lexeme = lexeme_;
+	lexeme.reset(lexeme_);
 }
 
 

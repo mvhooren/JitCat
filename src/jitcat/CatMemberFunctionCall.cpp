@@ -9,7 +9,7 @@
 #include "CatArgumentList.h"
 #include "CatLog.h"
 #include "MemberInfo.h"
-#include "OptimizationHelper.h"
+#include "ASTHelper.h"
 #include "TypeInfo.h"
 
 #include <cassert>
@@ -126,10 +126,10 @@ bool CatMemberFunctionCall::isConst() const
 
 CatTypedExpression* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext)
 {
-	OptimizationHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext));
 	for (auto& iter: arguments->arguments)
 	{
-		OptimizationHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
+		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
 	}
 	return this;
 }

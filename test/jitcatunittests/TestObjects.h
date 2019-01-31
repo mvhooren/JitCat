@@ -38,6 +38,7 @@ namespace TestObjects
 	{
 	public:
 		ReflectedObject();
+		~ReflectedObject();
 		void createNestedObjects();
 		void createNullObjects();
 

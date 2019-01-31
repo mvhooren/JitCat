@@ -103,7 +103,15 @@ inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
-			return getValueFunc(runtimeContext);
+			if constexpr (!std::is_same<void, T>::value)
+			{
+				return getValueFunc(runtimeContext);
+			}
+			else
+			{
+				getValueFunc(runtimeContext);
+				return;
+			}
 		}
 		else
 		{
@@ -134,12 +142,27 @@ inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeCont
 {
 	if (isConstant)
 	{
-		return cachedValue;
+		if constexpr (!std::is_same<void, T>::value)
+		{
+			return cachedValue;
+		}
+		else
+		{
+			return;
+		}
 	}
 	else if (expressionAST != nullptr)
 	{
-		std::any value = expressionAST->execute(runtimeContext);
-		return getActualValue(value);
+		if constexpr (!std::is_same<void, T>::value)
+		{
+			std::any value = expressionAST->execute(runtimeContext);
+			return getActualValue(value);
+		}
+		else
+		{
+			expressionAST->execute(runtimeContext);
+			return;
+		}
 	}
 	else
 	{

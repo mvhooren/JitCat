@@ -8,11 +8,11 @@
 #pragma once
 
 struct TypeMemberInfo;
-#include "CatTypedExpression.h"
+#include "CatAssignableExpression.h"
 #include "CatScopeID.h"
 
 
-class CatIdentifier: public CatTypedExpression
+class CatIdentifier: public CatAssignableExpression
 {
 public:
 	CatIdentifier(const std::string& name, CatRuntimeContext* context);
@@ -22,6 +22,7 @@ public:
 	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 	virtual CatASTNodeType getNodeType() override final;
 	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+	virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType) override final;
 	virtual CatGenericType typeCheck() override final;
 	CatScopeID getScopeId() const;
 	const TypeMemberInfo* getMemberInfo() const;

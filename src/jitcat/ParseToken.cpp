@@ -10,20 +10,19 @@
 
 
 ParseToken::ParseToken():
-	lexeme(0)
+	lexeme(nullptr)
 {
 }
 
 
 ParseToken::~ParseToken()
 {
-	delete lexeme;
 }
 
 
 const Lexeme* ParseToken::getLexeme() const
 {
-	return lexeme;
+	return lexeme.get();
 }
 
 

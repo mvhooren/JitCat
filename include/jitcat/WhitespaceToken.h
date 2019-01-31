@@ -13,7 +13,7 @@ class WhitespaceToken: public ParseToken
 {
 public:
 	WhitespaceToken() {};
-	WhitespaceToken(Lexeme* lexeme_) {lexeme = lexeme_;};
+	WhitespaceToken(Lexeme* lexeme_) {lexeme.reset(lexeme_);};
 	virtual int getTokenID() const {return getID();};
 	virtual const char* getTokenName() const {return "Whitespace";};
 	virtual const char* getSubTypeName(int subType) const {return getTokenName();}	

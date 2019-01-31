@@ -24,8 +24,8 @@ private:
 	~CatLog();
 public:
 	static void log(const char* message);
-	template <typename T>
-	static void log(T message);
+	template <typename... T>
+	static void log(T&&... message);
 	static void addListener(CatLogListener* listener);
 	static void removeListener(CatLogListener* listener);
 
@@ -35,10 +35,10 @@ private:
 
 #include <sstream>
 
-template <typename T>
-void CatLog::log(T message)
+template <typename... T>
+void CatLog::log(T&&... message)
 {
 	std::stringstream stream;
-	stream << message;
+	(stream << ... << std::forward<T>(message));
 	log(stream.str().c_str());
 }

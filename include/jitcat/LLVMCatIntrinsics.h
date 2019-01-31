@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2018
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #pragma once
 
 class CatRuntimeContext;
@@ -22,6 +29,7 @@ public:
 	static Reflectable* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
 	static bool stringEquals(const std::string& left, const std::string& right);
 	static bool stringNotEquals(const std::string& left, const std::string& right);
+	static void stringAssign(std::string* left, const std::string& right);
 	static bool stringToBoolean(const std::string& value);
 	static std::string stringAppend(const std::string& left, const std::string& right);
 	static std::string floatToString(float number);

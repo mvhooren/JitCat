@@ -9,7 +9,7 @@
 #include "CatLiteral.h"
 #include "CatLog.h"
 #include "InfixOperatorOptimizer.h"
-#include "OptimizationHelper.h"
+#include "ASTHelper.h"
 
 #include <cassert>
 
@@ -94,8 +94,8 @@ bool CatInfixOperator::isConst() const
 
 CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTimeContext)
 {
-	OptimizationHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext));
-	OptimizationHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
 
 	bool lhsIsConst = lhs->isConst();
 	bool rhsIsConst = rhs->isConst();

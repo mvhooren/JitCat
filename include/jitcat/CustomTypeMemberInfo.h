@@ -20,7 +20,10 @@ struct CustomBasicTypeMemberInfo: public TypeMemberInfo
 	CustomBasicTypeMemberInfo(const std::string& memberName, unsigned int memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
 
 	inline virtual std::any getMemberReference(Reflectable* base) override final;
+	inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) override final;
+	unsigned long long getMemberOffset() const;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
+	inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const override final;
 
 	void assign(std::any& base, const T& valueToSet);
 
@@ -34,8 +37,11 @@ struct CustomTypeObjectMemberInfo: public TypeMemberInfo
 	CustomTypeObjectMemberInfo(const std::string& memberName, unsigned int memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
 
 	inline virtual std::any getMemberReference(Reflectable* base) override final;
+	inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) override final;
+	unsigned long long getMemberOffset() const;
 	inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVMCompileTimeContext* context) const override final;
-	
+	inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVMCompileTimeContext* context) const override final;
+
 	void assign(std::any& base, std::any& valueToSet);
 	
 	unsigned int memberOffset;

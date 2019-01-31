@@ -82,6 +82,22 @@ std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 }
 
 
+std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType)
+{
+	if (memberInfo != nullptr && runtimeContext != nullptr)
+	{
+		Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+		return memberInfo->getAssignableMemberReference(rootObject, assignableType);
+	}
+	else
+	{
+		assignableType = AssignableType::None;
+	}
+	assert(false);
+	return std::any();
+}
+
+
 CatGenericType CatIdentifier::typeCheck()
 {
 	if (type.isValidType())

@@ -19,7 +19,7 @@ TwoCharToken::TwoCharToken():
 TwoCharToken::TwoCharToken(Lexeme* lexeme_, TwoChar subType):
 	subType(subType)
 {
-	lexeme = lexeme_;
+	lexeme.reset(lexeme_);
 }
 
 

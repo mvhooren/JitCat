@@ -50,44 +50,8 @@ public:
 	template <typename EnumT>
 	static constexpr int enumToInt(EnumT enumValue);
 
-	template <typename T1, typename T2>
-	static std::string append(const T1& part1, const T2& part2);
-
-	template <typename T1, typename T2, typename T3>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3);
-
-	template <typename T1, typename T2, typename T3, typename T4>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7, const T8& part8);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7, const T8& part8, const T9& part9);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7, const T8& part8, const T9& part9, const T10& part10);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7, const T8& part8, const T9& part9, const T10& part10, const T11& part11);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7, const T8& part8, const T9& part9, const T10& part10, const T11& part11, const T12& part12);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7, const T8& part8, const T9& part9, const T10& part10, const T11& part11, const T12& part12, const T13& part13);
-
-	template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6, typename T7, typename T8, typename T9, typename T10, typename T11, typename T12, typename T13, typename T14>
-	static std::string append(const T1& part1, const T2& part2, const T3& part3, const T4& part4, const T5& part5, const T6& part6, const T7& part7, const T8& part8, const T9& part9, const T10& part10, const T11& part11, const T12& part12, const T13& part13, const T14& part14);
+	template <typename... ValueTypes>
+	static std::string append(ValueTypes&&... values);
 
 	static const std::string empty;
 };

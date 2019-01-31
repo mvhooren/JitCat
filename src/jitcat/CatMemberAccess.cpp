@@ -63,6 +63,22 @@ std::any CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
 }
 
 
+std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType)
+{
+	std::any baseValue = base->execute(runtimeContext);
+	if (memberInfo != nullptr && runtimeContext != nullptr)
+	{
+		return memberInfo->getAssignableMemberReference(std::any_cast<Reflectable*>(baseValue), assignableType);
+	}
+	else
+	{
+		assignableType = AssignableType::None;
+	}
+	assert(false);
+	return std::any();
+}
+
+
 CatGenericType CatMemberAccess::typeCheck()
 {
 	CatGenericType baseType = base->typeCheck();

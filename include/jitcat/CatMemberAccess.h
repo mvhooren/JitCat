@@ -8,12 +8,12 @@
 #pragma once
 
 struct TypeMemberInfo;
-#include "CatTypedExpression.h"
+#include "CatAssignableExpression.h"
 
 #include <memory>
 
 
-class CatMemberAccess: public CatTypedExpression
+class CatMemberAccess: public CatAssignableExpression
 {
 public:
 	CatMemberAccess(CatTypedExpression* base, const std::string& memberName);
@@ -21,6 +21,7 @@ public:
 	virtual void print() const override final;
 	virtual CatASTNodeType getNodeType() override final;
 	virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+	virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType) override final;
 	virtual CatGenericType typeCheck() override final;
 	virtual CatGenericType getType() const override final;
 	virtual bool isConst() const override final;

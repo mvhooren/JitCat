@@ -43,6 +43,7 @@ public:
 	//Should always return the same value as getValue. Used for testing the interpreter when the LLVM backend is enabled.
 	const T getInterpretedValue(CatRuntimeContext* runtimeContext);
 
+	//Parses the expression, checks for errors and compiles the expression to native code if the LLVM backend is enabled.
 	virtual void compile(CatRuntimeContext* context) override final;
 
 protected:

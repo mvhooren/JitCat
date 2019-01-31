@@ -19,6 +19,21 @@
 #include <string>
 
 
+CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, ContainerType containerType, bool writable, bool constant, const CatError* error_):
+	specificType(specificType),
+	basicType(basicType),
+	nestedType(nestedType),
+	containerType(containerType),
+	writable(writable),
+	constant(constant)
+{
+	if (error_ != nullptr)
+	{
+		error.reset(new CatError(*error_));
+	}
+}
+
+
 CatGenericType::CatGenericType(BasicType basicType, bool writable, bool constant):
 	specificType(SpecificType::Basic),
 	basicType(basicType),
@@ -157,6 +172,12 @@ bool CatGenericType::isValidType() const
 }
 
 
+bool CatGenericType::isError() const
+{
+	return specificType == SpecificType::Error;
+}
+
+
 bool CatGenericType::isBasicType() const
 {
 	return specificType == SpecificType::Basic 
@@ -238,6 +259,24 @@ bool CatGenericType::isWritable() const
 bool CatGenericType::isConst() const
 {
 	return constant;
+}
+
+
+CatGenericType CatGenericType::toUnmodified() const
+{
+	return CatGenericType(specificType, basicType, nestedType, containerType, false, false, error.get());
+}
+
+
+CatGenericType CatGenericType::toUnwritable() const
+{
+	return CatGenericType(specificType, basicType, nestedType, containerType, false, constant, error.get());
+}
+
+
+CatGenericType CatGenericType::toWritable() const
+{
+	return CatGenericType(specificType, basicType, nestedType, containerType, true, constant, error.get());
 }
 
 

@@ -78,7 +78,7 @@ CatGrammar::CatGrammar(Tokenizer* tokenizer):
 
 	// literals, identifiers and ( ) (highest precedence)
 	rule(Prod::OperatorP2, {prod(Prod::Literal)}, pass);	
-	rule(Prod::OperatorP2, {term(one, OneChar::ParenthesesOpen), prod(Prod::OperatorP10), term(one, OneChar::ParenthesesClose)}, pass);
+	rule(Prod::OperatorP2, {term(one, OneChar::ParenthesesOpen), prod(Prod::OperatorP11), term(one, OneChar::ParenthesesClose)}, pass);
 	rule(Prod::OperatorP2, {term(id, Identifier::Identifier)}, identifierToken);
 	rule(Prod::OperatorP2, {term(id, Identifier::Identifier), prod(Prod::FunctionCallArguments)}, functionCallToken);
 

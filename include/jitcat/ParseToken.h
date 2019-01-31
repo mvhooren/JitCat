@@ -7,9 +7,11 @@
 
 #pragma once
 
-
 class Document;
-struct Lexeme;
+#include "Lexeme.h"
+
+#include <memory>
+
 
 class ParseToken
 {
@@ -23,9 +25,13 @@ public:
 	virtual int getTokenSubType() const = 0;
 	const Lexeme* getLexeme() const;
 	virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const = 0;
+
+protected:	
 	static int getNextTokenID();
-protected:
+
+private:
 	static int nextTokenID;
+
 protected:
-	Lexeme* lexeme;
+	std::unique_ptr<Lexeme> lexeme;
 };

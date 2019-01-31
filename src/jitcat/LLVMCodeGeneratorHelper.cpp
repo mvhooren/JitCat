@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2018
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #include "LLVMCodeGeneratorHelper.h"
 #include "LLVMCompileTimeContext.h"
 #include "LLVMJit.h"
@@ -177,6 +184,17 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isObjectType())	return LLVMTypes::pointerType;
 	else if (type.isContainerType())return LLVMTypes::pointerType;
 	else							return LLVMTypes::voidType;
+}
+
+llvm::Type* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& type)
+{
+	return llvm::PointerType::get(toLLVMType(type), 0);
+}
+
+
+void LLVMCodeGeneratorHelper::writeToPointer(llvm::Value* lValue, llvm::Value* rValue)
+{
+	builder->CreateStore(rValue, lValue);
 }
 
 

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "CatAssignableExpression.h"
 #include "CatAssignmentOperator.h"
 #include "CatASTNode.h"
 #include "CatExpression.h"

@@ -68,13 +68,13 @@ LLVMCodeGenerator::~LLVMCodeGenerator()
 
 llvm::Value* LLVMCodeGenerator::generate(CatTypedExpression* expression, LLVMCompileTimeContext* context)
 {
-	context->helper = helper.get();
-	context->currentDyLib = dylib;
+	initContext(context);
 	switch (expression->getNodeType())
 	{
 		case CatASTNodeType::Literal:				return generate(static_cast<CatLiteral*>(expression), context);			
 		case CatASTNodeType::Identifier:			return generate(static_cast<CatIdentifier*>(expression), context);		
 		case CatASTNodeType::InfixOperator:			return generate(static_cast<CatInfixOperator*>(expression), context);	
+		case CatASTNodeType::AssignmentOperator:	return generate(static_cast<CatAssignmentOperator*>(expression), context);	
 		case CatASTNodeType::PrefixOperator:		return generate(static_cast<CatPrefixOperator*>(expression), context);	
 		case CatASTNodeType::FunctionCall:			return generate(static_cast<CatFunctionCall*>(expression), context);		
 		case CatASTNodeType::MemberAccess:			return generate(static_cast<CatMemberAccess*>(expression), context);		
@@ -89,9 +89,12 @@ llvm::Value* LLVMCodeGenerator::generate(CatTypedExpression* expression, LLVMCom
 
 llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name)
 {
-	context->helper = helper.get();
-	context->currentDyLib = dylib;
-	//This parameter represents the CatRuntimeContext*
+	initContext(context);
+	
+	//Define the parameters for the function.
+	//Each function will at least get a CatRuntimeContext* as a parameter.
+	//If the function returns a string by value, the string is returned through a string pointer parameter and the function returns void.
+	//The string pointer should point to pre-allocated memory where the returned string will be constructed.
 	std::vector<llvm::Type*> parameters;
 	llvm::FunctionType* functionType = nullptr;
 	CatGenericType expressionType = expression->getType();
@@ -107,7 +110,11 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 		functionType = llvm::FunctionType::get(helper->toLLVMType(expressionType), parameters, false);
 	}
 
+	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, name.c_str(), currentModule.get());
+
+	//Attributes and names for the parameters can now be set on the function signature.
+	//When returning a string, the StructRet attribute is set to indicate that the parameter is used for returning a structure by value.
 	llvm::Argument* firstArg = function->arg_begin();
 	if (expressionType.isStringType())
 	{
@@ -122,12 +129,18 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 		firstArg->setName("RuntimeContext");
 	}
 	
-	
+	//Now, generate code for the function
 	context->currentFunction = function;
-	//Function body
+	
+	//Function entry block
 	llvm::BasicBlock* block = llvm::BasicBlock::Create(llvmContext, "entry", function);
 	builder->SetInsertPoint(&function->getEntryBlock());
+
+	//Generate code for the expression.
 	llvm::Value* expressionValue = generate(expression, context);
+
+	//If the expression returns a string, copy construct it into the string StructRet parameter and return void.
+	//If it is some other type, just return the value.
 	if (expressionType.isStringType())
 	{
 		helper->createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {function->arg_begin(), expressionValue}, "stringCopyConstruct");
@@ -141,36 +154,56 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 	}
 	context->currentFunction = nullptr;
 
-	if (!llvm::verifyFunction(*function, &llvm::outs()))
-	{
-		passManager->run(*function);
-		if constexpr (Configuration::dumpFunctionIR)
-		{
-			function->dump();
-		}		
-		return function;
-	}
-	else
-	{
-#ifdef _DEBUG
-		function->dump();
-#endif
-		assert(false);
-		LLVMJit::logError("Function contains errors.");
-		return nullptr;
-	}
+	//Verify the correctness of the function and execute optimization passes.
+	return verifyAndOptimizeFunction(function);
+}
+
+
+llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(CatAssignableExpression* expression, LLVMCompileTimeContext* context, const std::string& name)
+{
+	initContext(context);
+	
+	//Define the parameters for the function.
+	//Assign functions will always have two parameters: a CatRuntimeContext* and a value that will be assigned to the result of the assignable expression.
+	//It will always return void.
+	std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType, helper->toLLVMType(expression->getType())};
+	llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, parameters, false);		
+
+	//Create the function signature. No code is yet associated with the function at this time.
+	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, name.c_str(), currentModule.get());
+
+	//Name the parameters
+	llvm::Argument* argIter = function->arg_begin();
+	argIter->setName("RuntimeContext");
+	++argIter;
+	argIter->setName("ValueToAssign");
+
+	//Now, generate code for the function
+	context->currentFunction = function;
+
+	//Function entry block
+	llvm::BasicBlock* block = llvm::BasicBlock::Create(llvmContext, "entry", function);
+	builder->SetInsertPoint(&function->getEntryBlock());
+
+	//Generate the assignment expression, passing in the second function parameter.
+	generateAssign(expression, argIter, context);
+
+	//Destruct any heap allocations done by the function
+	helper->generateBlockDestructors(context);
+	
+	//Create the return statement, returning void.
+	builder->CreateRetVoid();
+
+	//Verify the correctness of the function and execute optimization passes.
+	return verifyAndOptimizeFunction(function);
 }
 
 
 intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(CatTypedExpression* expression, LLVMCompileTimeContext* context)
 {
-	context->helper = helper.get();
-	context->currentDyLib = dylib;
-	currentModule.reset(new llvm::Module(context->catContext->getContextName(), llvmContext));
-	currentModule->setTargetTriple(LLVMJit::get().getTargetMachine().getTargetTriple().str());
-	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
-	helper->setCurrentModule(currentModule.get());
-	std::string functionName = Tools::append("expression_", context->catContext->getContextName(), "_", context->catContext->getNextFunctionIndex());
+	initContext(context);
+	createNewModule(context);
+	std::string functionName = getNextFunctionName(context);
 	llvm::Function* function = generateExpressionFunction(expression, context, functionName);
 	assert(function != nullptr);
 	LLVMJit::get().addModule(currentModule, *dylib);
@@ -178,78 +211,15 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(CatTypedExpression* ex
 }
 
 
-void LLVMCodeGenerator::generateAndDump(CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& functionName)
+intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(CatAssignableExpression* expression, LLVMCompileTimeContext* context)
 {
-	context->helper = helper.get();
-	context->currentDyLib = dylib;
-	if (expression->getType().isValidType())
-	{
-		llvm::Function* generatedValue = generateExpressionFunction(expression, context, functionName.c_str());
-		if constexpr (Configuration::dumpFunctionIR)
-		{
-			if (generatedValue != nullptr)
-			{
-				generatedValue->dump();
-			}
-		}
-	}
-}
-
-
-void LLVMCodeGenerator::compileAndTest(CatRuntimeContext* context, const std::string& functionName)
-{
-	std::cout << "Adding module " << currentModule->getName().str() << " machine: " << currentModule->getTargetTriple() << " layout: " << currentModule->getDataLayoutStr() << "\n";
-	const auto& functionList = currentModule->getFunctionList();
-	std::cout << "Functions:\n";
-	const llvm::Function* function = nullptr;
-	for (const auto& iter : functionList)
-	{
-		if (iter.getName() == functionName)
-		{
-			function = &iter;
-		}
-		std::cout << "\t" << iter.getName().str() << "\n";
-	}
-	llvm::Type* returnType = nullptr;
-	if (function != nullptr)
-	{
-		returnType = function->getReturnType();
-	}
-	//function is destructed after addModule
+	initContext(context);
+	createNewModule(context);
+	std::string functionName = getNextFunctionName(context);
+	llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
+	assert(function != nullptr);
 	LLVMJit::get().addModule(currentModule, *dylib);
-	
-	llvm::JITTargetAddress address = LLVMJit::get().getSymbolAddress(functionName.c_str(), *dylib);
-	if (address == 0)
-	{
-		return;
-	}
-
-    if (returnType == LLVMTypes::floatType)
-	{
-		float (*getResult)(void* context) = reinterpret_cast<float (*)(void*)>(address);
-		std::cout << "Result call (float): " << getResult(context) << "\n";	
-	}
-	else if (returnType == LLVMTypes::intType)
-	{
-		int (*getResult)(void* context) = reinterpret_cast<int (*)(void*)>(address);
-		std::cout << "Result call (int): " << getResult(context) << "\n";	
-	}
-	else if (returnType == LLVMTypes::boolType)
-	{
-		bool (*getResult)(void* context) = reinterpret_cast<bool (*)(void*)>(address);
-		std::cout << "Result call (bool): " << getResult(context) << "\n";	
-	}
-	else if (returnType == LLVMTypes::voidType)//QQQ base this on the AST instead of the IR
-	{
-		std::string (*getResult)(void* context) = reinterpret_cast<std::string (*)(void*)>(address);
-		std::string result = getResult(context);
-		std::cout << "Result call (string): " << result << "\n";	
-	}
-	else if (returnType == LLVMTypes::pointerType)
-	{
-		Reflectable* (*getResult)(void* context) = reinterpret_cast<Reflectable* (*)(void*)>(address);
-		std::cout << "Result call (object): " << std::hex << getResult(context) << "\n";	
-	}
+	return (intptr_t)LLVMJit::get().getSymbolAddress(functionName.c_str(), *dylib);
 }
 
 
@@ -278,6 +248,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 	CatArgumentList* arguments = functionCall->getArgumentList();
 	switch (functionCall->getFunctionType())
 	{
+		case CatBuiltInFunctionType::ToVoid:	generate(arguments->arguments[0].get(), context); return nullptr;
 		case CatBuiltInFunctionType::ToInt:		return helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::intType, context);
 		case CatBuiltInFunctionType::ToFloat:	return helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context);
 		case CatBuiltInFunctionType::ToBool:	return helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::boolType, context);
@@ -624,6 +595,13 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 }
 
 
+llvm::Value* LLVMCodeGenerator::generate(CatAssignmentOperator* assignmentOperator, LLVMCompileTimeContext* context)
+{
+	assert(assignmentOperator->getLhs()->isAssignable());
+	return generateAssign(static_cast<CatAssignableExpression*>(assignmentOperator->getLhs()), generate(assignmentOperator->getRhs(), context), context);
+}
+
+
 llvm::Value* LLVMCodeGenerator::generate(CatLiteral* literal, LLVMCompileTimeContext* context)
 {
 	CatGenericType lhsType = literal->getType();
@@ -789,6 +767,47 @@ llvm::Value* LLVMCodeGenerator::generate(CatScopeRoot* scopeRoot, LLVMCompileTim
 }
 
 
+llvm::Value* LLVMCodeGenerator::generateAssign(CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context)
+{
+	context->helper = helper.get();
+	context->currentDyLib = dylib;
+	switch (expression->getNodeType())
+	{
+		case CatASTNodeType::Identifier:	return generateAssign(static_cast<CatIdentifier*>(expression), rValue, context);
+		case CatASTNodeType::MemberAccess:	return generateAssign(static_cast<CatMemberAccess*>(expression), rValue, context);
+	}
+	assert(false);
+	return nullptr;
+}
+
+
+llvm::Value* LLVMCodeGenerator::generateAssign(CatIdentifier* identifier, llvm::Value* rValue, LLVMCompileTimeContext* context)
+{
+	CatScopeID scopeId = identifier->getScopeId();
+	llvm::Value* parentObjectAddress = getBaseAddress(scopeId, context);
+
+	const TypeMemberInfo* memberInfo = identifier->getMemberInfo();
+
+	llvm::Value* result = memberInfo->generateAssignCode(parentObjectAddress, rValue, context);
+	if (result != nullptr)
+	{
+		return result;
+	}
+	else
+	{
+		assert(false);
+		return LLVMJit::logError("ERROR: Not supported.");
+	}
+}
+
+
+llvm::Value* LLVMCodeGenerator::generateAssign(CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context)
+{
+	llvm::Value* base = generate(memberAccess->getBase(), context);
+	return memberAccess->getMemberInfo()->generateAssignCode(base, rValue, context);
+}
+
+
 llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTimeContext* context)
 {
 	llvm::Value* parentObjectAddress = nullptr;
@@ -803,7 +822,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 		assert(context->currentFunction != nullptr);
 		assert(context->currentFunction->arg_size() > 0);
 		llvm::Argument* argument = context->currentFunction->arg_begin();
-		if (context->currentFunction->arg_size() == 2)
+		if (context->currentFunction->arg_size() > 0 && context->currentFunction->hasAttribute(0, llvm::Attribute::StructRet))
 		{
 			argument = context->currentFunction->arg_begin() + 1;
 		}
@@ -816,5 +835,51 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 	}
 
 	return parentObjectAddress;
+}
+
+
+void LLVMCodeGenerator::initContext(LLVMCompileTimeContext* context)
+{
+	context->helper = helper.get();
+	context->currentDyLib = dylib;
+}
+
+
+void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
+{
+	currentModule.reset(new llvm::Module(context->catContext->getContextName(), llvmContext));
+	currentModule->setTargetTriple(LLVMJit::get().getTargetMachine().getTargetTriple().str());
+	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
+	helper->setCurrentModule(currentModule.get());
+
+}
+
+
+std::string LLVMCodeGenerator::getNextFunctionName(LLVMCompileTimeContext * context)
+{
+	return Tools::append("expression_", context->catContext->getContextName(), "_", context->catContext->getNextFunctionIndex());
+}
+
+
+llvm::Function* LLVMCodeGenerator::verifyAndOptimizeFunction(llvm::Function* function)
+{
+	if (!llvm::verifyFunction(*function, &llvm::outs()))
+	{
+		passManager->run(*function);
+		if constexpr (Configuration::dumpFunctionIR)
+		{
+			function->dump();
+		}		
+		return function;
+	}
+	else
+	{
+#ifdef _DEBUG
+		function->dump();
+#endif
+		assert(false);
+		LLVMJit::logError("Function contains errors.");
+		return nullptr;
+	}
 }
 

@@ -13,7 +13,7 @@ class ErrorToken: public ParseToken
 {
 public:
 	ErrorToken() {};
-	ErrorToken(Lexeme* lexeme_) {lexeme = lexeme_;};
+	ErrorToken(Lexeme* lexeme_) {lexeme.reset(lexeme_);};
 	virtual int getTokenID() const {return getID();};
 	virtual const char* getTokenName() const {return "Error";};
 	virtual const char* getSubTypeName(int subType) const {return getTokenName();};	

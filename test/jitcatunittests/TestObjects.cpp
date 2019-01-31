@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2018
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #include "TestObjects.h"
 #include "Tools.h"
 #include "TypeInfo.h"
@@ -51,6 +58,13 @@ ReflectedObject::ReflectedObject():
 }
 
 
+TestObjects::ReflectedObject::~ReflectedObject()
+{
+	delete nestedSelfObject;
+	delete nestedObjectPointer;
+}
+
+
 void ReflectedObject::createNestedObjects()
 {
 	nestedSelfObject = new ReflectedObject();
@@ -96,18 +110,18 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("getThisObject", &ReflectedObject::getThisObject)
 
 		.addMember("numberString", &ReflectedObject::numberString)
-		.addMember("text", &ReflectedObject::text)
-		.addMember("theInt", &ReflectedObject::theInt)
+		.addMember("text", &ReflectedObject::text, MTF_IS_WRITABLE)
+		.addMember("theInt", &ReflectedObject::theInt, MTF_IS_WRITABLE)
 		.addMember("largeInt", &ReflectedObject::largeInt)
-		.addMember("aFloat", &ReflectedObject::aFloat)
+		.addMember("aFloat", &ReflectedObject::aFloat, MTF_IS_WRITABLE)
 		.addMember("zeroFloat", &ReflectedObject::zeroFloat)
-		.addMember("aBoolean", &ReflectedObject::aBoolean)
+		.addMember("aBoolean", &ReflectedObject::aBoolean, MTF_IS_WRITABLE)
 		.addMember("no", &ReflectedObject::no)
 
-		.addMember("nestedSelfObject", &ReflectedObject::nestedSelfObject)
+		.addMember("nestedSelfObject", &ReflectedObject::nestedSelfObject, MTF_IS_WRITABLE)
 		.addMember("nullObject", &ReflectedObject::nullObject)
 		.addMember("nestedObject", &ReflectedObject::nestedObject)
-		.addMember("nestedObjectPointer", &ReflectedObject::nestedObjectPointer)
+		.addMember("nestedObjectPointer", &ReflectedObject::nestedObjectPointer, MTF_IS_WRITABLE)
 		.addMember("nestedObjectUniquePointer", &ReflectedObject::nestedObjectUniquePointer)
 
 		.addMember("reflectableObjectsVector", &ReflectedObject::reflectableObjectsVector)
