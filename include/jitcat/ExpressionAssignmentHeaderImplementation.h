@@ -77,7 +77,7 @@ inline bool ExpressionAssignment<ExpressionT>::assignInterpretedValue(CatRuntime
 	if (expressionAST != nullptr && expressionAST->isAssignable())
 	{
 		jitcat::AST::CatAssignableExpression* assignable = static_cast<jitcat::AST::CatAssignableExpression*>(expressionAST);
-		AssignableType assignableType = AssignableType::None;
+		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
 		std::any target = assignable->executeAssignable(runtimeContext, assignableType);
 		std::any anyValue = TypeTraits<ExpressionT>::getCatValue(value);
 		jitcat::AST::ASTHelper::doAssignment(target, anyValue, getExpectedCatType(), assignableType);

@@ -24,7 +24,7 @@ inline std::any TypeTraits<T>::getCatValue(const T& value)
 template <typename U>
 std::any TypeTraits<U*>::getCatValue(U* value) 
 { 
-	return static_cast<Reflectable*>(value);
+	return static_cast<Reflection::Reflectable*>(value);
 }
 
 
@@ -52,4 +52,4 @@ template <typename ItemType>
 CatGenericType TypeTraits<std::vector<ItemType>>::toGenericType() { return CatGenericType(Reflection::ContainerType::Vector, Reflection::TypeRegistry::get()->registerType<ItemType>()); }
 
 template <typename ItemType>
-CatGenericType TypeTraits<std::map<std::string, ItemType>>::toGenericType() { return CatGenericType(Reflection::ContainerType::StringMap, Reflection::TypeTraits<ItemType>::getTypeInfo()); }
+CatGenericType TypeTraits<std::map<std::string, ItemType>>::toGenericType() { return CatGenericType(Reflection::ContainerType::StringMap, TypeTraits<ItemType>::getTypeInfo()); }

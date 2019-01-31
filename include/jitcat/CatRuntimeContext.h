@@ -126,11 +126,11 @@ namespace jitcat
 	template<typename ReflectableType>
 	inline CatScopeID CatRuntimeContext::addScope(ReflectableType* scopeObject, bool isStatic)
 	{
-		static_assert(std::is_base_of<Reflectable, ReflectableType>::value, "scopeObject must inherit from Reflectable");
+		static_assert(std::is_base_of<Reflection::Reflectable, ReflectableType>::value, "scopeObject must inherit from Reflectable");
 		//scopeObject must not be nullptr if it is static
 		assert(!isStatic || scopeObject != nullptr);
-		TypeInfo* typeInfo = TypeRegistry::get()->registerType<ReflectableType>();
-		return createScope(static_cast<Reflectable*>(scopeObject), typeInfo, isStatic);
+		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ReflectableType>();
+		return createScope(static_cast<Reflection::Reflectable*>(scopeObject), typeInfo, isStatic);
 	}
 
 } //End namespace jitcat

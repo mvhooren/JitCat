@@ -29,12 +29,13 @@ namespace jitcat::Tokenizer
 
 		std::string toString() const;
 
-		friend bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const char* other);
-		friend bool operator!=(const jitcat::Tokenizer::Lexeme& lexeme, const char* other);
-		friend bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
-		friend bool operator!=(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
-
-		friend std::ostream& operator<< (std::ostream& stream, const jitcat::Tokenizer::Lexeme* lexeme);
 	};
+
+	bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const char* other);
+	bool operator!=(const jitcat::Tokenizer::Lexeme& lexeme, const char* other);
+	bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
+	bool operator!=(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
+
+	std::ostream& operator<< (std::ostream& stream, const jitcat::Tokenizer::Lexeme* lexeme);
 
 } //End namespace jitcat::Tokenizer
