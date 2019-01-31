@@ -12,7 +12,7 @@
 #include "ReflectableHandle.h"
 
 #include <cassert>
-#include "..\..\include\jitcat\ASTHelper.h"
+#include "ASTHelper.h"
 
 
 void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatTypedExpression* expression)
