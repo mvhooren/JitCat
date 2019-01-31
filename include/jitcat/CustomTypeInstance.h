@@ -48,6 +48,7 @@ public:
 
 
 #include "ASTHelper.h"
+#include "MemberInfo.h"
 #include "TypeTraits.h"
 
 template<typename MemberT>
@@ -71,7 +72,8 @@ inline bool CustomTypeInstance::setMemberValue(const std::string& memberName, co
 	if (result.has_value())
 	{
 		TypeMemberInfo* memberInfo = getMemberInfo(memberName);
-		ASTHelper::doAssignment(*result, TypeTraits<MemberT>::getCatValue(value), memberInfo->catType, type);
+		std::any anyValue = TypeTraits<MemberT>::getCatValue(value);
+		ASTHelper::doAssignment(*result, anyValue, memberInfo->catType, type);
 		return true;
 	}
 	return false;
