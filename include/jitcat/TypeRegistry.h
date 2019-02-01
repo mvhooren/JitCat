@@ -15,7 +15,9 @@ namespace jitcat
 #include "jitcat/TypeCaster.h"
 
 #include <map>
+#include <memory>
 #include <string>
+
 
 namespace jitcat::Reflection
 {
