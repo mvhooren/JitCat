@@ -24,6 +24,7 @@ TypeRegistry::TypeRegistry()
 
 TypeRegistry::~TypeRegistry()
 {
+
 }
 
 

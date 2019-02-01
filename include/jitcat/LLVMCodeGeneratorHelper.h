@@ -66,7 +66,7 @@ namespace jitcat::LLVM
 
 		void setCurrentModule(llvm::Module* module);
 
-		llvm::Value* createStringAllocA(LLVMCompileTimeContext* context, const std::string& name);
+		llvm::Value* createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool constructEmptyString);
 		void generateBlockDestructors(LLVMCompileTimeContext* context);
 
 		llvm::LLVMContext& getContext();

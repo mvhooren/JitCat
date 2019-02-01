@@ -18,16 +18,21 @@
 #include "jitcat/SLRParser.h"
 #include "jitcat/ParseToken.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeRegistry.h"
 #include "jitcat/WhitespaceToken.h"
-
+#ifdef ENABLE_LLVM
+#include "jitcat/LLVMJit.h"
+#endif
 #include <string>
 #include <vector>
 #include <iostream>
 
 using namespace jitcat;
-using namespace Grammar;
-using namespace Parser;
-using namespace Tokenizer;
+using namespace jitcat::Grammar;
+using namespace jitcat::LLVM;
+using namespace jitcat::Parser;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tokenizer;
 
 JitCat::JitCat()
 {
@@ -63,6 +68,17 @@ SLRParseResult* JitCat::parse(Document* expression, CatRuntimeContext* context) 
 	SLRParseResult* result = parser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context);
 	Tools::deleteElements(tokens);
 	return result;
+}
+
+
+void jitcat::JitCat::cleanup()
+{
+	delete instance;
+	instance = nullptr;
+	TypeRegistry::get()->recreate();
+	#ifdef ENABLE_LLVM
+		LLVMJit::get().cleanup();
+	#endif
 }
 
 

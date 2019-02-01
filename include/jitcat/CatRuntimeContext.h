@@ -99,7 +99,7 @@ namespace jitcat
 		Reflection::TypeMemberInfo* findVariable(const std::string& lowercaseName, CatScopeID& scopeId);
 		Reflection::MemberFunctionInfo* findFunction(const std::string& lowercaseName, CatScopeID& scopeId);
 
-		LLVM::LLVMCodeGenerator* getCodeGenerator() const;
+		std::shared_ptr<LLVM::LLVMCodeGenerator> getCodeGenerator();
 		int getNextFunctionIndex();
 
 	private:
@@ -117,7 +117,7 @@ namespace jitcat
 		std::vector<std::unique_ptr<Scope>> scopes;
 
 	#ifdef ENABLE_LLVM
-		std::unique_ptr<LLVM::LLVMCodeGenerator> codeGenerator;
+		std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator;
 	#endif
 		std::vector<ErrorContext*> errorContextStack;
 	};

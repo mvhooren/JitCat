@@ -31,5 +31,8 @@ namespace llvm
 	namespace orc
 	{
 		class JITDylib;
+		class RTDyldObjectLinkingLayer;
+		class IRCompileLayer;
+		class ExecutionSession;
 	};
 };

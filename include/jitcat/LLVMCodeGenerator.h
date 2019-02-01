@@ -15,6 +15,9 @@ namespace jitcat
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/CatScopeID.h"
 
+#include <llvm/ExecutionEngine/Orc/Core.h>
+#include <llvm/Support/Error.h>
+#include <llvm/Support/ErrorHandling.h>
 #include <memory>
 #include <string>
 
@@ -71,13 +74,27 @@ namespace jitcat::LLVM
 		std::string getNextFunctionName(LLVMCompileTimeContext* context);
 		llvm::Function* verifyAndOptimizeFunction(llvm::Function* function);
 
+		llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
+		llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
+
 	private:
-		llvm::LLVMContext& llvmContext;
+		//ExecutionSession represents a running JIT program
+		std::unique_ptr<llvm::orc::ExecutionSession> executionSession;
+		//A module represents a "translation unit".
 		std::unique_ptr<llvm::Module> currentModule;
+		//
 		llvm::orc::JITDylib* dylib;
 		std::unique_ptr<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>> builder;
+		//Can be used to add object files to the JIT.
+		std::unique_ptr<llvm::orc::RTDyldObjectLinkingLayer> objectLinkLayer;
+		//Mangles symbol names
+		std::unique_ptr<llvm::orc::MangleAndInterner> mangler;
+		//Takes an LLVM IR module and creates an object file that is linked into the JIT using the objectLinkLayer
+		std::unique_ptr<llvm::orc::IRCompileLayer> compileLayer;
 		std::unique_ptr<llvm::legacy::FunctionPassManager> passManager;
 		std::unique_ptr<LLVMCodeGeneratorHelper> helper;
+		//The runtime library dylib
+		llvm::orc::JITDylib* runtimeLibraryDyLib;
 	};
 
 } //End namespace jitcat::LLVM

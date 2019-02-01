@@ -26,7 +26,7 @@ CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionE
 	errorManager(errorManager),
 	ownsErrorManager(false),
 #ifdef ENABLE_LLVM
-	codeGenerator(new LLVMCodeGenerator(contextName)),
+	codeGenerator(nullptr),
 #endif
 	nextFunctionIndex(0)
 {
@@ -187,10 +187,14 @@ MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercase
 }
 
 
-LLVMCodeGenerator* CatRuntimeContext::getCodeGenerator() const
+std::shared_ptr<LLVMCodeGenerator> CatRuntimeContext::getCodeGenerator()
 {
 #ifdef ENABLE_LLVM
-	return codeGenerator.get();
+	if (codeGenerator == nullptr)
+	{
+		codeGenerator.reset(new LLVMCodeGenerator(contextName));
+	}
+	return codeGenerator;
 #else
 	return nullptr;
 #endif

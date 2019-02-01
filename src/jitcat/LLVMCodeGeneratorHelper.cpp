@@ -394,13 +394,16 @@ void LLVMCodeGeneratorHelper::setCurrentModule(llvm::Module* module)
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext* context, const std::string& name)
+llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool constructEmptyString)
 {
 	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
 	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
 	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
 	llvm::AllocaInst* stringObjectAllocation = builder->CreateAlloca(LLVMTypes::stringType, 0, nullptr);
-	createCall(context, &LLVMCatIntrinsics::stringEmptyConstruct, {stringObjectAllocation}, "stringEmptyConstruct");
+	if (constructEmptyString)
+	{
+		createCall(context, &LLVMCatIntrinsics::stringEmptyConstruct, {stringObjectAllocation}, "stringEmptyConstruct");
+	}
 	stringObjectAllocation->setName(name);
 
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
@@ -450,7 +453,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateCall(LLVMCompileTimeContext* conte
 	llvm::Value* structRetValue = nullptr;
 	if (isStructRet)
 	{
-		structRetValue = createStringAllocA(context, name + "_Result");
+		structRetValue = createStringAllocA(context, name + "_Result", false);
 		finalArguments.insert(finalArguments.begin(), structRetValue);
 	}
 	llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, functionAddress, finalArguments, name));

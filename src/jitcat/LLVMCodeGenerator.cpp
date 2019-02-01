@@ -16,6 +16,12 @@
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/MemberInfo.h"
 
+#include <llvm/ExecutionEngine/Orc/CompileUtils.h>
+#include <llvm/ExecutionEngine/Orc/Core.h>
+#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
+#include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
+#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/LegacyPassManager.h>
@@ -41,10 +47,49 @@ using namespace jitcat::Reflection;
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	currentModule(new llvm::Module("JitCat", LLVMJit::get().getContext())),
 	builder(new llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>(LLVMJit::get().getContext())),
-	llvmContext(LLVMJit::get().getContext()),
-	dylib(&LLVMJit::get().createDyLib(name)),
-	helper(new LLVMCodeGeneratorHelper(builder.get(), currentModule.get()))
+	executionSession(new llvm::orc::ExecutionSession()),
+	helper(new LLVMCodeGeneratorHelper(builder.get(), currentModule.get())),
+	mangler(new llvm::orc::MangleAndInterner(*executionSession, LLVMJit::get().getDataLayout())),
+	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession.get(),
+															[]() {	return llvm::make_unique<llvm::SectionMemoryManager>();})),
+	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(LLVMJit::get().getTargetMachineBuilder())))
 {
+	
+	llvm::orc::SymbolMap intrinsicSymbols;
+	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary", false);
+
+	llvm::JITSymbolFlags functionFlags;
+	functionFlags |= llvm::JITSymbolFlags::Callable;
+	functionFlags |= llvm::JITSymbolFlags::Exported;
+	functionFlags |= llvm::JITSymbolFlags::Absolute;
+
+	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
+	intrinsicSymbols[executionSession->intern("_fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodl), functionFlags);
+	intrinsicSymbols[executionSession->intern("sinf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinf), functionFlags);
+	intrinsicSymbols[executionSession->intern("_sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinl), functionFlags);
+	intrinsicSymbols[executionSession->intern("cosf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosf), functionFlags);
+	intrinsicSymbols[executionSession->intern("_cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosl), functionFlags);
+	intrinsicSymbols[executionSession->intern("log10f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10f), functionFlags);
+	intrinsicSymbols[executionSession->intern("_log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10l), functionFlags);
+	intrinsicSymbols[executionSession->intern("powf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powf), functionFlags);
+	intrinsicSymbols[executionSession->intern("_pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powl), functionFlags);
+	intrinsicSymbols[executionSession->intern("ceilf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceilf), functionFlags);
+	intrinsicSymbols[executionSession->intern("_ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceill), functionFlags);
+	intrinsicSymbols[executionSession->intern("floorf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorf), functionFlags);
+	intrinsicSymbols[executionSession->intern("_floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorl), functionFlags);
+	
+
+	llvm::cantFail(runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
+
+	dylib = &executionSession->createJITDylib(Tools::append(name, "_", 0), false);
+	dylib->addToSearchOrder(*runtimeLibraryDyLib, false);
+
+	if constexpr (Configuration::enableSymbolSearchWorkaround)
+	{
+		objectLinkLayer->setAutoClaimResponsibilityForObjectSymbols(true);
+		objectLinkLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+	}
+
 	std::string targetTriple = LLVMJit::get().getTargetMachine().getTargetTriple().str();
 	currentModule->setTargetTriple(targetTriple);
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
@@ -138,7 +183,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(CatTypedExpression
 	context->currentFunction = function;
 	
 	//Function entry block
-	llvm::BasicBlock* block = llvm::BasicBlock::Create(llvmContext, "entry", function);
+	llvm::BasicBlock* block = llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
 	builder->SetInsertPoint(&function->getEntryBlock());
 
 	//Generate code for the expression.
@@ -187,7 +232,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(CatAssignabl
 	context->currentFunction = function;
 
 	//Function entry block
-	llvm::BasicBlock* block = llvm::BasicBlock::Create(llvmContext, "entry", function);
+	llvm::BasicBlock* block = llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
 	builder->SetInsertPoint(&function->getEntryBlock());
 
 	//Generate the assignment expression, passing in the second function parameter.
@@ -211,8 +256,8 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(CatTypedExpression* ex
 	std::string functionName = getNextFunctionName(context);
 	llvm::Function* function = generateExpressionFunction(expression, context, functionName);
 	assert(function != nullptr);
-	LLVMJit::get().addModule(currentModule, *dylib);
-	return (intptr_t)LLVMJit::get().getSymbolAddress(functionName.c_str(), *dylib);
+	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
+	return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
 }
 
 
@@ -223,8 +268,8 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(CatAssignableExp
 	std::string functionName = getNextFunctionName(context);
 	llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
 	assert(function != nullptr);
-	LLVMJit::get().addModule(currentModule, *dylib);
-	return (intptr_t)LLVMJit::get().getSymbolAddress(functionName.c_str(), *dylib);
+	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
+	return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
 }
 
 
@@ -680,13 +725,18 @@ llvm::Value* LLVMCodeGenerator::generate(CatMemberFunctionCall* memberFunctionCa
 		}
 		else if (returnType.isStringType())
 		{
-			llvm::Value* stringObjectAllocation = compileContext->helper->createStringAllocA(compileContext, memberFunctionCall->getMemberFunctionInfo()->memberFunctionName + "_Result");
+			llvm::Value* stringObjectAllocation = compileContext->helper->createStringAllocA(compileContext, memberFunctionCall->getMemberFunctionInfo()->memberFunctionName + "_Result", context->options.enableDereferenceNullChecks);
 			auto sretTypeInsertPoint = argumentTypes.begin();
 			if (!Configuration::sretBeforeThis && callData.makeDirectCall)
 			{
 				sretTypeInsertPoint++;
 			}
 			argumentTypes.insert(sretTypeInsertPoint, LLVMTypes::stringPtrType);
+			if (context->options.enableDereferenceNullChecks)
+			{
+				//Delete the default constructed string object allocation
+				compileContext->helper->createCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");
+			}
 			llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
 			auto sretInsertPoint = argumentList.begin();
 			if (!Configuration::sretBeforeThis && callData.makeDirectCall)
@@ -819,7 +869,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 	if (context->catContext->isStaticScope(scopeId))
 	{
 		Reflectable* object = context->catContext->getScopeObject(scopeId);
-		parentObjectAddress = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
+		parentObjectAddress = llvm::ConstantInt::get(LLVMJit::get().getContext(), llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
 	}
 	else
 	{
@@ -852,7 +902,7 @@ void LLVMCodeGenerator::initContext(LLVMCompileTimeContext* context)
 
 void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
 {
-	currentModule.reset(new llvm::Module(context->catContext->getContextName(), llvmContext));
+	currentModule.reset(new llvm::Module(context->catContext->getContextName(), LLVMJit::get().getContext()));
 	currentModule->setTargetTriple(LLVMJit::get().getTargetMachine().getTargetTriple().str());
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
 	helper->setCurrentModule(currentModule.get());
@@ -886,5 +936,17 @@ llvm::Function* LLVMCodeGenerator::verifyAndOptimizeFunction(llvm::Function* fun
 		LLVMJit::logError("Function contains errors.");
 		return nullptr;
 	}
+}
+
+
+llvm::Expected<llvm::JITEvaluatedSymbol> jitcat::LLVM::LLVMCodeGenerator::findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const
+{
+	return executionSession->lookup({&dyLib}, mangler->operator()(name));
+}
+
+
+llvm::JITTargetAddress jitcat::LLVM::LLVMCodeGenerator::getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const
+{
+	return llvm::cantFail(findSymbol(name, dyLib)).getAddress();
 }
 

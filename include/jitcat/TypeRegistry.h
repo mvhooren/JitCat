@@ -60,7 +60,7 @@ namespace jitcat::Reflection
 
 	private:
 		std::map<std::string, TypeInfo*> types;
-
+		std::vector<std::unique_ptr<TypeInfo>> ownedTypes;
 		static TypeRegistry* instance;
 	};
 
@@ -80,6 +80,7 @@ namespace jitcat::Reflection
 		{
 			typeInfo = createTypeInfo(typeName, new ObjectTypeCaster<T>());
 			types[typeName] = typeInfo;
+			ownedTypes.emplace_back(typeInfo);
 			T::reflect(*typeInfo);
 			return typeInfo;
 		}

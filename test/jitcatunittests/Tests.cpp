@@ -3254,16 +3254,16 @@ TEST_CASE("Assign tests", "[assign]" )
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	const char* customTypeName = "MyType";
 	TypeRegistry::get()->removeType(customTypeName);
-	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName);
-	TypeRegistry::get()->registerType(customTypeName, customType);
+	std::unique_ptr<CustomTypeInfo> customType(new CustomTypeInfo(customTypeName));
+	TypeRegistry::get()->registerType(customTypeName, customType.get());
 	customType->addFloatMember("myFloat", 0.001f);
 	customType->addIntMember("myInt", 54321);
 	customType->addStringMember("myString", "foo");
 	customType->addBoolMember("myBoolean", true);
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
-	CustomTypeInstance* typeInstance = customType->createInstance();
-	context.addCustomTypeScope(customType, typeInstance);
+	std::unique_ptr<CustomTypeInstance> typeInstance(customType->createInstance());
+	context.addCustomTypeScope(customType.get(), typeInstance.get());
 
 
 	SECTION("Assign reflected int")
@@ -3321,27 +3321,27 @@ TEST_CASE("Assign tests", "[assign]" )
 	SECTION("Assign custom int")
 	{
 		Expression<void> testExpression(&context, "myInt = -99");
-		checkAssignmentCustom(typeInstance, "myInt", -99, false, false, false, testExpression, context);
+		checkAssignmentCustom(typeInstance.get(), "myInt", -99, false, false, false, testExpression, context);
 	}
 	SECTION("Assign custom float")
 	{
 		Expression<void> testExpression(&context, "myFloat = 11.0f");
-		checkAssignmentCustom(typeInstance, "myFloat", 11.0f, false, false, false, testExpression, context);	
+		checkAssignmentCustom(typeInstance.get(), "myFloat", 11.0f, false, false, false, testExpression, context);	
 	}
 	SECTION("Assign custom bool")
 	{
 		Expression<void> testExpression(&context, "myBoolean = false");
-		checkAssignmentCustom(typeInstance, "myBoolean", false, false, false, false, testExpression, context);		
+		checkAssignmentCustom(typeInstance.get(), "myBoolean", false, false, false, false, testExpression, context);		
 	}
 	SECTION("Assign custom string")
 	{
 		Expression<void> testExpression(&context, "myString = \"bar\"");
-		checkAssignmentCustom(typeInstance, "myString", std::string("bar"), false, false, false, testExpression, context);		
+		checkAssignmentCustom(typeInstance.get(), "myString", std::string("bar"), false, false, false, testExpression, context);		
 	}
 	SECTION("Assign custom object")
 	{
 		Expression<void> testExpression(&context, "myObject = nestedSelfObject");
-		checkAssignmentCustom(typeInstance, "myObject", (Reflectable*)reflectedObject.nestedSelfObject, false, false, false, testExpression, context);		
+		checkAssignmentCustom(typeInstance.get(), "myObject", (Reflectable*)reflectedObject.nestedSelfObject, false, false, false, testExpression, context);		
 	}
 }
 
@@ -3359,16 +3359,16 @@ TEST_CASE("Expression assign tests", "[assign][expressionassign]" )
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	const char* customTypeName = "MyType";
 	TypeRegistry::get()->removeType(customTypeName);
-	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName);
-	TypeRegistry::get()->registerType(customTypeName, customType);
+	std::unique_ptr<CustomTypeInfo> customType(new CustomTypeInfo(customTypeName));
+	TypeRegistry::get()->registerType(customTypeName, customType.get());
 	customType->addFloatMember("myFloat", 0.001f);
 	customType->addIntMember("myInt", 54321);
 	customType->addStringMember("myString", "foo");
 	customType->addBoolMember("myBoolean", true);
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
-	CustomTypeInstance* typeInstance = customType->createInstance();
-	context.addCustomTypeScope(customType, typeInstance);
+	std::unique_ptr<CustomTypeInstance> typeInstance(customType->createInstance());
+	context.addCustomTypeScope(customType.get(), typeInstance.get());
 
 
 	SECTION("Assign reflected int")
@@ -3426,27 +3426,27 @@ TEST_CASE("Expression assign tests", "[assign][expressionassign]" )
 	SECTION("Assign custom int")
 	{
 		ExpressionAssignment<int> testExpression(&context, "myInt");
-		checkAssignExpressionCustom(typeInstance, "myInt", -99, false, testExpression, context);
+		checkAssignExpressionCustom(typeInstance.get(), "myInt", -99, false, testExpression, context);
 	}
 	SECTION("Assign custom float")
 	{
 		ExpressionAssignment<float> testExpression(&context, "myFloat");
-		checkAssignExpressionCustom(typeInstance, "myFloat", 11.0f, false, testExpression, context);	
+		checkAssignExpressionCustom(typeInstance.get(), "myFloat", 11.0f, false, testExpression, context);	
 	}
 	SECTION("Assign custom bool")
 	{
 		ExpressionAssignment<bool> testExpression(&context, "myBoolean");
-		checkAssignExpressionCustom(typeInstance, "myBoolean", false, false, testExpression, context);		
+		checkAssignExpressionCustom(typeInstance.get(), "myBoolean", false, false, testExpression, context);		
 	}
 	SECTION("Assign custom string")
 	{
 		ExpressionAssignment<std::string> testExpression(&context, "myString");
-		checkAssignExpressionCustom(typeInstance, "myString", std::string("bar"), false, testExpression, context);		
+		checkAssignExpressionCustom(typeInstance.get(), "myString", std::string("bar"), false, testExpression, context);		
 	}
 	SECTION("Assign custom object")
 	{
 		ExpressionAssignment<ReflectedObject*> testExpression(&context, "myObject");
-		checkAssignExpressionCustom(typeInstance, "myObject", reflectedObject.nestedSelfObject, false, testExpression, context);		
+		checkAssignExpressionCustom(typeInstance.get(), "myObject", reflectedObject.nestedSelfObject, false, testExpression, context);		
 	}
 }
 
@@ -3853,8 +3853,8 @@ TEST_CASE("Custom Types", "[customtypes]")
 	CatGenericType genericType = CatGenericType(objectTypeInfo);
 	const char* customTypeName2 = "MyType2";
 	TypeRegistry::get()->removeType(customTypeName2);
-	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName2);
-	TypeRegistry::get()->registerType(customTypeName2, customType);
+	std::unique_ptr<CustomTypeInfo> customType(new CustomTypeInfo(customTypeName2));
+	TypeRegistry::get()->registerType(customTypeName2, customType.get());
 	customType->addFloatMember("myFloat", 0.001f);
 	customType->addIntMember("myInt", 54321);
 	customType->addStringMember("myString", "foo");
@@ -3862,12 +3862,12 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject2", objectUniquePtr.get(), objectTypeInfo);
-	CustomTypeInstance* typeInstance = customType->createInstance();
+	std::unique_ptr<CustomTypeInstance> typeInstance(customType->createInstance());
 
 	const char* customTypeName3 = "MyType3";
 	TypeRegistry::get()->removeType(customTypeName3);
-	CustomTypeInfo* customType2 = new CustomTypeInfo(customTypeName3);
-	TypeRegistry::get()->registerType(customTypeName3, customType2);
+	std::unique_ptr<CustomTypeInfo> customType2(new CustomTypeInfo(customTypeName3));
+	TypeRegistry::get()->registerType(customTypeName3, customType2.get());
 	customType2->addFloatMember("myNullFloat", 0.001f);
 	customType2->addIntMember("myNullInt", 54321);
 	customType2->addStringMember("myNullString", "foo");
@@ -3875,7 +3875,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType2->addObjectMember("myNullObject3", &reflectedObject, objectTypeInfo);
 
 	//The case where the pointer is set to null manually
-	std::any instanceAny((Reflectable*)typeInstance);
+	std::any instanceAny((Reflectable*)typeInstance.get());
 	std::any nullAny((Reflectable*)nullptr);
 	static_cast<CustomTypeObjectMemberInfo*>(typeInstance->typeInfo->getMemberInfo("myNullObject"))->assign(instanceAny, nullAny);
 	//The case where the reflectable handle is set to null through deletion of the observed object.
@@ -3883,8 +3883,8 @@ TEST_CASE("Custom Types", "[customtypes]")
 
 	CatRuntimeContext context("builtinTests_Select", &errorManager);
 	context.addScope(&reflectedObject, true);
-	context.addCustomTypeScope(customType2);
-	context.addCustomTypeScope(customType, typeInstance);
+	context.addCustomTypeScope(customType2.get());
+	context.addCustomTypeScope(customType.get(), typeInstance.get());
 
 	SECTION("Float Variable")
 	{

@@ -323,13 +323,14 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 			LLVMCompileTimeContext llvmCompileContext(context);
 			llvmCompileContext.options.enableDereferenceNullChecks = true;
 			intptr_t functionAddress = 0;
+			codeGenerator = context->getCodeGenerator();
 			if (!expectAssignable)
 			{
-				functionAddress = context->getCodeGenerator()->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+				functionAddress = codeGenerator->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
 			}
 			else if (expressionAST->isAssignable())
 			{
-				functionAddress = context->getCodeGenerator()->generateAndGetAssignFunctionAddress(static_cast<CatAssignableExpression*>(expressionAST), &llvmCompileContext);
+				functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(static_cast<CatAssignableExpression*>(expressionAST), &llvmCompileContext);
 			}
 			if (functionAddress != 0)
 			{

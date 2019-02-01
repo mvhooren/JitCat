@@ -33,7 +33,9 @@ namespace jitcat
 	public:
 		static JitCat* get();
 		Parser::SLRParseResult* parse(Tokenizer::Document* expression, CatRuntimeContext* context) const;
-	
+		
+		static void cleanup();
+
 	private:
 		static JitCat* instance;
 

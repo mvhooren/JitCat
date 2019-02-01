@@ -21,6 +21,10 @@ namespace jitcat
 	{
 		struct SLRParseResult;	
 	}
+	namespace LLVM
+	{
+		class LLVMCodeGenerator;
+	}
 
 
 	//This class serves as the base class to Expression<T>, ExpressionAny and ExpressionAssignment, implementing shared functionality.
@@ -69,6 +73,9 @@ namespace jitcat
 		std::string expression;
 		CatGenericType valueType;
 		std::unique_ptr<Parser::SLRParseResult> parseResult;
+#ifdef ENABLE_LLVM
+		std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator;
+#endif
 
 		bool expressionIsLiteral;
 		bool isConstant;
