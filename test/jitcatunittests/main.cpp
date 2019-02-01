@@ -18,7 +18,7 @@ int main( int argc, char* argv[] )
 {
 	int result = Catch::Session().run( argc, argv );
 
-	jitcat::JitCat::get()->cleanup();
+	jitcat::JitCat::get()->destroy();
 
 	return result;
 }

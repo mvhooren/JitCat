@@ -71,7 +71,7 @@ SLRParseResult* JitCat::parse(Document* expression, CatRuntimeContext* context) 
 }
 
 
-void jitcat::JitCat::cleanup()
+void jitcat::JitCat::destroy()
 {
 	delete instance;
 	instance = nullptr;

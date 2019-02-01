@@ -34,7 +34,10 @@ namespace jitcat
 		static JitCat* get();
 		Parser::SLRParseResult* parse(Tokenizer::Document* expression, CatRuntimeContext* context) const;
 		
-		static void cleanup();
+		//This will clean up as much memory as possible, library features will be broken after this is called.
+		//The type registry will be cleared.
+		//Memory used by native code generation (LLVM) will also be destroyed. 
+		static void destroy();
 
 	private:
 		static JitCat* instance;
