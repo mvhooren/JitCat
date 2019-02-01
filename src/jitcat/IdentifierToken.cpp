@@ -5,16 +5,18 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "IdentifierToken.h"
-#include "Document.h"
-#include "Lexeme.h"
-#include "ParseHelper.h"
+#include "jitcat/IdentifierToken.h"
+#include "jitcat/Document.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/ParseHelper.h"
+
+using namespace jitcat::Tokenizer;
 
 
 IdentifierToken::IdentifierToken(Lexeme* lexeme_, Identifier subType):
 	subType(subType)
 {
-	lexeme = lexeme_;
+	lexeme.reset(lexeme_);
 }
 
 

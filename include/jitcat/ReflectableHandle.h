@@ -7,21 +7,31 @@
 
 #pragma once
 
-
-class Reflectable;
-
-
-class ReflectableHandle
+namespace jitcat::Reflection
 {
-public:
-	ReflectableHandle(Reflectable* reflectable);
-	virtual ~ReflectableHandle();
-	//Returns nullptr if reflectable is deleted
-	Reflectable* get() const;
-	bool getIsValid() const;
+	class Reflectable;
 
-	void notifyDeletion();
 
-private:
-	Reflectable* reflectable;
-};
+	class ReflectableHandle
+	{
+	public:
+		ReflectableHandle();
+		ReflectableHandle(Reflectable* reflectable);
+		ReflectableHandle(const ReflectableHandle& other);
+		virtual ~ReflectableHandle();
+		//Returns nullptr if reflectable is deleted
+		Reflectable* get() const;
+		bool getIsValid() const;
+		ReflectableHandle& operator=(const ReflectableHandle& other);
+		ReflectableHandle& operator=(Reflectable* other);
+
+		void notifyDeletion();
+
+		static Reflectable* staticGet(const ReflectableHandle& handle);
+		static void staticAssign(ReflectableHandle& handle, Reflectable* reflectable);
+
+	private:
+		Reflectable* reflectable;
+	};
+
+} //End namespace jitcat::Reflection

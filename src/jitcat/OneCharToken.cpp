@@ -5,10 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "OneCharToken.h"
-#include "Document.h"
-#include "Lexeme.h"
+#include "jitcat/OneCharToken.h"
+#include "jitcat/Document.h"
+#include "jitcat/Lexeme.h"
 
+using namespace jitcat::Tokenizer;
 
 OneCharToken::OneCharToken():
 subType(OneChar::Unknown)
@@ -19,7 +20,7 @@ subType(OneChar::Unknown)
 OneCharToken::OneCharToken(Lexeme* lexeme_, OneChar subType):
 subType((OneChar)subType)
 {
-	lexeme = lexeme_;
+	lexeme.reset(lexeme_);
 }
 
 

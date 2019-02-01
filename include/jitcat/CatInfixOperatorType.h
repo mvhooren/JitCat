@@ -7,10 +7,11 @@
 
 #pragma once
 
+namespace jitcat::AST
+{
 
 enum class CatInfixOperatorType
 {
-	Assign,
 	Plus,
 	Minus,
 	Multiply,
@@ -29,3 +30,5 @@ enum class CatInfixOperatorType
 
 
 const char* toString(CatInfixOperatorType infixOperator);
+
+} //End namespace jitcat::AST

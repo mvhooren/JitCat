@@ -5,10 +5,30 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatLiteral.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
+
+
+void CatLiteral::print() const
+{
+	if (type.isIntType())			CatLog::log(std::any_cast<int>(value));
+	else if (type.isFloatType())	CatLog::log(std::any_cast<float>(value));
+	else if (type.isBoolType())		CatLog::log(std::any_cast<bool>(value));
+	else if (type.isStringType())	CatLog::log(std::any_cast<std::string>(value));
+}
 
 
 CatGenericType CatLiteral::typeCheck()
 {
-	return getGenericType();
+	return type;
+}
+
+
+const std::any& CatLiteral::getValue() const
+{
+	return value;
 }

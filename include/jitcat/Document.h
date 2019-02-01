@@ -9,14 +9,19 @@
 
 #include <cstddef>
 
-class Document
+namespace jitcat::Tokenizer
 {
-public: 
-	Document(const char* fileData, std::size_t fileSize);
-	~Document();
-	const char* getDocumentData() const;
-	std::size_t getDocumentSize() const;
-private:
-	char* data;
-	std::size_t size;
-};
+
+	class Document
+	{
+	public: 
+		Document(const char* fileData, std::size_t fileSize);
+		~Document();
+		const char* getDocumentData() const;
+		std::size_t getDocumentSize() const;
+	private:
+		char* data;
+		std::size_t size;
+	};
+
+} //End namespace jitcat::Tokenizer

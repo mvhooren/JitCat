@@ -7,34 +7,38 @@
 
 #pragma once
 
-class TypeInfo;
-#include "CatGenericType.h"
+#include "jitcat/CatGenericType.h"
 
 #include <fstream>
 #include <map>
 #include <vector>
 
 
-enum class XMLLineType
+namespace jitcat::Reflection
 {
-	OpenTag,
-	CloseTag,
-	SelfClosingTag,
-	OpenCloseWithContent,
-	Error
-};
+	class TypeInfo;
 
-class XMLHelper
-{
-public:
-	static std::string readXMLLine(std::ifstream& xmlFile, XMLLineType& tagType, std::string& contents);
-	static bool readMember(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos);
-	static bool readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos);
-	static TypeInfo* findOrCreateTypeInfo(const std::string& typeName, std::map<std::string, TypeInfo*>& typeInfos);
 
-private:
-	static bool readGenericType(std::ifstream& xmlFile, const std::string& closingTag, CatGenericType& type, std::map<std::string, TypeInfo*>& typeInfos);
+	enum class XMLLineType
+	{
+		OpenTag,
+		CloseTag,
+		SelfClosingTag,
+		OpenCloseWithContent,
+		Error
+	};
+		
 
-private:
-	static std::vector<const char*> staticNames;
-};
+	class XMLHelper
+	{
+	public:
+		static std::string readXMLLine(std::ifstream& xmlFile, XMLLineType& tagType, std::string& contents);
+		static bool readMember(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos);
+		static bool readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos);
+		static TypeInfo* findOrCreateTypeInfo(const std::string& typeName, std::map<std::string, TypeInfo*>& typeInfos);
+
+	private:
+		static std::vector<const char*> staticNames;
+	};
+
+} //End namespace jitcat::Reflection

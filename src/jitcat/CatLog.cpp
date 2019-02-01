@@ -5,7 +5,9 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatLog.h"
+#include "jitcat/CatLog.h"
+
+using namespace jitcat::Tools;
 
 
 void CatLog::log(const char* message)

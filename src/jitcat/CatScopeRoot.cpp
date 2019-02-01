@@ -5,28 +5,17 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatScopeRoot.h"
-#include "CatRuntimeContext.h"
+#include "jitcat/CatScopeRoot.h"
+#include "jitcat/CatRuntimeContext.h"
+
+using namespace jitcat;
+using namespace jitcat::AST;
 
 
-CatScopeRoot::CatScopeRoot(RootTypeSource source, CatRuntimeContext* context):
-	source(source)
+CatScopeRoot::CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context):
+	scopeId(scopeId)
 {
-	switch (source)
-	{
-		case RootTypeSource::Global:
-			type = CatGenericType(context->getGlobalType());
-			break;
-		case RootTypeSource::This:
-			type = CatGenericType(context->getThisType());
-			break;
-		case RootTypeSource::CustomThis:
-			type = CatGenericType(context->getCustomThisType());
-			break;
-		case RootTypeSource::CustomGlobals:
-			type = CatGenericType(context->getCustomGlobalsType());
-			break;
-	}
+	type = context->getScopeType(scopeId);
 }
 
 
@@ -41,9 +30,9 @@ CatASTNodeType CatScopeRoot::getNodeType()
 }
 
 
-CatValue CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
+std::any CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
 {
-	return runtimeContext->getRootReference(source);
+	return runtimeContext->getScopeObject(scopeId);
 }
 
 
@@ -75,4 +64,10 @@ bool CatScopeRoot::isConst() const
 CatTypedExpression* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeContext)
 {
 	return this;
+}
+
+
+CatScopeID CatScopeRoot::getScopeId() const
+{
+	return scopeId;
 }

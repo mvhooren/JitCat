@@ -7,28 +7,41 @@
 
 #pragma once
 
-struct TypeMemberInfo;
-#include "CatTypedExpression.h"
-
-#include <memory>
-
-
-class CatMemberAccess: public CatTypedExpression
+namespace jitcat::Reflection
 {
-public:
-	CatMemberAccess(CatTypedExpression* base, const std::string& memberName);
-	CatMemberAccess(const CatMemberAccess&) = delete;
-	virtual void print() const override final;
-	virtual CatASTNodeType getNodeType() override final;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
-	virtual CatGenericType typeCheck() override final;
-	virtual CatGenericType getType() const override final;
-	virtual bool isConst() const override final;
-	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+	struct TypeMemberInfo;
+}
+#include "jitcat/CatAssignableExpression.h"
 
-private:
-	std::unique_ptr<CatTypedExpression> base;
-	TypeMemberInfo* memberInfo;
-	CatGenericType type;
-	const std::string memberName;
-};
+#include <any>
+#include <memory>
+#include <string>
+
+namespace jitcat::AST
+{
+
+	class CatMemberAccess: public CatAssignableExpression
+	{
+	public:
+		CatMemberAccess(CatTypedExpression* base, const std::string& memberName);
+		CatMemberAccess(const CatMemberAccess&) = delete;
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() override final;
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, Reflection::AssignableType& assignableType) override final;
+		virtual CatGenericType typeCheck() override final;
+		virtual CatGenericType getType() const override final;
+		virtual bool isConst() const override final;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+
+		CatTypedExpression* getBase() const;
+		Reflection::TypeMemberInfo* getMemberInfo() const;
+
+	private:
+		std::unique_ptr<CatTypedExpression> base;
+		Reflection::TypeMemberInfo* memberInfo;
+		CatGenericType type;
+		const std::string memberName;
+	};
+
+} //End namespace jitcat::AST

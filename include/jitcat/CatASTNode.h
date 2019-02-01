@@ -7,13 +7,19 @@
 
 #pragma once
 
-#include "ASTNode.h"
-#include "CatASTNodeType.h"
+#include "jitcat/ASTNode.h"
+#include "jitcat/CatASTNodeType.h"
 
-
-class CatASTNode: public ASTNode
+namespace jitcat::AST
 {
-public:
-	virtual void print() const = 0;
-	virtual CatASTNodeType getNodeType() = 0;
-};
+
+
+	class CatASTNode: public ASTNode
+	{
+	public:
+		virtual void print() const = 0;
+		virtual CatASTNodeType getNodeType() = 0;
+	};
+
+
+} //End namespace jitcat::AST

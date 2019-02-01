@@ -7,13 +7,17 @@
 
 #pragma once
 
-enum class ConstantType
+namespace jitcat::Tokenizer
 {
-	Integer,
-	FloatingPoint,
-	String,
-	Char,
-	Bool,
-	NoType
-};
 
+	enum class ConstantType
+	{
+		Integer,
+		FloatingPoint,
+		String,
+		Char,
+		Bool,
+		NoType
+	};
+
+} //End namespace jitcat::Tokenizer

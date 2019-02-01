@@ -7,148 +7,124 @@
 
 #pragma once
 
-#include "CatRuntimeContext.h"
 
-#include <string>
-#include <sstream>
-
-
-inline CatValue CatInfixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
+inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
 {
-	CatExpression* lExpression= static_cast<CatExpression*>(lhs.get());
-	CatExpression* rExpression = static_cast<CatExpression*>(rhs.get());
-
 	//Optimization to prevent always calculating both sides of an && or an ||
 	if (oper == CatInfixOperatorType::LogicalAnd || oper == CatInfixOperatorType::LogicalOr)
 	{
-		CatValue lValue = lExpression->execute(runtimeContext);
-		CatType lType = lValue.getValueType();
-		if (lType == CatType::Error)
-		{
-			return CatValue(lValue.getErrorValue());
-		}
+		std::any lValue = lhs->execute(runtimeContext);
 		//If lValue is true and oper is || then result is true
 		//If lValue is false and oper is && then result is false
-		if (lValue.getBoolValue() == (oper == CatInfixOperatorType::LogicalOr))
+		if (std::any_cast<bool>(lValue) == (oper == CatInfixOperatorType::LogicalOr))
 		{
 			return lValue;
 		}
 		else
 		{
-			CatValue rValue = rExpression->execute(runtimeContext);
-			CatType rType = rValue.getValueType();
-			if (rType == CatType::Error)
-			{
-				return CatValue(rValue.getErrorValue());
-			}
+			std::any rValue = rhs->execute(runtimeContext);
 			if (oper == CatInfixOperatorType::LogicalAnd)
 			{
-				return CatValue(lValue.getBoolValue() && rValue.getBoolValue());
+				return std::any(std::any_cast<bool>(lValue) && std::any_cast<bool>(rValue));
 			}
 			else
 			{
-				return CatValue(lValue.getBoolValue() || rValue.getBoolValue());
+				return std::any(std::any_cast<bool>(lValue) || std::any_cast<bool>(rValue));
 			}
 		}
 	}
 	else
 	{
 
-		CatValue lValue = lExpression->execute(runtimeContext);
-		CatValue rValue = rExpression->execute(runtimeContext);
-		CatType lType = lValue.getValueType();
-		CatType rType = rValue.getValueType();
-		if (rType == CatType::Error)
+		std::any lValue = lhs->execute(runtimeContext);
+		std::any rValue = rhs->execute(runtimeContext);
+		CatGenericType lType = lhs->getType();
+		CatGenericType rType = rhs->getType();
+		if (lType.isFloatType())
 		{
-			return CatValue(rValue.getErrorValue());
+			if		(rType.isIntType())		return calculateScalarExpression<float, int, float>(std::any_cast<float>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())	return calculateScalarExpression<float, float, float>(std::any_cast<float>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isStringType())  return calculateStringExpression<float, std::string>(std::any_cast<float>(lValue), std::any_cast<std::string>(rValue));
 		}
-		bool allowDivisionByZero = runtimeContext == nullptr || !runtimeContext->isRunTimeContext();
-		switch (lType)
+		else if (lType.isIntType())
 		{
-			case CatType::Error:			return CatValue(lValue.getErrorValue());
-			case CatType::Float:
-				switch (rType)
-				{
-					case CatType::Int:		return calculateScalarExpression<float, int, float>(lValue.getFloatValue(), rValue.getIntValue(), allowDivisionByZero);
-					case CatType::Float:	return calculateScalarExpression<float, float, float>(lValue.getFloatValue(), rValue.getFloatValue(), allowDivisionByZero);
-					case CatType::String:	return calculateStringExpression<float, std::string>(lValue.getFloatValue(), rValue.getStringValue());
-				}
-				break;
-			case CatType::Int:
-				switch (rType)
-				{
-					case CatType::Int:		return calculateScalarExpression<int, int, int>(lValue.getIntValue(), rValue.getIntValue(), allowDivisionByZero);
-					case CatType::Float:	return calculateScalarExpression<int, float, float>(lValue.getIntValue(), rValue.getFloatValue(), allowDivisionByZero);
-					case CatType::String:	return calculateStringExpression<int, std::string>(lValue.getIntValue(), rValue.getStringValue());
-				}
-				break;
-			case CatType::String:
-				switch (rType)
-				{
-					case CatType::Int:		return calculateStringExpression<std::string, int>(lValue.getStringValue(), rValue.getIntValue());
-					case CatType::Float:	return calculateStringExpression<std::string, float>(lValue.getStringValue(), rValue.getFloatValue());
-					case CatType::String:	return calculateStringExpression(lValue.getStringValue(), rValue.getStringValue());
-					case CatType::Bool:	return calculateStringExpression(lValue.getStringValue(), rValue.getBoolValue());
-				}
-				break;
-			case CatType::Bool:
-				switch (rType)
-				{
-					case CatType::Bool:	return calculateBooleanExpression(lValue.getBoolValue(), rValue.getBoolValue());
-					case CatType::String:	return calculateStringExpression(lValue.getBoolValue(), rValue.getStringValue());
-				}
-				break;
+			if		(rType.isIntType())		return calculateScalarExpression<int, int, int>(std::any_cast<int>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())	return calculateScalarExpression<int, float, float>(std::any_cast<int>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isStringType())  return calculateStringExpression<int, std::string>(std::any_cast<int>(lValue), std::any_cast<std::string>(rValue));
 		}
-		return CatValue(CatError(std::string("Invalid operation: ") + toString(lType) + " " + toString(oper) + " " + toString(rType)));
+		else if (lType.isStringType())
+		{
+			if		(rType.isIntType())		return calculateStringExpression<std::string, int>(std::any_cast<std::string>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())	return calculateStringExpression<std::string, float>(std::any_cast<std::string>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isStringType())  return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<std::string>(rValue));
+			else if (rType.isBoolType())	return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<bool>(rValue));
+		}
+		else if (lType.isBoolType())
+		{
+			if		(rType.isBoolType())	return calculateBooleanExpression(std::any_cast<bool>(lValue), std::any_cast<bool>(rValue));
+			else if (rType.isStringType())	return calculateStringExpression(std::any_cast<bool>(lValue), std::any_cast<std::string>(rValue));
+		}
+		assert(false);
+		return std::any();
 	}
 }
 
 
 template<typename T, typename U, typename V>
-inline CatValue CatInfixOperator::calculateScalarExpression(const T& lValue, const U& rValue, bool allowDivideByZero)
+inline std::any CatInfixOperator::calculateScalarExpression(const T& lValue, const U& rValue)
 {
 	switch (oper)
 	{
-		case CatInfixOperatorType::Plus:			return CatValue((V)lValue + (V)rValue);
-		case CatInfixOperatorType::Minus:			return CatValue((V)lValue - (V)rValue);
-		case CatInfixOperatorType::Multiply:		return CatValue((V)lValue * (V)rValue);
-		case CatInfixOperatorType::Greater:			return CatValue(lValue > rValue);
-		case CatInfixOperatorType::Smaller:			return CatValue(lValue < rValue);
-		case CatInfixOperatorType::GreaterOrEqual:	return CatValue(lValue >= rValue);
-		case CatInfixOperatorType::SmallerOrEqual:	return CatValue(lValue <= rValue);
-		case CatInfixOperatorType::Equals:			return CatValue(lValue == rValue);
-		case CatInfixOperatorType::NotEquals:		return CatValue(lValue != rValue);
+		case CatInfixOperatorType::Plus:			return std::any((V)lValue + (V)rValue);
+		case CatInfixOperatorType::Minus:			return std::any((V)lValue - (V)rValue);
+		case CatInfixOperatorType::Multiply:		return std::any((V)lValue * (V)rValue);
+		case CatInfixOperatorType::Greater:			return std::any(lValue > rValue);
+		case CatInfixOperatorType::Smaller:			return std::any(lValue < rValue);
+		case CatInfixOperatorType::GreaterOrEqual:	return std::any(lValue >= rValue);
+		case CatInfixOperatorType::SmallerOrEqual:	return std::any(lValue <= rValue);
+		case CatInfixOperatorType::Equals:			return std::any(lValue == rValue);
+		case CatInfixOperatorType::NotEquals:		return std::any(lValue != rValue);
 		case CatInfixOperatorType::Divide:
 			if (rValue != 0)
 			{
-				return CatValue((V)lValue / (V)rValue);
+				return std::any((V)lValue / (V)rValue);
 			}
-			else if (allowDivideByZero)
+			else 
 			{
-				return CatValue((V)0);
-			}
-			else
-			{
-				return CatValue(CatError("Division by zero."));
+				return std::any((V)0);
 			}
 		case CatInfixOperatorType::Modulo:
-			if ((int)rValue != 0)
+			if constexpr (std::is_same<T, float>::value || std::is_same<U, float>::value)
 			{
-				return CatValue((int)lValue % (int)rValue);
+				if ((float)rValue != 0)
+				{
+					return std::any((float)fmodf((float)lValue, (float)rValue));
+				}
+				else
+				{
+					return std::any(0.0f);
+				}
 			}
 			else
 			{
-				return lValue;
+				if ((int)rValue != 0)
+				{
+					return std::any((int)lValue % (int)rValue);
+				}
+				else
+				{
+					return std::any(0);
+				}
 			}
 	}
-	return CatValue(CatError(std::string("Invalid operation: ") + lhs->getType().toString() + " " + toString(oper) + " " + rhs->getType().toString()));
+	assert(false);
+	return std::any(V());
 }
 
 
 template<typename T, typename U>
-inline CatValue CatInfixOperator::calculateStringExpression(const T& lValue, const U& rValue)
+inline std::any CatInfixOperator::calculateStringExpression(const T& lValue, const U& rValue)
 {
-
 	switch (oper)
 	{
 		case CatInfixOperatorType::Plus:
@@ -156,33 +132,36 @@ inline CatValue CatInfixOperator::calculateStringExpression(const T& lValue, con
 			std::stringstream stream;
 			stream << lValue;
 			stream << rValue;
-			return CatValue(stream.str());
+			return std::any(stream.str());
 		}
 	}
-	return CatValue(CatError(std::string("Invalid operation: ") + lhs->getType().toString() + " " + toString(oper) + " " + rhs->getType().toString()));
+	assert(false);
+	return std::any(std::string());
 }
 
 
-inline CatValue CatInfixOperator::calculateStringExpression(const std::string& lValue, const std::string& rValue)
+inline std::any CatInfixOperator::calculateStringExpression(const std::string& lValue, const std::string& rValue)
 {
 	switch (oper)
 	{
-		case CatInfixOperatorType::Plus:		return CatValue(lValue + rValue);
-		case CatInfixOperatorType::Equals:		return CatValue(lValue == rValue);
-		case CatInfixOperatorType::NotEquals:	return CatValue(lValue != rValue);
+		case CatInfixOperatorType::Plus:		return std::any(lValue + rValue);
+		case CatInfixOperatorType::Equals:		return std::any(lValue == rValue);
+		case CatInfixOperatorType::NotEquals:	return std::any(lValue != rValue);
 	}
-	return CatValue(CatError(std::string("Invalid operation: ") + lhs->getType().toString() + " " + toString(oper) + " " + rhs->getType().toString()));
+	assert(false);
+	return std::any(std::string());
 }
 
 
-inline CatValue CatInfixOperator::calculateBooleanExpression(bool lValue, bool rValue)
+inline std::any CatInfixOperator::calculateBooleanExpression(bool lValue, bool rValue)
 {
 	switch (oper)
 	{
-		case CatInfixOperatorType::Equals:		return CatValue(lValue == rValue);
-		case CatInfixOperatorType::NotEquals:	return CatValue(lValue != rValue);
-		case CatInfixOperatorType::LogicalAnd:	return CatValue(lValue && rValue);
-		case CatInfixOperatorType::LogicalOr:	return CatValue(lValue || rValue);
+		case CatInfixOperatorType::Equals:		return std::any(lValue == rValue);
+		case CatInfixOperatorType::NotEquals:	return std::any(lValue != rValue);
+		case CatInfixOperatorType::LogicalAnd:	return std::any(lValue && rValue);
+		case CatInfixOperatorType::LogicalOr:	return std::any(lValue || rValue);
 	}
-	return CatValue(CatError(std::string("Invalid operation: ") + lhs->getType().toString() + " " + toString(oper) + " " + rhs->getType().toString()));
+	assert(false);
+	return std::any(false);
 }

@@ -8,29 +8,42 @@
 #pragma once
 
 #include <vector>
-#include "Grammar.h"
-class ASTNode;
-class ASTNodeParser;
-class Production;
-class ProductionToken;
-class ProductionTokenSet;
+#include "jitcat/GrammarBase.h"
 
-
-class ProductionRule
+namespace jitcat
 {
-public:
-	ProductionRule();
-	~ProductionRule();
-	void pushToken(ProductionToken* token);
-	void setSemanticAction(Grammar::SemanticAction action);
-	ASTNode* executeSemanticAction(const ASTNodeParser& nodeParser) const;
-	bool buildEpsilonContainment(std::vector<Production*>& productionStack);
-	void buildFirstSet(ProductionTokenSet* set);
-	void buildFollowSets(Production* parentProduction);
-	std::size_t getNumTokens() const;
-	ProductionToken* getToken(unsigned int index) const;
-private:
-	std::vector<ProductionToken*> ruleTokens;
+	namespace AST
+	{
+		class ASTNode;
+	}
+	namespace Parser
+	{
+		class ASTNodeParser;
+	}
+	namespace Grammar
+	{
+		class Production;
+		class ProductionToken;
+		class ProductionTokenSet;
 
-	Grammar::SemanticAction semanticAction;
-};
+		class ProductionRule
+		{
+		public:
+			ProductionRule();
+			~ProductionRule();
+			void pushToken(ProductionToken* token);
+			void setSemanticAction(GrammarBase::SemanticAction action);
+			AST::ASTNode* executeSemanticAction(const Parser::ASTNodeParser& nodeParser) const;
+			bool buildEpsilonContainment(std::vector<Production*>& productionStack);
+			void buildFirstSet(ProductionTokenSet* set);
+			void buildFollowSets(Production* parentProduction);
+			std::size_t getNumTokens() const;
+			ProductionToken* getToken(unsigned int index) const;
+		private:
+			std::vector<ProductionToken*> ruleTokens;
+
+			GrammarBase::SemanticAction semanticAction;
+		};
+
+	} //End namespace Grammar
+} //End namespace jitcat

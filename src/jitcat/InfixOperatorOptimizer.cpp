@@ -5,10 +5,12 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "InfixOperatorOptimizer.h"
-#include "CatTypedExpression.h"
-#include "CatLiteral.h"
+#include "jitcat/InfixOperatorOptimizer.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/CatLiteral.h"
 
+using namespace jitcat::AST;
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique_ptr<CatTypedExpression>& lhs, 
 																	 std::unique_ptr<CatTypedExpression>& rhs, 
@@ -80,7 +82,14 @@ bool InfixOperatorOptimizer::typedExpressionEqualsConstant(CatTypedExpression* e
 	if (expression->getNodeType() == CatASTNodeType::Literal)
 	{
 		CatLiteral* literalExpression = static_cast<CatLiteral*>(expression);
-		return literalExpression->toFloatValue() == constant;
+		if (literalExpression->getType().isScalarType())
+		{
+			return CatGenericType::convertToFloat(literalExpression->getValue(), literalExpression->getType()) == constant;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	else
 	{
@@ -94,10 +103,10 @@ bool InfixOperatorOptimizer::typedExpressionEqualsConstant(CatTypedExpression* e
 	if (expression->getNodeType() == CatASTNodeType::Literal)
 	{
 		CatLiteral* literalExpression = static_cast<CatLiteral*>(expression);
-		return literalExpression->toBoolValue() == constant;
+		if (literalExpression->getType().isBoolType())
+		{
+			return std::any_cast<bool>(literalExpression->getValue()) == constant;
+		}
 	}
-	else
-	{
-		return false;
-	}
+	return false;
 }

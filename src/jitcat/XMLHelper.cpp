@@ -5,16 +5,18 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "XMLHelper.h"
-#include "TypeInfo.h"
-#include "MemberInfo.h"
-#include "MemberFunctionInfo.h"
+#include "jitcat/XMLHelper.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/MemberFunctionInfo.h"
 
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
+
+using namespace jitcat::Reflection;
 
 std::string XMLHelper::readXMLLine(std::ifstream& xmlFile, XMLLineType& tagType, std::string& contents)
 {
@@ -87,107 +89,20 @@ std::string XMLHelper::readXMLLine(std::ifstream& xmlFile, XMLLineType& tagType,
 
 bool XMLHelper::readMember(std::ifstream& xmlFile, TypeInfo* currentTypeInfo, std::map<std::string, TypeInfo*>& typeInfos)
 {
-	SpecificMemberType currentSpecificMemberType = SpecificMemberType::None;
-	CatType currentMemberBasicType = CatType::Unknown;
-	ContainerType currentMemberContainerType = ContainerType::None;
-	std::string currentMemberContainerItemTypename = "";
-	std::string currentMemberObjectTypeName = "";
 	std::string currentMemberName = "";
-	bool currentMemberIsConst = false;
-	bool currentMemberIsWritable = false;
-	while (true)
+	CatGenericType currentMemberType;
+	XMLLineType tagType;
+	std::string contents;
+	std::string tagName = XMLHelper::readXMLLine(xmlFile, tagType, contents);
+	if (tagType == XMLLineType::OpenCloseWithContent)
 	{
-		XMLLineType tagType;
-		std::string contents;
-		std::string tagName = XMLHelper::readXMLLine(xmlFile, tagType, contents);
-		if (tagType == XMLLineType::OpenCloseWithContent)
+		if (tagName == "Name")
 		{
-			if (tagName == "Name")
+			currentMemberName = contents;
+			currentMemberType = CatGenericType::readFromXML(xmlFile, "Member", typeInfos);
+			if (currentMemberName != "" && currentMemberType.isValidType())
 			{
-				currentMemberName = contents;
-			}
-			else if (tagName == "Type")
-			{
-				currentSpecificMemberType = toSpecificMemberType(contents.c_str());
-			}
-			else if (tagName == "BasicType")
-			{
-				currentMemberBasicType = toCatType(contents.c_str());
-			}
-			else if (tagName == "ContainerType")
-			{
-				currentMemberContainerType = toContainerType(contents.c_str());
-			}
-			else if (tagName == "ContainerItemTypeName")
-			{
-				currentMemberContainerItemTypename = contents;
-			}
-			else if (tagName == "ObjectTypeName")
-			{
-				currentMemberObjectTypeName = contents;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else if (tagType == XMLLineType::SelfClosingTag)
-		{
-			if (tagName == "const")
-			{
-				currentMemberIsConst = true;
-			}
-			else if (tagName == "writable")
-			{
-				currentMemberIsWritable = true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else if (tagType == XMLLineType::CloseTag && tagName == "Member")
-		{
-			if (currentMemberName != "")
-			{
-				switch (currentSpecificMemberType)
-				{
-					case SpecificMemberType::CatType:
-						if (currentMemberBasicType != CatType::Unknown)
-						{
-							currentTypeInfo->addDeserializedMember(new TypeMemberInfo(currentMemberName, currentMemberBasicType, currentMemberIsConst, currentMemberIsWritable));
-						}
-						else
-						{
-							return false;
-						}
-						break;
-					case SpecificMemberType::ContainerType:
-						if (currentMemberContainerType != ContainerType::None
-							&& currentMemberContainerItemTypename != "")
-						{
-							TypeInfo* itemType = findOrCreateTypeInfo(currentMemberContainerItemTypename, typeInfos);
-							currentTypeInfo->addDeserializedMember(new TypeMemberInfo(currentMemberName, currentMemberContainerType, itemType, currentMemberIsConst, currentMemberIsWritable));
-						}
-						else
-						{
-							return false;
-						}
-						break;
-					case SpecificMemberType::NestedType:
-						if (currentMemberObjectTypeName != "")
-						{
-							TypeInfo* objectType = findOrCreateTypeInfo(currentMemberObjectTypeName, typeInfos);
-							currentTypeInfo->addDeserializedMember(new TypeMemberInfo(currentMemberName, objectType, currentMemberIsConst, currentMemberIsWritable));
-						}
-						else
-						{
-							return false;
-						}
-						break;
-					default:
-						return false;
-				}
+				currentTypeInfo->addDeserializedMember(new TypeMemberInfo(currentMemberName, currentMemberType));
 				return true;
 			}
 			else
@@ -195,11 +110,8 @@ bool XMLHelper::readMember(std::ifstream& xmlFile, TypeInfo* currentTypeInfo, st
 				return false;
 			}
 		}
-		else
-		{
-			return false;
-		}
 	}
+	return false;
 }
 
 
@@ -239,8 +151,12 @@ bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType
 		{
 			if (tagName == "ReturnType")
 			{
-				CatGenericType returnType;
-				if (functionInfo == nullptr && readGenericType(xmlFile, "ReturnType", returnType, typeInfos))
+				if (functionInfo != nullptr)
+				{
+					return false;
+				}
+				CatGenericType returnType = CatGenericType::readFromXML(xmlFile, "ReturnType", typeInfos);
+				if (returnType.isValidType())
 				{
 					functionInfo = new MemberFunctionInfo(functionName, returnType);
 				}
@@ -253,10 +169,10 @@ bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType
 			{
 				continue;
 			}
-			else if (tagName == "Argument")
+			else if (tagName == "Argument" && functionInfo != nullptr)
 			{
-				CatGenericType argumentType;
-				if (functionInfo != nullptr && readGenericType(xmlFile, "Argument", argumentType, typeInfos))
+				CatGenericType argumentType = CatGenericType::readFromXML(xmlFile, "Argument", typeInfos);
+				if (argumentType.isValidType())
 				{
 					functionInfo->argumentTypes.push_back(argumentType);
 				}
@@ -282,7 +198,7 @@ bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType
 }
 
 
-TypeInfo* XMLHelper::findOrCreateTypeInfo(const std::string & typeName, std::map<std::string, TypeInfo*>& typeInfos)
+TypeInfo* XMLHelper::findOrCreateTypeInfo(const std::string& typeName, std::map<std::string, TypeInfo*>& typeInfos)
 {
 	if (typeInfos.find(typeName) != typeInfos.end())
 	{
@@ -293,103 +209,9 @@ TypeInfo* XMLHelper::findOrCreateTypeInfo(const std::string & typeName, std::map
 		char* name = (char*)malloc(typeName.size() + 1);
 		memcpy(name, typeName.c_str(), typeName.size() + 1);
 		staticNames.push_back(name);
-		TypeInfo* newInfo = new TypeInfo(name);
+		TypeInfo* newInfo = new TypeInfo(name, nullptr);
 		typeInfos[name] = newInfo;
 		return newInfo;
-	}
-}
-
-
-bool XMLHelper::readGenericType(std::ifstream& xmlFile, const std::string& closingTag, CatGenericType& type, std::map<std::string, TypeInfo*>& typeInfos)
-{
-	SpecificMemberType specificType = SpecificMemberType::None;
-	CatType basicType = CatType::Unknown;
-	std::string objectTypeName = "";
-	std::string containerItemTypeName = "";
-	ContainerType containerType = ContainerType::None;
-	while (true)
-	{
-		XMLLineType tagType;
-		std::string contents;
-		std::string tagName = XMLHelper::readXMLLine(xmlFile, tagType, contents);
-		if (tagType == XMLLineType::OpenCloseWithContent)
-		{
-			if (tagName == "Type")
-			{
-				specificType = toSpecificMemberType(contents.c_str());
-			}
-			else if (tagName == "BasicType")
-			{
-				basicType = toCatType(contents.c_str());
-			}
-			else if (tagName == "ObjectTypeName")
-			{
-				objectTypeName = contents;
-			}
-			else if (tagName == "ContainerType")
-			{
-				containerType = toContainerType(contents.c_str());
-			}
-			else if (tagName == "ContainerItemTypeName")
-			{
-				containerItemTypeName = contents;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else if (tagType == XMLLineType::CloseTag && tagName == closingTag)
-		{
-			switch (specificType)
-			{
-				case SpecificMemberType::CatType:
-					if (basicType != CatType::Unknown)
-					{
-						type = CatGenericType(basicType);
-						return true;
-					}
-					else
-					{
-						return false;
-					}
-					break;
-				case SpecificMemberType::NestedType:
-					if (objectTypeName != "")
-					{
-						TypeInfo* objectType = findOrCreateTypeInfo(objectTypeName, typeInfos);
-						type = CatGenericType(objectType);
-						return true;
-					}
-					else
-					{
-						return false;
-					}
-					break;
-				case SpecificMemberType::ContainerType:
-					if (containerType != ContainerType::None
-						&& containerItemTypeName != "")
-					{
-						TypeInfo* itemType = findOrCreateTypeInfo(containerItemTypeName, typeInfos);
-						type = CatGenericType(containerType, itemType);
-						return true;
-					}
-					else
-					{
-						return false;
-					}
-					break;
-				case SpecificMemberType::None:
-					type = CatGenericType();
-					return true;
-				default: 
-					return false;
-			}
-		}
-		else
-		{
-			return false;
-		}
 	}
 }
 

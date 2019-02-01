@@ -7,10 +7,14 @@
 
 #pragma once
 
-
-class ASTNode
+namespace jitcat::AST
 {
-public:
-	ASTNode() {};
-	virtual ~ASTNode() {};
-};
+
+	class ASTNode
+	{
+	public:
+		ASTNode() {};
+		virtual ~ASTNode() {};
+	};
+
+} //End namespace jitcat::AST

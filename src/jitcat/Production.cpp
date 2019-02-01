@@ -5,14 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Production.h"
-#include "ProductionEpsilonToken.h"
-#include "ProductionRule.h"
-#include "ProductionTokenSet.h"
-#include "Grammar.h"
+#include "jitcat/Production.h"
+#include "jitcat/ProductionEpsilonToken.h"
+#include "jitcat/ProductionRule.h"
+#include "jitcat/ProductionTokenSet.h"
+#include "jitcat/GrammarBase.h"
+
+using namespace jitcat::Grammar;
 
 
-Production::Production(Grammar* grammar, int productionId):
+Production::Production(GrammarBase* grammar, int productionId):
 	grammar(grammar),
 	productionId(productionId),
 	containsEpsilon(TokenFlag::Unknown)

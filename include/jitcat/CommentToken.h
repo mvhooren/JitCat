@@ -7,15 +7,17 @@
 
 #pragma once
 
-#include "CommentTokenSubTypes.h"
-#include "ParseToken.h"
+#include "jitcat/CommentTokenSubTypes.h"
+#include "jitcat/ParseToken.h"
 
+namespace jitcat::Tokenizer
+{
 
 class CommentToken: public ParseToken
 {
 public:
 	CommentToken() {};
-	CommentToken(Lexeme* lexeme_, int subType): subType(subType) {lexeme = lexeme_;};
+	CommentToken(Lexeme* lexeme_, int subType): subType(subType) {lexeme.reset(lexeme_);};
 	virtual int getTokenID() const {return getID();};
 	virtual const char* getTokenName() const {return "Comment";};
 	virtual const char* getSubTypeName(int subType) const;
@@ -28,3 +30,6 @@ public:
 private:
 	int subType;
 };
+
+
+} //End namespace jitcat::Tokenizer

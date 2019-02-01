@@ -7,45 +7,56 @@
 
 #pragma once
 
-class CatRuntimeContext;
-class Document;
-class IdentifierToken;
-class ParseToken;
-class TypeInfo;
+namespace jitcat::Tokenizer
+{
+	class Document;
+	class IdentifierToken;
+	class ParseToken;
+}
+namespace jitcat::Reflection
+{
+	class TypeInfo;
+}
 #include <string>
 #include <vector>
 
-
-class AutoCompletion
+namespace jitcat
 {
-private:
-	AutoCompletion() {};
-public:
-	struct AutoCompletionEntry
+	class CatRuntimeContext;
+
+
+	class AutoCompletion
 	{
-		AutoCompletionEntry(const std::string& newExpression, const std::string& autoCompletionValue, bool isPrefixSuggestion, std::size_t newCursorPosition);
-		std::string newExpression;
-		std::string autoCompletionValue;
-		bool isPrefixSuggestion;
-		std::size_t newCursorPosition;
+	private:
+		AutoCompletion() {};
+	public:
+		struct AutoCompletionEntry
+		{
+			AutoCompletionEntry(const std::string& newExpression, const std::string& autoCompletionValue, bool isPrefixSuggestion, std::size_t newCursorPosition);
+			std::string newExpression;
+			std::string autoCompletionValue;
+			bool isPrefixSuggestion;
+			std::size_t newCursorPosition;
+		};
+
+		struct PartialExpressionForAutocompletion
+		{
+			std::string partialExpressionIdentifier;
+		};
+
+		static std::vector<AutoCompletionEntry> autoComplete(const std::string& expression, std::size_t cursorPosition, CatRuntimeContext* context);
+
+	private:
+		static std::vector<Tokenizer::IdentifierToken*> getSubExpressionToAutoComplete(const std::vector<Tokenizer::ParseToken*>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
+
+		static int findStartTokenIndex(int cursorPosition, const std::vector<Tokenizer::ParseToken*>& tokens);
+
+		static void addOptionsFromTypeInfo(Reflection::TypeInfo* typeInfo, std::vector<AutoCompletion::AutoCompletionEntry>& results, 
+										   const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset, const std::string& expressionTailEnd);
+		static void addOptionsFromBuiltIn(std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
+		static void addIfPartialMatch(const std::string& text, std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
+
+		static bool isGlobalScopeAutoCompletable(const std::vector<Tokenizer::ParseToken*>& tokens, int startingTokenIndex);
 	};
 
-	struct PartialExpressionForAutocompletion
-	{
-		std::string partialExpressionIdentifier;
-	};
-
-	static std::vector<AutoCompletionEntry> autoComplete(const std::string& expression, std::size_t cursorPosition, CatRuntimeContext* context);
-
-private:
-	static std::vector<IdentifierToken*> getSubExpressionToAutoComplete(const std::vector<ParseToken*>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
-
-	static int findStartTokenIndex(int cursorPosition, const std::vector<ParseToken*>& tokens);
-
-	static void addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<AutoCompletion::AutoCompletionEntry>& results, 
-									   const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset, const std::string& expressionTailEnd);
-	static void addOptionsFromBuiltIn(std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
-	static void addIfPartialMatch(const std::string& text, std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
-
-	static bool isGlobalScopeAutoCompletable(const std::vector<ParseToken*>& tokens, int startingTokenIndex);
-};
+} //End namespace jitcat

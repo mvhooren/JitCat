@@ -7,128 +7,133 @@
 
 #pragma once
 
-#include "MemberInfo.h"
-#include "TypeRegistry.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/TypeRegistry.h"
 
-
-template <typename T>
-class MemberTypeInfoCreator
+namespace jitcat::Reflection
 {
-public:
-	template<typename ClassType>
-	static inline TypeMemberInfo* getMemberInfo(const std::string& memberName, T ClassType::* member, bool isConst, bool isWritable) 
+
+	template <typename T>
+	class MemberTypeInfoCreator
 	{
-		static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
-		TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
-		return new ClassObjectMemberInfo<ClassType, T>(memberName, member, nestedType, isConst, isWritable);
-	}
-};
+	public:
+		template<typename ClassType>
+		static inline TypeMemberInfo* getMemberInfo(const std::string& memberName, T ClassType::* member, bool isConst, bool isWritable) 
+		{
+			static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
+			TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
+			return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, false, isConst));
+		}
+	};
 
 
-template <>
-class MemberTypeInfoCreator<void>
-{
-public:
-	template<typename ClassType>
-	static inline TypeMemberInfo* getMemberInfo(const std::string& memberName, int ClassType::* member, bool isConst, bool isWritable) { return nullptr;}
-};
-
-
-template <>
-class MemberTypeInfoCreator<float>
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, float ClassType::* member, bool isConst, bool isWritable) 
+	template <>
+	class MemberTypeInfoCreator<void>
 	{
-		return new BasicTypeMemberInfo<ClassType, float>(memberName, member, CatType::Float, isConst, isWritable);
-	}
-};
+	public:
+		template<typename ClassType>
+		static inline TypeMemberInfo* getMemberInfo(const std::string& memberName, int ClassType::* member, bool isConst, bool isWritable) { return nullptr;}
+	};
 
 
-template <>
-class MemberTypeInfoCreator<int>
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, int ClassType::* member, bool isConst, bool isWritable) 
+	template <>
+	class MemberTypeInfoCreator<float>
 	{
-		return new BasicTypeMemberInfo<ClassType, int>(memberName, member, CatType::Int, isConst, isWritable);
-	}
-};
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, float ClassType::* member, bool isConst, bool isWritable) 
+		{
+			return new BasicTypeMemberInfo<ClassType, float>(memberName, member, CatGenericType::createFloatType(isWritable, isConst));
+		}
+	};
 
 
-template <>
-class MemberTypeInfoCreator<bool>
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, bool ClassType::* member, bool isConst, bool isWritable) 
+	template <>
+	class MemberTypeInfoCreator<int>
 	{
-		return new BasicTypeMemberInfo<ClassType, bool>(memberName, member, CatType::Bool, isConst, isWritable);
-	}
-};
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, int ClassType::* member, bool isConst, bool isWritable) 
+		{
+			return new BasicTypeMemberInfo<ClassType, int>(memberName, member, CatGenericType::createIntType(isWritable, isConst));
+		}
+	};
 
 
-template <>
-class MemberTypeInfoCreator<std::string>
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::string ClassType::* member, bool isConst, bool isWritable) 
+	template <>
+	class MemberTypeInfoCreator<bool>
 	{
-		return new BasicTypeMemberInfo<ClassType, std::string>(memberName, member, CatType::String, isConst, isWritable);
-	}
-};
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, bool ClassType::* member, bool isConst, bool isWritable) 
+		{
+			return new BasicTypeMemberInfo<ClassType, bool>(memberName, member, CatGenericType::createBoolType(isWritable, isConst));
+		}
+	};
 
 
-template <typename U>
-class MemberTypeInfoCreator<std::unique_ptr<U>>
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<U> ClassType::* member, bool isConst, bool isWritable) 
+	template <>
+	class MemberTypeInfoCreator<std::string>
 	{
-		TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-		return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, nestedType, isConst, isWritable);
-	}
-};
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::string ClassType::* member, bool isConst, bool isWritable) 
+		{
+			return new BasicTypeMemberInfo<ClassType, std::string>(memberName, member, CatGenericType::createStringType(isWritable, isConst));
+		}
+	};
 
 
-template <typename U>
-class MemberTypeInfoCreator<U*>
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, U* ClassType::* member, bool isConst, bool isWritable) 
+	template <typename U>
+	class MemberTypeInfoCreator<std::unique_ptr<U>>
 	{
-		TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-		return new ClassPointerMemberInfo<ClassType, U>(memberName, member, nestedType, isConst, isWritable);
-	}
-};
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<U> ClassType::* member, bool isConst, bool isWritable) 
+		{
+			TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
+			return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, false, isConst));
+		}
+	};
 
 
-template <typename ItemType>
-class MemberTypeInfoCreator<std::vector<ItemType> >
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType> ClassType::* member, bool isConst, bool isWritable) 
+	template <typename U>
+	class MemberTypeInfoCreator<U*>
 	{
-		TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-		return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, ContainerType::Vector, nestedType, isConst);
-	}
-};
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, U* ClassType::* member, bool isConst, bool isWritable) 
+		{
+			TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
+			return new ClassPointerMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst));
+		}
+	};
 
 
-template <typename ItemType>
-class MemberTypeInfoCreator<std::map<std::string, ItemType> >
-{
-public:
-	template<typename ClassType>
-	static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<std::string, ItemType> ClassType::* member, bool isConst, bool isWritable) 
+	template <typename ItemType>
+	class MemberTypeInfoCreator<std::vector<ItemType> >
 	{
-		TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-		return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType> >(memberName, member, ContainerType::StringMap, nestedType, isConst);
-	}
-};
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType> ClassType::* member, bool isConst, bool isWritable) 
+		{
+			TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
+			return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, CatGenericType(ContainerType::Vector, nestedType, false, isConst));
+		}
+	};
+
+
+	template <typename ItemType>
+	class MemberTypeInfoCreator<std::map<std::string, ItemType> >
+	{
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<std::string, ItemType> ClassType::* member, bool isConst, bool isWritable) 
+		{
+			TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
+			return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType> >(memberName, member, CatGenericType(ContainerType::StringMap, nestedType, false, isConst));
+		}
+	};
+
+
+} //End namespace jitcat::Reflection

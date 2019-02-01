@@ -5,12 +5,19 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatMemberFunctionCall.h"
-#include "CatArgumentList.h"
-#include "CatLog.h"
-#include "MemberInfo.h"
-#include "OptimizationHelper.h"
-#include "TypeInfo.h"
+#include "jitcat/CatMemberFunctionCall.h"
+#include "jitcat/CatArgumentList.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/TypeInfo.h"
+
+#include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
 
 
 CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments):
@@ -20,7 +27,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedEx
 	memberFunctionInfo(nullptr)
 {
 	if (base != nullptr
-		&& base->getType() == CatType::Object)
+		&& base->getType().isObjectType())
 	{
 		CatGenericType baseMemberInfo = base->getType();
 		if (baseMemberInfo.isValidType()
@@ -36,6 +43,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedEx
 
 void CatMemberFunctionCall::print() const
 {
+	base->print();
 	CatLog::log(".");
 	CatLog::log(functionName);
 	arguments->print();
@@ -48,24 +56,20 @@ CatASTNodeType CatMemberFunctionCall::getNodeType()
 }
 
 
-CatValue CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
+std::any CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
 {
-	CatValue baseValue = base->execute(runtimeContext);
-	if (baseValue.getValueType() == CatType::Error)
-	{
-		return baseValue;
-	}
+	std::any baseValue = base->execute(runtimeContext);
 	if (memberFunctionInfo != nullptr && runtimeContext != nullptr)
 	{
-		std::vector<CatValue> argumentValues;
+		std::vector<std::any> argumentValues;
 		for (std::unique_ptr<CatTypedExpression>& argument : arguments->arguments)
 		{
 			argumentValues.push_back(argument->execute(runtimeContext));
 		}
-		MemberReferencePtr rootReference = baseValue.getCustomTypeValue();
-		return memberFunctionInfo->call(rootReference, argumentValues);
+		return memberFunctionInfo->call(baseValue, argumentValues);
 	}
-	return CatValue(CatError(std::string("Member not found: ") + functionName));
+	assert(false);
+	return std::any();
 
 }
 
@@ -114,7 +118,7 @@ CatGenericType CatMemberFunctionCall::getType() const
 	}
 	else 
 	{
-		return CatType::Unknown;
+		return CatGenericType::unknownType;
 	}
 }
 
@@ -127,10 +131,27 @@ bool CatMemberFunctionCall::isConst() const
 
 CatTypedExpression* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext)
 {
-	OptimizationHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext));
 	for (auto& iter: arguments->arguments)
 	{
-		OptimizationHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
+		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
 	}
 	return this;
+}
+
+
+MemberFunctionInfo* CatMemberFunctionCall::getMemberFunctionInfo() const
+{
+	return memberFunctionInfo;
+}
+
+
+CatTypedExpression* CatMemberFunctionCall::getBase() const
+{
+	return base.get();
+}
+
+CatArgumentList* CatMemberFunctionCall::getArguments() const
+{
+	return arguments.get();
 }

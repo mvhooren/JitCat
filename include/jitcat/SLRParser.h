@@ -7,61 +7,76 @@
 
 #pragma once
 
-class ASTNode;
-class DFAState;
-class Grammar;
-class Item;
-class ProductionRule;
-class ProductionToken;
-class ProductionTokenSet;
-class RuntimeContext;
-class StackItem;
+namespace jitcat
+{
+	class RuntimeContext;
+}
+namespace jitcat::AST
+{
+	class ASTNode;
+}
+namespace jitcat::Grammar
+{
+	class GrammarBase;
+	class ProductionRule;
+	class ProductionToken;
+	class ProductionTokenSet;
+}
 
-#include "Production.h"
-#include "SLRParseResult.h"
-#include "ParseToken.h"
+#include "jitcat/Production.h"
+#include "jitcat/SLRParseResult.h"
+#include "jitcat/ParseToken.h"
 
 #include <set>
 #include <string>
 #include <vector>
 
-class SLRParser
+namespace jitcat::Parser
 {
-protected:
-	friend class Grammar;
-	friend class ASTNodeParser;
+	class DFAState;
+	class Item;
+	class StackItem;
 
-	SLRParser() {}
+
+	class SLRParser
+	{
+	protected:
+		friend class Grammar::GrammarBase;
+		friend class ASTNodeParser;
+
+		SLRParser() {}
 	
-	void createNFA(const Grammar* grammar);
+		void createNFA(const Grammar::GrammarBase* grammar);
 
-private:
-	void buildNFA(DFAState* currentState, std::vector<DFAState*>& nfa);
-	void convertNFAtoDFA(std::vector<DFAState*>& nfa);
-	void epsilonClose(DFAState* state, DFAState* currentState, std::set<DFAState*>& recursionSet);
-	DFAState* addState(DFAState* state, std::vector<DFAState*>& nfa);
+	private:
+		void buildNFA(DFAState* currentState, std::vector<DFAState*>& nfa);
+		void convertNFAtoDFA(std::vector<DFAState*>& nfa);
+		void epsilonClose(DFAState* state, DFAState* currentState, std::set<DFAState*>& recursionSet);
+		DFAState* addState(DFAState* state, std::vector<DFAState*>& nfa);
 
-	void cleanupAfterConversionToDFA(std::vector<DFAState*>& dfaToClean);
+		void cleanupAfterConversionToDFA(std::vector<DFAState*>& dfaToClean);
 
-	void markReachableStates(DFAState* currentState);
+		void markReachableStates(DFAState* currentState);
 	
-	bool hasMultipleTransitionsWithToken(DFAState* state, ProductionToken* token) const;
-	void aggregateTokenTransitionIntoNewState(DFAState* state, ProductionToken* token, std::vector<DFAState*>& nfa, const Item& item);
+		bool hasMultipleTransitionsWithToken(DFAState* state, Grammar::ProductionToken* token) const;
+		void aggregateTokenTransitionIntoNewState(DFAState* state, Grammar::ProductionToken* token, std::vector<DFAState*>& nfa, const Item& item);
 
-	//Reduces if possible and returns true if reduce move was done
-	bool tryReduce(DFAState* currentState, std::vector<StackItem*>& stack, StackItem* nextToken, RuntimeContext* context) const;
-	//Returns the new state if it is possible to shift the given token onto the stack.
-	//Returns nullptr if the shift is not possible (error)
-	DFAState* canShift(DFAState* currentState, StackItem* tokenToShift) const;
-	bool isStackItemInFollowSet(StackItem* item, ProductionTokenSet* followSet) const;
-	void printStack(const std::vector<StackItem*> stack) const;
+		//Reduces if possible and returns true if reduce move was done
+		bool tryReduce(DFAState* currentState, std::vector<StackItem*>& stack, StackItem* nextToken, RuntimeContext* context) const;
+		//Returns the new state if it is possible to shift the given token onto the stack.
+		//Returns nullptr if the shift is not possible (error)
+		DFAState* canShift(DFAState* currentState, StackItem* tokenToShift) const;
+		bool isStackItemInFollowSet(StackItem* item, Grammar::ProductionTokenSet* followSet) const;
+		void printStack(const std::vector<StackItem*> stack) const;
 
-	void scanForConflicts() const;
+		void scanForConflicts() const;
 
-public:
-	SLRParseResult* parse(const std::vector<ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context) const;
-	~SLRParser();
+	public:
+		SLRParseResult* parse(const std::vector<Tokenizer::ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context) const;
+		~SLRParser();
 
-private:
-	std::vector<DFAState*> dfa;
-};
+	private:
+		std::vector<DFAState*> dfa;
+	};
+
+} //End namespace jitcat::Parser

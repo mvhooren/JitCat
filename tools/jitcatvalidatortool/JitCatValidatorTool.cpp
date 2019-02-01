@@ -7,27 +7,38 @@
 
 #include <algorithm>
 #include <iostream>
-#include <JitCatValidator.h>
+#include <jitcatvalidator/JitCatValidator.h>
 #include <locale>
+#include <sstream>
 #include <string>
+#include <vector>
+
+std::string replaceAll(std::string str, const std::string& from, const std::string& to) 
+{
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) 
+	{
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+    return str;
+}
 
 
 int main(int argc, char* argv[])
 {
-    if (argc == 7 || argc == 8)
+    if (argc == 4 || argc == 5)
 	{
 		std::string typeInformationPath = argv[1];
-		std::string globalTypeName = argv[2];
-		std::string localTypeName = argv[3];
-		std::string customLocalsTypeName = argv[4];
-		std::string customGlobalsTypeName = argv[5];
-		std::string expression = argv[6];
+		std::string rootScopeTypes = argv[2];
+		std::string expression = argv[3];
+		rootScopeTypes = replaceAll(rootScopeTypes, ":", " ");
 
-		bool isCodeCompletion = argc == 8;
+		bool isCodeCompletion = argc == 4;
 		int cursorPos = 0;
 		if (isCodeCompletion)
 		{
-			cursorPos = atoi(argv[7]);
+			cursorPos = atoi(argv[5]);
 		}
 		std::size_t length = typeInformationPath.length();
 		for (std::size_t i = 0; i < length; i++)
@@ -45,7 +56,7 @@ int main(int argc, char* argv[])
 		if (!isCodeCompletion)
 		{
 			ValidationResult result;
-			int error = validateExpression(expression.c_str(), globalTypeName.c_str(), localTypeName.c_str(), customLocalsTypeName.c_str(), customGlobalsTypeName.c_str(), &result);
+			int error = validateExpression(expression.c_str(), rootScopeTypes.c_str(), &result);
 			if (error == 1)
 			{
 				std::cout << "Success.\nconst: " << result.isConstant << "\nliteral: " << result.isLiteral << "\ntypename: " << result.typeName << "\n";
@@ -63,7 +74,7 @@ int main(int argc, char* argv[])
 		else
 		{
 			CodeCompletionSuggestions results;
-			int error = codeCompleteExpression(expression.c_str(), cursorPos, globalTypeName.c_str(), localTypeName.c_str(), customLocalsTypeName.c_str(), customGlobalsTypeName.c_str(), &results);
+			int error = codeCompleteExpression(expression.c_str(), cursorPos, rootScopeTypes.c_str(), &results);
 			if (error == 1)
 			{
 				for (std::size_t i = 0; i < results.numSuggestions; i++)
@@ -88,7 +99,8 @@ int main(int argc, char* argv[])
 	else
 	{
 		std::cout << "Invalid number of arguments.\n";
-		std::cout << "Usage: <PathToTypeInformation> <GlobalsTypeName> <LocalsTypeName> <CustomLocalsTypeName> <CustomGlobalsTypeName> <Expression>\n";
-		std::cout << "To not use type information, use \"none\"\n";
+		std::cout << "Usage: <PathToTypeInformation> <RootScopeTypes> <Expression>\n";
+		std::cout << "Where <RootScopeTypes> is a list of typenames separated by a colon.\n";
+		std::cout << "To not use type information, use \"none\" for PathToTypeInformation\n";
 	}
 }

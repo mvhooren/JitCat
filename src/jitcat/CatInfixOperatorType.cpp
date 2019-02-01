@@ -5,14 +5,16 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatInfixOperatorType.h"
+#include "jitcat/CatInfixOperatorType.h"
 
-const char* toString(CatInfixOperatorType infixOperator)
+using namespace jitcat::AST;
+
+
+const char* jitcat::AST::toString(CatInfixOperatorType infixOperator)
 {
 	switch (infixOperator)
 	{
 		default:									return "none";
-		case CatInfixOperatorType::Assign:			return "=";
 		case CatInfixOperatorType::Plus:			return "+";	
 		case CatInfixOperatorType::Minus:			return "-";
 		case CatInfixOperatorType::Multiply:		return "*";

@@ -5,9 +5,12 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatArgumentList.h"
-#include "CatLog.h"
-#include "CatTypedExpression.h"
+#include "jitcat/CatArgumentList.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/CatTypedExpression.h"
+
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
 
 
 void CatArgumentList::print() const

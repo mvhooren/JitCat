@@ -5,7 +5,9 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "StackItemProduction.h"
+#include "jitcat/StackItemProduction.h"
+
+using namespace jitcat::Parser;
 
 StackItemProduction::~StackItemProduction()
 {

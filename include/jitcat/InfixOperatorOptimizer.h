@@ -7,29 +7,34 @@
 
 #pragma once
 
-class CatTypedExpression;
-#include "CatInfixOperatorType.h"
+#include "jitcat/CatInfixOperatorType.h"
 
 #include <memory>
 
-
-class InfixOperatorOptimizer
+namespace jitcat::AST 
 {
-private:
-	InfixOperatorOptimizer();
-public:
-	static CatTypedExpression* tryCollapseInfixOperator(std::unique_ptr<CatTypedExpression>& lhs, 
-														std::unique_ptr<CatTypedExpression>& rhs, 
-														CatInfixOperatorType infixOperator);
+	class CatTypedExpression;
 
-private:
-	static CatTypedExpression* tryCollapseMultiplication(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
-	static CatTypedExpression* tryCollapseAddition(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
-	static CatTypedExpression* tryCollapseSubtraction(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
-	static CatTypedExpression* tryCollapseDivision(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
-	static CatTypedExpression* tryCollapseLogicalAnd(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
-	static CatTypedExpression* tryCollapseLogicalOr(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
 
-	static bool typedExpressionEqualsConstant(CatTypedExpression* expression, float constant);
-	static bool typedExpressionEqualsConstant(CatTypedExpression* expression, bool constant);
-};
+	class InfixOperatorOptimizer
+	{
+	private:
+		InfixOperatorOptimizer();
+	public:
+		static CatTypedExpression* tryCollapseInfixOperator(std::unique_ptr<CatTypedExpression>& lhs, 
+															std::unique_ptr<CatTypedExpression>& rhs, 
+															CatInfixOperatorType infixOperator);
+
+	private:
+		static CatTypedExpression* tryCollapseMultiplication(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
+		static CatTypedExpression* tryCollapseAddition(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
+		static CatTypedExpression* tryCollapseSubtraction(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
+		static CatTypedExpression* tryCollapseDivision(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
+		static CatTypedExpression* tryCollapseLogicalAnd(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
+		static CatTypedExpression* tryCollapseLogicalOr(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
+
+		static bool typedExpressionEqualsConstant(CatTypedExpression* expression, float constant);
+		static bool typedExpressionEqualsConstant(CatTypedExpression* expression, bool constant);
+	};
+
+} //End namespace jitcat::AST 

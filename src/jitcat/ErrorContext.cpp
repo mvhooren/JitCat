@@ -5,8 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ErrorContext.h"
-#include "CatRuntimeContext.h"
+#include "jitcat/ErrorContext.h"
+#include "jitcat/CatRuntimeContext.h"
+
+using namespace jitcat;
 
 
 ErrorContext::ErrorContext(CatRuntimeContext* context, const std::string& contextDescription):

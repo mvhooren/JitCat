@@ -7,18 +7,25 @@
 
 #pragma once
 
-class CatTypedExpression;
-#include "CatASTNode.h"
+#include "jitcat/CatASTNode.h"
 
 #include <memory>
 #include <vector>
 
-
-class CatArgumentList: public CatASTNode
+namespace jitcat::AST
 {
-public:
-	virtual void print() const override final;
-	virtual CatASTNodeType getNodeType() override final;
 
-	std::vector<std::unique_ptr<CatTypedExpression>> arguments;
-};
+	class CatTypedExpression;
+
+
+	class CatArgumentList: public CatASTNode
+	{
+	public:
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() override final;
+
+		std::vector<std::unique_ptr<CatTypedExpression>> arguments;
+	};
+
+
+} //End namespace jitcat::AST

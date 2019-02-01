@@ -5,11 +5,17 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatPrefixOperator.h"
-#include "CatLiteral.h"
-#include "CatLog.h"
-#include "OptimizationHelper.h"
-#include "Tools.h"
+#include "jitcat/CatPrefixOperator.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/Tools.h"
+
+#include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Tools;
 
 const char* CatPrefixOperator::conversionTable[] = {"!", "-"};
 
@@ -18,17 +24,17 @@ CatGenericType CatPrefixOperator::getType() const
 {
 	if (oper == Operator::Not)
 	{
-		return CatType::Bool;
+		return CatGenericType::boolType;
 	}
 	else if (oper == Operator::Minus
-			 && (rhs->getType() == CatType::Float
-			     || rhs->getType() == CatType::Int))
+			 && (rhs->getType().isFloatType()
+			     || rhs->getType().isIntType()))
 	{
-		return rhs->getType();
+		return rhs->getType().toUnwritable();
 	}
 	else
 	{
-		return CatType::Error;
+		return CatGenericType("Invalid use of operator.");
 	}
 }
 
@@ -41,16 +47,16 @@ bool CatPrefixOperator::isConst() const
 
 CatTypedExpression* CatPrefixOperator::constCollapse(CatRuntimeContext* compileTimeContext)
 {
-	OptimizationHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
 	if (rhs->isConst())
 	{
-		return new CatLiteral(calculateExpression(compileTimeContext));
+		return new CatLiteral(calculateExpression(compileTimeContext), getType());
 	}
 	return this;
 }
 
 
-CatValue CatPrefixOperator::execute(CatRuntimeContext* runtimeContext)
+std::any CatPrefixOperator::execute(CatRuntimeContext* runtimeContext)
 {
 	return calculateExpression(runtimeContext);
 }
@@ -68,17 +74,17 @@ CatGenericType CatPrefixOperator::typeCheck()
 		if (rightType.isBoolType()
 			&& oper == Operator::Not)
 		{
-			return CatGenericType(CatType::Bool);
+			return CatGenericType::boolType;
 		}
 		else if (rightType.isFloatType()
 				 && oper == Operator::Minus)
 		{
-			return CatGenericType(CatType::Float);
+			return CatGenericType::floatType;
 		}
 		else if (rightType.isIntType()
 				 && oper == Operator::Minus)
 		{
-			return CatGenericType(CatType::Int);
+			return CatGenericType::intType;
 		}
 		else
 		{
@@ -97,26 +103,24 @@ void CatPrefixOperator::print() const
 }
 
 
-inline CatValue CatPrefixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
+inline std::any CatPrefixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
 {
-	CatValue rValue = rhs->execute(runtimeContext);
-	if (rValue.getValueType() == CatType::Bool
+	std::any rValue = rhs->execute(runtimeContext);
+	if (rhs->getType().isBoolType()
 		&& oper == Operator::Not)
 	{
-		return CatValue(!rValue.getBoolValue());
+		return std::any(!std::any_cast<bool>(rValue));
 	}
-	else if (rhs->getType() == CatType::Float
+	else if (rhs->getType().isFloatType()
 				&& oper == Operator::Minus)
 	{
-		return CatValue(-rValue.getFloatValue());
+		return std::any(-std::any_cast<float>(rValue));
 	}
-	else if (rhs->getType() == CatType::Int
+	else if (rhs->getType().isIntType()
 				&& oper == Operator::Minus)
 	{
-		return CatValue(-rValue.getIntValue());
+		return std::any(-std::any_cast<int>(rValue));
 	}
-	else
-	{
-		return CatValue(CatError(std::string("Error: invalid operation: ") + conversionTable[(unsigned int)oper] + toString(rhs->getType().getCatType()) ));
-	}
+	assert(false);
+	return std::any();
 }

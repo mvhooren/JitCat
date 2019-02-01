@@ -7,20 +7,25 @@
 
 #pragma once
 
-class CatRuntimeContext;
 
 #include <string>
 
-
-class ErrorContext
+namespace jitcat
 {
-public:
-	ErrorContext(CatRuntimeContext* context, const std::string& contextDescription);
-	~ErrorContext();
+	class CatRuntimeContext;
 
-	const std::string& getContextDescription() const;
 
-private:
-	CatRuntimeContext* context;
-	std::string contextDescription;
-};
+	class ErrorContext
+	{
+	public:
+		ErrorContext(CatRuntimeContext* context, const std::string& contextDescription);
+		~ErrorContext();
+
+		const std::string& getContextDescription() const;
+
+	private:
+		CatRuntimeContext* context;
+		std::string contextDescription;
+	};
+
+} //End namespace jitcat

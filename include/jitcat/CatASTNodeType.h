@@ -7,18 +7,23 @@
 
 #pragma once
 
-
-enum class CatASTNodeType
+namespace jitcat::AST
 {
-	Literal,
-	Identifier,
-	InfixOperator,
-	PrefixOperator,
-	ParameterList,
-	FunctionCall,
-	LinkedList,
-	MemberAccess,
-	ArrayIndex,
-	MemberFunctionCall,
-	ScopeRoot
-};
+
+	enum class CatASTNodeType
+	{
+		Literal,
+		Identifier,
+		InfixOperator,
+		AssignmentOperator,
+		PrefixOperator,
+		ParameterList,
+		FunctionCall,
+		LinkedList,
+		MemberAccess,
+		ArrayIndex,
+		MemberFunctionCall,
+		ScopeRoot
+	};
+
+} //End namespace jitcat::AST

@@ -5,26 +5,30 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "AutoCompletion.h"
-#include "CatFunctionCall.h"
-#include "CatRuntimeContext.h"
-#include "CatTokenizer.h"
-#include "CommentToken.h"
-#include "ConstantToken.h"
-#include "CustomTypeInfo.h"
-#include "Document.h"
-#include "ErrorToken.h"
-#include "IdentifierToken.h"
-#include "Lexeme.h"
-#include "OneCharToken.h"
-#include "Tools.h"
-#include "TypeInfo.h"
-#include "WhitespaceToken.h"
+#include "jitcat/AutoCompletion.h"
+#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTokenizer.h"
+#include "jitcat/CommentToken.h"
+#include "jitcat/ConstantToken.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/Document.h"
+#include "jitcat/ErrorToken.h"
+#include "jitcat/IdentifierToken.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/OneCharToken.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/WhitespaceToken.h"
 
 #include <algorithm>
 #include <functional>
 #include <set>
 #include <sstream>
+
+using namespace jitcat;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tokenizer;
 
 
 std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(const std::string& expression, std::size_t cursorPosition, CatRuntimeContext* context)
@@ -76,18 +80,22 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					if (i == 0)
 					{
 						//search in the runtime context
-						addOptionsFromTypeInfo(context->getCustomThisType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
-						addOptionsFromTypeInfo(context->getThisType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
-						addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
-						addOptionsFromTypeInfo(context->getGlobalType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+						for (int i = context->getNumScopes() - 1; i >= 0; i--)
+						{
+							TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
+							if (typeInfo != nullptr)
+							{
+								addOptionsFromTypeInfo(typeInfo, results, memberPrefix, expression, completionOffset, expressionTailEnd);
+							}
+						}
 						addOptionsFromBuiltIn(results, memberPrefix, expression, completionOffset);
 					}
 				}
-				else if (currentMemberInfo != nullptr && currentMemberInfo->catType == CatType::Object)
+				else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isObjectType())
 				{
-					addOptionsFromTypeInfo(currentMemberInfo->nestedType, results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					addOptionsFromTypeInfo(currentMemberInfo->catType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
-				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.getCatType() == CatType::Object)
+				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isObjectType())
 				{
 					addOptionsFromTypeInfo(currentFunctionInfo->returnType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
@@ -98,20 +106,20 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			}
 			else if (currentMemberInfo == nullptr && currentFunctionInfo == nullptr)
 			{
-				currentMemberInfo = context->findIdentifier(lowercaseIdentifier);
+				CatScopeID scopeId;
+				currentMemberInfo = context->findVariable(lowercaseIdentifier, scopeId);
 				if (currentMemberInfo == nullptr)
 				{
-					RootTypeSource source;
-					currentFunctionInfo = context->findFunction(lowercaseIdentifier, source);
+					currentFunctionInfo = context->findFunction(lowercaseIdentifier, scopeId);
 				}
 			}
-			else if (currentMemberInfo != nullptr && currentMemberInfo->catType == CatType::Object)
+			else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isObjectType())
 			{
 				TypeMemberInfo* currentMember = currentMemberInfo;
-				currentMemberInfo = currentMemberInfo->nestedType->getMemberInfo(lowercaseIdentifier);
+				currentMemberInfo = currentMemberInfo->catType.getObjectType()->getMemberInfo(lowercaseIdentifier);
 				if (currentMemberInfo == nullptr)
 				{
-					currentFunctionInfo = currentMember->nestedType->getMemberFunctionInfo(lowercaseIdentifier);
+					currentFunctionInfo = currentMember->catType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
 					if (currentFunctionInfo == nullptr)
 					{
 						//failed
@@ -119,7 +127,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					}
 				}
 			}
-			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.getCatType() == CatType::Object)
+			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isObjectType())
 			{
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
 				currentFunctionInfo = currentFunctionInfo->returnType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
@@ -142,10 +150,15 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	}
 	if (!foundValidAutoCompletion && isGlobalScopeAutoCompletable(tokens, startingTokenIndex))
 	{
-		addOptionsFromTypeInfo(context->getCustomThisType(), results, "", expression, cursorPosition, expressionTailEnd);
-		addOptionsFromTypeInfo(context->getThisType(), results, "", expression, cursorPosition, expressionTailEnd);
-		addOptionsFromTypeInfo(context->getCustomGlobalsType(), results, "", expression, cursorPosition, expressionTailEnd);
-		addOptionsFromTypeInfo(context->getGlobalType(), results, "", expression, cursorPosition, expressionTailEnd);
+		//search in the runtime context
+		for (int i = context->getNumScopes() - 1; i >= 0; i--)
+		{
+			TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
+			if (typeInfo != nullptr)
+			{
+				addOptionsFromTypeInfo(typeInfo, results, "", expression, cursorPosition, expressionTailEnd);
+			}
+		}
 		addOptionsFromBuiltIn(results, "", expression, cursorPosition);
 	}
 	std::sort(std::begin(results), std::end(results), [](const AutoCompletion::AutoCompletionEntry& a, const AutoCompletion::AutoCompletionEntry& b) 
@@ -299,7 +312,7 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 				std::string newExpression = originalExpression;
 				std::string replacement = iter.second->memberName;
 				int numberOfCharactersToAdd = (int)replacement.size();
-				if (expressionTailEnd.size() == 0 && iter.second->specificType == SpecificMemberType::ContainerType)
+				if (expressionTailEnd.size() == 0 && iter.second->catType.isContainerType())
 				{
 					numberOfCharactersToAdd++;
 					replacement += "[";
@@ -330,7 +343,7 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 void AutoCompletion::addOptionsFromBuiltIn(std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, 
 										   const std::string& originalExpression, std::size_t prefixOffset)
 {
-	auto& allFunctions = CatFunctionCall::getAllBuiltInFunctions();
+	auto& allFunctions = jitcat::AST::CatFunctionCall::getAllBuiltInFunctions();
 	for (auto& iter : allFunctions)
 	{
 		addIfPartialMatch(iter + "(", results, lowercasePrefix, originalExpression, prefixOffset);

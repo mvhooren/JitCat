@@ -7,29 +7,42 @@
 
 #pragma once
 
-class ASTNode;
-class RuntimeContext;
-class StackItem;
-class ParseToken;
+namespace jitcat
+{
+	class RuntimeContext;
+	namespace AST
+	{
+		class ASTNode;
+	}
+	namespace Tokenizer
+	{
+		class ParseToken;
+	}
+}
 
 #include <vector>
 
-
-class ASTNodeParser
+namespace jitcat::Parser
 {
-public:
-	ASTNodeParser(const std::vector<StackItem*>& stack, std::size_t numItems, RuntimeContext* context);
-	int getNumItems() const;
-	StackItem* getItem(unsigned int index) const;
-	ASTNode* getASTNodeByIndex(unsigned int index) const;
-	const ParseToken* getTerminalByIndex(unsigned int index) const;
-	RuntimeContext* getContext() const;
+	class StackItem;
 
-private:
-	const std::vector<StackItem*>& stack;
-	std::size_t numItems;
-	std::size_t startIndex;
+	class ASTNodeParser
+	{
+	public:
+		ASTNodeParser(const std::vector<Parser::StackItem*>& stack, std::size_t numItems, RuntimeContext* context);
+		int getNumItems() const;
+		Parser::StackItem* getItem(unsigned int index) const;
+		AST::ASTNode* getASTNodeByIndex(unsigned int index) const;
+		const Tokenizer::ParseToken* getTerminalByIndex(unsigned int index) const;
+		RuntimeContext* getContext() const;
 
-	//not owned
-	RuntimeContext* context;
-};
+	private:
+		const std::vector<Parser::StackItem*>& stack;
+		std::size_t numItems;
+		std::size_t startIndex;
+
+		//not owned
+		RuntimeContext* context;
+	};
+
+} //End namespace jitcat::AST

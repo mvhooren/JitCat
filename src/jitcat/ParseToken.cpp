@@ -5,25 +5,26 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ParseToken.h"
-#include "Lexeme.h"
+#include "jitcat/ParseToken.h"
+#include "jitcat/Lexeme.h"
+
+using namespace jitcat::Tokenizer;
 
 
 ParseToken::ParseToken():
-	lexeme(0)
+	lexeme(nullptr)
 {
 }
 
 
 ParseToken::~ParseToken()
 {
-	delete lexeme;
 }
 
 
 const Lexeme* ParseToken::getLexeme() const
 {
-	return lexeme;
+	return lexeme.get();
 }
 
 

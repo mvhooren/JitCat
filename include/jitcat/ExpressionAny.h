@@ -7,60 +7,42 @@
 
 #pragma once
 
-class CatRuntimeContext;
-class CatTypedExpression;
-struct SLRParseResult;
-#include "CatGenericType.h"
-#include "CatValue.h"
-#include "ReflectableHandle.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/ExpressionBase.h"
 
+#include <any>
 #include <string>
 
-
-//An expression that can return any type.
-class ExpressionAny
+namespace jitcat
 {
-public:
-	ExpressionAny();
-	ExpressionAny(const ExpressionAny& other);
-	ExpressionAny(const char* expression);
-	ExpressionAny(const std::string& expression);
-	ExpressionAny(CatRuntimeContext* compileContext, const std::string& expression);
-	~ExpressionAny();
+	class CatRuntimeContext;
+	struct SLRParseResult;
 
-	// Sets the expression text for this Expression
-	// If compileContext == nullptr, compile needs to be called afterwards to compile the expression text
-	void setExpression(const std::string& expression, CatRuntimeContext* compileContext);
-	const std::string& getExpression() const;
-	// Returns true if the expression is just a simple literal.
-	bool isLiteral() const;
 
-	// Returns true if the expression is constant. (It is just a literal, or a combination of operators operating on constants)
-	bool isConst() const;
+	//An expression that can return any type (among supported types).
+	class ExpressionAny: public ExpressionBase
+	{
+	public:
+		ExpressionAny();
+		ExpressionAny(const char* expression);
+		ExpressionAny(const std::string& expression);
+		ExpressionAny(CatRuntimeContext* compileContext, const std::string& expression);
+		ExpressionAny(const ExpressionAny& other) = delete;
 
-	// Returns true if the expression contains an error
-	bool hasError() const;
+		//Executes the expression and returns the value.
+		//To get the actual value contained in std::any, cast it using std::any_cast based on this expression's type (getType()) .
+		//If the type is a Reflectable object, first any_cast to Reflectable*, then static_cast to the final type.
+		//Objects and stl containers are always returned as pointers.
+		const std::any getValue(CatRuntimeContext* runtimeContext);
 
-	// Executes the expression and returns the value.
-	const CatValue getValue(CatRuntimeContext* runtimeContext);
+		virtual void compile(CatRuntimeContext* context) override final;
 
-	void compile(CatRuntimeContext* context);
+	protected:
+		virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
 
-	const CatGenericType getType() const;
+	private:
+		std::any cachedValue;
+		uintptr_t nativeFunctionAddress;
+	};
 
-	//Returns the expression string (this allows serialisation without calling transSerialise on this class, saving one XML open and end tag.
-	std::string& getExpressionForSerialisation();
-
-private:
-	std::string expression;
-	CatGenericType valueType;
-	SLRParseResult* parseResult;
-	bool expressionIsLiteral;
-
-	bool isConstant;
-	CatValue cachedValue;
-
-	//Not owned
-	CatTypedExpression* expressionAST;
-	ReflectableHandle errorManagerHandle;
-};
+}

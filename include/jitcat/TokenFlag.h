@@ -7,6 +7,8 @@
 
 #pragma once
 
+namespace jitcat::Grammar
+{
 
 enum class TokenFlag
 {
@@ -14,3 +16,5 @@ enum class TokenFlag
 	Yes,
 	Unknown
 };
+
+} //End namespace jitcat::Grammar

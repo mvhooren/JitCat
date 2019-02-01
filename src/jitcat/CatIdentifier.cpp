@@ -5,36 +5,35 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatIdentifier.h"
-#include "CatLog.h"
-#include "CatRuntimeContext.h"
-#include "CustomTypeInfo.h"
-#include "Tools.h"
+#include "jitcat/CatIdentifier.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/Tools.h"
+
+#include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
 
 
 CatIdentifier::CatIdentifier(const std::string& name, CatRuntimeContext* context):
 	name(name),
 	compileTimeContext(context),
 	memberInfo(nullptr),
-	source(RootTypeSource::None),
-	type(CatType::Error)
+	scopeId(-1)
 {
 	std::string lowerName = Tools::toLowerCase(name);
 	if (context != nullptr)
 	{
-		//First check if the variable name is a custom local
-		findIdentifier(context->getCustomThisType(), RootTypeSource::CustomThis, lowerName);
-		//Next, if the variable is not a custom local, check if the variable name is a normal local (via reflection)
-		findIdentifier(context->getThisType(), RootTypeSource::This, lowerName);
-		//Next, if the variable is not a local, check if the variable name is a custom global
-		findIdentifier(context->getCustomGlobalsType(), RootTypeSource::CustomGlobals, lowerName);
-		//Lastly, if the variable is not a local, check if the variable name is a global
-		findIdentifier(context->getGlobalType(), RootTypeSource::Global, lowerName);
+		memberInfo = context->findVariable(lowerName, scopeId);
 	}
 
 	if (memberInfo != nullptr)
 	{
-		type = memberInfo->toGenericType();
+		type = memberInfo->catType;
 	}
 }
 
@@ -55,7 +54,7 @@ bool CatIdentifier::isConst() const
 {
 	if (memberInfo != nullptr)
 	{
-		return memberInfo->isConst;
+		return memberInfo->catType.isConst();
 	}
 	else
 	{
@@ -76,27 +75,31 @@ CatASTNodeType CatIdentifier::getNodeType()
 }
 
 
-CatValue CatIdentifier::execute(CatRuntimeContext* runtimeContext)
+std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		MemberReferencePtr rootReference = runtimeContext->getRootReference(source);
-		MemberReferencePtr reference = memberInfo->getMemberReference(rootReference);
-		if (!reference.isNull())
-		{
-			switch (type.getCatType())
-			{
-				case CatType::Int:		
-				case CatType::Float:	
-				case CatType::String:	
-				case CatType::Bool:	
-				case CatType::Object:	return CatValue(reference);
-				case CatType::Void:
-					return CatValue();
-			}
-		}
+		Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+		return memberInfo->getMemberReference(rootObject);
 	}
-	return CatValue(CatError(std::string("Variable not found:") + name));
+	assert(false);
+	return std::any();
+}
+
+
+std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType)
+{
+	if (memberInfo != nullptr && runtimeContext != nullptr)
+	{
+		Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+		return memberInfo->getAssignableMemberReference(rootObject, assignableType);
+	}
+	else
+	{
+		assignableType = AssignableType::None;
+	}
+	assert(false);
+	return std::any();
 }
 
 
@@ -113,14 +116,13 @@ CatGenericType CatIdentifier::typeCheck()
 }
 
 
-void CatIdentifier::findIdentifier(TypeInfo* typeInfo, RootTypeSource typeSource, const std::string& lowercaseName)
+CatScopeID CatIdentifier::getScopeId() const
 {
-	if (memberInfo == nullptr && typeInfo != nullptr)
-	{
-		memberInfo = typeInfo->getMemberInfo(lowercaseName);
-		if (memberInfo != nullptr)
-		{
-			source = typeSource;
-		}
-	}
+	return scopeId;
+}
+
+
+const TypeMemberInfo* CatIdentifier::getMemberInfo() const
+{
+	return memberInfo;
 }

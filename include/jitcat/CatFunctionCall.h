@@ -7,70 +7,48 @@
 
 #pragma once
 
-class CatArgumentList;
-#include "CatTypedExpression.h"
+#include "jitcat/CatBuiltInFunctionType.h"
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/CatGenericType.h"
 
 #include <memory>
 #include <vector>
 
-
-class CatFunctionCall: public CatTypedExpression
+namespace jitcat::AST
 {
-private:
-	enum class BuiltInFunction
+	class CatArgumentList;
+
+	class CatFunctionCall: public CatTypedExpression
 	{
-		ToInt,
-		ToFloat,
-		ToBool,
-		ToString,
-		ToPrettyString,
-		ToFixedLengthString,
-		Sin,
-		Cos,
-		Tan,
-		Random,
-		RandomRange,
-		Round,
-		StringRound,
-		Abs,
-		Cap,
-		Min,
-		Max,
-		Log,
-		Sqrt,
-		Pow,
-		Ceil,
-		Floor,
-		FindInString,
-		ReplaceInString,
-		StringLength,
-		SubString,
-		Select,
-		Count,
-		Invalid
+	public:
+		CatFunctionCall(const std::string& name, CatArgumentList* arguments);
+		CatFunctionCall(const CatFunctionCall&) = delete;
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() override final;
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+		virtual CatGenericType typeCheck() override final;
+		virtual CatGenericType getType() const override final;
+		virtual bool isConst() const override final;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+		CatBuiltInFunctionType getFunctionType() const;
+
+		const std::string& getFunctionName() const;
+		CatArgumentList* getArgumentList() const;
+
+		static bool isBuiltInFunction(const char* functionName, int numArguments);
+		static const std::vector<std::string>& getAllBuiltInFunctions();
+
+	private:
+		bool isDeterministic() const;
+		bool checkArgumentCount(std::size_t count) const;
+		static CatBuiltInFunctionType toFunction(const char* functionName, int numArguments);
+		static std::vector<std::string> functionTable;
+
+	private:
+		std::unique_ptr<CatArgumentList> arguments;
+		std::vector<CatGenericType> argumentTypes;
+		const std::string name;
+		CatBuiltInFunctionType function;
 	};
-public:
-	CatFunctionCall(const std::string& name, CatArgumentList* arguments);
-	CatFunctionCall(const CatFunctionCall&) = delete;
-	virtual void print() const override final;
-	virtual CatASTNodeType getNodeType() override final;
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) override final;
-	virtual CatGenericType typeCheck() override final;
-	virtual CatGenericType getType() const override final;
-	virtual bool isConst() const override final;
-	virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 
-	static bool isBuiltInFunction(const char* functionName, int numArguments);
-	static const std::vector<std::string>& getAllBuiltInFunctions();
-
-private:
-	bool isDeterministic() const;
-	bool checkArgumentCount(std::size_t count) const;
-	static BuiltInFunction toFunction(const char* functionName, int numArguments);
-	static std::vector<std::string> functionTable;
-
-private:
-	std::unique_ptr<CatArgumentList> arguments;
-	const std::string name;
-	BuiltInFunction function;
-};
+} //End namespace jitcat::AST

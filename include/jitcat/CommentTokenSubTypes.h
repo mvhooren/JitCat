@@ -7,8 +7,13 @@
 
 #pragma once
 
-enum CommentType
+namespace jitcat::Tokenizer
 {
-	CT_SINGLE_LINE,
-	CT_BLOCK
-};
+
+	enum CommentType
+	{
+		CT_SINGLE_LINE,
+		CT_BLOCK
+	};
+
+} //End namespace jitcat::Tokenizer

@@ -5,25 +5,30 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "JitCatValidator.h"
+#include "jitcatvalidator/JitCatValidator.h"
 
-#include <AutoCompletion.h>
-#include <CatPrefixOperator.h>
-#include <CatRuntimeContext.h>
-#include <CatTypedExpression.h>
-#include <CustomTypeInfo.h>
-#include <Document.h>
-#include <ExpressionErrorManager.h>
-#include <JitCat.h>
+#include <jitcat/AutoCompletion.h>
+#include <jitcat/CatPrefixOperator.h>
+#include <jitcat/CatRuntimeContext.h>
+#include <jitcat/CatTypedExpression.h>
+#include <jitcat/CustomTypeInfo.h>
+#include <jitcat/Document.h>
+#include <jitcat/ExpressionErrorManager.h>
+#include <jitcat/JitCat.h>
+#include <jitcat/SLRParseResult.h>
+#include <jitcat/TypeInfo.h>
+#include <jitcat/TypeRegistry.h>
+#include <jitcat/Tools.h>
 #include <memory>
-#include <SLRParseResult.h>
-#include <TypeInfo.h>
-#include <TypeRegistry.h>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Parser;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tokenizer;
 
 
-JITCATVALIDATOR_API int validateExpression(const char* expression, const char* globalsTypeName, 
-										   const char* localsTypeName, const char* customLocalsTypeName, 
-										   const char* customGlobalsTypeName, ValidationResult* result)
+JITCATVALIDATOR_API int validateExpression(const char* expression, const char* rootScopeTypeNames, ValidationResult* result)
 {
 	if (result == nullptr)
 	{
@@ -35,18 +40,22 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* g
 	result->isConstant = false;
 	result->isLiteral = false;
 	result->isValid = false;
-	TypeInfo* globalsType = TypeRegistry::get()->getTypeInfo(globalsTypeName);
-	TypeInfo* localsType = TypeRegistry::get()->getTypeInfo(localsTypeName);
-	TypeInfo* customLocalsType = TypeRegistry::get()->getTypeInfo(customLocalsTypeName);
-	TypeInfo* customGlobalsType = TypeRegistry::get()->getTypeInfo(customGlobalsTypeName);
-	if ((globalsType == nullptr && strlen(globalsTypeName) != 0)
-		|| (localsType == nullptr && strlen(localsTypeName) != 0)
-		|| (customLocalsType == nullptr && strlen(customLocalsTypeName) != 0)
-		|| (customGlobalsType == nullptr && strlen(customGlobalsTypeName) != 0))
+
+	std::vector<std::string> rootScopeTypeList;
+	Tools::split(rootScopeTypeNames, " ", rootScopeTypeList); 
+	CatRuntimeContext context("", nullptr);
+	for (auto& iter : rootScopeTypeList)
 	{
-		return -2;
+		TypeInfo* typeInfo = TypeRegistry::get()->getTypeInfo(iter);
+		if (typeInfo == nullptr)
+		{
+			return -2;
+		}
+		else
+		{
+			context.addScope(typeInfo);
+		}
 	}
-	CatRuntimeContext context(globalsType, localsType, customLocalsType, customGlobalsType, "", false, nullptr);
 
 	Document document(expression, strlen(expression));
 	std::unique_ptr<SLRParseResult> parseResult(JitCat::get()->parse(&document, &context));
@@ -58,7 +67,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* g
 		if (!valueType.isValidType())
 		{
 			parseResult->success = false;
-			parseResult->errorMessage = valueType.getErrorMessage();
+			parseResult->errorMessage = valueType.getError().getMessage();
 		}
 		else
 		{
@@ -109,26 +118,29 @@ JITCATVALIDATOR_API void destroyValidationResult(ValidationResult* result)
 }
 
 
-JITCATVALIDATOR_API int codeCompleteExpression(const char* expression, int cursorPosition, const char* globalsTypeName, 
-											   const char* localsTypeName, const char* customLocalsTypeName, 
-											   const char* customGlobalsTypeName, CodeCompletionSuggestions* results)
+JITCATVALIDATOR_API int codeCompleteExpression(const char* expression, int cursorPosition, const char* rootScopeTypeNames, CodeCompletionSuggestions* results)
 {
 	if (results == nullptr)
 	{
 		return -1;
 	}
-	TypeInfo* globalsType = TypeRegistry::get()->getTypeInfo(globalsTypeName);
-	TypeInfo* localsType = TypeRegistry::get()->getTypeInfo(localsTypeName);
-	TypeInfo* customLocalsType = TypeRegistry::get()->getTypeInfo(customLocalsTypeName);
-	TypeInfo* customGlobalsType = TypeRegistry::get()->getTypeInfo(customGlobalsTypeName);
-	if ((globalsType == nullptr && strlen(globalsTypeName) != 0)
-		|| (localsType == nullptr && strlen(localsTypeName) != 0)
-		|| (customLocalsType == nullptr && strlen(customLocalsTypeName) != 0)
-		|| (customGlobalsType == nullptr && strlen(customGlobalsTypeName) != 0))
+
+	std::vector<std::string> rootScopeTypeList;
+	Tools::split(rootScopeTypeNames, " ", rootScopeTypeList); 
+	CatRuntimeContext context("", nullptr);
+	for (auto& iter : rootScopeTypeList)
 	{
-		return -2;
+		TypeInfo* typeInfo = TypeRegistry::get()->getTypeInfo(iter);
+		if (typeInfo == nullptr)
+		{
+			return -2;
+		}
+		else
+		{
+			context.addScope(typeInfo);
+		}
 	}
-	CatRuntimeContext context(globalsType, localsType, customLocalsType, customGlobalsType, "Completion", false, nullptr);
+
 	const auto& suggestions = AutoCompletion::autoComplete(expression, cursorPosition, &context);
 	if (suggestions.size() > 0)
 	{

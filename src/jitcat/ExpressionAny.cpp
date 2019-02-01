@@ -5,119 +5,48 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ExpressionAny.h"
-#include "ExpressionErrorManager.h"
-#include "CatASTNodes.h"
-#include "Document.h"
-#include "JitCat.h"
-#include "SLRParseResult.h"
-#include "Tools.h"
+#include "jitcat/ExpressionAny.h"
+#include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/CatASTNodes.h"
+#include "jitcat/Configuration.h"
+#include "jitcat/Document.h"
+#include "jitcat/JitCat.h"
+#include "jitcat/SLRParseResult.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
+
+using namespace jitcat;
 
 
 ExpressionAny::ExpressionAny():
-	expressionIsLiteral(false),
-	expressionAST(nullptr),
-	parseResult(nullptr),
-	isConstant(false),
-	errorManagerHandle(nullptr)
-{
-}
-
-
-ExpressionAny::ExpressionAny(const ExpressionAny& other):
-	expression(other.expression),
-	expressionIsLiteral(false),
-	expressionAST(nullptr),
-	parseResult(nullptr),
-	isConstant(false),
-	errorManagerHandle(nullptr)
+	nativeFunctionAddress(0)
 {
 }
 
 
 ExpressionAny::ExpressionAny(const char* expression):
-	expression(expression),
-	expressionIsLiteral(false),
-	expressionAST(nullptr),
-	parseResult(nullptr),
-	isConstant(false),
-	errorManagerHandle(nullptr)
+	ExpressionBase(expression),
+	nativeFunctionAddress(0)
 {
 }
 
 
 ExpressionAny::ExpressionAny(const std::string& expression):
-	expression(expression),
-	expressionIsLiteral(false),
-	expressionAST(nullptr),
-	parseResult(nullptr),
-	isConstant(false),
-	errorManagerHandle(nullptr)
+	ExpressionBase(expression),
+	nativeFunctionAddress(0)
 {
 }
 
 
 ExpressionAny::ExpressionAny(CatRuntimeContext* compileContext, const std::string& expression):
-	expression(expression),
-	expressionIsLiteral(false),
-	expressionAST(nullptr),
-	parseResult(nullptr),
-	isConstant(false),
-	errorManagerHandle(nullptr)
+	ExpressionBase(compileContext, expression),
+	nativeFunctionAddress(0)
 {
 	compile(compileContext);
 }
 
 
-ExpressionAny::~ExpressionAny()
-{
-	if (errorManagerHandle.getIsValid())
-	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->expressionDeleted(this);
-	}
-	delete parseResult;
-}
-
-
-void ExpressionAny::setExpression(const std::string& expression_, CatRuntimeContext* compileContext)
-{
-	if (expression != expression_)
-	{
-		expression = expression_;
-		if (compileContext != nullptr)
-		{
-			compile(compileContext);
-		}
-	}
-}
-
-
-const std::string& ExpressionAny::getExpression() const
-{
-	return expression;
-}
-
-
-bool ExpressionAny::isLiteral() const
-{
-	return expressionIsLiteral;
-}
-
-
-bool ExpressionAny::isConst() const
-{
-	return isConstant;
-}
-
-
-bool ExpressionAny::hasError() const
-{
-	return !(parseResult != nullptr
-			&& parseResult->success);
-}
-
-
-const CatValue ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
+const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 {
 	if (isConstant)
 	{
@@ -125,97 +54,42 @@ const CatValue ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 	}
 	else if (expressionAST != nullptr)
 	{
-		return expressionAST->execute(runtimeContext);
+		if constexpr (Configuration::enableLLVM)
+		{
+			if		(valueType.isIntType())		return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isFloatType())	return std::any(reinterpret_cast<float(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isBoolType())	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isStringType())	return std::any(reinterpret_cast<std::string(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isObjectType())	return valueType.getObjectType()->getTypeCaster()->cast(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isVectorType())	return valueType.getObjectType()->getTypeCaster()->castToVectorOf(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isMapType())		return valueType.getObjectType()->getTypeCaster()->castToStringIndexedMapOf(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else 
+			{
+				return std::any();
+			}
+		}
+		else
+		{
+			return expressionAST->execute(runtimeContext);
+		}
 	}
 	else
 	{
-		return CatValue();
+		return std::any();
 	}
 }
 
 
 void ExpressionAny::compile(CatRuntimeContext* context)
 {
-	errorManagerHandle = context->getErrorManager();
-	isConstant = false;
-	delete parseResult;
-	Document document(expression.c_str(), expression.length());
-	parseResult = JitCat::get()->parse(&document, context);
-	if (parseResult->success)
+	if (parse(context, CatGenericType()) && isConstant)
 	{
-		CatTypedExpression* typedExpression = static_cast<CatTypedExpression*>(parseResult->astRootNode);
-		bool isMinusPrefixWithLiteral = false;
-		//If the expression is a minus prefix operator combined with a literal, then we need to count the whole expression as a literal.
-		if (typedExpression->getNodeType() == CatASTNodeType::PrefixOperator)
-		{
-			CatPrefixOperator* prefixOp = static_cast<CatPrefixOperator*>(typedExpression);
-			if (prefixOp->rhs != nullptr
-				&& prefixOp->oper == CatPrefixOperator::Operator::Minus
-				&& prefixOp->rhs->getNodeType() == CatASTNodeType::Literal)
-			{
-				isMinusPrefixWithLiteral = true;
-			}
-		}
-		CatTypedExpression* newExpression = typedExpression->constCollapse(context);
-		if (newExpression != typedExpression)
-		{
-			delete typedExpression;
-			typedExpression = newExpression;
-			parseResult->astRootNode = newExpression;
-			expressionIsLiteral = isMinusPrefixWithLiteral;
-		}
-		else
-		{
-			expressionIsLiteral = typedExpression->getNodeType() == CatASTNodeType::Literal;
-		}
-		expressionAST = typedExpression;
-		//Type check by just executing the expression and checking the result.
-		//The compile-time context should give correct default values for type checking
-		valueType = expressionAST->typeCheck();
-		if (!valueType.isValidType())
-		{
-			parseResult->success = false;
-			parseResult->errorMessage = valueType.getErrorMessage();
-		}
-	}
-	if (!parseResult->success)
-	{
-		std::string contextName = context->getContextName().c_str();
-		std::string errorMessage;
-		if (contextName != "")
-		{
-			errorMessage = Tools::append("ERROR in ", contextName, ": \n", expression, "\n", parseResult->errorMessage);
-		}
-		else
-		{
-			errorMessage = Tools::append("ERROR: \n", expression, "\n", parseResult->errorMessage);
-		}
-		errorMessage = Tools::append(errorMessage, " Offset: ", parseResult->errorPosition);
-
-		context->getErrorManager()->compiledWithError(errorMessage, this);
-		expressionIsLiteral = false;
-		expressionAST = nullptr;
-		parseResult->astRootNode = nullptr;//QQQ leaking
-	}
-	else
-	{
-		if (expressionAST->isConst())
-		{
-			isConstant = true;
-			cachedValue = expressionAST->execute(context);
-		}
-		context->getErrorManager()->compiledWithoutErrors(this);
+		cachedValue = expressionAST->execute(context);
 	}
 }
 
 
-const CatGenericType ExpressionAny::getType() const
+void ExpressionAny::handleCompiledFunction(uintptr_t functionAddress)
 {
-	return valueType;
-}
-
-
-std::string& ExpressionAny::getExpressionForSerialisation()
-{
-	return expression;
+	nativeFunctionAddress = functionAddress;
 }

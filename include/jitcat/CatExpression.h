@@ -7,14 +7,24 @@
 
 #pragma once
 
-class CatRuntimeContext;
-#include "CatASTNode.h"
-#include "CatValue.h"
-
-
-class CatExpression: public CatASTNode
+namespace jitcat
 {
-public:
-	virtual CatValue execute(CatRuntimeContext* runtimeContext) = 0;
-	virtual CatGenericType typeCheck() = 0;
-};
+	class CatRuntimeContext;
+}
+#include "jitcat/CatASTNode.h"
+#include "jitcat/CatGenericType.h"
+
+#include <any>
+
+namespace jitcat::AST
+{
+
+	class CatExpression: public CatASTNode
+	{
+	public:
+		virtual std::any execute(CatRuntimeContext* runtimeContext) = 0;
+		virtual CatGenericType typeCheck() = 0;
+	};
+
+
+} //End namespace jitcat::AST

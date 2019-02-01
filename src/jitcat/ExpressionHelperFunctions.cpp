@@ -5,44 +5,39 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "ExpressionHelperFunctions.h"
-#include "Expression.h"
-#include "Tools.h"
+#include "jitcat/ExpressionHelperFunctions.h"
+#include "jitcat/Expression.h"
+#include "jitcat/Tools.h"
 
 #include <string>
 
+using namespace jitcat;
 
-bool ExpressionHelperFunctions::canBeAssigned(CatType targetType, CatType sourceType) 
+
+bool ExpressionHelperFunctions::canBeAssigned(const CatGenericType& targetType, const CatGenericType& sourceType) 
 {
-	return targetType < CatType::Void 
-		   && sourceType < CatType::Void 
+	return targetType.isBasicType()
+		   && sourceType.isBasicType()
 		   && ((targetType == sourceType) 
-		       || (targetType == CatType::Float && sourceType == CatType::Int) 
-			   || (targetType == CatType::Int && sourceType == CatType::Float));
+		       || (targetType.isScalarType() && sourceType.isScalarType()));
 }
 
 
-ExpressionBase* ExpressionHelperFunctions::createExpression(CatType type, const std::string& expressionText, CatRuntimeContext* compileContext)
+ExpressionBase* ExpressionHelperFunctions::createExpression(const CatGenericType& type, const std::string& expressionText, CatRuntimeContext* compileContext)
 {
-	switch (type)
-	{
-		case CatType::Bool:		return new Expression<bool>(compileContext, expressionText);
-		case CatType::Float:		return new Expression<float>(compileContext, expressionText);
-		case CatType::Int:			return new Expression<int>(compileContext, expressionText);
-		case CatType::String:		return new Expression<std::string>(compileContext, expressionText);
-	}
-	return nullptr;
+	if		(type.isBoolType())		return new Expression<bool>(compileContext, expressionText);
+	else if (type.isFloatType())	return new Expression<float>(compileContext, expressionText);
+	else if (type.isIntType())		return new Expression<int>(compileContext, expressionText);
+	else if (type.isStringType())	return new Expression<std::string>(compileContext, expressionText);
+	else							return nullptr;
 }
 
 
-ExpressionBase* ExpressionHelperFunctions::createExpression(CatType type, const std::string& expressionText)
+ExpressionBase* ExpressionHelperFunctions::createExpression(const CatGenericType& type, const std::string& expressionText)
 {
-	switch (type)
-	{
-		case CatType::Bool:	return new Expression<bool>(expressionText);
-		case CatType::Float:	return new Expression<float>(expressionText);
-		case CatType::Int:		return new Expression<int>(expressionText);
-		case CatType::String:	return new Expression<std::string>(expressionText);
-	}
-	return nullptr;
+	if		(type.isBoolType())		return new Expression<bool>(expressionText);
+	else if (type.isFloatType())	return new Expression<float>(expressionText);
+	else if (type.isIntType())		return new Expression<int>(expressionText);
+	else if (type.isStringType())	return new Expression<std::string>(expressionText);
+	else							return nullptr;
 }

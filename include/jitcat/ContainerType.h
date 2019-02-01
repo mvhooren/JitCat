@@ -8,14 +8,19 @@
 #pragma once
 
 
-enum class ContainerType
+namespace jitcat::Reflection
 {
-	None,
-	Vector,
-	StringMap,
-	Count
-};
+
+	enum class ContainerType
+	{
+		None,
+		Vector,
+		StringMap,
+		Count
+	};
 
 
-const char* toString(ContainerType type);
-ContainerType toContainerType(const char* value);
+	const char* toString(ContainerType type);
+	ContainerType toContainerType(const char* value);
+
+} //End namespace jitcat::Reflection

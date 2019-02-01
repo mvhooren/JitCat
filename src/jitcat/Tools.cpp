@@ -5,12 +5,14 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "Tools.h"
+#include "jitcat/Tools.h"
 
 #include <cctype>
 
+using namespace jitcat::Tools;
 
-void Tools::split(const std::string& stringToSplit, const std::string& delims, std::vector<std::string>& stringsOut, bool allowEmpty)
+
+void jitcat::Tools::split(const std::string& stringToSplit, const std::string& delims, std::vector<std::string>& stringsOut, bool allowEmpty)
 {
 	stringsOut.clear();
 	std::string currentString;
@@ -45,7 +47,7 @@ void Tools::split(const std::string& stringToSplit, const std::string& delims, s
 }
 
 
-bool Tools::isNumber(const std::string& text)
+bool jitcat::Tools::isNumber(const std::string& text)
 {
 	// Go over all characters and check if all are either a digit, sign or dot. Allowing only the first character to be a sign and a single dot in the text.
 	std::size_t textSize = text.size();
@@ -88,7 +90,7 @@ bool Tools::isNumber(const std::string& text)
 }
 
 
-char Tools::toUpperCase(char text)
+char jitcat::Tools::toUpperCase(char text)
 {
 	if (text <= 'z' && text >= 'a')
 	{
@@ -99,7 +101,7 @@ char Tools::toUpperCase(char text)
 }
 
 
-std::string Tools::toUpperCase(std::string text)
+std::string jitcat::Tools::toUpperCase(std::string text)
 {
 	int difference = 'A' - 'a';
 	std::size_t size = text.size();
@@ -114,7 +116,7 @@ std::string Tools::toUpperCase(std::string text)
 }
 
 
-char Tools::toLowerCase(char text)
+char jitcat::Tools::toLowerCase(char text)
 {
 	if (text <= 'Z' && text >= 'A')
 	{
@@ -125,7 +127,7 @@ char Tools::toLowerCase(char text)
 }
 
 
-std::string Tools::toLowerCase(std::string text)
+std::string jitcat::Tools::toLowerCase(std::string text)
 {
 	const int difference = 'a' - 'A';
 	std::size_t size = text.size();
@@ -141,7 +143,7 @@ std::string Tools::toLowerCase(std::string text)
 }
 
 
-bool Tools::equalsWhileIgnoringCase(const std::string& text1, const std::string& text2)
+bool jitcat::Tools::equalsWhileIgnoringCase(const std::string& text1, const std::string& text2)
 {
 	std::size_t text1Size = text1.size();
 	std::size_t text2Size = text2.size();
@@ -157,19 +159,19 @@ bool Tools::equalsWhileIgnoringCase(const std::string& text1, const std::string&
 }
 
 
-bool Tools::equalsWhileIgnoringCase(const std::string& text1, const char* text2)
+bool jitcat::Tools::equalsWhileIgnoringCase(const std::string& text1, const char* text2)
 {
 	return equalsWhileIgnoringCase(text1.c_str(), text2);
 }
 
 
-bool Tools::equalsWhileIgnoringCase(const char* text1, const std::string& text2)
+bool jitcat::Tools::equalsWhileIgnoringCase(const char* text1, const std::string& text2)
 {
 	return equalsWhileIgnoringCase(text1, text2.c_str());
 }
 
 
-bool Tools::equalsWhileIgnoringCase(const char* text1, const char* text2)
+bool jitcat::Tools::equalsWhileIgnoringCase(const char* text1, const char* text2)
 {
 	while (true)
 	{
@@ -197,4 +199,17 @@ bool Tools::equalsWhileIgnoringCase(const char* text1, const char* text2)
 }
 
 
-const std::string Tools::empty = "";
+std::string jitcat::Tools::toHexBytes(const unsigned char* data, int length)
+{
+	std::stringstream stream;
+	for (int i = 0; i < length; i++)
+	{
+		int byteValue = (int)data[i];
+		if (byteValue <= 0xf)
+		{
+			stream << "0";
+		}
+		stream << std::hex << byteValue  << " ";
+	}
+	return stream.str();
+}

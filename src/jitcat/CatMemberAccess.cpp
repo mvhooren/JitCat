@@ -5,21 +5,27 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "CatMemberAccess.h"
-#include "CatLiteral.h"
-#include "CatLog.h"
-#include "MemberInfo.h"
-#include "TypeInfo.h"
+#include "jitcat/CatMemberAccess.h"
+#include "jitcat/CatLiteral.h"
+#include "jitcat/CatLog.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/TypeInfo.h"
+
+#include <cassert>
+
+using namespace jitcat;
+using namespace jitcat::AST;
+using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
 
 
 CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName):
 	base(base),
 	memberName(memberName),
-	memberInfo(nullptr),
-	type(CatType::Error)
+	memberInfo(nullptr)
 {
 	if (base != nullptr
-		&& base->getType() == CatType::Object)
+		&& base->getType().isObjectType())
 	{
 		CatGenericType baseMemberInfo = base->getType();
 		if (baseMemberInfo.isValidType()
@@ -31,7 +37,7 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 
 		if (memberInfo != nullptr)
 		{
-			type = memberInfo->toGenericType();
+			type = memberInfo->catType;
 		}
 	}
 }
@@ -51,32 +57,31 @@ CatASTNodeType CatMemberAccess::getNodeType()
 }
 
 
-CatValue CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
+std::any CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
 {
-	CatValue baseValue = base->execute(runtimeContext);
-	if (baseValue.getValueType() == CatType::Error)
-	{
-		return baseValue;
-	}
+	std::any baseValue = base->execute(runtimeContext);
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-
-		MemberReferencePtr rootReference = baseValue.getCustomTypeValue();
-		MemberReferencePtr reference = memberInfo->getMemberReference(rootReference);
-		if (!reference.isNull())
-		{
-			switch (type.getCatType())
-			{
-				case CatType::Int:		
-				case CatType::Float:	
-				case CatType::String:	
-				case CatType::Bool:	
-				case CatType::Object:	return CatValue(reference);
-				case CatType::Void:	return CatValue();
-			}
-		}
+		return memberInfo->getMemberReference(std::any_cast<Reflectable*>(baseValue));
 	}
-	return CatValue(CatError(std::string("Member not found:") + memberName));
+	assert(false);
+	return std::any();
+}
+
+
+std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType)
+{
+	std::any baseValue = base->execute(runtimeContext);
+	if (memberInfo != nullptr && runtimeContext != nullptr)
+	{
+		return memberInfo->getAssignableMemberReference(std::any_cast<Reflectable*>(baseValue), assignableType);
+	}
+	else
+	{
+		assignableType = AssignableType::None;
+	}
+	assert(false);
+	return std::any();
 }
 
 
@@ -93,7 +98,7 @@ CatGenericType CatMemberAccess::typeCheck()
 	}
 	else if (memberInfo != nullptr)
 	{
-		return memberInfo->toGenericType();
+		return memberInfo->catType;
 	}
 	else
 	{
@@ -112,7 +117,7 @@ bool CatMemberAccess::isConst() const
 {
 	if (memberInfo != nullptr)
 	{
-		return memberInfo->isConst && base->isConst();
+		return memberInfo->catType.isConst() && base->isConst();
 	}
 	return false;
 }
@@ -122,7 +127,19 @@ CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTim
 {
 	if (type.isValidType() && isConst())
 	{
-		return new CatLiteral(execute(compileTimeContext));
+		return new CatLiteral(execute(compileTimeContext), getType());
 	}
 	return this;
+}
+
+
+CatTypedExpression* CatMemberAccess::getBase() const
+{
+	return base.get();
+}
+
+
+TypeMemberInfo* CatMemberAccess::getMemberInfo() const
+{
+	return memberInfo;
 }

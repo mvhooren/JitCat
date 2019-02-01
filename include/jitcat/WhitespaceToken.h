@@ -7,20 +7,25 @@
 
 #pragma once
 
-#include "ParseToken.h"
+#include "jitcat/ParseToken.h"
 
-class WhitespaceToken: public ParseToken
+namespace jitcat::Tokenizer
 {
-public:
-	WhitespaceToken() {};
-	WhitespaceToken(Lexeme* lexeme_) {lexeme = lexeme_;};
-	virtual int getTokenID() const {return getID();};
-	virtual const char* getTokenName() const {return "Whitespace";};
-	virtual const char* getSubTypeName(int subType) const {return getTokenName();}	
-	virtual const char* getSubTypeSymbol(int subType) const {return getTokenName();};
-	virtual int getTokenSubType() const {return 0;};
-	virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
+
+	class WhitespaceToken: public ParseToken
+	{
+	public:
+		WhitespaceToken() {};
+		WhitespaceToken(Lexeme* lexeme_) {lexeme.reset(lexeme_);};
+		virtual int getTokenID() const {return getID();};
+		virtual const char* getTokenName() const {return "Whitespace";};
+		virtual const char* getSubTypeName(int subType) const {return getTokenName();}	
+		virtual const char* getSubTypeSymbol(int subType) const {return getTokenName();};
+		virtual int getTokenSubType() const {return 0;};
+		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
 
 
-	static const int getID(){static int ID = ParseToken::getNextTokenID(); return ID;};
-};
+		static const int getID(){static int ID = ParseToken::getNextTokenID(); return ID;};
+	};
+
+} //End namespace jitcat::Tokenizer

@@ -5,9 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "TwoCharToken.h"
-#include "Document.h"
-#include "Lexeme.h"
+#include "jitcat/TwoCharToken.h"
+#include "jitcat/Document.h"
+#include "jitcat/Lexeme.h"
+
+using namespace jitcat::Tokenizer;
 
 
 TwoCharToken::TwoCharToken():
@@ -19,7 +21,7 @@ TwoCharToken::TwoCharToken():
 TwoCharToken::TwoCharToken(Lexeme* lexeme_, TwoChar subType):
 	subType(subType)
 {
-	lexeme = lexeme_;
+	lexeme.reset(lexeme_);
 }
 
 
