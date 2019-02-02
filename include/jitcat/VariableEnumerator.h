@@ -12,19 +12,19 @@
 
 namespace jitcat::Reflection
 {
+	enum class NamespaceType
+	{
+		Category,
+		Object,
+		Map,
+		Vector
+	};
 
 	class VariableEnumerator
 	{
 	public:
 		virtual ~VariableEnumerator() {}
 
-		enum NamespaceType
-		{
-			NT_CATEGORY,
-			NT_OBJECT,
-			NT_MAP,
-			NT_VECTOR
-		};
 		virtual void addFunction(const std::string& name, const std::string& prototype) = 0;
 		virtual void addVariable(const std::string& name, const std::string& typeName, bool isWritable, bool isConst) = 0;
 		virtual void enterNameSpace(const std::string& name, const std::string& typeName, NamespaceType namespaceType) = 0;

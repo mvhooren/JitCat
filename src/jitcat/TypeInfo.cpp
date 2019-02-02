@@ -175,7 +175,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 			std::string nestedTypeName = memberType.toString();
 			if (allowEmptyStructs || memberType.getObjectType()->getMembers().size() > 0)
 			{
-				enumerator->enterNameSpace(iter->second->memberName, nestedTypeName, VariableEnumerator::NT_OBJECT);
+				enumerator->enterNameSpace(iter->second->memberName, nestedTypeName, NamespaceType::Object);
 				if (!Tools::isInList(enumerator->loopDetectionTypeStack, nestedTypeName))
 				{
 					enumerator->loopDetectionTypeStack.push_back(nestedTypeName);
@@ -190,7 +190,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 		{
 			std::string containerType = memberType.isMapType() ? "Map" : "List";
 			std::string itemType = memberType.getContainerItemType().toString();
-			enumerator->enterNameSpace(iter->second->memberName, Tools::append(containerType, ": ", itemType), memberType.isMapType() ? VariableEnumerator::NT_MAP : VariableEnumerator::NT_VECTOR);
+			enumerator->enterNameSpace(iter->second->memberName, Tools::append(containerType, ": ", itemType), memberType.isMapType() ? NamespaceType::Map : NamespaceType::Vector);
 			if (!Tools::isInList(enumerator->loopDetectionTypeStack, itemType))
 			{
 				enumerator->loopDetectionTypeStack.push_back(itemType);

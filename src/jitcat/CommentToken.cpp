@@ -8,6 +8,7 @@
 #include "jitcat/CommentToken.h"
 #include "jitcat/Document.h"
 #include "jitcat/Lexeme.h"
+#include "jitcat/Tools.h"
 
 using namespace jitcat::Tokenizer;
 
@@ -17,8 +18,8 @@ const char* CommentToken::getSubTypeName(int subType_) const
 	switch ((CommentType) subType_)
 	{
 		default:
-		case CT_SINGLE_LINE:	return "single line";
-		case CT_BLOCK:			return "block";
+		case CommentType::SingleLine:	return "single line";
+		case CommentType::Block:		return "block";
 	}
 }
 
@@ -28,8 +29,8 @@ const char* CommentToken::getSubTypeSymbol(int subType_) const
 	switch ((CommentType) subType_)
 	{
 		default:
-		case CT_SINGLE_LINE:	return "//";
-		case CT_BLOCK:			return "/**/";
+		case CommentType::SingleLine:	return "//";
+		case CommentType::Block:		return "/**/";
 	}
 }
 
@@ -39,7 +40,7 @@ ParseToken* CommentToken::createIfMatch(Document* document, const char* currentP
 	std::size_t offset = 0;
 	std::size_t docOffset = currentPosition - document->getDocumentData();
 	std::size_t documentLength = document->getDocumentSize() - docOffset;
-	int subTypeToCreate = CT_SINGLE_LINE;
+	CommentType subTypeToCreate = CommentType::SingleLine;
 	if (documentLength >= 2)
 	{
 		if (currentPosition[0] == '/' && currentPosition[1] == '/')
@@ -53,7 +54,7 @@ ParseToken* CommentToken::createIfMatch(Document* document, const char* currentP
 		}
 		else if (currentPosition[0] == '/' && currentPosition[1] == '*')
 		{
-			subTypeToCreate = CT_BLOCK;
+			subTypeToCreate = CommentType::Block;
 			offset += 2;
 			bool previousCharacterIsStar = false;
 			while (offset < documentLength
@@ -69,7 +70,7 @@ ParseToken* CommentToken::createIfMatch(Document* document, const char* currentP
 
 	if (offset > 0)
 	{
-		return new CommentToken(new Lexeme(document, docOffset, offset), subTypeToCreate);
+		return new CommentToken(new Lexeme(document, docOffset, offset), Tools::enumToInt(subTypeToCreate));
 	}
 	else
 	{

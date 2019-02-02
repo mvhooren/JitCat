@@ -10,10 +10,10 @@
 namespace jitcat::Tokenizer
 {
 
-	enum CommentType
+	enum class CommentType: int
 	{
-		CT_SINGLE_LINE,
-		CT_BLOCK
+		SingleLine,
+		Block
 	};
 
 } //End namespace jitcat::Tokenizer
