@@ -183,7 +183,7 @@ set(Source_Reflection_Enums
 	${JitCatHeaderPath}/AssignableType.h
 	ContainerType.cpp
 	${JitCatHeaderPath}/ContainerType.h
-	${JitCatHeaderPath}/MemberTypeFlags.h
+	${JitCatHeaderPath}/MemberFlags.h
 )
 
 

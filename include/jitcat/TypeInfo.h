@@ -9,7 +9,7 @@
 
 #include "jitcat/CatGenericType.h"
 #include "jitcat/ContainerType.h"
-#include "jitcat/MemberTypeFlags.h"
+#include "jitcat/MemberFlags.h"
 #include "jitcat/Reflectable.h"
 #include "jitcat/ReflectableHandle.h"
 #include "jitcat/Tools.h"
@@ -60,16 +60,10 @@ namespace jitcat::Reflection
 		//Adds information of a member of type U inside struct/class T
 		//A second function exists to differentiate between U and U*
 		template <typename T, typename U>
-		TypeInfo& addMember(const std::string& identifier, U T::* member, unsigned int flags = 0);
-
-		template <typename T, typename ... Args>
-		TypeInfo& addMember(const std::string& identifier, void (T::*function)(Args...));
+		TypeInfo& addMember(const std::string& identifier, U T::* member, MemberFlags flags = MF::none);
 
 		template <typename T, typename U, typename ... Args>
 		TypeInfo& addMember(const std::string& identifier, U (T::*function)(Args...));
-
-		template <typename T, typename ... Args>
-		TypeInfo& addMember(const std::string& identifier, void (T::*function)(Args...) const);
 
 		template <typename T, typename U, typename ... Args>
 		TypeInfo& addMember(const std::string& identifier, U (T::*function)(Args...) const);

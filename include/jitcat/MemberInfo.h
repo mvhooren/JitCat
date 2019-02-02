@@ -16,7 +16,7 @@ namespace jitcat::LLVM
 #include "jitcat/CatGenericType.h"
 #include "jitcat/ContainerType.h"
 #include "jitcat/LLVMForwardDeclares.h"
-#include "jitcat/MemberTypeFlags.h"
+#include "jitcat/MemberFlags.h"
 #include "jitcat/TypeRegistry.h"
 
 #include <map>

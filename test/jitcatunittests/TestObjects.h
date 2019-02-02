@@ -50,6 +50,7 @@ namespace TestObjects
 		int getInt();
 		bool getBoolean();
 		std::string getString();
+		const std::string& getStringRef();
 		ReflectedObject* getObject();
 		void doSomething();
 
@@ -86,6 +87,7 @@ namespace TestObjects
 		std::unique_ptr<NestedReflectedObject> nestedObjectUniquePointer;
 
 		std::vector<NestedReflectedObject*> reflectableObjectsVector;
+		std::vector<float> floatVector;
 		std::map<std::string, NestedReflectedObject*> reflectableObjectsMap;
 	};
 }

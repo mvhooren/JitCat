@@ -33,7 +33,7 @@ ReflectionTestRoot::~ReflectionTestRoot()
 
 void ReflectionTestRoot::reflect(TypeInfo& typeInfo)
 {
-	typeInfo.addMember("test", &ReflectionTestRoot::testObject, MTF_IS_CONST);
+	typeInfo.addMember("test", &ReflectionTestRoot::testObject, MF::isConst);
 	typeInfo.addMember("test2", &ReflectionTestRoot::testObject2);
 	typeInfo.addMember("test3", &ReflectionTestRoot::testObject3);
 	typeInfo.addMember("getPi", &ReflectionTestRoot::getPi);
