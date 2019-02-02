@@ -45,12 +45,6 @@ bool ProductionTokenSet::getIsSet() const
 }
 
 
-bool ProductionTokenSet::containsEpsilon() const
-{
-	return false;
-}
-
-
 void ProductionTokenSet::addMemberIfNotPresent(ProductionTokenSetMember* member)
 {
 	if (disallowEpsilons
@@ -148,11 +142,11 @@ bool ProductionTokenSet::isInSet(const ProductionTokenSetMember* token) const
 }
 
 
-bool ProductionTokenSet::overlaps(const ProductionTokenSet* otherSet) const
+bool ProductionTokenSet::overlaps(const ProductionTokenSet& otherSet) const
 {
 	for (int i = 0; i < (int)members.size(); i++)
 	{
-		if (otherSet->isInSet(members[i]))
+		if (otherSet.isInSet(members[i]))
 		{
 			return true;
 		}

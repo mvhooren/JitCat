@@ -62,7 +62,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 	CatTypedExpression* typedExpression = nullptr;
 	if (parseResult->success)
 	{
-		typedExpression = static_cast<CatTypedExpression*>(parseResult->astRootNode);
+		typedExpression = parseResult->getNode<CatTypedExpression>();
 		CatGenericType valueType = typedExpression->typeCheck();
 		if (!valueType.isValidType())
 		{
@@ -101,7 +101,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 		result->errorMessage = new char[parseResult->errorMessage.size() + 1];
 		memcpy((void*)result->errorMessage, parseResult->errorMessage.c_str(), parseResult->errorMessage.size() + 1);
 		result->errorOffset = parseResult->errorPosition;
-		parseResult->astRootNode = nullptr;
+		parseResult->astRootNode.reset(nullptr);
 		return 0;
 	}
 

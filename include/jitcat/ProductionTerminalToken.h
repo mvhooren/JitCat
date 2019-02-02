@@ -8,6 +8,8 @@
 #pragma once
 
 #include "jitcat/ProductionToken.h"
+#include "jitcat/ProductionTokenSet.h"
+
 namespace jitcat::Tokenizer
 {
 	class ParseToken;
@@ -26,23 +28,23 @@ namespace jitcat::Grammar
 		ProductionTerminalToken(Tokenizer::TokenizerBase* tokenizer, int tokenId, int tokenSubType);
 		virtual ~ProductionTerminalToken();
 		bool matches(const Tokenizer::ParseToken* token) const;
-		virtual ProductionTokenSet* getFirstSet() const;
-		virtual ProductionTokenSet* getFollowSet() const;
-		virtual bool getIsTerminal() const;
-		virtual bool getIsEpsilon() const;
-		virtual bool buildEpsilonContainment(std::vector<Production*>& productionStack);
-		virtual const char* getDescription() const;
-		virtual const char* getSymbol() const;
+		virtual ProductionTokenSet& getFirstSet() override final;
+		virtual ProductionTokenSet& getFollowSet() override final;
+		virtual bool getIsTerminal() const override final;
+		virtual bool getIsEpsilon() const override final;
+		virtual bool buildEpsilonContainment(std::vector<Production*>& productionStack) override final;
+		virtual const char* getDescription() const override final;
+		virtual const char* getSymbol() const override final;
 		int getTokenId() const;
 		int getTokenSubType() const;
-		virtual ProductionTokenType getType() const; 
-		virtual bool equals(const ProductionToken& other) const;
+		virtual ProductionTokenType getType() const override final; 
+		virtual bool equals(const ProductionToken& other) const override final;
 	private:
 		int tokenId;
 		int tokenSubType;
 		Tokenizer::TokenizerBase* tokenizer;
-		ProductionTokenSet* firstSet;
-		ProductionTokenSet* followSet;
+		ProductionTokenSet firstSet;
+		ProductionTokenSet followSet;
 	};
 
 } //End namespace jitcat::Grammar

@@ -6,7 +6,6 @@
 */
 
 #include "jitcat/ProductionTerminalToken.h"
-#include "jitcat/ProductionTokenSet.h"
 #include "jitcat/ParseToken.h"
 #include "jitcat/TokenizerBase.h"
 
@@ -19,19 +18,17 @@ using namespace jitcat::Tokenizer;
 ProductionTerminalToken::ProductionTerminalToken(TokenizerBase* tokenizer, int tokenId, int tokenSubType):
 	tokenizer(tokenizer),
 	tokenId(tokenId),
-	tokenSubType(tokenSubType)
+	tokenSubType(tokenSubType),
+	firstSet(false),
+	followSet(true)
 {
-	firstSet = new ProductionTokenSet(false);
-	firstSet->addMemberIfNotPresent(this);
-	followSet = new ProductionTokenSet(true);
+	firstSet.addMemberIfNotPresent(this);
 	setContainsEpsilon(false);
 }
 
 
 ProductionTerminalToken::~ProductionTerminalToken()
 {
-	delete firstSet;
-	delete followSet;
 }
 
 
@@ -42,13 +39,13 @@ bool ProductionTerminalToken::matches(const ParseToken* token) const
 }
 
 
-ProductionTokenSet* ProductionTerminalToken::getFirstSet() const
+ProductionTokenSet& ProductionTerminalToken::getFirstSet()
 {
 	return firstSet;
 }
 
 
-ProductionTokenSet* ProductionTerminalToken::getFollowSet() const
+ProductionTokenSet& ProductionTerminalToken::getFollowSet()
 {
 	return followSet;
 }

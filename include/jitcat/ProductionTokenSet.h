@@ -24,22 +24,22 @@ namespace jitcat::Grammar
 		ProductionTokenSet(bool disallowEpsilons);
 		virtual ~ProductionTokenSet() {}
 		void flatten();
-		virtual bool getIsSet() const;
-		virtual bool containsEpsilon() const;
+		virtual bool getIsSet() const override final;
 		void addMemberIfNotPresent(ProductionTokenSetMember* member);
-		virtual const char* getDescription() const;
+		virtual const char* getDescription() const override final;
 		std::size_t getNumMembers() const;
 		ProductionTokenSetMember* getMember(unsigned int index) const;
-		virtual bool getIsEpsilon() const;
+		virtual bool getIsEpsilon() const override final;
 		bool isInSet(const Tokenizer::ParseToken* token) const;
 		bool isInSet(const Production* production) const;
 		bool isInSet(const ProductionToken* token) const;
 		bool isInSet(const ProductionTokenSetMember* token) const;
 		//Returns true if any token in otherSet is also in this set
-		bool overlaps(const ProductionTokenSet* otherSet) const;
+		bool overlaps(const ProductionTokenSet& otherSet) const;
 
-		virtual ProductionTokenType getType() const; 
-		virtual bool equals(const ProductionToken& other) const;
+		virtual ProductionTokenType getType() const override final; 
+		virtual bool equals(const ProductionToken& other) const override final;
+
 
 	protected:
 		virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set);

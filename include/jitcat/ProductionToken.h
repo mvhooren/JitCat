@@ -25,8 +25,8 @@ namespace jitcat::Grammar
 		virtual const char* getSymbol() const = 0;
 		virtual bool getIsTerminal() const = 0;
 		virtual bool getIsEpsilon() const = 0;
-		virtual ProductionTokenSet* getFirstSet() const = 0;
-		virtual ProductionTokenSet* getFollowSet() const = 0;
+		virtual ProductionTokenSet& getFirstSet() = 0;
+		virtual ProductionTokenSet& getFollowSet() = 0;
 		virtual bool getIsSet() const {return false;};
 		virtual bool buildEpsilonContainment(std::vector<Production*>& productionStack) = 0;
 		virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set);

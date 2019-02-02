@@ -18,16 +18,16 @@ namespace jitcat::Grammar
 	{
 	public:
 		ProductionNonTerminalToken(Production* production);
-		virtual bool getIsTerminal() const;
-		virtual bool getIsEpsilon() const;
-		virtual bool buildEpsilonContainment(std::vector<Production*>& productionStack);
-		virtual ProductionTokenSet* getFirstSet() const;
-		virtual ProductionTokenSet* getFollowSet() const;
-		virtual const char* getDescription() const;
-		virtual const char* getSymbol() const;
-		virtual bool getContainsEpsilon();
-		virtual ProductionTokenType getType() const; 
-		virtual bool equals(const ProductionToken& other) const;
+		virtual bool getIsTerminal() const override final;
+		virtual bool getIsEpsilon() const override final;
+		virtual bool buildEpsilonContainment(std::vector<Production*>& productionStack) override final;
+		virtual ProductionTokenSet& getFirstSet() override final;
+		virtual ProductionTokenSet& getFollowSet() override final;
+		virtual const char* getDescription() const override final;
+		virtual const char* getSymbol() const override final;
+		virtual bool getContainsEpsilon() override final;
+		virtual ProductionTokenType getType() const override final; 
+		virtual bool equals(const ProductionToken& other) const override final;
 		const Production* getProduction() const;
 	private:
 		Production* production;

@@ -321,10 +321,8 @@ ASTNode* CatGrammar::argumentListToken(const ASTNodeParser& nodeParser)
 		else if (astNode->getNodeType() == CatASTNodeType::LinkedList)
 		{
 			CatLinkNode* linkNode = static_cast<CatLinkNode*>(astNode);
-			argumentList->arguments.emplace_back(static_cast<CatTypedExpression*>(linkNode->me.get()));
-			astNode = linkNode->next.get();
-			linkNode->me.release();
-			linkNode->next.release();
+			argumentList->arguments.emplace_back(static_cast<CatTypedExpression*>(linkNode->me.release()));
+			astNode = linkNode->next.release();
 			delete linkNode;
 		}
 		else

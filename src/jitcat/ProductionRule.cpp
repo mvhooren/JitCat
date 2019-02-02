@@ -72,7 +72,7 @@ bool ProductionRule::buildEpsilonContainment(std::vector<Production*>& productio
 }
 
 
-void ProductionRule::buildFirstSet(ProductionTokenSet* set)
+void ProductionRule::buildFirstSet(ProductionTokenSet& set)
 {
 	for (unsigned int i = 0; i < ruleTokens.size(); i++)
 	{
@@ -82,15 +82,15 @@ void ProductionRule::buildFirstSet(ProductionTokenSet* set)
 		}
 		if (ruleTokens[i]->getIsTerminal())
 		{
-			set->addMemberIfNotPresent(ruleTokens[i]);
+			set.addMemberIfNotPresent(ruleTokens[i]);
 			return;
 		}
 		else 
 		{
-			ProductionTokenSet* prodFirstSet = ruleTokens[i]->getFirstSet();
-			if (prodFirstSet != set)
+			ProductionTokenSet& prodFirstSet = ruleTokens[i]->getFirstSet();
+			if (&prodFirstSet != &set)
 			{
-				set->addMemberIfNotPresent(prodFirstSet);
+				set.addMemberIfNotPresent(&prodFirstSet);
 			}
 			if (!ruleTokens[i]->getContainsEpsilon())
 			{
@@ -111,7 +111,7 @@ void ProductionRule::buildFollowSets(Production* parentProduction)
 			bool allEpsilons = true;
 			for (unsigned int j = i + 1; j < ruleTokens.size(); j++)
 			{
-				ruleTokens[i]->getFollowSet()->addMemberIfNotPresent(ruleTokens[j]->getFirstSet());
+				ruleTokens[i]->getFollowSet().addMemberIfNotPresent(&ruleTokens[j]->getFirstSet());
 				if (!ruleTokens[j]->getContainsEpsilon())
 				{
 					allEpsilons = false;
@@ -120,12 +120,12 @@ void ProductionRule::buildFollowSets(Production* parentProduction)
 			}
 			if (allEpsilons)
 			{
-				ruleTokens[i]->getFollowSet()->addMemberIfNotPresent(parentProduction->getFollowSet());
+				ruleTokens[i]->getFollowSet().addMemberIfNotPresent(&parentProduction->getFollowSet());
 			}
 		}
 		else
 		{
-			ruleTokens[i]->getFollowSet()->addMemberIfNotPresent(parentProduction->getFollowSet());
+			ruleTokens[i]->getFollowSet().addMemberIfNotPresent(&parentProduction->getFollowSet());
 		}
 	}
 }

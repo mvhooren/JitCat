@@ -69,13 +69,13 @@ SLRParser* GrammarBase::createSLRParser() const
 
 void GrammarBase::rule(int productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action)
 {
-	ProductionRule* rule = new ProductionRule();
+	std::unique_ptr<ProductionRule> rule(new ProductionRule());
 	for (auto iter : tokens)
 	{
 		rule->pushToken(iter);
 	}
 	rule->setSemanticAction(action);
-	findOrCreateProduction(productionId)->addProductionRule(rule);
+	findOrCreateProduction(productionId)->addProductionRule(std::move(rule));
 }
 
 
@@ -104,7 +104,7 @@ ProductionToken* GrammarBase::prod(int productionId)
 void GrammarBase::setRootProduction(int productionId, ProductionToken* eofToken)
 {
 	rootProduction = findOrCreateProduction(productionId);
-	rootProduction->getFollowSet()->addMemberIfNotPresent(eofToken);
+	rootProduction->getFollowSet().addMemberIfNotPresent(eofToken);
 }
 
 
@@ -178,7 +178,7 @@ void GrammarBase::buildFirstSets()
 	}
 	for (iter = productions.begin(); iter != productions.end(); iter++)
 	{
-		iter->second->getFirstSet()->flatten();
+		iter->second->getFirstSet().flatten();
 	}
 #ifdef DEBUG_GRAMMAR
 	CatLog::log("##############\n");
@@ -215,11 +215,11 @@ void GrammarBase::buildFollowSets()
 	}
 	for (iter = productions.begin(); iter != productions.end(); iter++)
 	{
-		iter->second->getFollowSet()->flatten();
+		iter->second->getFollowSet().flatten();
 	}
 	for (unsigned int i = 0; i < terminals.size(); i++)
 	{
-		terminals[i]->getFollowSet()->flatten();
+		terminals[i]->getFollowSet().flatten();
 	}
 	#ifdef DEBUG_GRAMMAR
 		CatLog::log("############################\n");

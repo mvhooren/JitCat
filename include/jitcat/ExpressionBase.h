@@ -82,7 +82,6 @@ namespace jitcat
 		bool expectAssignable;
 
 		//Not owned
-		jitcat::AST::CatTypedExpression* expressionAST;
 		Reflection::ReflectableHandle errorManagerHandle;
 	};
 

@@ -11,6 +11,7 @@ namespace jitcat::AST
 {
 	class ASTNode;
 }
+#include <memory>
 #include <string>
 
 
@@ -21,8 +22,15 @@ namespace jitcat::Parser
 	{
 		SLRParseResult();
 		~SLRParseResult();
+
+		template<typename ASTNodeType>
+		ASTNodeType* getNode() { return static_cast<ASTNodeType*>(astRootNode.get());}
+
+		template<typename ASTNodeType>
+		ASTNodeType* releaseNode() { return static_cast<ASTNodeType*>(astRootNode.release());}
+
 		bool success;
-		AST::ASTNode* astRootNode;
+		std::unique_ptr<AST::ASTNode> astRootNode;
 		std::string errorMessage;
 		std::size_t errorPosition;
 	};

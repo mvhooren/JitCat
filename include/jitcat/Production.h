@@ -7,8 +7,11 @@
 
 #pragma once
 
+#include "jitcat/ProductionTokenSet.h"
 #include "jitcat/TokenFlag.h"
+#include <memory>
 #include <vector>
+
 
 namespace jitcat::Grammar
 {
@@ -21,25 +24,27 @@ namespace jitcat::Grammar
 	public:
 		Production(GrammarBase* grammar, int productionId);
 		~Production();
-		void addProductionRule(ProductionRule* rule);
+		void addProductionRule(std::unique_ptr<ProductionRule> rule);
 		bool buildEpsilonContainment(std::vector<Production*>& productionStack);
 		void buildFirstSet();
 		void buildFollowSets();
 		TokenFlag getContainsEpsilon();
-		ProductionTokenSet* getFirstSet() const;
-		ProductionTokenSet* getFollowSet() const;
+		ProductionTokenSet& getFirstSet();
+		ProductionTokenSet& getFollowSet();
+		const ProductionTokenSet& getFirstSet() const;
+		const ProductionTokenSet& getFollowSet() const;
 		const char* getProductionName() const;
 		std::size_t getNumRules() const;
-		const ProductionRule* getRule(unsigned int index) const;
+		const ProductionRule& getRule(unsigned int index) const;
 		int getProductionID() const;
 
 	private:
-		std::vector<ProductionRule*> rules;
+		std::vector<std::unique_ptr<ProductionRule>> rules;
 		int productionId;
 		TokenFlag containsEpsilon;
 		GrammarBase* grammar;
-		ProductionTokenSet* firstSet;
-		ProductionTokenSet* followSet;
+		ProductionTokenSet firstSet;
+		ProductionTokenSet followSet;
 	};
 
 }

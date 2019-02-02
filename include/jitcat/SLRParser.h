@@ -66,7 +66,7 @@ namespace jitcat::Parser
 		//Returns the new state if it is possible to shift the given token onto the stack.
 		//Returns nullptr if the shift is not possible (error)
 		DFAState* canShift(DFAState* currentState, StackItem* tokenToShift) const;
-		bool isStackItemInFollowSet(StackItem* item, Grammar::ProductionTokenSet* followSet) const;
+		bool isStackItemInFollowSet(StackItem* item, const Grammar::ProductionTokenSet& followSet) const;
 		void printStack(const std::vector<StackItem*> stack) const;
 
 		void scanForConflicts() const;

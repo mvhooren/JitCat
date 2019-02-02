@@ -8,6 +8,8 @@
 #pragma once
 
 #include "jitcat/ProductionToken.h"
+#include "jitcat/ProductionTokenSet.h"
+
 
 namespace jitcat::Grammar
 {
@@ -19,19 +21,18 @@ namespace jitcat::Grammar
 	public:
 		ProductionEpsilonToken();
 		virtual ~ProductionEpsilonToken();
-		virtual bool getIsTerminal() const;
-		virtual bool getIsEpsilon() const;
-		virtual bool containsEpsilon() const;
-		virtual bool buildEpsilonContainment(std::vector<Production*>& productionStack);
-		virtual ProductionTokenSet* getFirstSet() const;
-		virtual ProductionTokenSet* getFollowSet() const;
-		virtual const char* getDescription() const;
-		virtual const char* getSymbol() const;
-		virtual ProductionTokenType getType() const; 
-		virtual bool equals(const ProductionToken& other) const;
+		virtual bool getIsTerminal() const override final;
+		virtual bool getIsEpsilon() const override final;
+		virtual bool buildEpsilonContainment(std::vector<Production*>& productionStack) override final;
+		virtual ProductionTokenSet& getFirstSet() override final;
+		virtual ProductionTokenSet& getFollowSet() override final;
+		virtual const char* getDescription() const override final;
+		virtual const char* getSymbol() const override final;
+		virtual ProductionTokenType getType() const override final;  
+		virtual bool equals(const ProductionToken& other) const override final;
 	private:
-		ProductionTokenSet* firstSet;
-		ProductionTokenSet* followSet;
+		ProductionTokenSet firstSet;
+		ProductionTokenSet followSet;
 	};
 
 } //End namespace jitcat::Grammar

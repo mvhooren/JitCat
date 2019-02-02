@@ -35,7 +35,7 @@ namespace jitcat
 			void setSemanticAction(GrammarBase::SemanticAction action);
 			AST::ASTNode* executeSemanticAction(const Parser::ASTNodeParser& nodeParser) const;
 			bool buildEpsilonContainment(std::vector<Production*>& productionStack);
-			void buildFirstSet(ProductionTokenSet* set);
+			void buildFirstSet(ProductionTokenSet& set);
 			void buildFollowSets(Production* parentProduction);
 			std::size_t getNumTokens() const;
 			ProductionToken* getToken(unsigned int index) const;

@@ -8,7 +8,6 @@
 #include "jitcat/Production.h"
 #include "jitcat/ProductionEpsilonToken.h"
 #include "jitcat/ProductionRule.h"
-#include "jitcat/ProductionTokenSet.h"
 #include "jitcat/GrammarBase.h"
 
 using namespace jitcat::Grammar;
@@ -17,29 +16,21 @@ using namespace jitcat::Grammar;
 Production::Production(GrammarBase* grammar, int productionId):
 	grammar(grammar),
 	productionId(productionId),
-	containsEpsilon(TokenFlag::Unknown)
+	containsEpsilon(TokenFlag::Unknown),
+	firstSet(false),
+	followSet(true)
 {
-	firstSet = new ProductionTokenSet(false);
-	followSet = new ProductionTokenSet(true);
 }
 
 
 Production::~Production()
 {
-	for (unsigned int i = 0; i < rules.size(); i++)
-	{
-		delete rules[i];
-	}
-	rules.clear();
-
-	delete firstSet;
-	delete followSet;
 }
 
 
-void Production::addProductionRule(ProductionRule* rule)
+void Production::addProductionRule(std::unique_ptr<ProductionRule> rule)
 {
-	rules.push_back(rule);
+	rules.emplace_back(std::move(rule));
 }
 
 
@@ -76,7 +67,7 @@ void Production::buildFirstSet()
 	}
 	if (containsEpsilon != TokenFlag::No)
 	{
-		firstSet->addMemberIfNotPresent(grammar->epsilon());
+		firstSet.addMemberIfNotPresent(grammar->epsilon());
 	}
 }
 
@@ -96,13 +87,25 @@ TokenFlag Production::getContainsEpsilon()
 }
 
 
-ProductionTokenSet* Production::getFirstSet() const
+ProductionTokenSet& Production::getFirstSet()
 {
 	return firstSet;
 }
 
 
-ProductionTokenSet* Production::getFollowSet() const
+ProductionTokenSet& Production::getFollowSet()
+{
+	return followSet;
+}
+
+
+const ProductionTokenSet& jitcat::Grammar::Production::getFirstSet() const
+{
+	return firstSet;
+}
+
+
+const ProductionTokenSet& jitcat::Grammar::Production::getFollowSet() const
 {
 	return followSet;
 }
@@ -120,9 +123,9 @@ std::size_t Production::getNumRules() const
 }
 
 
-const ProductionRule* Production::getRule(unsigned int index) const
+const ProductionRule& Production::getRule(unsigned int index) const
 {
-	return rules[index];
+	return *rules[index].get();
 }
 
 

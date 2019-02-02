@@ -74,9 +74,9 @@ inline bool ExpressionAssignment<ExpressionT>::assignValue(CatRuntimeContext* ru
 template<typename ExpressionT>
 inline bool ExpressionAssignment<ExpressionT>::assignInterpretedValue(CatRuntimeContext* runtimeContext, typename TypeTraits<ExpressionT>::functionParameterType value)
 {
-	if (expressionAST != nullptr && expressionAST->isAssignable())
+	if (parseResult->astRootNode != nullptr && parseResult->getNode<AST::CatTypedExpression>()->isAssignable())
 	{
-		jitcat::AST::CatAssignableExpression* assignable = static_cast<jitcat::AST::CatAssignableExpression*>(expressionAST);
+		jitcat::AST::CatAssignableExpression* assignable = parseResult->getNode<AST::CatAssignableExpression>();
 		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
 		std::any target = assignable->executeAssignable(runtimeContext, assignableType);
 		std::any anyValue = TypeTraits<ExpressionT>::getCatValue(value);

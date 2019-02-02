@@ -35,13 +35,13 @@ bool ProductionNonTerminalToken::buildEpsilonContainment(std::vector<Production*
 }
 
 
-ProductionTokenSet* ProductionNonTerminalToken::getFirstSet() const
+ProductionTokenSet& ProductionNonTerminalToken::getFirstSet()
 {
 	return production->getFirstSet();
 }
 
 
-ProductionTokenSet* ProductionNonTerminalToken::getFollowSet() const
+ProductionTokenSet& ProductionNonTerminalToken::getFollowSet()
 {
 	return production->getFollowSet();
 }

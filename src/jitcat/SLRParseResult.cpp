@@ -21,5 +21,4 @@ SLRParseResult::SLRParseResult():
 
 SLRParseResult::~SLRParseResult()
 {
-	delete astRootNode;
 };

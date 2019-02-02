@@ -33,7 +33,6 @@ using namespace jitcat::Tokenizer;
 
 ExpressionBase::ExpressionBase(bool expectAssignable):
 	expressionIsLiteral(false),
-	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
 	expectAssignable(expectAssignable)
@@ -44,7 +43,6 @@ ExpressionBase::ExpressionBase(bool expectAssignable):
 ExpressionBase::ExpressionBase(const char* expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
-	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
 	expectAssignable(expectAssignable)
@@ -55,7 +53,6 @@ ExpressionBase::ExpressionBase(const char* expression, bool expectAssignable):
 ExpressionBase::ExpressionBase(const std::string& expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
-	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
 	expectAssignable(expectAssignable)
@@ -66,7 +63,6 @@ ExpressionBase::ExpressionBase(const std::string& expression, bool expectAssigna
 ExpressionBase::ExpressionBase(CatRuntimeContext* compileContext, const std::string& expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
-	expressionAST(nullptr),
 	isConstant(false),
 	errorManagerHandle(nullptr),
 	expectAssignable(expectAssignable)
@@ -146,7 +142,6 @@ bool ExpressionBase::parse(CatRuntimeContext* context, const CatGenericType& exp
 
 	if (parseResult->success)
 	{
-		expressionAST = static_cast<CatTypedExpression*>(parseResult->astRootNode);
 		typeCheck(expectedType);
 		if (parseResult->success)
 		{
@@ -159,7 +154,10 @@ bool ExpressionBase::parse(CatRuntimeContext* context, const CatGenericType& exp
 	{
 		compileToNativeCode(context);
 	}
-
+	if (!parseResult->success)
+	{
+		parseResult->astRootNode.reset(nullptr);
+	}
 	return parseResult->success;
 }
 
@@ -168,9 +166,9 @@ void ExpressionBase::constCollapse(CatRuntimeContext* context)
 {
 	bool isMinusPrefixWithLiteral = false;
 	//If the expression is a minus prefix operator combined with a literal, then we need to count the whole expression as a literal.
-	if (expressionAST->getNodeType() == CatASTNodeType::PrefixOperator)
+	if (parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::PrefixOperator)
 	{
-		CatPrefixOperator* prefixOp = static_cast<CatPrefixOperator*>(expressionAST);
+		CatPrefixOperator* prefixOp = parseResult->getNode<CatPrefixOperator>();
 		if (prefixOp->rhs != nullptr
 			&& prefixOp->oper == CatPrefixOperator::Operator::Minus
 			&& prefixOp->rhs->getNodeType() == CatASTNodeType::Literal)
@@ -178,24 +176,22 @@ void ExpressionBase::constCollapse(CatRuntimeContext* context)
 			isMinusPrefixWithLiteral = true;
 		}
 	}
-	CatTypedExpression* newExpression = expressionAST->constCollapse(context);
-	if (newExpression != expressionAST)
+	CatTypedExpression* newExpression = parseResult->getNode<CatTypedExpression>()->constCollapse(context);
+	if (newExpression != parseResult->astRootNode.get())
 	{
-		delete expressionAST;
-		expressionAST = newExpression;
-		parseResult->astRootNode = newExpression;
+		parseResult->astRootNode.reset(newExpression);
 		expressionIsLiteral = isMinusPrefixWithLiteral;
 	}
 	else
 	{
-		expressionIsLiteral = expressionAST->getNodeType() == CatASTNodeType::Literal;
+		expressionIsLiteral = parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::Literal;
 	}
 }
 
 
 void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 {
-	valueType = expressionAST->typeCheck();
+	valueType = parseResult->getNode<CatTypedExpression>()->typeCheck();
 
 	if (!valueType.isValidType())
 	{
@@ -228,7 +224,6 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 			else if (expectedType.isVoidType() && valueType.isVoidType())
 			{
 				parseResult->success = true;
-				parseResult->astRootNode = expressionAST;
 			}
 			else if (valueType != expectedType)
 			{
@@ -236,23 +231,22 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 				{
 					//Insert an automatic type conversion to void.
 					CatArgumentList* arguments = new CatArgumentList();
-					arguments->arguments.emplace_back(static_cast<CatTypedExpression*>(parseResult->astRootNode));
-					expressionAST = new CatFunctionCall("toVoid", arguments);
-					parseResult->astRootNode = expressionAST;
-					valueType = expressionAST->getType();
+					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
+
+					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", arguments));
+					valueType = parseResult->getNode<CatTypedExpression>()->getType();
 				}
 				else if (expectedType.isScalarType() && valueType.isScalarType())
 				{
 					//Insert an automatic type conversion if the scalar types do not match.
 					CatArgumentList* arguments = new CatArgumentList();
-					arguments->arguments.emplace_back(static_cast<CatTypedExpression*>(parseResult->astRootNode));
+					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
 
-					if		(expectedType.isFloatType())	expressionAST = new CatFunctionCall("toFloat", arguments);
-					else if (expectedType.isIntType())		expressionAST = new CatFunctionCall("toInt", arguments);
+					if		(expectedType.isFloatType())	parseResult->astRootNode.reset(new CatFunctionCall("toFloat", arguments));
+					else if (expectedType.isIntType())		parseResult->astRootNode.reset(new CatFunctionCall("toInt", arguments));
 					else assert(false);	//Missing a conversion here?
 					
-					parseResult->astRootNode = expressionAST;
-					valueType = expressionAST->getType();
+					valueType = parseResult->getNode<CatTypedExpression>()->getType();
 				}
 				else
 				{
@@ -263,7 +257,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 		}
 		if (parseResult->success)
 		{
-			isConstant = expressionAST->isConst();
+			isConstant = parseResult->getNode<CatTypedExpression>()->isConst();
 		}
 	}
 }
@@ -300,7 +294,6 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 			}
 		}
 		expressionIsLiteral = false;
-		expressionAST = nullptr;
 	}
 	else if (context != nullptr)
 	{
@@ -326,11 +319,11 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 			codeGenerator = context->getCodeGenerator();
 			if (!expectAssignable)
 			{
-				functionAddress = codeGenerator->generateAndGetFunctionAddress(expressionAST, &llvmCompileContext);
+				functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult->getNode<CatTypedExpression>(), &llvmCompileContext);
 			}
-			else if (expressionAST->isAssignable())
+			else if (parseResult->getNode<CatTypedExpression>()->isAssignable())
 			{
-				functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(static_cast<CatAssignableExpression*>(expressionAST), &llvmCompileContext);
+				functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult->getNode<CatAssignableExpression>(), &llvmCompileContext);
 			}
 			if (functionAddress != 0)
 			{

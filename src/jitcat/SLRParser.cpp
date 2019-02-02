@@ -42,8 +42,8 @@ void SLRParser::createNFA(const GrammarBase* grammar)
 	std::vector<DFAState*>& nfa = dfa;
 	Production* prod = grammar->rootProduction;
 	if (prod->getNumRules() == 1
-		&& prod->getRule(0)->getNumTokens() == 1
-		&& !prod->getRule(0)->getToken(0)->getIsTerminal())
+		&& prod->getRule(0).getNumTokens() == 1
+		&& !prod->getRule(0).getToken(0)->getIsTerminal())
 	{
 		//The root production should contain only a single production
 		DFAState* rootState = new DFAState();
@@ -52,7 +52,7 @@ void SLRParser::createNFA(const GrammarBase* grammar)
 		rootState->reachable = false;
 		Item rootItem;
 		rootItem.production = prod;
-		rootItem.rule = prod->getRule(0);
+		rootItem.rule = &prod->getRule(0);
 		rootItem.tokenOffset = 0;
 		rootState->addItem(rootItem);
 		nfa.push_back(rootState);
@@ -111,9 +111,9 @@ void SLRParser::buildNFA(DFAState* currentState, std::vector<DFAState*>& nfa)
 				const Production* production = static_cast<const ProductionNonTerminalToken*>(currentItemNextToken)->getProduction();
 				for (unsigned int j = 0; j < production->getNumRules(); j++)
 				{
-					const ProductionRule* rule = production->getRule(j);
+					const ProductionRule& rule = production->getRule(j);
 					nextItem.production = production;
-					nextItem.rule = rule;
+					nextItem.rule = &rule;
 					nextItem.tokenOffset = 0;
 					nextState = new DFAState();
 					nextState->addItem(nextItem);
@@ -419,19 +419,19 @@ DFAState* SLRParser::canShift(DFAState* currentState, StackItem* tokenToShift) c
 }
 
 
-bool SLRParser::isStackItemInFollowSet(StackItem* item, ProductionTokenSet* followSet) const
+bool SLRParser::isStackItemInFollowSet(StackItem* item, const ProductionTokenSet& followSet) const
 {
 	const ParseToken* token = item->getTokenIfToken();
 	if (token != nullptr)
 	{
-		return followSet->isInSet(token);
+		return followSet.isInSet(token);
 	}
 	else
 	{
 		const Production* production = item->getProductionIfProduction();
 		if (production != nullptr)
 		{
-			return followSet->isInSet(production);
+			return followSet.isInSet(production);
 		}
 	}
 	//We should never get here
@@ -481,7 +481,7 @@ void SLRParser::scanForConflicts() const
 				const Item& item = state->items[k];
 				if ((item.tokenOffset >= item.rule->getNumTokens()
 					|| (item.rule->getNumTokens() == 1 && item.rule->getToken(0)->getType() == ProductionTokenType::Epsilon))
-					&& item.production->getFollowSet()->isInSet(transitionToken))
+					&& item.production->getFollowSet().isInSet(transitionToken))
 				{
 					conflictCount++;
 					if (!foundShiftReduceConflict)
@@ -547,7 +547,7 @@ void SLRParser::scanForConflicts() const
 					const Production* secondItemProduction = secondItem.production;
 					if ((secondItem.tokenOffset >= secondItem.rule->getNumTokens()
 						 || (secondItem.rule->getNumTokens() == 1 && secondItem.rule->getToken(0)->getType() == ProductionTokenType::Epsilon))
-						&& firstItemProduction->getFollowSet()->overlaps(secondItemProduction->getFollowSet()))
+						&& firstItemProduction->getFollowSet().overlaps(secondItemProduction->getFollowSet()))
 					{
 						if (!foundReduceReduceConflict)
 						{
@@ -643,7 +643,7 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 				{
 					//Succesful parse
 					parseResult->success = true;
-					parseResult->astRootNode = parseStack[1]->astNode;
+					parseResult->astRootNode.reset(parseStack[1]->astNode);
 					Tools::deleteElements(parseStack);
 					return parseResult;
 				}

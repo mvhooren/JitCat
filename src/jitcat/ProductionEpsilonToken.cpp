@@ -11,18 +11,16 @@
 using namespace jitcat::Grammar;
 
 
-ProductionEpsilonToken::ProductionEpsilonToken()
+ProductionEpsilonToken::ProductionEpsilonToken():
+	firstSet(false),
+	followSet(true)
 {
-	firstSet = new ProductionTokenSet(false);
-	firstSet->addMemberIfNotPresent(this);
-	followSet = new ProductionTokenSet(true);
+	firstSet.addMemberIfNotPresent(this);
 }
 
 
 ProductionEpsilonToken::~ProductionEpsilonToken()
 {
-	delete firstSet;
-	delete followSet;
 }
 
 
@@ -38,12 +36,6 @@ bool ProductionEpsilonToken::getIsEpsilon() const
 }
 
 
-bool ProductionEpsilonToken::containsEpsilon() const
-{
-	return true;
-}
-
-
 bool ProductionEpsilonToken::buildEpsilonContainment(std::vector<Production*>& productionStack)
 {
 	setContainsEpsilon(true);
@@ -51,13 +43,13 @@ bool ProductionEpsilonToken::buildEpsilonContainment(std::vector<Production*>& p
 }
 
 
-ProductionTokenSet* ProductionEpsilonToken::getFirstSet() const
+ProductionTokenSet& ProductionEpsilonToken::getFirstSet()
 {
 	return firstSet;
 }
 
 
-ProductionTokenSet* ProductionEpsilonToken::getFollowSet() const
+ProductionTokenSet& ProductionEpsilonToken::getFollowSet()
 {
 	return followSet;
 }

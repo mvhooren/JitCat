@@ -16,6 +16,7 @@
 #include "jitcat/TypeInfo.h"
 
 using namespace jitcat;
+using namespace jitcat::AST;
 
 
 ExpressionAny::ExpressionAny():
@@ -52,7 +53,7 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 	{
 		return cachedValue;
 	}
-	else if (expressionAST != nullptr)
+	else if (parseResult->astRootNode != nullptr)
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
@@ -70,7 +71,7 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 		}
 		else
 		{
-			return expressionAST->execute(runtimeContext);
+			return parseResult->getNode<CatTypedExpression>()->execute(runtimeContext);
 		}
 	}
 	else
@@ -84,7 +85,7 @@ void ExpressionAny::compile(CatRuntimeContext* context)
 {
 	if (parse(context, CatGenericType()) && isConstant)
 	{
-		cachedValue = expressionAST->execute(context);
+		cachedValue = parseResult->getNode<CatTypedExpression>()->execute(context);
 	}
 }
 
