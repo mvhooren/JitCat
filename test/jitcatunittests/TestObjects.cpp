@@ -96,6 +96,7 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("getInt", &ReflectedObject::getInt)
 		.addMember("getBoolean", &ReflectedObject::getBoolean)
 		.addMember("getString", &ReflectedObject::getString)
+		//.addMember("getStringRef", &ReflectedObject::getStringRef) Not yet supported
 		.addMember("getObject", &ReflectedObject::getObject)
 		.addMember("doSomething", &ReflectedObject::doSomething)
 
@@ -112,21 +113,22 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("getThisObject", &ReflectedObject::getThisObject)
 
 		.addMember("numberString", &ReflectedObject::numberString)
-		.addMember("text", &ReflectedObject::text, MTF_IS_WRITABLE)
-		.addMember("theInt", &ReflectedObject::theInt, MTF_IS_WRITABLE)
+		.addMember("text", &ReflectedObject::text, MF::isWritable)
+		.addMember("theInt", &ReflectedObject::theInt, MF::isWritable)
 		.addMember("largeInt", &ReflectedObject::largeInt)
-		.addMember("aFloat", &ReflectedObject::aFloat, MTF_IS_WRITABLE)
+		.addMember("aFloat", &ReflectedObject::aFloat, MF::isWritable)
 		.addMember("zeroFloat", &ReflectedObject::zeroFloat)
-		.addMember("aBoolean", &ReflectedObject::aBoolean, MTF_IS_WRITABLE)
+		.addMember("aBoolean", &ReflectedObject::aBoolean, MF::isWritable)
 		.addMember("no", &ReflectedObject::no)
 
-		.addMember("nestedSelfObject", &ReflectedObject::nestedSelfObject, MTF_IS_WRITABLE)
+		.addMember("nestedSelfObject", &ReflectedObject::nestedSelfObject, MF::isWritable)
 		.addMember("nullObject", &ReflectedObject::nullObject)
 		.addMember("nestedObject", &ReflectedObject::nestedObject)
-		.addMember("nestedObjectPointer", &ReflectedObject::nestedObjectPointer, MTF_IS_WRITABLE)
+		.addMember("nestedObjectPointer", &ReflectedObject::nestedObjectPointer, MF::isWritable)
 		.addMember("nestedObjectUniquePointer", &ReflectedObject::nestedObjectUniquePointer)
 
 		.addMember("reflectableObjectsVector", &ReflectedObject::reflectableObjectsVector)
+		//.addMember("floatVector", &ReflectedObject::floatVector) not yet supported
 		.addMember("reflectableObjectsMap", &ReflectedObject::reflectableObjectsMap);
 }
 
@@ -156,6 +158,12 @@ bool ReflectedObject::getBoolean()
 
 
 std::string ReflectedObject::getString()
+{
+	return text;
+}
+
+
+const std::string& TestObjects::ReflectedObject::getStringRef()
 {
 	return text;
 }

@@ -15,12 +15,12 @@ namespace jitcat::Reflection
 {
 
 template <typename T, typename U>
-TypeInfo& TypeInfo::addMember(const std::string& identifier_, U T::* member, unsigned int flags)
+TypeInfo& TypeInfo::addMember(const std::string& identifier_, U T::* member, MemberFlags flags)
 {
 	std::string identifier = Tools::toLowerCase(identifier_);
-	bool isConst = (flags & MTF_IS_CONST) != 0
-				    || (flags & MTF_IS_STATIC_CONST) != 0;
-	bool isWritable = (flags & MTF_IS_WRITABLE) != 0;
+	bool isConst = (flags & MF::isConst) != 0
+				    || (flags & MF::isStaticConst) != 0;
+	bool isWritable = (flags & MF::isWritable) != 0;
 	TypeMemberInfo* memberInfo = MemberTypeInfoCreator<U>::getMemberInfo(identifier_, member, isConst, isWritable);
 	if (memberInfo != nullptr)
 	{
@@ -30,29 +30,18 @@ TypeInfo& TypeInfo::addMember(const std::string& identifier_, U T::* member, uns
 }
 
 
-template <typename T, typename ... Args>
-TypeInfo& TypeInfo::addMember(const std::string& identifier_, void (T::*function)(Args...))
-{
-	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions.emplace(identifier, new MemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function));
-	return *this;
-}
-
-
 template <typename T, typename U, typename ... Args>
 TypeInfo& TypeInfo::addMember(const std::string& identifier_, U (T::*function)(Args...))
 {
 	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions.emplace(identifier, new MemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function));
-	return *this;
-}
-
-
-template <typename T, typename ... Args>
-TypeInfo& TypeInfo::addMember(const std::string& identifier_, void (T::*function)(Args...) const)
-{
-	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions.emplace(identifier, new ConstMemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function));
+	if constexpr (!std::is_void<U>::value)
+	{
+		memberFunctions.emplace(identifier, new MemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function));
+	}
+	else
+	{
+		memberFunctions.emplace(identifier, new MemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function));
+	}
 	return *this;
 }
 
@@ -61,7 +50,14 @@ template <typename T, typename U, typename ... Args>
 TypeInfo& TypeInfo::addMember(const std::string& identifier_, U (T::*function)(Args...) const)
 {
 	std::string identifier = Tools::toLowerCase(identifier_);
-	memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function));
+	if constexpr (!std::is_void<U>::value)
+	{
+		memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<T, U, Args...>(identifier_, function));
+	}
+	else
+	{
+		memberFunctions.emplace(identifier, new ConstMemberVoidFunctionInfoWithArgs<T, Args...>(identifier_, function));
+	}
 	return *this;
 }
 
