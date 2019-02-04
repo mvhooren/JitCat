@@ -117,7 +117,7 @@ namespace jitcat
 			}
 			else
 			{
-				if (parseResult->success != nullptr)
+				if (parseResult->success)
 				{
 					if constexpr (!std::is_same<void, T>::value)
 					{
