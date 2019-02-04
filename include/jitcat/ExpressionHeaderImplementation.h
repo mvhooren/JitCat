@@ -117,16 +117,16 @@ namespace jitcat
 			}
 			else
 			{
-				if (expressionAST != nullptr)
+				if (parseResult->success != nullptr)
 				{
 					if constexpr (!std::is_same<void, T>::value)
 					{
-						std::any value = expressionAST->execute(runtimeContext);
+						std::any value = parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 						return getActualValue(value);
 					}
 					else
 					{
-						expressionAST->execute(runtimeContext);
+						parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 						return;
 					}
 				}
@@ -153,7 +153,7 @@ namespace jitcat
 				return;
 			}
 		}
-		else if (parseResult->astRootNode != nullptr)
+		else if (parseResult->success)
 		{
 			if constexpr (!std::is_same<void, T>::value)
 			{
