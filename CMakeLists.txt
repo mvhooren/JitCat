@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.12)
 project(JitCat)
 #These are all the options available for configuration using CMake
 option(LLVM_ENABLED "Enable the LLVM backend for JitCat." OFF)
+option(DEBUG_GRAMMAR "Will print lots of debug output for the parser generator." OFF)
 option(BUILD_JITCAT_LIB "Build the JitCat library." ON)
 option(BUILD_VALIDATOR_LIB "Build the JitCat validator library." ON)
 option(BUILD_VALIDATOR_TOOL "Build the JitCat validator tool." ON)
@@ -34,8 +35,9 @@ set(BasicExampleIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/examples/basicexample)
 set(JitCatUnitTestsIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/test/jitcatunittests)
 set(DependenciesIncludePath ${CMAKE_CURRENT_SOURCE_DIR}/dependencies)
 
-#This disables debug output of the parser generator. TODO: Change this to DEBUG_GRAMMAR, update code accordingly and add a CMake option.
-add_compile_definitions(NO_DEBUG_GRAMMAR)
+if (DEBUG_GRAMMAR)
+	add_compile_definitions(DEBUG_GRAMMAR)
+endif()
 
 if(LLVM_ENABLED)
 	add_compile_definitions(ENABLE_LLVM)

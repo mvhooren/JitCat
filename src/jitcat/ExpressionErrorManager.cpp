@@ -34,13 +34,13 @@ void ExpressionErrorManager::clear()
 }
 
 
-void ExpressionErrorManager::compiledWithError(const std::string& errorMessage, void* expression)
+void ExpressionErrorManager::compiledWithError(const std::string& errorMessage, void* errorSource)
 {
-	deleteErrorsFromExpression(expression);
+	deleteErrorsFromSource(errorSource);
 
 	Error* error = new Error();
 	error->message = errorMessage;
-	error->expression = expression;
+	error->errorSource = errorSource;
 	errors.push_back(error);
 	errorsRevision++;
 
@@ -51,15 +51,15 @@ void ExpressionErrorManager::compiledWithError(const std::string& errorMessage, 
 }
 
 
-void ExpressionErrorManager::compiledWithoutErrors(void* expression)
+void ExpressionErrorManager::compiledWithoutErrors(void* errorSource)
 {
-	deleteErrorsFromExpression(expression);
+	deleteErrorsFromSource(errorSource);
 }
 
 
-void ExpressionErrorManager::expressionDeleted(void* expression)
+void ExpressionErrorManager::errorSourceDeleted(void* errorSource)
 {
-	deleteErrorsFromExpression(expression);
+	deleteErrorsFromSource(errorSource);
 }
 
 
@@ -87,11 +87,11 @@ const char* ExpressionErrorManager::getTypeName()
 }
 
 
-void ExpressionErrorManager::deleteErrorsFromExpression(void* expression)
+void ExpressionErrorManager::deleteErrorsFromSource(void* errorSource)
 {
 	for (int i = 0; i < (int)errors.size(); i++)
 	{
-		if (errors[(unsigned int)i]->expression == expression)
+		if (errors[(unsigned int)i]->errorSource == errorSource)
 		{
 			delete errors[(unsigned int)i];
 			errors.erase(errors.begin() + i);

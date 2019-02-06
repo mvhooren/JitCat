@@ -74,7 +74,7 @@ ExpressionBase::~ExpressionBase()
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->expressionDeleted(this);
+		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 	}
 }
 
@@ -138,7 +138,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, const CatGenericType& exp
 	expressionIsLiteral = false;
 
 	Document document(expression.c_str(), expression.length());
-	parseResult.reset(JitCat::get()->parse(&document, context));
+	parseResult.reset(JitCat::get()->parseExpression(&document, context));
 
 	if (parseResult->success)
 	{

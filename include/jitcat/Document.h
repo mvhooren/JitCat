@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 namespace jitcat::Tokenizer
 {
@@ -20,7 +21,7 @@ namespace jitcat::Tokenizer
 		const char* getDocumentData() const;
 		std::size_t getDocumentSize() const;
 	private:
-		char* data;
+		std::unique_ptr<char[]> data;
 		std::size_t size;
 	};
 

@@ -5,6 +5,7 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
+#include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeInstance.h"
@@ -27,6 +28,11 @@ using namespace jitcat::Reflection;
 
 int MAIN(int argc, char* argv[])
 {
+	//#####################################
+	//# Route any debug output to std out #
+	//#####################################
+	Tools::CatLog::addListener(new Tools::CatLogStdOut());
+
 	//###############################
 	//# A simple consant expression #
 	//###############################

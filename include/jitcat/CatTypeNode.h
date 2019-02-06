@@ -1,0 +1,30 @@
+#pragma once
+
+#include "CatASTNode.h"
+#include "CatGenericType.h"
+
+
+namespace jitcat::AST
+{
+
+	class CatTypeNode: public CatASTNode
+	{
+	public:
+		CatTypeNode(const CatGenericType& type);
+		CatTypeNode(const std::string& name);
+		virtual ~CatTypeNode();
+
+		bool isKnownType() const;
+		std::string getTypeName() const;
+		const CatGenericType& getType() const;
+
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() override final;
+
+	private:
+		CatGenericType type;
+		std::string name;
+		bool knownType;
+	};
+
+};

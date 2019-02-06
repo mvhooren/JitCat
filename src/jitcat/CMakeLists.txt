@@ -26,6 +26,7 @@ set(Source_Cat
 	${JitCatHeaderPath}/CatGenericType.h
 	CatGrammar.cpp
 	${JitCatHeaderPath}/CatGrammar.h
+	${JitCatHeaderPath}/CatGrammarType.h
 	CatRuntimeContext.cpp
 	${JitCatHeaderPath}/CatRuntimeContext.h
 	${JitCatHeaderPath}/CatScopeID.h
@@ -47,9 +48,14 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatAssignmentOperator.h 
 	CatAssignmentOperator.cpp 
 	${JitCatHeaderPath}/CatBuiltInFunctionType.h
+	CatClassDefinition.cpp
+	${JitCatHeaderPath}/CatClassDefinition.h
+	${JitCatHeaderPath}/CatDefinition.h
 	${JitCatHeaderPath}/CatExpression.h
 	CatFunctionCall.cpp
 	${JitCatHeaderPath}/CatFunctionCall.h
+	CatFunctionDefinition.cpp
+	${JitCatHeaderPath}/CatFunctionDefinition.h
 	CatIdentifier.cpp
 	${JitCatHeaderPath}/CatIdentifier.h
 	CatInfixOperator.cpp
@@ -69,6 +75,10 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatPrefixOperator.h
 	CatScopeRoot.cpp
 	${JitCatHeaderPath}/CatScopeRoot.h
+	CatTypeNode.cpp
+	CatSourceFile.cpp
+	${JitCatHeaderPath}/CatSourceFile.h
+	${JitCatHeaderPath}/CatTypeNode.h
 	${JitCatHeaderPath}/CatTypedExpression.h
 )
 
@@ -112,8 +122,11 @@ set(Source_Cat_Expression
 	${JitCatHeaderPath}/ExpressionHeaderImplementation.h
 	ExpressionHelperFunctions.cpp
 	${JitCatHeaderPath}/ExpressionHelperFunctions.h
-	${JitCatHeaderPath}/TypeTraits.h
-	${JitCatHeaderPath}/TypeTraitsHeaderImplementation.h
+)
+
+set(Source_Cat_SourceFile
+	SourceFile.cpp
+	${JitCatHeaderPath}/SourceFile.h
 )
 
 set(Source_Cat_Expression_Autocompletion
@@ -207,6 +220,8 @@ set(Source_Reflection_TypeInfo
 	TypeInfo.cpp
 	${JitCatHeaderPath}/TypeInfo.h
 	${JitCatHeaderPath}/TypeInfoHeaderImplementation.h
+	${JitCatHeaderPath}/TypeTraits.h
+	${JitCatHeaderPath}/TypeTraitsHeaderImplementation.h
 	${JitCatHeaderPath}/VariableEnumerator.h
 )
 
@@ -264,6 +279,7 @@ source_group(Cat\\CodeGeneration\\LLVM FILES ${Source_Cat_CodeGeneration_LLVM})
 source_group(Cat\\Expression FILES ${Source_Cat_Expression})
 source_group(Cat\\Expression\\AutoCompletion FILES ${Source_Cat_Expression_Autocompletion})
 source_group(Cat\\Expression\\Errors FILES ${Source_Cat_Expression_Errors})
+source_group(Cat\\SourceFile FILES ${Source_Cat_SourceFile})
 source_group(Grammar FILES ${Source_Grammar})
 source_group(Parser FILES ${Source_Parser})
 source_group(Reflection FILES ${Source_Reflection})
@@ -288,6 +304,7 @@ add_library(JitCat STATIC
 	${Source_Cat_Expression}
 	${Source_Cat_Expression_Autocompletion}
 	${Source_Cat_Expression_Errors}
+	${Source_Cat_SourceFile}
 	${Source_Grammar}
 	${Source_Parser}
 	${Source_Reflection}

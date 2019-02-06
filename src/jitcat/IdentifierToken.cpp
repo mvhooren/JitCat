@@ -61,12 +61,14 @@ const char* IdentifierToken::getSubTypeName(int subType_) const
 	case Identifier::Void:				return "void";
 	case Identifier::Unsigned:			return "unsigned";
 	case Identifier::Char:				return "char";
+	case Identifier::Bool:				return "bool";
 	case Identifier::Int:				return "int";
 	case Identifier::Long:				return "long";
 	case Identifier::Float:				return "float";
 	case Identifier::Double:			return "double";
 	case Identifier::Vector4:			return "vector4";
 	case Identifier::Matrix:			return "matrix";
+	case Identifier::String:			return "string";
 	}
 }
 

@@ -7,6 +7,9 @@
 
 #include "jitcat/CatLog.h"
 
+#include <iostream>
+
+
 using namespace jitcat::Tools;
 
 
@@ -46,3 +49,9 @@ void CatLog::removeListener(CatLogListener* listener)
 
 
 std::vector<CatLogListener*> CatLog::listeners = std::vector<CatLogListener*>();
+
+
+void jitcat::Tools::CatLogStdOut::catLog(const char* message)
+{
+	std::cout << message;
+}

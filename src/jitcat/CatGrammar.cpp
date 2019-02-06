@@ -26,11 +26,43 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
 
-CatGrammar::CatGrammar(TokenizerBase* tokenizer):
+CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	GrammarBase(tokenizer)
 {
-	rule(Prod::Root, {prod(Prod::Expression)}, pass);
-	
+	Prod rootProduction;
+	switch (grammarType)
+	{
+		case CatGrammarType::Expression: rootProduction = Prod::Expression; break;
+		case CatGrammarType::Full:		 rootProduction = Prod::SourceFile; break;
+	}
+
+	rule(Prod::Root, {prod(rootProduction)}, pass);
+
+	if (grammarType == CatGrammarType::Full)
+	{
+		//A source file is either empty or has one or more definitions
+		rule(Prod::SourceFile, {prod(Prod::Definitions)}, sourceFile);
+		rule(Prod::SourceFile, {epsilon()}, sourceFile);
+
+		//A list of definitions
+		rule(Prod::Definitions, {prod(Prod::Definition), prod(Prod::Definition)}, link);
+		rule(Prod::Definitions, {prod(Prod::Definition)}, pass);
+
+		//Possible definition
+		rule(Prod::Definition, {prod(Prod::ClassDefinition)}, pass);
+		rule(Prod::Definition, {prod(Prod::FunctionDefinition)}, pass);
+		
+		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen)/*, prod(Prod::ClassContents)*/, term(one, OneChar::BraceClose)}, classDefinition);
+
+		rule(Prod::FunctionDefinition, {prod(Prod::Type), term(id, Identifier::Identifier), term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose), term(one, OneChar::BraceOpen), term(one, OneChar::BraceClose)}, functionDefinition);
+
+		rule(Prod::Type, {term(id, Identifier::Identifier)}, typeName);
+		rule(Prod::Type, {term(id, Identifier::Bool)}, typeName);
+		rule(Prod::Type, {term(id, Identifier::Int)}, typeName);
+		rule(Prod::Type, {term(id, Identifier::Float)}, typeName);
+		rule(Prod::Type, {term(id, Identifier::String)}, typeName);
+	}
+
 	//Expressions
 	rule(Prod::Expression, {prod(Prod::OperatorP11)}, pass);
 	//Operators
@@ -112,6 +144,9 @@ const char* CatGrammar::getProductionName(int production) const
 	{
 		default:								return "unknown";
 		case Prod::Root:						return "root";
+		case Prod::SourceFile:					return "source file";
+		case Prod::Definitions:					return "definitions";
+		case Prod::Definition:					return "definition";
 		case Prod::ClassDefinition:				return "class definition";
 		case Prod::ClassContents:				return "class contents";
 		case Prod::Declaration:					return "declaration";
@@ -163,6 +198,13 @@ bool CatGrammar::isTypedExpression(CatASTNodeType node)
 }
 
 
+bool jitcat::Grammar::CatGrammar::isDefinition(AST::CatASTNodeType node)
+{
+	return	  node == CatASTNodeType::ClassDefinition
+		   || node == CatASTNodeType::FunctionDefinition;
+}
+
+
 ASTNode* CatGrammar::pass(const ASTNodeParser& nodeParser)
 {
 	return nodeParser.getASTNodeByIndex(0);
@@ -173,6 +215,65 @@ ASTNode* CatGrammar::link(const ASTNodeParser& nodeParser)
 {
 	return new CatLinkNode(static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(0)),
 						   static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(1)));
+}
+
+
+ASTNode* jitcat::Grammar::CatGrammar::sourceFile(const Parser::ASTNodeParser& nodeParser)
+{
+	CatASTNode* astNode = static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(0));
+	std::vector<std::unique_ptr<CatDefinition>> definitions;
+	
+	while (astNode != nullptr)
+	{
+		if (isDefinition(astNode->getNodeType()))
+		{
+			definitions.emplace_back(static_cast<CatDefinition*>(astNode));
+			break;
+		}
+		else if (astNode->getNodeType() == CatASTNodeType::LinkedList)
+		{
+			CatLinkNode* linkNode = static_cast<CatLinkNode*>(astNode);
+			definitions.emplace_back(static_cast<CatDefinition*>(linkNode->me.release()));
+			astNode = linkNode->next.release();
+			delete linkNode;
+		}
+		else
+		{
+			//Error. Should not get here.
+			assert(false);
+			break;
+		}
+	} 
+
+	return new CatSourceFile("none", std::move(definitions));
+}
+
+
+ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParser& nodeParser)
+{
+	return new CatClassDefinition(nodeParser.getTerminalByIndex(1)->getLexeme()->toString());
+}
+
+
+ASTNode* jitcat::Grammar::CatGrammar::functionDefinition(const Parser::ASTNodeParser& nodeParser)
+{
+	return new CatFunctionDefinition(static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0)), nodeParser.getTerminalByIndex(0)->getLexeme()->toString());
+}
+
+
+ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& nodeParser)
+{
+	Identifier identifierType = static_cast<Identifier>(nodeParser.getTerminalByIndex(0)->getTokenSubType());
+	CatGenericType type;
+	switch (identifierType)
+	{
+		case Identifier::Bool:		 type = CatGenericType::boolType; break;
+		case Identifier::Int:		 type = CatGenericType::intType; break;
+		case Identifier::Float:		 type = CatGenericType::floatType; break;
+		case Identifier::String:	 type = CatGenericType::stringType; break;
+		case Identifier::Identifier: return new CatTypeNode(nodeParser.getTerminalByIndex(0)->getLexeme()->toString());
+	}
+	return new CatTypeNode(type);
 }
 
 

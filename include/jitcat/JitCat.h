@@ -22,6 +22,9 @@ namespace jitcat::Parser
 	struct SLRParseResult;
 }
 
+#include <memory>
+
+
 namespace jitcat
 {
 	class CatRuntimeContext;
@@ -32,7 +35,8 @@ namespace jitcat
 		~JitCat();
 	public:
 		static JitCat* get();
-		Parser::SLRParseResult* parse(Tokenizer::Document* expression, CatRuntimeContext* context) const;
+		Parser::SLRParseResult* parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context) const;
+		Parser::SLRParseResult* parseFull(Tokenizer::Document* expression, CatRuntimeContext* context) const;
 		
 		//This will clean up as much memory as possible, library features will be broken after this is called.
 		//The type registry will be cleared.
@@ -42,9 +46,11 @@ namespace jitcat
 	private:
 		static JitCat* instance;
 
-		Grammar::CatGrammar* grammar;
-		Tokenizer::CatTokenizer* tokenizer;
-		Parser::SLRParser* parser;
+		std::unique_ptr<Tokenizer::CatTokenizer> tokenizer;
+		std::unique_ptr<Grammar::CatGrammar> expressionGrammar;
+		std::unique_ptr<Grammar::CatGrammar> fullGrammar;
+		std::unique_ptr<Parser::SLRParser> expressionParser;
+		std::unique_ptr<Parser::SLRParser> fullParser;
 	};
 
 } //End namespace jitcat

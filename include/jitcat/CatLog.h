@@ -19,6 +19,12 @@ namespace jitcat::Tools
 		virtual void catLog(const char* message) = 0;
 	};
 
+	class CatLogStdOut: public CatLogListener
+	{
+	public:
+		CatLogStdOut() {};
+		virtual void catLog(const char* message) override final;
+	};
 
 	class CatLog
 	{

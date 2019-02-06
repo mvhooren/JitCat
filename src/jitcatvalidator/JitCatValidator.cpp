@@ -58,7 +58,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 	}
 
 	Document document(expression, strlen(expression));
-	std::unique_ptr<SLRParseResult> parseResult(JitCat::get()->parse(&document, &context));
+	std::unique_ptr<SLRParseResult> parseResult(JitCat::get()->parseExpression(&document, &context));
 	CatTypedExpression* typedExpression = nullptr;
 	if (parseResult->success)
 	{

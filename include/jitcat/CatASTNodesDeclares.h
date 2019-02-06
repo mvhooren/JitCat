@@ -13,7 +13,9 @@ namespace jitcat::AST
 	class CatArrayIndex;
 	class CatAssignableExpression;
 	class CatAssignmentOperator;
+	class CatClassDefinition;
 	class CatFunctionCall;
+	class CatFunctionDefinition;
 	class CatIdentifier;
 	class CatInfixOperator;
 	class CatLiteral;
@@ -21,6 +23,8 @@ namespace jitcat::AST
 	class CatMemberFunctionCall;
 	class CatPrefixOperator;
 	class CatScopeRoot;
+	class CatSourceFile;
 	class CatTypedExpression;
+	class CatTypeNode;
 
 } //End namespace jitcat::AST

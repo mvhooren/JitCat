@@ -9,6 +9,7 @@
 
 
 #include <map>
+#include <memory>
 #include <vector>
 
 namespace jitcat
@@ -41,7 +42,7 @@ namespace jitcat
 			virtual ~GrammarBase();
 			virtual const char* getProductionName(int production) const = 0;
 			ProductionToken* epsilon();
-			Parser::SLRParser* createSLRParser() const;
+			std::unique_ptr<Parser::SLRParser> createSLRParser() const;
 
 			typedef AST::ASTNode* (*SemanticAction)(const Parser::ASTNodeParser&);
 

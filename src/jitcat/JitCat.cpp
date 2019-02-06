@@ -34,19 +34,18 @@ using namespace jitcat::Parser;
 using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
-JitCat::JitCat()
+JitCat::JitCat():
+	tokenizer(new CatTokenizer()),
+	expressionGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Expression)),
+	fullGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Full))
 {
-	tokenizer = new CatTokenizer();
-	grammar = new CatGrammar(tokenizer);
-	parser = grammar->createSLRParser();
+	expressionParser = expressionGrammar->createSLRParser();
+	fullParser = fullGrammar->createSLRParser();
 }
 
 
 JitCat::~JitCat()
 {
-	delete parser;
-	delete grammar;
-	delete tokenizer;
 }
 
 
@@ -60,12 +59,23 @@ JitCat* JitCat::get()
 }
 
 
-SLRParseResult* JitCat::parse(Document* expression, CatRuntimeContext* context) const
+Parser::SLRParseResult* jitcat::JitCat::parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context) const
 {
 	std::vector<ParseToken*> tokens;
 	OneCharToken* eofToken = new OneCharToken(new Lexeme(expression, expression->getDocumentSize(), 0), OneChar::Eof);
 	tokenizer->tokenize(expression, tokens, eofToken);	
-	SLRParseResult* result = parser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context);
+	SLRParseResult* result = expressionParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context);
+	Tools::deleteElements(tokens);
+	return result;
+}
+
+
+Parser::SLRParseResult* jitcat::JitCat::parseFull(Tokenizer::Document* expression, CatRuntimeContext* context) const
+{
+	std::vector<ParseToken*> tokens;
+	OneCharToken* eofToken = new OneCharToken(new Lexeme(expression, expression->getDocumentSize(), 0), OneChar::Eof);
+	tokenizer->tokenize(expression, tokens, eofToken);	
+	SLRParseResult* result = fullParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context);
 	Tools::deleteElements(tokens);
 	return result;
 }

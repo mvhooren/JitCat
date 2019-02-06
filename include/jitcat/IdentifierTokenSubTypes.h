@@ -36,12 +36,14 @@ namespace jitcat::Tokenizer
 		Void,
 		Unsigned,
 		Char,
+		Bool,
 		Int,
 		Long,
 		Float,
 		Double,
 		Vector4,
 		Matrix,
+		String,
 		Last
 	};
 

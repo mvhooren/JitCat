@@ -22,6 +22,7 @@ using namespace jitcat::AST;
 using namespace jitcat::Grammar;
 using namespace jitcat::Parser;
 using namespace jitcat::Tokenizer;
+using namespace jitcat::Tools;
 
 
 GrammarBase::GrammarBase(TokenizerBase* tokenizer):
@@ -59,9 +60,9 @@ ProductionToken* GrammarBase::epsilon()
 }
 
 
-SLRParser* GrammarBase::createSLRParser() const
+std::unique_ptr<Parser::SLRParser> GrammarBase::createSLRParser() const
 {
-	SLRParser* parser = new SLRParser();
+	std::unique_ptr<SLRParser> parser(new SLRParser());
 	parser->createNFA(this);
 	return parser;
 }
@@ -188,16 +189,16 @@ void GrammarBase::buildFirstSets()
 	{
 		CatLog::log(iter->second->getProductionName());
 		CatLog::log(": ");
-		ProductionTokenSet* set = iter->second->getFirstSet();
+		ProductionTokenSet& set = iter->second->getFirstSet();
 		
-		for (unsigned int i = 0; i < set->getNumMembers(); i++)
+		for (unsigned int i = 0; i < set.getNumMembers(); i++)
 		{
 			if (i > 0)
 			{
 				CatLog::log(", ");
 			}
 			CatLog::log("'");
-			CatLog::log(set->getMember(i)->getDescription());
+			CatLog::log(set.getMember(i)->getDescription());
 			CatLog::log("'");
 		}
 		CatLog::log("\n");
@@ -229,16 +230,16 @@ void GrammarBase::buildFollowSets()
 		{
 			CatLog::log(iter->second->getProductionName());
 			CatLog::log(": ");
-			ProductionTokenSet* set = iter->second->getFollowSet();
+			ProductionTokenSet& set = iter->second->getFollowSet();
 
-			for (unsigned int i = 0; i < set->getNumMembers(); i++)
+			for (unsigned int i = 0; i < set.getNumMembers(); i++)
 			{
 				if (i > 0)
 				{
 					CatLog::log(", ");
 				}
 				CatLog::log("'");
-				CatLog::log(set->getMember(i)->getDescription());
+				CatLog::log(set.getMember(i)->getDescription());
 				CatLog::log("'");
 			}
 			CatLog::log("\n");
@@ -248,17 +249,17 @@ void GrammarBase::buildFollowSets()
 		CatLog::log("##########################\n");
 		for (unsigned int i = 0; i < terminals.size(); i++)
 		{
-			ProductionTokenSet* set = terminals[i]->getFollowSet();
+			ProductionTokenSet& set = terminals[i]->getFollowSet();
 			CatLog::log(terminals[i]->getDescription());
 			CatLog::log(": ");
-			for (unsigned int j = 0; j < set->getNumMembers(); j++)
+			for (unsigned int j = 0; j < set.getNumMembers(); j++)
 			{
 				if (j > 0)
 				{
 					CatLog::log(", ");
 				}
 				CatLog::log("'");
-				CatLog::log(set->getMember(j)->getDescription());
+				CatLog::log(set.getMember(j)->getDescription());
 				CatLog::log("'");
 			}
 			CatLog::log("\n");

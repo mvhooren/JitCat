@@ -15,21 +15,20 @@ using namespace jitcat::Tokenizer;
 Document::Document(const char* fileData, std::size_t fileSize):
 	size(fileSize)
 {
-	data = new char[fileSize + 1];
-	memcpy(data, fileData, fileSize);
-	data[fileSize] = 0;
+	data.reset(new char[fileSize + 1]);
+	memcpy(data.get(), fileData, fileSize);
+	data.get()[fileSize] = 0;
 }
 
 
 Document::~Document()
 {
-	delete[] data;
 }
 
 
 const char* Document::getDocumentData() const
 {
-	return data;
+	return data.get();
 }
 
 

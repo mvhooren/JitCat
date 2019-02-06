@@ -28,7 +28,7 @@ namespace jitcat
 		public:
 			Error() {}
 			std::string message;
-			void* expression;
+			void* errorSource;
 
 			static void reflect(Reflection::TypeInfo& typeInfo);
 			static const char* getTypeName();
@@ -40,9 +40,9 @@ namespace jitcat
 
 		void clear();
 		//Adds an error to the list. The void* serves as a unique id so that error messages disappear once the error is fixed.
-		void compiledWithError(const std::string& errorMessage, void* expression);
-		void compiledWithoutErrors(void* expression);
-		void expressionDeleted(void* expression);
+		void compiledWithError(const std::string& errorMessage, void* errorSource);
+		void compiledWithoutErrors(void* errorSource);
+		void errorSourceDeleted(void* errorSource);
 
 		const std::vector<Error*>& getErrors() const;
 
@@ -54,7 +54,7 @@ namespace jitcat
 		static const char* getTypeName();
 
 	private:
-		void deleteErrorsFromExpression(void* expression);
+		void deleteErrorsFromSource(void* errorSource);
 
 	private:
 		std::vector<Error*> errors;

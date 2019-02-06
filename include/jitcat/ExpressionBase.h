@@ -81,7 +81,6 @@ namespace jitcat
 		bool isConstant;
 		bool expectAssignable;
 
-		//Not owned
 		Reflection::ReflectableHandle errorManagerHandle;
 	};
 

@@ -12,6 +12,10 @@ namespace jitcat::AST
 
 	enum class CatASTNodeType
 	{
+		SourceFile,
+		ClassDefinition,
+		FunctionDefinition,
+		TypeName,
 		Literal,
 		Identifier,
 		InfixOperator,
