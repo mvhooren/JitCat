@@ -17,11 +17,7 @@ using namespace jitcat::Tokenizer;
 
 SourceFile::SourceFile(const std::string& fileContents, CatRuntimeContext* context)
 {
-	sourceText.reset(new Document(fileContents.c_str(), fileContents.size()));
-	if (context != nullptr)
-	{
-		compile(context);
-	}
+	setSource(fileContents, context);
 }
 
 
@@ -36,9 +32,11 @@ SourceFile::~SourceFile()
 
 void SourceFile::compile(CatRuntimeContext* context)
 {
+	ExpressionErrorManager* errorManager = nullptr;
 	if (context != nullptr)
 	{
-		errorManagerHandle = context->getErrorManager();
+		errorManager = context->getErrorManager();
+		errorManagerHandle = errorManager;
 	}
 	else
 	{
@@ -49,5 +47,29 @@ void SourceFile::compile(CatRuntimeContext* context)
 	{
 		AST::CatSourceFile* sourceFileNode = parseResult->getNode<AST::CatSourceFile>();
 		sourceFileNode->print();
+		if (errorManager != nullptr)
+		{
+			errorManager->compiledWithoutErrors(this);
+		}
+	}
+	else
+	{
+		if (errorManager != nullptr)
+		{
+			errorManager->compiledWithError(parseResult->errorMessage, this);
+		}
+	}
+}
+
+void jitcat::SourceFile::setSource(const std::string& source, CatRuntimeContext* context)
+{
+	if (context != nullptr)
+	{
+		context->getErrorManager()->errorSourceDeleted(this);	
+	}
+	sourceText.reset(new Document(source.c_str(), source.size()));
+	if (context != nullptr)
+	{
+		compile(context);
 	}
 }

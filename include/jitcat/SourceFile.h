@@ -27,6 +27,8 @@ namespace jitcat
 
 		void compile(CatRuntimeContext* context);
 
+		void setSource(const std::string& source, CatRuntimeContext* context = nullptr);
+
 	private:
 		std::unique_ptr<Tokenizer::Document> sourceText;
 		std::unique_ptr<Parser::SLRParseResult> parseResult;

@@ -42,7 +42,6 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	{
 		//A source file is either empty or has one or more definitions
 		rule(Prod::SourceFile, {prod(Prod::Definitions)}, sourceFile);
-		rule(Prod::SourceFile, {epsilon()}, sourceFile);
 
 		//A list of definitions
 		rule(Prod::Definitions, {prod(Prod::Definition), prod(Prod::Definition)}, link);
@@ -57,6 +56,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::FunctionDefinition, {prod(Prod::Type), term(id, Identifier::Identifier), term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose), term(one, OneChar::BraceOpen), term(one, OneChar::BraceClose)}, functionDefinition);
 
 		rule(Prod::Type, {term(id, Identifier::Identifier)}, typeName);
+		rule(Prod::Type, {term(id, Identifier::Void)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Bool)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Int)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Float)}, typeName);
