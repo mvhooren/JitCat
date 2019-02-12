@@ -16,15 +16,21 @@ namespace jitcat::AST
 	class CatClassDefinition;
 	class CatFunctionCall;
 	class CatFunctionDefinition;
+	class CatFunctionParameterDefinitions;
 	class CatIdentifier;
+	class CatIfStatement;
 	class CatInfixOperator;
 	class CatLiteral;
 	class CatMemberAccess;
 	class CatMemberFunctionCall;
 	class CatPrefixOperator;
+	class CatReturnStatement;
+	class CatScopeBlock;
 	class CatScopeRoot;
 	class CatSourceFile;
+	class CatStatement;
 	class CatTypedExpression;
 	class CatTypeNode;
+	class CatVariableDeclaration;
 
 } //End namespace jitcat::AST

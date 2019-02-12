@@ -627,7 +627,15 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 		if (reduced)
 		{
 			delete token;
-			if (parseStack.size() > 1)
+			if (parseStack.size() == 1)
+			{
+				//Succesful parse
+				parseResult->success = true;
+				parseResult->astRootNode.reset(parseStack[0]->astNode);
+				Tools::deleteElements(parseStack);
+				return parseResult;
+			}
+			else if (parseStack.size() > 1)
 			{
 				std::size_t previousStackItem = parseStack.size() - 2;
 				DFAState* state = parseStack[previousStackItem]->state;
@@ -655,11 +663,11 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 			}
 			else
 			{
-				Tools::deleteElements(parseStack);
-				//Should never happen
 				assert(false);
+				Tools::deleteElements(parseStack);
 				return parseResult;
 			}
+
 		}
 		else
 		{

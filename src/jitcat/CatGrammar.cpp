@@ -16,6 +16,7 @@
 #include "jitcat/Tools.h"
 
 #include <stdlib.h>
+#include <type_traits>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -40,21 +41,54 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 
 	if (grammarType == CatGrammarType::Full)
 	{
-		//A source file is either empty or has one or more definitions
+		//A source file has one or more definitions
 		rule(Prod::SourceFile, {prod(Prod::Definitions)}, sourceFile);
 
 		//A list of definitions
-		rule(Prod::Definitions, {prod(Prod::Definition), prod(Prod::Definition)}, link);
+		rule(Prod::Definitions, {prod(Prod::Definition), prod(Prod::Definitions)}, link);
 		rule(Prod::Definitions, {prod(Prod::Definition)}, pass);
 
-		//Possible definition
+		//Possible definitions
 		rule(Prod::Definition, {prod(Prod::ClassDefinition)}, pass);
 		rule(Prod::Definition, {prod(Prod::FunctionDefinition)}, pass);
 		
+		//Class definition
 		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen)/*, prod(Prod::ClassContents)*/, term(one, OneChar::BraceClose)}, classDefinition);
 
-		rule(Prod::FunctionDefinition, {prod(Prod::Type), term(id, Identifier::Identifier), term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose), term(one, OneChar::BraceOpen), term(one, OneChar::BraceClose)}, functionDefinition);
+		//Variable declaration
+		rule(Prod::VariableDeclaration, {prod(Prod::Type), term(id, Identifier::Identifier)}, variableDeclaration);
+		rule(Prod::VariableDeclaration, {prod(Prod::Type), term(id, Identifier::Identifier), term(one, OneChar::Assignment), prod(Prod::Expression)}, variableDeclaration);
 
+		//Function definition
+		rule(Prod::FunctionDefinition, {prod(Prod::Type), term(id, Identifier::Identifier), prod(Prod::FunctionParameters), prod(Prod::ScopeBlock)}, functionDefinition);
+		rule(Prod::FunctionParameters, {term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose)}, functionParameterDefinitions);
+		rule(Prod::FunctionParameters, {term(one, OneChar::ParenthesesOpen), prod(Prod::FunctionParameterDefinitions), term(one, OneChar::ParenthesesClose)}, functionParameterDefinitions);
+		rule(Prod::FunctionParameterDefinitions, {prod(Prod::VariableDeclaration), term(one, OneChar::Comma), prod(Prod::FunctionParameterDefinitions)}, link);
+		rule(Prod::FunctionParameterDefinitions, {prod(Prod::VariableDeclaration)}, pass);
+		
+		//Scope block
+		rule(Prod::ScopeBlock, {term(one, OneChar::BraceOpen), prod(Prod::ScopeBlockStatements), term(one, OneChar::BraceClose)}, scopeBlock);
+		rule(Prod::ScopeBlock, {term(one, OneChar::BraceOpen), term(one, OneChar::BraceClose)}, scopeBlock);
+		rule(Prod::ScopeBlockStatements, {prod(Prod::Statement), prod(Prod::ScopeBlockStatements)}, link);
+		rule(Prod::ScopeBlockStatements, {prod(Prod::Statement)}, pass);
+
+		//All possible statements
+		rule(Prod::Statement, {prod(Prod::Return), term(one, OneChar::Semicolon)}, pass);
+		rule(Prod::Statement, {prod(Prod::Expression), term(one, OneChar::Semicolon)}, pass);
+		rule(Prod::Statement, {prod(Prod::VariableDeclaration), term(one, OneChar::Semicolon)}, pass);
+		rule(Prod::Statement, {prod(Prod::IfThen)}, pass);
+
+		//If statement
+		rule(Prod::IfThen, {term(id, Identifier::If), term(one, OneChar::ParenthesesOpen), prod(Prod::Expression), term(one, OneChar::ParenthesesClose), prod(Prod::ScopeBlock)}, ifStatement);
+		rule(Prod::IfThen, {term(id, Identifier::If), term(one, OneChar::ParenthesesOpen), prod(Prod::Expression), term(one, OneChar::ParenthesesClose), prod(Prod::ScopeBlock), prod(Prod::Else)}, ifStatement);
+		rule(Prod::Else, {term(id, Identifier::Else), prod(Prod::IfThen)}, pass);
+		rule(Prod::Else, {term(id, Identifier::Else), prod(Prod::ScopeBlock)}, pass);
+
+		//Return statement
+		rule(Prod::Return, {term(id, Identifier::Return)}, returnStatement);
+		rule(Prod::Return, {term(id, Identifier::Return), prod(Prod::Expression)}, returnStatement);
+
+		//Typename
 		rule(Prod::Type, {term(id, Identifier::Identifier)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Void)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Bool)}, typeName);
@@ -151,10 +185,9 @@ const char* CatGrammar::getProductionName(int production) const
 		case Prod::ClassContents:				return "class contents";
 		case Prod::Declaration:					return "declaration";
 		case Prod::FunctionDefinition:			return "function definition";
-		case Prod::FunctionParameterDefinition:	return "function parameter definition";
-		case Prod::FunctionParameterDefRepeat:	return "function parameter definition repeat";
+		case Prod::FunctionParameters:			return "function parameters";
+		case Prod::FunctionParameterDefinitions:return "function parameter definitions";
 		case Prod::VariableDeclaration:			return "variable declaration";
-		case Prod::VariableDeclarationTail:		return "variable declaration tail";
 		case Prod::OperatorP2:					return "P2";
 		case Prod::OperatorP3:					return "P3";
 		case Prod::OperatorP4:					return "P4";
@@ -168,7 +201,6 @@ const char* CatGrammar::getProductionName(int production) const
 		case Prod::Expression:					return "expression";
 		case Prod::ExpressionBlock:				return "expression block";
 		case Prod::ExpressionBlockContents:		return "expression block contents";
-		case Prod::FlowControl:					return "flow control";
 		case Prod::IfThen:						return "if then";
 		case Prod::Else:						return "else ";
 		case Prod::ElseBody:					return "else body";
@@ -205,6 +237,50 @@ bool jitcat::Grammar::CatGrammar::isDefinition(AST::CatASTNodeType node)
 }
 
 
+template<typename ItemT>
+void unLink(ASTNode* astNode, std::vector<ItemT*>& list)
+{
+	CatASTNode* catASTNode = static_cast<CatASTNode*>(astNode);
+	while (catASTNode != nullptr)
+	{
+		if (catASTNode->getNodeType() == CatASTNodeType::LinkedList)
+		{
+			CatLinkNode* linkNode = static_cast<CatLinkNode*>(catASTNode);
+			list.push_back(static_cast<ItemT*>(linkNode->me.release()));
+			catASTNode = linkNode->next.release();
+			delete linkNode;
+		}
+		else 
+		{
+			list.push_back(static_cast<ItemT*>(catASTNode));
+			break;
+		}
+	} 
+}
+
+
+template<typename ItemT>
+void unLink(ASTNode* astNode, std::vector<std::unique_ptr<ItemT>>& list)
+{
+	CatASTNode* catASTNode = static_cast<CatASTNode*>(astNode);
+	while (catASTNode != nullptr)
+	{
+		if (catASTNode->getNodeType() == CatASTNodeType::LinkedList)
+		{
+			CatLinkNode* linkNode = static_cast<CatLinkNode*>(catASTNode);
+			list.emplace_back(static_cast<ItemT*>(linkNode->me.release()));
+			catASTNode = linkNode->next.release();
+			delete linkNode;
+		}
+		else 
+		{
+			list.emplace_back(static_cast<ItemT*>(catASTNode));
+			break;
+		}
+	} 
+}
+
+
 ASTNode* CatGrammar::pass(const ASTNodeParser& nodeParser)
 {
 	return nodeParser.getASTNodeByIndex(0);
@@ -222,29 +298,7 @@ ASTNode* jitcat::Grammar::CatGrammar::sourceFile(const Parser::ASTNodeParser& no
 {
 	CatASTNode* astNode = static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(0));
 	std::vector<std::unique_ptr<CatDefinition>> definitions;
-	
-	while (astNode != nullptr)
-	{
-		if (isDefinition(astNode->getNodeType()))
-		{
-			definitions.emplace_back(static_cast<CatDefinition*>(astNode));
-			break;
-		}
-		else if (astNode->getNodeType() == CatASTNodeType::LinkedList)
-		{
-			CatLinkNode* linkNode = static_cast<CatLinkNode*>(astNode);
-			definitions.emplace_back(static_cast<CatDefinition*>(linkNode->me.release()));
-			astNode = linkNode->next.release();
-			delete linkNode;
-		}
-		else
-		{
-			//Error. Should not get here.
-			assert(false);
-			break;
-		}
-	} 
-
+	unLink(nodeParser.getASTNodeByIndex(0), definitions);
 	return new CatSourceFile("none", std::move(definitions));
 }
 
@@ -257,7 +311,32 @@ ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParse
 
 ASTNode* jitcat::Grammar::CatGrammar::functionDefinition(const Parser::ASTNodeParser& nodeParser)
 {
-	return new CatFunctionDefinition(static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0)), nodeParser.getTerminalByIndex(0)->getLexeme()->toString());
+	return new CatFunctionDefinition(static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0)), 
+									 nodeParser.getTerminalByIndex(0)->getLexeme()->toString(),
+									 static_cast<CatFunctionParameterDefinitions*>(nodeParser.getASTNodeByIndex(1)),
+									 static_cast<CatScopeBlock*>(nodeParser.getASTNodeByIndex(2)));
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::functionParameterDefinitions(const Parser::ASTNodeParser& nodeParser)
+{
+	std::vector<CatVariableDeclaration*> parameterDefinitions;
+	unLink(nodeParser.getASTNodeByIndex(0), parameterDefinitions);
+	return new CatFunctionParameterDefinitions(parameterDefinitions);
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::variableDeclaration(const Parser::ASTNodeParser& nodeParser)
+{
+	 CatTypeNode* type = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	 std::string name  = nodeParser.getTerminalByIndex(0)->getLexeme()->toString();
+	 CatTypedExpression* initExpression = nullptr;
+	 if (nodeParser.getNumItems() > 2)
+	 {
+		 //declaration has initialization
+		 initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
+	 }
+	 return new CatVariableDeclaration(type, name, initExpression);
 }
 
 
@@ -274,6 +353,34 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 		case Identifier::Identifier: return new CatTypeNode(nodeParser.getTerminalByIndex(0)->getLexeme()->toString());
 	}
 	return new CatTypeNode(type);
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::ifStatement(const Parser::ASTNodeParser& nodeParser)
+{
+	CatTypedExpression* condition = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0));
+	CatScopeBlock* ifBody = static_cast<CatScopeBlock*>(nodeParser.getASTNodeByIndex(1));
+	CatASTNode* elseNode = static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(2));
+	return new CatIfStatement(condition, ifBody, elseNode);
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::returnStatement(const Parser::ASTNodeParser& nodeParser)
+{
+	CatTypedExpression* returnExpression = nullptr;
+	if (nodeParser.getNumItems() > 0)
+	{
+		returnExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0));
+	}
+	return new CatReturnStatement(returnExpression);;
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::scopeBlock(const Parser::ASTNodeParser& nodeParser)
+{
+	std::vector<CatStatement*> statements;
+	unLink(nodeParser.getASTNodeByIndex(0), statements);
+	return new CatScopeBlock(statements);
 }
 
 
@@ -411,27 +518,7 @@ ASTNode* CatGrammar::identifierToken(const ASTNodeParser& nodeParser)
 ASTNode* CatGrammar::argumentListToken(const ASTNodeParser& nodeParser)
 {
 	CatArgumentList* argumentList = new CatArgumentList();
-	CatASTNode* astNode = static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(0));
-	while (astNode != nullptr)
-	{
-		if (isTypedExpression(astNode->getNodeType()))
-		{
-			argumentList->arguments.emplace_back(static_cast<CatTypedExpression*>(astNode));
-			break;
-		}
-		else if (astNode->getNodeType() == CatASTNodeType::LinkedList)
-		{
-			CatLinkNode* linkNode = static_cast<CatLinkNode*>(astNode);
-			argumentList->arguments.emplace_back(static_cast<CatTypedExpression*>(linkNode->me.release()));
-			astNode = linkNode->next.release();
-			delete linkNode;
-		}
-		else
-		{
-			//Error. Should not get here.
-			break;
-		}
-	} 
+	unLink(nodeParser.getASTNodeByIndex(0), argumentList->arguments);
 	return argumentList;
 }
 

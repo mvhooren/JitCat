@@ -15,6 +15,7 @@ namespace jitcat::AST
 		SourceFile,
 		ClassDefinition,
 		FunctionDefinition,
+		FunctionParameterDefinitions,
 		TypeName,
 		Literal,
 		Identifier,
@@ -27,7 +28,11 @@ namespace jitcat::AST
 		MemberAccess,
 		ArrayIndex,
 		MemberFunctionCall,
-		ScopeRoot
+		ScopeRoot,
+		VariableDeclaration,
+		IfStatement,
+		ReturnStatement,
+		ScopeBlock
 	};
 
 } //End namespace jitcat::AST

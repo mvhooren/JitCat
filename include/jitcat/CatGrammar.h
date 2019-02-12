@@ -32,10 +32,10 @@ namespace jitcat::Grammar
 			ClassContents,
 			Declaration,
 			FunctionDefinition,
-			FunctionParameterDefinition,
-			FunctionParameterDefRepeat,
+			FunctionParameters,
+			FunctionParameterDefinitions,
 			VariableDeclaration,
-			VariableDeclarationTail,
+			VariableInitialization,
 			OperatorP2,
 			OperatorP3,
 			OperatorP4,
@@ -49,7 +49,6 @@ namespace jitcat::Grammar
 			Expression,
 			ExpressionBlock,
 			ExpressionBlockContents,
-			FlowControl,
 			IfThen,
 			Else,
 			ElseBody,
@@ -61,7 +60,10 @@ namespace jitcat::Grammar
 			Assignment,
 			ObjectMemberAccess,
 			ObjectMemberAccessAction,
-			Return
+			Return,
+			Statement,
+			ScopeBlock,
+			ScopeBlockStatements
 		};
 	public: 
 		CatGrammar(Tokenizer::TokenizerBase* tokenizer, CatGrammarType grammarType);
@@ -77,7 +79,12 @@ namespace jitcat::Grammar
 		static AST::ASTNode* sourceFile(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* classDefinition(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionDefinition(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* functionParameterDefinitions(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* variableDeclaration(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* typeName(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* ifStatement(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* returnStatement(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* scopeBlock(const Parser::ASTNodeParser& nodeParser);
 
 		static AST::ASTNode* assignmentOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* infixOperator(const Parser::ASTNodeParser& nodeParser);

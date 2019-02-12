@@ -11,7 +11,7 @@ namespace jitcat
 {
 	class CatRuntimeContext;
 }
-#include "jitcat/CatASTNode.h"
+#include "jitcat/CatStatement.h"
 #include "jitcat/CatGenericType.h"
 
 #include <any>
@@ -19,7 +19,7 @@ namespace jitcat
 namespace jitcat::AST
 {
 
-	class CatExpression: public CatASTNode
+	class CatExpression: public CatStatement
 	{
 	public:
 		virtual std::any execute(CatRuntimeContext* runtimeContext) = 0;

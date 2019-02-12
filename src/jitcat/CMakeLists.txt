@@ -56,8 +56,12 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatFunctionCall.h
 	CatFunctionDefinition.cpp
 	${JitCatHeaderPath}/CatFunctionDefinition.h
+	CatFunctionParameterDefinitions.cpp
+	${JitCatHeaderPath}/CatFunctionParameterDefinitions.h
 	CatIdentifier.cpp
 	${JitCatHeaderPath}/CatIdentifier.h
+	CatIfStatement.cpp
+	${JitCatHeaderPath}/CatIfStatement.h
 	CatInfixOperator.cpp
 	${JitCatHeaderPath}/CatInfixOperator.h
 	${JitCatHeaderPath}/CatInfixOperatorHeaderImplementation.h
@@ -73,13 +77,20 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatMemberFunctionCall.h
 	CatPrefixOperator.cpp
 	${JitCatHeaderPath}/CatPrefixOperator.h
+	CatReturnStatement.cpp
+	${JitCatHeaderPath}/CatReturnStatement.h
+	CatScopeBlock.cpp
+	${JitCatHeaderPath}/CatScopeBlock.h
 	CatScopeRoot.cpp
 	${JitCatHeaderPath}/CatScopeRoot.h
 	CatTypeNode.cpp
 	CatSourceFile.cpp
 	${JitCatHeaderPath}/CatSourceFile.h
+	${JitCatHeaderPath}/CatStatement.h
 	${JitCatHeaderPath}/CatTypeNode.h
 	${JitCatHeaderPath}/CatTypedExpression.h
+	CatVariableDeclaration.cpp
+	${JitCatHeaderPath}/CatVariableDeclaration.h
 )
 
 set(Source_Cat_ASTNodes_ASTHelper
