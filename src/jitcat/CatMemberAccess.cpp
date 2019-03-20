@@ -8,6 +8,7 @@
 #include "jitcat/CatMemberAccess.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/TypeInfo.h"
 
@@ -22,24 +23,9 @@ using namespace jitcat::Tools;
 CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName):
 	base(base),
 	memberName(memberName),
-	memberInfo(nullptr)
+	memberInfo(nullptr),
+	type(CatGenericType::errorType)
 {
-	if (base != nullptr
-		&& base->getType().isObjectType())
-	{
-		CatGenericType baseMemberInfo = base->getType();
-		if (baseMemberInfo.isValidType()
-			&& (baseMemberInfo.isObjectType()
- 			    || baseMemberInfo.isContainerType()))
-		{
-			memberInfo = baseMemberInfo.getObjectType()->getMemberInfo(Tools::toLowerCase(memberName));
-		}
-
-		if (memberInfo != nullptr)
-		{
-			type = memberInfo->catType;
-		}
-	}
 }
 
 
@@ -85,25 +71,31 @@ std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext, A
 }
 
 
-CatGenericType CatMemberAccess::typeCheck()
+bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatGenericType baseType = base->typeCheck();
-	if (!baseType.isValidType())
+	memberInfo = nullptr;
+	type = CatGenericType::errorType;
+	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
-		return baseType;
+		CatGenericType baseType = base->getType();
+		if (!baseType.isObjectType())
+		{
+			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext);
+			return false;
+		}
+		memberInfo = baseType.getObjectType()->getMemberInfo(Tools::toLowerCase(memberName));
+		if (memberInfo != nullptr)
+		{
+			type = memberInfo->catType;
+			return true;
+		}
+		else
+		{
+			errorManager->compiledWithError(Tools::append("Member not found:", memberName), errorContext);
+			return false;
+		}
 	}
-	else if (baseType.isContainerType())
-	{
-		return CatGenericType(Tools::append("Invalid operation on container:", memberName));
-	}
-	else if (memberInfo != nullptr)
-	{
-		return memberInfo->catType;
-	}
-	else
-	{
-		return CatGenericType(Tools::append("Member not found:", memberName));
-	}
+	return false;
 }
 
 

@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2019
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #include "jitcat/CatReturnStatement.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatTypedExpression.h"
@@ -40,9 +47,9 @@ std::any CatReturnStatement::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatReturnStatement::typeCheck()
+bool CatReturnStatement::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	return CatGenericType();
+	return false;
 }
 
 

@@ -20,12 +20,12 @@ namespace jitcat::AST
 	class CatScopeRoot: public CatTypedExpression
 	{
 	public:
-		CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context);
+		CatScopeRoot(CatScopeID scopeId);
 		// Inherited via CatTypedExpression
 		virtual void print() const override;
 		virtual CatASTNodeType getNodeType() override;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override;
-		virtual CatGenericType typeCheck() override;
+		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual CatGenericType getType() const override;
 		virtual bool isConst() const override;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override;

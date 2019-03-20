@@ -58,16 +58,17 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 	}
 
 	Document document(expression, strlen(expression));
-	std::unique_ptr<SLRParseResult> parseResult(JitCat::get()->parseExpression(&document, &context));
+	ExpressionErrorManager errorManager;
+	std::unique_ptr<SLRParseResult> parseResult(JitCat::get()->parseExpression(&document, &context, &errorManager, nullptr));
 	CatTypedExpression* typedExpression = nullptr;
+
 	if (parseResult->success)
 	{
 		typedExpression = parseResult->getNode<CatTypedExpression>();
-		CatGenericType valueType = typedExpression->typeCheck();
-		if (!valueType.isValidType())
+		
+		if (!typedExpression->typeCheck(&context, &errorManager, nullptr))
 		{
 			parseResult->success = false;
-			parseResult->errorMessage = valueType.getError().getMessage();
 		}
 		else
 		{
@@ -88,7 +89,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 				result->isLiteral = true;
 			}
 			result->isValid = true;
-			std::string typeName = valueType.toString();
+			std::string typeName = typedExpression->getType().toString();
 			result->typeName = (const char*)malloc(typeName.size() + 1);
 			memcpy((void*)result->typeName, typeName.c_str(), typeName.size() + 1);
 			result->isConstant = typedExpression->isConst();
@@ -98,9 +99,15 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 	if (!parseResult->success)
 	{
 		std::string contextName = context.getContextName().c_str();
-		result->errorMessage = new char[parseResult->errorMessage.size() + 1];
-		memcpy((void*)result->errorMessage, parseResult->errorMessage.c_str(), parseResult->errorMessage.size() + 1);
-		result->errorOffset = parseResult->errorPosition;
+		auto errorList = errorManager.getErrors();
+		std::string errorMessage;
+		if (errorList.size() > 0)
+		{
+			errorMessage = errorList[0]->message;
+		}
+		result->errorMessage = new char[errorMessage.size() + 1];
+		memcpy((void*)result->errorMessage, errorMessage.c_str(), errorMessage.size() + 1);
+		result->errorOffset = 0; //QQQ
 		parseResult->astRootNode.reset(nullptr);
 		return 0;
 	}

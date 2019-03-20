@@ -7,9 +7,10 @@
 
 #include "jitcat/CatAssignmentOperator.h"
 #include "jitcat/AssignableType.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatLog.h"
-#include "jitcat/ASTHelper.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 
 using namespace jitcat;
@@ -22,16 +23,6 @@ CatAssignmentOperator::CatAssignmentOperator(CatTypedExpression* lhs, CatTypedEx
 	lhs(lhs),
 	rhs(rhs)
 {
-	CatGenericType lhsType = lhs->getType();
-	CatGenericType rhsType = rhs->getType();
-
-	if (lhsType.isValidType() && rhsType.isValidType()
-		&& lhsType != rhsType
-		&& lhsType.isBasicType() && rhsType.isBasicType())
-	{
-		//Automatic type conversion
-		ASTHelper::doTypeConversion(this->rhs, lhs->getType());
-	}
 }
 
 
@@ -64,30 +55,32 @@ std::any CatAssignmentOperator::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatAssignmentOperator::typeCheck()
+bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatGenericType leftType = lhs->typeCheck();
-	if (!leftType.isValidType())
+	if (lhs->typeCheck(compiletimeContext, errorManager, errorContext) && rhs->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
-		return leftType;
+		CatGenericType leftType = lhs->getType();
+		CatGenericType rightType = rhs->getType();
+		if (leftType != rightType
+			&& leftType.isBasicType() && rightType.isBasicType())
+		{
+			//Automatic type conversion
+			ASTHelper::doTypeConversion(this->rhs, lhs->getType());
+		}
+		if (!leftType.isWritable() || leftType.isConst() || !lhs->isAssignable())
+		{
+			errorManager->compiledWithError("Assignment failed because target cannot be assigned.", errorContext);
+		}
+		else if (leftType == rightType)
+		{
+			return true;
+		}
+		else
+		{
+			errorManager->compiledWithError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), "."), errorContext);
+		}
 	}
-	CatGenericType rightType = rhs->typeCheck();
-	if (!rightType.isValidType())
-	{
-		return rightType;
-	}
-	if (!leftType.isWritable() || leftType.isConst() || !lhs->isAssignable())
-	{
-		return CatGenericType(CatError("Assignment failed because target cannot be assigned."));
-	}
-	else if (leftType == rightType)
-	{
-		return leftType.toUnmodified();
-	}
-	else
-	{
-		return CatGenericType(CatError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), ".")));
-	}
+	return false;
 }
 
 

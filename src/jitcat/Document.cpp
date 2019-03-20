@@ -7,17 +7,21 @@
 
 #include "jitcat/Document.h"
 
+#include <cassert>
 #include <string.h>
 
 using namespace jitcat::Tokenizer;
 
 
-Document::Document(const char* fileData, std::size_t fileSize):
-	size(fileSize)
+jitcat::Tokenizer::Document::Document(const std::string& document):
+	document(document)
 {
-	data.reset(new char[fileSize + 1]);
-	memcpy(data.get(), fileData, fileSize);
-	data.get()[fileSize] = 0;
+}
+
+
+Document::Document(const char* fileData, std::size_t fileSize):
+	document(fileData, fileSize)
+{
 }
 
 
@@ -26,13 +30,31 @@ Document::~Document()
 }
 
 
-const char* Document::getDocumentData() const
+const std::string& Document::getDocumentData() const
 {
-	return data.get();
+	return document;
 }
 
 
 std::size_t Document::getDocumentSize() const
 {
-	return size;
+	return document.size();
+}
+
+
+Lexeme jitcat::Tokenizer::Document::createLexeme(std::size_t offset, std::size_t length)
+{
+	if (offset + length <= document.size())
+	{
+		return Lexeme(document.c_str() + offset, length);
+	}
+	return Lexeme();
+}
+
+
+std::size_t jitcat::Tokenizer::Document::getOffsetInDocument(const Lexeme& lexeme) const
+{
+	//Check that the lexeme lies inside the document
+	assert(lexeme.data() >= document.c_str() && (lexeme.data() + lexeme.size()) < document.c_str() + document.size());
+	return lexeme.data() - document.c_str();
 }

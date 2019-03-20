@@ -16,7 +16,7 @@ namespace jitcat::Tokenizer
 	{
 	public:
 		ErrorToken() {};
-		ErrorToken(Lexeme* lexeme_) {lexeme.reset(lexeme_);};
+		ErrorToken(const Lexeme& lexeme): ParseToken(lexeme) {};
 		virtual int getTokenID() const {return getID();};
 		virtual const char* getTokenName() const {return "Error";};
 		virtual const char* getSubTypeName(int subType) const {return getTokenName();};	

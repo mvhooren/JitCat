@@ -13,10 +13,11 @@
 using namespace jitcat::Tokenizer;
 
 
-IdentifierToken::IdentifierToken(Lexeme* lexeme_, Identifier subType):
+IdentifierToken::IdentifierToken(const Lexeme& lexeme, Identifier subType):
+	ParseToken(lexeme),
 	subType(subType)
 {
-	lexeme.reset(lexeme_);
+
 }
 
 
@@ -88,7 +89,7 @@ int IdentifierToken::getTokenSubType() const
 ParseToken* IdentifierToken::createIfMatch(Document* document, const char* currentPosition) const
 {
 	std::size_t offset = 0;
-	std::size_t docOffset = currentPosition - document->getDocumentData();
+	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
 	std::size_t documentLength = document->getDocumentSize() - docOffset;
 	if (documentLength > 0)
 	{
@@ -107,10 +108,10 @@ ParseToken* IdentifierToken::createIfMatch(Document* document, const char* curre
 	}
 	if (offset > 0)
 	{
-		Lexeme* newLexeme = new Lexeme(document, docOffset, offset);
+		Lexeme newLexeme = document->createLexeme(docOffset, offset);
 		for (int type = (int)Identifier::Class; type < (int)Identifier::Last; type++)
 		{
-			if (*newLexeme == getSubTypeName(type))
+			if (newLexeme == getSubTypeName(type))
 			{
 				return new IdentifierToken(newLexeme, (Identifier)type);
 			}

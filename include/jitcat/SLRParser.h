@@ -9,6 +9,7 @@
 
 namespace jitcat
 {
+	class ExpressionErrorManager;
 	class RuntimeContext;
 }
 namespace jitcat::AST
@@ -72,7 +73,7 @@ namespace jitcat::Parser
 		void scanForConflicts() const;
 
 	public:
-		SLRParseResult* parse(const std::vector<Tokenizer::ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context) const;
+		SLRParseResult* parse(const std::vector<Tokenizer::ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const;
 		~SLRParser();
 
 	private:

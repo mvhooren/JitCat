@@ -1,12 +1,23 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2019
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatVariableDeclaration.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatTypeNode.h"
+#include "jitcat/CustomTypeInfo.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 
 
-CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(const std::vector<CatVariableDeclaration*>& parameterDeclarations)
+CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(const std::vector<CatVariableDeclaration*>& parameterDeclarations):
+	customType(new CustomTypeInfo(nullptr))
 {
 	for (auto& iter : parameterDeclarations)
 	{
@@ -23,7 +34,7 @@ CatFunctionParameterDefinitions::~CatFunctionParameterDefinitions()
 void CatFunctionParameterDefinitions::print() const
 {
 	bool addComma = false;
-	for (auto& iter: parameters)
+	for (auto& iter : parameters)
 	{
 		if (addComma)
 		{
@@ -38,4 +49,31 @@ void CatFunctionParameterDefinitions::print() const
 CatASTNodeType CatFunctionParameterDefinitions::getNodeType()
 {
 	return CatASTNodeType::FunctionParameterDefinitions;
+}
+
+
+bool jitcat::AST::CatFunctionParameterDefinitions::typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	bool success = true;
+	for (auto& iter : parameters)
+	{
+		if (!iter->typeCheck(runtimeContext, errorManager, errorContext))
+		{
+			success = false;
+		}
+		else
+		{
+			 const CatTypeNode& parameterTypeNode = iter->getType();
+			 const std::string& parameterName = iter->getName();
+			 const CatGenericType& parameterType = parameterTypeNode.getType();
+			 customType->addMember(parameterName, parameterType);
+		}
+	}
+	return success;
+}
+
+
+Reflection::CustomTypeInfo* jitcat::AST::CatFunctionParameterDefinitions::getCustomType() const
+{
+	return customType.get();
 }

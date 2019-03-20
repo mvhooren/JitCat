@@ -23,7 +23,6 @@ namespace jitcat::AST
 	{
 	public:
 		virtual std::any execute(CatRuntimeContext* runtimeContext) = 0;
-		virtual CatGenericType typeCheck() = 0;
 	};
 
 

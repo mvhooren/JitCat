@@ -389,7 +389,7 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 		}
 	}
 
-	return CatGenericType(Tools::append("Invalid operation: ", toString(), " ", ::toString(oper), " ", rightType.toString()));
+	return CatGenericType::errorType;
 }
 
 

@@ -8,27 +8,20 @@
 #pragma once
 
 #include <iostream>
-#include <string.h>
+#include <string_view>
+
 
 namespace jitcat::Tokenizer
 {
-	class Document;
+	using Lexeme = std::string_view;
 
 	//A lexeme points to a word or symbol contained in a document.
 	//It is typically used to refer to the document text represented by a ParseToken.
-	struct Lexeme
+	/*struct Lexeme
 	{
-		Lexeme(Document* document, std::size_t offset, std::size_t length);
-		//Get a pointer to the contents of the document referred to by this Lexeme.
-		//The const char* is valid as long as the document is not edited.
-		const char* getDataPointer() const;
+		Lexeme(const std::string_view& lexeme);
 
-		Document* document;
-		std::size_t offset;
-		std::size_t length;
-
-		std::string toString() const;
-
+		std::string_view lexeme;
 	};
 
 	bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const char* other);
@@ -36,6 +29,6 @@ namespace jitcat::Tokenizer
 	bool operator==(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
 	bool operator!=(const jitcat::Tokenizer::Lexeme& lexeme, const std::string& other);
 
-	std::ostream& operator<< (std::ostream& stream, const jitcat::Tokenizer::Lexeme* lexeme);
+	std::ostream& operator<< (std::ostream& stream, const jitcat::Tokenizer::Lexeme* lexeme);*/
 
 } //End namespace jitcat::Tokenizer

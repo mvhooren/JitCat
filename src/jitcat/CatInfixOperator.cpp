@@ -8,6 +8,7 @@
 #include "jitcat/CatInfixOperator.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/InfixOperatorOptimizer.h"
 #include "jitcat/ASTHelper.h"
 
@@ -129,11 +130,21 @@ std::any CatInfixOperator::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatInfixOperator::typeCheck()
+bool CatInfixOperator::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatGenericType leftType = lhs->typeCheck();
-	CatGenericType rightType = rhs->typeCheck();
-	return leftType.getInfixOperatorResultType(oper, rightType);
+	if (lhs->typeCheck(compiletimeContext, errorManager, errorContext)
+		&& rhs->typeCheck(compiletimeContext, errorManager, errorContext))
+	{
+		CatGenericType leftType = lhs->getType();
+		CatGenericType rightType = rhs->getType();
+		resultType = leftType.getInfixOperatorResultType(oper, rightType);
+		if (resultType != CatGenericType::errorType)
+		{
+			errorManager->compiledWithError(Tools::append("Invalid operation: ", leftType.toString(), " ", ::toString(oper), " ", rightType.toString()), errorContext);
+			return true;
+		}
+	}
+	return false;
 }
 
 

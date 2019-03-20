@@ -16,7 +16,7 @@ namespace jitcat::Tokenizer
 	{
 	public:
 		WhitespaceToken() {};
-		WhitespaceToken(Lexeme* lexeme_) {lexeme.reset(lexeme_);};
+		WhitespaceToken(const Lexeme& lexeme): ParseToken(lexeme) {};
 		virtual int getTokenID() const {return getID();};
 		virtual const char* getTokenName() const {return "Whitespace";};
 		virtual const char* getSubTypeName(int subType) const {return getTokenName();}	

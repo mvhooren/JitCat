@@ -11,8 +11,13 @@
 using namespace jitcat::Tokenizer;
 
 
-ParseToken::ParseToken():
-	lexeme(nullptr)
+ParseToken::ParseToken()
+{
+}
+
+
+jitcat::Tokenizer::ParseToken::ParseToken(const Lexeme& lexeme):
+	lexeme(lexeme)
 {
 }
 
@@ -22,9 +27,9 @@ ParseToken::~ParseToken()
 }
 
 
-const Lexeme* ParseToken::getLexeme() const
+const Lexeme& ParseToken::getLexeme() const
 {
-	return lexeme.get();
+	return lexeme;
 }
 
 

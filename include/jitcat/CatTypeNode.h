@@ -21,6 +21,10 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 
+		void setType(const CatGenericType& newType);
+
+		bool typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+
 	private:
 		CatGenericType type;
 		std::string name;

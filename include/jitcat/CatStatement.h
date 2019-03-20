@@ -10,6 +10,7 @@ namespace jitcat::AST
 	public:
 		CatStatement() {}
 		virtual ~CatStatement() {};
+		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) = 0;
 	};
 
 };

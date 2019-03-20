@@ -6,9 +6,10 @@
 */
 
 #include "jitcat/CatPrefixOperator.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
-#include "jitcat/ASTHelper.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 
 #include <cassert>
@@ -22,20 +23,7 @@ const char* CatPrefixOperator::conversionTable[] = {"!", "-"};
 
 CatGenericType CatPrefixOperator::getType() const 
 {
-	if (oper == Operator::Not)
-	{
-		return CatGenericType::boolType;
-	}
-	else if (oper == Operator::Minus
-			 && (rhs->getType().isFloatType()
-			     || rhs->getType().isIntType()))
-	{
-		return rhs->getType().toUnwritable();
-	}
-	else
-	{
-		return CatGenericType("Invalid use of operator.");
-	}
+	return resultType;
 }
 
 
@@ -62,35 +50,36 @@ std::any CatPrefixOperator::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatPrefixOperator::typeCheck()
+bool CatPrefixOperator::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatGenericType rightType = rhs->typeCheck();
-	if (!rightType.isValidType())
+	if (rhs->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
-		return rightType;
-	}
-	else
-	{
+		CatGenericType rightType = rhs->getType();
 		if (rightType.isBoolType()
 			&& oper == Operator::Not)
 		{
-			return CatGenericType::boolType;
+			resultType = CatGenericType::boolType;
+			return true;
 		}
 		else if (rightType.isFloatType()
-				 && oper == Operator::Minus)
+					&& oper == Operator::Minus)
 		{
-			return CatGenericType::floatType;
+			resultType =  CatGenericType::floatType;
+			return true;
 		}
 		else if (rightType.isIntType()
-				 && oper == Operator::Minus)
+					&& oper == Operator::Minus)
 		{
-			return CatGenericType::intType;
+			resultType =  CatGenericType::intType;
+			return true;
 		}
 		else
 		{
-			return CatGenericType(Tools::append("Error: invalid operation: ", conversionTable[(unsigned int)oper], rightType.toString()));
+			errorManager->compiledWithError(Tools::append("Error: invalid operation: ", conversionTable[(unsigned int)oper], rightType.toString()), errorContext);
+			return false;
 		}
 	}
+	return false;
 }
 
 

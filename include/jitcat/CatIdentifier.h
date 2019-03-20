@@ -21,7 +21,7 @@ namespace jitcat::AST
 	class CatIdentifier: public CatAssignableExpression
 	{
 	public:
-		CatIdentifier(const std::string& name, CatRuntimeContext* context);
+		CatIdentifier(const std::string& name);
 		virtual CatGenericType getType() const override final;
 		virtual void print() const override final;
 		virtual bool isConst() const override final;
@@ -29,7 +29,7 @@ namespace jitcat::AST
 		virtual CatASTNodeType getNodeType() override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, Reflection::AssignableType& assignableType) override final;
-		virtual CatGenericType typeCheck() override final;
+		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		CatScopeID getScopeId() const;
 		const Reflection::TypeMemberInfo* getMemberInfo() const;
 
@@ -38,7 +38,6 @@ namespace jitcat::AST
 		CatGenericType type;
 		Reflection::TypeMemberInfo* memberInfo;
 		CatScopeID scopeId;
-		CatRuntimeContext* compileTimeContext;
 	};
 
 

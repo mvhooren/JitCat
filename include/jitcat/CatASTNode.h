@@ -7,6 +7,11 @@
 
 #pragma once
 
+namespace jitcat
+{
+	class CatRuntimeContext;
+	class ExpressionErrorManager;
+}
 #include "jitcat/ASTNode.h"
 #include "jitcat/CatASTNodeType.h"
 

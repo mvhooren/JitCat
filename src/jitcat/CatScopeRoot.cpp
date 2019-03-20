@@ -7,15 +7,16 @@
 
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/ExpressionErrorManager.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatScopeRoot::CatScopeRoot(CatScopeID scopeId, CatRuntimeContext* context):
-	scopeId(scopeId)
+CatScopeRoot::CatScopeRoot(CatScopeID scopeId):
+	scopeId(scopeId),
+	type(CatGenericType::errorType)
 {
-	type = context->getScopeType(scopeId);
 }
 
 
@@ -36,15 +37,22 @@ std::any CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatScopeRoot::typeCheck()
+bool CatScopeRoot::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	type = CatGenericType::errorType;
+	if (compiletimeContext != nullptr)
+	{
+		type = compiletimeContext->getScopeType(scopeId);
+	}
 	if (type.isValidType())
 	{
-		return type;
+		return true;
+
 	}
 	else
 	{
-		return CatGenericType(std::string("Invalid scope."));
+		errorManager->compiledWithError(std::string("Invalid scope."), errorContext);
+		return false;
 	}
 }
 

@@ -38,7 +38,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	CatTokenizer tokenizer;
 	std::vector<ParseToken*> tokens;
 	tokenizer.tokenize(&doc, tokens, nullptr);
-	int startingTokenIndex = findStartTokenIndex((int)cursorPosition - 1, tokens);
+	int startingTokenIndex = findStartTokenIndex(doc, (int)cursorPosition - 1, tokens);
 	while (startingTokenIndex >= 0 && tokens[(unsigned int)startingTokenIndex] == nullptr)
 	{
 		startingTokenIndex--;
@@ -59,12 +59,12 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			std::size_t identifierOffset;
 			if (subExpression[i] != nullptr)
 			{
-				lowercaseIdentifier = Tools::toLowerCase(subExpression[i]->getLexeme()->toString());
-				identifierOffset = subExpression[i]->getLexeme()->offset;
+				lowercaseIdentifier = Tools::toLowerCase(subExpression[i]->getLexeme());
+				identifierOffset = subExpression[i]->getLexeme().data() - doc.getDocumentData().c_str();
 			}
 			else if (i > 0)
 			{
-				identifierOffset = subExpression[i - 1]->getLexeme()->offset + subExpression[i - 1]->getLexeme()->length;
+				identifierOffset = (subExpression[i - 1]->getLexeme().data() - doc.getDocumentData().c_str()) + subExpression[i - 1]->getLexeme().length();
 			}
 			else
 			{
@@ -206,7 +206,7 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 				}
 				else
 				{
-					expressionTailEnd = tokens[i]->getLexeme()->toString() + expressionTailEnd;
+					expressionTailEnd = Tools::append(tokens[i]->getLexeme(), expressionTailEnd);
 				}
 			}
 			if (tokens[i]->getTokenID() == OneCharToken::getID())
@@ -274,16 +274,17 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 }
 
 
-int AutoCompletion::findStartTokenIndex(int cursorPosition, const std::vector<ParseToken*>& tokens)
+int AutoCompletion::findStartTokenIndex(const Document& doc, int cursorPosition, const std::vector<ParseToken*>& tokens)
 {
 	for (int i = 0; i < (int)tokens.size(); i++)
 	{
 		ParseToken* token = tokens[i];
 		if (token != nullptr)
 		{
-			const Lexeme* lexeme = token->getLexeme();
-			if ((int)lexeme->offset <= cursorPosition
-				&& (int)(lexeme->offset + lexeme->length) > cursorPosition)
+			const Lexeme& lexeme = token->getLexeme();
+			std::size_t lexemeOffset = doc.getOffsetInDocument(lexeme);
+			if ((int)lexemeOffset <= cursorPosition
+				&& (int)(lexemeOffset + lexeme.length()) > cursorPosition)
 			{
 				return i;
 			}

@@ -116,6 +116,13 @@ std::string jitcat::Tools::toUpperCase(std::string text)
 }
 
 
+std::string jitcat::Tools::toUpperCase(const std::string_view& text)
+{
+	std::string textCopy(text);
+	return toUpperCase(textCopy);
+}
+
+
 char jitcat::Tools::toLowerCase(char text)
 {
 	if (text <= 'Z' && text >= 'A')
@@ -140,6 +147,13 @@ std::string jitcat::Tools::toLowerCase(std::string text)
 	}
 
 	return text;
+}
+
+
+std::string jitcat::Tools::toLowerCase(const std::string_view& text)
+{
+	std::string textCopy(text);
+	return toLowerCase(textCopy);
 }
 
 

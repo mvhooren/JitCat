@@ -15,7 +15,7 @@ using namespace jitcat::Tokenizer;
 ParseToken* ErrorToken::createIfMatch(Document* document, const char* currentPosition) const
 {
 	std::size_t offset = 0;
-	std::size_t docOffset = currentPosition - document->getDocumentData();
+	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
 	std::size_t documentLength = document->getDocumentSize() - docOffset;
 	while (offset < documentLength
 		   && currentPosition[offset] != ' '
@@ -26,7 +26,7 @@ ParseToken* ErrorToken::createIfMatch(Document* document, const char* currentPos
 	}
 	if (offset > 0)
 	{
-		return new ErrorToken(new Lexeme(document, docOffset, offset));
+		return new ErrorToken(document->createLexeme(docOffset, offset));
 	}
 	else
 	{

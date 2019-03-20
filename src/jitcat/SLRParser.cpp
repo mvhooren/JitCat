@@ -10,6 +10,7 @@
 #include "jitcat/ASTNodeParser.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/DFAState.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/GrammarBase.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/Production.h"
@@ -583,7 +584,7 @@ void SLRParser::scanForConflicts() const
 }
 
 
-SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context) const
+SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
 {
 	SLRParseResult* parseResult = new SLRParseResult();
 
@@ -686,19 +687,18 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 				{
 					if (token->getTokenIfToken())
 					{
-						const Lexeme* errorLexeme = token->getTokenIfToken()->getLexeme();
-						std::string errorToken = std::string(errorLexeme->getDataPointer(), errorLexeme->length);
+						const Lexeme& errorLexeme = token->getTokenIfToken()->getLexeme();
+						std::string errorToken = std::string(errorLexeme);
 						if (errorToken == "")
 						{
 							errorToken = "end of line";
 						}
-						parseResult->errorMessage = std::string("Did not expect ") + errorToken + " here.";
-						parseResult->errorPosition = errorLexeme->offset;
+						errorManager->compiledWithError(std::string("Did not expect ") + errorToken + " here.", errorSource);
 					}
 					else if (token->getProductionIfProduction())
 					{
 						const Production* errorProduction = token->getProductionIfProduction();
-						parseResult->errorMessage = std::string("Did not expect ") + errorProduction->getProductionName() + " here.";
+						errorManager->compiledWithError(std::string("Did not expect ") + errorProduction->getProductionName() + " here.", errorSource);
 					}
 					delete token;
 				}

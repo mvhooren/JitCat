@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2019
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #include "jitcat/CatIfStatement.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatScopeBlock.h"
@@ -37,4 +44,10 @@ void CatIfStatement::print() const
 CatASTNodeType CatIfStatement::getNodeType()
 {
 	return CatASTNodeType::IfStatement;
+}
+
+
+bool jitcat::AST::CatIfStatement::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	return false;
 }

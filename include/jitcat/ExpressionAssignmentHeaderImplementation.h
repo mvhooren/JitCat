@@ -90,9 +90,22 @@ inline bool ExpressionAssignment<ExpressionT>::assignInterpretedValue(CatRuntime
 template<typename ExpressionT>
 inline void ExpressionAssignment<ExpressionT>::compile(CatRuntimeContext* context)
 {
-	if (!parse(context, TypeTraits<ExpressionT>::toGenericType()))
+	ExpressionErrorManager* errorManager = nullptr;
+	if (context != nullptr)
+	{
+		errorManager = context->getErrorManager();
+	}
+	else
+	{
+		errorManager = new ExpressionErrorManager();
+	}
+	if (!parse(context, errorManager, this, TypeTraits<ExpressionT>::toGenericType()))
 	{
 		assignValueFunc = &defaultAssignFunction;
+	}
+	if (context == nullptr)
+	{
+		delete errorManager;
 	}
 }
 

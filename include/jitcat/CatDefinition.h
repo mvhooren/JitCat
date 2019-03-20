@@ -1,7 +1,18 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2019
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #pragma once
 
+#include "jitcat/CatASTNode.h"
+#include "jitcat/CatError.h"
 
-#include "CatASTNode.h"
+#include <optional>
+
+
 
 namespace jitcat::AST
 {
@@ -10,6 +21,7 @@ namespace jitcat::AST
 	public:
 		CatDefinition() {};
 		virtual ~CatDefinition() {};
+		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) = 0;
 	};
 
 };

@@ -123,26 +123,19 @@ const CatGenericType ExpressionBase::getType() const
 }
 
 
-bool ExpressionBase::parse(CatRuntimeContext* context, const CatGenericType& expectedType)
+bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext, const CatGenericType& expectedType)
 {
-	if (context != nullptr)
-	{
-		errorManagerHandle = context->getErrorManager();
-	}
-	else
-	{
-		errorManagerHandle = nullptr;
-	}
+	errorManagerHandle = errorManager;
 
 	isConstant = false;
 	expressionIsLiteral = false;
 
 	Document document(expression.c_str(), expression.length());
-	parseResult.reset(JitCat::get()->parseExpression(&document, context));
+	parseResult.reset(JitCat::get()->parseExpression(&document, context, errorManager, errorContext));
 
 	if (parseResult->success)
 	{
-		typeCheck(expectedType);
+		typeCheck(expectedType, context, errorManager, errorContext);
 		if (parseResult->success)
 		{
 			constCollapse(context);
@@ -189,23 +182,21 @@ void ExpressionBase::constCollapse(CatRuntimeContext* context)
 }
 
 
-void ExpressionBase::typeCheck(const CatGenericType& expectedType)
+void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	valueType = parseResult->getNode<CatTypedExpression>()->typeCheck();
-
-	if (!valueType.isValidType())
+	if (!parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext))
 	{
 		parseResult->success = false;
-		parseResult->errorMessage = valueType.getError().getMessage();
 	}
 	else 
 	{	
+		valueType = parseResult->getNode<CatTypedExpression>()->getType();
 		if (!expectedType.isUnknown())
 		{
 			if (expectAssignable && !valueType.isWritable())
 			{
 				parseResult->success = false;
-				parseResult->errorMessage = std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), "."));
+ 				errorManager->compiledWithError(std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), ".")), errorContext);
 			}
 			if (expectedType.isObjectType())
 			{
@@ -213,12 +204,12 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 				if (!valueType.isObjectType())
 				{
 					parseResult->success = false;
-					parseResult->errorMessage = Tools::append("Expected a ", typeName);
+					errorManager->compiledWithError(Tools::append("Expected a ", typeName), errorContext);
 				}
 				else if (valueType.getObjectTypeName() != typeName)
 				{
 					parseResult->success = false;
-					parseResult->errorMessage = Tools::append("Expected a ", typeName, ", got a ", valueType.getObjectTypeName());
+					errorManager->compiledWithError(Tools::append("Expected a ", typeName, ", got a ", valueType.getObjectTypeName()), errorContext);
 				}
 			}
 			else if (expectedType.isVoidType() && valueType.isVoidType())
@@ -251,7 +242,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 				else
 				{
 					parseResult->success = false;
-					parseResult->errorMessage = std::string(Tools::append("Expected a ", expectedType.toString()));
+					errorManager->compiledWithError(std::string(Tools::append("Expected a ", expectedType.toString())), errorContext);
 				}
 			}
 		}
@@ -267,7 +258,7 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 {
 	if (!parseResult->success)
 	{
-		if (context != nullptr)
+		/*QQQif (context != nullptr)
 		{
 			ExpressionErrorManager* errorManager = context->getErrorManager();
 			if (errorManager != nullptr)
@@ -292,7 +283,7 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 				}
 				errorManager->compiledWithError(errorMessage, this);
 			}
-		}
+		}*/
 		expressionIsLiteral = false;
 	}
 	else if (context != nullptr)

@@ -1,3 +1,10 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2019
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatLog.h"
 
@@ -26,4 +33,10 @@ void jitcat::AST::CatClassDefinition::print() const
 CatASTNodeType jitcat::AST::CatClassDefinition::getNodeType()
 {
 	return CatASTNodeType::ClassDefinition;
+}
+
+
+bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
+{
+	return false;
 }

@@ -17,7 +17,7 @@ namespace jitcat::Tokenizer
 	{
 	public:
 		IdentifierToken(): subType(Identifier::Identifier) {};
-		IdentifierToken(Lexeme* lexeme, Identifier subType);
+		IdentifierToken(const Lexeme& lexeme, Identifier subType);
 		virtual int getTokenID() const;
 		virtual const char* getTokenName() const;
 		virtual const char* getSubTypeName(int subType) const;

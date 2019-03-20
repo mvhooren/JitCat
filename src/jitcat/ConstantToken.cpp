@@ -18,10 +18,10 @@ ConstantToken::ConstantToken():
 {
 }
 
-ConstantToken::ConstantToken(Lexeme* lexeme_, ConstantType subType):
+ConstantToken::ConstantToken(const Lexeme& lexeme, ConstantType subType):
+	ParseToken(lexeme),
 	subType(subType)
 {
-	lexeme.reset(lexeme_);
 }
 
 
@@ -40,10 +40,10 @@ const char* ConstantToken::getTokenName() const
 ParseToken* ConstantToken::createIfMatch(Document* document, const char* currentPosition) const
 {
 	std::size_t  readLength = 0;
-	ConstantType constant = parseConstant(currentPosition, document->getDocumentSize() - (currentPosition - document->getDocumentData()), readLength);
+	ConstantType constant = parseConstant(currentPosition, document->getDocumentSize() - (currentPosition - document->getDocumentData().c_str()), readLength);
 	if (constant != ConstantType::NoType)
 	{
-		Lexeme* newLexeme = new Lexeme(document, currentPosition - document->getDocumentData(), readLength);
+		Lexeme newLexeme = document->createLexeme(currentPosition - document->getDocumentData().c_str(), readLength);
 		return new ConstantToken(newLexeme, constant);
 	}
 	else

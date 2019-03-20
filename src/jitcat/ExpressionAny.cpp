@@ -83,9 +83,22 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 
 void ExpressionAny::compile(CatRuntimeContext* context)
 {
-	if (parse(context, CatGenericType()) && isConstant)
+	ExpressionErrorManager* errorManager = nullptr;
+	if (context != nullptr)
+	{
+		errorManager = context->getErrorManager();
+	}
+	else
+	{
+		errorManager = new ExpressionErrorManager();
+	}
+	if (parse(context, errorManager, this, CatGenericType()) && isConstant)
 	{
 		cachedValue = parseResult->getNode<CatTypedExpression>()->execute(context);
+	}
+	if (context == nullptr)
+	{
+		delete errorManager;
 	}
 }
 

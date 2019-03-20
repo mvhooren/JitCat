@@ -21,10 +21,9 @@ void CatLiteral::print() const
 	else if (type.isStringType())	CatLog::log(std::any_cast<std::string>(value));
 }
 
-
-CatGenericType CatLiteral::typeCheck()
+bool CatLiteral::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	return type;
+	return true;
 }
 
 

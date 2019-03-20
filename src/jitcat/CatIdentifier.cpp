@@ -9,6 +9,7 @@
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 
 #include <cassert>
@@ -19,22 +20,12 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatIdentifier::CatIdentifier(const std::string& name, CatRuntimeContext* context):
+CatIdentifier::CatIdentifier(const std::string& name):
 	name(name),
-	compileTimeContext(context),
 	memberInfo(nullptr),
-	scopeId(-1)
+	scopeId(InvalidScopeID),
+	type(CatGenericType::errorType)
 {
-	std::string lowerName = Tools::toLowerCase(name);
-	if (context != nullptr)
-	{
-		memberInfo = context->findVariable(lowerName, scopeId);
-	}
-
-	if (memberInfo != nullptr)
-	{
-		type = memberInfo->catType;
-	}
 }
 
 
@@ -103,15 +94,27 @@ std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext, Ass
 }
 
 
-CatGenericType CatIdentifier::typeCheck()
+bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	std::string lowerName = Tools::toLowerCase(name);
+	memberInfo = nullptr;
+	type = CatGenericType::errorType;
+	if (compiletimeContext != nullptr)
+	{
+		memberInfo = compiletimeContext->findVariable(lowerName, scopeId);
+	}
+	if (memberInfo != nullptr)
+	{
+		type = memberInfo->catType;
+	}
 	if (type.isValidType())
 	{
-		return type;
+		return true;
 	}
 	else
 	{
-		return CatGenericType(std::string("Variable not found: ") + name);
+		errorManager->compiledWithError(std::string("Variable not found: ") + name, errorContext);
+		return false;
 	}
 }
 

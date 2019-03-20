@@ -12,15 +12,15 @@
 using namespace jitcat::Tokenizer;
 
 OneCharToken::OneCharToken():
-subType(OneChar::Unknown)
+	subType(OneChar::Unknown)
 {
 }
 
 
-OneCharToken::OneCharToken(Lexeme* lexeme_, OneChar subType):
-subType((OneChar)subType)
+OneCharToken::OneCharToken(const Lexeme& lexeme, OneChar subType):
+	ParseToken(lexeme),
+	subType((OneChar)subType)
 {
-	lexeme.reset(lexeme_);
 }
 
 
@@ -112,7 +112,7 @@ int OneCharToken::getTokenSubType() const
 
 ParseToken* OneCharToken::createIfMatch(Document* document, const char* currentPosition) const
 {
-	std::size_t offset = currentPosition - document->getDocumentData();
+	std::size_t offset = currentPosition - document->getDocumentData().c_str();
 	std::size_t remainingLength = document->getDocumentSize() - offset;
 	if (remainingLength > 0)
 	{
@@ -143,7 +143,7 @@ ParseToken* OneCharToken::createIfMatch(Document* document, const char* currentP
 		}
 		if (type != OneChar::Unknown)
 		{
-			Lexeme* newLexeme = new Lexeme(document, offset, 1);
+			Lexeme newLexeme = document->createLexeme(offset, 1);
 			return new OneCharToken(newLexeme, type);
 		}
 	}

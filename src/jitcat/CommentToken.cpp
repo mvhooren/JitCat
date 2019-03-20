@@ -38,7 +38,7 @@ const char* CommentToken::getSubTypeSymbol(int subType_) const
 ParseToken* CommentToken::createIfMatch(Document* document, const char* currentPosition) const
 {
 	std::size_t offset = 0;
-	std::size_t docOffset = currentPosition - document->getDocumentData();
+	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
 	std::size_t documentLength = document->getDocumentSize() - docOffset;
 	CommentType subTypeToCreate = CommentType::SingleLine;
 	if (documentLength >= 2)
@@ -70,7 +70,7 @@ ParseToken* CommentToken::createIfMatch(Document* document, const char* currentP
 
 	if (offset > 0)
 	{
-		return new CommentToken(new Lexeme(document, docOffset, offset), Tools::enumToInt(subTypeToCreate));
+		return new CommentToken(document->createLexeme(docOffset, offset), Tools::enumToInt(subTypeToCreate));
 	}
 	else
 	{

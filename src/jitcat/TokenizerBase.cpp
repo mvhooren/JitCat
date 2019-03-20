@@ -31,7 +31,7 @@ TokenizerBase::~TokenizerBase()
 
 bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& tokens, ParseToken* eofToken)
 {
-	const char* data = document->getDocumentData();
+	const char* data = document->getDocumentData().c_str();
 	const char* position = data;
 	std::size_t size = document->getDocumentSize();
 	while (position < data + size)
@@ -44,7 +44,7 @@ bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& token
 			{
 				found = true;
 				tokens.push_back(token);
-				position += token->getLexeme()->length;
+				position += token->getLexeme().length();
 				break;
 			}
 		}

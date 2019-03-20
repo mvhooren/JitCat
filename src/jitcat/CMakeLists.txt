@@ -239,7 +239,6 @@ set(Source_Reflection_TypeInfo
 set(Source_Tokenizer
 	Document.cpp
 	${JitCatHeaderPath}/Document.h
-	Lexeme.cpp
 	${JitCatHeaderPath}/Lexeme.h
 	ParseToken.cpp
 	${JitCatHeaderPath}/ParseToken.h

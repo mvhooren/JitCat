@@ -13,8 +13,7 @@ using namespace jitcat::Parser;
 
 SLRParseResult::SLRParseResult():
 	success(false),
-	astRootNode(nullptr),
-	errorPosition(0)
+	astRootNode(nullptr)
 {
 }
 

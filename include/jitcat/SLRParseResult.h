@@ -31,8 +31,6 @@ namespace jitcat::Parser
 
 		bool success;
 		std::unique_ptr<AST::ASTNode> astRootNode;
-		std::string errorMessage;
-		std::size_t errorPosition;
 	};
 
 }

@@ -1,8 +1,23 @@
-#pragma once
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2019
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
 
+#pragma once
+namespace jitcat
+{
+	class CatRuntimeContext;
+	namespace Reflection
+	{
+		class CustomTypeInfo;
+	}
+}
 #include "jitcat/CatASTNode.h"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 
@@ -18,9 +33,12 @@ namespace jitcat::AST
 
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
+		bool typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+		Reflection::CustomTypeInfo* getCustomType() const;
 
 	private:
 		std::vector<std::unique_ptr<CatVariableDeclaration>> parameters;
+		std::unique_ptr<Reflection::CustomTypeInfo> customType;
 	};
 
 }

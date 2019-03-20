@@ -40,6 +40,8 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, bool isWritable = true, bool isConst = false);
 
+		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
+
 		//This will not shrink the typeSize, only remove the member from the list.
 		//The data will only shrink after a restart of the program.
 		//Because of this, the CustomTypeInfo remains compatible with existing instances.
@@ -47,7 +49,7 @@ namespace jitcat::Reflection
 		void removeMember(const std::string& memberName);
 		void renameMember(const std::string& oldMemberName, const std::string& newMemberName);
 
-		//For creatign a "static" data type, this instance points directly to the default data.
+		//For creating a "static" data type, this instance points directly to the default data.
 		CustomTypeInstance* getDefaultInstance();
 
 		virtual bool isCustomType() const;

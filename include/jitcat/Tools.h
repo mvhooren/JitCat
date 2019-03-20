@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace jitcat::Tools
@@ -36,8 +37,10 @@ namespace jitcat::Tools
 
 	char toUpperCase(char text);
 	std::string toUpperCase(std::string text);
+	std::string toUpperCase(const std::string_view& text);
 	char toLowerCase(char text);
 	std::string toLowerCase(std::string text);
+	std::string toLowerCase(const std::string_view& text);
 
 	bool equalsWhileIgnoringCase(const std::string& text1, const std::string& text2);
 	bool equalsWhileIgnoringCase(const std::string& text1, const char* text2);

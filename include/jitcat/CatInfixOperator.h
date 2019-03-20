@@ -33,7 +33,7 @@ namespace jitcat::AST
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 
-		virtual CatGenericType typeCheck() override final;
+		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
 		virtual void print() const override final;
 
@@ -58,6 +58,7 @@ namespace jitcat::AST
 		std::unique_ptr<CatTypedExpression> lhs;
 		CatInfixOperatorType oper;
 		std::unique_ptr<CatTypedExpression> rhs;
+		CatGenericType resultType;
 	};
 
 	#include "jitcat/CatInfixOperatorHeaderImplementation.h"

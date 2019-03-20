@@ -8,6 +8,9 @@
 #include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatScopeRoot.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/TypeInfo.h"
@@ -24,20 +27,9 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedEx
 	functionName(name),
 	arguments(arguments),
 	base(base),
-	memberFunctionInfo(nullptr)
+	memberFunctionInfo(nullptr),
+	returnType(CatGenericType::errorType)
 {
-	if (base != nullptr
-		&& base->getType().isObjectType())
-	{
-		CatGenericType baseMemberInfo = base->getType();
-		if (baseMemberInfo.isValidType()
-			&& (baseMemberInfo.isObjectType()
- 			    ||  baseMemberInfo.isContainerType()))
-		{
-			memberFunctionInfo = baseMemberInfo.getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(name));
-		}
-	}
-
 }
 
 
@@ -74,52 +66,74 @@ std::any CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatMemberFunctionCall::typeCheck()
+bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatGenericType baseType = base->typeCheck();
-	if (!baseType.isValidType())
+	returnType = CatGenericType::errorType;
+	if (base == nullptr)
 	{
-		return baseType;
-	}
-	else if (memberFunctionInfo != nullptr)
-	{
-		std::size_t numArgumentsSupplied = arguments->arguments.size();
-		if (numArgumentsSupplied != memberFunctionInfo->getNumberOfArguments())
+		//function call without a base. Check Scopes.
+		CatScopeID scopeId = InvalidScopeID;
+		MemberFunctionInfo* memberFunctionInfo = compiletimeContext->findFunction(Tools::toLowerCase(functionName), scopeId);
+		if (memberFunctionInfo != nullptr && scopeId != InvalidScopeID)
 		{
-			return CatGenericType(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."));
+			base.reset(new CatScopeRoot(scopeId));
 		}
-		std::vector<CatGenericType> argumentList;
-		for (unsigned int i = 0; i < numArgumentsSupplied; i++)
+		else
 		{
-			argumentList.push_back(arguments->arguments[i]->typeCheck());
-			if (!argumentList[i].isValidType())
-			{
-				return argumentList[i];
-			}
-			else if (!(memberFunctionInfo->getArgumentType(i) == argumentList[i]))
-			{
-				return CatGenericType(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()));
-			}
+			errorManager->compiledWithError(Tools::append("Function not found: ", functionName, "."), errorContext);
+			return false;
 		}
-		return memberFunctionInfo->returnType;
 	}
-	else
+	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
-		return CatGenericType(Tools::append("Member function not found: ", functionName));
+		CatGenericType baseType = base->getType();
+		if (!baseType.isObjectType())
+		{
+			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext);
+			return false;
+		}
+		memberFunctionInfo = baseType.getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
+		if (memberFunctionInfo != nullptr)
+		{
+			std::size_t numArgumentsSupplied = arguments->arguments.size();
+			if (numArgumentsSupplied != memberFunctionInfo->getNumberOfArguments())
+			{
+				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."), errorContext);
+				return false;
+			}
+			std::vector<CatGenericType> argumentList;
+			for (unsigned int i = 0; i < numArgumentsSupplied; i++)
+			{
+				if (arguments->arguments[i]->typeCheck(compiletimeContext, errorManager, errorContext))
+				{
+					argumentList.push_back(arguments->arguments[i]->getType());
+					if (!(memberFunctionInfo->getArgumentType(i) == argumentList[i]))
+					{
+						errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext);
+						return false;
+					}
+				}
+				else
+				{
+					return false;
+				}
+			}
+			returnType = memberFunctionInfo->returnType;
+			return true;
+		}
+		else
+		{
+			errorManager->compiledWithError(Tools::append("Member function not found: ", functionName), errorContext);
+			return false;
+		}
 	}
+	return false;
 }
 
 
 CatGenericType CatMemberFunctionCall::getType() const
 {
-	if (memberFunctionInfo != nullptr)
-	{
-		return memberFunctionInfo->returnType;
-	}
-	else 
-	{
-		return CatGenericType::unknownType;
-	}
+	return returnType;
 }
 
 

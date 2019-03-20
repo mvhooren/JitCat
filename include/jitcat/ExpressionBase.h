@@ -17,6 +17,7 @@
 namespace jitcat
 {
 	class CatRuntimeContext;
+	class ExpressionErrorManager;
 	namespace Parser
 	{
 		struct SLRParseResult;	
@@ -60,12 +61,12 @@ namespace jitcat
 		const CatGenericType getType() const;
 
 	protected:
-		bool parse(CatRuntimeContext* context, const CatGenericType& expectedType);
+		bool parse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext, const CatGenericType& expectedType);
 		virtual void handleCompiledFunction(uintptr_t functionAddress) = 0;
 
 	private:
 		void constCollapse(CatRuntimeContext* context);
-		void typeCheck(const CatGenericType& expectedType);
+		void typeCheck(const CatGenericType& expectedType, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext);
 		void handleParseErrors(CatRuntimeContext* context);
 		void compileToNativeCode(CatRuntimeContext* context);
 

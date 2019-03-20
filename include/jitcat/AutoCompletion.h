@@ -49,7 +49,7 @@ namespace jitcat
 	private:
 		static std::vector<Tokenizer::IdentifierToken*> getSubExpressionToAutoComplete(const std::vector<Tokenizer::ParseToken*>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
 
-		static int findStartTokenIndex(int cursorPosition, const std::vector<Tokenizer::ParseToken*>& tokens);
+		static int findStartTokenIndex(const jitcat::Tokenizer::Document& doc, int cursorPosition, const std::vector<Tokenizer::ParseToken*>& tokens);
 
 		static void addOptionsFromTypeInfo(Reflection::TypeInfo* typeInfo, std::vector<AutoCompletion::AutoCompletionEntry>& results, 
 										   const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset, const std::string& expressionTailEnd);

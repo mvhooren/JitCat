@@ -227,6 +227,17 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 }
 
 
+TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string& memberName, const CatGenericType& type)
+{
+	if		(type.isFloatType())	return addFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
+	else if (type.isIntType())		return addIntMember(memberName, 0, type.isWritable(), type.isConst());
+	else if (type.isBoolType())		return addBoolMember(memberName, false, type.isWritable(), type.isConst());
+	else if (type.isStringType())	return addStringMember(memberName, "", type.isWritable(), type.isConst());
+	else if (type.isObjectType())	return addObjectMember(memberName, nullptr, type.getObjectType(), type.isWritable(), type.isConst());
+	else							return nullptr;
+}
+
+
 void CustomTypeInfo::removeMember(const std::string& memberName)
 {
 	auto iter = members.find(Tools::toLowerCase(memberName));

@@ -42,7 +42,7 @@ void SourceFile::compile(CatRuntimeContext* context)
 	{
 		errorManagerHandle = nullptr;
 	}
-	parseResult.reset(JitCat::get()->parseFull(sourceText.get(), context));
+	parseResult.reset(JitCat::get()->parseFull(sourceText.get(), context, errorManager, this));
 	if (parseResult->success)
 	{
 		AST::CatSourceFile* sourceFileNode = parseResult->getNode<AST::CatSourceFile>();
@@ -50,13 +50,6 @@ void SourceFile::compile(CatRuntimeContext* context)
 		if (errorManager != nullptr)
 		{
 			errorManager->compiledWithoutErrors(this);
-		}
-	}
-	else
-	{
-		if (errorManager != nullptr)
-		{
-			errorManager->compiledWithError(parseResult->errorMessage, this);
 		}
 	}
 }

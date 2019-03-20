@@ -17,7 +17,7 @@ namespace jitcat::AST
 	class CatPrefixOperator: public CatTypedExpression
 	{
 	public:
-		CatPrefixOperator(): oper(Operator::Not) {};
+		CatPrefixOperator(): oper(Operator::Not), resultType(CatGenericType::errorType) {};
 		CatPrefixOperator(const CatPrefixOperator&) = delete;
 
 		enum class Operator
@@ -37,12 +37,13 @@ namespace jitcat::AST
 
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
-		virtual CatGenericType typeCheck() override final;
+		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
 		virtual void print() const override final;
 
 	private:
 		inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
+		CatGenericType resultType;
 	};
 
 

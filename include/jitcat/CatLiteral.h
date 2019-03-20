@@ -28,7 +28,7 @@ namespace jitcat::AST
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final {return this;}
 		virtual CatASTNodeType getNodeType() override final {return CatASTNodeType::Literal;}
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final {return value;};
-		virtual CatGenericType typeCheck() override final;
+		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		const std::any& getValue() const;
 
 	private:

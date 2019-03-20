@@ -9,6 +9,7 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/ASTHelper.h"
@@ -26,13 +27,10 @@ using namespace jitcat::Tools;
 
 CatFunctionCall::CatFunctionCall(const std::string& name, CatArgumentList* arguments):
 	name(name),
-	arguments(arguments)
+	arguments(arguments),
+	returnType(CatGenericType::errorType),
+	function(CatBuiltInFunctionType::Invalid)
 {
-	function = toFunction(name.c_str(), (int)arguments->arguments.size());
-	for (auto& iter : arguments->arguments)
-	{
-		argumentTypes.push_back(iter->getType());
-	}
 }
 
 
@@ -355,212 +353,247 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatFunctionCall::typeCheck()
+bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	function = toFunction(name.c_str(), (int)arguments->arguments.size());
+	argumentTypes.clear();
+	returnType = CatGenericType::errorType;
 	std::size_t numArgumentsSupplied = arguments->arguments.size();
 	if (function >= CatBuiltInFunctionType::Count)
 	{
-		return CatGenericType(Tools::append("function not found: ", name));
+		errorManager->compiledWithError(Tools::append("function not found: ", name), errorContext);
+		return false;
 	}
 	else if (!checkArgumentCount(numArgumentsSupplied))
 	{
-		return CatGenericType(Tools::append("Invalid number of arguments in function: " , name));
+		errorManager->compiledWithError(Tools::append("Invalid number of arguments in function: " , name), errorContext);
+		return false;
 	}
 	else
 	{
-		CatGenericType argumentTypes[3];
 		for (unsigned int i = 0; i < numArgumentsSupplied; i++)
 		{
-			argumentTypes[i] = arguments->arguments[i]->typeCheck();
-			if (!argumentTypes[i].isValidType())
+			if (arguments->arguments[i]->typeCheck(compiletimeContext, errorManager, errorContext))
 			{
-				return argumentTypes[i];
+				argumentTypes.push_back(arguments->arguments[i]->getType());
+			}
+			else
+			{
+				return false;
 			}
 		}
 
 		switch (function)
 		{
-			case CatBuiltInFunctionType::ToVoid:			return CatGenericType::voidType;
-			case CatBuiltInFunctionType::ToInt:				return argumentTypes[0].isBasicType() ? CatGenericType::intType : CatGenericType(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToFloat:			return argumentTypes[0].isBasicType() ? CatGenericType::floatType : CatGenericType(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToBool:			return argumentTypes[0].isBasicType() ? CatGenericType::boolType : CatGenericType(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToString:			return argumentTypes[0].isBasicType() ? CatGenericType::stringType : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
-			case CatBuiltInFunctionType::ToPrettyString:	return argumentTypes[0].isBasicType() ? CatGenericType::stringType : CatGenericType(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()));
+			case CatBuiltInFunctionType::ToVoid:			returnType = CatGenericType::voidType;	break;
+			case CatBuiltInFunctionType::ToInt:				if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::intType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()), errorContext); return false;}  break;
+			case CatBuiltInFunctionType::ToFloat:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::floatType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()), errorContext); return false;}	break;
+			case CatBuiltInFunctionType::ToBool:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::boolType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()), errorContext); return false;}  break;
+			case CatBuiltInFunctionType::ToString:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()), errorContext); return false;}	break;
+			case CatBuiltInFunctionType::ToPrettyString:	if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()), errorContext); return false;}	break;
 			case CatBuiltInFunctionType::ToFixedLengthString:
 				if (argumentTypes[0].isIntType() && argumentTypes[1].isIntType())
 				{
-					return CatGenericType::stringType;
+					returnType = CatGenericType::stringType;
 				}
 				else
 				{
-					return CatGenericType(Tools::append(name, ": expected an int."));
+					errorManager->compiledWithError(Tools::append(name, ": expected an int."), errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::Sin:
 			case CatBuiltInFunctionType::Cos:
 			case CatBuiltInFunctionType::Tan:
 				if (argumentTypes[0].isScalarType())
 				{
-					return CatGenericType::floatType;
+					returnType = CatGenericType::floatType;
 				}
 				else
 				{
-					return CatGenericType(Tools::append(name, ": expected a number as argument."));
+					errorManager->compiledWithError(Tools::append(name, ": expected a number as argument."), errorContext);
+					return false;
 				}
-			case CatBuiltInFunctionType::Random:		return CatGenericType::floatType;
+				break;
+			case CatBuiltInFunctionType::Random:		returnType = CatGenericType::floatType; break;
 			case CatBuiltInFunctionType::RandomRange:
 			{
 				if (argumentTypes[0].isBoolType()
 					&& argumentTypes[1].isBoolType())
 				{
-					return CatGenericType::boolType;
+					returnType = CatGenericType::boolType;
 				}
 				else if (argumentTypes[0].isIntType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType::intType;
+					returnType = CatGenericType::intType;
 				}
 				else if (argumentTypes[0].isFloatType()
 					&& argumentTypes[0].isScalarType())
 				{
-					return CatGenericType::floatType;
+					returnType = CatGenericType::floatType;
 				}
 				else
 				{
-					return CatGenericType(Tools::append(name, ": invalid argument types."));
+					errorManager->compiledWithError(Tools::append(name, ": invalid argument types."), errorContext);
+					return false;
 				}
+				break;
 			}
 			case CatBuiltInFunctionType::Round:
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType::floatType;
+					returnType = CatGenericType::floatType;
 				}
 				else
 				{
-					return CatGenericType("round: can only round floating point numbers to integer number of decimals.");
+					errorManager->compiledWithError("round: can only round floating point numbers to integer number of decimals.", errorContext);
 				}
+				break;
 			case CatBuiltInFunctionType::StringRound:
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType::stringType;
+					returnType = CatGenericType::stringType;
 				}
 				else
 				{
-					return CatGenericType("stringRound: can only round floating point numbers to integer number of decimals.");
+					errorManager->compiledWithError("stringRound: can only round floating point numbers to integer number of decimals.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::Abs:
 				if (argumentTypes[0].isFloatType())
 				{
-					return CatGenericType::floatType;
+					returnType = CatGenericType::floatType;
 				}
 				else if (argumentTypes[0].isIntType())
 				{
-					return CatGenericType::intType;
+					returnType = CatGenericType::intType;
 				}
 				else
 				{
-					return CatGenericType("abs: expected a number as argument.");
+					errorManager->compiledWithError("abs: expected a number as argument.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::Cap:
 				if (argumentTypes[1].isScalarType()
 					&& argumentTypes[2].isScalarType())
 				{
 					if (argumentTypes[0].isFloatType())
 					{
-						return CatGenericType::floatType;
+						returnType = CatGenericType::floatType;
 					}
 					else if (argumentTypes[0].isIntType())
 					{
-						return CatGenericType::intType;
+						returnType = CatGenericType::intType;
 					}
 					else
 					{
-						return CatGenericType("cap: value to be capped must be a number.");
+						errorManager->compiledWithError("cap: value to be capped must be a number.", errorContext);
+						return false;
 					}
 				}
 				else
 				{
-					return CatGenericType("cap: range must consist of 2 numbers.");
+					errorManager->compiledWithError("cap: range must consist of 2 numbers.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::Min:
 			case CatBuiltInFunctionType::Max:
 				if (argumentTypes[0].isFloatType()
 					&& argumentTypes[1].isScalarType())
 				{
-					return CatGenericType::floatType;
+					returnType = CatGenericType::floatType;
 				}
 				else if (argumentTypes[0].isIntType()
 						 && argumentTypes[1].isScalarType())
 				{
-					return CatGenericType::intType;
+					returnType = CatGenericType::intType;
 				}
 				else
 				{
-					return CatGenericType(Tools::append(name, ": expected two numbers as arguments."));
+					errorManager->compiledWithError(Tools::append(name, ": expected two numbers as arguments."), errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::Log:
 			case CatBuiltInFunctionType::Sqrt:
 			case CatBuiltInFunctionType::Ceil:
 			case CatBuiltInFunctionType::Floor:
 				if (argumentTypes[0].isScalarType())
 				{
-					return CatGenericType::floatType;
+					returnType = CatGenericType::floatType;
 				}
 				else
 				{
-					return CatGenericType(Tools::append(name, ": expected a number as argument."));
+					errorManager->compiledWithError(Tools::append(name, ": expected a number as argument."), errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::Pow:
 				if (argumentTypes[0].isScalarType() && argumentTypes[1].isScalarType())
 				{
-					return CatGenericType::floatType;
+					returnType = CatGenericType::floatType;
 				}
 				else
 				{
-					return CatGenericType("pow: expected two numbers as arguments.");
+					errorManager->compiledWithError("pow: expected two numbers as arguments.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::FindInString:
 				if (argumentTypes[0].isBasicType()
 					&& argumentTypes[1].isBasicType())
 				{
-					return CatGenericType::intType;
+					returnType = CatGenericType::intType;
 				}
 				else
 				{
-					return CatGenericType("findInString: invalid argument.");
+					errorManager->compiledWithError("findInString: invalid argument.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::ReplaceInString:
 				if (argumentTypes[0].isBasicType()
 					&& argumentTypes[1].isBasicType()
 					&& argumentTypes[2].isBasicType())
 				{
-					return CatGenericType::stringType;
+					returnType = CatGenericType::stringType;
 				}
 				else
 				{
-					return CatGenericType("replaceInString: invalid argument.");
+					errorManager->compiledWithError("replaceInString: invalid argument.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::StringLength:
 				if (argumentTypes[0].isBasicType())
 				{
-					return CatGenericType::intType;
+					returnType = CatGenericType::intType;
 				}
 				else
 				{
-					return CatGenericType("stringLength: invalid argument.");
+					errorManager->compiledWithError("stringLength: invalid argument.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::SubString:
 				if (argumentTypes[0].isBasicType()
 					&& argumentTypes[1].isScalarType()
 					&& argumentTypes[2].isScalarType())
 				{
-					return CatGenericType::stringType;
+					returnType = CatGenericType::stringType;
 				}
 				else
 				{
-					return CatGenericType("subString: invalid argument.");
+					errorManager->compiledWithError("subString: invalid argument.", errorContext);
+					return false;
 				}
+				break;
 			case CatBuiltInFunctionType::Select:
 			{
 				if (argumentTypes[0].isBoolType())
@@ -568,76 +601,34 @@ CatGenericType CatFunctionCall::typeCheck()
 					if (argumentTypes[1] == argumentTypes[2]
 						|| (argumentTypes[1].isScalarType() && argumentTypes[2].isScalarType()))
 					{
-						return argumentTypes[1];
+						returnType = argumentTypes[1];
 					}
 					else
 					{
-						return CatGenericType("select: second and third argument must be the same type.");
+						errorManager->compiledWithError("select: second and third argument must be the same type.", errorContext);
+						return false;
 					}
 				}
 				else
 				{
-					return CatGenericType("select: first argument must resolve to a boolean.");
+					errorManager->compiledWithError("select: first argument must resolve to a boolean.", errorContext);
+					return false;
 				}
-			}
+			} break;
 			default:
 			case CatBuiltInFunctionType::Count:
 			case CatBuiltInFunctionType::Invalid:
-				return CatGenericType(std::string("function not found: ") + name);
+				errorManager->compiledWithError(std::string("function not found: ") + name, errorContext);
+				return false;
 		}
 	}
+	return true;
 }
 
 
 CatGenericType CatFunctionCall::getType() const
 {
-	if (checkArgumentCount(arguments->arguments.size()))
-	{
-		switch (function)
-		{
-			default:
-				return CatGenericType::errorType;
-			case CatBuiltInFunctionType::ToVoid:
-				return CatGenericType::voidType;
-			case CatBuiltInFunctionType::ToInt:
-			case CatBuiltInFunctionType::StringLength:
-			case CatBuiltInFunctionType::FindInString:
-				return CatGenericType::intType;
-			case CatBuiltInFunctionType::ToBool:
-				return CatGenericType::boolType;
-			case CatBuiltInFunctionType::RandomRange:
-			case CatBuiltInFunctionType::Abs:
-			case CatBuiltInFunctionType::Cap:
-			case CatBuiltInFunctionType::Min:
-			case CatBuiltInFunctionType::Max:
-				return arguments->arguments[0]->getType();
-			case CatBuiltInFunctionType::Select:
-				return arguments->arguments[1]->getType();
-			case CatBuiltInFunctionType::ToFloat:
-			case CatBuiltInFunctionType::Round:
-			case CatBuiltInFunctionType::Sin:
-			case CatBuiltInFunctionType::Cos:
-			case CatBuiltInFunctionType::Tan:
-			case CatBuiltInFunctionType::Random:
-			case CatBuiltInFunctionType::Log:
-			case CatBuiltInFunctionType::Pow:
-			case CatBuiltInFunctionType::Sqrt:
-			case CatBuiltInFunctionType::Ceil:
-			case CatBuiltInFunctionType::Floor:
-				return CatGenericType::floatType;
-			case CatBuiltInFunctionType::SubString:
-			case CatBuiltInFunctionType::ToString:
-			case CatBuiltInFunctionType::ToPrettyString:
-			case CatBuiltInFunctionType::ToFixedLengthString:
-			case CatBuiltInFunctionType::StringRound:
-			case CatBuiltInFunctionType::ReplaceInString:
-				return CatGenericType::stringType;
-		}
-	}
-	else
-	{
-		return CatGenericType("Unknown function");
-	}
+	return returnType;
 }
 
 

@@ -18,10 +18,10 @@ TwoCharToken::TwoCharToken():
 }
 
 
-TwoCharToken::TwoCharToken(Lexeme* lexeme_, TwoChar subType):
+TwoCharToken::TwoCharToken(const Lexeme& lexeme, TwoChar subType):
+	ParseToken(lexeme),
 	subType(subType)
 {
-	lexeme.reset(lexeme_);
 }
 
 
@@ -103,12 +103,12 @@ int TwoCharToken::getTokenSubType() const
 
 ParseToken* TwoCharToken::createIfMatch(Document* document, const char* currentPosition) const
 {
-	std::size_t offset = currentPosition - document->getDocumentData();
+	std::size_t offset = currentPosition - document->getDocumentData().c_str();
 	std::size_t remainingLength = document->getDocumentSize() - offset;
 	
 	if (remainingLength > 1)
 	{
-		Lexeme lex = Lexeme(document, offset, 2);
+		Lexeme lex = document->createLexeme(offset, 2);
 		TwoChar type = TwoChar::Unknown;
 		
 		if (lex == "==")			type = TwoChar::Equals;
@@ -131,7 +131,7 @@ ParseToken* TwoCharToken::createIfMatch(Document* document, const char* currentP
 
 		if (type != TwoChar::Unknown)
 		{
-			Lexeme* newLexeme = new Lexeme(document, offset, 2);
+			Lexeme newLexeme = document->createLexeme(offset, 2);
 			return new TwoCharToken(newLexeme, type);
 		}
 	}

@@ -7,6 +7,7 @@
 
 #include "jitcat/CatArrayIndex.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/TypeInfo.h"
@@ -19,15 +20,12 @@ using namespace jitcat::Tools;
 
 CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex):
 	array(base),
-	index(arrayIndex)
+	index(arrayIndex),
+	arrayType(CatGenericType::errorType),
+	indexType(CatGenericType::errorType),
+	containerItemType(CatGenericType::errorType)
 {
-	arrayType = base->getType();
-	indexType = index->getType();
-	if ((indexType.isIntType() || indexType.isStringType())
-		 && arrayType.isContainerType())
-	{
-		containerItemType = arrayType.getContainerItemType();
-	}
+
 }
 
 
@@ -69,38 +67,37 @@ std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-CatGenericType CatArrayIndex::typeCheck()
+bool CatArrayIndex::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatGenericType baseType = array->typeCheck();
-	CatGenericType indexType = index->typeCheck();
-	if (!baseType.isValidType())
+	if (array->typeCheck(compiletimeContext, errorManager, errorContext)
+		&& index->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
-		return baseType;
-	}
-	else if (!indexType.isValidType())
-	{
-		return indexType;
-	}
-	if (containerItemType.isObjectType())
-	{
-		if (!baseType.isContainerType())
+		arrayType = array->getType();
+		indexType = index->getType();
+		if (!arrayType.isContainerType())
 		{
-			return CatGenericType(Tools::append(baseType.toString(), " is not a list."));
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " is not a list."), errorContext);
+			return false;
 		}
-		else if (baseType.isIntType() && !indexType.isScalarType())
+		containerItemType = arrayType.getContainerItemType();
+		if (!containerItemType.isObjectType())
 		{
-			return CatGenericType(Tools::append(baseType.toString(), " should be indexed by a number."));
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " not supported."), errorContext);
 		}
-		else if (baseType.isMapType() && (!indexType.isScalarType() && !indexType.isStringType()))
+		else if (arrayType.isIntType() && !indexType.isScalarType())
 		{
-			return CatGenericType(Tools::append(baseType.toString(), " should be indexed by a string or a number."));
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a number."), errorContext);
+		}
+		else if (arrayType.isMapType() && (!indexType.isScalarType() && !indexType.isStringType()))
+		{
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a string or a number."), errorContext);
 		}
 		else
 		{
-			return baseType.getContainerItemType();
+			return true;
 		}
 	}
-	return CatGenericType("Invalid list or map.");
+	return false;
 }
 
 

@@ -26,7 +26,7 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
-		virtual CatGenericType typeCheck() override final;
+		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual CatGenericType getType() const override final;
 		virtual bool isConst() const override final;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
@@ -38,10 +38,12 @@ namespace jitcat::AST
 		static bool isBuiltInFunction(const char* functionName, int numArguments);
 		static const std::vector<std::string>& getAllBuiltInFunctions();
 
+		static CatBuiltInFunctionType toFunction(const char* functionName, int numArguments);
+
 	private:
 		bool isDeterministic() const;
 		bool checkArgumentCount(std::size_t count) const;
-		static CatBuiltInFunctionType toFunction(const char* functionName, int numArguments);
+		
 		static std::vector<std::string> functionTable;
 
 	private:
@@ -49,6 +51,7 @@ namespace jitcat::AST
 		std::vector<CatGenericType> argumentTypes;
 		const std::string name;
 		CatBuiltInFunctionType function;
+		CatGenericType returnType;
 	};
 
 } //End namespace jitcat::AST

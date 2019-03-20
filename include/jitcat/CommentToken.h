@@ -17,7 +17,7 @@ class CommentToken: public ParseToken
 {
 public:
 	CommentToken() {};
-	CommentToken(Lexeme* lexeme_, int subType): subType(subType) {lexeme.reset(lexeme_);};
+	CommentToken(const Lexeme& lexeme, int subType): ParseToken(lexeme), subType(subType) {};
 	virtual int getTokenID() const {return getID();};
 	virtual const char* getTokenName() const {return "Comment";};
 	virtual const char* getSubTypeName(int subType) const;

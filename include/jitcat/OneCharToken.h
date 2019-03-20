@@ -13,13 +13,12 @@
 namespace jitcat::Tokenizer
 {
 	class Document;
-	struct Lexeme;
 
 	class OneCharToken: public ParseToken
 	{
 	public:
 		OneCharToken();
-		OneCharToken(Lexeme* lexeme, OneChar subType);
+		OneCharToken(const Lexeme& lexeme, OneChar subType);
 		virtual ~OneCharToken();
 		virtual int getTokenID() const;
 		virtual const char* getTokenName() const;

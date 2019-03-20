@@ -13,13 +13,12 @@
 namespace jitcat::Tokenizer
 {
 	class Document;
-	struct Lexeme;
 
 	class TwoCharToken: public ParseToken
 	{
 	public:
 		TwoCharToken();
-		TwoCharToken(Lexeme* lexeme, TwoChar subType);
+		TwoCharToken(const Lexeme& lexeme, TwoChar subType);
 		virtual ~TwoCharToken();
 		virtual int getTokenID() const;
 		virtual const char* getTokenName() const;

@@ -63,7 +63,16 @@ namespace jitcat
 	template<typename T>
 	void Expression<T>::compile(CatRuntimeContext* context)
 	{
-		if (!parse(context, TypeTraits<T>::toGenericType()))
+		ExpressionErrorManager* errorManager = nullptr;
+		if (context != nullptr)
+		{
+			errorManager = context->getErrorManager();
+		}
+		else
+		{
+			errorManager = new ExpressionErrorManager();
+		}
+		if (!parse(context, errorManager, this, TypeTraits<T>::toGenericType()))
 		{
 			getValueFunc = &getDefaultValue;
 		}
@@ -76,6 +85,10 @@ namespace jitcat
 					cachedValue = getActualValue(parseResult->getNode<AST::CatTypedExpression>()->execute(context));
 				}
 			}
+		}
+		if (context == nullptr)
+		{
+			delete errorManager;
 		}
 	}
 
