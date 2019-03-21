@@ -101,13 +101,15 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 		std::string contextName = context.getContextName().c_str();
 		auto errorList = errorManager.getErrors();
 		std::string errorMessage;
+		int errorOffset = 0;
 		if (errorList.size() > 0)
 		{
 			errorMessage = errorList[0]->message;
+			errorOffset = document.getOffsetInDocument(errorList[0]->errorLexeme); 
 		}
 		result->errorMessage = new char[errorMessage.size() + 1];
 		memcpy((void*)result->errorMessage, errorMessage.c_str(), errorMessage.size() + 1);
-		result->errorOffset = 0; //QQQ
+		result->errorOffset = errorOffset;
 		parseResult->astRootNode.reset(nullptr);
 		return 0;
 	}

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "jitcat/Lexeme.h"
 #include "jitcat/Reflectable.h"
 
 #include <functional>
@@ -27,6 +28,8 @@ namespace jitcat
 			Error(const Error&) = delete;
 		public:
 			Error() {}
+			std::string contextName;
+			jitcat::Tokenizer::Lexeme errorLexeme;
 			std::string message;
 			void* errorSource;
 
@@ -40,7 +43,7 @@ namespace jitcat
 
 		void clear();
 		//Adds an error to the list. The void* serves as a unique id so that error messages disappear once the error is fixed.
-		void compiledWithError(const std::string& errorMessage, void* errorSource);
+		void compiledWithError(const std::string& errorMessage, void* errorSource, const std::string& contextName, const jitcat::Tokenizer::Lexeme& errorLexeme);
 		void compiledWithoutErrors(void* errorSource);
 		void errorSourceDeleted(void* errorSource);
 

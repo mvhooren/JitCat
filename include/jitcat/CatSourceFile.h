@@ -22,7 +22,7 @@ namespace jitcat::AST
 	class CatSourceFile: public CatASTNode
 	{
 	public:
-		CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions);
+		CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatSourceFile();
 
 		virtual void print() const override final;
@@ -30,6 +30,8 @@ namespace jitcat::AST
 
 		const std::vector<const CatClassDefinition*>& getClassDefinitions() const;
 		const std::vector<const CatFunctionDefinition*>& getFunctionDefinitions() const;
+
+		bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
 	private:
 		std::string name;

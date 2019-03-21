@@ -20,7 +20,7 @@ namespace jitcat::AST
 	class CatScopeRoot: public CatTypedExpression
 	{
 	public:
-		CatScopeRoot(CatScopeID scopeId);
+		CatScopeRoot(CatScopeID scopeId, const Tokenizer::Lexeme& lexeme);
 		// Inherited via CatTypedExpression
 		virtual void print() const override;
 		virtual CatASTNodeType getNodeType() override;

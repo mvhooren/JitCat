@@ -13,7 +13,8 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name):
+jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, const Tokenizer::Lexeme& lexeme):
+	CatDefinition(lexeme),
 	name(name)
 {
 }

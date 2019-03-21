@@ -17,7 +17,7 @@ namespace jitcat::AST
 	class CatPrefixOperator: public CatTypedExpression
 	{
 	public:
-		CatPrefixOperator(): oper(Operator::Not), resultType(CatGenericType::errorType) {};
+		CatPrefixOperator(const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme), oper(Operator::Not), resultType(CatGenericType::errorType) {};
 		CatPrefixOperator(const CatPrefixOperator&) = delete;
 
 		enum class Operator

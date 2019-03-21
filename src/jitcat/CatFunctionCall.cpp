@@ -9,6 +9,7 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/LLVMCatIntrinsics.h"
@@ -25,7 +26,8 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Tools;
 
 
-CatFunctionCall::CatFunctionCall(const std::string& name, CatArgumentList* arguments):
+CatFunctionCall::CatFunctionCall(const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme),
 	name(name),
 	arguments(arguments),
 	returnType(CatGenericType::errorType),
@@ -361,12 +363,12 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 	std::size_t numArgumentsSupplied = arguments->arguments.size();
 	if (function >= CatBuiltInFunctionType::Count)
 	{
-		errorManager->compiledWithError(Tools::append("function not found: ", name), errorContext);
+		errorManager->compiledWithError(Tools::append("function not found: ", name), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
 	else if (!checkArgumentCount(numArgumentsSupplied))
 	{
-		errorManager->compiledWithError(Tools::append("Invalid number of arguments in function: " , name), errorContext);
+		errorManager->compiledWithError(Tools::append("Invalid number of arguments in function: " , name), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
 	else
@@ -386,11 +388,11 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 		switch (function)
 		{
 			case CatBuiltInFunctionType::ToVoid:			returnType = CatGenericType::voidType;	break;
-			case CatBuiltInFunctionType::ToInt:				if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::intType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()), errorContext); return false;}  break;
-			case CatBuiltInFunctionType::ToFloat:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::floatType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()), errorContext); return false;}	break;
-			case CatBuiltInFunctionType::ToBool:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::boolType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()), errorContext); return false;}  break;
-			case CatBuiltInFunctionType::ToString:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()), errorContext); return false;}	break;
-			case CatBuiltInFunctionType::ToPrettyString:	if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()), errorContext); return false;}	break;
+			case CatBuiltInFunctionType::ToInt:				if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::intType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to integer: ", argumentTypes[0].toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
+			case CatBuiltInFunctionType::ToFloat:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::floatType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to float: ", argumentTypes[0].toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
+			case CatBuiltInFunctionType::ToBool:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::boolType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to boolean: ", argumentTypes[0].toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
+			case CatBuiltInFunctionType::ToString:			if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
+			case CatBuiltInFunctionType::ToPrettyString:	if (argumentTypes[0].isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ", argumentTypes[0].toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
 			case CatBuiltInFunctionType::ToFixedLengthString:
 				if (argumentTypes[0].isIntType() && argumentTypes[1].isIntType())
 				{
@@ -398,7 +400,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError(Tools::append(name, ": expected an int."), errorContext);
+					errorManager->compiledWithError(Tools::append(name, ": expected an int."), errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -411,7 +413,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError(Tools::append(name, ": expected a number as argument."), errorContext);
+					errorManager->compiledWithError(Tools::append(name, ": expected a number as argument."), errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -435,7 +437,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError(Tools::append(name, ": invalid argument types."), errorContext);
+					errorManager->compiledWithError(Tools::append(name, ": invalid argument types."), errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -448,7 +450,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("round: can only round floating point numbers to integer number of decimals.", errorContext);
+					errorManager->compiledWithError("round: can only round floating point numbers to integer number of decimals.", errorContext, compiletimeContext->getContextName(), getLexeme());
 				}
 				break;
 			case CatBuiltInFunctionType::StringRound:
@@ -459,7 +461,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("stringRound: can only round floating point numbers to integer number of decimals.", errorContext);
+					errorManager->compiledWithError("stringRound: can only round floating point numbers to integer number of decimals.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -474,7 +476,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("abs: expected a number as argument.", errorContext);
+					errorManager->compiledWithError("abs: expected a number as argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -492,13 +494,13 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 					}
 					else
 					{
-						errorManager->compiledWithError("cap: value to be capped must be a number.", errorContext);
+						errorManager->compiledWithError("cap: value to be capped must be a number.", errorContext, compiletimeContext->getContextName(), getLexeme());
 						return false;
 					}
 				}
 				else
 				{
-					errorManager->compiledWithError("cap: range must consist of 2 numbers.", errorContext);
+					errorManager->compiledWithError("cap: range must consist of 2 numbers.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -516,7 +518,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError(Tools::append(name, ": expected two numbers as arguments."), errorContext);
+					errorManager->compiledWithError(Tools::append(name, ": expected two numbers as arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -530,7 +532,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError(Tools::append(name, ": expected a number as argument."), errorContext);
+					errorManager->compiledWithError(Tools::append(name, ": expected a number as argument."), errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -541,7 +543,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("pow: expected two numbers as arguments.", errorContext);
+					errorManager->compiledWithError("pow: expected two numbers as arguments.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -553,7 +555,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("findInString: invalid argument.", errorContext);
+					errorManager->compiledWithError("findInString: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -566,7 +568,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("replaceInString: invalid argument.", errorContext);
+					errorManager->compiledWithError("replaceInString: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -577,7 +579,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("stringLength: invalid argument.", errorContext);
+					errorManager->compiledWithError("stringLength: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -590,7 +592,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 				}
 				else
 				{
-					errorManager->compiledWithError("subString: invalid argument.", errorContext);
+					errorManager->compiledWithError("subString: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 				break;
@@ -605,20 +607,20 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 					}
 					else
 					{
-						errorManager->compiledWithError("select: second and third argument must be the same type.", errorContext);
+						errorManager->compiledWithError("select: second and third argument must be the same type.", errorContext, compiletimeContext->getContextName(), getLexeme());
 						return false;
 					}
 				}
 				else
 				{
-					errorManager->compiledWithError("select: first argument must resolve to a boolean.", errorContext);
+					errorManager->compiledWithError("select: first argument must resolve to a boolean.", errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
 				}
 			} break;
 			default:
 			case CatBuiltInFunctionType::Count:
 			case CatBuiltInFunctionType::Invalid:
-				errorManager->compiledWithError(std::string("function not found: ") + name, errorContext);
+				errorManager->compiledWithError(std::string("function not found: ") + name, errorContext, compiletimeContext->getContextName(), getLexeme());
 				return false;
 		}
 	}
@@ -667,7 +669,7 @@ CatTypedExpression* CatFunctionCall::constCollapse(CatRuntimeContext* compileTim
 	}
 	if (isDeterministic() && allArgumentsAreConst)
 	{
-		return new CatLiteral(execute(compileTimeContext), getType());
+		return new CatLiteral(execute(compileTimeContext), getType(), getLexeme());
 	}
 	else if (function == CatBuiltInFunctionType::Select
 			 && arguments->arguments[0]->isConst())

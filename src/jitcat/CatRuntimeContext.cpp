@@ -216,3 +216,6 @@ CatScopeID CatRuntimeContext::createScope(Reflectable* scopeObject, TypeInfo* ty
 	scopes.emplace_back(scope);
 	return static_cast<CatScopeID>((int)scopes.size() - 1);
 }
+
+
+CatRuntimeContext CatRuntimeContext::defaultContext("default", nullptr);

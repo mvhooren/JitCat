@@ -125,6 +125,11 @@ const CatGenericType ExpressionBase::getType() const
 
 bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext, const CatGenericType& expectedType)
 {
+	if (context == nullptr)
+	{
+		context = &CatRuntimeContext::defaultContext;
+		context->getErrorManager()->clear();
+	}
 	errorManagerHandle = errorManager;
 
 	isConstant = false;
@@ -191,12 +196,13 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 	else 
 	{	
 		valueType = parseResult->getNode<CatTypedExpression>()->getType();
+		Lexeme expressionLexeme = parseResult->getNode<CatTypedExpression>()->getLexeme();
 		if (!expectedType.isUnknown())
 		{
 			if (expectAssignable && !valueType.isWritable())
 			{
 				parseResult->success = false;
- 				errorManager->compiledWithError(std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), ".")), errorContext);
+ 				errorManager->compiledWithError(std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
 			}
 			if (expectedType.isObjectType())
 			{
@@ -204,12 +210,12 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				if (!valueType.isObjectType())
 				{
 					parseResult->success = false;
-					errorManager->compiledWithError(Tools::append("Expected a ", typeName), errorContext);
+					errorManager->compiledWithError(Tools::append("Expected a ", typeName), errorContext, context->getContextName(), expressionLexeme);
 				}
 				else if (valueType.getObjectTypeName() != typeName)
 				{
 					parseResult->success = false;
-					errorManager->compiledWithError(Tools::append("Expected a ", typeName, ", got a ", valueType.getObjectTypeName()), errorContext);
+					errorManager->compiledWithError(Tools::append("Expected a ", typeName, ", got a ", valueType.getObjectTypeName()), errorContext, context->getContextName(), expressionLexeme);
 				}
 			}
 			else if (expectedType.isVoidType() && valueType.isVoidType())
@@ -221,20 +227,20 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				if (expectedType.isVoidType())
 				{
 					//Insert an automatic type conversion to void.
-					CatArgumentList* arguments = new CatArgumentList();
+					CatArgumentList* arguments = new CatArgumentList(expressionLexeme);
 					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
 
-					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", arguments));
+					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", arguments, expressionLexeme));
 					valueType = parseResult->getNode<CatTypedExpression>()->getType();
 				}
 				else if (expectedType.isScalarType() && valueType.isScalarType())
 				{
 					//Insert an automatic type conversion if the scalar types do not match.
-					CatArgumentList* arguments = new CatArgumentList();
+					CatArgumentList* arguments = new CatArgumentList(expressionLexeme);
 					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
 
-					if		(expectedType.isFloatType())	parseResult->astRootNode.reset(new CatFunctionCall("toFloat", arguments));
-					else if (expectedType.isIntType())		parseResult->astRootNode.reset(new CatFunctionCall("toInt", arguments));
+					if		(expectedType.isFloatType())	parseResult->astRootNode.reset(new CatFunctionCall("toFloat", arguments, expressionLexeme));
+					else if (expectedType.isIntType())		parseResult->astRootNode.reset(new CatFunctionCall("toInt", arguments, expressionLexeme));
 					else assert(false);	//Missing a conversion here?
 					
 					valueType = parseResult->getNode<CatTypedExpression>()->getType();
@@ -242,7 +248,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				else
 				{
 					parseResult->success = false;
-					errorManager->compiledWithError(std::string(Tools::append("Expected a ", expectedType.toString())), errorContext);
+					errorManager->compiledWithError(std::string(Tools::append("Expected a ", expectedType.toString())), errorContext, context->getContextName(), expressionLexeme);
 				}
 			}
 		}
@@ -258,41 +264,13 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 {
 	if (!parseResult->success)
 	{
-		/*QQQif (context != nullptr)
-		{
-			ExpressionErrorManager* errorManager = context->getErrorManager();
-			if (errorManager != nullptr)
-			{
-				std::string contextName = "";
-				if (context != nullptr)
-				{
-					contextName = context->getContextName().c_str();
-				}
-				std::string errorMessage;
-				if (contextName != "")
-				{
-					errorMessage = Tools::append("ERROR in ", contextName, ": \n", expression ,"\n", parseResult->errorMessage);
-				}
-				else
-				{
-					errorMessage = Tools::append("ERROR: \n", expression ,"\n", parseResult->errorMessage);
-				}
-				if (parseResult->errorPosition >= 0)
-				{
-					errorMessage = Tools::append(errorMessage, " Offset: ", parseResult->errorPosition);
-				}
-				errorManager->compiledWithError(errorMessage, this);
-			}
-		}*/
 		expressionIsLiteral = false;
+		isConstant = false;
+		valueType = CatGenericType::errorType;
 	}
-	else if (context != nullptr)
+	else
 	{
-		ExpressionErrorManager* errorManager = context->getErrorManager();
-		if (errorManager != nullptr)
-		{
-			errorManager->compiledWithoutErrors(this);
-		}
+		context->getErrorManager()->compiledWithoutErrors(this);
 	}
 }
 
@@ -300,30 +278,27 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 {
 #ifdef ENABLE_LLVM
-	if (context != nullptr)
+	if (!isConstant)
 	{
-		if (!isConstant)
+		LLVMCompileTimeContext llvmCompileContext(context);
+		llvmCompileContext.options.enableDereferenceNullChecks = true;
+		intptr_t functionAddress = 0;
+		codeGenerator = context->getCodeGenerator();
+		if (!expectAssignable)
 		{
-			LLVMCompileTimeContext llvmCompileContext(context);
-			llvmCompileContext.options.enableDereferenceNullChecks = true;
-			intptr_t functionAddress = 0;
-			codeGenerator = context->getCodeGenerator();
-			if (!expectAssignable)
-			{
-				functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult->getNode<CatTypedExpression>(), &llvmCompileContext);
-			}
-			else if (parseResult->getNode<CatTypedExpression>()->isAssignable())
-			{
-				functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult->getNode<CatAssignableExpression>(), &llvmCompileContext);
-			}
-			if (functionAddress != 0)
-			{
-				handleCompiledFunction(functionAddress);
-			}
-			else
-			{
-				assert(false);
-			}
+			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult->getNode<CatTypedExpression>(), &llvmCompileContext);
+		}
+		else if (parseResult->getNode<CatTypedExpression>()->isAssignable())
+		{
+			functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult->getNode<CatAssignableExpression>(), &llvmCompileContext);
+		}
+		if (functionAddress != 0)
+		{
+			handleCompiledFunction(functionAddress);
+		}
+		else
+		{
+			assert(false);
 		}
 	}
 #endif //ENABLE_LLVM

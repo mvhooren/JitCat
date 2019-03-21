@@ -21,6 +21,7 @@ namespace jitcat::AST
 	class CatArgumentList: public CatASTNode
 	{
 	public:
+		CatArgumentList(const Tokenizer::Lexeme& lexeme): CatASTNode(lexeme) {}
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 

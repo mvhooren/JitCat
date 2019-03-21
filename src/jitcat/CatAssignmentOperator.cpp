@@ -10,6 +10,7 @@
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 
@@ -19,7 +20,8 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatAssignmentOperator::CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs):
+CatAssignmentOperator::CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme),
 	lhs(lhs),
 	rhs(rhs)
 {
@@ -69,7 +71,7 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		}
 		if (!leftType.isWritable() || leftType.isConst() || !lhs->isAssignable())
 		{
-			errorManager->compiledWithError("Assignment failed because target cannot be assigned.", errorContext);
+			errorManager->compiledWithError("Assignment failed because target cannot be assigned.", errorContext, compiletimeContext->getContextName(), getLexeme());
 		}
 		else if (leftType == rightType)
 		{
@@ -77,7 +79,7 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		}
 		else
 		{
-			errorManager->compiledWithError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), "."), errorContext);
+			errorManager->compiledWithError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), "."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		}
 	}
 	return false;

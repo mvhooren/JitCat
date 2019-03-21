@@ -18,7 +18,7 @@ namespace jitcat::AST
 	class CatArrayIndex: public CatTypedExpression
 	{
 	public:
-		CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex);
+		CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex, const Tokenizer::Lexeme& lexeme);
 		CatArrayIndex(const CatArrayIndex&) = delete;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;

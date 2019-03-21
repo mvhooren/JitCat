@@ -19,7 +19,7 @@ namespace jitcat::AST
 	class CatReturnStatement: public CatTypedExpression
 	{
 	public:
-		CatReturnStatement(CatTypedExpression* returnExpression = nullptr);
+		CatReturnStatement(const Tokenizer::Lexeme& lexeme, CatTypedExpression* returnExpression = nullptr);
 		virtual ~CatReturnStatement();
 
 		virtual void print() const override final;

@@ -17,6 +17,7 @@ namespace jitcat
 	public:
 		RuntimeContext() {};
 		virtual ~RuntimeContext() {};
+		virtual std::string getContextName() = 0;
 	};
 
 } // End namespace jitcat;

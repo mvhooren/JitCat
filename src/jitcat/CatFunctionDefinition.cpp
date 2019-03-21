@@ -11,9 +11,12 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatScopeBlock.h"
+#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
+
+#include <cassert>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -21,11 +24,13 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, const std::string& name, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock):
+jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, const std::string& name, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme):
+	CatDefinition(lexeme),
 	type(type),
 	name(name),
 	parameters(parameters),
-	scopeBlock(scopeBlock)
+	scopeBlock(scopeBlock),
+	parametersScopeId(InvalidScopeID)
 {
 }
 
@@ -72,12 +77,33 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	{
 		return false;
 	}
-	CatScopeID scopeId = compileTimeContext->addCustomTypeScope(parameters->getCustomType());
+	parametersScopeId = compileTimeContext->addCustomTypeScope(parameters->getCustomType());
 	if (!scopeBlock->typeCheck(compileTimeContext, errorManager, this))
 	{
 		return false;
 	}
-	compileTimeContext->removeScope(scopeId);
+	compileTimeContext->removeScope(parametersScopeId);
 	errorManager->compiledWithoutErrors(this);
 	return true;
+}
+
+
+std::any jitcat::AST::CatFunctionDefinition::executeFunction(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterValues)
+{
+	CatScopeID scopeId = runtimeContext->addCustomTypeScope(parameters->getCustomType(), parameterValues);
+	//The scopeId should match the scopeId that was obtained during type checking.
+	assert(scopeId == parametersScopeId);
+	//The parameter values should be of the correct type.
+	assert(parameterValues->typeInfo == parameters->getCustomType());
+
+	std::any result = scopeBlock->execute(runtimeContext);
+
+	runtimeContext->removeScope(scopeId);
+	return result;
+}
+
+
+jitcat::Reflection::CustomTypeInfo* jitcat::AST::CatFunctionDefinition::getParametersType() const
+{
+	return parameters->getCustomType();
 }

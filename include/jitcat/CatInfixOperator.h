@@ -23,7 +23,7 @@ namespace jitcat::AST
 	class CatInfixOperator: public CatTypedExpression
 	{
 	public:
-		CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType);
+		CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme);
 		CatInfixOperator(const CatInfixOperator&) = delete;
 
 		virtual CatGenericType getType() const override final;

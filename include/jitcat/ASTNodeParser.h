@@ -20,6 +20,7 @@ namespace jitcat
 	}
 }
 
+#include "jitcat/Lexeme.h"
 #include <vector>
 
 namespace jitcat::Parser
@@ -35,6 +36,7 @@ namespace jitcat::Parser
 		AST::ASTNode* getASTNodeByIndex(unsigned int index) const;
 		const Tokenizer::ParseToken* getTerminalByIndex(unsigned int index) const;
 		RuntimeContext* getContext() const;
+		Tokenizer::Lexeme getStackLexeme() const;
 
 	private:
 		const std::vector<Parser::StackItem*>& stack;

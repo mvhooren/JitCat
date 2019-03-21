@@ -23,7 +23,8 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments):
+CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme),
 	functionName(name),
 	arguments(arguments),
 	base(base),
@@ -76,11 +77,11 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		MemberFunctionInfo* memberFunctionInfo = compiletimeContext->findFunction(Tools::toLowerCase(functionName), scopeId);
 		if (memberFunctionInfo != nullptr && scopeId != InvalidScopeID)
 		{
-			base.reset(new CatScopeRoot(scopeId));
+			base.reset(new CatScopeRoot(scopeId, getLexeme()));
 		}
 		else
 		{
-			errorManager->compiledWithError(Tools::append("Function not found: ", functionName, "."), errorContext);
+			errorManager->compiledWithError(Tools::append("Function not found: ", functionName, "."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
 	}
@@ -89,7 +90,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		CatGenericType baseType = base->getType();
 		if (!baseType.isObjectType())
 		{
-			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext);
+			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
 		memberFunctionInfo = baseType.getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
@@ -98,7 +99,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			std::size_t numArgumentsSupplied = arguments->arguments.size();
 			if (numArgumentsSupplied != memberFunctionInfo->getNumberOfArguments())
 			{
-				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."), errorContext);
+				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
 				return false;
 			}
 			std::vector<CatGenericType> argumentList;
@@ -109,7 +110,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 					argumentList.push_back(arguments->arguments[i]->getType());
 					if (!(memberFunctionInfo->getArgumentType(i) == argumentList[i]))
 					{
-						errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext);
+						errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 						return false;
 					}
 				}
@@ -123,7 +124,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		}
 		else
 		{
-			errorManager->compiledWithError(Tools::append("Member function not found: ", functionName), errorContext);
+			errorManager->compiledWithError(Tools::append("Member function not found: ", functionName), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
 	}

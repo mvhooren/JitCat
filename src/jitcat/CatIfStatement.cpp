@@ -14,7 +14,8 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatIfStatement::CatIfStatement(CatTypedExpression* condition, CatScopeBlock* ifBody, CatASTNode* elseNode):
+CatIfStatement::CatIfStatement(CatTypedExpression* condition, CatScopeBlock* ifBody, const Tokenizer::Lexeme& lexeme, CatASTNode* elseNode):
+	CatStatement(lexeme),
 	condition(condition),
 	ifBody(ifBody),
 	elseNode(elseNode)

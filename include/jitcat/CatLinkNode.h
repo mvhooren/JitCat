@@ -17,7 +17,7 @@ namespace jitcat::AST
 	class CatLinkNode: public CatASTNode
 	{
 	public:
-		CatLinkNode(CatASTNode* me, CatASTNode* next);
+		CatLinkNode(CatASTNode* me, CatASTNode* next, const jitcat::Tokenizer::Lexeme& lexeme);
 		CatLinkNode(const CatLinkNode&) = delete;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;

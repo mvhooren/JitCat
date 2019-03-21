@@ -17,7 +17,8 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, CatTypedExpression* initialization):
+CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization):
+	CatStatement(lexeme),
 	type(typeNode),
 	name(name),
 	initializationExpression(initialization)
@@ -57,7 +58,7 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 	CatScopeID id = InvalidScopeID;
 	if (compiletimeContext->findVariable(Tools::toLowerCase(name), id) != nullptr)
 	{
-		errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), errorContext);
+		errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
 	if (initializationExpression != nullptr)
@@ -67,12 +68,18 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 			CatGenericType initializationType = initializationExpression->getType();
 			if (initializationType != type->getType())
 			{
-				errorManager->compiledWithError(Tools::append("Initialization of variable \"", name, "\" returns the wrong type. Expected a ", type->getTypeName(), " but the initialization expression returns a ", initializationType.toString(), "."), errorContext);
+				errorManager->compiledWithError(Tools::append("Initialization of variable \"", name, "\" returns the wrong type. Expected a ", type->getTypeName(), " but the initialization expression returns a ", initializationType.toString(), "."), errorContext, compiletimeContext->getContextName(), getLexeme());
 				return false;
 			}
 		}
 	}
 	return true;
+}
+
+
+std::any jitcat::AST::CatVariableDeclaration::execute(CatRuntimeContext* runtimeContext)
+{
+	return std::any();
 }
 
 

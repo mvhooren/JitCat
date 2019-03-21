@@ -8,6 +8,7 @@
 #include "jitcat/CatMemberAccess.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/TypeInfo.h"
@@ -20,7 +21,8 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName):
+CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName, const Tokenizer::Lexeme& lexeme):
+	CatAssignableExpression(lexeme),
 	base(base),
 	memberName(memberName),
 	memberInfo(nullptr),
@@ -80,7 +82,7 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 		CatGenericType baseType = base->getType();
 		if (!baseType.isObjectType())
 		{
-			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext);
+			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
 		memberInfo = baseType.getObjectType()->getMemberInfo(Tools::toLowerCase(memberName));
@@ -91,7 +93,7 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 		}
 		else
 		{
-			errorManager->compiledWithError(Tools::append("Member not found:", memberName), errorContext);
+			errorManager->compiledWithError(Tools::append("Member not found:", memberName), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
 	}
@@ -119,7 +121,7 @@ CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTim
 {
 	if (type.isValidType() && isConst())
 	{
-		return new CatLiteral(execute(compileTimeContext), getType());
+		return new CatLiteral(execute(compileTimeContext), getType(), getLexeme());
 	}
 	return this;
 }

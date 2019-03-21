@@ -32,16 +32,14 @@ SourceFile::~SourceFile()
 
 void SourceFile::compile(CatRuntimeContext* context)
 {
+	if (context == nullptr)
+	{
+		context = &CatRuntimeContext::defaultContext;
+		context->getErrorManager()->clear();
+	}
 	ExpressionErrorManager* errorManager = nullptr;
-	if (context != nullptr)
-	{
-		errorManager = context->getErrorManager();
-		errorManagerHandle = errorManager;
-	}
-	else
-	{
-		errorManagerHandle = nullptr;
-	}
+	errorManager = context->getErrorManager();
+	errorManagerHandle = errorManager;
 	parseResult.reset(JitCat::get()->parseFull(sourceText.get(), context, errorManager, this));
 	if (parseResult->success)
 	{
@@ -56,13 +54,12 @@ void SourceFile::compile(CatRuntimeContext* context)
 
 void jitcat::SourceFile::setSource(const std::string& source, CatRuntimeContext* context)
 {
-	if (context != nullptr)
+	if (context == nullptr)
 	{
-		context->getErrorManager()->errorSourceDeleted(this);	
+		context = &CatRuntimeContext::defaultContext;
+		context->getErrorManager()->clear();
 	}
+	context->getErrorManager()->errorSourceDeleted(this);	
 	sourceText.reset(new Document(source.c_str(), source.size()));
-	if (context != nullptr)
-	{
-		compile(context);
-	}
+	compile(context);
 }

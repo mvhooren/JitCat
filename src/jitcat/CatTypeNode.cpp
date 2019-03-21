@@ -1,5 +1,6 @@
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/TypeRegistry.h"
 
@@ -9,14 +10,16 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatTypeNode::CatTypeNode(const CatGenericType& type):
+CatTypeNode::CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme):
+	CatASTNode(lexeme),
 	type(type),
 	knownType(true)
 {
 }
 
 
-jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name):
+jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, const Tokenizer::Lexeme& lexeme):
+	CatASTNode(lexeme),
 	name(name),
 	knownType(false)
 {
@@ -79,7 +82,7 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 		TypeInfo* typeInfo = TypeRegistry::get()->getTypeInfo(getTypeName());
 		if (typeInfo == nullptr)
 		{
-			errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), this);
+			errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), this, compileTimeContext->getContextName(), getLexeme());
 			return false;
 		}
 		else

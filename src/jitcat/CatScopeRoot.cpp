@@ -13,7 +13,8 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatScopeRoot::CatScopeRoot(CatScopeID scopeId):
+CatScopeRoot::CatScopeRoot(CatScopeID scopeId, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme),
 	scopeId(scopeId),
 	type(CatGenericType::errorType)
 {
@@ -47,11 +48,10 @@ bool CatScopeRoot::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionEr
 	if (type.isValidType())
 	{
 		return true;
-
 	}
 	else
 	{
-		errorManager->compiledWithError(std::string("Invalid scope."), errorContext);
+		errorManager->compiledWithError(std::string("Invalid scope."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
 }

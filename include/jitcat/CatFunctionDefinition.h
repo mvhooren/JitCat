@@ -10,10 +10,17 @@
 
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatGenericType.h"
+#include "jitcat/CatScopeID.h"
 #include "jitcat/ReflectableHandle.h"
 
+#include <any>
 #include <memory>
 
+namespace jitcat::Reflection
+{
+	class CustomTypeInstance;
+	class CustomTypeInfo;
+}
 
 namespace jitcat::AST
 {
@@ -24,17 +31,20 @@ namespace jitcat::AST
 	class CatFunctionDefinition: public CatDefinition
 	{
 	public:
-		CatFunctionDefinition(CatTypeNode* type, const std::string& name, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock);
+		CatFunctionDefinition(CatTypeNode* type, const std::string& name, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatFunctionDefinition();
 
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
+		std::any executeFunction(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterValues);
+		jitcat::Reflection::CustomTypeInfo* getParametersType() const;
 
 	private:
 		std::string name;
 		std::unique_ptr<CatTypeNode> type;
 		std::unique_ptr<CatFunctionParameterDefinitions> parameters;
+		CatScopeID parametersScopeId;
 		std::unique_ptr<CatScopeBlock> scopeBlock;
 		Reflection::ReflectableHandle errorManagerHandle;
 	};

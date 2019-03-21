@@ -29,6 +29,14 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique
 }
 
 
+jitcat::Tokenizer::Lexeme jitcat::AST::InfixOperatorOptimizer::combineLexemes(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs)
+{
+	Tokenizer::Lexeme lhsLexeme = lhs->getLexeme();
+	Tokenizer::Lexeme rhsLexeme = rhs->getLexeme();
+	return Tokenizer::Lexeme(lhsLexeme.data(), rhsLexeme.data() + rhsLexeme.length() - lhsLexeme.data());
+}
+
+
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseMultiplication(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs)
 {
 	if (typedExpressionEqualsConstant(lhs.get(), 1.0f))			return rhs.release();
@@ -65,14 +73,14 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseDivision(std::unique_ptr<
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseLogicalAnd(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs)
 {
-	if (typedExpressionEqualsConstant(lhs.get(), false))		return new CatLiteral(false);
+	if (typedExpressionEqualsConstant(lhs.get(), false))		return new CatLiteral(false, combineLexemes(lhs, rhs));
 	else														return nullptr;
 }
 
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseLogicalOr(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs)
 {
-	if (typedExpressionEqualsConstant(lhs.get(), true))			return new CatLiteral(true);
+	if (typedExpressionEqualsConstant(lhs.get(), true))			return new CatLiteral(true, combineLexemes(lhs, rhs));
 	else														return nullptr;
 }
 

@@ -18,7 +18,8 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions):
+jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme):
+	CatASTNode(lexeme),
 	name(name),
 	definitions(std::move(definitions))
 {
@@ -67,4 +68,15 @@ const std::vector<const CatClassDefinition*>& jitcat::AST::CatSourceFile::getCla
 const std::vector<const CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFunctionDefinitions() const
 {
 	return functionDefinitions;
+}
+
+
+bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	bool anyErrors = false;
+	for (auto& iter: definitions)
+	{
+		anyErrors |= iter->typeCheck(compiletimeContext);
+	}
+	return !anyErrors;
 }

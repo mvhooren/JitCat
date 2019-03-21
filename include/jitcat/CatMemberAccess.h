@@ -23,7 +23,7 @@ namespace jitcat::AST
 	class CatMemberAccess: public CatAssignableExpression
 	{
 	public:
-		CatMemberAccess(CatTypedExpression* base, const std::string& memberName);
+		CatMemberAccess(CatTypedExpression* base, const std::string& memberName, const Tokenizer::Lexeme& lexeme);
 		CatMemberAccess(const CatMemberAccess&) = delete;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;

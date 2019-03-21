@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/ASTNodeParser.h"
+#include "jitcat/ASTNode.h"
 #include "jitcat/Production.h"
 #include "jitcat/StackItem.h"
 
@@ -89,4 +90,36 @@ const ParseToken* ASTNodeParser::getTerminalByIndex(unsigned int index) const
 RuntimeContext* ASTNodeParser::getContext() const
 {
 	return context;
+}
+
+
+Tokenizer::Lexeme jitcat::Parser::ASTNodeParser::getStackLexeme() const
+{
+	const char* start = nullptr;
+	const char* end = nullptr;
+	for (std::size_t i = startIndex; i < stack.size(); i++)
+	{
+		const char* itemStart = nullptr;
+		const char* itemEnd = nullptr;
+		if (stack[i]->astNode != nullptr)
+		{
+			itemStart = stack[i]->astNode->getLexeme().data();
+			itemEnd = itemStart + stack[i]->astNode->getLexeme().length();
+		}
+		else if (stack[i]->getTokenIfToken() != nullptr)
+		{
+			const Lexeme& tokenLexeme = stack[i]->getTokenIfToken()->getLexeme();
+			itemStart = tokenLexeme.data();
+			itemEnd = itemStart + tokenLexeme.length();
+		}
+		if (start == nullptr || start > itemStart)
+		{
+			start = itemStart;
+		}
+		if (end == nullptr || end < itemEnd)
+		{
+			end = itemEnd;
+		}
+	}
+	return Lexeme(start, end - start);
 }

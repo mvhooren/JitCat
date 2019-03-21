@@ -63,16 +63,12 @@ namespace jitcat
 	template<typename T>
 	void Expression<T>::compile(CatRuntimeContext* context)
 	{
-		ExpressionErrorManager* errorManager = nullptr;
-		if (context != nullptr)
+		if (context == nullptr)
 		{
-			errorManager = context->getErrorManager();
+			context = &CatRuntimeContext::defaultContext;
+			context->getErrorManager()->clear();
 		}
-		else
-		{
-			errorManager = new ExpressionErrorManager();
-		}
-		if (!parse(context, errorManager, this, TypeTraits<T>::toGenericType()))
+		if (!parse(context, context->getErrorManager(), this, TypeTraits<T>::toGenericType()))
 		{
 			getValueFunc = &getDefaultValue;
 		}
@@ -85,10 +81,6 @@ namespace jitcat
 					cachedValue = getActualValue(parseResult->getNode<AST::CatTypedExpression>()->execute(context));
 				}
 			}
-		}
-		if (context == nullptr)
-		{
-			delete errorManager;
 		}
 	}
 
@@ -116,6 +108,10 @@ namespace jitcat
 		}
 		else
 		{
+			if (runtimeContext == nullptr)
+			{
+				runtimeContext = &CatRuntimeContext::defaultContext;
+			}
 			if constexpr (Configuration::enableLLVM)
 			{
 				if constexpr (!std::is_same<void, T>::value)
@@ -168,6 +164,10 @@ namespace jitcat
 		}
 		else if (parseResult->success)
 		{
+			if (runtimeContext == nullptr)
+			{
+				runtimeContext = &CatRuntimeContext::defaultContext;
+			}
 			if constexpr (!std::is_same<void, T>::value)
 			{
 				std::any value = parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);

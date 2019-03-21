@@ -63,7 +63,7 @@ namespace jitcat
 		virtual ~CatRuntimeContext();
 
 		//Returns the name of the context for the purpose of error messages.
-		std::string getContextName();
+		virtual std::string getContextName() override final;
 
 		//addScope adds a scope containing variables and/or functions that can be used by an expression. 
 		//If isStatic is true, scopeObject must not be null when compiling an expression and is assumed to be "static", that is, 
@@ -102,9 +102,12 @@ namespace jitcat
 		std::shared_ptr<LLVM::LLVMCodeGenerator> getCodeGenerator();
 		int getNextFunctionIndex();
 
+
 	private:
 		CatScopeID createScope(Reflection::Reflectable* scopeObject, Reflection::TypeInfo* type, bool isStatic);
 
+	public:
+		static CatRuntimeContext defaultContext;
 	private:
 		int nextFunctionIndex;
 

@@ -16,6 +16,7 @@ namespace jitcat::AST
 	class CatTypedExpression: public CatExpression
 	{
 	public:
+		CatTypedExpression(const Tokenizer::Lexeme& lexeme): CatExpression(lexeme) {}
 		virtual CatGenericType getType() const = 0;
 		virtual bool isConst() const = 0;
 		virtual bool isAssignable() const {return false;}

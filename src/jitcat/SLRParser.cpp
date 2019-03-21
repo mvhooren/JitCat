@@ -20,6 +20,7 @@
 #include "jitcat/ProductionTerminalToken.h"
 #include "jitcat/ProductionToken.h"
 #include "jitcat/ProductionTokenSet.h"
+#include "jitcat/RuntimeContext.h"
 #include "jitcat/SLRParseResult.h"
 #include "jitcat/StackItemProduction.h"
 #include "jitcat/StackItemToken.h"
@@ -693,12 +694,12 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 						{
 							errorToken = "end of line";
 						}
-						errorManager->compiledWithError(std::string("Did not expect ") + errorToken + " here.", errorSource);
+						errorManager->compiledWithError(std::string("Did not expect ") + errorToken + " here.", errorSource, context->getContextName(), errorLexeme);
 					}
 					else if (token->getProductionIfProduction())
 					{
 						const Production* errorProduction = token->getProductionIfProduction();
-						errorManager->compiledWithError(std::string("Did not expect ") + errorProduction->getProductionName() + " here.", errorSource);
+						errorManager->compiledWithError(std::string("Did not expect ") + errorProduction->getProductionName() + " here.", errorSource, context->getContextName(), token->astNode->getLexeme());
 					}
 					delete token;
 				}

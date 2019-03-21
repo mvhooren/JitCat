@@ -17,7 +17,7 @@ namespace jitcat::AST
 	class CatAssignmentOperator: public CatTypedExpression
 	{
 	public:
-		CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs);
+		CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, const Tokenizer::Lexeme& lexeme);
 		// Inherited via CatTypedExpression
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;

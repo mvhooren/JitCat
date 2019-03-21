@@ -17,7 +17,7 @@ namespace jitcat::AST
 	class CatClassDefinition: public CatDefinition
 	{
 	public:
-		CatClassDefinition(const std::string& name);
+		CatClassDefinition(const std::string& name, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatClassDefinition();
 
 		virtual void print() const override final;

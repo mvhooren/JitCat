@@ -10,8 +10,8 @@ namespace jitcat::AST
 	class CatTypeNode: public CatASTNode
 	{
 	public:
-		CatTypeNode(const CatGenericType& type);
-		CatTypeNode(const std::string& name);
+		CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme);
+		CatTypeNode(const std::string& name, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatTypeNode();
 
 		bool isKnownType() const;

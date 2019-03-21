@@ -34,19 +34,21 @@ void ExpressionErrorManager::clear()
 }
 
 
-void ExpressionErrorManager::compiledWithError(const std::string& errorMessage, void* errorSource)
+void ExpressionErrorManager::compiledWithError(const std::string& errorMessage, void* errorSource, const std::string& contextName, const jitcat::Tokenizer::Lexeme& errorLexeme)
 {
 	deleteErrorsFromSource(errorSource);
 
 	Error* error = new Error();
 	error->message = errorMessage;
+	error->contextName = contextName;
+	error->errorLexeme = errorLexeme;
 	error->errorSource = errorSource;
 	errors.push_back(error);
 	errorsRevision++;
 
 	if (errorHandler)
 	{
-		errorHandler(errorMessage);
+		errorHandler(Tools::append(contextName, "\n", errorMessage));
 	}
 }
 

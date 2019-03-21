@@ -7,6 +7,7 @@
 
 #include "jitcat/CatArrayIndex.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/ASTHelper.h"
@@ -18,7 +19,8 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex):
+CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme),
 	array(base),
 	index(arrayIndex),
 	arrayType(CatGenericType::errorType),
@@ -76,21 +78,21 @@ bool CatArrayIndex::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 		indexType = index->getType();
 		if (!arrayType.isContainerType())
 		{
-			errorManager->compiledWithError(Tools::append(arrayType.toString(), " is not a list."), errorContext);
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " is not a list."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
 		containerItemType = arrayType.getContainerItemType();
 		if (!containerItemType.isObjectType())
 		{
-			errorManager->compiledWithError(Tools::append(arrayType.toString(), " not supported."), errorContext);
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " not supported."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		}
 		else if (arrayType.isIntType() && !indexType.isScalarType())
 		{
-			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a number."), errorContext);
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a number."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		}
 		else if (arrayType.isMapType() && (!indexType.isScalarType() && !indexType.isStringType()))
 		{
-			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a string or a number."), errorContext);
+			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a string or a number."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		}
 		else
 		{

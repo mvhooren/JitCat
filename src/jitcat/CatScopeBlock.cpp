@@ -7,13 +7,18 @@
 
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatLog.h"
-
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeInstance.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 
 
-CatScopeBlock::CatScopeBlock(const std::vector<CatStatement*>& statementList)
+CatScopeBlock::CatScopeBlock(const std::vector<CatStatement*>& statementList, const Tokenizer::Lexeme& lexeme):
+	CatStatement(lexeme),
+	customType(new CustomTypeInfo(nullptr))
 {
 	for (auto& iter : statementList)
 	{
@@ -47,5 +52,44 @@ CatASTNodeType CatScopeBlock::getNodeType()
 
 bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	return false;
+	CatScopeID myScopeId = compiletimeContext->addCustomTypeScope(customType.get());
+	bool anyErrors = false;
+	for (auto& iter : statements)
+	{
+		anyErrors |= iter->typeCheck(compiletimeContext, errorManager, errorContext);
+	}
+	compiletimeContext->removeScope(myScopeId);
+	return !anyErrors;
+}
+
+
+std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
+{
+	std::unique_ptr<CustomTypeInstance> scopeInstance;
+	if (customType != nullptr)
+	{
+		scopeInstance.reset(customType->createInstance());
+		runtimeContext->addCustomTypeScope(customType.get(), scopeInstance.get());
+	}
+	for (auto& iter : statements)
+	{
+		if (iter->getNodeType() == CatASTNodeType::ReturnStatement)
+		{
+			if (scopeInstance != nullptr)
+			{
+				customType->instanceDestructor(scopeInstance.get());
+			}
+			return iter->execute(runtimeContext);
+		}
+		else
+		{
+			iter->execute(runtimeContext);
+		}
+	}
+
+	if (scopeInstance != nullptr)
+	{
+		customType->instanceDestructor(scopeInstance.get());
+	}
+	return std::any();
 }

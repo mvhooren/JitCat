@@ -12,7 +12,8 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-CatLinkNode::CatLinkNode(CatASTNode* me, CatASTNode* next):
+CatLinkNode::CatLinkNode(CatASTNode* me, CatASTNode* next, const jitcat::Tokenizer::Lexeme& lexeme):
+	CatASTNode(lexeme),
 	me(me),
 	next(next)
 {

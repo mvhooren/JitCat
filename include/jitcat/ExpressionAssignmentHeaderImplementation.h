@@ -58,6 +58,10 @@ inline ExpressionAssignment<ExpressionT>::~ExpressionAssignment()
 template<typename ExpressionT>
 inline bool ExpressionAssignment<ExpressionT>::assignValue(CatRuntimeContext* runtimeContext, typename TypeTraits<ExpressionT>::functionParameterType value)
 {
+	if (runtimeContext == nullptr)
+	{
+		runtimeContext = &CatRuntimeContext::defaultContext;
+	}
 	if constexpr (Configuration::enableLLVM)
 	{
 		assignValueFunc(runtimeContext, value);
@@ -90,22 +94,14 @@ inline bool ExpressionAssignment<ExpressionT>::assignInterpretedValue(CatRuntime
 template<typename ExpressionT>
 inline void ExpressionAssignment<ExpressionT>::compile(CatRuntimeContext* context)
 {
-	ExpressionErrorManager* errorManager = nullptr;
-	if (context != nullptr)
-	{
-		errorManager = context->getErrorManager();
-	}
-	else
-	{
-		errorManager = new ExpressionErrorManager();
-	}
-	if (!parse(context, errorManager, this, TypeTraits<ExpressionT>::toGenericType()))
-	{
-		assignValueFunc = &defaultAssignFunction;
-	}
 	if (context == nullptr)
 	{
-		delete errorManager;
+		context = &CatRuntimeContext::defaultContext;
+		context->getErrorManager()->clear();
+	}
+	if (!parse(context, context->getErrorManager(), this, TypeTraits<ExpressionT>::toGenericType()))
+	{
+		assignValueFunc = &defaultAssignFunction;
 	}
 }
 

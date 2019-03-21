@@ -23,7 +23,7 @@ namespace jitcat::AST
 	class CatMemberFunctionCall: public CatTypedExpression
 	{
 	public:
-		CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments);
+		CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
 		CatMemberFunctionCall(const CatMemberFunctionCall&) = delete;
 		// Inherited via CatTypedExpression
 		virtual void print() const override final;

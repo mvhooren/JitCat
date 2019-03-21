@@ -19,7 +19,8 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType):
+CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme),
 	rhs(rhs),
 	lhs(lhs),
 	oper(operatorType)
@@ -106,10 +107,11 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 	bool rhsIsConst = rhs->isConst();
 	if (lhsIsConst && rhsIsConst)
 	{
+		Tokenizer::Lexeme collapsedLexeme = InfixOperatorOptimizer::combineLexemes(lhs, rhs);
 		const CatGenericType lhsType = lhs->getType();
 		if (lhsType.isBasicType())
 		{
-			return new CatLiteral(calculateExpression(compileTimeContext), getType());
+			return new CatLiteral(calculateExpression(compileTimeContext), getType(), collapsedLexeme);
 		}
 	}
 	else
@@ -140,7 +142,7 @@ bool CatInfixOperator::typeCheck(CatRuntimeContext* compiletimeContext, Expressi
 		resultType = leftType.getInfixOperatorResultType(oper, rightType);
 		if (resultType != CatGenericType::errorType)
 		{
-			errorManager->compiledWithError(Tools::append("Invalid operation: ", leftType.toString(), " ", ::toString(oper), " ", rightType.toString()), errorContext);
+			errorManager->compiledWithError(Tools::append("Invalid operation: ", leftType.toString(), " ", ::toString(oper), " ", rightType.toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return true;
 		}
 	}

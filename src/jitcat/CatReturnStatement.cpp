@@ -13,7 +13,8 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatReturnStatement::CatReturnStatement(CatTypedExpression* returnExpression):
+CatReturnStatement::CatReturnStatement(const Tokenizer::Lexeme& lexeme, CatTypedExpression* returnExpression):
+	CatTypedExpression(lexeme),
 	returnExpression(returnExpression)
 {
 }

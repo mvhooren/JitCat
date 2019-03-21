@@ -20,7 +20,8 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatIdentifier::CatIdentifier(const std::string& name):
+CatIdentifier::CatIdentifier(const std::string& name, const Tokenizer::Lexeme& lexeme):
+	CatAssignableExpression(lexeme),
 	name(name),
 	memberInfo(nullptr),
 	scopeId(InvalidScopeID),
@@ -68,29 +69,15 @@ CatASTNodeType CatIdentifier::getNodeType()
 
 std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
-	if (memberInfo != nullptr && runtimeContext != nullptr)
-	{
-		Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
-		return memberInfo->getMemberReference(rootObject);
-	}
-	assert(false);
-	return std::any();
+	Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+	return memberInfo->getMemberReference(rootObject);
 }
 
 
 std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType)
 {
-	if (memberInfo != nullptr && runtimeContext != nullptr)
-	{
-		Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
-		return memberInfo->getAssignableMemberReference(rootObject, assignableType);
-	}
-	else
-	{
-		assignableType = AssignableType::None;
-	}
-	assert(false);
-	return std::any();
+	Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+	return memberInfo->getAssignableMemberReference(rootObject, assignableType);
 }
 
 
@@ -113,7 +100,7 @@ bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 	}
 	else
 	{
-		errorManager->compiledWithError(std::string("Variable not found: ") + name, errorContext);
+		errorManager->compiledWithError(std::string("Variable not found: ") + name, errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
 }

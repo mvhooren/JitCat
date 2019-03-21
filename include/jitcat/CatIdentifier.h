@@ -21,7 +21,7 @@ namespace jitcat::AST
 	class CatIdentifier: public CatAssignableExpression
 	{
 	public:
-		CatIdentifier(const std::string& name);
+		CatIdentifier(const std::string& name, const Tokenizer::Lexeme& lexeme);
 		virtual CatGenericType getType() const override final;
 		virtual void print() const override final;
 		virtual bool isConst() const override final;

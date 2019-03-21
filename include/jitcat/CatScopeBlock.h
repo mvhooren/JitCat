@@ -9,9 +9,17 @@
 
 #include "jitcat/CatStatement.h"
 
+#include <any>
 #include <memory>
 #include <vector>
 
+namespace jitcat
+{
+	namespace Reflection
+	{
+		class CustomTypeInfo;
+	}
+}
 
 namespace jitcat::AST
 {
@@ -20,15 +28,18 @@ namespace jitcat::AST
 	class CatScopeBlock: public CatStatement
 	{
 	public:
-		CatScopeBlock(const std::vector<CatStatement*>& statementList);
+		CatScopeBlock(const std::vector<CatStatement*>& statementList, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatScopeBlock();
 
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;
+		std::unique_ptr<Reflection::CustomTypeInfo> customType;
 	};
 
 }

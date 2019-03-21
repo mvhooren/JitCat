@@ -55,6 +55,10 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 	}
 	else if (parseResult->astRootNode != nullptr)
 	{
+		if (runtimeContext == nullptr)
+		{
+			runtimeContext = &CatRuntimeContext::defaultContext;
+		}
 		if constexpr (Configuration::enableLLVM)
 		{
 			if		(valueType.isIntType())		return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
@@ -83,22 +87,14 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 
 void ExpressionAny::compile(CatRuntimeContext* context)
 {
-	ExpressionErrorManager* errorManager = nullptr;
-	if (context != nullptr)
-	{
-		errorManager = context->getErrorManager();
-	}
-	else
-	{
-		errorManager = new ExpressionErrorManager();
-	}
-	if (parse(context, errorManager, this, CatGenericType()) && isConstant)
-	{
-		cachedValue = parseResult->getNode<CatTypedExpression>()->execute(context);
-	}
 	if (context == nullptr)
 	{
-		delete errorManager;
+		context = &CatRuntimeContext::defaultContext;
+		context->getErrorManager()->clear();
+	}
+	if (parse(context, context->getErrorManager(), this, CatGenericType()) && isConstant)
+	{
+		cachedValue = parseResult->getNode<CatTypedExpression>()->execute(context);
 	}
 }
 

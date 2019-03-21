@@ -9,6 +9,7 @@
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 
@@ -38,7 +39,7 @@ CatTypedExpression* CatPrefixOperator::constCollapse(CatRuntimeContext* compileT
 	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
 	if (rhs->isConst())
 	{
-		return new CatLiteral(calculateExpression(compileTimeContext), getType());
+		return new CatLiteral(calculateExpression(compileTimeContext), getType(), rhs->getLexeme());
 	}
 	return this;
 }
@@ -75,7 +76,7 @@ bool CatPrefixOperator::typeCheck(CatRuntimeContext* compiletimeContext, Express
 		}
 		else
 		{
-			errorManager->compiledWithError(Tools::append("Error: invalid operation: ", conversionTable[(unsigned int)oper], rightType.toString()), errorContext);
+			errorManager->compiledWithError(Tools::append("Error: invalid operation: ", conversionTable[(unsigned int)oper], rightType.toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
 	}

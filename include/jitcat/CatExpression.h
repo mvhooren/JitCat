@@ -22,7 +22,7 @@ namespace jitcat::AST
 	class CatExpression: public CatStatement
 	{
 	public:
-		virtual std::any execute(CatRuntimeContext* runtimeContext) = 0;
+		CatExpression(const Tokenizer::Lexeme& lexeme): CatStatement(lexeme) {}
 	};
 
 

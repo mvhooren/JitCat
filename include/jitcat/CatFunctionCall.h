@@ -21,7 +21,7 @@ namespace jitcat::AST
 	class CatFunctionCall: public CatTypedExpression
 	{
 	public:
-		CatFunctionCall(const std::string& name, CatArgumentList* arguments);
+		CatFunctionCall(const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
 		CatFunctionCall(const CatFunctionCall&) = delete;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;

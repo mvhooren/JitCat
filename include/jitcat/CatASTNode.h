@@ -22,6 +22,7 @@ namespace jitcat::AST
 	class CatASTNode: public ASTNode
 	{
 	public:
+		CatASTNode(const Tokenizer::Lexeme& lexeme): ASTNode(lexeme) {}
 		virtual void print() const = 0;
 		virtual CatASTNodeType getNodeType() = 0;
 	};

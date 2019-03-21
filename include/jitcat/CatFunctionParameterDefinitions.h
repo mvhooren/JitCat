@@ -28,7 +28,7 @@ namespace jitcat::AST
 	class CatFunctionParameterDefinitions: public CatASTNode
 	{
 	public:
-		CatFunctionParameterDefinitions(const std::vector<CatVariableDeclaration*>& parameterDeclarations);
+		CatFunctionParameterDefinitions(const std::vector<CatVariableDeclaration*>& parameterDeclarations, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatFunctionParameterDefinitions();
 
 		virtual void print() const override final;
