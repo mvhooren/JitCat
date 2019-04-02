@@ -9,7 +9,7 @@
 #include "jitcat/ASTNode.h"
 #include "jitcat/Production.h"
 #include "jitcat/StackItem.h"
-
+#include <cassert>
 using namespace jitcat;
 using namespace jitcat::AST;
 using namespace jitcat::Parser;

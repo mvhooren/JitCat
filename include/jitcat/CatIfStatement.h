@@ -25,7 +25,8 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
-		virtual std::any execute(CatRuntimeContext* runtimeContext) override final { return std::any();}
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+		
 	private:
 		std::unique_ptr<CatTypedExpression> condition;
 		std::unique_ptr<CatScopeBlock> ifBody;

@@ -15,7 +15,7 @@ namespace jitcat::AST
 	class CatLiteral: public CatTypedExpression
 	{
 	public:
-		CatLiteral(const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme) {}
+		//CatLiteral(const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme) {}
 		CatLiteral(const std::any& value, CatGenericType type, const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme), value(value), type(type) {}
 		CatLiteral(const std::string& value, const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme), value(value), type(CatGenericType::stringType) {}
 		CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme), value(floatValue), type(CatGenericType::floatType) {}

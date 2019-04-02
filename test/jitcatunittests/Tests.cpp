@@ -34,7 +34,8 @@ bool doCommonChecks(ExpressionBase* expression, bool shouldHaveError, bool shoul
 	{
 		if (expression->hasError())
 		{
-			auto errorList = context.getErrorManager()->getErrors();
+			std::vector<const ExpressionErrorManager::Error*> errorList;
+			context.getErrorManager()->getAllErrors(errorList);
 			REQUIRE(errorList.size() > 0);
 			std::cout << errorList[0]->message << "\n";
 		}

@@ -78,3 +78,9 @@ Reflection::CustomTypeInfo* jitcat::AST::CatFunctionParameterDefinitions::getCus
 {
 	return customType.get();
 }
+
+
+int jitcat::AST::CatFunctionParameterDefinitions::getNumParameters() const
+{
+	return (int)parameters.size();
+}

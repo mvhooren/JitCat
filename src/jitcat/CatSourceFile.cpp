@@ -65,7 +65,7 @@ const std::vector<const CatClassDefinition*>& jitcat::AST::CatSourceFile::getCla
 }
 
 
-const std::vector<const CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFunctionDefinitions() const
+const std::vector<CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFunctionDefinitions() const
 {
 	return functionDefinitions;
 }
@@ -73,10 +73,10 @@ const std::vector<const CatFunctionDefinition*>& jitcat::AST::CatSourceFile::get
 
 bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	bool anyErrors = false;
+	bool noErrors = true;
 	for (auto& iter: definitions)
 	{
-		anyErrors |= iter->typeCheck(compiletimeContext);
+		noErrors &= iter->typeCheck(compiletimeContext);
 	}
-	return !anyErrors;
+	return noErrors;
 }

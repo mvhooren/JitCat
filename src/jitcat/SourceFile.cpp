@@ -37,20 +37,27 @@ void SourceFile::compile(CatRuntimeContext* context)
 		context = &CatRuntimeContext::defaultContext;
 		context->getErrorManager()->clear();
 	}
+
 	ExpressionErrorManager* errorManager = nullptr;
 	errorManager = context->getErrorManager();
 	errorManagerHandle = errorManager;
+	errorManager->setCurrentDocument(sourceText.get());
 	parseResult.reset(JitCat::get()->parseFull(sourceText.get(), context, errorManager, this));
 	if (parseResult->success)
 	{
 		AST::CatSourceFile* sourceFileNode = parseResult->getNode<AST::CatSourceFile>();
-		sourceFileNode->print();
-		if (errorManager != nullptr)
+		if (sourceFileNode->typeCheck(context, errorManager, this))
 		{
 			errorManager->compiledWithoutErrors(this);
 		}
+		else
+		{
+			parseResult->success = false;
+		}
 	}
+	errorManager->setCurrentDocument(nullptr);
 }
+
 
 void jitcat::SourceFile::setSource(const std::string& source, CatRuntimeContext* context)
 {
@@ -62,4 +69,20 @@ void jitcat::SourceFile::setSource(const std::string& source, CatRuntimeContext*
 	context->getErrorManager()->errorSourceDeleted(this);	
 	sourceText.reset(new Document(source.c_str(), source.size()));
 	compile(context);
+}
+
+
+bool jitcat::SourceFile::hasErrors() const
+{
+	return parseResult == nullptr || !parseResult->success;
+}
+
+
+AST::CatSourceFile* jitcat::SourceFile::getAST() const
+{
+	if (parseResult != nullptr && parseResult->success)
+	{
+		return parseResult->getNode<AST::CatSourceFile>();
+	}
+	return nullptr;
 }

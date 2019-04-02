@@ -60,6 +60,7 @@ namespace jitcat
 
 	}
 
+
 	template<typename T>
 	void Expression<T>::compile(CatRuntimeContext* context)
 	{

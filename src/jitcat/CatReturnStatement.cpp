@@ -6,8 +6,13 @@
 */
 
 #include "jitcat/CatReturnStatement.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/CatTypeNode.h"
+#include "jitcat/ExpressionErrorManager.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -44,29 +49,69 @@ CatASTNodeType CatReturnStatement::getNodeType()
 
 std::any CatReturnStatement::execute(CatRuntimeContext* runtimeContext)
 {
-	return std::any();
+	if (returnExpression != nullptr)
+	{
+		return returnExpression->execute(runtimeContext);
+	}
+	else
+	{
+		return std::any();
+	}
 }
 
 
 bool CatReturnStatement::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	return false;
+	CatFunctionDefinition* currentFunction = compiletimeContext->getCurrentFunction();
+	if (returnExpression == nullptr && !currentFunction->getReturnTypeNode()->getType().isVoidType())
+	{
+		errorManager->compiledWithError("Void returned where a non-void type was expected.", errorContext, compiletimeContext->getContextName(), getLexeme());
+		return false;
+	}
+	else if (returnExpression != nullptr)
+	{
+		if (!returnExpression->typeCheck(compiletimeContext, errorManager, errorContext))
+		{
+			return false;
+		}
+		else if (returnExpression->getType() != currentFunction->getReturnTypeNode()->getType())
+		{
+			errorManager->compiledWithError("Returned type does not match function return type.", errorContext, compiletimeContext->getContextName(), getLexeme());
+			return false;
+		}
+	}
+	return true;
 }
 
 
 CatGenericType CatReturnStatement::getType() const
 {
-	return CatGenericType();
+	if (returnExpression != nullptr)
+	{
+		return returnExpression->getType();
+	}
+	return CatGenericType::voidType;
 }
 
 
 bool CatReturnStatement::isConst() const
 {
-	return false;
+	if (returnExpression != nullptr)
+	{
+		return returnExpression->isConst();
+	}
+	else
+	{
+		return true;
+	}
 }
 
 
 CatTypedExpression* CatReturnStatement::constCollapse(CatRuntimeContext* compileTimeContext)
 {
+	if (returnExpression != nullptr)
+	{
+		ASTHelper::updatePointerIfChanged(returnExpression, returnExpression->constCollapse(compileTimeContext));
+	}
 	return this;
 }

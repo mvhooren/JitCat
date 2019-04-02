@@ -35,6 +35,7 @@ namespace jitcat::AST
 		virtual CatASTNodeType getNodeType() override final;
 		bool typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 		Reflection::CustomTypeInfo* getCustomType() const;
+		int getNumParameters() const;
 
 	private:
 		std::vector<std::unique_ptr<CatVariableDeclaration>> parameters;

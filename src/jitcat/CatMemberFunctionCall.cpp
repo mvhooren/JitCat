@@ -36,8 +36,11 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedEx
 
 void CatMemberFunctionCall::print() const
 {
-	base->print();
-	CatLog::log(".");
+	if (base != nullptr)\
+	{
+		base->print();
+		CatLog::log(".");
+	}
 	CatLog::log(functionName);
 	arguments->print();
 }

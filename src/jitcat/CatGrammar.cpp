@@ -298,8 +298,9 @@ ASTNode* jitcat::Grammar::CatGrammar::sourceFile(const Parser::ASTNodeParser& no
 {
 	CatASTNode* astNode = static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(0));
 	std::vector<std::unique_ptr<CatDefinition>> definitions;
+	Lexeme lexeme = nodeParser.getStackLexeme();
 	unLink(nodeParser.getASTNodeByIndex(0), definitions);
-	return new CatSourceFile("none", std::move(definitions), nodeParser.getStackLexeme());
+	return new CatSourceFile("none", std::move(definitions), lexeme);
 }
 
 
@@ -323,8 +324,9 @@ ASTNode* jitcat::Grammar::CatGrammar::functionDefinition(const Parser::ASTNodePa
 AST::ASTNode* jitcat::Grammar::CatGrammar::functionParameterDefinitions(const Parser::ASTNodeParser& nodeParser)
 {
 	std::vector<CatVariableDeclaration*> parameterDefinitions;
+	Lexeme lexeme = nodeParser.getStackLexeme();
 	unLink(nodeParser.getASTNodeByIndex(0), parameterDefinitions);
-	return new CatFunctionParameterDefinitions(parameterDefinitions, nodeParser.getStackLexeme());
+	return new CatFunctionParameterDefinitions(parameterDefinitions, lexeme);
 }
 
 
@@ -352,6 +354,7 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 		case Identifier::Int:		 type = CatGenericType::intType; break;
 		case Identifier::Float:		 type = CatGenericType::floatType; break;
 		case Identifier::String:	 type = CatGenericType::stringType; break;
+		case Identifier::Void:		 type = CatGenericType::voidType;	break;
 		case Identifier::Identifier:
 		{
 			std::string identifierName(nodeParser.getTerminalByIndex(0)->getLexeme());
@@ -385,8 +388,9 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::returnStatement(const Parser::ASTNode
 AST::ASTNode* jitcat::Grammar::CatGrammar::scopeBlock(const Parser::ASTNodeParser& nodeParser)
 {
 	std::vector<CatStatement*> statements;
+	Lexeme lexeme = nodeParser.getStackLexeme();
 	unLink(nodeParser.getASTNodeByIndex(0), statements);
-	return new CatScopeBlock(statements, nodeParser.getStackLexeme());
+	return new CatScopeBlock(statements, lexeme);
 }
 
 
@@ -477,8 +481,7 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 	{
 		switch ((ConstantType)literalToken->getTokenSubType())
 		{
-			default:
-				return new CatLiteral(nodeParser.getStackLexeme());
+			default:	return nullptr;
 			case ConstantType::Integer:
 			{
 				CatLiteral* intLiteral = new CatLiteral(atoi(literalToken->getLexeme().data()), nodeParser.getStackLexeme());
@@ -509,7 +512,7 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 			}			
 		}
 	}
-	return new CatLiteral(nodeParser.getStackLexeme());
+	return nullptr;
 }
 
 

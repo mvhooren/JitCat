@@ -142,8 +142,12 @@ bool CatInfixOperator::typeCheck(CatRuntimeContext* compiletimeContext, Expressi
 		resultType = leftType.getInfixOperatorResultType(oper, rightType);
 		if (resultType != CatGenericType::errorType)
 		{
-			errorManager->compiledWithError(Tools::append("Invalid operation: ", leftType.toString(), " ", ::toString(oper), " ", rightType.toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return true;
+		}
+		else
+		{
+			errorManager->compiledWithError(Tools::append("Invalid operation: ", leftType.toString(), " ", ::toString(oper), " ", rightType.toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
+			return false;
 		}
 	}
 	return false;

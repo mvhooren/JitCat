@@ -16,6 +16,10 @@ namespace jitcat
 	{
 		class Document;
 	}
+	namespace AST
+	{
+		class CatSourceFile;
+	}
 	class CatRuntimeContext;
 
 
@@ -28,6 +32,9 @@ namespace jitcat
 		void compile(CatRuntimeContext* context);
 
 		void setSource(const std::string& source, CatRuntimeContext* context = nullptr);
+
+		bool hasErrors() const;
+		AST::CatSourceFile* getAST() const;
 
 	private:
 		std::unique_ptr<Tokenizer::Document> sourceText;

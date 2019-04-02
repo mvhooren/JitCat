@@ -8,6 +8,8 @@
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTypeNode.h"
+#include "jitcat/CatVariableDeclaration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeInstance.h"
 
@@ -18,7 +20,8 @@ using namespace jitcat::Reflection;
 
 CatScopeBlock::CatScopeBlock(const std::vector<CatStatement*>& statementList, const Tokenizer::Lexeme& lexeme):
 	CatStatement(lexeme),
-	customType(new CustomTypeInfo(nullptr))
+	customType(new CustomTypeInfo(nullptr)),
+	scopeId(InvalidScopeID)
 {
 	for (auto& iter : statementList)
 	{
@@ -53,43 +56,65 @@ CatASTNodeType CatScopeBlock::getNodeType()
 bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	CatScopeID myScopeId = compiletimeContext->addCustomTypeScope(customType.get());
-	bool anyErrors = false;
+	CatScopeBlock* previousScope = compiletimeContext->getCurrentScope();
+	compiletimeContext->setCurrentScope(this);
+	bool noErrors = true;
 	for (auto& iter : statements)
 	{
-		anyErrors |= iter->typeCheck(compiletimeContext, errorManager, errorContext);
+		noErrors &= iter->typeCheck(compiletimeContext, errorManager, errorContext);
 	}
 	compiletimeContext->removeScope(myScopeId);
-	return !anyErrors;
+	compiletimeContext->setCurrentScope(previousScope);
+	return noErrors;
 }
 
 
 std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 {
 	std::unique_ptr<CustomTypeInstance> scopeInstance;
-	if (customType != nullptr)
-	{
-		scopeInstance.reset(customType->createInstance());
-		runtimeContext->addCustomTypeScope(customType.get(), scopeInstance.get());
-	}
+	scopeInstance.reset(customType->createInstance());
+	scopeId = runtimeContext->addCustomTypeScope(customType.get(), scopeInstance.get());
+	CatScopeBlock* previousScope = runtimeContext->getCurrentScope();
+	runtimeContext->setCurrentScope(this);
+	std::any result = std::any();
 	for (auto& iter : statements)
 	{
 		if (iter->getNodeType() == CatASTNodeType::ReturnStatement)
 		{
-			if (scopeInstance != nullptr)
-			{
-				customType->instanceDestructor(scopeInstance.get());
-			}
-			return iter->execute(runtimeContext);
+			runtimeContext->setReturning(true);
 		}
-		else
+		result = iter->execute(runtimeContext);
+		if (runtimeContext->getIsReturning())
 		{
-			iter->execute(runtimeContext);
+			break;
 		}
 	}
+	runtimeContext->removeScope(scopeId);
+	runtimeContext->setCurrentScope(previousScope);
+	return result;
+}
 
-	if (scopeInstance != nullptr)
+
+bool jitcat::AST::CatScopeBlock::containsReturnStatement() const
+{
+	for (auto& iter : statements)
 	{
-		customType->instanceDestructor(scopeInstance.get());
+		if (iter->getNodeType() == CatASTNodeType::ReturnStatement)
+		{
+			return true;
+		}
 	}
-	return std::any();
+	return false;
+}
+
+
+Reflection::CustomTypeInfo* jitcat::AST::CatScopeBlock::getCustomType()
+{
+	return customType.get();
+}
+
+
+CatScopeID jitcat::AST::CatScopeBlock::getScopeId() const
+{
+	return scopeId;
 }

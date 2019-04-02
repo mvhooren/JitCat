@@ -23,7 +23,7 @@ namespace jitcat::Tokenizer
 		virtual const char* getSubTypeSymbol(int subType) const {return getTokenName();};
 		virtual int getTokenSubType() const {return 0;};
 		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-
+		int getNumNewLines() const;
 
 		static const int getID(){static int ID = ParseToken::getNextTokenID(); return ID;};
 	};

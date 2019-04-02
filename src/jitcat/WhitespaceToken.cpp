@@ -17,12 +17,25 @@ ParseToken* WhitespaceToken::createIfMatch(Document* document, const char* curre
 	std::size_t offset = 0;
 	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
 	std::size_t documentLength = document->getDocumentSize() - docOffset;
+	int numLineEndings = 0;
+	bool seenCarriageReturn = false;
 	while (offset < documentLength
 		   && (   currentPosition[offset] == ' '
 			   || currentPosition[offset] == '\t'
-			   || currentPosition[offset] == '\n'))
+			   || currentPosition[offset] == '\n'
+			   || currentPosition[offset] == '\r'))
 	{
+		if (currentPosition[offset] == '\r' && !seenCarriageReturn)
+		{
+			seenCarriageReturn = true;
+		}
+		else if (currentPosition[offset] == '\r' || currentPosition[offset] == '\n')
+		{
+			seenCarriageReturn = false;
+			document->addNewLine((int)(docOffset + offset));
+		}
 		offset++;
+		
 	}
 	if (offset > 0)
 	{

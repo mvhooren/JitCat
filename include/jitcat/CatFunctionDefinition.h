@@ -39,6 +39,9 @@ namespace jitcat::AST
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 		std::any executeFunction(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterValues);
 		jitcat::Reflection::CustomTypeInfo* getParametersType() const;
+		CatTypeNode* getReturnTypeNode() const;
+		int getNumParameters() const;
+		const std::string& getFunctionName() const;
 
 	private:
 		std::string name;

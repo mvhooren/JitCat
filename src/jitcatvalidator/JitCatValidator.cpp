@@ -59,6 +59,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 
 	Document document(expression, strlen(expression));
 	ExpressionErrorManager errorManager;
+	errorManager.setCurrentDocument(&document);
 	std::unique_ptr<SLRParseResult> parseResult(JitCat::get()->parseExpression(&document, &context, &errorManager, nullptr));
 	CatTypedExpression* typedExpression = nullptr;
 
@@ -99,13 +100,14 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 	if (!parseResult->success)
 	{
 		std::string contextName = context.getContextName().c_str();
-		auto errorList = errorManager.getErrors();
+		std::vector<const ExpressionErrorManager::Error*> errorList;
+		errorManager.getAllErrors(errorList);
 		std::string errorMessage;
 		int errorOffset = 0;
 		if (errorList.size() > 0)
 		{
 			errorMessage = errorList[0]->message;
-			errorOffset = document.getOffsetInDocument(errorList[0]->errorLexeme); 
+			errorOffset = (int)document.getOffsetInDocument(errorList[0]->errorLexeme); 
 		}
 		result->errorMessage = new char[errorMessage.size() + 1];
 		memcpy((void*)result->errorMessage, errorMessage.c_str(), errorMessage.size() + 1);

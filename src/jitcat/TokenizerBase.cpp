@@ -31,6 +31,7 @@ TokenizerBase::~TokenizerBase()
 
 bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& tokens, ParseToken* eofToken)
 {
+	document->clearLineLookup();
 	const char* data = document->getDocumentData().c_str();
 	const char* position = data;
 	std::size_t size = document->getDocumentSize();
@@ -54,6 +55,7 @@ bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& token
 		}
 	}
 	tokens.push_back(eofToken);
+	document->addNewLine((int)(position - data));
 	return true;
 }
 

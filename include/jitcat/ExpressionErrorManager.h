@@ -11,12 +11,16 @@
 #include "jitcat/Reflectable.h"
 
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
 namespace jitcat
 {
-
+	namespace Tokenizer
+	{
+		class Document;
+	};
 	class ExpressionErrorManager: public Reflection::Reflectable
 	{
 	private:
@@ -30,6 +34,9 @@ namespace jitcat
 			Error() {}
 			std::string contextName;
 			jitcat::Tokenizer::Lexeme errorLexeme;
+			int errorLine;
+			int errorColumn;
+			int errorLength;
 			std::string message;
 			void* errorSource;
 
@@ -38,8 +45,12 @@ namespace jitcat
 
 		};
 
-		ExpressionErrorManager(std::function<void(const std::string&)> errorHandler = {});
+		ExpressionErrorManager(std::function<void(const std::string&, int, int, int)> errorHandler = {});
 		~ExpressionErrorManager();
+
+		//The error manager needs to know about the current document if it wants to properly translate lexemes to line and column numbers.
+		//errorLine, errorColumn and errorLength will be set to 0 on all errors if a document is not set.
+		void setCurrentDocument(Tokenizer::Document* document);
 
 		void clear();
 		//Adds an error to the list. The void* serves as a unique id so that error messages disappear once the error is fixed.
@@ -47,7 +58,7 @@ namespace jitcat
 		void compiledWithoutErrors(void* errorSource);
 		void errorSourceDeleted(void* errorSource);
 
-		const std::vector<Error*>& getErrors() const;
+		void getAllErrors(std::vector<const Error*>& errors) const;
 
 		//Whenever errors are added or removed, the error revision is incremented.
 		//This is used by the user interface to track changes and update the error list accordingly.
@@ -60,8 +71,9 @@ namespace jitcat
 		void deleteErrorsFromSource(void* errorSource);
 
 	private:
-		std::vector<Error*> errors;
-		std::function<void(const std::string&)> errorHandler;
+		Tokenizer::Document* currentDocument;
+		std::multimap<void*, std::unique_ptr<Error>> errors;
+		std::function<void(const std::string&, int, int, int)> errorHandler;
 		unsigned int errorsRevision;
 	};
 

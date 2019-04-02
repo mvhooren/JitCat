@@ -8,6 +8,7 @@
 #pragma once
 
 #include "jitcat/CatStatement.h"
+#include "jitcat/CatScopeID.h"
 
 #include <any>
 #include <memory>
@@ -37,9 +38,15 @@ namespace jitcat::AST
 
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 
+		bool containsReturnStatement() const;
+
+		Reflection::CustomTypeInfo* getCustomType();
+		CatScopeID getScopeId() const;
+
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;
 		std::unique_ptr<Reflection::CustomTypeInfo> customType;
+		CatScopeID scopeId;
 	};
 
 }

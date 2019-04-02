@@ -7,9 +7,12 @@
 
 #include "jitcat/CatVariableDeclaration.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 
@@ -21,7 +24,8 @@ CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std:
 	CatStatement(lexeme),
 	type(typeNode),
 	name(name),
-	initializationExpression(initialization)
+	initializationExpression(initialization),
+	memberInfo(nullptr)
 {
 }
 
@@ -72,6 +76,15 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 				return false;
 			}
 		}
+		else
+		{
+			return false;
+		}
+	}
+	CatScopeBlock* currentScope = compiletimeContext->getCurrentScope();
+	if (currentScope != nullptr)
+	{
+		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
 	}
 	return true;
 }
@@ -79,6 +92,21 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 
 std::any jitcat::AST::CatVariableDeclaration::execute(CatRuntimeContext* runtimeContext)
 {
+	if (memberInfo != nullptr)
+	{
+		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
+		std::any assignableRef = memberInfo->getAssignableMemberReference(runtimeContext->getCurrentScopeObject(), assignableType);
+		std::any source;
+		if (initializationExpression != nullptr)
+		{
+			source = initializationExpression->execute(runtimeContext);
+		}
+		else
+		{
+			source = type->getType().createDefault();
+		}
+		ASTHelper::doAssignment(assignableRef, source, type->getType(), assignableType);
+	}
 	return std::any();
 }
 

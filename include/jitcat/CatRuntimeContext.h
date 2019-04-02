@@ -38,7 +38,11 @@ namespace jitcat
 	class CatRuntimeContext;
 	class ErrorContext;
 	class ExpressionErrorManager;
-
+	namespace AST
+	{
+		class CatFunctionDefinition;
+		class CatScopeBlock;
+	}
 	//A CatRuntimeContext provides variables and functions for use in expressions. (See Expression.h, ExpressionAny.h)
 	//It can contain multiple "scopes" of variables.
 	//Variables can come from classes that inherit from Reflectable (and implement the static functions required for reflection, see TypeInfo.h) or
@@ -102,6 +106,15 @@ namespace jitcat
 		std::shared_ptr<LLVM::LLVMCodeGenerator> getCodeGenerator();
 		int getNextFunctionIndex();
 
+		void setCurrentFunction(AST::CatFunctionDefinition* function);
+		AST::CatFunctionDefinition* getCurrentFunction() const;
+
+		void setCurrentScope(AST::CatScopeBlock* scope);
+		AST::CatScopeBlock* getCurrentScope() const;
+		Reflection::Reflectable* getCurrentScopeObject() const;
+
+		bool getIsReturning() const;
+		void setReturning(bool isReturning);
 
 	private:
 		CatScopeID createScope(Reflection::Reflectable* scopeObject, Reflection::TypeInfo* type, bool isStatic);
@@ -110,6 +123,10 @@ namespace jitcat
 		static CatRuntimeContext defaultContext;
 	private:
 		int nextFunctionIndex;
+		AST::CatFunctionDefinition* currentFunctionDefinition;
+		AST::CatScopeBlock* currentScope;
+
+		bool returning;
 
 		bool ownsErrorManager;
 		ExpressionErrorManager* errorManager;

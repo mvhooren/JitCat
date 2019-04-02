@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatScopeBlock.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ErrorContext.h"
@@ -28,12 +29,15 @@ CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionE
 #ifdef ENABLE_LLVM
 	codeGenerator(nullptr),
 #endif
-	nextFunctionIndex(0)
+	nextFunctionIndex(0),
+	currentFunctionDefinition(nullptr),
+	currentScope(nullptr),
+	returning(false)
 {
 	if (errorManager == nullptr)
 	{
 		ownsErrorManager = true;
-		errorManager = new ExpressionErrorManager();
+		this->errorManager = new ExpressionErrorManager();
 	}
 }
 
@@ -93,8 +97,11 @@ int CatRuntimeContext::getNumScopes() const
 
 void CatRuntimeContext::removeScope(CatScopeID id)
 {
-	assert(id >= 0 && id < scopes.size());
-	scopes[id].reset(nullptr);
+	if (id != InvalidScopeID)
+	{
+		assert(id >= 0 && id < scopes.size());
+		scopes.erase(scopes.begin() + id);
+	}
 }
 
 
@@ -204,6 +211,52 @@ std::shared_ptr<LLVMCodeGenerator> CatRuntimeContext::getCodeGenerator()
 int CatRuntimeContext::getNextFunctionIndex()
 {
 	return nextFunctionIndex++;
+}
+
+
+void jitcat::CatRuntimeContext::setCurrentFunction(AST::CatFunctionDefinition* function)
+{
+	currentFunctionDefinition = function;
+}
+
+
+AST::CatFunctionDefinition* jitcat::CatRuntimeContext::getCurrentFunction() const
+{
+	return currentFunctionDefinition;
+}
+
+
+void jitcat::CatRuntimeContext::setCurrentScope(AST::CatScopeBlock* scope)
+{
+	currentScope = scope;
+}
+
+
+AST::CatScopeBlock* jitcat::CatRuntimeContext::getCurrentScope() const
+{
+	return currentScope;
+}
+
+
+Reflection::Reflectable* jitcat::CatRuntimeContext::getCurrentScopeObject() const
+{
+	if (currentScope != nullptr)
+	{
+		return getScopeObject(currentScope->getScopeId());
+	}
+	return nullptr;
+}
+
+
+bool jitcat::CatRuntimeContext::getIsReturning() const
+{
+	return returning;
+}
+
+
+void jitcat::CatRuntimeContext::setReturning(bool isReturning)
+{
+	returning = isReturning;
 }
 
 

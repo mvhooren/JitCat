@@ -136,6 +136,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 	expressionIsLiteral = false;
 
 	Document document(expression.c_str(), expression.length());
+	context->getErrorManager()->setCurrentDocument(&document);
 	parseResult.reset(JitCat::get()->parseExpression(&document, context, errorManager, errorContext));
 
 	if (parseResult->success)
@@ -156,6 +157,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 	{
 		parseResult->astRootNode.reset(nullptr);
 	}
+	context->getErrorManager()->setCurrentDocument(nullptr);
 	return parseResult->success;
 }
 

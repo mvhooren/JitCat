@@ -6,16 +6,19 @@
 */
 
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/Document.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
+using namespace jitcat::Tokenizer;
 
 
-ExpressionErrorManager::ExpressionErrorManager(std::function<void(const std::string&)> errorHandler):
+ExpressionErrorManager::ExpressionErrorManager(std::function<void(const std::string&, int, int, int)> errorHandler):
 	errorsRevision(0),
-	errorHandler(errorHandler)
+	errorHandler(errorHandler),
+	currentDocument(nullptr)
 {
 }
 
@@ -26,9 +29,14 @@ ExpressionErrorManager::~ExpressionErrorManager()
 }
 
 
+void jitcat::ExpressionErrorManager::setCurrentDocument(Tokenizer::Document* document)
+{
+	currentDocument = document;
+}
+
+
 void ExpressionErrorManager::clear()
 {
-	Tools::deleteElements(errors);
 	errors.clear();
 	errorsRevision++;
 }
@@ -42,13 +50,26 @@ void ExpressionErrorManager::compiledWithError(const std::string& errorMessage, 
 	error->message = errorMessage;
 	error->contextName = contextName;
 	error->errorLexeme = errorLexeme;
+	if (currentDocument != nullptr)
+	{
+		auto [line, column, length] = currentDocument->getLineColumnAndLength(errorLexeme);
+		error->errorLine = line;
+		error->errorColumn = column;
+		error->errorLength = length;
+	}
+	else
+	{
+		error->errorLine = 0;
+		error->errorColumn = 0;
+		error->errorLength = 0;
+	}
 	error->errorSource = errorSource;
-	errors.push_back(error);
+	errors.emplace(errorSource, error);
 	errorsRevision++;
 
 	if (errorHandler)
 	{
-		errorHandler(Tools::append(contextName, "\n", errorMessage));
+		errorHandler(Tools::append(contextName, "\n", errorMessage), error->errorLine, error->errorColumn, error->errorLength);
 	}
 }
 
@@ -65,9 +86,12 @@ void ExpressionErrorManager::errorSourceDeleted(void* errorSource)
 }
 
 
-const std::vector<ExpressionErrorManager::Error*>& ExpressionErrorManager::getErrors() const
+void jitcat::ExpressionErrorManager::getAllErrors(std::vector<const Error*>& allErrors) const
 {
-	return errors;
+	for (auto& iter : errors)
+	{
+		allErrors.push_back(iter.second.get());
+	}
 }
 
 
@@ -79,7 +103,7 @@ unsigned int ExpressionErrorManager::getErrorsRevision() const
 
 void ExpressionErrorManager::reflect(TypeInfo& typeInfo)
 {
-	typeInfo.addMember("errors", &ExpressionErrorManager::errors);
+	//typeInfo.addMember("errors", &ExpressionErrorManager::errors);
 }
 
 
@@ -91,16 +115,7 @@ const char* ExpressionErrorManager::getTypeName()
 
 void ExpressionErrorManager::deleteErrorsFromSource(void* errorSource)
 {
-	for (int i = 0; i < (int)errors.size(); i++)
-	{
-		if (errors[(unsigned int)i]->errorSource == errorSource)
-		{
-			delete errors[(unsigned int)i];
-			errors.erase(errors.begin() + i);
-			errorsRevision++;
-			i--;
-		}
-	}
+	errors.erase(errorSource);
 }
 
 

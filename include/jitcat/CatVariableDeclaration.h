@@ -12,7 +12,10 @@
 #include <memory>
 #include <string>
 
-
+namespace jitcat::Reflection
+{
+	struct TypeMemberInfo;
+}
 namespace jitcat::AST
 {
 
@@ -37,6 +40,7 @@ namespace jitcat::AST
 		std::unique_ptr<CatTypeNode> type;
 		std::string name;
 		std::unique_ptr<CatTypedExpression> initializationExpression;
+		Reflection::TypeMemberInfo* memberInfo;
 	};
 
 }
