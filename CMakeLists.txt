@@ -75,6 +75,7 @@ if(LLVM_ENABLED)
 		LLVMMCParser
 		LLVMMC
 		LLVMDebugInfoCodeView
+		LLVMDebugInfoDwarf
 		LLVMDebugInfoMSF
 		LLVMBitReader
 		LLVMCore
