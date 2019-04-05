@@ -97,3 +97,16 @@ const char* TokenizerBase::getTokenSymbol(int tokenId, int tokenSubType) const
 	}
 	return "?";
 }
+
+
+bool jitcat::Tokenizer::TokenizerBase::isSuggestedToken(int tokenId, int tokenSubType) const
+{
+	for (unsigned int i = 0; i < tokenFactories.size(); i++)
+	{
+		if (tokenFactories[i]->getTokenID() == tokenId)
+		{
+			return tokenFactories[i]->isSuggestedToken(tokenSubType);
+		}
+	}
+	return false;
+}

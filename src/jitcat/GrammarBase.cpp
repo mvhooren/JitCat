@@ -62,9 +62,15 @@ ProductionToken* GrammarBase::epsilon()
 
 std::unique_ptr<Parser::SLRParser> GrammarBase::createSLRParser() const
 {
-	std::unique_ptr<SLRParser> parser(new SLRParser());
-	parser->createNFA(this);
+	std::unique_ptr<SLRParser> parser(new SLRParser(this));
+	parser->createNFA();
 	return parser;
+}
+
+
+const Tokenizer::TokenizerBase* jitcat::Grammar::GrammarBase::getTokenizer() const
+{
+	return tokenizer;
 }
 
 

@@ -115,3 +115,9 @@ CatTypedExpression* CatReturnStatement::constCollapse(CatRuntimeContext* compile
 	}
 	return this;
 }
+
+
+std::optional<bool> jitcat::AST::CatReturnStatement::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+{
+	return true;
+}

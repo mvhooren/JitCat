@@ -16,7 +16,7 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatIfStatement::CatIfStatement(CatTypedExpression* condition, CatScopeBlock* ifBody, const Tokenizer::Lexeme& lexeme, CatASTNode* elseNode):
+CatIfStatement::CatIfStatement(CatTypedExpression* condition, CatScopeBlock* ifBody, const Tokenizer::Lexeme& lexeme, CatStatement* elseNode):
 	CatStatement(lexeme),
 	condition(condition),
 	ifBody(ifBody),
@@ -80,4 +80,20 @@ std::any jitcat::AST::CatIfStatement::execute(CatRuntimeContext* runtimeContext)
 		return static_cast<CatStatement*>(elseNode.get())->execute(runtimeContext);
 	}
 	return std::any();
+}
+
+
+std::optional<bool> jitcat::AST::CatIfStatement::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+{
+	auto ifBodyReturns = ifBody->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
+	if (elseNode == nullptr)
+	{
+		return ifBodyReturns;
+	}
+	else
+	{
+		auto elseBodyReturns = elseNode->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
+		assert(ifBodyReturns.has_value() && elseBodyReturns.has_value());
+		return (*ifBodyReturns) && (*elseBodyReturns);
+	}
 }

@@ -110,6 +110,16 @@ int OneCharToken::getTokenSubType() const
 }
 
 
+bool jitcat::Tokenizer::OneCharToken::isSuggestedToken(int subType_) const
+{
+	OneChar tokenType = static_cast<OneChar>(subType_);
+	return	   tokenType == OneChar::BraceClose 
+			|| tokenType == OneChar::ParenthesesClose 
+			|| tokenType == OneChar::BracketClose 
+			|| tokenType == OneChar::Semicolon;
+}
+
+
 ParseToken* OneCharToken::createIfMatch(Document* document, const char* currentPosition) const
 {
 	std::size_t offset = currentPosition - document->getDocumentData().c_str();

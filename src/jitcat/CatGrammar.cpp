@@ -369,7 +369,7 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::ifStatement(const Parser::ASTNodePars
 {
 	CatTypedExpression* condition = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0));
 	CatScopeBlock* ifBody = static_cast<CatScopeBlock*>(nodeParser.getASTNodeByIndex(1));
-	CatASTNode* elseNode = static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(2));
+	CatStatement* elseNode = static_cast<CatStatement*>(nodeParser.getASTNodeByIndex(2));
 	return new CatIfStatement(condition, ifBody, nodeParser.getStackLexeme(), elseNode);
 }
 

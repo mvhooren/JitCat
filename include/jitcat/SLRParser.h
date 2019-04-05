@@ -45,9 +45,9 @@ namespace jitcat::Parser
 		friend class Grammar::GrammarBase;
 		friend class ASTNodeParser;
 
-		SLRParser() {}
+		SLRParser(const Grammar::GrammarBase* grammar): grammar(grammar) {}
 	
-		void createNFA(const Grammar::GrammarBase* grammar);
+		void createNFA();
 
 	private:
 		void buildNFA(DFAState* currentState, std::vector<DFAState*>& nfa);
@@ -72,11 +72,14 @@ namespace jitcat::Parser
 
 		void scanForConflicts() const;
 
+		std::string getShiftErrorMessage(DFAState* currentState, const std::string& errorTokenName) const;
+
 	public:
 		SLRParseResult* parse(const std::vector<Tokenizer::ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const;
 		~SLRParser();
 
 	private:
+		const Grammar::GrammarBase* grammar;
 		std::vector<DFAState*> dfa;
 	};
 

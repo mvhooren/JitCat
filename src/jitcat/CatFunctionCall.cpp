@@ -31,7 +31,7 @@ CatFunctionCall::CatFunctionCall(const std::string& name, CatArgumentList* argum
 	name(name),
 	arguments(arguments),
 	returnType(CatGenericType::errorType),
-	function(CatBuiltInFunctionType::Invalid)
+	function(toFunction(name.c_str(), (int)(arguments->arguments.size())))
 {
 }
 

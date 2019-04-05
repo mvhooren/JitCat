@@ -84,3 +84,15 @@ int jitcat::AST::CatFunctionParameterDefinitions::getNumParameters() const
 {
 	return (int)parameters.size();
 }
+
+
+const std::string& jitcat::AST::CatFunctionParameterDefinitions::getParameterName(int index) const
+{
+	return parameters[index]->getName();
+}
+
+
+const CatTypeNode* jitcat::AST::CatFunctionParameterDefinitions::getParameterType(int index) const
+{
+	return &(parameters[index]->getType());
+}

@@ -12,6 +12,7 @@
 #include "jitcat/CatVariableDeclaration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeInstance.h"
+#include "jitcat/ExpressionErrorManager.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -92,6 +93,27 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 	runtimeContext->removeScope(scopeId);
 	runtimeContext->setCurrentScope(previousScope);
 	return result;
+}
+
+
+std::optional<bool> jitcat::AST::CatScopeBlock::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+{
+	bool controlFlowReturns = false;
+	for (auto& iter : statements)
+	{
+		auto returns = iter->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
+		if (!controlFlowReturns && returns.has_value() && (*returns))
+		{
+			controlFlowReturns = true;		
+		}
+		else if (controlFlowReturns)
+		{
+			unreachableCodeDetected = true;
+			errorManager->compiledWithError("Code is unreachable.", errorContext, compiletimeContext->getContextName(), iter->getLexeme());
+			return true;
+		}
+	}
+	return controlFlowReturns;
 }
 
 

@@ -39,6 +39,8 @@ namespace jitcat
 			void buildFollowSets(Production* parentProduction);
 			std::size_t getNumTokens() const;
 			ProductionToken* getToken(unsigned int index) const;
+			std::string toString() const;
+
 		private:
 			std::vector<ProductionToken*> ruleTokens;
 

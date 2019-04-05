@@ -24,6 +24,7 @@
 #include "jitcat/SLRParseResult.h"
 #include "jitcat/StackItemProduction.h"
 #include "jitcat/StackItemToken.h"
+#include "jitcat/TokenizerBase.h"
 #include "jitcat/Tools.h"
 
 #include <cassert>
@@ -39,7 +40,7 @@ using namespace jitcat::Tokenizer;
 using namespace jitcat::Tools;
 
 
-void SLRParser::createNFA(const GrammarBase* grammar)
+void SLRParser::createNFA()
 {
 	std::vector<DFAState*>& nfa = dfa;
 	Production* prod = grammar->rootProduction;
@@ -585,6 +586,142 @@ void SLRParser::scanForConflicts() const
 }
 
 
+std::string jitcat::Parser::SLRParser::getShiftErrorMessage(DFAState* currentState, const std::string& errorTokenName) const
+{
+	std::string suggestion;
+	//Try to suggest something based on the available transitions of the current state
+	//std::cout << "\n###################################################################################\n\n";
+	//std::cout << "Shift error message:\n";
+	if (currentState->transitions.size() > 0)
+	{
+		for (auto& iter : currentState->transitions)
+		{
+			if (iter.transitionToken != nullptr && iter.transitionToken->getIsTerminal())
+			{
+				ProductionTerminalToken* terminal = static_cast<ProductionTerminalToken*>(iter.transitionToken);
+				int id = terminal->getTokenId();
+				int subtype = terminal->getTokenSubType();
+				if (grammar->getTokenizer()->isSuggestedToken(id, subtype))
+				{
+					//std::cout << "Suggesting " << terminal->getSymbol() << " because it is in a transition.\n";
+					suggestion = grammar->getTokenizer()->getTokenSymbol(id, subtype);
+					break;
+				}
+				else
+				{
+					//std::cout << terminal->getSymbol() << " is in a transition, but is not a suggested token.\n";
+				}
+			}
+			else if (iter.transitionToken != nullptr)
+			{
+				//std::cout << iter.transitionToken->getSymbol() << " is not a terminal.\n";
+			}
+		}
+	}
+	//Try to suggest something based on the rules of the items in the current state.
+	/*if (suggestion.size() == 0 && currentState->items.size() > 0)
+	{
+		std::cout << "No suggestions based on transitions, trying the items.\n";
+		for (auto& iter : currentState->items)
+		{
+			if (iter.tokenOffset < iter.rule->getNumTokens())
+			{
+				ProductionToken* token = iter.rule->getToken(iter.tokenOffset);
+				if (token->getIsTerminal())
+				{
+					ProductionTerminalToken* terminal = static_cast<ProductionTerminalToken*>(token);
+					int id = terminal->getTokenId();
+					int subtype = terminal->getTokenSubType();
+					if (grammar->getTokenizer()->isSuggestedToken(id, subtype))
+					{
+						suggestion = grammar->getTokenizer()->getTokenSymbol(id, subtype);
+						std::cout << "Suggesting " << suggestion << "\n";
+						break;
+					}
+					else
+					{
+						std::cout << "Next token in item is not a suggested token. (" << iter.tokenOffset << ") " << iter.rule->toString() << "\n";
+					}
+				}
+				else
+				{
+					std::cout << "Next token in item is not a terminal. (" << iter.tokenOffset << ") " << iter.rule->toString() << "\n";
+				}
+			}
+			else
+			{
+				std::cout << "Item is a reduce candidate: (" << iter.tokenOffset << ") " << iter.rule->toString() << " check its follow set.\n";
+				ProductionTokenSet followSet = iter.production->getFollowSet();
+				for (int i = 0; i < followSet.getNumMembers(); i++)
+				{
+					ProductionTokenSetMember* member = followSet.getMember(i);
+					if (member->getType() == ProductionTokenType::Terminal)
+					{
+						ProductionTerminalToken* terminal = static_cast<ProductionTerminalToken*>(member);
+						int id = terminal->getTokenId();
+						int subtype = terminal->getTokenSubType();
+						if (grammar->getTokenizer()->isSuggestedToken(id, subtype))
+						{
+							suggestion = grammar->getTokenizer()->getTokenSymbol(id, subtype);
+							std::cout << "Suggesting " << terminal->getSymbol() << "\n";
+							//break;
+						}
+						else
+						{
+							std::cout << terminal->getSymbol() << " is a terminal, but not a suggested one.\n";
+						}
+					}
+					else
+					{
+						std::cout << member->getDescription() << " is not a terminal.\n";
+					}
+				}		
+			}
+		}
+	}*/
+	/*
+	//Suggest things based on follow set (often provides incorrect suggestions)
+	if (suggestion.size() == 0 && currentState->items.size() > 0)
+	{
+		const ProductionTokenSet& followSet = currentState->items.back().production->getFollowSet();
+		for (int i = 0; i < followSet.getNumMembers(); i++)
+		{
+			ProductionTokenSetMember* member = followSet.getMember(i);
+			if (member->getType() == ProductionTokenType::Terminal)
+			{
+				ProductionTerminalToken* terminal = static_cast<ProductionTerminalToken*>(member);
+				int id = terminal->getTokenId();
+				int subtype = terminal->getTokenSubType();
+				if (grammar->getTokenizer()->isSuggestedToken(id, subtype))
+				{
+					suggestion = grammar->getTokenizer()->getTokenSymbol(id, subtype);
+					//break;
+				}
+			}
+			
+		}
+	}*/
+	std::string errorMessage;
+	if (errorTokenName == "")
+	{
+		errorMessage = "Did not expect end of line here";
+	}
+	else
+	{
+		errorMessage = Tools::append(std::string("Did not expect "), errorTokenName, " here");
+	}
+	if (suggestion.size() > 0)
+	{
+		errorMessage = Tools::append(errorMessage, ", did you forget a '", suggestion, "'?");
+	}
+	else
+	{
+		errorMessage += ".";
+	}
+	return errorMessage;
+}
+
+
 SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
 {
 	SLRParseResult* parseResult = new SLRParseResult();
@@ -689,17 +826,12 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 					if (token->getTokenIfToken())
 					{
 						const Lexeme& errorLexeme = token->getTokenIfToken()->getLexeme();
-						std::string errorToken = std::string(errorLexeme);
-						if (errorToken == "")
-						{
-							errorToken = "end of line";
-						}
-						errorManager->compiledWithError(std::string("Did not expect ") + errorToken + " here.", errorSource, context->getContextName(), errorLexeme);
+						errorManager->compiledWithError(getShiftErrorMessage(currentState, std::string(errorLexeme)), errorSource, context->getContextName(), errorLexeme);
 					}
 					else if (token->getProductionIfProduction())
 					{
 						const Production* errorProduction = token->getProductionIfProduction();
-						errorManager->compiledWithError(std::string("Did not expect ") + errorProduction->getProductionName() + " here.", errorSource, context->getContextName(), token->astNode->getLexeme());
+						errorManager->compiledWithError(getShiftErrorMessage(currentState, errorProduction->getProductionName()), errorSource, context->getContextName(), token->astNode->getLexeme());
 					}
 					delete token;
 				}

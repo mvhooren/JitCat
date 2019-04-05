@@ -44,6 +44,7 @@ namespace jitcat::Reflection
 		bool setMemberValue(const std::string& memberName, const MemberT& value);
 
 		TypeMemberInfo* getMemberInfo(const std::string& memberName) const;
+
 		std::any getValue(TypeMemberInfo* memberInfo);
 		std::optional<std::any> getMemberAnyValue(const std::string& memberName);
 		std::optional<std::any> getMemberAnyValueReference(const std::string& memberName, AssignableType& assignableType);
@@ -83,5 +84,6 @@ namespace jitcat::Reflection
 		}
 		return false;
 	}
+
 
 } //End namespace jitcat::Reflection

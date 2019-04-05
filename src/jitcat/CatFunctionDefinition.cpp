@@ -12,6 +12,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatScopeBlock.h"
+#include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
@@ -89,29 +90,36 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	}
 	compileTimeContext->removeScope(parametersScopeId);
 	compileTimeContext->setCurrentFunction(nullptr);
-
-	if (!type->getType().isVoidType() && !scopeBlock->containsReturnStatement())
+	if (!type->getType().isVoidType())
 	{
-		errorManager->compiledWithError("Function is missing a return statement.", this, compileTimeContext->getContextName(), getLexeme());
-		return false;
+		bool unreachableCodeDetected = false;
+		auto returnCheck = scopeBlock->checkControlFlow(compileTimeContext, errorManager, this, unreachableCodeDetected);
+		if(!returnCheck.has_value() || !(*returnCheck))
+		{
+			errorManager->compiledWithError("Function is missing a return statement.", this, compileTimeContext->getContextName(), getLexeme());
+			return false;
+		}
+		else if (unreachableCodeDetected)
+		{
+			return false;
+		}
 	}
-
 	errorManager->compiledWithoutErrors(this);
 	return true;
 }
 
 
-std::any jitcat::AST::CatFunctionDefinition::executeFunction(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterValues)
+std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterPack)
 {
 	CatScopeID scopeId = InvalidScopeID;
 	if (parameters->getNumParameters() > 0)
 	{
-		assert(parameterValues != nullptr);
-		CatScopeID scopeId = runtimeContext->addCustomTypeScope(parameters->getCustomType(), parameterValues);
+		assert(parameterPack != nullptr);
+		scopeId = runtimeContext->addCustomTypeScope(parameters->getCustomType(), parameterPack);
 		//The scopeId should match the scopeId that was obtained during type checking.
 		assert(scopeId == parametersScopeId);
 		//The parameter values should be of the correct type.
-		assert(parameterValues->typeInfo == parameters->getCustomType());
+		assert(parameterPack->typeInfo == parameters->getCustomType());
 	}
 	std::any result = scopeBlock->execute(runtimeContext);
 	runtimeContext->setReturning(false);
@@ -138,7 +146,25 @@ int jitcat::AST::CatFunctionDefinition::getNumParameters() const
 }
 
 
+const std::string& jitcat::AST::CatFunctionDefinition::getParameterName(int index) const
+{
+	return parameters->getParameterName(index);
+}
+
+
+const CatTypeNode* jitcat::AST::CatFunctionDefinition::getParameterType(int index) const
+{
+	return parameters->getParameterType(index);
+}
+
+
 const std::string & jitcat::AST::CatFunctionDefinition::getFunctionName() const
 {
 	return name;
+}
+
+
+Reflection::CustomTypeInstance* jitcat::AST::CatFunctionDefinition::createCustomTypeInstance() const
+{
+	return parameters->getCustomType()->createInstance();
 }

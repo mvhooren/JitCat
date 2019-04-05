@@ -38,6 +38,8 @@ namespace jitcat::AST
 
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 
+		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const override final;
+
 		bool containsReturnStatement() const;
 
 		Reflection::CustomTypeInfo* getCustomType();

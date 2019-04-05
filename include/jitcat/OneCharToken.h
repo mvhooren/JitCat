@@ -25,6 +25,7 @@ namespace jitcat::Tokenizer
 		virtual const char* getSubTypeName(int subType) const;
 		virtual const char* getSubTypeSymbol(int subType) const;
 		virtual int getTokenSubType() const;
+		virtual bool isSuggestedToken(int subType) const;
 		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
 		static const int getID();
 	private:

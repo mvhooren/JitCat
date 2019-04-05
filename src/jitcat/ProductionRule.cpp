@@ -12,6 +12,7 @@
 #include "jitcat/Tools.h"
 
 #include <cassert>
+#include <sstream>
 #include <stddef.h>
 
 using namespace jitcat::AST;
@@ -140,4 +141,16 @@ std::size_t ProductionRule::getNumTokens() const
 ProductionToken* ProductionRule::getToken(unsigned int index) const
 {
 	return ruleTokens[index];
+}
+
+
+std::string jitcat::Grammar::ProductionRule::toString() const
+{
+	std::stringstream stream;
+	for (auto& iter : ruleTokens)
+	{
+		stream << iter->getDescription();
+		stream << " ";
+	}
+	return stream.str();
 }

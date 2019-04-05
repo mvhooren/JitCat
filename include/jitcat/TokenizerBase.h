@@ -24,6 +24,10 @@ namespace jitcat::Tokenizer
 		void registerTokenFactory(ParseToken* factory);
 		const char* getTokenName(int tokenId, int tokenSubType) const;
 		const char* getTokenSymbol(int tokenId, int tokenSubType) const;
+
+		//Returns true if the token should be suggested if a parse error occurs and this token is in the follow set.
+		bool isSuggestedToken(int tokenId, int tokenSubType) const;
+
 	private:
 		std::vector<ParseToken*> tokenFactories;
 	};

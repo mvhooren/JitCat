@@ -24,6 +24,7 @@ namespace jitcat
 namespace jitcat::AST
 {
 	class CatVariableDeclaration;
+	class CatTypeNode;
 
 	class CatFunctionParameterDefinitions: public CatASTNode
 	{
@@ -36,6 +37,8 @@ namespace jitcat::AST
 		bool typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 		Reflection::CustomTypeInfo* getCustomType() const;
 		int getNumParameters() const;
+		const std::string& getParameterName(int index) const;
+		const CatTypeNode* getParameterType(int index) const;
 
 	private:
 		std::vector<std::unique_ptr<CatVariableDeclaration>> parameters;

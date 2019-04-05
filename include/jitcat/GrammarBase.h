@@ -46,6 +46,8 @@ namespace jitcat
 
 			typedef AST::ASTNode* (*SemanticAction)(const Parser::ASTNodeParser&);
 
+			const Tokenizer::TokenizerBase* getTokenizer() const;
+
 		protected:
 			void rule(int productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action);
 

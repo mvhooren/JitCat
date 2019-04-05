@@ -11,9 +11,11 @@
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScopeID.h"
+#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ReflectableHandle.h"
 
 #include <any>
+#include <cassert>
 #include <memory>
 
 namespace jitcat::Reflection
@@ -37,11 +39,25 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
-		std::any executeFunction(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterValues);
+		
+		std::any executeFunctionWithPack(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterPack);
+
+		template<typename... ArgumentsT>
+		std::any executeFunction(CatRuntimeContext* runtimeContext, ArgumentsT... arguments);
+
 		jitcat::Reflection::CustomTypeInfo* getParametersType() const;
 		CatTypeNode* getReturnTypeNode() const;
 		int getNumParameters() const;
+		const std::string& getParameterName(int index) const;
+		const CatTypeNode* getParameterType(int index) const;
+
 		const std::string& getFunctionName() const;
+
+		template<typename... ArgumentsT>
+		Reflection::CustomTypeInstance* createParameterPack(ArgumentsT... arguments);
+
+	private:
+		Reflection::CustomTypeInstance* createCustomTypeInstance() const;
 
 	private:
 		std::string name;
@@ -52,5 +68,30 @@ namespace jitcat::AST
 		Reflection::ReflectableHandle errorManagerHandle;
 	};
 
+
+	template<typename ...ArgumentsT>
+	inline std::any CatFunctionDefinition::executeFunction(CatRuntimeContext* runtimeContext, ArgumentsT... arguments)
+	{
+		if constexpr (sizeof...(ArgumentsT) == 0)
+		{
+			return executeFunctionWithPack(runtimeContext, nullptr);
+		}
+		else
+		{
+			std::unique_ptr<Reflection::CustomTypeInstance> instance(createParameterPack(std::forward<ArgumentsT>(arguments)...));
+			return executeFunctionWithPack(runtimeContext, instance.get());
+		}
+	}
+
+
+	template<typename... ArgumentsT>
+	inline Reflection::CustomTypeInstance* CatFunctionDefinition::createParameterPack(ArgumentsT... arguments)
+	{
+		Reflection::CustomTypeInstance* instance = createCustomTypeInstance();
+		assert(sizeof...(ArgumentsT) == (std::size_t)getNumParameters());
+		int i = 0;
+		(instance->setMemberValue(getParameterName(i++), (std::forward<ArgumentsT>(arguments))), ...);
+		return instance;
+	}
 
 };

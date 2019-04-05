@@ -98,6 +98,7 @@ set(Source_Cat_ASTNodes_ASTHelper
 	${JitCatHeaderPath}/InfixOperatorOptimizer.h
 	ASTHelper.cpp
 	${JitCatHeaderPath}/ASTHelper.h
+	${JitCatHeaderPath}/CatFunctionParameterPack.h
 )
 
 set(Source_Cat_CodeGeneration_LLVM

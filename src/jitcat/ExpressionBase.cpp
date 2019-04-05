@@ -233,6 +233,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
 
 					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", arguments, expressionLexeme));
+					
 					valueType = parseResult->getNode<CatTypedExpression>()->getType();
 				}
 				else if (expectedType.isScalarType() && valueType.isScalarType())
