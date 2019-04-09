@@ -722,7 +722,7 @@ std::string jitcat::Parser::SLRParser::getShiftErrorMessage(DFAState* currentSta
 }
 
 
-SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
+SLRParseResult* SLRParser::parse(const std::vector<std::unique_ptr<ParseToken>>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
 {
 	SLRParseResult* parseResult = new SLRParseResult();
 
@@ -759,7 +759,7 @@ SLRParseResult* SLRParser::parse(const std::vector<ParseToken*>& tokens, int whi
 		StackItemToken* token = nullptr;
 		if (tokenIndex < (int)tokens.size())
 		{
-			token = new StackItemToken(tokens[tokenIndex]);
+			token = new StackItemToken(tokens[tokenIndex].get());
 			token->state = nullptr;
 		}
 		bool reduced = tryReduce(currentState, parseStack, token, context);

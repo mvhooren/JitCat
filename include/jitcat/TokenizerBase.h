@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 
 
@@ -20,7 +21,7 @@ namespace jitcat::Tokenizer
 	public:
 		TokenizerBase();
 		virtual ~TokenizerBase();
-		bool tokenize(Document* document, std::vector<ParseToken*>& tokens, ParseToken* eofToken);
+		bool tokenize(Document* document, std::vector<std::unique_ptr<ParseToken>>& tokens, ParseToken* eofToken);
 		void registerTokenFactory(ParseToken* factory);
 		const char* getTokenName(int tokenId, int tokenSubType) const;
 		const char* getTokenSymbol(int tokenId, int tokenSubType) const;

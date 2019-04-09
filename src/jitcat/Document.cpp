@@ -8,7 +8,9 @@
 #include "jitcat/Document.h"
 
 #include <cassert>
+#include <algorithm>
 #include <string.h>
+
 
 using namespace jitcat::Tokenizer;
 
@@ -62,12 +64,29 @@ std::size_t jitcat::Tokenizer::Document::getOffsetInDocument(const Lexeme& lexem
 }
 
 
-std::tuple<int, int, int> jitcat::Tokenizer::Document::getLineColumnAndLength(const Lexeme& lexeme) const
+DocumentSelection jitcat::Tokenizer::Document::toSelection(const Lexeme& lexeme) const
 {
 	//Check that the lexeme lies inside the document
 	assert((lexeme.data() >= document.c_str() 
 			   && (lexeme.data() + lexeme.size()) <= document.c_str() + document.size()));
 	int offset = (int)(lexeme.data() - document.c_str());
+	auto[startLine, startColumn] = getLineAndColumnNumber(offset);
+	auto[endLine, endColumn] = getLineAndColumnNumber(offset + (int)lexeme.length());
+	return DocumentSelection(startLine, startColumn, endLine, endColumn);
+}
+
+
+std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(const Lexeme & lexeme) const
+{
+	assert((lexeme.data() >= document.c_str() 
+			   && (lexeme.data() + lexeme.size()) <= document.c_str() + document.size()));
+	int offset = (int)(lexeme.data() - document.c_str());
+	return getLineAndColumnNumber(offset);
+}
+
+
+std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(int offset) const
+{
 	auto& iter = lineNumberLookup.upper_bound(offset);
 	if (iter != lineNumberLookup.end())
 	{
@@ -79,7 +98,7 @@ std::tuple<int, int, int> jitcat::Tokenizer::Document::getLineColumnAndLength(co
 			lineStartOffset = iter->first + 1;
 		}
 		int column = offset - lineStartOffset;
-		return std::tuple<int, int, int>(lineNumber, column, (int)lexeme.length());
+		return std::tuple<int, int>(lineNumber, column);
 	}
 	else
 	{
@@ -97,9 +116,9 @@ std::tuple<int, int, int> jitcat::Tokenizer::Document::getLineColumnAndLength(co
 				lineStartOffset = 0;
 			}
 			int column = offset - lineStartOffset;
-			return std::tuple<int, int, int>(lineNumber, column, (int)lexeme.length());
+			return std::tuple<int, int>(lineNumber, column);
 		}
-		return std::tuple<int, int, int>(0, 0, 0);
+		return std::tuple<int, int>(0, 0);
 	}
 }
 

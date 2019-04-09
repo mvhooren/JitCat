@@ -6,6 +6,7 @@
 #include "jitcat/Document.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/JitCat.h"
+#include "jitcat/ParseToken.h"
 #include "jitcat/Reflectable.h"
 #include "jitcat/SLRParseResult.h"
 
@@ -42,7 +43,8 @@ void SourceFile::compile(CatRuntimeContext* context)
 	errorManager = context->getErrorManager();
 	errorManagerHandle = errorManager;
 	errorManager->setCurrentDocument(sourceText.get());
-	parseResult.reset(JitCat::get()->parseFull(sourceText.get(), context, errorManager, this));
+	sourceTokens.clear();
+	parseResult.reset(JitCat::get()->parseFull(sourceText.get(), sourceTokens, context, errorManager, this));
 	if (parseResult->success)
 	{
 		AST::CatSourceFile* sourceFileNode = parseResult->getNode<AST::CatSourceFile>();
@@ -54,6 +56,10 @@ void SourceFile::compile(CatRuntimeContext* context)
 		{
 			parseResult->success = false;
 		}
+	}
+	else
+	{
+		parseResult->success = false;
 	}
 	errorManager->setCurrentDocument(nullptr);
 }
@@ -85,4 +91,16 @@ AST::CatSourceFile* jitcat::SourceFile::getAST() const
 		return parseResult->getNode<AST::CatSourceFile>();
 	}
 	return nullptr;
+}
+
+
+const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& jitcat::SourceFile::getSourceTokens() const
+{
+	return sourceTokens;
+}
+
+
+const Tokenizer::Document* jitcat::SourceFile::getSourceText() const
+{
+	return sourceText.get();
 }

@@ -15,6 +15,7 @@ namespace jitcat::Tokenizer
 {
 	class CatTokenizer;
 	class Document;
+	class ParseToken;
 }
 namespace jitcat::Parser
 {
@@ -23,6 +24,7 @@ namespace jitcat::Parser
 }
 
 #include <memory>
+#include <vector>
 
 
 namespace jitcat
@@ -37,6 +39,7 @@ namespace jitcat
 	public:
 		static JitCat* get();
 		Parser::SLRParseResult* parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
+		Parser::SLRParseResult* parseFull(Tokenizer::Document* expression, std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
 		Parser::SLRParseResult* parseFull(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
 		
 		//This will clean up as much memory as possible, library features will be broken after this is called.

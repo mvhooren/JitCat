@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "Lexeme.h"
+#include "jitcat/Lexeme.h"
+#include "jitcat/DocumentSelection.h"
 #include <map>
 #include <string>
 #include <tuple>
@@ -26,8 +27,10 @@ namespace jitcat::Tokenizer
 		Lexeme createLexeme(std::size_t offset, std::size_t length);
 
 		std::size_t getOffsetInDocument(const Lexeme& lexeme) const;
-		std::tuple<int, int, int> getLineColumnAndLength(const Lexeme& lexeme) const;
-		
+		DocumentSelection toSelection(const Lexeme& lexeme) const;
+		std::tuple<int, int> getLineAndColumnNumber(const Lexeme& lexeme) const;
+		std::tuple<int, int> getLineAndColumnNumber(int offset) const;
+
 		int offsetToLineNumber(int offset) const;
 		void clearLineLookup();
 		void addNewLine(int offset);

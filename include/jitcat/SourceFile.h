@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 
 namespace jitcat
@@ -15,6 +16,7 @@ namespace jitcat
 	namespace Tokenizer
 	{
 		class Document;
+		class ParseToken;
 	}
 	namespace AST
 	{
@@ -35,10 +37,14 @@ namespace jitcat
 
 		bool hasErrors() const;
 		AST::CatSourceFile* getAST() const;
+		const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& getSourceTokens() const;
+		const Tokenizer::Document* getSourceText() const;
 
 	private:
 		std::unique_ptr<Tokenizer::Document> sourceText;
 		std::unique_ptr<Parser::SLRParseResult> parseResult;
+
+		std::vector<std::unique_ptr<Tokenizer::ParseToken>> sourceTokens;
 
 		Reflection::ReflectableHandle errorManagerHandle;
 	};

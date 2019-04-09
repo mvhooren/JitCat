@@ -29,7 +29,7 @@ TokenizerBase::~TokenizerBase()
 }
 
 
-bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& tokens, ParseToken* eofToken)
+bool TokenizerBase::tokenize(Document* document, std::vector<std::unique_ptr<ParseToken>>& tokens, ParseToken* eofToken)
 {
 	document->clearLineLookup();
 	const char* data = document->getDocumentData().c_str();
@@ -44,7 +44,7 @@ bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& token
 			if (token != nullptr)
 			{
 				found = true;
-				tokens.push_back(token);
+				tokens.emplace_back(token);
 				position += token->getLexeme().length();
 				break;
 			}
@@ -54,7 +54,7 @@ bool TokenizerBase::tokenize(Document* document, std::vector<ParseToken*>& token
 			return false;
 		}
 	}
-	tokens.push_back(eofToken);
+	tokens.emplace_back(eofToken);
 	document->addNewLine((int)(position - data));
 	return true;
 }

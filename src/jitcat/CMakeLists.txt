@@ -98,7 +98,6 @@ set(Source_Cat_ASTNodes_ASTHelper
 	${JitCatHeaderPath}/InfixOperatorOptimizer.h
 	ASTHelper.cpp
 	${JitCatHeaderPath}/ASTHelper.h
-	${JitCatHeaderPath}/CatFunctionParameterPack.h
 )
 
 set(Source_Cat_CodeGeneration_LLVM
@@ -240,6 +239,7 @@ set(Source_Reflection_TypeInfo
 set(Source_Tokenizer
 	Document.cpp
 	${JitCatHeaderPath}/Document.h
+	${JitCatHeaderPath}/DocumentSelection.h
 	${JitCatHeaderPath}/Lexeme.h
 	ParseToken.cpp
 	${JitCatHeaderPath}/ParseToken.h

@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <set>
 #include <sstream>
 
@@ -36,7 +37,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	Document doc(expression.c_str(), expression.size());
 
 	CatTokenizer tokenizer;
-	std::vector<ParseToken*> tokens;
+	std::vector<std::unique_ptr<ParseToken>> tokens;
 	tokenizer.tokenize(&doc, tokens, nullptr);
 	int startingTokenIndex = findStartTokenIndex(doc, (int)cursorPosition - 1, tokens);
 	while (startingTokenIndex >= 0 && tokens[(unsigned int)startingTokenIndex] == nullptr)
@@ -176,7 +177,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 }
 
 
-std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<ParseToken*>& tokens, int startingTokenIndex, std::string& expressionTailEnd)
+std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd)
 {
 	bool readTailEnd = false;
 	//Tokenize the entire expression, then find the token at the cursorPosition, then backtrack from there to find the 
@@ -185,7 +186,7 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 	{
 		return std::vector<IdentifierToken*>();
 	}
-	ParseToken* startingToken = tokens[(unsigned int)startingTokenIndex];
+	ParseToken* startingToken = tokens[(unsigned int)startingTokenIndex].get();
 	std::vector<IdentifierToken*> subExpressions;
 	if (startingToken->getTokenID() == IdentifierToken::getID()
 		|| (startingToken->getTokenID() == OneCharToken::getID() 
@@ -255,7 +256,7 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 			}
 			else if (tokens[i]->getTokenID() == IdentifierToken::getID())
 			{
-				subExpressions.push_back(static_cast<IdentifierToken*>(tokens[i]));
+				subExpressions.push_back(static_cast<IdentifierToken*>(tokens[i].get()));
 			}
 			else if (tokens[i]->getTokenID() == WhitespaceToken::getID()
 					 || tokens[i]->getTokenID() == CommentToken::getID())
@@ -274,11 +275,11 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 }
 
 
-int AutoCompletion::findStartTokenIndex(const Document& doc, int cursorPosition, const std::vector<ParseToken*>& tokens)
+int AutoCompletion::findStartTokenIndex(const Document& doc, int cursorPosition, const std::vector<std::unique_ptr<ParseToken>>& tokens)
 {
 	for (int i = 0; i < (int)tokens.size(); i++)
 	{
-		ParseToken* token = tokens[i];
+		ParseToken* token = tokens[i].get();
 		if (token != nullptr)
 		{
 			const Lexeme& lexeme = token->getLexeme();
@@ -369,13 +370,13 @@ void AutoCompletion::addIfPartialMatch(const std::string& text, std::vector<Auto
 }
 
 
-bool AutoCompletion::isGlobalScopeAutoCompletable(const std::vector<ParseToken*>& tokens, int startingTokenIndex)
+bool AutoCompletion::isGlobalScopeAutoCompletable(const std::vector<std::unique_ptr<ParseToken>>& tokens, int startingTokenIndex)
 {
 	if (startingTokenIndex < 0)
 	{
 		return true;
 	}
-	ParseToken* startingToken = tokens[startingTokenIndex];
+	ParseToken* startingToken = tokens[startingTokenIndex].get();
 	while (startingToken->getTokenID() == WhitespaceToken::getID())
 	{
 		startingTokenIndex--;
@@ -385,7 +386,7 @@ bool AutoCompletion::isGlobalScopeAutoCompletable(const std::vector<ParseToken*>
 		}
 		else
 		{
-			startingToken = tokens[startingTokenIndex];
+			startingToken = tokens[startingTokenIndex].get();
 		}
 	}
 	//There are several types of token after which it does not make sense to do any autocompletion

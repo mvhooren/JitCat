@@ -90,19 +90,19 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	}
 	compileTimeContext->removeScope(parametersScopeId);
 	compileTimeContext->setCurrentFunction(nullptr);
-	if (!type->getType().isVoidType())
+	bool unreachableCodeDetected = false;
+	auto returnCheck = scopeBlock->checkControlFlow(compileTimeContext, errorManager, this, unreachableCodeDetected);
+	if(!type->getType().isVoidType() &&(!returnCheck.has_value() || !(*returnCheck)))
 	{
-		bool unreachableCodeDetected = false;
-		auto returnCheck = scopeBlock->checkControlFlow(compileTimeContext, errorManager, this, unreachableCodeDetected);
-		if(!returnCheck.has_value() || !(*returnCheck))
-		{
-			errorManager->compiledWithError("Function is missing a return statement.", this, compileTimeContext->getContextName(), getLexeme());
-			return false;
-		}
-		else if (unreachableCodeDetected)
-		{
-			return false;
-		}
+		const Tokenizer::Lexeme& typeLexeme = type->getLexeme();
+		const Tokenizer::Lexeme& paramLexeme = parameters->getLexeme();
+		Tokenizer::Lexeme errorLexeme = Tokenizer::Lexeme(typeLexeme.data(), paramLexeme.data() - typeLexeme.data() + paramLexeme.length() - 1);
+		errorManager->compiledWithError("Not all control flow paths return a value.", this, compileTimeContext->getContextName(), errorLexeme);
+		return false;
+	}
+	else if (unreachableCodeDetected)
+	{
+		return false;
 	}
 	errorManager->compiledWithoutErrors(this);
 	return true;

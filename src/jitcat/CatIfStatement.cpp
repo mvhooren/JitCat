@@ -62,7 +62,7 @@ bool jitcat::AST::CatIfStatement::typeCheck(CatRuntimeContext* compiletimeContex
 	bool conditionIsBool = condition->getType().isBoolType();
 	if (!conditionIsBool)
 	{
-		errorManager->compiledWithError("Condition expression does not evaluate to a boolean.", errorContext, compiletimeContext->getContextName(), getLexeme());
+		errorManager->compiledWithError("Condition expression does not evaluate to a boolean.", errorContext, compiletimeContext->getContextName(), condition->getLexeme());
 	}
 	return conditionOk && ifBodyOk && elseBodyOk && conditionIsBool;
 }
@@ -88,7 +88,14 @@ std::optional<bool> jitcat::AST::CatIfStatement::checkControlFlow(CatRuntimeCont
 	auto ifBodyReturns = ifBody->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
 	if (elseNode == nullptr)
 	{
-		return ifBodyReturns;
+		if (condition->isConst() && std::any_cast<bool>(condition->execute(compiletimeContext)))
+		{
+			return ifBodyReturns;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	else
 	{

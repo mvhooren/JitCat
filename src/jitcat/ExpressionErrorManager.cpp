@@ -52,10 +52,10 @@ void ExpressionErrorManager::compiledWithError(const std::string& errorMessage, 
 	error->errorLexeme = errorLexeme;
 	if (currentDocument != nullptr)
 	{
-		auto [line, column, length] = currentDocument->getLineColumnAndLength(errorLexeme);
+		auto [line, column] = currentDocument->getLineAndColumnNumber(errorLexeme);
 		error->errorLine = line;
 		error->errorColumn = column;
-		error->errorLength = length;
+		error->errorLength = (int)errorLexeme.length();
 	}
 	else
 	{

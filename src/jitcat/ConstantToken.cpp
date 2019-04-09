@@ -299,12 +299,14 @@ ConstantType ConstantToken::parseBool(const char* text, std::size_t textLength, 
 {
 	if (textLength - offset >= 4)
 	{
-		if ((text[0] == 't' || text[0] == 'T') && (text[1] == 'r' || text[1] == 'R') && (text[2] == 'u' || text[2] == 'U') && (text[3] == 'e' || text[3] == 'E'))
+		if ((text[0] == 't' || text[0] == 'T') && (text[1] == 'r' || text[1] == 'R') && (text[2] == 'u' || text[2] == 'U') && (text[3] == 'e' || text[3] == 'E') 
+			&& !ParseHelper::isAlphaNumeric(text[4]) && text[4] != '_') 
 		{
 			offset += 4;
 			return ConstantType::Bool;
 		}
-		else if((text[0] == 'f' || text[0] == 'F') && (text[1] == 'a' || text[1] == 'A') && (text[2] == 'l' || text[2] == 'L') && (text[3] == 's' || text[3] == 'S') && (text[4] == 'e' || text[4] == 'E'))
+		else if((text[0] == 'f' || text[0] == 'F') && (text[1] == 'a' || text[1] == 'A') && (text[2] == 'l' || text[2] == 'L') && (text[3] == 's' || text[3] == 'S') && (text[4] == 'e' || text[4] == 'E')
+				&& !ParseHelper::isAlphaNumeric(text[5]) && text[5] != '_')
 		{
 			offset += 5;
 			return ConstantType::Bool;
