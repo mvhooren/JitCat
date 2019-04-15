@@ -76,7 +76,8 @@ namespace jitcat
 		bool isContainerType() const;
 		bool isVectorType() const;
 		bool isMapType() const;
-
+		
+		bool isTriviallyCopyable() const;
 		bool isWritable() const;
 		bool isConst() const;
 

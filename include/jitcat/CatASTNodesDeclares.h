@@ -32,5 +32,6 @@ namespace jitcat::AST
 	class CatTypedExpression;
 	class CatTypeNode;
 	class CatVariableDeclaration;
+	class CatVariableDefinition;
 
 } //End namespace jitcat::AST

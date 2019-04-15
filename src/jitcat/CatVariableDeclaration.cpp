@@ -81,7 +81,7 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 			return false;
 		}
 	}
-	CatScopeBlock* currentScope = compiletimeContext->getCurrentScope();
+	CatScope* currentScope = compiletimeContext->getCurrentScope();
 	if (currentScope != nullptr)
 	{
 		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());

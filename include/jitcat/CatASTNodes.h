@@ -33,3 +33,4 @@
 #include "jitcat/CatStatement.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatVariableDeclaration.h"
+#include "jitcat/CatVariableDefinition.h"

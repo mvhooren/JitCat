@@ -38,7 +38,7 @@ struct MemberFunctionInfo
 {
 	MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): memberFunctionName(memberFunctionName), returnType(returnType) {};
 	virtual ~MemberFunctionInfo() {}
-	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
+	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
 	virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
 	inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
 
@@ -98,7 +98,7 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) override
+	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -157,7 +157,7 @@ struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) 
+	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -216,7 +216,7 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters)
+	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -275,7 +275,7 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	inline virtual std::any call(std::any& base, const std::vector<std::any>& parameters) 
+	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
 	{ 
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});

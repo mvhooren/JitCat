@@ -226,13 +226,13 @@ AST::CatFunctionDefinition* jitcat::CatRuntimeContext::getCurrentFunction() cons
 }
 
 
-void jitcat::CatRuntimeContext::setCurrentScope(AST::CatScopeBlock* scope)
+void jitcat::CatRuntimeContext::setCurrentScope(CatScope* scope)
 {
 	currentScope = scope;
 }
 
 
-AST::CatScopeBlock* jitcat::CatRuntimeContext::getCurrentScope() const
+CatScope* jitcat::CatRuntimeContext::getCurrentScope() const
 {
 	return currentScope;
 }

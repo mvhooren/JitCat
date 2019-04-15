@@ -7,16 +7,37 @@
 
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatFunctionDefinition.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTypeNode.h"
+#include "jitcat/CatVariableDefinition.h"
+#include "jitcat/CustomTypeInfo.h"
+#include <cassert>
 
 using namespace jitcat;
 using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, const Tokenizer::Lexeme& lexeme):
+jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme):
 	CatDefinition(lexeme),
-	name(name)
+	name(name),
+	definitions(std::move(definitions)),
+	scopeId(InvalidScopeID),
+	customType(new CustomTypeInfo(name.c_str()))
 {
+	for (auto& iter : this->definitions)
+	{
+		switch (iter->getNodeType())
+		{
+			case CatASTNodeType::ClassDefinition:		classDefinitions.push_back(static_cast<CatClassDefinition*>(iter.get())); break;
+			case CatASTNodeType::FunctionDefinition:	functionDefinitions.push_back(static_cast<CatFunctionDefinition*>(iter.get())); break;
+			case CatASTNodeType::VariableDefinition:	variableDefinitions.push_back(static_cast<CatVariableDefinition*>(iter.get())); break;
+			default:
+				assert(false);
+		}
+	}
 }
 
 
@@ -27,7 +48,20 @@ jitcat::AST::CatClassDefinition::~CatClassDefinition()
 
 void jitcat::AST::CatClassDefinition::print() const
 {
-	CatLog::log("class ", name, "{}");
+	if (definitions.size() == 0)
+	{
+		CatLog::log("class ", name, "{}");
+	}
+	else
+	{
+		CatLog::log("class ", name, "\n{");
+		for (auto& iter : definitions)
+		{
+			iter->print();
+			CatLog::log("\n\n");
+		}
+		CatLog::log("}\n\n");
+	}
 }
 
 
@@ -39,5 +73,55 @@ CatASTNodeType jitcat::AST::CatClassDefinition::getNodeType()
 
 bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 {
-	return false;
+	bool noErrors = true;
+
+	for (auto& iter: classDefinitions)
+	{
+		noErrors &= iter->typeCheck(compileTimeContext);
+	}
+
+	scopeId = compileTimeContext->addCustomTypeScope(customType.get());
+	CatScope* previousScope = compileTimeContext->getCurrentScope();
+	compileTimeContext->setCurrentScope(this);
+
+	for (auto& iter: variableDefinitions)
+	{
+		bool valid = iter->typeCheck(compileTimeContext);
+		noErrors &= valid;
+	}
+
+	for (auto& iter: functionDefinitions)
+	{
+		bool valid = iter->typeCheck(compileTimeContext);
+		noErrors &= valid;
+	}
+
+	compileTimeContext->removeScope(scopeId);
+	compileTimeContext->setCurrentScope(previousScope);
+	return noErrors;
+}
+
+
+bool jitcat::AST::CatClassDefinition::isTriviallyCopyable() const
+{
+	for (const auto& iter : variableDefinitions)
+	{
+		if (!iter->getType().getType().isTriviallyCopyable())
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+
+Reflection::CustomTypeInfo* jitcat::AST::CatClassDefinition::getCustomType()
+{
+	return customType.get();
+}
+
+
+CatScopeID jitcat::AST::CatClassDefinition::getScopeId() const
+{
+	return scopeId;
 }

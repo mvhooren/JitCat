@@ -11,6 +11,11 @@
 
 #include <set>
 
+namespace jitcat::AST
+{
+	class CatFunctionDefinition;
+}
+
 namespace jitcat::Reflection
 {
 	class CustomTypeInstance;
@@ -41,6 +46,8 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, bool isWritable = true, bool isConst = false);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
+
+		void addMemberFunction(const std::string& memberFunctionName, AST::CatFunctionDefinition* functionDefinition);
 
 		//This will not shrink the typeSize, only remove the member from the list.
 		//The data will only shrink after a restart of the program.

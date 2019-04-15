@@ -238,6 +238,12 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 }
 
 
+void jitcat::Reflection::CustomTypeInfo::addMemberFunction(const std::string& memberFunctionName, AST::CatFunctionDefinition* functionDefinition)
+{
+
+}
+
+
 void CustomTypeInfo::removeMember(const std::string& memberName)
 {
 	auto iter = members.find(Tools::toLowerCase(memberName));

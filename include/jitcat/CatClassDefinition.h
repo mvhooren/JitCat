@@ -9,23 +9,53 @@
 
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatGenericType.h"
+#include "jitcat/CatScope.h"
 
+#include <memory>
+#include <vector>
+
+namespace jitcat::Reflection
+{
+	class CustomTypeInfo;
+}
 
 namespace jitcat::AST
 {
+	class CatFunctionDefinition;
+	class CatVariableDefinition;
 
-	class CatClassDefinition: public CatDefinition
+	class CatClassDefinition: public CatDefinition, public CatScope
 	{
 	public:
-		CatClassDefinition(const std::string& name, const Tokenizer::Lexeme& lexeme);
+		CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatClassDefinition();
 
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 
+		bool isTriviallyCopyable() const;
+
+		virtual Reflection::CustomTypeInfo* getCustomType() override final;
+		virtual CatScopeID getScopeId() const override final;
+
 	private:
 		std::string name;
+
+		//All definitions
+		std::vector<std::unique_ptr<CatDefinition>> definitions;
+
+		//All class definitions
+		std::vector<CatClassDefinition*> classDefinitions;
+
+		//All global function definitions
+		std::vector<CatFunctionDefinition*> functionDefinitions;
+
+		//All variable definitions
+		std::vector<CatVariableDefinition*> variableDefinitions;
+
+		CatScopeID scopeId;
+		std::unique_ptr<Reflection::CustomTypeInfo> customType;
 	};
 
 };

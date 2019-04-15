@@ -62,7 +62,7 @@ std::any CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		{
 			argumentValues.push_back(argument->execute(runtimeContext));
 		}
-		return memberFunctionInfo->call(baseValue, argumentValues);
+		return memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
 	}
 	assert(false);
 	return std::any();

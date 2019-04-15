@@ -35,6 +35,7 @@ namespace jitcat::Grammar
 			FunctionParameters,
 			FunctionParameterDefinitions,
 			VariableDeclaration,
+			VariableDefinition,
 			VariableInitialization,
 			OperatorP2,
 			OperatorP3,
@@ -81,6 +82,7 @@ namespace jitcat::Grammar
 		static AST::ASTNode* functionDefinition(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionParameterDefinitions(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* variableDeclaration(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* variableDefinition(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* typeName(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* ifStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* returnStatement(const Parser::ASTNodeParser& nodeParser);

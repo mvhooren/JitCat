@@ -17,6 +17,8 @@
 #include <any>
 #include <cassert>
 #include <memory>
+#include <vector>
+
 
 namespace jitcat::Reflection
 {
@@ -26,6 +28,7 @@ namespace jitcat::Reflection
 
 namespace jitcat::AST
 {
+	class CatAssignableExpression;
 	class CatTypeNode;
 	class CatFunctionParameterDefinitions;
 	class CatScopeBlock;
@@ -40,7 +43,9 @@ namespace jitcat::AST
 		virtual CatASTNodeType getNodeType() override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 		
-		std::any executeFunctionWithPack(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterPack);
+		std::any executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId);
+
+		std::any executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments);
 
 		template<typename... ArgumentsT>
 		std::any executeFunction(CatRuntimeContext* runtimeContext, ArgumentsT... arguments);
@@ -57,12 +62,15 @@ namespace jitcat::AST
 		Reflection::CustomTypeInstance* createParameterPack(ArgumentsT... arguments);
 
 	private:
+		//Reflection::CustomTypeInstance* createAnyParametersPack(const std::vector<std::any>& arguments, CatScopeID& createdScopeId);
 		Reflection::CustomTypeInstance* createCustomTypeInstance() const;
+		CatScopeID pushScope(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* instance);
 
 	private:
 		std::string name;
 		std::unique_ptr<CatTypeNode> type;
 		std::unique_ptr<CatFunctionParameterDefinitions> parameters;
+		std::vector<std::unique_ptr<CatAssignableExpression>> parameterAssignables;
 		CatScopeID parametersScopeId;
 		std::unique_ptr<CatScopeBlock> scopeBlock;
 		Reflection::ReflectableHandle errorManagerHandle;
@@ -74,12 +82,13 @@ namespace jitcat::AST
 	{
 		if constexpr (sizeof...(ArgumentsT) == 0)
 		{
-			return executeFunctionWithPack(runtimeContext, nullptr);
+			return executeFunctionWithPack(runtimeContext, InvalidScopeID);
 		}
 		else
 		{
 			std::unique_ptr<Reflection::CustomTypeInstance> instance(createParameterPack(std::forward<ArgumentsT>(arguments)...));
-			return executeFunctionWithPack(runtimeContext, instance.get());
+			CatScopeID scopeId = pushScope(runtimeContext, instance.get());
+			return executeFunctionWithPack(runtimeContext, scopeId);
 		}
 	}
 

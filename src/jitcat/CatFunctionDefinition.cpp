@@ -6,8 +6,9 @@
 */
 
 #include "jitcat/CatFunctionDefinition.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
-
+#include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
@@ -17,6 +18,8 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
+
+#include <cassert>
 
 
 using namespace jitcat;
@@ -83,6 +86,11 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	{
 		parametersScopeId = compileTimeContext->addCustomTypeScope(parameters->getCustomType());
 	}
+	for (int i = 0; i < parameters->getNumParameters(); i++)
+	{
+		parameterAssignables.emplace_back(new CatIdentifier(parameters->getParameterName(i), parameters->getParameterLexeme(i)));
+		parameterAssignables.back()->typeCheck(compileTimeContext, errorManager, this);
+	}
 	if (!scopeBlock->typeCheck(compileTimeContext, errorManager, this))
 	{
 		compileTimeContext->removeScope(parametersScopeId);
@@ -109,22 +117,40 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 }
 
 
-std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* parameterPack)
+std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId)
 {
-	CatScopeID scopeId = InvalidScopeID;
-	if (parameters->getNumParameters() > 0)
-	{
-		assert(parameterPack != nullptr);
-		scopeId = runtimeContext->addCustomTypeScope(parameters->getCustomType(), parameterPack);
-		//The scopeId should match the scopeId that was obtained during type checking.
-		assert(scopeId == parametersScopeId);
-		//The parameter values should be of the correct type.
-		assert(parameterPack->typeInfo == parameters->getCustomType());
-	}
 	std::any result = scopeBlock->execute(runtimeContext);
 	runtimeContext->setReturning(false);
-	runtimeContext->removeScope(scopeId);
+	runtimeContext->removeScope(packScopeId);
 	return result;
+}
+
+
+std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments)
+{
+	assert(parameterAssignables.size() == arguments.size());
+	CatScopeID scopeId = InvalidScopeID;
+	std::unique_ptr<CustomTypeInstance> parametersInstance;
+	if (parameters->getNumParameters() > 0)
+	{
+		parametersInstance.reset(createCustomTypeInstance());
+		//The parameter values should be of the correct type.
+		assert(parametersInstance->typeInfo == parameters->getCustomType());
+
+		scopeId = pushScope(runtimeContext, parametersInstance.get());
+		//The scopeId should match the scopeId that was obtained during type checking.
+		assert(scopeId == parametersScopeId);
+
+		int i = 0;
+		for (auto& iter : parameterAssignables)
+		{
+			AssignableType assignableType = AssignableType::None;
+			std::any target = iter->executeAssignable(runtimeContext, assignableType);
+			ASTHelper::doAssignment(target, arguments[i], iter->getType(), assignableType);
+			i++;
+		}
+	}
+	return executeFunctionWithPack(runtimeContext, scopeId);
 }
 
 
@@ -167,4 +193,10 @@ const std::string & jitcat::AST::CatFunctionDefinition::getFunctionName() const
 Reflection::CustomTypeInstance* jitcat::AST::CatFunctionDefinition::createCustomTypeInstance() const
 {
 	return parameters->getCustomType()->createInstance();
+}
+
+
+CatScopeID jitcat::AST::CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* instance)
+{
+	return runtimeContext->addCustomTypeScope(parameters->getCustomType(), instance);
 }

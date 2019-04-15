@@ -39,6 +39,7 @@ namespace jitcat::AST
 		int getNumParameters() const;
 		const std::string& getParameterName(int index) const;
 		const CatTypeNode* getParameterType(int index) const;
+		const Tokenizer::Lexeme& getParameterLexeme(int index) const;
 
 	private:
 		std::vector<std::unique_ptr<CatVariableDeclaration>> parameters;

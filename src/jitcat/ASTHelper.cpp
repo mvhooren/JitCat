@@ -51,7 +51,7 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 }
 
 
-void ASTHelper::doAssignment(std::any& target, std::any& source, const CatGenericType& type, AssignableType targetAssignableType)
+void ASTHelper::doAssignment(std::any& target, const std::any& source, const CatGenericType& type, AssignableType targetAssignableType)
 {
 	if (targetAssignableType == AssignableType::Pointer)
 	{

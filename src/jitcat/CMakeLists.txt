@@ -79,6 +79,7 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatPrefixOperator.h
 	CatReturnStatement.cpp
 	${JitCatHeaderPath}/CatReturnStatement.h
+	${JitCatHeaderPath}/CatScope.h
 	CatScopeBlock.cpp
 	${JitCatHeaderPath}/CatScopeBlock.h
 	CatScopeRoot.cpp
@@ -91,6 +92,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatTypedExpression.h
 	CatVariableDeclaration.cpp
 	${JitCatHeaderPath}/CatVariableDeclaration.h
+	CatVariableDefinition.cpp
+	${JitCatHeaderPath}/CatVariableDefinition.h
 )
 
 set(Source_Cat_ASTNodes_ASTHelper
@@ -221,6 +224,7 @@ set(Source_Reflection_TypeInfo
 	${JitCatHeaderPath}/CustomTypeInfo.h
 	CustomTypeInstance.cpp
 	${JitCatHeaderPath}/CustomTypeInstance.h
+	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
 	${JitCatHeaderPath}/CustomTypeMemberInfo.h
 	${JitCatHeaderPath}/CustomTypeMemberInfoHeaderImplementation.h
 	${JitCatHeaderPath}/MemberFunctionInfo.h

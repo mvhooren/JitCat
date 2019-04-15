@@ -57,7 +57,7 @@ CatASTNodeType CatScopeBlock::getNodeType()
 bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	CatScopeID myScopeId = compiletimeContext->addCustomTypeScope(customType.get());
-	CatScopeBlock* previousScope = compiletimeContext->getCurrentScope();
+	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
 	for (auto& iter : statements)
@@ -75,7 +75,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 	std::unique_ptr<CustomTypeInstance> scopeInstance;
 	scopeInstance.reset(customType->createInstance());
 	scopeId = runtimeContext->addCustomTypeScope(customType.get(), scopeInstance.get());
-	CatScopeBlock* previousScope = runtimeContext->getCurrentScope();
+	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 	std::any result = std::any();
 	for (auto& iter : statements)

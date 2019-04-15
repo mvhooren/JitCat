@@ -30,6 +30,7 @@ namespace jitcat::AST
 		MemberFunctionCall,
 		ScopeRoot,
 		VariableDeclaration,
+		VariableDefinition,
 		IfStatement,
 		ReturnStatement,
 		ScopeBlock

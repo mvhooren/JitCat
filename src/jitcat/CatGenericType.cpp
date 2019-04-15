@@ -255,6 +255,12 @@ bool CatGenericType::isMapType() const
 }
 
 
+bool jitcat::CatGenericType::isTriviallyCopyable() const
+{
+	return isBasicType() && basicType != BasicType::String;
+}
+
+
 bool CatGenericType::isWritable() const
 {
 	return writable;

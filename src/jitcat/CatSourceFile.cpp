@@ -10,6 +10,7 @@
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatVariableDefinition.h"
 
 #include <cassert>
 
@@ -29,11 +30,10 @@ jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<s
 		{
 			case CatASTNodeType::ClassDefinition:		classDefinitions.push_back(static_cast<CatClassDefinition*>(iter.get())); break;
 			case CatASTNodeType::FunctionDefinition:	functionDefinitions.push_back(static_cast<CatFunctionDefinition*>(iter.get())); break;
+			case CatASTNodeType::VariableDefinition:	variableDefinitions.push_back(static_cast<CatVariableDefinition*>(iter.get())); break;
 			default:
 				assert(false);
-
 		}
-
 	}
 }
 

@@ -51,13 +51,15 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		//Possible definitions
 		rule(Prod::Definition, {prod(Prod::ClassDefinition)}, pass);
 		rule(Prod::Definition, {prod(Prod::FunctionDefinition)}, pass);
+		rule(Prod::Definition, {prod(Prod::VariableDefinition), term(one, OneChar::Semicolon)}, pass);
 		
 		//Class definition
-		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen)/*, prod(Prod::ClassContents)*/, term(one, OneChar::BraceClose)}, classDefinition);
+		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen), term(one, OneChar::BraceClose)}, classDefinition);
+		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen), prod(Prod::Definitions), term(one, OneChar::BraceClose)}, classDefinition);
 
-		//Variable declaration
-		rule(Prod::VariableDeclaration, {prod(Prod::Type), term(id, Identifier::Identifier)}, variableDeclaration);
-		rule(Prod::VariableDeclaration, {prod(Prod::Type), term(id, Identifier::Identifier), term(one, OneChar::Assignment), prod(Prod::Expression)}, variableDeclaration);
+		//Variable definition (definition)
+		rule(Prod::VariableDefinition,  {prod(Prod::Type), term(id, Identifier::Identifier)}, variableDefinition);
+		rule(Prod::VariableDefinition, {prod(Prod::Type), term(id, Identifier::Identifier), term(one, OneChar::Assignment), prod(Prod::Expression)}, variableDefinition);
 
 		//Function definition
 		rule(Prod::FunctionDefinition, {prod(Prod::Type), term(id, Identifier::Identifier), prod(Prod::FunctionParameters), prod(Prod::ScopeBlock)}, functionDefinition);
@@ -72,11 +74,16 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::ScopeBlockStatements, {prod(Prod::Statement), prod(Prod::ScopeBlockStatements)}, link);
 		rule(Prod::ScopeBlockStatements, {prod(Prod::Statement)}, pass);
 
+
 		//All possible statements
 		rule(Prod::Statement, {prod(Prod::Return), term(one, OneChar::Semicolon)}, pass);
 		rule(Prod::Statement, {prod(Prod::Expression), term(one, OneChar::Semicolon)}, pass);
 		rule(Prod::Statement, {prod(Prod::VariableDeclaration), term(one, OneChar::Semicolon)}, pass);
 		rule(Prod::Statement, {prod(Prod::IfThen)}, pass);
+
+		//Variable declaration (statement)
+		rule(Prod::VariableDeclaration, {prod(Prod::Type), term(id, Identifier::Identifier)}, variableDeclaration);
+		rule(Prod::VariableDeclaration, {prod(Prod::Type), term(id, Identifier::Identifier), term(one, OneChar::Assignment), prod(Prod::Expression)}, variableDeclaration);
 
 		//If statement
 		rule(Prod::IfThen, {term(id, Identifier::If), term(one, OneChar::ParenthesesOpen), prod(Prod::Expression), term(one, OneChar::ParenthesesClose), prod(Prod::ScopeBlock)}, ifStatement);
@@ -188,6 +195,7 @@ const char* CatGrammar::getProductionName(int production) const
 		case Prod::FunctionParameters:			return "function parameters";
 		case Prod::FunctionParameterDefinitions:return "function parameter definitions";
 		case Prod::VariableDeclaration:			return "variable declaration";
+		case Prod::VariableDefinition:			return "variable definition";
 		case Prod::OperatorP2:					return "P2";
 		case Prod::OperatorP3:					return "P3";
 		case Prod::OperatorP4:					return "P4";
@@ -307,7 +315,11 @@ ASTNode* jitcat::Grammar::CatGrammar::sourceFile(const Parser::ASTNodeParser& no
 ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParser& nodeParser)
 {
 	std::string className(nodeParser.getTerminalByIndex(1)->getLexeme());
-	return new CatClassDefinition(className, nodeParser.getStackLexeme());
+	CatASTNode* astNode = static_cast<CatASTNode*>(nodeParser.getASTNodeByIndex(0));
+	std::vector<std::unique_ptr<CatDefinition>> definitions;
+	Lexeme lexeme = nodeParser.getStackLexeme();
+	unLink(nodeParser.getASTNodeByIndex(0), definitions);
+	return new CatClassDefinition(className, std::move(definitions), nodeParser.getStackLexeme());
 }
 
 
@@ -341,6 +353,20 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::variableDeclaration(const Parser::AST
 		 initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
 	 }
 	 return new CatVariableDeclaration(type, name, nodeParser.getStackLexeme(), initExpression);
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::variableDefinition(const Parser::ASTNodeParser & nodeParser)
+{
+	 CatTypeNode* type = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	 std::string name(nodeParser.getTerminalByIndex(0)->getLexeme());
+	 CatTypedExpression* initExpression = nullptr;
+	 if (nodeParser.getNumItems() > 2)
+	 {
+		 //declaration has initialization
+		 initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
+	 }
+	 return new CatVariableDefinition(type, name, nodeParser.getStackLexeme(), initExpression);
 }
 
 

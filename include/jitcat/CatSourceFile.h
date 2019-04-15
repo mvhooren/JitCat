@@ -42,8 +42,11 @@ namespace jitcat::AST
 		//All class definitions
 		std::vector<const CatClassDefinition*> classDefinitions;
 
-		//All function definitions
+		//All global function definitions
 		std::vector<CatFunctionDefinition*> functionDefinitions;
+
+		//All global variable declarations
+		std::vector<CatVariableDefinition*> variableDefinitions;
 	};
 
 };

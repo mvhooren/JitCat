@@ -36,6 +36,7 @@ namespace jitcat::Reflection
 namespace jitcat
 {
 	class CatRuntimeContext;
+	class CatScope;
 	class ErrorContext;
 	class ExpressionErrorManager;
 	namespace AST
@@ -109,8 +110,8 @@ namespace jitcat
 		void setCurrentFunction(AST::CatFunctionDefinition* function);
 		AST::CatFunctionDefinition* getCurrentFunction() const;
 
-		void setCurrentScope(AST::CatScopeBlock* scope);
-		AST::CatScopeBlock* getCurrentScope() const;
+		void setCurrentScope(CatScope* scope);
+		CatScope* getCurrentScope() const;
 		Reflection::Reflectable* getCurrentScopeObject() const;
 
 		bool getIsReturning() const;
@@ -124,7 +125,7 @@ namespace jitcat
 	private:
 		int nextFunctionIndex;
 		AST::CatFunctionDefinition* currentFunctionDefinition;
-		AST::CatScopeBlock* currentScope;
+		CatScope* currentScope;
 
 		bool returning;
 

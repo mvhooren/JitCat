@@ -96,3 +96,9 @@ const CatTypeNode* jitcat::AST::CatFunctionParameterDefinitions::getParameterTyp
 {
 	return &(parameters[index]->getType());
 }
+
+
+const Tokenizer::Lexeme& jitcat::AST::CatFunctionParameterDefinitions::getParameterLexeme(int index) const
+{
+	return parameters[index]->getLexeme();
+}

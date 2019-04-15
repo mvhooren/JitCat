@@ -8,6 +8,7 @@
 #pragma once
 
 #include "jitcat/CatStatement.h"
+#include "jitcat/CatScope.h"
 #include "jitcat/CatScopeID.h"
 
 #include <any>
@@ -26,7 +27,7 @@ namespace jitcat::AST
 {
 	class CatStatement;
 
-	class CatScopeBlock: public CatStatement
+	class CatScopeBlock: public CatStatement, public CatScope
 	{
 	public:
 		CatScopeBlock(const std::vector<CatStatement*>& statementList, const Tokenizer::Lexeme& lexeme);
@@ -42,8 +43,8 @@ namespace jitcat::AST
 
 		bool containsReturnStatement() const;
 
-		Reflection::CustomTypeInfo* getCustomType();
-		CatScopeID getScopeId() const;
+		virtual Reflection::CustomTypeInfo* getCustomType() override final;
+		virtual CatScopeID getScopeId() const override final;
 
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;
