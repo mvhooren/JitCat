@@ -25,6 +25,7 @@ namespace jitcat::AST
 	public:
 		static void updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatTypedExpression* expression);
 		static void doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType);
+
 		//Source and target must be of the same type and target must be a writable type
 		static void doAssignment(std::any& target, std::any& source, const CatGenericType& type, Reflection::AssignableType targetAssignableType);
 	};

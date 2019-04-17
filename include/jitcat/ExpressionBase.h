@@ -57,7 +57,7 @@ namespace jitcat
 		virtual void compile(CatRuntimeContext* context) = 0;
 
 		//Gets the type of the expression.
-		const CatGenericType getType() const;
+		const CatGenericType& getType() const;
 
 	protected:
 		bool parse(CatRuntimeContext* context, const CatGenericType& expectedType);
