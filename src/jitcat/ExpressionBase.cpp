@@ -117,7 +117,7 @@ bool ExpressionBase::hasError() const
 }
 
 
-const CatGenericType ExpressionBase::getType() const
+const CatGenericType& ExpressionBase::getType() const
 {
 	return valueType;
 }
@@ -254,6 +254,11 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 					errorManager->compiledWithError(std::string(Tools::append("Expected a ", expectedType.toString())), errorContext, context->getContextName(), expressionLexeme);
 				}
 			}
+		}
+		else if (expectAssignable && !valueType.isWritable())
+		{
+			parseResult->success = false;
+			parseResult->errorMessage = std::string(Tools::append("Expression result is read only. Expected a writable value."));
 		}
 		if (parseResult->success)
 		{

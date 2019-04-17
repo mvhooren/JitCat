@@ -129,6 +129,8 @@ set(Source_Cat_Expression
 	${JitCatHeaderPath}/Expression.h
 	ExpressionAny.cpp
 	${JitCatHeaderPath}/ExpressionAny.h
+	ExpressionAssignAny.cpp
+	${JitCatHeaderPath}/ExpressionAssignAny.h
 	${JitCatHeaderPath}/ExpressionAssignment.h
 	${JitCatHeaderPath}/ExpressionAssignmentHeaderImplementation.h
 	ExpressionBase.cpp

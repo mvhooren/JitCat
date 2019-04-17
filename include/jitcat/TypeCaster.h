@@ -21,6 +21,7 @@ class TypeCaster
 public:
 	TypeCaster() {};
 	virtual ~TypeCaster() {};
+	virtual std::any cast(const std::any& pointer) const = 0;
 	virtual std::any cast(uintptr_t pointer) const = 0;
 	virtual std::any getNull() const = 0;
 	virtual std::any getNullVector() const = 0;
@@ -43,6 +44,12 @@ class ObjectTypeCaster: public TypeCaster
 public:
 	ObjectTypeCaster() {};
 	virtual ~ObjectTypeCaster() {};
+
+
+	virtual std::any cast(const std::any& pointer ) const override final
+	{
+		return std::any(static_cast<Reflectable*>(std::any_cast<ObjectT*>(pointer)));
+	}
 
 
 	virtual std::any cast(uintptr_t pointer) const override final

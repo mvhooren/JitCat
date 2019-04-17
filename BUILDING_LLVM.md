@@ -11,7 +11,7 @@ JitCat uses some of the latest features of LLVM, some of which are not yet inclu
 Therefore, you will have to build LLVM from source. Check out the trunk using SVN:  
 http://llvm.org/svn/llvm-project/llvm/trunk  
 JitCat will track the trunk as much as possible, but it can happen that updates to LLVM will break a JitCat build.  
-The last time this document was updated, JitCat was built against revision 350712.  
+The last time this document was updated, JitCat was built against revision 357703.  
 Once a stable LLVM version is released that includes everything JitCat needs, JitCat will target that version.  
 
 ## Read the documentation
