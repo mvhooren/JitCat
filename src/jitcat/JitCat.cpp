@@ -62,7 +62,9 @@ JitCat* JitCat::get()
 Parser::SLRParseResult* jitcat::JitCat::parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
 	std::vector<std::unique_ptr<ParseToken>> tokens;
-	SLRParseResult* result = parseFull(expression, tokens, context, errorManager, errorContext);
+	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
+	tokenizer->tokenize(expression, tokens, eofToken);
+	SLRParseResult* result = expressionParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context, errorManager, errorContext);
 	return result;
 }
 

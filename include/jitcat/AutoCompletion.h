@@ -17,6 +17,8 @@ namespace jitcat::Reflection
 {
 	class TypeInfo;
 }
+
+#include <memory>
 #include <string>
 #include <vector>
 
