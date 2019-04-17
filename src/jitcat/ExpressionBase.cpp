@@ -258,7 +258,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 		else if (expectAssignable && !valueType.isWritable())
 		{
 			parseResult->success = false;
-			parseResult->errorMessage = std::string(Tools::append("Expression result is read only. Expected a writable value."));
+			errorManager->compiledWithError("Expression result is read only. Expected a writable value.", errorContext, context->getContextName(), expressionLexeme);
 		}
 		if (parseResult->success)
 		{

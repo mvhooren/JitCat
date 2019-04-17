@@ -2,6 +2,7 @@
 #include "jitcat/AssignableType.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatAssignableExpression.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/SLRParseResult.h"
@@ -98,7 +99,7 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 
 void ExpressionAssignAny::compile(CatRuntimeContext* context)
 {
-	parse(context, CatGenericType());
+	parse(context, context->getErrorManager(), this, CatGenericType());
 }
 
 
