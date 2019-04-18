@@ -213,6 +213,47 @@ bool jitcat::Tools::equalsWhileIgnoringCase(const char* text1, const char* text2
 }
 
 
+bool jitcat::Tools::lessWhileIgnoringCase(const std::string& text1, const std::string& text2)
+{
+	const char* charText1 = text1.c_str();
+	const char* charText2 = text2.c_str();
+	while (true)
+	{
+		//Check whether char1 is maller than char2. Also automatically checks if text1 is shorter than text2, because the last character is always 0.
+		if (*charText1 != *charText2)
+		{
+			//get the two characters we are comparing here, converted to upper case
+			char char1 = toUpperCase(*charText1);
+			char char2 = toUpperCase(*charText2);
+
+			//We want underscore ('_') to be before all other characters, but NOT before whitespaces.
+			//Do this by simply changing their code to some weird ASCII codes that are never used anyway:
+			//30 is RS (record separator)
+			//31 is US (unit separator)
+			if (char1 == ' ')		char1 = 30;
+			else if (char1 == '_')	char1 = 31;
+
+			if (char2 == ' ')		char2 = 30;
+			else if (char2 == '_')	char2 = 31;
+
+			if (char1 != char2)
+			{
+				return char1 < char2;
+			}
+		}
+
+		//If char2 is 0, the strings are either equal or text1 is a longer string. In both cases, text1 is not smaller than text2.
+		if (*charText2 == '\0')
+		{
+			return false;
+		}
+
+		++charText1;
+		++charText2;
+	}
+}
+
+
 std::string jitcat::Tools::toHexBytes(const unsigned char* data, int length)
 {
 	std::stringstream stream;

@@ -46,6 +46,7 @@ namespace jitcat::Tools
 	bool equalsWhileIgnoringCase(const std::string& text1, const char* text2);
 	bool equalsWhileIgnoringCase(const char* text1, const std::string& text2);
 	bool equalsWhileIgnoringCase(const char* text1, const char* text2);
+	bool lessWhileIgnoringCase(const std::string& first, const std::string& second);
 
 	std::string toHexBytes(const unsigned char* data, int length);
 

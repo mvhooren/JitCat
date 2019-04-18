@@ -75,8 +75,16 @@ void ReflectedObject::createNestedObjects()
 
 	reflectableObjectsVector.push_back(nestedObjectPointer);
 	reflectableObjectsVector.push_back(nestedObjectUniquePointer.get());
+	reflectableUniqueObjectsVector.emplace_back(new NestedReflectedObject());
+	reflectableUniqueObjectsVector.emplace_back(new NestedReflectedObject());
+
+	reflectableObjectsMapCustomCompare["one"] = nestedObjectPointer;
+	reflectableObjectsMapCustomCompare["two"] = nestedObjectUniquePointer.get();
+
 	reflectableObjectsMap["one"] = nestedObjectPointer;
 	reflectableObjectsMap["two"] = nestedObjectUniquePointer.get();
+	reflectableUniqueObjectsMap.emplace("one", new NestedReflectedObject());
+	reflectableUniqueObjectsMap.emplace("two", new NestedReflectedObject());
 }
 
 
@@ -128,8 +136,12 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("nestedObjectUniquePointer", &ReflectedObject::nestedObjectUniquePointer)
 
 		.addMember("reflectableObjectsVector", &ReflectedObject::reflectableObjectsVector)
+		.addMember("reflectableUniqueObjectsVector", &ReflectedObject::reflectableUniqueObjectsVector)
 		//.addMember("floatVector", &ReflectedObject::floatVector) not yet supported
-		.addMember("reflectableObjectsMap", &ReflectedObject::reflectableObjectsMap);
+		.addMember("reflectableObjectsMap", &ReflectedObject::reflectableObjectsMap)
+		.addMember("reflectableObjectsMapCustomCompare", &ReflectedObject::reflectableObjectsMapCustomCompare)
+		.addMember("reflectableUniqueObjectsMap", &ReflectedObject::reflectableUniqueObjectsMap);
+	
 }
 
 

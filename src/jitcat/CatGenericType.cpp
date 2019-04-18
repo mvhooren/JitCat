@@ -24,11 +24,12 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, ContainerType containerType, bool writable, bool constant, const CatError* error_):
+CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant, const CatError* error_):
 	specificType(specificType),
 	basicType(basicType),
 	nestedType(nestedType),
 	containerType(containerType),
+	containerManipulator(containerManipulator),
 	writable(writable),
 	constant(constant)
 {
@@ -44,6 +45,7 @@ CatGenericType::CatGenericType(BasicType basicType, bool writable, bool constant
 	basicType(basicType),
 	nestedType(nullptr),
 	containerType(ContainerType::None),
+	containerManipulator(nullptr),
 	error(nullptr),
 	writable(writable),
 	constant(constant)
@@ -56,6 +58,7 @@ CatGenericType::CatGenericType():
 	basicType(BasicType::None),
 	nestedType(nullptr),
 	containerType(ContainerType::None),
+	containerManipulator(nullptr),
 	error(nullptr),
 	writable(false),
 	constant(false)
@@ -68,6 +71,7 @@ CatGenericType::CatGenericType(TypeInfo* objectType, bool writable, bool constan
 	basicType(BasicType::None),
 	nestedType(objectType),
 	containerType(ContainerType::None),
+	containerManipulator(nullptr),
 	error(nullptr),
 	writable(writable),
 	constant(constant)
@@ -75,11 +79,12 @@ CatGenericType::CatGenericType(TypeInfo* objectType, bool writable, bool constan
 }
 
 
-CatGenericType::CatGenericType(ContainerType containerType, TypeInfo* itemType, bool writable, bool constant):
+CatGenericType::CatGenericType(ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, TypeInfo* itemType, bool writable, bool constant):
 	specificType(SpecificType::Container),
 	basicType(BasicType::None),
 	nestedType(itemType),
 	containerType(containerType),
+	containerManipulator(containerManipulator),
 	error(nullptr),
 	writable(writable),
 	constant(constant)
@@ -92,6 +97,7 @@ CatGenericType::CatGenericType(const CatError& error):
 	basicType(BasicType::None),
 	nestedType(nullptr),
 	containerType(ContainerType::None),
+	containerManipulator(nullptr),
 	error(new CatError(error)),
 	writable(false),
 	constant(false)
@@ -104,6 +110,7 @@ CatGenericType::CatGenericType(const CatGenericType& other):
 	basicType(other.basicType),
 	nestedType(other.nestedType),
 	containerType(other.containerType),
+	containerManipulator(other.containerManipulator),
 	error(nullptr),
 	writable(other.writable),
 	constant(other.constant)
@@ -121,6 +128,7 @@ CatGenericType& CatGenericType::operator=(const CatGenericType& other)
 	basicType = other.basicType;
 	nestedType = other.nestedType;
 	containerType = other.containerType;
+	containerManipulator = other.containerManipulator;
 	writable = other.writable;
 	constant = other.constant;
 	if (other.error.get() != nullptr)
@@ -146,7 +154,7 @@ bool CatGenericType::operator==(const CatGenericType& other) const
 			case SpecificType::Error:		return error == other.error;
 			case SpecificType::Basic:		return basicType == other.basicType;
 			case SpecificType::Object:		return nestedType->getTypeName() == other.nestedType->getTypeName();
-			case SpecificType::Container:	return containerType == other.containerType && nestedType->getTypeName() == other.nestedType->getTypeName();
+			case SpecificType::Container:	return containerType == other.containerType && nestedType->getTypeName() == other.nestedType->getTypeName() && containerManipulator == other.containerManipulator;
 		}
 	}
 	else
@@ -275,19 +283,25 @@ bool CatGenericType::isConst() const
 
 CatGenericType CatGenericType::toUnmodified() const
 {
-	return CatGenericType(specificType, basicType, nestedType, containerType, false, false, error.get());
+	return CatGenericType(specificType, basicType, nestedType, containerType, containerManipulator, false, false, error.get());
 }
 
 
 CatGenericType CatGenericType::toUnwritable() const
 {
-	return CatGenericType(specificType, basicType, nestedType, containerType, false, constant, error.get());
+	return CatGenericType(specificType, basicType, nestedType, containerType, containerManipulator, false, constant, error.get());
 }
 
 
 CatGenericType CatGenericType::toWritable() const
 {
-	return CatGenericType(specificType, basicType, nestedType, containerType, true, constant, error.get());
+	return CatGenericType(specificType, basicType, nestedType, containerType, containerManipulator, true, constant, error.get());
+}
+
+
+Reflection::ContainerManipulator* jitcat::CatGenericType::getContainerManipulator() const
+{
+	return containerManipulator;
 }
 
 
@@ -450,14 +464,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 		} break;
 		case SpecificType::Container:
 		{
-			if (containerType == ContainerType::Vector)
-			{
-				return nestedType->getTypeCaster()->castToVectorOf(pointer);
-			}
-			else if (containerType == ContainerType::StringMap)
-			{
-				return nestedType->getTypeCaster()->castToStringIndexedMapOf(pointer);
-			}
+			return containerManipulator->createAnyPointer(pointer);
 		} break;
 	}
 	return std::any();
@@ -484,14 +491,7 @@ std::any CatGenericType::createDefault() const
 		} break;
 		case SpecificType::Container:
 		{
-			if (containerType == ContainerType::Vector)
-			{
-				return nestedType->getTypeCaster()->getNullVector();
-			}
-			else if (containerType == ContainerType::StringMap)
-			{
-				return nestedType->getTypeCaster()->getNullStringIndexedMap();
-			}
+			return containerManipulator->createAnyPointer(0);
 		} break;
 	}
 	return std::any();
@@ -713,7 +713,7 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 						&& containerItemTypeName != "")
 					{
 						TypeInfo* itemType = XMLHelper::findOrCreateTypeInfo(containerItemTypeName, typeInfos);
-						return CatGenericType(containerType, itemType, writable, constant);
+						return CatGenericType(containerType, nullptr, itemType, writable, constant);
 					}
 					else
 					{

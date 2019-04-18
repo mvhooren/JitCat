@@ -22,6 +22,7 @@ namespace jitcat
 	namespace Reflection
 	{
 		class TypeInfo;
+		class ContainerManipulator;
 	}
 
 	class CatGenericType
@@ -48,13 +49,13 @@ namespace jitcat
 			Count
 		};
 
-		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::ContainerType containerType, bool writable, bool constant, const CatError* error);
+		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant, const CatError* error);
 		CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 	public:
 		CatGenericType();
 		CatGenericType(Reflection::TypeInfo* objectType, bool writable = false, bool constant = false);
-		CatGenericType(Reflection::ContainerType containerType, Reflection::TypeInfo* itemType, bool writable = false, bool constant = false);
+		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, Reflection::TypeInfo* itemType, bool writable = false, bool constant = false);
 		CatGenericType(const CatError& error);
 		CatGenericType(const CatGenericType& other);
 
@@ -88,6 +89,7 @@ namespace jitcat
 		//Copies the type but sets the writable flag to true.
 		CatGenericType toWritable() const;
 
+		Reflection::ContainerManipulator* getContainerManipulator() const;
 		CatGenericType getContainerItemType() const;
 		const char* getObjectTypeName() const;
 
@@ -143,6 +145,8 @@ namespace jitcat
 
 		//When the member is a container, catType or nestedType will be set to the item type of the container
 		Reflection::ContainerType containerType;
+		//not owned, non null when the type is a container.
+		Reflection::ContainerManipulator* containerManipulator;
 
 		//Type modifiers/flags. These are not taken into account when comparing CatGenericType objects using operator ==.
 		bool writable;

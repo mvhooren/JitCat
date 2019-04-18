@@ -34,6 +34,7 @@ namespace jitcat
 		static const char* getTypeName() { return T::getTypeName(); }
 		static std::any getCatValue(void) { return std::any();}
 		static std::any getCatValue(const T& value);
+		static std::any getDefaultCatValue() { return std::any(); }
 		static T* getValue(const std::any& value)  { return static_cast<T*>(std::any_cast<Reflection::Reflectable*>(value));}
 		static Reflection::TypeInfo* getTypeInfo() {return Reflection::TypeRegistry::get()->registerType<T>();}
 
@@ -52,9 +53,11 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return false; }
 		template <typename U>
 		static std::any getCatValue(const U& param) { return std::any();}
+		static std::any getDefaultCatValue() { return std::any(); }
 
 		static void getValue() { return;}
 		static void getValue(const std::any& value) { return;}
+		
 
 		static const char* getTypeName()
 		{
@@ -76,6 +79,7 @@ namespace jitcat
 		static bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
 		static std::any getCatValue(float value) { return std::any(value);}
+		static std::any getDefaultCatValue() { return std::any(0.0f); }
 		static float getValue(const std::any& value) { return std::any_cast<float>(value);}
 		static const char* getTypeName()
 		{
@@ -97,6 +101,7 @@ namespace jitcat
 		static bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
 		static std::any getCatValue(int value) { return std::any(value);}
+		static std::any getDefaultCatValue() { return std::any(0); }
 		static int getValue(const std::any& value) { return std::any_cast<int>(value);}
 		static const char* getTypeName()
 		{
@@ -117,6 +122,7 @@ namespace jitcat
 		static bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
 		static std::any getCatValue(bool value) { return std::any(value);}
+		static std::any getDefaultCatValue() { return std::any(false); }
 		static bool getValue(const std::any& value) { return std::any_cast<bool>(value);}
 		static const char* getTypeName()
 		{
@@ -137,6 +143,7 @@ namespace jitcat
 		static bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
 		static std::any getCatValue(const std::string& value) { return std::any(value);}
+		static std::any getDefaultCatValue() { return std::any(""); }
 		static std::string getValue(const std::any& value) { return std::any_cast<std::string>(value);}
 		static const char* getTypeName()
 		{
@@ -158,8 +165,9 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static const char* getTypeName() { return U::getTypeName(); }
 		static std::any getCatValue(std::unique_ptr<U>& value);
+		static std::any getDefaultCatValue() { return std::any((Reflection::Reflectable*)(nullptr)); }
 		static U* getValue(const std::any& value) {return static_cast<U*>(std::any_cast<Reflection::Reflectable*>(value));}
-		static U* getPointer(std::unique_ptr<U>& value);
+		static Reflection::Reflectable* getPointer(std::unique_ptr<U>& value);
 		static Reflection::TypeInfo* getTypeInfo() {return Reflection::TypeRegistry::get()->registerType<U>();}
 
 		typedef U type;
@@ -177,8 +185,9 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static const char* getTypeName() { return U::getTypeName(); }
 		static std::any getCatValue(U* value);
+		static std::any getDefaultCatValue() { return std::any((Reflection::Reflectable*)(nullptr)); }
 		static U* getValue(const std::any& value) {return static_cast<U*>(std::any_cast<Reflection::Reflectable*>(value));}
-		static U* getPointer(U* value) {return value;};
+		static Reflection::Reflectable* getPointer(U* value) {return static_cast<Reflection::Reflectable*>(value);};
 		static Reflection::TypeInfo* getTypeInfo() {return Reflection::TypeRegistry::get()->registerType<U>();}
 
 		typedef U type;
@@ -196,6 +205,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return false; }
 		static const char* getTypeName() { return ""; }
 		static std::any getCatValue(void) { return std::any();}
+		static std::any getDefaultCatValue() { return std::any((std::vector<ItemType>*)(nullptr)); }
 		static std::vector<ItemType>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType>*>(value); }
 
 		typedef ItemType type;
@@ -204,8 +214,8 @@ namespace jitcat
 	};
 
 
-	template <typename ItemType>
-	class TypeTraits<std::map<std::string, ItemType> >
+	template <typename ItemType, typename ComparatorT>
+	class TypeTraits<std::map<std::string, ItemType, ComparatorT> >
 	{
 	public:
 		static CatGenericType toGenericType();
@@ -213,13 +223,14 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return false; }
 		static const char* getTypeName() { return ""; }
 		static std::any getCatValue(void) { return std::any();}
-		static std::map<std::string, ItemType>& getValue(const std::any& value) { return *std::any_cast<std::map<std::string, ItemType>*>(value);}
+		static std::any getDefaultCatValue() { return std::any((std::map<std::string, ItemType, ComparatorT>*)(nullptr)); }
+		static std::map<std::string, ItemType, ComparatorT>& getValue(const std::any& value) { return *std::any_cast<std::map<std::string, ItemType>*>(value);}
 
 		typedef ItemType type;
-		typedef std::map<std::string, ItemType> cachedType;
-		typedef std::map<std::string, ItemType>* functionParameterType;
+		typedef std::map<std::string, ItemType, ComparatorT> cachedType;
+		typedef std::map<std::string, ItemType, ComparatorT>* functionParameterType;
 	};
 
-
-	#include "jitcat/TypeTraitsHeaderImplementation.h"
 } //End namespace jitcat
+
+#include "jitcat/TypeTraitsHeaderImplementation.h"

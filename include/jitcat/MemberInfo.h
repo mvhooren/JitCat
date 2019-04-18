@@ -64,15 +64,15 @@ namespace jitcat::Reflection
 		inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 	
+		template<typename ContainerItemType, typename Compare>
+		static Reflection::Reflectable* getMapIntIndex(std::map<std::string, ContainerItemType, Compare>* map, int index);
+		template<typename ContainerItemType, typename Compare>
+		static Reflection::Reflectable* getMapStringIndex(std::map<std::string, ContainerItemType, Compare>* map, std::string* index);
 		template<typename ContainerItemType>
-		static ContainerItemType getMapIntIndex(std::map<std::string, ContainerItemType>* map, int index);
-		template<typename ContainerItemType>
-		static ContainerItemType getMapStringIndex(std::map<std::string, ContainerItemType>* map, std::string* index);
-		template<typename ContainerItemType>
-		static ContainerItemType getVectorIndex(std::vector<ContainerItemType>* vector, int index);
+		static Reflection::Reflectable* getVectorIndex(std::vector<ContainerItemType>* vector, int index);
 
-		template<typename ContainerItemType>
-		inline llvm::Value* generateIndex(std::map<std::string, ContainerItemType>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
+		template<typename ContainerItemType, typename Compare>
+		inline llvm::Value* generateIndex(std::map<std::string, ContainerItemType, Compare>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
 		template<typename ContainerItemType>
 		inline llvm::Value* generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
