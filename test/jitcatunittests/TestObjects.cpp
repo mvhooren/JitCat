@@ -69,9 +69,17 @@ TestObjects::ReflectedObject::~ReflectedObject()
 
 void ReflectedObject::createNestedObjects()
 {
+	floatVector.push_back(33.3f);
+	floatVector.push_back(123.5f);
+
+	intToStringMap[1] = "four";
+	intToStringMap[2] = "six";
+
 	nestedSelfObject = new ReflectedObject();
 	nestedObjectPointer = new NestedReflectedObject();
 	nestedObjectUniquePointer.reset(new NestedReflectedObject());
+
+	objectVector.emplace_back();
 
 	reflectableObjectsVector.push_back(nestedObjectPointer);
 	reflectableObjectsVector.push_back(nestedObjectUniquePointer.get());
@@ -129,15 +137,21 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("aBoolean", &ReflectedObject::aBoolean, MF::isWritable)
 		.addMember("no", &ReflectedObject::no)
 
+		
 		.addMember("nestedSelfObject", &ReflectedObject::nestedSelfObject, MF::isWritable)
 		.addMember("nullObject", &ReflectedObject::nullObject)
 		.addMember("nestedObject", &ReflectedObject::nestedObject)
 		.addMember("nestedObjectPointer", &ReflectedObject::nestedObjectPointer, MF::isWritable)
 		.addMember("nestedObjectUniquePointer", &ReflectedObject::nestedObjectUniquePointer)
-
+		
+		.addMember("objectVector", &ReflectedObject::objectVector)
 		.addMember("reflectableObjectsVector", &ReflectedObject::reflectableObjectsVector)
 		.addMember("reflectableUniqueObjectsVector", &ReflectedObject::reflectableUniqueObjectsVector)
-		//.addMember("floatVector", &ReflectedObject::floatVector) not yet supported
+
+		.addMember("floatVector", &ReflectedObject::floatVector)
+
+		.addMember("intToStringMap", &ReflectedObject::intToStringMap)
+
 		.addMember("reflectableObjectsMap", &ReflectedObject::reflectableObjectsMap)
 		.addMember("reflectableObjectsMapCustomCompare", &ReflectedObject::reflectableObjectsMapCustomCompare)
 		.addMember("reflectableUniqueObjectsMap", &ReflectedObject::reflectableUniqueObjectsMap);

@@ -323,6 +323,12 @@ bool LLVMCodeGeneratorHelper::isIntPtr(llvm::Value* value) const
 }
 
 
+bool jitcat::LLVM::LLVMCodeGeneratorHelper::isInt(llvm::Value* value) const
+{
+	return value->getType() == LLVMTypes::intType;
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Value* addressValue, const std::string& name)
 {
 	llvm::Value* addressAsPointer = builder->CreateIntToPtr(addressValue, llvm::PointerType::getUnqual(type));

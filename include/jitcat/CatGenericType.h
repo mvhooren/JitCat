@@ -55,7 +55,7 @@ namespace jitcat
 	public:
 		CatGenericType();
 		CatGenericType(Reflection::TypeInfo* objectType, bool writable = false, bool constant = false);
-		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, Reflection::TypeInfo* itemType, bool writable = false, bool constant = false);
+		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable = false, bool constant = false);
 		CatGenericType(const CatError& error);
 		CatGenericType(const CatGenericType& other);
 
@@ -77,7 +77,8 @@ namespace jitcat
 		bool isContainerType() const;
 		bool isVectorType() const;
 		bool isMapType() const;
-
+		
+		bool isTriviallyCopyable() const;
 		bool isWritable() const;
 		bool isConst() const;
 

@@ -847,7 +847,7 @@ TEST_CASE("Boolean Tests", "[bool][operators]" )
 }
 
 
-TEST_CASE("Operator precedence", "[containers][map]" ) 
+TEST_CASE("Operator precedence", "[operators][precedence]" ) 
 {
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
@@ -3573,6 +3573,26 @@ TEST_CASE("Containers tests: Vector", "[containers][vector]")
 		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsVector[0]");
 		doChecks(reflectedObject.nestedObjectPointer, false, false, false, testExpression, context);
 	}
+	SECTION("Vector get non-pointer object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectVector[0]");
+		doChecks(&reflectedObject.objectVector[0], false, false, false, testExpression, context);
+	}
+	SECTION("Vector get non-pointer object out of range")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectVector[-1]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Vector get float")
+	{
+		Expression<float> testExpression(&context, "floatVector[0]");
+		doChecks(reflectedObject.floatVector[0], false, false, false, testExpression, context);
+	}
+	SECTION("Vector get float out of range")
+	{
+		Expression<float> testExpression(&context, "floatVector[-1]");
+		doChecks(0.0f, false, false, false, testExpression, context);
+	}
 	SECTION("Vector get object out of range")
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsVector[5000]");
@@ -3714,6 +3734,16 @@ TEST_CASE("Containers tests: Map", "[containers][map]" )
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsMap[0]");
 		doChecks(reflectedObject.nestedObjectPointer, false, false, false, testExpression, context);
+	}
+	SECTION("Map get string")
+	{
+		Expression<std::string> testExpression(&context, "intToStringMap[1]");
+		doChecks(reflectedObject.intToStringMap[1], false, false, false, testExpression, context);
+	}
+	SECTION("Map get string, not found")
+	{
+		Expression<std::string> testExpression(&context, "intToStringMap[0]");
+		doChecks(std::string(""), false, false, false, testExpression, context);
 	}
 	SECTION("Map get object, string index")
 	{

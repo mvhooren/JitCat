@@ -51,6 +51,7 @@ namespace jitcat::LLVM
 		bool isPointer(llvm::Value* value) const;
 		bool isStringPointer(llvm::Value* value) const;
 		bool isIntPtr(llvm::Value* value) const;
+		bool isInt(llvm::Value* value) const;
 
 		llvm::Value* loadBasicType(llvm::Type* type, llvm::Value* addressValue, const std::string& name);
 		llvm::Value* loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::Type* type = LLVMTypes::pointerType);

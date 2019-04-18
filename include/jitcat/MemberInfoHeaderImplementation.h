@@ -70,59 +70,73 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 
 
 template<typename T, typename U>
-template<typename ContainerItemType, typename Compare>
-inline Reflection::Reflectable* ContainerMemberInfo<T, U>::getMapIntIndex(std::map<std::string, ContainerItemType, Compare>* map, int index)
+template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<T, U>::getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index)
 {
 	int count = 0;
 	for (auto& iter : (*map))
 	{
 		if (count == index)
 		{
-			return TypeTraits<ContainerItemType>::getPointer(iter.second);
+			return TypeTraits<ContainerItemType>::stripValue(iter.second);
 		}
 		count++;
 	}
-	return nullptr;
+	return TypeTraits<ContainerItemType>::getDefaultValue();
 }
 
 
 template<typename T, typename U>
-template<typename ContainerItemType, typename Compare>
-inline Reflection::Reflectable* ContainerMemberInfo<T, U>::getMapStringIndex(std::map<std::string, ContainerItemType, Compare>* map, std::string* index)
+template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<T, U>::getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index)
 {
-	std::string lowerCaseIdx = Tools::toLowerCase(*index);
-	auto iter = map->find(lowerCaseIdx);
-	if (iter != map->end())
+	if constexpr (std::is_same<ContainerKeyType, std::string>::value)
 	{
-		return TypeTraits<ContainerItemType>::getPointer(iter->second);
+		if (&index != nullptr)
+		{
+			std::string lowerCaseIdx = Tools::toLowerCase(index);
+			auto iter = map->find(lowerCaseIdx);
+			if (iter != map->end())
+			{
+				return TypeTraits<ContainerItemType>::stripValue(iter->second);
+			}
+		}
 	}
-	return nullptr;
+	else
+	{
+		auto iter = map->find(index);
+		if (iter != map->end())
+		{
+			return TypeTraits<ContainerItemType>::stripValue(iter->second);
+		}
+	}
+	return TypeTraits<ContainerItemType>::getDefaultValue();
 }
 
 
 template<typename T, typename U>
-template<typename ContainerItemType>
-inline Reflection::Reflectable* ContainerMemberInfo<T, U>::getVectorIndex(std::vector<ContainerItemType>* vector, int index)
+template<typename ContainerItemType, typename AllocatorT>
+inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<T, U>::getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index)
 {
 	if (index >= 0 && index < (int)vector->size())
 	{
-		return TypeTraits<ContainerItemType>::getPointer(vector->operator[](index));
+		return TypeTraits<ContainerItemType>::stripValue(vector->operator[](index));
 	}
-	return nullptr;
+	return TypeTraits<ContainerItemType>::getDefaultValue();
 }
 
 
 template<typename T, typename U>
-template<typename ContainerItemType, typename Compare>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::string, ContainerItemType, Compare>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
+template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	if (context->helper->isStringPointer(index))
+	if (!context->helper->isInt(index) || std::is_same<int, ContainerKeyType>::value)
 	{
 		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
-			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapStringIndex<ContainerItemType, Compare>;
-			return compileContext->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_StringPtr, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapStringIndex");
+			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapKeyIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
+			return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapKeyIndex");
 		};
 		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 	}
@@ -130,8 +144,8 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::strin
 	{
 		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
-			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapIntIndex<ContainerItemType, Compare>;
-			return compileContext->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getMapIntIndex");
+			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapIntIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
+			return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapIntIndex");
 		};
 		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 	}
@@ -142,14 +156,14 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<std::strin
 
 
 template<typename T, typename U>
-template<typename ContainerItemType>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
+template<typename ContainerItemType, typename AllocatorT>
+inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType, AllocatorT>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		static auto functionPointer = &ContainerMemberInfo<T, U>::getVectorIndex<ContainerItemType>;
-		return compileContext->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Int, reinterpret_cast<uintptr_t>(functionPointer), {containerPtr, index}, "getVectorIndex");
+		static auto functionPointer = &ContainerMemberInfo<T, U>::getVectorIndex<ContainerItemType, AllocatorT>;
+		return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getVectorIndex");
 	};
 	return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 #else

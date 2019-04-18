@@ -110,29 +110,26 @@ namespace jitcat::Reflection
 	};
 
 
-	template <typename ItemType>
-	class MemberTypeInfoCreator<std::vector<ItemType> >
+	template <typename ItemType, typename AllocatorT>
+	class MemberTypeInfoCreator<std::vector<ItemType, AllocatorT> >
 	{
 	public:
 		template<typename ClassType>
-		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType> ClassType::* member, bool isConst, bool isWritable) 
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType, AllocatorT> ClassType::* member, bool isConst, bool isWritable)
 		{
-			TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-			
-			return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, TypeTraits<std::vector<ItemType>>::toGenericType());
+			return new ContainerMemberInfo<ClassType, std::vector<ItemType, AllocatorT> >(memberName, member, TypeTraits<std::vector<ItemType, AllocatorT>>::toGenericType());
 		}
 	};
 
 
-	template <typename ItemType, typename Compare>
-	class MemberTypeInfoCreator<std::map<std::string, ItemType, Compare> >
+	template <typename KeyType, typename ItemType, typename CompareT, typename AllocatorT>
+	class MemberTypeInfoCreator<std::map<KeyType, ItemType, CompareT, AllocatorT> >
 	{
 	public:
 		template<typename ClassType>
-		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<std::string, ItemType, Compare> ClassType::* member, bool isConst, bool isWritable) 
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<KeyType, ItemType, CompareT, AllocatorT> ClassType::* member, bool isConst, bool isWritable)
 		{
-			TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-			return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType, Compare> >(memberName, member, TypeTraits<std::map<std::string, ItemType, Compare>>::toGenericType());
+			return new ContainerMemberInfo<ClassType, std::map<KeyType, ItemType, CompareT, AllocatorT> >(memberName, member, TypeTraits<std::map<KeyType, ItemType, CompareT, AllocatorT>>::toGenericType());
 		}
 	};
 

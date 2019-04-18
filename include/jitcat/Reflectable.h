@@ -24,6 +24,8 @@ namespace jitcat::Reflection
 		Reflectable(const Reflectable& );
 	public:
 		Reflectable();
+		//Do allow move construction, all the observers will be updated to the new Reflectable
+		Reflectable(Reflectable&&) noexcept;
 		virtual ~Reflectable();
 
 		void addObserver(ReflectableHandle* observer);

@@ -52,13 +52,13 @@ std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 	std::any indexValue = index->execute(runtimeContext);
 	if (arrayType.isMapType())
 	{
-		if (indexType.isIntType())
+		if (indexType.isIntType() && !arrayType.getContainerManipulator()->getKeyType().isIntType())
 		{
 			return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<int>(indexValue));
 		}
-		else if (indexType.isStringType())
+		else 
 		{
-			return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<std::string>(indexValue));
+			return arrayType.getContainerManipulator()->getItemAt(arrayValue, indexValue);
 		}
 	}
 	else if (arrayType.isVectorType())
@@ -81,26 +81,20 @@ CatGenericType CatArrayIndex::typeCheck()
 	{
 		return indexType;
 	}
-	if (containerItemType.isObjectType())
+	if (!baseType.isContainerType())
 	{
-		if (!baseType.isContainerType())
-		{
-			return CatGenericType(Tools::append(baseType.toString(), " is not a list."));
-		}
-		else if (baseType.isIntType() && !indexType.isScalarType())
-		{
-			return CatGenericType(Tools::append(baseType.toString(), " should be indexed by a number."));
-		}
-		else if (baseType.isMapType() && (!indexType.isScalarType() && !indexType.isStringType()))
-		{
-			return CatGenericType(Tools::append(baseType.toString(), " should be indexed by a string or a number."));
-		}
-		else
-		{
-			return baseType.getContainerItemType();
-		}
+		return CatGenericType(Tools::append(baseType.toString(), " is not a container."));
 	}
-	return CatGenericType("Invalid list or map.");
+	CatGenericType keyType = arrayType.getContainerManipulator()->getKeyType();
+	indexType = index->getType();
+	if (indexType != keyType && !indexType.isIntType())
+	{
+		return CatGenericType(Tools::append("Key type ", indexType.toString(), " does not match key type of container. Expected a ", keyType.toString(), " or an int."));
+	}
+	else
+	{
+		return arrayType.getContainerManipulator()->getValueType();
+	}
 }
 
 

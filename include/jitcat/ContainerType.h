@@ -15,7 +15,7 @@ namespace jitcat::Reflection
 	{
 		None,
 		Vector,
-		StringMap,
+		Map,
 		Count
 	};
 
