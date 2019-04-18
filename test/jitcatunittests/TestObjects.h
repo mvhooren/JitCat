@@ -8,14 +8,25 @@
 #pragma once
 
 #include "jitcat/Reflectable.h"
+#include "jitcat/Tools.h"
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+
 namespace TestObjects
 {
+	class CaseInsensitiveCompare
+	{
+	public:
+		bool operator() (const std::string& first, const std::string& second) const
+		{
+			return jitcat::Tools::lessWhileIgnoringCase(first, second);
+		}
+	};
+
 
 	class NestedReflectedObject: public jitcat::Reflection::Reflectable
 	{
@@ -90,6 +101,7 @@ namespace TestObjects
 		std::vector<std::unique_ptr<NestedReflectedObject>> reflectableUniqueObjectsVector;
 		std::vector<float> floatVector;
 		std::map<std::string, NestedReflectedObject*> reflectableObjectsMap;
+		std::map<std::string, NestedReflectedObject*, CaseInsensitiveCompare> reflectableObjectsMapCustomCompare;
 		std::map<std::string, std::unique_ptr<NestedReflectedObject>> reflectableUniqueObjectsMap;
 	};
 }

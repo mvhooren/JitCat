@@ -3765,6 +3765,98 @@ TEST_CASE("Containers tests: Map", "[containers][map]" )
 	}
 }
 
+
+TEST_CASE("Containers tests: Map with custom comparator", "[containers][map]")
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("mapContainer", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Map get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsMapCustomCompare[0]");
+		doChecks(reflectedObject.nestedObjectPointer, false, false, false, testExpression, context);
+	}
+	SECTION("Map get object, string index")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsMapCustomCompare[\"two\"]");
+		doChecks(reflectedObject.nestedObjectUniquePointer.get(), false, false, false, testExpression, context);
+	}
+	SECTION("Map get object, string index uppercase")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsMapCustomCompare[\"ONE\"]");
+		doChecks(reflectedObject.nestedObjectPointer, false, false, false, testExpression, context);
+	}
+	SECTION("Map get object out of range")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsMapCustomCompare[5000]");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Map get object, string index not found")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsMapCustomCompare[\"OneHundred\"]");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Map get object out of range, negative")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsMapCustomCompare[-1]");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Map get string object")
+	{
+		Expression<std::string> testExpression(&context, "reflectableObjectsMapCustomCompare[0].someString");
+		doChecks(std::string("test"), false, false, false, testExpression, context);
+	}
+	SECTION("Map get int object")
+	{
+		Expression<int> testExpression(&context, "reflectableObjectsMapCustomCompare[0].someInt");
+		doChecks(21, false, false, false, testExpression, context);
+	}
+	SECTION("Map get boolean object")
+	{
+		Expression<bool> testExpression(&context, "reflectableObjectsMapCustomCompare[0].someBoolean");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Map out of range get string")
+	{
+		Expression<std::string> testExpression(&context, "reflectableObjectsMapCustomCompare[10].someString");
+		doChecks(std::string(""), false, false, false, testExpression, context);
+	}
+	SECTION("Map out of range, variable index")
+	{
+		Expression<int> testExpression(&context, "reflectableObjectsMapCustomCompare[text].someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Map out of range, negative variable index")
+	{
+		Expression<int> testExpression(&context, "reflectableObjectsMapCustomCompare[-theInt].someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Null map get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.reflectableObjectsMap[0]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Null map get object 2")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.reflectableObjectsMap[\"one\"]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Bad map name error")
+	{
+		Expression<int> testExpression(&context, "badMapName[\"two\"]");
+		doChecks(0, true, false, false, testExpression, context);
+	}
+	SECTION("Missing map name error")
+	{
+		Expression<int> testExpression(&context, "[\"one\"].theInt");
+		doChecks(0, true, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Containers tests: Map of unique_ptr", "[containers][map]")
 {
 	ReflectedObject reflectedObject;
