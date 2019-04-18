@@ -7,6 +7,7 @@
 
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/ContainerManipulator.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/XMLHelper.h"
@@ -79,10 +80,10 @@ CatGenericType::CatGenericType(TypeInfo* objectType, bool writable, bool constan
 }
 
 
-CatGenericType::CatGenericType(ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, TypeInfo* itemType, bool writable, bool constant):
+CatGenericType::CatGenericType(ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant):
 	specificType(SpecificType::Container),
 	basicType(BasicType::None),
-	nestedType(itemType),
+	nestedType(nullptr),
 	containerType(containerType),
 	containerManipulator(containerManipulator),
 	error(nullptr),
@@ -154,7 +155,7 @@ bool CatGenericType::operator==(const CatGenericType& other) const
 			case SpecificType::Error:		return error == other.error;
 			case SpecificType::Basic:		return basicType == other.basicType;
 			case SpecificType::Object:		return nestedType->getTypeName() == other.nestedType->getTypeName();
-			case SpecificType::Container:	return containerType == other.containerType && nestedType->getTypeName() == other.nestedType->getTypeName() && containerManipulator == other.containerManipulator;
+			case SpecificType::Container:	return containerType == other.containerType && containerManipulator == other.containerManipulator;
 		}
 	}
 	else
@@ -181,7 +182,8 @@ bool CatGenericType::isValidType() const
 	return specificType != SpecificType::Error 
 		   && specificType != SpecificType::None 
 		   && (specificType != SpecificType::Basic || (basicType != BasicType::None))
-		   && (specificType != SpecificType::Object || nestedType != nullptr);
+		   && (specificType != SpecificType::Object || nestedType != nullptr)
+		   && (specificType != SpecificType::Container || containerManipulator != nullptr);
 }
 
 
@@ -259,7 +261,7 @@ bool CatGenericType::isVectorType() const
 
 bool CatGenericType::isMapType() const
 {
-	return specificType == SpecificType::Container && containerType == ContainerType::StringMap;
+	return specificType == SpecificType::Container && containerType == ContainerType::Map;
 }
 
 
@@ -307,10 +309,9 @@ Reflection::ContainerManipulator* jitcat::CatGenericType::getContainerManipulato
 
 CatGenericType CatGenericType::getContainerItemType() const
 {
-	if (specificType == SpecificType::Container
-		&& nestedType != nullptr)
+	if (specificType == SpecificType::Container)
 	{
-		return CatGenericType(nestedType);
+		return containerManipulator->getValueType();
 	}
 	else
 	{
@@ -424,11 +425,11 @@ std::string CatGenericType::toString() const
 		case SpecificType::Container:
 			if (containerType == ContainerType::Vector)
 			{
-				return  std::string("list of ") + nestedType->getTypeName();
+				return  Tools::append("list of ", containerManipulator->getValueType().toString());
 			}
-			else if (containerType == ContainerType::StringMap)
+			else if (containerType == ContainerType::Map)
 			{
-				return std::string("map of ") + nestedType->getTypeName();
+				return Tools::append("map of ", containerManipulator->getKeyType().toString(), " to ", containerManipulator->getKeyType().toString());
 			}
 			else
 			{
@@ -588,16 +589,7 @@ void CatGenericType::printValue(std::any& value)
 		} break;
 		case SpecificType::Container:
 		{
-			if (containerType == ContainerType::Vector)
-			{
-				CatLog::log("Vector of ");
-				CatLog::log(getContainerItemType().toString());
-			}
-			else if (containerType == ContainerType::StringMap)
-			{
-				CatLog::log("Map of string to ");
-				CatLog::log(getContainerItemType().toString());
-			}
+			CatLog::log(toString());
 		} break;
 	}
 }
@@ -712,8 +704,10 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 					if (containerType != ContainerType::None
 						&& containerItemTypeName != "")
 					{
-						TypeInfo* itemType = XMLHelper::findOrCreateTypeInfo(containerItemTypeName, typeInfos);
-						return CatGenericType(containerType, nullptr, itemType, writable, constant);
+						//QQQ ContainerManipulator must not be nullptr
+						//Use DummyManipulator for now with random types
+						static std::unique_ptr<DummyManipulator> qqqmanipulator(new DummyManipulator(CatGenericType::intType, CatGenericType::stringType));
+						return CatGenericType(containerType, qqqmanipulator.get(), writable, constant);
 					}
 					else
 					{
@@ -751,10 +745,11 @@ void CatGenericType::writeToXML(std::ofstream& xmlFile, const char* linePrefixCh
 	}
 	else if (isContainerType())
 	{
+		//QQQ Write full type information for key and value types.
 		xmlFile << linePrefixCharacters << "<Type>ContainerType</Type>\n";		
 		if (isMapType())
 		{
-			xmlFile << linePrefixCharacters << "<ContainerType>StringMap</ContainerType>\n";		
+			xmlFile << linePrefixCharacters << "<ContainerType>Map</ContainerType>\n";		
 		}
 		else
 		{

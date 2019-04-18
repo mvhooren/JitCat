@@ -97,9 +97,11 @@ namespace TestObjects
 		NestedReflectedObject* nestedObjectPointer;
 		std::unique_ptr<NestedReflectedObject> nestedObjectUniquePointer;
 
+		std::vector<NestedReflectedObject> objectVector;
 		std::vector<NestedReflectedObject*> reflectableObjectsVector;
 		std::vector<std::unique_ptr<NestedReflectedObject>> reflectableUniqueObjectsVector;
 		std::vector<float> floatVector;
+		std::map<int, std::string> intToStringMap;
 		std::map<std::string, NestedReflectedObject*> reflectableObjectsMap;
 		std::map<std::string, NestedReflectedObject*, CaseInsensitiveCompare> reflectableObjectsMapCustomCompare;
 		std::map<std::string, std::unique_ptr<NestedReflectedObject>> reflectableUniqueObjectsMap;

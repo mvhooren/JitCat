@@ -14,16 +14,17 @@ namespace jitcat
 {
 
 	template<typename T>
-	CatGenericType TypeTraits<T>::toGenericType()
+	const CatGenericType& TypeTraits<T>::toGenericType()
 	{
-		return CatGenericType(Reflection::TypeRegistry::get()->registerType<T>());
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::TypeRegistry::get()->registerType<T>()));
+		return *type.get();
 	}
 
 
 	template<typename T>
-	inline std::any TypeTraits<T>::getCatValue(const T& value)
+	inline std::any TypeTraits<T>::getCatValue(T& value)
 	{
-		return &value;
+		return static_cast<Reflection::Reflectable*>(&value);
 	}
 
 
@@ -35,37 +36,42 @@ namespace jitcat
 
 
 	template <typename U>
-	CatGenericType TypeTraits<U*>::toGenericType()
+	const CatGenericType& TypeTraits<U*>::toGenericType()
 	{
-		return CatGenericType(Reflection::TypeRegistry::get()->registerType<U>());
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::TypeRegistry::get()->registerType<U>()));
+		return *type.get();
 	}
 
 
 	template <typename U>
-	std::any TypeTraits<std::unique_ptr<U>>::getCatValue(std::unique_ptr<U>& value) { return static_cast<Reflection::Reflectable*>(value.get()); }
-
-	template<typename U>
-	inline Reflection::Reflectable* TypeTraits<std::unique_ptr<U>>::getPointer(std::unique_ptr<U>& value)
-	{
-		return static_cast<Reflection::Reflectable*>(value.get());
+	std::any TypeTraits<std::unique_ptr<U>>::getCatValue(std::unique_ptr<U>& value) 
+	{ 
+		return static_cast<Reflection::Reflectable*>(value.get()); 
 	}
+
 
 	template <typename U>
-	CatGenericType TypeTraits<std::unique_ptr<U>>::toGenericType() { return CatGenericType(Reflection::TypeRegistry::get()->registerType<U>()); }
-
-
-	template <typename ItemType>
-	CatGenericType TypeTraits<std::vector<ItemType>>::toGenericType()
+	const CatGenericType& TypeTraits<std::unique_ptr<U>>::toGenericType() 
 	{
-		static std::unique_ptr<Reflection::ContainerManipulator> vectorManipulator(new jitcat::Reflection::VectorManipulator<std::vector<ItemType>>());
-		return CatGenericType(Reflection::ContainerType::Vector, vectorManipulator.get(), Reflection::TypeRegistry::get()->registerType<typename TypeTraits<ItemType>::type>());
+		return TypeTraits<U*>::toGenericType();
 	}
 
-	template <typename ItemType, typename ComparatorT>
-	CatGenericType TypeTraits<std::map<std::string, ItemType, ComparatorT>>::toGenericType()
+
+	template <typename ItemType, typename AllocatorT>
+	const CatGenericType& TypeTraits<std::vector<ItemType, AllocatorT>>::toGenericType()
 	{
-		static std::unique_ptr<Reflection::ContainerManipulator> mapManipulator(new jitcat::Reflection::MapManipulator<std::map<std::string, ItemType, ComparatorT>>());
-		return CatGenericType(Reflection::ContainerType::StringMap, mapManipulator.get(), TypeTraits<typename TypeTraits<ItemType>::type>::getTypeInfo());
+		static std::unique_ptr<Reflection::ContainerManipulator> vectorManipulator(new jitcat::Reflection::VectorManipulator<std::vector<ItemType, AllocatorT>>());
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Vector, vectorManipulator.get()));
+		return *type.get();
+	}
+
+
+	template <typename KeyType, typename ItemType, typename ComparatorT, typename AllocatorT>
+	const CatGenericType& TypeTraits<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>::toGenericType()
+	{
+		static std::unique_ptr<Reflection::ContainerManipulator> mapManipulator(new jitcat::Reflection::MapManipulator<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>());
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Map, mapManipulator.get()));
+		return *type.get();
 	}
 
 }

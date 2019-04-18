@@ -19,9 +19,9 @@ const char* jitcat::Reflection::toString(ContainerType type)
 	switch (type)
 	{
 		default:
-		case ContainerType::None:		return "None";
-		case ContainerType::Vector:		return "Vector";
-		case ContainerType::StringMap:	return "StringMap";
+		case ContainerType::None:	return "None";
+		case ContainerType::Vector:	return "Vector";
+		case ContainerType::Map:	return "Map";
 	}
 }
 

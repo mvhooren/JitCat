@@ -16,6 +16,15 @@ Reflectable::Reflectable()
 }
 
 
+Reflectable::Reflectable(Reflectable&& other) noexcept
+{
+	while (!other.observers.empty())
+	{
+		(*other.observers.begin())->operator=(this);
+	}
+}
+
+
 Reflectable::~Reflectable()
 {
 	for (unsigned int i = 0; i < observers.size(); i++)

@@ -52,13 +52,13 @@ std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 	std::any indexValue = index->execute(runtimeContext);
 	if (arrayType.isMapType())
 	{
-		if (indexType.isIntType())
+		if (indexType.isIntType() && !arrayType.getContainerManipulator()->getKeyType().isIntType())
 		{
 			return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<int>(indexValue));
 		}
-		else if (indexType.isStringType())
+		else 
 		{
-			return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<std::string>(indexValue));
+			return arrayType.getContainerManipulator()->getItemAt(arrayValue, indexValue);
 		}
 	}
 	else if (arrayType.isVectorType())
@@ -75,29 +75,21 @@ bool CatArrayIndex::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 		&& index->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		arrayType = array->getType();
-		indexType = index->getType();
 		if (!arrayType.isContainerType())
 		{
 			errorManager->compiledWithError(Tools::append(arrayType.toString(), " is not a list."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
+		CatGenericType keyType = arrayType.getContainerManipulator()->getKeyType();
+		indexType = index->getType();
+		if (indexType != keyType && !indexType.isIntType())
+		{
+			errorManager->compiledWithError(Tools::append("Key type ", indexType.toString(), " does not match key type of container. Expected a ", keyType.toString(), " or an int."), errorContext, compiletimeContext->getContextName(), getLexeme());
+			return false;
+		}
+		
 		containerItemType = arrayType.getContainerItemType();
-		if (!containerItemType.isObjectType())
-		{
-			errorManager->compiledWithError(Tools::append(arrayType.toString(), " not supported."), errorContext, compiletimeContext->getContextName(), getLexeme());
-		}
-		else if (arrayType.isIntType() && !indexType.isScalarType())
-		{
-			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a number."), errorContext, compiletimeContext->getContextName(), getLexeme());
-		}
-		else if (arrayType.isMapType() && (!indexType.isScalarType() && !indexType.isStringType()))
-		{
-			errorManager->compiledWithError(Tools::append(arrayType.toString(), " should be indexed by a string or a number."), errorContext, compiletimeContext->getContextName(), getLexeme());
-		}
-		else
-		{
-			return true;
-		}
+		return true;
 	}
 	return false;
 }

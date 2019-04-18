@@ -23,10 +23,31 @@ namespace jitcat::Reflection
 		virtual ~ContainerManipulator() {}
 		virtual std::size_t getContainerSize(std::any container) const = 0;
 		virtual std::any getItemAt(std::any container, int index) = 0;
-		virtual std::any getItemAt(std::any container, const std::string& index) = 0;
-		virtual int getIndexOf(std::any container, const std::string& index) = 0;
+		virtual std::any getItemAt(std::any container, std::any key) = 0;
+		virtual int getIndexOf(std::any container, std::any key) = 0;
 		virtual std::any createAnyPointer(uintptr_t pointer) = 0;
-		virtual std::string getKeyAtIndex(std::any container, int index) const = 0;
+		virtual std::any getKeyAtIndex(std::any container, int index) const = 0;
+		virtual CatGenericType getKeyType() const = 0;
+		virtual CatGenericType getValueType() const = 0;
+	};
+
+
+	//Used for deserialized type information, not backed by actual reflected type.
+	class DummyManipulator: public ContainerManipulator
+	{
+	public:
+		DummyManipulator(const CatGenericType& keyType, const CatGenericType& valueType): keyType(keyType), valueType(valueType) {}
+		virtual std::size_t getContainerSize(std::any container) const {return 0;}
+		virtual std::any getItemAt(std::any container, int index) {	return std::any();}
+		virtual std::any getItemAt(std::any container, std::any key) { return std::any(); }
+		virtual int getIndexOf(std::any container, std::any key) { return -1; }
+		virtual std::any createAnyPointer(uintptr_t pointer) { return nullptr; }
+		virtual std::any getKeyAtIndex(std::any container, int index) const { return std::any(); }
+		virtual CatGenericType getKeyType() const { return keyType; }
+		virtual CatGenericType getValueType() const { return valueType; }
+	private:
+		CatGenericType keyType;
+		CatGenericType valueType;
 	};
 
 
@@ -61,13 +82,13 @@ namespace jitcat::Reflection
 		}
 
 
-		virtual std::any getItemAt(std::any container, const std::string& index) override final
+		virtual std::any getItemAt(std::any container, std::any key) override final
 		{
-			return TypeTraits<typename VectorT::value_type>::getDefaultCatValue();
+			return getItemAt(container, std::any_cast<int>(key));
 		}
 
 
-		virtual int getIndexOf(std::any container, const std::string& index) override final
+		virtual int getIndexOf(std::any container, std::any key) override final
 		{
 			return -1;
 		}
@@ -79,9 +100,21 @@ namespace jitcat::Reflection
 		}
 
 
-		virtual std::string getKeyAtIndex(std::any container, int index) const override final
+		virtual std::any getKeyAtIndex(std::any container, int index) const override final
 		{
-			return "";
+			return std::any();
+		}
+
+
+		virtual CatGenericType getKeyType() const override final
+		{
+			return CatGenericType::intType;
+		}
+
+
+		virtual CatGenericType getValueType() const override final
+		{
+			return TypeTraits<typename VectorT::value_type>::toGenericType();
 		}
 	};
 
@@ -127,43 +160,69 @@ namespace jitcat::Reflection
 		}
 
 
-		virtual std::any getItemAt(std::any container, const std::string& index) override final
+		virtual std::any getItemAt(std::any container, std::any key) override final
 		{
 			MapT* map = std::any_cast<MapT*>(container);
 			if (map != nullptr)
 			{
-				std::string lowerIndex = Tools::toLowerCase(index);	
-				auto& iter = map->find(lowerIndex);
-				if (iter != map->end())
+				if constexpr (std::is_same<typename MapT::key_type, std::string>::value)
 				{
-					return TypeTraits<typename MapT::mapped_type>::getCatValue(iter->second);
+					std::string lowerKey = Tools::toLowerCase(std::any_cast<std::string>(key));
+					auto& iter = map->find(lowerKey);
+					if (iter != map->end())
+					{
+						return TypeTraits<typename MapT::mapped_type>::getCatValue(iter->second);
+					}
+				}
+				else
+				{
+					auto& iter = map->find(std::any_cast<typename MapT::key_type>(key));
+					if (iter != map->end())
+					{
+						return TypeTraits<typename MapT::mapped_type>::getCatValue(iter->second);
+					}
 				}
 			}
 			return TypeTraits<typename MapT::mapped_type>::getDefaultCatValue();
 		}
 
 
-		virtual int getIndexOf(std::any container, const std::string& index) override final
+		virtual int getIndexOf(std::any container, std::any key) override final
 		{
 			MapT* map = std::any_cast<MapT*>(container);
 			if (map != nullptr)
 			{
-				std::string lowerIndex = Tools::toLowerCase(index);
-				int count = 0;
-				for (auto& iter : *map)
+				if constexpr (std::is_same<typename MapT::key_type, std::string>::value)
 				{
-					if (iter.first == lowerIndex)
+					std::string lowerIndex = Tools::toLowerCase(std::any_cast<std::string>(key));
+					int count = 0;
+					for (auto& iter : *map)
 					{
-						return count;
+						if (iter.first == lowerIndex)
+						{
+							return count;
+						}
+						count++;
 					}
-					count++;
+				}
+				else
+				{
+					int count = 0;
+					for (auto& iter : *map)
+					{
+						if (iter.first == std::any_cast<typename MapT::key_type>(key))
+						{
+							return count;
+						}
+						count++;
+					}
 				}
 			}
 			return -1;
 		}
 
 
-		virtual std::string getKeyAtIndex(std::any container, int index) const override final
+		virtual std::any getKeyAtIndex(std::any container, int index) const override final
 		{
 			MapT* map = std::any_cast<MapT*>(container);
 			if (map != nullptr && index < (int)map->size() && index >= 0)
@@ -178,12 +237,25 @@ namespace jitcat::Reflection
 					count++;
 				}
 			}
-			return "";
+			return TypeTraits<typename MapT::key_type>::getDefaultCatValue();
 		}
+
 
 		virtual std::any createAnyPointer(uintptr_t pointer) override final
 		{
 			return std::any(reinterpret_cast<MapT*>(pointer));
+		}
+
+
+		virtual CatGenericType getKeyType() const override final
+		{
+			return TypeTraits<typename MapT::key_type>::toGenericType();
+		}
+
+
+		virtual CatGenericType getValueType() const override final
+		{
+			return TypeTraits<typename MapT::mapped_type>::toGenericType();
 		}
 	};
 

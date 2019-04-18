@@ -18,6 +18,7 @@ namespace jitcat::LLVM
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberFlags.h"
 #include "jitcat/TypeRegistry.h"
+#include "jitcat/TypeTraits.h"
 
 #include <map>
 #include <memory>
@@ -64,17 +65,21 @@ namespace jitcat::Reflection
 		inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 	
-		template<typename ContainerItemType, typename Compare>
-		static Reflection::Reflectable* getMapIntIndex(std::map<std::string, ContainerItemType, Compare>* map, int index);
-		template<typename ContainerItemType, typename Compare>
-		static Reflection::Reflectable* getMapStringIndex(std::map<std::string, ContainerItemType, Compare>* map, std::string* index);
-		template<typename ContainerItemType>
-		static Reflection::Reflectable* getVectorIndex(std::vector<ContainerItemType>* vector, int index);
+		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+		static typename TypeTraits<ContainerItemType>::functionReturnType getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index);
 
-		template<typename ContainerItemType, typename Compare>
-		inline llvm::Value* generateIndex(std::map<std::string, ContainerItemType, Compare>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
-		template<typename ContainerItemType>
-		inline llvm::Value* generateIndex(std::vector<ContainerItemType>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
+		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+		static typename TypeTraits<ContainerItemType>::functionReturnType  getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index);
+
+		template<typename ContainerItemType, typename AllocatorT>
+		static typename TypeTraits<ContainerItemType>::functionReturnType getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index);
+
+		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+		inline llvm::Value* generateIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
+
+		template<typename ContainerItemType, typename AllocatorT>
+		inline llvm::Value* generateIndex(std::vector<ContainerItemType, AllocatorT>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
+
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
 
 
