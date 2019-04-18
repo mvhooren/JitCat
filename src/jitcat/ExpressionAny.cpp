@@ -81,6 +81,23 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 }
 
 
+const std::any jitcat::ExpressionAny::getInterpretedValue(CatRuntimeContext* runtimeContext)
+{
+	if (isConstant)
+	{
+		return cachedValue;
+	}
+	else if (parseResult->astRootNode != nullptr)
+	{
+		return parseResult->getNode<CatTypedExpression>()->execute(runtimeContext);
+	}
+	else
+	{
+		return std::any();
+	}
+}
+
+
 void ExpressionAny::compile(CatRuntimeContext* context)
 {
 	if (parse(context, CatGenericType()) && isConstant)
