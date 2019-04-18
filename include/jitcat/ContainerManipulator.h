@@ -26,6 +26,7 @@ namespace jitcat::Reflection
 		virtual std::any getItemAt(std::any container, const std::string& index) = 0;
 		virtual int getIndexOf(std::any container, const std::string& index) = 0;
 		virtual std::any createAnyPointer(uintptr_t pointer) = 0;
+		virtual std::string getKeyAtIndex(std::any container, int index) const = 0;
 	};
 
 
@@ -75,6 +76,12 @@ namespace jitcat::Reflection
 		virtual std::any createAnyPointer(uintptr_t pointer) override final
 		{
 			return std::any(reinterpret_cast<VectorT*>(pointer));
+		}
+
+
+		virtual std::string getKeyAtIndex(std::any container, int index) const override final
+		{
+			return "";
 		}
 	};
 
@@ -155,6 +162,24 @@ namespace jitcat::Reflection
 			return -1;
 		}
 
+
+		virtual std::string getKeyAtIndex(std::any container, int index) const override final
+		{
+			MapT* map = std::any_cast<MapT*>(container);
+			if (map != nullptr && index < (int)map->size() && index >= 0)
+			{
+				int count = 0;
+				for (auto& iter : *map)
+				{
+					if (count == index)
+					{
+						return iter.first;
+					}
+					count++;
+				}
+			}
+			return "";
+		}
 
 		virtual std::any createAnyPointer(uintptr_t pointer) override final
 		{
