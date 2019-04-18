@@ -54,16 +54,16 @@ std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 	{
 		if (indexType.isIntType())
 		{
-			return containerItemType.getObjectType()->getTypeCaster()->getItemOfStringIndexedMapOf(arrayValue, std::any_cast<int>(indexValue));
+			return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<int>(indexValue));
 		}
 		else if (indexType.isStringType())
 		{
-			return containerItemType.getObjectType()->getTypeCaster()->getItemOfStringIndexedMapOf(arrayValue, std::any_cast<std::string>(indexValue));
+			return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<std::string>(indexValue));
 		}
 	}
 	else if (arrayType.isVectorType())
 	{
-		return containerItemType.getObjectType()->getTypeCaster()->getItemOfVectorOf(arrayValue, std::any_cast<int>(indexValue));
+		return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<int>(indexValue));
 	}
 	return containerItemType.createDefault();
 }

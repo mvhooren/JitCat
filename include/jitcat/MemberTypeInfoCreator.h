@@ -118,20 +118,21 @@ namespace jitcat::Reflection
 		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType> ClassType::* member, bool isConst, bool isWritable) 
 		{
 			TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-			return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, CatGenericType(ContainerType::Vector, nestedType, false, isConst));
+			
+			return new ContainerMemberInfo<ClassType, std::vector<ItemType> >(memberName, member, TypeTraits<std::vector<ItemType>>::toGenericType());
 		}
 	};
 
 
-	template <typename ItemType>
-	class MemberTypeInfoCreator<std::map<std::string, ItemType> >
+	template <typename ItemType, typename Compare>
+	class MemberTypeInfoCreator<std::map<std::string, ItemType, Compare> >
 	{
 	public:
 		template<typename ClassType>
-		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<std::string, ItemType> ClassType::* member, bool isConst, bool isWritable) 
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<std::string, ItemType, Compare> ClassType::* member, bool isConst, bool isWritable) 
 		{
 			TypeInfo* nestedType = TypeTraits<ItemType>::getTypeInfo();
-			return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType> >(memberName, member, CatGenericType(ContainerType::StringMap, nestedType, false, isConst));
+			return new ContainerMemberInfo<ClassType, std::map<std::string, ItemType, Compare> >(memberName, member, TypeTraits<std::map<std::string, ItemType, Compare>>::toGenericType());
 		}
 	};
 

@@ -62,8 +62,8 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 			else if (valueType.isBoolType())	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
 			else if (valueType.isStringType())	return std::any(reinterpret_cast<std::string(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
 			else if (valueType.isObjectType())	return valueType.getObjectType()->getTypeCaster()->cast(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isVectorType())	return valueType.getObjectType()->getTypeCaster()->castToVectorOf(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isMapType())		return valueType.getObjectType()->getTypeCaster()->castToStringIndexedMapOf(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isVectorType())	return valueType.getContainerManipulator()->createAnyPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+			else if (valueType.isMapType())		return valueType.getContainerManipulator()->createAnyPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
 			else 
 			{
 				return std::any();
