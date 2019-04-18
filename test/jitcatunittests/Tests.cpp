@@ -117,6 +117,33 @@ void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, 
 
 
 template <typename T>
+void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, ExpressionAny& expression, CatRuntimeContext& context)
+{
+	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
+	{
+		if constexpr (std::is_same<T, float>::value)
+		{
+			CHECK(std::any_cast<float>(expression.getValue(&context)) == Approx(expectedValue).epsilon(0.001f));
+			CHECK(std::any_cast<float>(expression.getInterpretedValue(&context)) == Approx(expectedValue).epsilon(0.001f));
+		}
+		else
+		{
+			CHECK(std::any_cast<T>(expression.getValue(&context)) == expectedValue);
+			CHECK(std::any_cast<T>(expression.getInterpretedValue(&context)) == expectedValue);
+		}
+	}
+	else if (shouldHaveError)
+	{
+		if constexpr (!std::is_same<T, void>::value)
+		{
+			//When te expression has an error, the getValue functions should return the default value
+			CHECK(std::any_cast<T>(expression.getValue(&context)) == T());
+			CHECK(std::any_cast<T>(expression.getInterpretedValue(&context)) == T());
+		}
+	}
+}
+
+template <typename T>
 void checkAssignment(T& assignedValue, const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, Expression<void>& expression, CatRuntimeContext& context)
 {
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
@@ -4151,124 +4178,67 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	SECTION("Literal Float")
 	{
 		ExpressionAny testExpression(&context, "1.1f");
-		doCommonChecks(&testExpression, false, true, true, context);
-		CHECK(testExpression.getType().isFloatType());
-		std::any value = testExpression.getValue(&context);
-		float castValue = std::any_cast<float>(value);
-		REQUIRE(castValue == 1.1f);
+		doChecks(1.1f, false, true, true, testExpression, context);
 	}
 	SECTION("Literal Int")
 	{
 		ExpressionAny testExpression(&context, "11");
-		doCommonChecks(&testExpression, false, true, true, context);
-		CHECK(testExpression.getType().isIntType());
-		std::any value = testExpression.getValue(&context);
-		int castValue = std::any_cast<int>(value);
-		REQUIRE(castValue == 11);
+		doChecks(11, false, true, true, testExpression, context);
 	}
 	SECTION("Literal Boolean true")
 	{
 		ExpressionAny testExpression(&context, "true");
-		doCommonChecks(&testExpression, false, true, true, context);
-		CHECK(testExpression.getType().isBoolType());
-		std::any value = testExpression.getValue(&context);
-		bool castValue = std::any_cast<bool>(value);
-		REQUIRE(castValue == true);
+		doChecks(true, false, true, true, testExpression, context);
 	}
 	SECTION("Literal Boolean false")
 	{
 		ExpressionAny testExpression(&context, "false");
-		doCommonChecks(&testExpression, false, true, true, context);
-		CHECK(testExpression.getType().isBoolType());
-		std::any value = testExpression.getValue(&context);
-		bool castValue = std::any_cast<bool>(value);
-		REQUIRE(castValue == false);
+		doChecks(false, false, true, true, testExpression, context);
 	}
 	SECTION("Literal String")
 	{
 		ExpressionAny testExpression(&context, "\"test\"");
-		doCommonChecks(&testExpression, false, true, true, context);
-		CHECK(testExpression.getType().isStringType());
-		std::any value = testExpression.getValue(&context);
-		std::string castValue = std::any_cast<std::string>(value);
-		REQUIRE(castValue == "test");
+		doChecks(std::string("test"), false, true, true, testExpression, context);
 	}
 	SECTION("Float Variable")
 	{
 		ExpressionAny testExpression(&context, "aFloat");
-		doCommonChecks(&testExpression, false, false, false, context);
-		CHECK(testExpression.getType().isFloatType());
-		std::any value = testExpression.getValue(&context);
-		float castValue = std::any_cast<float>(value);
-		REQUIRE(castValue == 999.9f);
+		doChecks(999.9f, false, false, false, testExpression, context);
 	}
 	SECTION("Int Variable")
 	{
 		ExpressionAny testExpression(&context, "theInt");
-		doCommonChecks(&testExpression, false, false, false, context);
-		CHECK(testExpression.getType().isIntType());
-		std::any value = testExpression.getValue(&context);
-		int castValue = std::any_cast<int>(value);
-		REQUIRE(castValue == 42);
+		doChecks(42, false, false, false, testExpression, context);
 	}
 	SECTION("Boolean Variable true")
 	{
 		ExpressionAny testExpression(&context, "aBoolean");
-		doCommonChecks(&testExpression, false, false, false, context);
-		CHECK(testExpression.getType().isBoolType());
-		std::any value = testExpression.getValue(&context);
-		bool castValue = std::any_cast<bool>(value);
-		REQUIRE(castValue == true);
+		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("Boolean Variable false")
 	{
 		ExpressionAny testExpression(&context, "no");
-		doCommonChecks(&testExpression, false, false, false, context);
-		CHECK(testExpression.getType().isBoolType());
-		std::any value = testExpression.getValue(&context);
-		bool castValue = std::any_cast<bool>(value);
-		REQUIRE(castValue == false);
+		doChecks(false, false, false, false, testExpression, context);
 	}
 	SECTION("String Variable")
 	{
 		ExpressionAny testExpression(&context, "text");
-		doCommonChecks(&testExpression, false, false, false, context);
-		CHECK(testExpression.getType().isStringType());
-		std::any value = testExpression.getValue(&context);
-		std::string castValue = std::any_cast<std::string>(value);
-		REQUIRE(castValue == "Hello!");
+		doChecks(std::string("Hello!"), false, false, false, testExpression, context);
 	}
 	SECTION("Object Variable")
 	{
 		ExpressionAny testExpression(&context, "nestedSelfObject");
-		doCommonChecks(&testExpression, false, false, false, context);
-		CHECK(testExpression.getType() == genericType);
-		std::any value = testExpression.getValue(&context);
-		ReflectedObject* castValue = static_cast<ReflectedObject*>(std::any_cast<Reflectable*>(value));
-		REQUIRE_FALSE(castValue == nullptr);
-		CHECK(castValue == reflectedObject.nestedSelfObject);
+		doChecks((Reflection::Reflectable*)reflectedObject.nestedSelfObject, false, false, false, testExpression, context);
 	}
 	SECTION("Vector Variable")
 	{
 		ExpressionAny testExpression(&context, "reflectableObjectsVector");
-		doCommonChecks(&testExpression, false, false, false, context);
-		REQUIRE(testExpression.getType().isVectorType());
-		REQUIRE(testExpression.getType().getContainerItemType().isObjectType());
-		std::any value = testExpression.getValue(&context);
-		std::vector<NestedReflectedObject*>* castValue = std::any_cast<std::vector<NestedReflectedObject*>*>(value);
-		REQUIRE_FALSE(castValue == nullptr);
-		CHECK(castValue->size() == 2);
+		doChecks(&reflectedObject.reflectableObjectsVector, false, false, false, testExpression, context);
 	}
 	SECTION("Map Variable")
 	{
 		ExpressionAny testExpression(&context, "reflectableObjectsMap");
-		doCommonChecks(&testExpression, false, false, false, context);
-		REQUIRE(testExpression.getType().isMapType());
-		REQUIRE(testExpression.getType().getContainerItemType().isObjectType());
-		std::any value = testExpression.getValue(&context);
-		std::map<std::string, NestedReflectedObject*>* castValue = std::any_cast<std::map<std::string, NestedReflectedObject*>*>(value);
-		REQUIRE_FALSE(castValue == nullptr);
-		CHECK(castValue->size() == 2);
+		doChecks(&reflectedObject.reflectableObjectsMap, false, false, false, testExpression, context);
 	}
 	SECTION("Void")
 	{
@@ -4277,6 +4247,8 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 		REQUIRE(testExpression.getType().isVoidType());
 		std::any value = testExpression.getValue(&context);
 		CHECK_FALSE(value.has_value());
+		std::any value2 = testExpression.getInterpretedValue(&context);
+		CHECK_FALSE(value2.has_value());
 	}
 }
 

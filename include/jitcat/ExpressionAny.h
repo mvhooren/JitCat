@@ -35,6 +35,10 @@ namespace jitcat
 		//Objects and stl containers are always returned as pointers.
 		const std::any getValue(CatRuntimeContext* runtimeContext);
 
+		//Same as getValue but will always execute the expression using the interpreter.
+		//Should always return the same value as getValue. Used for testing the interpreter when the LLVM backend is enabled.
+		const std::any getInterpretedValue(CatRuntimeContext* runtimeContext);
+
 		virtual void compile(CatRuntimeContext* context) override final;
 
 	protected:
