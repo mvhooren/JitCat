@@ -202,6 +202,10 @@ void LLVMCodeGeneratorHelper::writeToPointer(llvm::Value* lValue, llvm::Value* r
 
 llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, llvm::Type* type, LLVMCompileTimeContext* context)
 {
+	if (valueToConvert->getType() == type)
+	{
+		return valueToConvert;
+	}
 	if (type == LLVMTypes::boolType)
 	{
 		//to 'boolean' type

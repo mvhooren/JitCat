@@ -114,6 +114,8 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("getString", &ReflectedObject::getString)
 		//.addMember("getStringRef", &ReflectedObject::getStringRef) Not yet supported
 		.addMember("getObject", &ReflectedObject::getObject)
+		.addMember("getObject2", &ReflectedObject::getObject2)
+		
 		.addMember("doSomething", &ReflectedObject::doSomething)
 
 		.addMember("getConstantFloat", &ReflectedObject::getConstantFloat)
@@ -196,6 +198,12 @@ const std::string& TestObjects::ReflectedObject::getStringRef()
 
 
 ReflectedObject* ReflectedObject::getObject()
+{
+	return nestedSelfObject;
+}
+
+
+ReflectedObject* TestObjects::ReflectedObject::getObject2(const std::string& name, bool amITrue)
 {
 	return nestedSelfObject;
 }
