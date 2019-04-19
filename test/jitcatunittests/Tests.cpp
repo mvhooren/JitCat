@@ -292,6 +292,24 @@ void checkAnyAssignExpressionCustom(CustomTypeInstance* instance, const std::str
 }
 
 
+TEST_CASE("Regression testing", "[regression]")
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	reflectedObject.nestedSelfObject->createNestedObjects();
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("regressionTests", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+
+	SECTION("Crash when using select with object types.")
+	{
+		Expression<TestObjects::NestedReflectedObject*> testExpression(&context, "select(!nestedSelfObject.getObject2(text, false).no, nestedSelfObject.getObject2(text, false).nestedObject, nestedObjectPointer)");
+		doChecks(&reflectedObject.nestedSelfObject->getObject2(reflectedObject.text, false)->nestedObject, false, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Floating Point Tests", "[float][operators]" ) 
 {
 	ReflectedObject reflectedObject;

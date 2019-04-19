@@ -63,6 +63,8 @@ namespace TestObjects
 		std::string getString();
 		const std::string& getStringRef();
 		ReflectedObject* getObject();
+		ReflectedObject* getObject2(const std::string& name, bool amITrue);
+
 		void doSomething();
 
 		//const versions of all supported return types
