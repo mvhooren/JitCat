@@ -60,10 +60,10 @@ namespace jitcat
 	template <typename ItemType, typename AllocatorT>
 	const CatGenericType& TypeTraits<std::vector<ItemType, AllocatorT>>::toGenericType()
 	{
-		static std::unique_ptr<Reflection::ContainerManipulator> vectorManipulator(new jitcat::Reflection::VectorManipulator<std::vector<ItemType, AllocatorT>>());
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Vector, vectorManipulator.get()));
 		//Make sure that the item type is known to the type system.
 		TypeTraits<ItemType>::toGenericType();
+		static std::unique_ptr<Reflection::ContainerManipulator> vectorManipulator(new jitcat::Reflection::VectorManipulator<std::vector<ItemType, AllocatorT>>());
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Vector, vectorManipulator.get()));
 		return *type.get();
 	}
 
@@ -71,11 +71,11 @@ namespace jitcat
 	template <typename KeyType, typename ItemType, typename ComparatorT, typename AllocatorT>
 	const CatGenericType& TypeTraits<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>::toGenericType()
 	{
-		static std::unique_ptr<Reflection::ContainerManipulator> mapManipulator(new jitcat::Reflection::MapManipulator<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>());
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Map, mapManipulator.get()));
 		//Make sure that the key type and item type are known to the type system.
 		TypeTraits<ItemType>::toGenericType();
 		TypeTraits<KeyType>::toGenericType();
+		static std::unique_ptr<Reflection::ContainerManipulator> mapManipulator(new jitcat::Reflection::MapManipulator<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>());
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Map, mapManipulator.get()));
 		return *type.get();
 	}
 
