@@ -19,13 +19,14 @@ namespace jitcat::Reflection
 
 	class Reflectable
 	{
-	private:
-		//disable copying, this is usually a bad idea because of the observers list
-		Reflectable(const Reflectable& );
 	public:
 		Reflectable();
-		//Do allow move construction, all the observers will be updated to the new Reflectable
-		Reflectable(Reflectable&&) noexcept;
+		Reflectable(const Reflectable& other);
+		//Allow move construction, all the observers will be updated to the new Reflectable
+		Reflectable(Reflectable&& other) noexcept;
+
+		Reflectable& operator=(const Reflectable& other);
+
 		virtual ~Reflectable();
 
 		void addObserver(ReflectableHandle* observer);
