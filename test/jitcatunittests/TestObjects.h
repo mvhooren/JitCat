@@ -27,6 +27,7 @@ namespace TestObjects
 		}
 	};
 
+	class ReflectedObject;
 
 	class NestedReflectedObject: public jitcat::Reflection::Reflectable
 	{
@@ -42,6 +43,8 @@ namespace TestObjects
 			float someFloat;
 			bool someBoolean;
 			NestedReflectedObject* nullObject;
+			//Test for circular reference
+			ReflectedObject* nullCircularRefObject;
 	};
 
 

@@ -16,7 +16,8 @@ namespace jitcat
 	template<typename T>
 	const CatGenericType& TypeTraits<T>::toGenericType()
 	{
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::TypeRegistry::get()->registerType<T>()));
+		TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<T>();
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(typeInfo));
 		return *type.get();
 	}
 
@@ -38,7 +39,8 @@ namespace jitcat
 	template <typename U>
 	const CatGenericType& TypeTraits<U*>::toGenericType()
 	{
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::TypeRegistry::get()->registerType<U>()));
+		TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<U>();
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(typeInfo));
 		return *type.get();
 	}
 
