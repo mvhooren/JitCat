@@ -11,6 +11,13 @@
 using namespace jitcat::Reflection;
 
 
+jitcat::Reflection::Reflectable::Reflectable(const Reflectable& other)
+{
+	//Observers are not copied.
+	//Use move constructor if observers should be copied and updated.
+}
+
+
 Reflectable::Reflectable()
 {
 }
@@ -22,6 +29,14 @@ Reflectable::Reflectable(Reflectable&& other) noexcept
 	{
 		(*other.observers.begin())->operator=(this);
 	}
+}
+
+
+Reflectable& jitcat::Reflection::Reflectable::operator=(const Reflectable& other)
+{
+	//Observers are not copied.
+	//Use move constructor if observers should be copied and updated.
+	return *this;
 }
 
 

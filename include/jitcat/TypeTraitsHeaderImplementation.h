@@ -62,6 +62,8 @@ namespace jitcat
 	{
 		static std::unique_ptr<Reflection::ContainerManipulator> vectorManipulator(new jitcat::Reflection::VectorManipulator<std::vector<ItemType, AllocatorT>>());
 		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Vector, vectorManipulator.get()));
+		//Make sure that the item type is known to the type system.
+		TypeTraits<ItemType>::toGenericType();
 		return *type.get();
 	}
 
@@ -71,6 +73,9 @@ namespace jitcat
 	{
 		static std::unique_ptr<Reflection::ContainerManipulator> mapManipulator(new jitcat::Reflection::MapManipulator<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>());
 		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Map, mapManipulator.get()));
+		//Make sure that the key type and item type are known to the type system.
+		TypeTraits<ItemType>::toGenericType();
+		TypeTraits<KeyType>::toGenericType();
 		return *type.get();
 	}
 
