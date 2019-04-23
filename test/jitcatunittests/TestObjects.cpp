@@ -20,7 +20,8 @@ NestedReflectedObject::NestedReflectedObject():
 	someInt(21),
 	someFloat(1.1f),
 	someBoolean(true),
-	nullObject(nullptr)
+	nullObject(nullptr),
+	nullCircularRefObject(nullptr)
 {
 }
 
@@ -32,7 +33,9 @@ void NestedReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("someInt", &NestedReflectedObject::someInt)
 		.addMember("someFloat", &NestedReflectedObject::someFloat)
 		.addMember("someBoolean", &NestedReflectedObject::someBoolean)
-		.addMember("nullObject", &NestedReflectedObject::nullObject);
+		.addMember("nullObject", &NestedReflectedObject::nullObject)
+		.addMember("nullCircularRefObject", &NestedReflectedObject::nullCircularRefObject)
+		.addMember("emptyCircularRefList", &NestedReflectedObject::emptyCircularRefList);
 }
 
 
