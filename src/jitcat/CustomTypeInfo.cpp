@@ -7,6 +7,7 @@
 
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ReflectableHandle.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
@@ -238,9 +239,11 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 }
 
 
-void jitcat::Reflection::CustomTypeInfo::addMemberFunction(const std::string& memberFunctionName, AST::CatFunctionDefinition* functionDefinition)
+CustomTypeMemberFunctionInfo* jitcat::Reflection::CustomTypeInfo::addMemberFunction(const std::string& memberFunctionName, const CatGenericType& thisType, AST::CatFunctionDefinition* functionDefinition)
 {
-
+	CustomTypeMemberFunctionInfo* functionInfo = new CustomTypeMemberFunctionInfo(functionDefinition, thisType);
+	memberFunctions.emplace(memberFunctionName, functionInfo);
+	return functionInfo;
 }
 
 

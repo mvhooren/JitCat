@@ -28,7 +28,7 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 
-		const std::vector<const CatClassDefinition*>& getClassDefinitions() const;
+		const std::vector<CatClassDefinition*>& getClassDefinitions() const;
 		const std::vector<CatFunctionDefinition*>& getFunctionDefinitions() const;
 
 		bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
@@ -40,7 +40,7 @@ namespace jitcat::AST
 		std::vector<std::unique_ptr<CatDefinition>> definitions;
 
 		//All class definitions
-		std::vector<const CatClassDefinition*> classDefinitions;
+		std::vector<CatClassDefinition*> classDefinitions;
 
 		//All global function definitions
 		std::vector<CatFunctionDefinition*> functionDefinitions;

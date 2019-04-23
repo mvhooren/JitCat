@@ -8,8 +8,11 @@
 #pragma once
 
 #include "jitcat/CatFunctionDefinition.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/TypeInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
 
 #include <memory>
@@ -19,9 +22,10 @@ namespace jitcat::Reflection
 {
 	struct CustomTypeMemberFunctionInfo: public MemberFunctionInfo
 	{
-		CustomTypeMemberFunctionInfo(AST::CatFunctionDefinition* functionDefinition): 
+		CustomTypeMemberFunctionInfo(AST::CatFunctionDefinition* functionDefinition, const CatGenericType& thisType) :
 			MemberFunctionInfo(functionDefinition->getFunctionName(), functionDefinition->getReturnTypeNode()->getType()),
-			functionDefinition(functionDefinition)
+			functionDefinition(functionDefinition),
+			thisType(thisType)
 		{
 			int numParameters = functionDefinition->getNumParameters(); 
 			for (int i = 0; i < numParameters; i++)
@@ -37,7 +41,15 @@ namespace jitcat::Reflection
 
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
 		{ 
-			return functionDefinition->executeFunctionWithArguments(runtimeContext, parameters);
+			if (base.has_value())
+			{
+				Reflectable* baseReflectable = std::any_cast<Reflectable*>(base);
+				CatScopeID scope = runtimeContext->addScope(thisType.getObjectType(), baseReflectable, false);
+				std::any result = functionDefinition->executeFunctionWithArguments(runtimeContext, parameters);
+				runtimeContext->removeScope(scope);
+				return result;
+			}
+			return functionDefinition->getReturnTypeNode()->getType().createDefault();
 		}
 
 
@@ -46,7 +58,7 @@ namespace jitcat::Reflection
 			return MemberFunctionCallData();
 		}
 
-
+		CatGenericType thisType;
 		AST::CatFunctionDefinition* functionDefinition;
 	};
 }

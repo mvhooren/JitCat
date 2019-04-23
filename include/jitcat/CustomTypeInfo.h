@@ -19,7 +19,7 @@ namespace jitcat::AST
 namespace jitcat::Reflection
 {
 	class CustomTypeInstance;
-
+	struct CustomTypeMemberFunctionInfo;
 
 	//Represents the type of a struct that can be defined at runtime.
 	//Fields can be added to the struct using the addMember functions.
@@ -47,7 +47,7 @@ namespace jitcat::Reflection
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
 
-		void addMemberFunction(const std::string& memberFunctionName, AST::CatFunctionDefinition* functionDefinition);
+		CustomTypeMemberFunctionInfo* addMemberFunction(const std::string& memberFunctionName, const CatGenericType& thisType, AST::CatFunctionDefinition* functionDefinition);
 
 		//This will not shrink the typeSize, only remove the member from the list.
 		//The data will only shrink after a restart of the program.

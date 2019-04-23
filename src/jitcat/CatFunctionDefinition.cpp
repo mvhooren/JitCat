@@ -34,7 +34,8 @@ jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, con
 	name(name),
 	parameters(parameters),
 	scopeBlock(scopeBlock),
-	parametersScopeId(InvalidScopeID)
+	parametersScopeId(InvalidScopeID),
+	memberFunctionInfo(nullptr)
 {
 }
 
@@ -113,6 +114,11 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 		return false;
 	}
 	errorManager->compiledWithoutErrors(this);
+	CatScope* currentScope = compileTimeContext->getCurrentScope();
+	if (currentScope != nullptr)
+	{
+		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, compileTimeContext->getScopeType(currentScope->getScopeId()), this);
+	}
 	return true;
 }
 

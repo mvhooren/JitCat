@@ -24,6 +24,7 @@ namespace jitcat::Reflection
 {
 	class CustomTypeInstance;
 	class CustomTypeInfo;
+	struct CustomTypeMemberFunctionInfo;
 }
 
 namespace jitcat::AST
@@ -74,6 +75,9 @@ namespace jitcat::AST
 		CatScopeID parametersScopeId;
 		std::unique_ptr<CatScopeBlock> scopeBlock;
 		Reflection::ReflectableHandle errorManagerHandle;
+
+		//not owned
+		Reflection::CustomTypeMemberFunctionInfo* memberFunctionInfo;
 	};
 
 

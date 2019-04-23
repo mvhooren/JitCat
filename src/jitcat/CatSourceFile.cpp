@@ -59,7 +59,7 @@ CatASTNodeType jitcat::AST::CatSourceFile::getNodeType()
 }
 
 
-const std::vector<const CatClassDefinition*>& jitcat::AST::CatSourceFile::getClassDefinitions() const
+const std::vector<CatClassDefinition*>& jitcat::AST::CatSourceFile::getClassDefinitions() const
 {
 	return classDefinitions;
 }
