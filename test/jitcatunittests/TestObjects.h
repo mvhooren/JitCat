@@ -45,6 +45,7 @@ namespace TestObjects
 			NestedReflectedObject* nullObject;
 			//Test for circular reference
 			ReflectedObject* nullCircularRefObject;
+			std::vector<ReflectedObject*> emptyCircularRefList;
 	};
 
 
