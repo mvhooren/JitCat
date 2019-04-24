@@ -86,6 +86,10 @@ namespace jitcat
 		//Same as addScope but uses a custom type (a struct defined at runtime) instead of a reflected C++ class.
 		CatScopeID addCustomTypeScope(Reflection::CustomTypeInfo* typeInfo, Reflection::CustomTypeInstance* scopeObject = nullptr, bool isStatic = false);
 
+		void pushStackFrame();
+		void popStackFrame();
+
+
 		int getNumScopes() const;
 		//When a scope is removed, any expressions that were compiled using this context should be recompiled.
 		void removeScope(CatScopeID id);
@@ -119,6 +123,7 @@ namespace jitcat
 
 	private:
 		CatScopeID createScope(Reflection::Reflectable* scopeObject, Reflection::TypeInfo* type, bool isStatic);
+		Scope* getScope(CatScopeID scopeId) const;
 
 	public:
 		static CatRuntimeContext defaultContext;
@@ -136,6 +141,11 @@ namespace jitcat
 		//Scopes should not actually be removed from this list (but they can be set to nullptr if removeScope is called).
 		//This allows the ScopeID to be equal to the index of the scope in this vector.
 		std::vector<std::unique_ptr<Scope>> scopes;
+		//A separate list of static scopes because static scopes are available accross function calls.
+		std::vector<std::unique_ptr<Scope>> staticScopes;
+		
+		CatScopeID currentStackFrameOffset;
+		std::vector<CatScopeID> stackFrameOffsets;
 
 	#ifdef ENABLE_LLVM
 		std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator;

@@ -29,6 +29,7 @@ CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionE
 #ifdef ENABLE_LLVM
 	codeGenerator(nullptr),
 #endif
+	currentStackFrameOffset(0),
 	nextFunctionIndex(0),
 	currentFunctionDefinition(nullptr),
 	currentScope(nullptr),
@@ -89,6 +90,27 @@ CatScopeID CatRuntimeContext::addCustomTypeScope(CustomTypeInfo* typeInfo, Custo
 }
 
 
+void jitcat::CatRuntimeContext::pushStackFrame()
+{
+	currentStackFrameOffset = (int)scopes.size();
+	stackFrameOffsets.push_back(currentStackFrameOffset);
+}
+
+
+void jitcat::CatRuntimeContext::popStackFrame()
+{
+	stackFrameOffsets.pop_back();
+	if (stackFrameOffsets.size() > 0)
+	{
+		currentStackFrameOffset = stackFrameOffsets.back();
+	}
+	else
+	{
+		currentStackFrameOffset = 0;
+	}
+}
+
+
 int CatRuntimeContext::getNumScopes() const
 {
 	return (int)scopes.size();
@@ -97,8 +119,16 @@ int CatRuntimeContext::getNumScopes() const
 
 void CatRuntimeContext::removeScope(CatScopeID id)
 {
-	if (id != InvalidScopeID)
+	if (id < InvalidScopeID)
 	{
+		//Static scope
+		id = std::abs(id) - 2;
+		assert(id >= 0 && id < staticScopes.size());
+		staticScopes.erase(staticScopes.begin() + id);
+	}
+	else if (id != InvalidScopeID)
+	{
+		id += currentStackFrameOffset;
 		assert(id >= 0 && id < scopes.size());
 		scopes.erase(scopes.begin() + id);
 	}
@@ -107,8 +137,7 @@ void CatRuntimeContext::removeScope(CatScopeID id)
 
 void CatRuntimeContext::setScopeObject(CatScopeID id, Reflectable* scopeObject)
 {
-	assert(id >= 0 && id < scopes.size());
-	Scope* scope = scopes[id].get();
+	Scope* scope = getScope(id);
 	if (scope->scopeType->isCustomType())
 	{
 		assert(static_cast<CustomTypeInstance*>(scopeObject)->typeInfo == scope->scopeType);
@@ -119,22 +148,22 @@ void CatRuntimeContext::setScopeObject(CatScopeID id, Reflectable* scopeObject)
 
 bool CatRuntimeContext::isStaticScope(CatScopeID id) const
 {
-	assert(id >= 0 && id < scopes.size());
-	return scopes[id]->isStatic;
+	Scope* scope = getScope(id);
+	return scope->isStatic;
 }
 
 
 Reflectable* CatRuntimeContext::getScopeObject(CatScopeID id) const
 {
-	assert(id >= 0 && id < scopes.size());
-	return scopes[id]->scopeObject.get();
+	Scope* scope = getScope(id);
+	return scope->scopeObject.get();
 }
 
 
 TypeInfo* CatRuntimeContext::getScopeType(CatScopeID id) const
 {
-	assert(id >= 0 && id < scopes.size());
-	return scopes[id]->scopeType;
+	Scope* scope = getScope(id);
+	return scope->scopeType;
 }
 
 
@@ -175,6 +204,15 @@ TypeMemberInfo* CatRuntimeContext::findVariable(const std::string& lowercaseName
 			return memberInfo;
 		}
 	}
+	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
+	{
+		TypeMemberInfo* memberInfo = staticScopes[i]->scopeType->getMemberInfo(lowercaseName);
+		if (memberInfo != nullptr)
+		{
+			scopeId = InvalidScopeID - i - 1;
+			return memberInfo;
+		}
+	}
 	return nullptr;
 }
 
@@ -187,6 +225,15 @@ MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercase
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = i;
+			return memberFunctionInfo;
+		}
+	}
+	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
+	{
+		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getMemberFunctionInfo(lowercaseName);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = InvalidScopeID - i - 1;
 			return memberFunctionInfo;
 		}
 	}
@@ -266,8 +313,36 @@ CatScopeID CatRuntimeContext::createScope(Reflectable* scopeObject, TypeInfo* ty
 	scope->isStatic = isStatic;
 	scope->scopeObject = scopeObject;
 	scope->scopeType = type;
-	scopes.emplace_back(scope);
-	return static_cast<CatScopeID>((int)scopes.size() - 1);
+	if (!isStatic)
+	{
+		scopes.emplace_back(scope);
+		return static_cast<CatScopeID>((int)scopes.size() - 1) - currentStackFrameOffset;
+	}
+	else
+	{
+		staticScopes.emplace_back(scope);
+		return static_cast<CatScopeID>(InvalidScopeID - (int)staticScopes.size());
+	}
+}
+
+
+CatRuntimeContext::Scope* jitcat::CatRuntimeContext::getScope(CatScopeID scopeId) const
+{
+	if (scopeId < InvalidScopeID)
+	{
+		//Static scope
+		scopeId = std::abs(scopeId) - 2;
+		assert(scopeId >= 0 && scopeId < staticScopes.size());
+
+		return staticScopes[scopeId].get();
+	}
+	else if (scopeId != InvalidScopeID)
+	{
+		scopeId += currentStackFrameOffset;
+		assert(scopeId >= 0 && scopeId < scopes.size());
+		return scopes[scopeId].get();
+	}
+	return nullptr;
 }
 
 
