@@ -34,7 +34,7 @@ void NestedReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("someFloat", &NestedReflectedObject::someFloat)
 		.addMember("someBoolean", &NestedReflectedObject::someBoolean)
 		.addMember("nullObject", &NestedReflectedObject::nullObject)
-		.addMember("nullCircularRefObject", &NestedReflectedObject::nullCircularRefObject)
+		.addMember("nullCircularRefObject", &NestedReflectedObject::nullCircularRefObject, MF::isWritable)
 		.addMember("emptyCircularRefList", &NestedReflectedObject::emptyCircularRefList);
 }
 
