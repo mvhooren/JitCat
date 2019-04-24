@@ -3290,6 +3290,13 @@ TEST_CASE("Assign tests", "[assign]" )
 	std::unique_ptr<CustomTypeInstance> typeInstance(customType->createInstance());
 	context.addCustomTypeScope(customType.get(), typeInstance.get());
 
+	const char* customStaticTypeName = "MyStaticType";
+	TypeRegistry::get()->removeType(customStaticTypeName);
+	std::unique_ptr<CustomTypeInfo> customStaticType(new CustomTypeInfo(customStaticTypeName));
+	customStaticType->addObjectMember("myStaticObject", &reflectedObject, objectTypeInfo);
+	customStaticType->addObjectMember("myStaticCustomObject", typeInstance.get(), customType.get());
+	std::unique_ptr<CustomTypeInstance> staticTypeInstance(customStaticType->createInstance());
+	context.addCustomTypeScope(customStaticType.get(), staticTypeInstance.get(), true);
 
 	SECTION("Assign reflected int")
 	{
@@ -3316,7 +3323,25 @@ TEST_CASE("Assign tests", "[assign]" )
 		Expression<void> testExpression(&context, "nestedObjectPointer = nestedObject");
 		checkAssignment((Reflectable*&)reflectedObject.nestedObjectPointer, (Reflectable*)&reflectedObject.nestedObject, false, false, false, testExpression, context);	
 	}
-
+	SECTION("Assign reflected object 2")
+	{
+		Expression<void> testExpression(&context, "nestedSelfObject.nestedObjectPointer = nestedObject");
+		checkAssignment((Reflectable * &)reflectedObject.nestedSelfObject->nestedObjectPointer, (Reflectable*)& reflectedObject.nestedObject, false, false, false, testExpression, context);
+	}
+	SECTION("Assign custom object")
+	{
+		Expression<void> testExpression(&context, "myNullObject = nestedSelfObject");
+		doCommonChecks(&testExpression, false, false, false, context);
+		testExpression.getValue(&context);
+		testExpression.getInterpretedValue(&context);
+	}
+	SECTION("Assign static custom object")
+	{
+		Expression<void> testExpression(&context, "myStaticCustomObject.myNullObject = nestedSelfObject");
+		doCommonChecks(&testExpression, false, false, false, context);
+		testExpression.getValue(&context);
+		testExpression.getInterpretedValue(&context);
+	}
 	SECTION("Assign nonWritable int")
 	{
 		Expression<void> testExpression(&context, "largeInt = -99");

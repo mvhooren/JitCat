@@ -251,8 +251,10 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Va
 	{
 		//Create an llvm constant that contains the offset to "data"
 		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
+		//Convert pointer to int so it can be used in createAdd
+		llvm::Value* parentAddressInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		//Add the offset to the address of the CustomTypeInstance object
-		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentObjectPointer, dataPointerOffsetValue, "dataPtr_IntPtr");
+		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentAddressInt, dataPointerOffsetValue, "dataPtr_IntPtr");
 		//Load the data pointer stored inside the CustomTypeInstance object
 		llvm::Value* dataPointer = context->helper->loadPointerAtAddress(dataPointerAddressValue, "data_Ptr");
 		//Convert to int so we can add the offset
@@ -282,8 +284,10 @@ inline llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* 
 	{
 		//Create an llvm constant that contains the offset to "data"
 		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
+		//Convert pointer to int so it can be used in createAdd
+		llvm::Value* parentAddressInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		//Add the offset to the address of the CustomTypeInstance object
-		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentObjectPointer, dataPointerOffsetValue, "dataPtr_IntPtr");
+		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentAddressInt, dataPointerOffsetValue, "dataPtr_IntPtr");
 		//Load the data pointer stored inside the CustomTypeInstance object
 		llvm::Value* dataPointer = context->helper->loadPointerAtAddress(dataPointerAddressValue, "data_Ptr");
 		//Convert to int so we can add the offset
