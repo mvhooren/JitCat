@@ -36,8 +36,7 @@ namespace jitcat
 		template<typename T>
 		bool assignValue(CatRuntimeContext* runtimeContext, T* value, const CatGenericType& valueType)
 		{
-			std::any reflectableAny = valueType.getObjectType()->getTypeCaster()->cast(value);
-			return assignValue(runtimeContext, reflectableAny, valueType);
+			return assignUncastedPointer(runtimeContext, value, valueType);
 		}
 
 		//Executes the expression and assigns the value parameter to the result of the expression.
@@ -49,8 +48,7 @@ namespace jitcat
 		template<typename T>
 		bool assignInterpretedValue(CatRuntimeContext* runtimeContext, T* value, const CatGenericType& valueType)
 		{
-			std::any reflectableValue = valueType.getObjectType()->getTypeCaster()->cast(value);
-			return assignInterpretedValue(runtimeContext, reflectableValue, valueType);
+			return assignInterpretedUncastedPointer(runtimeContext, value, valueType);
 		}
 
 		//Same as assignValue but will always execute the expression using the interpreter.
@@ -63,6 +61,10 @@ namespace jitcat
 
 	protected:
 		virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
+
+	private:
+		bool assignUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType);
+		bool assignInterpretedUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType);
 
 	private:
 		uintptr_t nativeFunctionAddress;

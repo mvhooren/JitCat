@@ -102,3 +102,17 @@ void ExpressionAssignAny::handleCompiledFunction(uintptr_t functionAddress)
 {
 	nativeFunctionAddress = functionAddress;
 }
+
+
+bool jitcat::ExpressionAssignAny::assignUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType)
+{
+	std::any reflectableAny = valueType.getObjectType()->getTypeCaster()->cast(pointerValue);
+	return assignValue(runtimeContext, reflectableAny, valueType);
+}
+
+
+bool jitcat::ExpressionAssignAny::assignInterpretedUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType)
+{
+	std::any reflectableValue = valueType.getObjectType()->getTypeCaster()->cast(pointerValue);
+	return assignInterpretedValue(runtimeContext, reflectableValue, valueType);
+}
