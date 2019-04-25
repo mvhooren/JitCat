@@ -59,8 +59,8 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 			else if (myType.isObjectType())
 			{
 				//Use the type caster to cast the object contained in value to a std::any containing a Reflectable*;
-				std::any reflectableAny = valueType.getObjectType()->getTypeCaster()->cast(value);
-				reinterpret_cast<void(*)(CatRuntimeContext*, Reflectable*)>(nativeFunctionAddress)(runtimeContext, std::any_cast<Reflectable*>(reflectableAny));
+				//std::any reflectableAny = valueType.getObjectType()->getTypeCaster()->cast(value);
+				reinterpret_cast<void(*)(CatRuntimeContext*, Reflectable*)>(nativeFunctionAddress)(runtimeContext, std::any_cast<Reflectable*>(value));
 			}
 			else
 			{
@@ -84,10 +84,6 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 		jitcat::AST::CatAssignableExpression* assignable = parseResult->getNode<AST::CatAssignableExpression>();
 		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
 		std::any target = assignable->executeAssignable(runtimeContext, assignableType);
-		if (getType().isObjectType())
-		{
-			value = valueType.getObjectType()->getTypeCaster()->cast(value);
-		}
 		value = getType().convertToType(value, valueType);
 		jitcat::AST::ASTHelper::doAssignment(target, value, getType().toWritable(), assignableType);
 		return true;

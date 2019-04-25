@@ -254,6 +254,18 @@ void checkAnyAssignExpression(T& assignedValue, const T& newValue, bool shouldHa
 		expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
 		CHECK(assignedValue == newValue);
 		assignedValue = originalValue;
+
+		if constexpr (std::is_pointer<T>::value)
+		{
+			expression.assignValue(&context, std::any(static_cast<Reflectable*>(newValue)), TypeTraits<T>::toGenericType());
+			CHECK(assignedValue == newValue);
+			assignedValue = originalValue;
+
+			expression.assignInterpretedValue(&context, std::any(static_cast<Reflectable*>(newValue)), TypeTraits<T>::toGenericType());
+			CHECK(assignedValue == newValue);
+			assignedValue = originalValue;
+		}
+
 	}
 	else if (shouldHaveError)
 	{
