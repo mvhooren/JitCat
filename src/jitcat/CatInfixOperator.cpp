@@ -36,8 +36,8 @@ CatGenericType CatInfixOperator::getType() const
 		case CatInfixOperatorType::Plus:
 			if ((lhsType.isStringType()
 				 && (rhsType.isStringType()
-				     || rhsType.isScalarType()))
-				|| (lhsType.isScalarType()
+				     || rhsType.isBasicType()))
+				|| (lhsType.isBasicType()
 					&& rhsType.isStringType()))
 			{
 				return CatGenericType::stringType;

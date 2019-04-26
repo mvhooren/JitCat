@@ -415,12 +415,12 @@ CatGenericType CatFunctionCall::typeCheck()
 					return CatGenericType::boolType;
 				}
 				else if (argumentTypes[0].isIntType()
-					&& argumentTypes[1].isScalarType())
+						 && argumentTypes[1].isIntType())
 				{
 					return CatGenericType::intType;
 				}
-				else if (argumentTypes[0].isFloatType()
-					&& argumentTypes[0].isScalarType())
+				else if (argumentTypes[0].isScalarType()
+						&& argumentTypes[1].isScalarType())
 				{
 					return CatGenericType::floatType;
 				}
@@ -606,10 +606,27 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::ToBool:
 				return CatGenericType::boolType;
 			case CatBuiltInFunctionType::RandomRange:
-			case CatBuiltInFunctionType::Abs:
-			case CatBuiltInFunctionType::Cap:
+			{
+				if (arguments->arguments[0]->getType().isBoolType() && arguments->arguments[1]->getType().isBoolType())
+				{
+					return CatGenericType::boolType;
+				}
+				//Intentional fall-through
+			}
 			case CatBuiltInFunctionType::Min:
 			case CatBuiltInFunctionType::Max:
+			{
+				if (arguments->arguments[0]->getType().isIntType() && arguments->arguments[1]->getType().isIntType())
+				{
+					return CatGenericType::intType;
+				}
+				else
+				{
+					return CatGenericType::floatType;
+				}
+			}
+			case CatBuiltInFunctionType::Abs:
+			case CatBuiltInFunctionType::Cap:
 				return arguments->arguments[0]->getType();
 			case CatBuiltInFunctionType::Select:
 				return arguments->arguments[1]->getType();
