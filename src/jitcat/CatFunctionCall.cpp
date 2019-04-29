@@ -426,12 +426,12 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 					returnType = CatGenericType::boolType;
 				}
 				else if (argumentTypes[0].isIntType()
-					&& argumentTypes[1].isScalarType())
+						 && argumentTypes[1].isIntType())
 				{
 					returnType = CatGenericType::intType;
 				}
-				else if (argumentTypes[0].isFloatType()
-					&& argumentTypes[0].isScalarType())
+				else if (argumentTypes[0].isScalarType()
+						&& argumentTypes[1].isScalarType())
 				{
 					returnType = CatGenericType::floatType;
 				}

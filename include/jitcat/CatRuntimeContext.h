@@ -138,8 +138,8 @@ namespace jitcat
 		ExpressionErrorManager* errorManager;
 
 		std::string contextName;
-		//Scopes should not actually be removed from this list (but they can be set to nullptr if removeScope is called).
-		//This allows the ScopeID to be equal to the index of the scope in this vector.
+
+		//Scopes used for looking up symbols. Also serves as a runtime stack for the interpreter.
 		std::vector<std::unique_ptr<Scope>> scopes;
 		//A separate list of static scopes because static scopes are available accross function calls.
 		std::vector<std::unique_ptr<Scope>> staticScopes;
