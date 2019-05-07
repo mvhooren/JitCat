@@ -27,7 +27,7 @@ namespace jitcat::AST
 	class CatClassDefinition: public CatDefinition, public CatScope
 	{
 	public:
-		CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme);
+		CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme);
 		virtual ~CatClassDefinition();
 
 		virtual void print() const override final;
@@ -41,6 +41,7 @@ namespace jitcat::AST
 
 	private:
 		std::string name;
+		Tokenizer::Lexeme nameLexeme;
 
 		//All definitions
 		std::vector<std::unique_ptr<CatDefinition>> definitions;

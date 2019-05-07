@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatScopeRoot.h"
+#include "jitcat/CatLiteral.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 
@@ -71,6 +72,10 @@ bool CatScopeRoot::isConst() const
 
 CatTypedExpression* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeContext)
 {
+	if (compileTimeContext->isStaticScope(scopeId))
+	{
+		return new CatLiteral(compileTimeContext->getScopeObject(scopeId), type, getLexeme());
+	}
 	return this;
 }
 

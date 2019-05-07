@@ -319,7 +319,7 @@ ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParse
 	std::vector<std::unique_ptr<CatDefinition>> definitions;
 	Lexeme lexeme = nodeParser.getStackLexeme();
 	unLink(nodeParser.getASTNodeByIndex(0), definitions);
-	return new CatClassDefinition(className, std::move(definitions), nodeParser.getStackLexeme());
+	return new CatClassDefinition(className, std::move(definitions), nodeParser.getStackLexeme(), nodeParser.getTerminalByIndex(1)->getLexeme());
 }
 
 

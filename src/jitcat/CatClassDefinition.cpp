@@ -12,6 +12,7 @@
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatVariableDefinition.h"
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include <cassert>
 
 using namespace jitcat;
@@ -20,9 +21,10 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme):
+jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme):
 	CatDefinition(lexeme),
 	name(name),
+	nameLexeme(nameLexeme),
 	definitions(std::move(definitions)),
 	scopeId(InvalidScopeID),
 	customType(new CustomTypeInfo(name.c_str()))
@@ -98,6 +100,15 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 
 	compileTimeContext->removeScope(scopeId);
 	compileTimeContext->setCurrentScope(previousScope);
+	if (!compileTimeContext->getCurrentScope()->getCustomType()->addType(customType.get()))
+	{
+		compileTimeContext->getErrorManager()->compiledWithError(Tools::append("A type with name ", name, " already exists."), this, compileTimeContext->getContextName(), nameLexeme);
+		noErrors = false;
+	}
+	if (noErrors)
+	{
+		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
+	}
 	return noErrors;
 }
 

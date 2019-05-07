@@ -90,6 +90,9 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	}
 	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
+		//Try to collapse the base into a literal. (in case of a static scope, for example)
+		ASTHelper::updatePointerIfChanged(base, base->constCollapse(compiletimeContext));
+
 		CatGenericType baseType = base->getType();
 		if (!baseType.isObjectType())
 		{

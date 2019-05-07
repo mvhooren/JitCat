@@ -242,7 +242,7 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 CustomTypeMemberFunctionInfo* jitcat::Reflection::CustomTypeInfo::addMemberFunction(const std::string& memberFunctionName, const CatGenericType& thisType, AST::CatFunctionDefinition* functionDefinition)
 {
 	CustomTypeMemberFunctionInfo* functionInfo = new CustomTypeMemberFunctionInfo(functionDefinition, thisType);
-	memberFunctions.emplace(memberFunctionName, functionInfo);
+	memberFunctions.emplace(Tools::toLowerCase(memberFunctionName), functionInfo);
 	return functionInfo;
 }
 

@@ -68,6 +68,13 @@ namespace jitcat::Reflection
 		template <typename T, typename U, typename ... Args>
 		TypeInfo& addMember(const std::string& identifier, U (T::*function)(Args...) const);
 
+		//Add a nested type to this type. Return true if the type was added, false if a type with this name already exists.
+		bool addType(TypeInfo* type);
+		//Set the parent of this type if this type is nested in some other time.
+		void setParentType(TypeInfo* type);
+		//Returns true if the type was deleted, false if the type was not found.
+		bool removeType(const std::string& typeName);
+
 		void addDeserializedMember(TypeMemberInfo* memberInfo);
 		void addDeserializedMemberFunction(MemberFunctionInfo* memberFunction);
 
@@ -82,6 +89,8 @@ namespace jitcat::Reflection
 		//Gets the type information of a member function given its name.
 		MemberFunctionInfo* getMemberFunctionInfo(const std::string& identifier) const;
 
+		TypeInfo* getTypeInfo(const std::string& typeName) const;
+
 		//Returns the type name of the class/struct
 		const char* getTypeName() const;
 		void setTypeName(const char* newTypeName);
@@ -89,11 +98,13 @@ namespace jitcat::Reflection
 		//Enumerates all the members of the class described by this TypeInfo by passing them to the VariableEnumerator
 		void enumerateVariables(VariableEnumerator* enumerator, bool allowEmptyStructs) const;
 
+		//Returns true if this is a CustomTypeInfo.
 		virtual bool isCustomType() const;
 
 		//Beware that these lists are case insensitive because the indices have been converted to lower case
 		const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;
 		const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
+		const std::map<std::string, TypeInfo*>& getTypes() const;
 
 		//May be nullptr when type info was read from XML
 		const TypeCaster* getTypeCaster() const;
@@ -101,8 +112,14 @@ namespace jitcat::Reflection
 	protected:
 		const char* typeName;
 		std::unique_ptr<TypeCaster> caster;
+		//Member variables of this type
 		std::map<std::string, std::unique_ptr<TypeMemberInfo>> members;
+		//Member functions of this type
 		std::map<std::string, std::unique_ptr<MemberFunctionInfo>> memberFunctions;
+		//Nested type definitions within this type. These are not owned here.
+		std::map<std::string, TypeInfo*> types;
+		//The parent of this type if this type is nested into another type. nullptr otherwise.
+		TypeInfo* parentType;
 	};
 
 }

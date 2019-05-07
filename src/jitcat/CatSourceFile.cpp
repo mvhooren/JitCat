@@ -10,7 +10,10 @@
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatVariableDefinition.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeInstance.h"
 
 #include <cassert>
 
@@ -22,7 +25,10 @@ using namespace jitcat::Tools;
 jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	name(name),
-	definitions(std::move(definitions))
+	definitions(std::move(definitions)),
+	staticScopeId(InvalidScopeID),
+	scopeType(new Reflection::CustomTypeInfo(this->name.c_str())),
+	scopeInstance(scopeType->createInstance())
 {
 	for (auto& iter : this->definitions)
 	{
@@ -73,10 +79,27 @@ const std::vector<CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFuncti
 
 bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	staticScopeId = compiletimeContext->addCustomTypeScope(scopeType.get(), scopeInstance.get(), true);
+	CatScope* previousScope = compiletimeContext->getCurrentScope();
+	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
 	for (auto& iter: definitions)
 	{
 		noErrors &= iter->typeCheck(compiletimeContext);
 	}
+	compiletimeContext->removeScope(staticScopeId);
+	compiletimeContext->setCurrentScope(previousScope);
 	return noErrors;
+}
+
+
+CatScopeID jitcat::AST::CatSourceFile::getScopeId() const
+{
+	return staticScopeId;
+}
+
+
+Reflection::CustomTypeInfo* jitcat::AST::CatSourceFile::getCustomType()
+{
+	return scopeType.get();
 }

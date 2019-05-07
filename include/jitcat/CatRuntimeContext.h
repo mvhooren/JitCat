@@ -105,7 +105,12 @@ namespace jitcat
 		void pushErrorContext(ErrorContext* context);
 		void popErrorContext(ErrorContext* context);
 
+		//Tries to find a variable by name, starting from the most recently added scope and going backwards through
+		//the scopes until the variable is found or there are no more scopes.
 		Reflection::TypeMemberInfo* findVariable(const std::string& lowercaseName, CatScopeID& scopeId);
+
+		//Tries to find a function by name, starting from the most recently added scope and going backwards through
+		//the scopes until the variable is found or there are no more scopes.
 		Reflection::MemberFunctionInfo* findFunction(const std::string& lowercaseName, CatScopeID& scopeId);
 
 		std::shared_ptr<LLVM::LLVMCodeGenerator> getCodeGenerator();

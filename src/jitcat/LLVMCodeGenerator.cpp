@@ -654,15 +654,21 @@ llvm::Value* LLVMCodeGenerator::generate(CatAssignmentOperator* assignmentOperat
 
 llvm::Value* LLVMCodeGenerator::generate(CatLiteral* literal, LLVMCompileTimeContext* context)
 {
-	CatGenericType lhsType = literal->getType();
-	if		(lhsType.isIntType())		return helper->createConstant(std::any_cast<int>(literal->getValue()));
-	else if (lhsType.isFloatType())		return helper->createConstant(std::any_cast<float>(literal->getValue()));
-	else if (lhsType.isBoolType())		return helper->createConstant(std::any_cast<bool>(literal->getValue()));
-	else if (lhsType.isStringType())
+	CatGenericType literalType = literal->getType();
+	if		(literalType.isIntType())		return helper->createConstant(std::any_cast<int>(literal->getValue()));
+	else if (literalType.isFloatType())		return helper->createConstant(std::any_cast<float>(literal->getValue()));
+	else if (literalType.isBoolType())		return helper->createConstant(std::any_cast<bool>(literal->getValue()));
+	else if (literalType.isStringType())
 	{
 		const std::string& stringReference = std::any_cast<const std::string&>(literal->getValue());
 		llvm::Value* stringObjectAddress = helper->createIntPtrConstant(reinterpret_cast<std::uintptr_t>(&stringReference), "stringLiteralAddress");
 		return builder->CreateIntToPtr(stringObjectAddress, LLVMTypes::stringPtrType);			
+	}
+	else if (literalType.isObjectType())
+	{
+		Reflectable* reflectable = std::any_cast<Reflectable*>(literal->getValue());
+		llvm::Value* reflectableAddress = helper->createIntPtrConstant(reinterpret_cast<std::uintptr_t>(reflectable), "literalObjectAddress");
+		return builder->CreateIntToPtr(reflectableAddress, LLVMTypes::pointerType);
 	}
 	else
 	{

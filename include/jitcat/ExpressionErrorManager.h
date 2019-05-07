@@ -31,7 +31,7 @@ namespace jitcat
 		private:
 			Error(const Error&) = delete;
 		public:
-			Error() {}
+			Error(): errorLine(0), errorColumn(0), errorLength(0), errorSource(nullptr) {}
 			std::string contextName;
 			jitcat::Tokenizer::Lexeme errorLexeme;
 			int errorLine;

@@ -19,13 +19,54 @@ using namespace jitcat::Reflection;
 
 TypeInfo::TypeInfo(const char* typeName, TypeCaster* caster):
 	typeName(typeName),
-	caster(caster)
+	caster(caster),
+	parentType(nullptr)
 {
 }
 
 
 TypeInfo::~TypeInfo()
 {
+	if (parentType != nullptr)
+	{
+		parentType->removeType(getTypeName());
+	}
+	for (auto& iter : types)
+	{
+		iter.second->setParentType(nullptr);
+	}
+}
+
+
+bool jitcat::Reflection::TypeInfo::addType(TypeInfo* type)
+{
+	std::string lowercaseTypeName = Tools::toLowerCase(type->getTypeName());
+	if (types.find(lowercaseTypeName) == types.end())
+	{
+		types[lowercaseTypeName] = type;
+		type->setParentType(this);
+		return true;
+	}
+	return false;
+}
+
+
+void jitcat::Reflection::TypeInfo::setParentType(TypeInfo* type)
+{
+	parentType = type;
+}
+
+
+bool jitcat::Reflection::TypeInfo::removeType(const std::string& typeName)
+{
+	auto& iter = types.find(Tools::toLowerCase(typeName));
+	if (iter != types.end())
+	{
+		iter->second->setParentType(nullptr);
+		types.erase(iter);
+		return true;
+	}
+	return false;
 }
 
 
@@ -128,6 +169,20 @@ MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifie
 }
 
 
+TypeInfo* jitcat::Reflection::TypeInfo::getTypeInfo(const std::string& typeName) const
+{
+	auto iter = types.find(Tools::toLowerCase(typeName));
+	if (iter != types.end())
+	{
+		return iter->second;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+
 const char* TypeInfo::getTypeName() const
 {
 	return typeName;
@@ -218,6 +273,12 @@ const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& TypeInfo::getMembe
 const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& TypeInfo::getMemberFunctions() const
 {
 	return memberFunctions;
+}
+
+
+const std::map<std::string, TypeInfo*>& jitcat::Reflection::TypeInfo::getTypes() const
+{
+	return types;
 }
 
 
