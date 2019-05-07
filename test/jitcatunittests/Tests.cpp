@@ -332,6 +332,21 @@ TEST_CASE("Regression testing", "[regression]")
 		Expression<float> testExpression(&context, "rand(0, 2.0f)");
 		doChecksFn<float>([&](float value) {return value >= 0.0f && value <= 2.0f; }, false, false, false, testExpression, context);
 	}
+	SECTION("Float zeroLiteral")
+	{
+		Expression<float> testExpression(&context, "0");
+		doChecks(0.0f, false, true, true, testExpression, context);
+	}
+	SECTION("Int zeroLiteral")
+	{
+		Expression<int> testExpression(&context, "0.0f");
+		doChecks(0, false, true, true, testExpression, context);
+	}
+	SECTION("Void zeroLiteral")
+	{
+		Expression<void> testExpression(&context, "0");
+		doCommonChecks(&testExpression, false, true, true, context);
+	}
 }
 
 
