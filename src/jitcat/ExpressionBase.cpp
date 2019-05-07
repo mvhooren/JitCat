@@ -164,27 +164,10 @@ bool ExpressionBase::parse(CatRuntimeContext* context, const CatGenericType& exp
 
 void ExpressionBase::constCollapse(CatRuntimeContext* context)
 {
-	bool isMinusPrefixWithLiteral = false;
-	//If the expression is a minus prefix operator combined with a literal, then we need to count the whole expression as a literal.
-	if (parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::PrefixOperator)
-	{
-		CatPrefixOperator* prefixOp = parseResult->getNode<CatPrefixOperator>();
-		if (prefixOp->rhs != nullptr
-			&& prefixOp->oper == CatPrefixOperator::Operator::Minus
-			&& prefixOp->rhs->getNodeType() == CatASTNodeType::Literal)
-		{
-			isMinusPrefixWithLiteral = true;
-		}
-	}
 	CatTypedExpression* newExpression = parseResult->getNode<CatTypedExpression>()->constCollapse(context);
 	if (newExpression != parseResult->astRootNode.get())
 	{
 		parseResult->astRootNode.reset(newExpression);
-		expressionIsLiteral = isMinusPrefixWithLiteral;
-	}
-	else
-	{
-		expressionIsLiteral = parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::Literal;
 	}
 }
 
@@ -200,6 +183,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType)
 	}
 	else 
 	{	
+		calculateLiteralStatus();
 		if (!expectedType.isUnknown())
 		{
 			if (expectAssignable && !valueType.isWritable())
@@ -341,4 +325,28 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 		}
 	}
 #endif //ENABLE_LLVM
+}
+
+
+void jitcat::ExpressionBase::calculateLiteralStatus()
+{
+	expressionIsLiteral = false;
+	if (parseResult->success)
+	{
+		if (parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::Literal)
+		{
+			expressionIsLiteral = true;
+		}
+		else if (parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::PrefixOperator)
+		{
+			//If the expression is a minus prefix operator combined with a literal, then we need to count the whole expression as a literal.
+			CatPrefixOperator* prefixOp = parseResult->getNode<CatPrefixOperator>();
+			if (prefixOp->rhs != nullptr
+				&& prefixOp->oper == CatPrefixOperator::Operator::Minus
+				&& prefixOp->rhs->getNodeType() == CatASTNodeType::Literal)
+			{
+				expressionIsLiteral = true;
+			}
+		}
+	}
 }

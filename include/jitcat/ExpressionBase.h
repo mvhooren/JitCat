@@ -68,6 +68,7 @@ namespace jitcat
 		void typeCheck(const CatGenericType& expectedType);
 		void handleParseErrors(CatRuntimeContext* context);
 		void compileToNativeCode(CatRuntimeContext* context);
+		void calculateLiteralStatus();
 
 	protected:
 		std::string expression;
