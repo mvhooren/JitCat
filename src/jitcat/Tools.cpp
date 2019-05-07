@@ -7,6 +7,7 @@
 
 #include "jitcat/Tools.h"
 
+#include <cassert>
 #include <cctype>
 
 using namespace jitcat::Tools;
@@ -153,6 +154,25 @@ std::string jitcat::Tools::toLowerCase(std::string text)
 	}
 
 	return text;
+}
+
+
+uintptr_t jitcat::Tools::alignPointer(uintptr_t pointer, std::size_t alignment)
+{
+	return (pointer + alignment - 1) & ~((uintptr_t)alignment - 1);
+}
+
+
+std::size_t jitcat::Tools::roundUp(std::size_t size, std::size_t multiple)
+{
+	if (multiple == 0)
+		return size;
+
+	std::size_t remainder = size % multiple;
+	if (remainder == 0)
+		return size;
+
+	return size + multiple - remainder;
 }
 
 

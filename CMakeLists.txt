@@ -84,6 +84,7 @@ if(LLVM_ENABLED)
 		LLVMBinaryFormat
 		LLVMSupport
 		LLVMDemangle
+		LLVMRemarks
 	)
 	if (NOT MSVC)
 		link_libraries(

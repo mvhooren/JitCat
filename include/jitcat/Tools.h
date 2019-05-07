@@ -44,6 +44,9 @@ namespace jitcat::Tools
 	std::string toLowerCase(const char* text);
 	std::string toLowerCase(const std::string_view& text);
 
+	uintptr_t alignPointer(uintptr_t pointer, std::size_t alignment);
+	std::size_t roundUp(std::size_t size, std::size_t multiple);
+
 	bool equalsWhileIgnoringCase(const std::string& text1, const std::string& text2);
 	bool equalsWhileIgnoringCase(const std::string& text1, const char* text2);
 	bool equalsWhileIgnoringCase(const char* text1, const std::string& text2);
