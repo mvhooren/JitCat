@@ -12,6 +12,7 @@
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMJit.h"
+#include "jitcat/LLVMMemoryManager.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/MemberInfo.h"
@@ -51,7 +52,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	helper(new LLVMCodeGeneratorHelper(builder.get(), currentModule.get())),
 	mangler(new llvm::orc::MangleAndInterner(*executionSession, LLVMJit::get().getDataLayout())),
 	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession.get(),
-															[]() {	return llvm::make_unique<llvm::SectionMemoryManager>();})),
+															[]() {	return memoryManager->createExpressionAllocator();})),
 	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(LLVMJit::get().getTargetMachineBuilder())))
 {
 	
@@ -905,6 +906,21 @@ void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
 	currentModule.reset(new llvm::Module(context->catContext->getContextName(), LLVMJit::get().getContext()));
 	currentModule->setTargetTriple(LLVMJit::get().getTargetMachine().getTargetTriple().str());
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
+
+	// Create a new pass manager attached to it.
+	passManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
+
+	// Do simple "peephole" optimizations and bit-twiddling optzns.
+	passManager->add(llvm::createInstructionCombiningPass());
+	// Reassociate expressions.
+	passManager->add(llvm::createReassociatePass());
+	// Eliminate Common SubExpressions.
+	passManager->add(llvm::createGVNPass());
+	// Simplify the control flow graph (deleting unreachable blocks, etc).
+	passManager->add(llvm::createCFGSimplificationPass());
+
+	passManager->doInitialization();
+
 	helper->setCurrentModule(currentModule.get());
 
 }
@@ -939,14 +955,15 @@ llvm::Function* LLVMCodeGenerator::verifyAndOptimizeFunction(llvm::Function* fun
 }
 
 
-llvm::Expected<llvm::JITEvaluatedSymbol> jitcat::LLVM::LLVMCodeGenerator::findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const
+llvm::Expected<llvm::JITEvaluatedSymbol> LLVMCodeGenerator::findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const
 {
 	return executionSession->lookup({&dyLib}, mangler->operator()(name));
 }
 
 
-llvm::JITTargetAddress jitcat::LLVM::LLVMCodeGenerator::getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const
+llvm::JITTargetAddress LLVMCodeGenerator::getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const
 {
 	return llvm::cantFail(findSymbol(name, dyLib)).getAddress();
 }
 
+std::unique_ptr<LLVMMemoryManager> LLVMCodeGenerator::memoryManager = std::make_unique<LLVMMemoryManager>();

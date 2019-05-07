@@ -26,6 +26,7 @@ namespace jitcat::LLVM
 {
 	class LLVMCodeGeneratorHelper;
 	struct LLVMCompileTimeContext;
+	class LLVMMemoryManager;
 
 	//A code generator for the LLVM backend. 
 	//Create one code generator per module / translation unit.
@@ -95,6 +96,8 @@ namespace jitcat::LLVM
 		std::unique_ptr<LLVMCodeGeneratorHelper> helper;
 		//The runtime library dylib
 		llvm::orc::JITDylib* runtimeLibraryDyLib;
+
+		static std::unique_ptr<LLVMMemoryManager> memoryManager;
 	};
 
 } //End namespace jitcat::LLVM

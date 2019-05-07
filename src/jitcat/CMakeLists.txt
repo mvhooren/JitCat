@@ -89,6 +89,7 @@ set(Source_Cat_CodeGeneration_LLVM
 	${JitCatHeaderPath}/LLVMForwardDeclares.h
 	${JitCatHeaderPath}/LLVMJit.h
 	${JitCatHeaderPath}/LLVMJitHeaderImplementation.h
+	${JitCatHeaderPath}/LLVMMemoryManager.h
 	LLVMTypes.cpp
 	${JitCatHeaderPath}/LLVMTypes.h
 )
@@ -98,7 +99,8 @@ if(LLVM_ENABLED)
 		LLVMCodeGenerator.cpp
 		LLVMCodeGeneratorHelper.cpp
 		LLVMCompileTimeContext.cpp
-		LLVMJit.cpp)	
+		LLVMJit.cpp
+		LLVMMemoryManager.cpp)	
 endif()
 
 set(Source_Cat_Expression
