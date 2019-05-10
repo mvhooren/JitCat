@@ -27,7 +27,7 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std
 	nameLexeme(nameLexeme),
 	definitions(std::move(definitions)),
 	scopeId(InvalidScopeID),
-	customType(new CustomTypeInfo(name.c_str()))
+	customType(new CustomTypeInfo(this->name.c_str()))
 {
 	for (auto& iter : this->definitions)
 	{

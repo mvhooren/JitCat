@@ -21,6 +21,7 @@ namespace jitcat::Tokenizer
 		Const,
 		Static,
 		Virtual,
+		New,
 		If,
 		Then,
 		Else,

@@ -156,10 +156,11 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	rule(Prod::OperatorP3, {prod(Prod::OperatorP3), term(one, OneChar::BracketOpen), prod(Prod::OperatorP10), term(one, OneChar::BracketClose)}, arrayIndexToken);
 	rule(Prod::OperatorP3, {prod(Prod::OperatorP2)}, pass);
 
-	// literals, identifiers and ( ) (highest precedence)
+	// literals, identifiers, parentheses( ), operator new and function calls (highest precedence)
 	rule(Prod::OperatorP2, {prod(Prod::Literal)}, pass);	
 	rule(Prod::OperatorP2, {term(one, OneChar::ParenthesesOpen), prod(Prod::OperatorP11), term(one, OneChar::ParenthesesClose)}, pass);
 	rule(Prod::OperatorP2, {term(id, Identifier::Identifier)}, identifierToken);
+	rule(Prod::OperatorP2, {term(id, Identifier::New), prod(Prod::Type), prod(Prod::FunctionCallArguments)}, operatorNew);
 	rule(Prod::OperatorP2, {term(id, Identifier::Identifier), prod(Prod::FunctionCallArguments)}, functionCallToken);
 
 	rule(Prod::FunctionCallArguments, {term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose)}, argumentListToken);
@@ -234,7 +235,8 @@ bool CatGrammar::isTypedExpression(CatASTNodeType node)
 			|| node == CatASTNodeType::FunctionCall
 			|| node == CatASTNodeType::MemberAccess
 			|| node == CatASTNodeType::ArrayIndex
-			|| node == CatASTNodeType::MemberFunctionCall;
+			|| node == CatASTNodeType::MemberFunctionCall
+			|| node == CatASTNodeType::OperatorNew;
 }
 
 
@@ -497,6 +499,14 @@ ASTNode* CatGrammar::prefixOperator(const ASTNodeParser& nodeParser)
 		}
 	}
 	return oper;
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::operatorNew(const Parser::ASTNodeParser& nodeParser)
+{
+	CatTypeNode* typeNode = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	CatArgumentList* arguments = static_cast<CatArgumentList*>(nodeParser.getASTNodeByIndex(1));
+	return new CatOperatorNew(typeNode, arguments, nodeParser.getStackLexeme());
 }
 
 

@@ -23,6 +23,7 @@ namespace jitcat::AST
 	class CatLiteral;
 	class CatMemberAccess;
 	class CatMemberFunctionCall;
+	class CatOperatorNew;
 	class CatPrefixOperator;
 	class CatReturnStatement;
 	class CatScopeBlock;

@@ -19,6 +19,7 @@
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatInfixOperator.h"
+#include "jitcat/CatOperatorNew.h"
 #include "jitcat/CatPrefixOperator.h"
 #include "jitcat/CatLinkNode.h"
 #include "jitcat/CatArgumentList.h"

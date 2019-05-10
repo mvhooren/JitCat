@@ -75,6 +75,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatMemberAccess.h
 	CatMemberFunctionCall.cpp
 	${JitCatHeaderPath}/CatMemberFunctionCall.h
+	${JitCatHeaderPath}/CatOperatorNew.h
+	CatOperatorNew.cpp
 	CatPrefixOperator.cpp
 	${JitCatHeaderPath}/CatPrefixOperator.h
 	CatReturnStatement.cpp

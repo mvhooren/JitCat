@@ -22,6 +22,7 @@ namespace jitcat::AST
 		InfixOperator,
 		AssignmentOperator,
 		PrefixOperator,
+		OperatorNew,
 		ParameterList,
 		FunctionCall,
 		LinkedList,

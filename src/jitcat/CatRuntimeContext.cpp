@@ -241,6 +241,30 @@ MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercase
 }
 
 
+Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& lowercaseName, CatScopeID& scopeId)
+{
+	for (int i = (int)scopes.size() - 1; i >= 0; i--)
+	{
+		TypeInfo* memberFunctionInfo = scopes[i]->scopeType->getTypeInfo(lowercaseName);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = i;
+			return memberFunctionInfo;
+		}
+	}
+	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
+	{
+		TypeInfo* memberFunctionInfo = staticScopes[i]->scopeType->getTypeInfo(lowercaseName);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = InvalidScopeID - i - 1;
+			return memberFunctionInfo;
+		}
+	}
+	return nullptr;
+}
+
+
 std::shared_ptr<LLVMCodeGenerator> CatRuntimeContext::getCodeGenerator()
 {
 #ifdef ENABLE_LLVM

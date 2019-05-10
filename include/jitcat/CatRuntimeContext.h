@@ -113,6 +113,8 @@ namespace jitcat
 		//the scopes until the variable is found or there are no more scopes.
 		Reflection::MemberFunctionInfo* findFunction(const std::string& lowercaseName, CatScopeID& scopeId);
 
+		Reflection::TypeInfo* findType(const std::string& lowercaseName, CatScopeID& scopeId);
+
 		std::shared_ptr<LLVM::LLVMCodeGenerator> getCodeGenerator();
 		int getNextFunctionIndex();
 

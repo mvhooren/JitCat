@@ -203,28 +203,24 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 
 TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, bool isWritable, bool isConst)
 {
-	if (defaultValue != nullptr)
+	isTriviallyCopyable = false;
+	unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
+	unsigned int offset = (unsigned int)(data - defaultData);
+	if (defaultData == nullptr)
 	{
-		isTriviallyCopyable = false;
-		unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
-		unsigned int offset = (unsigned int)(data - defaultData);
-		if (defaultData == nullptr)
-		{
-			offset = 0;
-		}
-
-		std::set<CustomTypeInstance*>::iterator end = instances.end();
-		for (std::set<CustomTypeInstance*>::iterator iter = instances.begin(); iter != end; ++iter)
-		{
-			new ((*iter)->data + offset) ReflectableHandle(defaultValue);
-		}
-		new (data) ReflectableHandle(defaultValue);
-		TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst));
-		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-		members.emplace(lowerCaseMemberName, memberInfo);
-		return memberInfo;
+		offset = 0;
 	}
-	return nullptr;
+
+	std::set<CustomTypeInstance*>::iterator end = instances.end();
+	for (std::set<CustomTypeInstance*>::iterator iter = instances.begin(); iter != end; ++iter)
+	{
+		new ((*iter)->data + offset) ReflectableHandle(defaultValue);
+	}
+	new (data) ReflectableHandle(defaultValue);
+	TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst));
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	members.emplace(lowerCaseMemberName, memberInfo);
+	return memberInfo;
 }
 
 

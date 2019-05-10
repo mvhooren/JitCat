@@ -108,13 +108,11 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
 				return false;
 			}
-			std::vector<CatGenericType> argumentList;
 			for (unsigned int i = 0; i < numArgumentsSupplied; i++)
 			{
 				if (arguments->arguments[i]->typeCheck(compiletimeContext, errorManager, errorContext))
 				{
-					argumentList.push_back(arguments->arguments[i]->getType());
-					if (!(memberFunctionInfo->getArgumentType(i) == argumentList[i]))
+					if (!(memberFunctionInfo->getArgumentType(i) == arguments->arguments[i]->getType()))
 					{
 						errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 						return false;

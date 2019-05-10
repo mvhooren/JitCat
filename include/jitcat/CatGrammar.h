@@ -91,6 +91,7 @@ namespace jitcat::Grammar
 		static AST::ASTNode* assignmentOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* infixOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* prefixOperator(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* operatorNew(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* literalToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* identifierToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* argumentListToken(const Parser::ASTNodeParser& nodeParser);

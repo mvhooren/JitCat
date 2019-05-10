@@ -47,6 +47,7 @@ const char* IdentifierToken::getSubTypeName(int subType_) const
 	case Identifier::Const:				return "const";
 	case Identifier::Static:			return "static";
 	case Identifier::Virtual:			return "virtual";
+	case Identifier::New:				return "new";
 	case Identifier::If:				return "if";
 	case Identifier::Then:				return "then";
 	case Identifier::Else:				return "else";

@@ -79,7 +79,12 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 	//Check the return type
 	if (!isKnownType())
 	{
-		TypeInfo* typeInfo = TypeRegistry::get()->getTypeInfo(getTypeName());
+		CatScopeID typeScope = InvalidScopeID;
+		TypeInfo* typeInfo = compileTimeContext->findType(Tools::toLowerCase(getTypeName()), typeScope);
+		if (typeInfo == nullptr)
+		{
+			typeInfo = TypeRegistry::get()->getTypeInfo(getTypeName());
+		}
 		if (typeInfo == nullptr)
 		{
 			errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), this, compileTimeContext->getContextName(), getLexeme());
