@@ -144,11 +144,6 @@ set(Source_Cat_Expression
 	${JitCatHeaderPath}/ExpressionHelperFunctions.h
 )
 
-set(Source_Cat_SourceFile
-	SourceFile.cpp
-	${JitCatHeaderPath}/SourceFile.h
-)
-
 set(Source_Cat_Expression_Autocompletion
 	AutoCompletion.cpp
 	${JitCatHeaderPath}/AutoCompletion.h
@@ -159,6 +154,20 @@ set(Source_Cat_Expression_Errors
 	${JitCatHeaderPath}/ErrorContext.h
 	ExpressionErrorManager.cpp
 	${JitCatHeaderPath}/ExpressionErrorManager.h
+)
+
+set(Source_Cat_HostClasses
+	${JitCatHeaderPath}/CatBasicHostClass.h
+	${JitCatHeaderPath}/CatDeferredHostClass.h
+	${JitCatHeaderPath}/CatHostClass.h
+	${JitCatHeaderPath}/CatHostClasses.h
+	${JitCatHeaderPath}/CatHostClassesHeaderImplementation.h
+	CatHostClasses.cpp
+)
+
+set(Source_Cat_SourceFile
+	SourceFile.cpp
+	${JitCatHeaderPath}/SourceFile.h
 )
 
 set(Source_Grammar
@@ -301,6 +310,7 @@ source_group(Cat\\CodeGeneration\\LLVM FILES ${Source_Cat_CodeGeneration_LLVM})
 source_group(Cat\\Expression FILES ${Source_Cat_Expression})
 source_group(Cat\\Expression\\AutoCompletion FILES ${Source_Cat_Expression_Autocompletion})
 source_group(Cat\\Expression\\Errors FILES ${Source_Cat_Expression_Errors})
+source_group(Cat\\HostClasses FILES ${Source_Cat_HostClasses})
 source_group(Cat\\SourceFile FILES ${Source_Cat_SourceFile})
 source_group(Grammar FILES ${Source_Grammar})
 source_group(Parser FILES ${Source_Parser})
@@ -326,6 +336,7 @@ add_library(JitCat STATIC
 	${Source_Cat_Expression}
 	${Source_Cat_Expression_Autocompletion}
 	${Source_Cat_Expression_Errors}
+	${Source_Cat_HostClasses}
 	${Source_Cat_SourceFile}
 	${Source_Grammar}
 	${Source_Parser}
