@@ -6,9 +6,13 @@
 */
 
 #include "jitcat/CatClassDefinition.h"
+#include "jitcat/CatAssignmentOperator.h"
+#include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatFunctionDefinition.h"
+#include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatVariableDefinition.h"
 #include "jitcat/CustomTypeInfo.h"
@@ -88,14 +92,18 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 
 	for (auto& iter: variableDefinitions)
 	{
-		bool valid = iter->typeCheck(compileTimeContext);
-		noErrors &= valid;
+		noErrors &= iter->typeCheck(compileTimeContext);;
+	}
+
+	if (noErrors)
+	{
+		noErrors &= generateConstructor(compileTimeContext);
+		noErrors &= generateDestructor(compileTimeContext);
 	}
 
 	for (auto& iter: functionDefinitions)
 	{
-		bool valid = iter->typeCheck(compileTimeContext);
-		noErrors &= valid;
+		noErrors &= iter->typeCheck(compileTimeContext);;
 	}
 
 	compileTimeContext->removeScope(scopeId);
@@ -135,4 +143,33 @@ Reflection::CustomTypeInfo* jitcat::AST::CatClassDefinition::getCustomType()
 CatScopeID jitcat::AST::CatClassDefinition::getScopeId() const
 {
 	return scopeId;
+}
+
+
+bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeContext)
+{
+	CatTypeNode* typeNode = new CatTypeNode(CatGenericType::voidType, nameLexeme);
+	CatFunctionParameterDefinitions* parameters = new CatFunctionParameterDefinitions({}, nameLexeme);
+	std::vector<CatStatement*> statements;
+	for (auto& iter : variableDefinitions)
+	{
+		CatTypedExpression* variableInitExpr = iter->releaseInitializationExpression();
+		if (variableInitExpr != nullptr)
+		{
+			CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
+			CatAssignmentOperator* assignment = new CatAssignmentOperator(id, variableInitExpr, variableInitExpr->getLexeme());
+			statements.push_back(assignment);
+		}
+	}
+	CatScopeBlock* scopeBlock = new CatScopeBlock(statements, nameLexeme);
+	generatedConstructor.reset(new CatFunctionDefinition(typeNode, "__init", parameters, scopeBlock, nameLexeme));
+
+	return generatedConstructor->typeCheck(compileTimeContext);
+
+}
+
+
+bool jitcat::AST::CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContext)
+{
+	return true;
 }

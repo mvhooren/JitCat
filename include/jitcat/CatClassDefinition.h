@@ -40,6 +40,10 @@ namespace jitcat::AST
 		virtual CatScopeID getScopeId() const override final;
 
 	private:
+		bool generateConstructor(CatRuntimeContext* compileTimeContext);
+		bool generateDestructor(CatRuntimeContext* compileTimeContext);
+
+	private:
 		std::string name;
 		Tokenizer::Lexeme nameLexeme;
 
@@ -51,6 +55,9 @@ namespace jitcat::AST
 
 		//All global function definitions
 		std::vector<CatFunctionDefinition*> functionDefinitions;
+
+		std::unique_ptr<CatFunctionDefinition> generatedConstructor;
+		std::unique_ptr<CatFunctionDefinition> generatedDestructor;
 
 		//All variable definitions
 		std::vector<CatVariableDefinition*> variableDefinitions;

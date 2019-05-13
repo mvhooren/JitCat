@@ -32,8 +32,6 @@ namespace jitcat::Reflection
 		void addObserver(ReflectableHandle* observer);
 		void removeObserver(ReflectableHandle* observer);
 
-		virtual void copyFrom(const Reflectable* other) {}
-
 	private:
 		std::vector<ReflectableHandle*> observers;
 	};

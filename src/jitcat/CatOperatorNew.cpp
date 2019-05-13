@@ -7,6 +7,7 @@
 
 
 #include "jitcat/CatOperatorNew.h"
+#include "jitcat/CatHostClasses.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CustomTypeInfo.h"
@@ -56,6 +57,10 @@ std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 		std::any instanceValue(static_cast<Reflectable*>(instance));
 		typeConstructor->call(runtimeContext, instanceValue, argumentValues);
 	}
+	else if (hostClass != nullptr)
+	{
+		return std::any(static_cast<Reflectable*>(hostClass->construct()));
+	}
 	return std::any((Reflectable*)instance);
 }
 
@@ -68,6 +73,8 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 		return false;
 	}
 	newType = type->getType();
+	std::size_t numArgumentsSupplied = arguments->arguments.size();
+	std::size_t expectedNrOfArguments = 0;
 	if (!newType.isObjectType())
 	{
 		errorManager->compiledWithError(Tools::append("Operator new only supports object types, ", newType.toString(), " not yet supported."), errorContext, compiletimeContext->getContextName(), getLexeme());
@@ -75,16 +82,28 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	}
 	else if (!newType.getObjectType()->isCustomType())
 	{
-		errorManager->compiledWithError(Tools::append("Operator new only supports custom types, reflected types not yet supported."), errorContext, compiletimeContext->getContextName(), getLexeme());
-		return false;
+		hostClass = compiletimeContext->getHostClasses()->getHostClass(newType.getObjectType()->getTypeName());
+		if (hostClass == nullptr)
+		{
+			errorManager->compiledWithError(Tools::append("Host type cannot be constructed: ", newType.toString(), ", provide a constructor and destructor through the CatHostClasses interface."), errorContext, compiletimeContext->getContextName(), getLexeme());
+			return false;
+		}
 	}
-	std::size_t numArgumentsSupplied = arguments->arguments.size();
-	typeConstructor = newType.getObjectType()->getMemberFunctionInfo("init");
-	std::size_t expectedNrOfArguments = 0;
-	if (typeConstructor != nullptr)
+	else
 	{
-		expectedNrOfArguments = typeConstructor->getNumberOfArguments();
+		typeConstructor = newType.getObjectType()->getMemberFunctionInfo("init");
+		if (typeConstructor == nullptr)
+		{
+			//If there is no custom-defined init function, call the auto generated init function if it exists.
+			typeConstructor = newType.getObjectType()->getMemberFunctionInfo("__init");
+		}
+		if (typeConstructor != nullptr)
+		{
+			expectedNrOfArguments = typeConstructor->getNumberOfArguments();
+		}
+
 	}
+	
 	if (expectedNrOfArguments != numArgumentsSupplied)
 	{
 		errorManager->compiledWithError(Tools::append("Invalid number of arguments for init function of: ", newType.toString(), " expected ", expectedNrOfArguments, " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());

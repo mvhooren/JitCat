@@ -32,6 +32,8 @@ namespace jitcat
 								std::function<ReflectableT* ()> constructor,
 								std::function<void(ReflectableT*)> destructor = [](ReflectableT * object) {delete object; });
 
+		CatHostClass* getHostClass(const std::string& hostClassName) const;
+
 	private:
 		std::map<std::string, std::unique_ptr<CatHostClass>> hostClasses;
 	};

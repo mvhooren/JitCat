@@ -39,6 +39,8 @@ namespace jitcat::AST
 		const std::string& getName() const;
 		const CatTypeNode& getType() const;
 		
+		CatTypedExpression* releaseInitializationExpression();
+
 	private:
 		std::unique_ptr<CatTypeNode> type;
 		std::string name;

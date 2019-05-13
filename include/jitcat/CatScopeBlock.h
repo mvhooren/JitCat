@@ -46,6 +46,9 @@ namespace jitcat::AST
 		virtual Reflection::CustomTypeInfo* getCustomType() override final;
 		virtual CatScopeID getScopeId() const override final;
 
+		void insertStatementFront(CatStatement* statement);
+
+
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;
 		std::unique_ptr<Reflection::CustomTypeInfo> customType;

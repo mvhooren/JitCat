@@ -100,3 +100,9 @@ const CatTypeNode& CatVariableDefinition::getType() const
 {
 	return *type.get();
 }
+
+
+CatTypedExpression* jitcat::AST::CatVariableDefinition::releaseInitializationExpression()
+{
+	return initializationExpression.release();
+}

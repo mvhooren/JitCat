@@ -14,6 +14,10 @@
 #include <memory>
 #include <vector>
 
+namespace jitcat
+{
+	class CatHostClass;
+}
 namespace jitcat::Reflection
 {
 	struct MemberFunctionInfo;
@@ -39,6 +43,8 @@ namespace jitcat::AST
 		std::unique_ptr<CatTypeNode> type;
 		std::vector<CatGenericType> argumentTypes;
 		CatGenericType newType;
+		//may be nullptr
+		CatHostClass* hostClass;
 		//may be nullptr
 		jitcat::Reflection::MemberFunctionInfo* typeConstructor;
 	};

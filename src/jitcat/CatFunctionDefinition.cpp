@@ -7,12 +7,15 @@
 
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/ASTHelper.h"
+#include "jitcat/CatArgumentList.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatScopeBlock.h"
+#include "jitcat/CatScopeRoot.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -91,6 +94,14 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	{
 		parameterAssignables.emplace_back(new CatIdentifier(parameters->getParameterName(i), parameters->getParameterLexeme(i)));
 		parameterAssignables.back()->typeCheck(compileTimeContext, errorManager, this);
+	}
+	if (compileTimeContext->getCurrentScope() != nullptr && Tools::equalsWhileIgnoringCase(name, "init"))
+	{
+		//init function is a special case. We should call the auto generated __init function first.
+		CatArgumentList* arguments = new CatArgumentList(lexeme);
+		CatScopeRoot* scopeRoot = new CatScopeRoot(compileTimeContext->getCurrentScope()->getScopeId(), lexeme);
+		CatMemberFunctionCall* callAutoInit = new CatMemberFunctionCall("__init", scopeRoot, arguments, lexeme);
+		scopeBlock->insertStatementFront(callAutoInit);
 	}
 	if (!scopeBlock->typeCheck(compileTimeContext, errorManager, this))
 	{

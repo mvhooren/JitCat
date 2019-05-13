@@ -140,3 +140,9 @@ CatScopeID jitcat::AST::CatScopeBlock::getScopeId() const
 {
 	return scopeId;
 }
+
+
+void jitcat::AST::CatScopeBlock::insertStatementFront(CatStatement* statement)
+{
+	statements.emplace(statements.begin(), statement);
+}
