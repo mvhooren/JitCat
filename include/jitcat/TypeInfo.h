@@ -70,7 +70,7 @@ namespace jitcat::Reflection
 
 		//Add a nested type to this type. Return true if the type was added, false if a type with this name already exists.
 		bool addType(TypeInfo* type);
-		//Set the parent of this type if this type is nested in some other time.
+		//Set the parent of this type if this type is nested in some other type.
 		void setParentType(TypeInfo* type);
 		//Returns true if the type was deleted, false if the type was not found.
 		bool removeType(const std::string& typeName);
@@ -81,6 +81,7 @@ namespace jitcat::Reflection
 		//Given a dot notated string like "bla.blep.blip", returns the CatGenericType of "blip".
 		CatGenericType getType(const std::string& dotNotation) const;
 		//Similar to above, but instead it takes a vector that contains the strings splitted on "." and an offset from where to start.
+		//The offset should point to a variable of the type described by this TypeInfo.
 		CatGenericType getType(const std::vector<std::string>& indirectionList, int offset) const;
 	
 		//Gets the type information of a member variable given its name.
@@ -101,13 +102,17 @@ namespace jitcat::Reflection
 		//Returns true if this is a CustomTypeInfo.
 		virtual bool isCustomType() const;
 
-		//Beware that these lists are case insensitive because the indices have been converted to lower case
+		//Beware that these lists are case insensitive because the keys have been converted to lower case
 		const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;
 		const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
 		const std::map<std::string, TypeInfo*>& getTypes() const;
 
 		//May be nullptr when type info was read from XML
 		const TypeCaster* getTypeCaster() const;
+
+	protected:
+		//Adds members from a member object that will automatically be forwarded.
+		void addDeferredMembers(TypeMemberInfo* deferredMember);
 
 	protected:
 		const char* typeName;

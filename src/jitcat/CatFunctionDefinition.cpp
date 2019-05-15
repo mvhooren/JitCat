@@ -18,6 +18,7 @@
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeInstance.h"
+#include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
@@ -31,10 +32,12 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, const std::string& name, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme):
+jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme):
 	CatDefinition(lexeme),
 	type(type),
 	name(name),
+	visibility(MemberVisibility::Public),
+	nameLexeme(nameLexeme),
 	parameters(parameters),
 	scopeBlock(scopeBlock),
 	parametersScopeId(InvalidScopeID),
@@ -97,6 +100,7 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	}
 	if (compileTimeContext->getCurrentScope() != nullptr && Tools::equalsWhileIgnoringCase(name, "init"))
 	{
+		visibility = MemberVisibility::Constructor;
 		//init function is a special case. We should call the auto generated __init function first.
 		CatArgumentList* arguments = new CatArgumentList(lexeme);
 		CatScopeRoot* scopeRoot = new CatScopeRoot(compileTimeContext->getCurrentScope()->getScopeId(), lexeme);
@@ -128,7 +132,14 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	CatScope* currentScope = compileTimeContext->getCurrentScope();
 	if (currentScope != nullptr)
 	{
+		CatScopeID existingFunctionScopeId = InvalidScopeID;
+		if (compileTimeContext->findFunction(Tools::toLowerCase(name), existingFunctionScopeId) != nullptr && existingFunctionScopeId == currentScope->getScopeId())
+		{
+			errorManager->compiledWithError(Tools::append("A function with name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), nameLexeme);
+			return false;
+		}
 		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, compileTimeContext->getScopeType(currentScope->getScopeId()), this);
+		memberFunctionInfo->visibility = visibility;
 	}
 	return true;
 }
@@ -198,6 +209,22 @@ const std::string& jitcat::AST::CatFunctionDefinition::getParameterName(int inde
 const CatTypeNode* jitcat::AST::CatFunctionDefinition::getParameterType(int index) const
 {
 	return parameters->getParameterType(index);
+}
+
+
+Reflection::MemberVisibility jitcat::AST::CatFunctionDefinition::getFunctionVisibility() const
+{
+	return visibility;
+}
+
+
+void jitcat::AST::CatFunctionDefinition::setFunctionVisibility(Reflection::MemberVisibility functionVisibility)
+{
+	visibility = functionVisibility;
+	if (memberFunctionInfo != nullptr)
+	{
+		memberFunctionInfo->visibility = visibility;
+	}
 }
 
 

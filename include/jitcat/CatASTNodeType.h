@@ -14,6 +14,7 @@ namespace jitcat::AST
 	{
 		SourceFile,
 		ClassDefinition,
+		InheritanceDefinition,
 		FunctionDefinition,
 		FunctionParameterDefinitions,
 		TypeName,

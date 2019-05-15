@@ -34,6 +34,8 @@ namespace jitcat::AST
 		virtual bool isConst() const override final;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 
+		void setTypeAndMemberInfo(Reflection::TypeMemberInfo* newMemberInfo, const CatGenericType& newMemberType);
+
 		CatTypedExpression* getBase() const;
 		Reflection::TypeMemberInfo* getMemberInfo() const;
 

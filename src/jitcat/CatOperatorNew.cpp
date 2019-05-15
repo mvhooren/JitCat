@@ -46,9 +46,9 @@ CatASTNodeType CatOperatorNew::getNodeType()
 
 std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 {
-	CustomTypeInstance* instance = static_cast<CustomTypeInfo*>(newType.getObjectType())->createInstance();
 	if (typeConstructor != nullptr)
 	{
+		CustomTypeInstance* instance = static_cast<CustomTypeInfo*>(newType.getObjectType())->createInstance();
 		std::vector<std::any> argumentValues;
 		for (std::unique_ptr<CatTypedExpression>& argument : arguments->arguments)
 		{
@@ -56,12 +56,13 @@ std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 		}
 		std::any instanceValue(static_cast<Reflectable*>(instance));
 		typeConstructor->call(runtimeContext, instanceValue, argumentValues);
+		return std::any((Reflectable*)instance);
 	}
 	else if (hostClass != nullptr)
 	{
 		return std::any(static_cast<Reflectable*>(hostClass->construct()));
 	}
-	return std::any((Reflectable*)instance);
+	return nullptr;
 }
 
 
@@ -83,7 +84,7 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	else if (!newType.getObjectType()->isCustomType())
 	{
 		hostClass = compiletimeContext->getHostClasses()->getHostClass(newType.getObjectType()->getTypeName());
-		if (hostClass == nullptr)
+		if (hostClass == nullptr || !hostClass->isConstructible())
 		{
 			errorManager->compiledWithError(Tools::append("Host type cannot be constructed: ", newType.toString(), ", provide a constructor and destructor through the CatHostClasses interface."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;

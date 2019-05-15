@@ -48,6 +48,13 @@ void jitcat::Tools::split(const std::string& stringToSplit, const std::string& d
 }
 
 
+bool jitcat::Tools::startsWith(const std::string& text, const std::string& prefix)
+{
+	return !(prefix.size() > text.size())
+		   && text.substr(0, prefix.size()) == prefix;
+}
+
+
 bool jitcat::Tools::isNumber(const std::string& text)
 {
 	// Go over all characters and check if all are either a digit, sign or dot. Allowing only the first character to be a sign and a single dot in the text.

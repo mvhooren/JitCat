@@ -31,6 +31,7 @@ namespace jitcat::Grammar
 			ClassDefinition,
 			ClassContents,
 			Declaration,
+			InheritanceDefinition,
 			FunctionDefinition,
 			FunctionParameters,
 			FunctionParameterDefinitions,
@@ -69,8 +70,6 @@ namespace jitcat::Grammar
 	public: 
 		CatGrammar(Tokenizer::TokenizerBase* tokenizer, CatGrammarType grammarType);
 		virtual const char* getProductionName(int production) const;
-		static bool isTypedExpression(AST::CatASTNodeType node);
-		static bool isDefinition(AST::CatASTNodeType node);
 
 	private:
 		//Semantic action
@@ -79,6 +78,7 @@ namespace jitcat::Grammar
 
 		static AST::ASTNode* sourceFile(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* classDefinition(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* inheritanceDefinition(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionDefinition(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionParameterDefinitions(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* variableDeclaration(const Parser::ASTNodeParser& nodeParser);

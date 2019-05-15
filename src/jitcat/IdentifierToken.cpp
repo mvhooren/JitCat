@@ -40,6 +40,8 @@ const char* IdentifierToken::getSubTypeName(int subType_) const
 	default:
 	case Identifier::Identifier:		return "identifier";
 	case Identifier::Class:				return "class";
+	case Identifier::Struct:			return "struct";
+	case Identifier::Inherits:			return "inherits";
 	case Identifier::Enum:				return "enum";
 	case Identifier::Public:			return "public";
 	case Identifier::Protected:			return "protected";

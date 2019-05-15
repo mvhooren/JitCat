@@ -88,6 +88,10 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 	auto end = members.end();
 	for (auto iter = members.begin(); iter != end; ++iter)
 	{
+		if (iter->second->isDeferred())
+		{
+			continue;
+		}
 		if (iter->second->catType.isStringType())
 		{
 			std::string* string;
@@ -220,6 +224,11 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 	TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
+	if (Tools::startsWith(memberName, "$"))
+	{
+		addDeferredMembers(memberInfo);
+	}
+	
 	return memberInfo;
 }
 
@@ -246,7 +255,7 @@ CustomTypeMemberFunctionInfo* jitcat::Reflection::CustomTypeInfo::addMemberFunct
 void CustomTypeInfo::removeMember(const std::string& memberName)
 {
 	auto iter = members.find(Tools::toLowerCase(memberName));
-	if (iter != members.end())
+	if (iter != members.end() && !iter->second->isDeferred())
 	{
 		removedMembers.push_back(std::move(iter->second));
 		members.erase(iter);
@@ -257,7 +266,7 @@ void CustomTypeInfo::removeMember(const std::string& memberName)
 void CustomTypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
 {
 	auto iter = members.find(Tools::toLowerCase(oldMemberName));
-	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end())
+	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end() && !iter->second->isDeferred())
 	{
 		std::unique_ptr<TypeMemberInfo> memberInfo = std::move(iter->second);
 		memberInfo->memberName = newMemberName;
@@ -331,6 +340,10 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned
 			auto end = members.end();
 			for (auto iter = members.begin(); iter != end; ++iter)
 			{
+				if (iter->second->isDeferred())
+				{
+					continue;
+				}
 				if (iter->second->catType.isStringType())
 				{
 					std::string* originalString;

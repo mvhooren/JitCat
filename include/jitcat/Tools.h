@@ -33,6 +33,8 @@ namespace jitcat::Tools
 
 	void split(const std::string& stringToSplit, const std::string& delims, std::vector<std::string>& stringsOut, bool allowEmpty = false);
 
+	bool startsWith(const std::string& text, const std::string& prefix);
+
 	bool isNumber(const std::string& text);
 
 	char toUpperCase(char text);

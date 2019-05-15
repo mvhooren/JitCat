@@ -17,6 +17,7 @@ namespace jitcat::LLVM
 #include "jitcat/ContainerType.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberFlags.h"
+#include "jitcat/MemberVisibility.h"
 #include "jitcat/TypeRegistry.h"
 #include "jitcat/TypeTraits.h"
 
@@ -41,17 +42,38 @@ namespace jitcat::Reflection
 	struct TypeMemberInfo
 	{
 		TypeMemberInfo() {}
-		TypeMemberInfo(const std::string& memberName, const CatGenericType& type): memberName(memberName), catType(type) {}
+		TypeMemberInfo(const std::string& memberName, const CatGenericType& type): memberName(memberName), catType(type), visibility(MemberVisibility::Public) {}
 		virtual ~TypeMemberInfo() {};
-		inline virtual std::any getMemberReference(Reflectable* base) { return nullptr; }
-		inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) { return nullptr; }
-		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const {return nullptr;};
-		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const {return nullptr;};
-		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const {return nullptr;};
+		inline virtual std::any getMemberReference(Reflectable* base);
+		inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType);
+		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const;
+		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const;
+		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
+		inline virtual bool isDeferred() const { return false; }
+		TypeMemberInfo* toDeferredTypeMemberInfo(TypeMemberInfo* baseMember);
 
 		CatGenericType catType;
+		MemberVisibility visibility;
 
 		std::string memberName;
+	};
+
+	struct DeferredMemberInfo: public TypeMemberInfo
+	{
+		DeferredMemberInfo(TypeMemberInfo* baseMember, TypeMemberInfo* deferredMember):
+			TypeMemberInfo(deferredMember->memberName, deferredMember->catType),
+			baseMember(baseMember),
+			deferredMember(deferredMember)
+		{}
+
+		inline virtual std::any getMemberReference(Reflectable* base) override final;
+		inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) override final;
+		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
+		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
+		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
+		inline virtual bool isDeferred() const override final { return true; }
+		TypeMemberInfo* baseMember;
+		TypeMemberInfo* deferredMember;
 	};
 
 

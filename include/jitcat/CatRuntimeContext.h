@@ -43,6 +43,7 @@ namespace jitcat
 	namespace AST
 	{
 		class CatFunctionDefinition;
+		class CatClassDefinition;
 		class CatScopeBlock;
 	}
 	//A CatRuntimeContext provides variables and functions for use in expressions. (See Expression.h, ExpressionAny.h)
@@ -122,6 +123,9 @@ namespace jitcat
 		void setCurrentFunction(AST::CatFunctionDefinition* function);
 		AST::CatFunctionDefinition* getCurrentFunction() const;
 
+		void setCurrentClass(AST::CatClassDefinition* function);
+		AST::CatClassDefinition* getCurrentClass() const;
+
 		void setCurrentScope(CatScope* scope);
 		CatScope* getCurrentScope() const;
 		Reflection::Reflectable* getCurrentScopeObject() const;
@@ -141,6 +145,7 @@ namespace jitcat
 	private:
 		int nextFunctionIndex;
 		AST::CatFunctionDefinition* currentFunctionDefinition;
+		AST::CatClassDefinition* currentClassDefinition;
 		CatScope* currentScope;
 
 		bool returning;

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "jitcat/CatDefinition.h"
+#include "jitcat/MemberVisibility.h"
 
 #include <any>
 #include <memory>
@@ -41,10 +42,15 @@ namespace jitcat::AST
 		
 		CatTypedExpression* releaseInitializationExpression();
 
+		Reflection::MemberVisibility getVariableVisibility() const;
+		void setVariableVisibility(Reflection::MemberVisibility variableVisibility);
+
 	private:
 		std::unique_ptr<CatTypeNode> type;
 		std::string name;
+		Reflection::MemberVisibility visibility;
 		std::unique_ptr<CatTypedExpression> initializationExpression;
+
 		Reflection::TypeMemberInfo* memberInfo;
 	};
 

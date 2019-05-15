@@ -12,6 +12,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScopeID.h"
 #include "jitcat/CustomTypeInstance.h"
+#include "jitcat/MemberVisibility.h"
 #include "jitcat/ReflectableHandle.h"
 
 #include <any>
@@ -37,7 +38,7 @@ namespace jitcat::AST
 	class CatFunctionDefinition: public CatDefinition
 	{
 	public:
-		CatFunctionDefinition(CatTypeNode* type, const std::string& name, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme);
+		CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatFunctionDefinition();
 
 		virtual void print() const override final;
@@ -57,6 +58,9 @@ namespace jitcat::AST
 		const std::string& getParameterName(int index) const;
 		const CatTypeNode* getParameterType(int index) const;
 
+		Reflection::MemberVisibility getFunctionVisibility() const;
+		void setFunctionVisibility(Reflection::MemberVisibility functionVisibility);
+
 		const std::string& getFunctionName() const;
 
 		template<typename... ArgumentsT>
@@ -69,13 +73,16 @@ namespace jitcat::AST
 
 	private:
 		std::string name;
+		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypeNode> type;
 		std::unique_ptr<CatFunctionParameterDefinitions> parameters;
+		Reflection::MemberVisibility visibility;
+
 		std::vector<std::unique_ptr<CatAssignableExpression>> parameterAssignables;
 		CatScopeID parametersScopeId;
 		std::unique_ptr<CatScopeBlock> scopeBlock;
 		Reflection::ReflectableHandle errorManagerHandle;
-
+		
 		//not owned
 		Reflection::CustomTypeMemberFunctionInfo* memberFunctionInfo;
 	};

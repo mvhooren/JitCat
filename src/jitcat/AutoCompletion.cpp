@@ -131,6 +131,8 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isObjectType())
 			{
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
+				bool isInheritedHostClass = false;
+				std::string inheritedHostClassName;
 				currentFunctionInfo = currentFunctionInfo->returnType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
 				if (currentFunctionInfo == nullptr)
 				{

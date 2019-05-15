@@ -33,6 +33,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	Prod rootProduction;
 	switch (grammarType)
 	{
+		default:
 		case CatGrammarType::Expression: rootProduction = Prod::Expression; break;
 		case CatGrammarType::Full:		 rootProduction = Prod::SourceFile; break;
 	}
@@ -52,10 +53,14 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::Definition, {prod(Prod::ClassDefinition)}, pass);
 		rule(Prod::Definition, {prod(Prod::FunctionDefinition)}, pass);
 		rule(Prod::Definition, {prod(Prod::VariableDefinition), term(one, OneChar::Semicolon)}, pass);
-		
+		rule(Prod::Definition, {prod(Prod::InheritanceDefinition), term(one, OneChar::Semicolon)}, pass);
+
 		//Class definition
 		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen), term(one, OneChar::BraceClose)}, classDefinition);
 		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen), prod(Prod::Definitions), term(one, OneChar::BraceClose)}, classDefinition);
+
+		//Inheritance definition
+		rule(Prod::InheritanceDefinition, {term(id, Identifier::Inherits), prod(Prod::Type)}, inheritanceDefinition);
 
 		//Variable definition (definition)
 		rule(Prod::VariableDefinition,  {prod(Prod::Type), term(id, Identifier::Identifier)}, variableDefinition);
@@ -67,7 +72,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::FunctionParameters, {term(one, OneChar::ParenthesesOpen), prod(Prod::FunctionParameterDefinitions), term(one, OneChar::ParenthesesClose)}, functionParameterDefinitions);
 		rule(Prod::FunctionParameterDefinitions, {prod(Prod::VariableDeclaration), term(one, OneChar::Comma), prod(Prod::FunctionParameterDefinitions)}, link);
 		rule(Prod::FunctionParameterDefinitions, {prod(Prod::VariableDeclaration)}, pass);
-		
+
 		//Scope block
 		rule(Prod::ScopeBlock, {term(one, OneChar::BraceOpen), prod(Prod::ScopeBlockStatements), term(one, OneChar::BraceClose)}, scopeBlock);
 		rule(Prod::ScopeBlock, {term(one, OneChar::BraceOpen), term(one, OneChar::BraceClose)}, scopeBlock);
@@ -192,6 +197,7 @@ const char* CatGrammar::getProductionName(int production) const
 		case Prod::ClassDefinition:				return "class definition";
 		case Prod::ClassContents:				return "class contents";
 		case Prod::Declaration:					return "declaration";
+		case Prod::InheritanceDefinition:		return "inheritance definition";
 		case Prod::FunctionDefinition:			return "function definition";
 		case Prod::FunctionParameters:			return "function parameters";
 		case Prod::FunctionParameterDefinitions:return "function parameter definitions";
@@ -223,27 +229,6 @@ const char* CatGrammar::getProductionName(int production) const
 		case Prod::ObjectMemberAccessAction:	return "object member access action";
 		case Prod::Return:						return "return";
 	}
-}
-
-
-bool CatGrammar::isTypedExpression(CatASTNodeType node)
-{
-	return	node == CatASTNodeType::Literal
-			|| node == CatASTNodeType::Identifier
-			|| node == CatASTNodeType::InfixOperator
-			|| node == CatASTNodeType::PrefixOperator
-			|| node == CatASTNodeType::FunctionCall
-			|| node == CatASTNodeType::MemberAccess
-			|| node == CatASTNodeType::ArrayIndex
-			|| node == CatASTNodeType::MemberFunctionCall
-			|| node == CatASTNodeType::OperatorNew;
-}
-
-
-bool jitcat::Grammar::CatGrammar::isDefinition(AST::CatASTNodeType node)
-{
-	return	  node == CatASTNodeType::ClassDefinition
-		   || node == CatASTNodeType::FunctionDefinition;
 }
 
 
@@ -325,11 +310,18 @@ ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParse
 }
 
 
+AST::ASTNode* jitcat::Grammar::CatGrammar::inheritanceDefinition(const Parser::ASTNodeParser& nodeParser)
+{
+	CatTypeNode* typeNode = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	return new CatInheritanceDefinition(typeNode, typeNode->getLexeme(), nodeParser.getStackLexeme());
+}
+
+
 ASTNode* jitcat::Grammar::CatGrammar::functionDefinition(const Parser::ASTNodeParser& nodeParser)
 {
 	std::string functionName(nodeParser.getTerminalByIndex(0)->getLexeme());
 	return new CatFunctionDefinition(static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0)), 
-									 functionName,
+									 functionName, nodeParser.getTerminalByIndex(0)->getLexeme(),
 									 static_cast<CatFunctionParameterDefinitions*>(nodeParser.getASTNodeByIndex(1)),
 									 static_cast<CatScopeBlock*>(nodeParser.getASTNodeByIndex(2)), nodeParser.getStackLexeme());
 }

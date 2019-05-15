@@ -71,6 +71,7 @@ CatASTNodeType CatTypeNode::getNodeType()
 void jitcat::AST::CatTypeNode::setType(const CatGenericType& newType)
 {
 	type = newType;
+	knownType = true;
 }
 
 

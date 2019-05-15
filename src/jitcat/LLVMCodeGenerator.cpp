@@ -694,7 +694,12 @@ llvm::Value* LLVMCodeGenerator::generate(CatMemberFunctionCall* memberFunctionCa
 	MemberFunctionCallData callData = functionInfo->getFunctionAddress();
 
 	llvm::Value* baseObject = generate(base, context);
-
+	if (functionInfo->isDeferredFunctionCall())
+	{
+		//We must first get the deferred base.
+		DeferredMemberFunctionInfo* deferredFunctionInfo = static_cast<DeferredMemberFunctionInfo*>(functionInfo);
+		baseObject = deferredFunctionInfo->baseMember->generateDereferenceCode(baseObject, context);
+	}
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
 		std::vector<llvm::Value*> argumentList;

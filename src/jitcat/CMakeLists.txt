@@ -67,6 +67,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatInfixOperatorHeaderImplementation.h
 	CatInfixOperatorType.cpp
 	${JitCatHeaderPath}/CatInfixOperatorType.h
+	CatInheritanceDefinition.cpp
+	${JitCatHeaderPath}/CatInheritanceDefinition.h
 	CatLinkNode.cpp
 	${JitCatHeaderPath}/CatLinkNode.h
 	CatLiteral.cpp
@@ -243,10 +245,13 @@ set(Source_Reflection_TypeInfo
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
 	${JitCatHeaderPath}/CustomTypeMemberInfo.h
 	${JitCatHeaderPath}/CustomTypeMemberInfoHeaderImplementation.h
+	MemberFunctionInfo.cpp
 	${JitCatHeaderPath}/MemberFunctionInfo.h
+	MemberInfo.cpp
 	${JitCatHeaderPath}/MemberInfo.h
 	${JitCatHeaderPath}/MemberInfoHeaderImplementation.h
 	${JitCatHeaderPath}/MemberTypeInfoCreator.h
+	${JitCatHeaderPath}/MemberVisibility.h
 	${JitCatHeaderPath}/TypeCaster.h
 	TypeInfo.cpp
 	${JitCatHeaderPath}/TypeInfo.h

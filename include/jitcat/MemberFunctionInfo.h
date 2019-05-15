@@ -9,62 +9,81 @@
 
 #include "jitcat/CatGenericType.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/MemberVisibility.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeTraits.h"
 
 #include <string>
 #include <vector>
 
+namespace jitcat
+{
+	class CatRuntimeContext;
+	
+}
+
 namespace jitcat::Reflection
 {
+	struct TypeMemberInfo;
+	struct DeferredMemberFunctionInfo;
 
-struct MemberFunctionCallData
-{
-	MemberFunctionCallData(): staticFunctionAddress(0), memberFunctionAddress(0), functionInfoStructAddress(0), makeDirectCall(false) {}
-	MemberFunctionCallData(uintptr_t staticFunctionAddress, uintptr_t memberFunctionAddress, uintptr_t functionInfoStructAddress, bool makeDirectCall): 
-		staticFunctionAddress(staticFunctionAddress), 
-		memberFunctionAddress(memberFunctionAddress), 
-		functionInfoStructAddress(functionInfoStructAddress), 
-		makeDirectCall(makeDirectCall) 
-	{}
-	uintptr_t staticFunctionAddress;
-	uintptr_t memberFunctionAddress;
-	uintptr_t functionInfoStructAddress;
-	bool makeDirectCall;
-};
-
-
-struct MemberFunctionInfo
-{
-	MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): memberFunctionName(memberFunctionName), returnType(returnType) {};
-	virtual ~MemberFunctionInfo() {}
-	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
-	virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
-	inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
-
-	template<typename X>
-	inline void addParameterTypeInfo()
+	struct MemberFunctionCallData
 	{
-		argumentTypes.push_back(TypeTraits<typename std::decay<X>::type >::toGenericType());
-	}
+		MemberFunctionCallData(): staticFunctionAddress(0), memberFunctionAddress(0), functionInfoStructAddress(0), makeDirectCall(false) {}
+		MemberFunctionCallData(uintptr_t staticFunctionAddress, uintptr_t memberFunctionAddress, uintptr_t functionInfoStructAddress, bool makeDirectCall): 
+			staticFunctionAddress(staticFunctionAddress), 
+			memberFunctionAddress(memberFunctionAddress), 
+			functionInfoStructAddress(functionInfoStructAddress), 
+			makeDirectCall(makeDirectCall) 
+		{}
+		uintptr_t staticFunctionAddress;
+		uintptr_t memberFunctionAddress;
+		uintptr_t functionInfoStructAddress;
+		bool makeDirectCall;
+	};
 
-	CatGenericType getArgumentType(std::size_t argumentIndex) const 
+
+	struct MemberFunctionInfo
 	{
-		if (argumentIndex < argumentTypes.size())
-		{
-			return argumentTypes[argumentIndex];
-		}
-		else
-		{
-			return CatGenericType();
-		}
-	}
+		MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): memberFunctionName(memberFunctionName), returnType(returnType), visibility(MemberVisibility::Public){};
+		virtual ~MemberFunctionInfo() {}
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
+		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
+		inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
+		inline virtual bool isDeferredFunctionCall() {return false;}
 
-	std::string memberFunctionName;
-	CatGenericType returnType;
+		template<typename X>
+		inline void addParameterTypeInfo()
+		{
+			argumentTypes.push_back(TypeTraits<typename std::decay<X>::type >::toGenericType());
+		}
 
-	std::vector<CatGenericType> argumentTypes;
-};
+		CatGenericType getArgumentType(std::size_t argumentIndex) const;
+
+		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember);
+
+
+		std::string memberFunctionName;
+		CatGenericType returnType;
+		MemberVisibility visibility;
+
+		std::vector<CatGenericType> argumentTypes;
+	};
+
+	struct DeferredMemberFunctionInfo : public MemberFunctionInfo
+	{
+		DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, MemberFunctionInfo* deferredFunction);
+
+		virtual ~DeferredMemberFunctionInfo();
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters);
+		virtual std::size_t getNumberOfArguments() const;
+		inline virtual MemberFunctionCallData getFunctionAddress() const;
+		inline virtual bool isDeferredFunctionCall() override final;
+
+		TypeMemberInfo* baseMember;
+		MemberFunctionInfo* deferredFunction;
+
+	};
 
 
 ////Indices trick

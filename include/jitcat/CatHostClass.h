@@ -27,7 +27,7 @@ namespace jitcat
 		virtual ~CatHostClass() {}
 		virtual Reflection::Reflectable* construct() = 0;
 		virtual void destruct(Reflection::Reflectable* object) = 0;
-		virtual void inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext) {};
+		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext) { return true; };
 		bool isConstructible() { return constructible; }
 		bool isInheritable() { return inheritable; }
 	private:

@@ -14,6 +14,8 @@ namespace jitcat::Tokenizer
 	{
 		Identifier,
 		Class,
+		Struct,
+		Inherits,
 		Enum,
 		Public,
 		Protected,

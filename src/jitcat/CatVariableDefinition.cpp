@@ -23,6 +23,7 @@ CatVariableDefinition::CatVariableDefinition(CatTypeNode* typeNode, const std::s
 	CatDefinition(lexeme),
 	type(typeNode),
 	name(name),
+	visibility(Reflection::MemberVisibility::Public),
 	initializationExpression(initialization),
 	memberInfo(nullptr)
 {
@@ -85,6 +86,7 @@ bool CatVariableDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	if (currentScope != nullptr)
 	{
 		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
+		memberInfo->visibility = visibility;
 	}
 	return true;
 }
@@ -105,4 +107,20 @@ const CatTypeNode& CatVariableDefinition::getType() const
 CatTypedExpression* jitcat::AST::CatVariableDefinition::releaseInitializationExpression()
 {
 	return initializationExpression.release();
+}
+
+
+Reflection::MemberVisibility jitcat::AST::CatVariableDefinition::getVariableVisibility() const
+{
+	return visibility;
+}
+
+
+void jitcat::AST::CatVariableDefinition::setVariableVisibility(Reflection::MemberVisibility variableVisibility)
+{
+	visibility = variableVisibility;
+	if (memberInfo != nullptr)
+	{
+		memberInfo->visibility = visibility;
+	}
 }

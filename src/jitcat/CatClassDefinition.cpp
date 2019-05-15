@@ -8,9 +8,11 @@
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatAssignmentOperator.h"
 #include "jitcat/CatIdentifier.h"
+#include "jitcat/CatInheritanceDefinition.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
+#include "jitcat/CatOperatorNew.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatTypeNode.h"
@@ -40,6 +42,7 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std
 			case CatASTNodeType::ClassDefinition:		classDefinitions.push_back(static_cast<CatClassDefinition*>(iter.get())); break;
 			case CatASTNodeType::FunctionDefinition:	functionDefinitions.push_back(static_cast<CatFunctionDefinition*>(iter.get())); break;
 			case CatASTNodeType::VariableDefinition:	variableDefinitions.push_back(static_cast<CatVariableDefinition*>(iter.get())); break;
+			case CatASTNodeType::InheritanceDefinition: inheritanceDefinitions.push_back(static_cast<CatInheritanceDefinition*>(iter.get())); break;
 			default:
 				assert(false);
 		}
@@ -79,16 +82,22 @@ CatASTNodeType jitcat::AST::CatClassDefinition::getNodeType()
 
 bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 {
+	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
+	compileTimeContext->setCurrentClass(this);
 	bool noErrors = true;
+	scopeId = compileTimeContext->addCustomTypeScope(customType.get());
+	CatScope* previousScope = compileTimeContext->getCurrentScope();
+	compileTimeContext->setCurrentScope(this);
 
-	for (auto& iter: classDefinitions)
+	for (auto& iter : inheritanceDefinitions)
 	{
 		noErrors &= iter->typeCheck(compileTimeContext);
 	}
 
-	scopeId = compileTimeContext->addCustomTypeScope(customType.get());
-	CatScope* previousScope = compileTimeContext->getCurrentScope();
-	compileTimeContext->setCurrentScope(this);
+	for (auto& iter : classDefinitions)
+	{
+		noErrors &= iter->typeCheck(compileTimeContext);
+	}
 
 	for (auto& iter: variableDefinitions)
 	{
@@ -108,6 +117,8 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 
 	compileTimeContext->removeScope(scopeId);
 	compileTimeContext->setCurrentScope(previousScope);
+	compileTimeContext->setCurrentClass(parentClass);
+
 	if (!compileTimeContext->getCurrentScope()->getCustomType()->addType(customType.get()))
 	{
 		compileTimeContext->getErrorManager()->compiledWithError(Tools::append("A type with name ", name, " already exists."), this, compileTimeContext->getContextName(), nameLexeme);
@@ -117,6 +128,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 	{
 		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
 	}
+	
 	return noErrors;
 }
 
@@ -151,6 +163,15 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 	CatTypeNode* typeNode = new CatTypeNode(CatGenericType::voidType, nameLexeme);
 	CatFunctionParameterDefinitions* parameters = new CatFunctionParameterDefinitions({}, nameLexeme);
 	std::vector<CatStatement*> statements;
+	for (auto& iter : inheritanceDefinitions)
+	{
+		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
+		CatTypeNode* newType = new CatTypeNode(inheritedMember->catType, iter->getLexeme());
+		CatOperatorNew* operatorNew = new CatOperatorNew(newType, new CatArgumentList(iter->getLexeme()), iter->getLexeme());
+		CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
+		CatAssignmentOperator* assignment = new CatAssignmentOperator(id, operatorNew, iter->getLexeme());
+		statements.push_back(assignment);
+	}
 	for (auto& iter : variableDefinitions)
 	{
 		CatTypedExpression* variableInitExpr = iter->releaseInitializationExpression();
@@ -162,8 +183,8 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 		}
 	}
 	CatScopeBlock* scopeBlock = new CatScopeBlock(statements, nameLexeme);
-	generatedConstructor.reset(new CatFunctionDefinition(typeNode, "__init", parameters, scopeBlock, nameLexeme));
-
+	generatedConstructor.reset(new CatFunctionDefinition(typeNode, "__init", nameLexeme, parameters, scopeBlock, nameLexeme));
+	generatedConstructor->setFunctionVisibility(MemberVisibility::Constructor);
 	return generatedConstructor->typeCheck(compileTimeContext);
 
 }

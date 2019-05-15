@@ -15,6 +15,7 @@
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatIfStatement.h"
+#include "jitcat/CatInheritanceDefinition.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatIdentifier.h"

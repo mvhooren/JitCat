@@ -20,6 +20,7 @@ namespace jitcat::AST
 	class CatIdentifier;
 	class CatIfStatement;
 	class CatInfixOperator;
+	class CatInheritanceDefinition;
 	class CatLiteral;
 	class CatMemberAccess;
 	class CatMemberFunctionCall;

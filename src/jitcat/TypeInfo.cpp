@@ -287,3 +287,27 @@ const TypeCaster* TypeInfo::getTypeCaster() const
 	return caster.get();
 }
 
+
+void jitcat::Reflection::TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
+{
+	auto& deferredMembers = deferredMember->catType.getObjectType()->getMembers();
+	auto& deferredMemberFunctions = deferredMember->catType.getObjectType()->getMemberFunctions();
+
+	for (auto& member : deferredMembers)
+	{
+		if (member.second->visibility == MemberVisibility::Public
+			|| member.second->visibility == MemberVisibility::Protected)
+		{
+			members.emplace(member.first, member.second->toDeferredTypeMemberInfo(deferredMember));
+		}
+	}
+	for (auto& memberFunction : deferredMemberFunctions)
+	{
+		if (memberFunction.second->visibility == MemberVisibility::Public
+			|| memberFunction.second->visibility == MemberVisibility::Protected)
+		{
+			memberFunctions.emplace(memberFunction.first, memberFunction.second->toDeferredMemberFunction(deferredMember));
+		}
+	}
+}
+

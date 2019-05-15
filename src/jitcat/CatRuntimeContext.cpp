@@ -32,6 +32,7 @@ CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionE
 	currentStackFrameOffset(0),
 	nextFunctionIndex(0),
 	currentFunctionDefinition(nullptr),
+	currentClassDefinition(nullptr),
 	currentScope(nullptr),
 	returning(false),
 	hostClasses(hostClasses)
@@ -295,6 +296,18 @@ void jitcat::CatRuntimeContext::setCurrentFunction(AST::CatFunctionDefinition* f
 AST::CatFunctionDefinition* jitcat::CatRuntimeContext::getCurrentFunction() const
 {
 	return currentFunctionDefinition;
+}
+
+
+void jitcat::CatRuntimeContext::setCurrentClass(AST::CatClassDefinition* currentClass)
+{
+	currentClassDefinition = currentClass;
+}
+
+
+AST::CatClassDefinition* jitcat::CatRuntimeContext::getCurrentClass() const
+{
+	return currentClassDefinition;
 }
 
 

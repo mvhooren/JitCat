@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatMemberAccess.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
@@ -124,6 +125,13 @@ CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTim
 		return new CatLiteral(execute(compileTimeContext), getType(), getLexeme());
 	}
 	return this;
+}
+
+
+void jitcat::AST::CatMemberAccess::setTypeAndMemberInfo(Reflection::TypeMemberInfo* newMemberInfo, const CatGenericType& newMemberType)
+{
+	memberInfo = newMemberInfo;
+	type = newMemberType;
 }
 
 

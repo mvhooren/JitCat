@@ -22,8 +22,9 @@ namespace jitcat::Reflection
 namespace jitcat::AST
 {
 	class CatFunctionDefinition;
+	class CatInheritanceDefinition;
 	class CatVariableDefinition;
-
+	
 	class CatClassDefinition: public CatDefinition, public CatScope
 	{
 	public:
@@ -56,11 +57,15 @@ namespace jitcat::AST
 		//All global function definitions
 		std::vector<CatFunctionDefinition*> functionDefinitions;
 
-		std::unique_ptr<CatFunctionDefinition> generatedConstructor;
-		std::unique_ptr<CatFunctionDefinition> generatedDestructor;
-
 		//All variable definitions
 		std::vector<CatVariableDefinition*> variableDefinitions;
+
+		//All inheritance definitions
+		std::vector<CatInheritanceDefinition*> inheritanceDefinitions;
+
+		//Constructor/destructor
+		std::unique_ptr<CatFunctionDefinition> generatedConstructor;
+		std::unique_ptr<CatFunctionDefinition> generatedDestructor;
 
 		CatScopeID scopeId;
 		std::unique_ptr<Reflection::CustomTypeInfo> customType;
