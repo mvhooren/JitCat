@@ -26,9 +26,10 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Tools;
 
 
-CatFunctionCall::CatFunctionCall(const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
+CatFunctionCall::CatFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	name(name),
+	nameLexeme(nameLexeme),
 	arguments(arguments),
 	returnType(CatGenericType::errorType),
 	function(toFunction(name.c_str(), (int)(arguments->arguments.size())))
@@ -697,6 +698,12 @@ CatBuiltInFunctionType CatFunctionCall::getFunctionType() const
 const std::string& CatFunctionCall::getFunctionName() const
 {
 	return name;
+}
+
+
+const Tokenizer::Lexeme& jitcat::AST::CatFunctionCall::getNameLexeme() const
+{
+	return nameLexeme;
 }
 
 

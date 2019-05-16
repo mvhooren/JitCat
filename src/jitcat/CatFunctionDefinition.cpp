@@ -104,7 +104,7 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 		//init function is a special case. We should call the auto generated __init function first.
 		CatArgumentList* arguments = new CatArgumentList(lexeme);
 		CatScopeRoot* scopeRoot = new CatScopeRoot(compileTimeContext->getCurrentScope()->getScopeId(), lexeme);
-		CatMemberFunctionCall* callAutoInit = new CatMemberFunctionCall("__init", scopeRoot, arguments, lexeme);
+		CatMemberFunctionCall* callAutoInit = new CatMemberFunctionCall("__init", nameLexeme, scopeRoot, arguments, lexeme);
 		scopeBlock->insertStatementFront(callAutoInit);
 	}
 	if (!scopeBlock->typeCheck(compileTimeContext, errorManager, this))

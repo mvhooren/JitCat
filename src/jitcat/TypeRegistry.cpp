@@ -47,7 +47,8 @@ void TypeRegistry::recreate()
 
 TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 {
-	std::map<std::string, TypeInfo*>::iterator iter = types.find(typeName);
+	std::string lowerName = Tools::toLowerCase(typeName);;
+	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter != types.end())
 	{
 		return iter->second;
@@ -61,11 +62,12 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 
 TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, TypeCaster* caster)
 {
-	std::map<std::string, TypeInfo*>::iterator iter = types.find(typeName);
+	std::string lowerName = Tools::toLowerCase(typeName);
+	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter == types.end())
 	{
 		TypeInfo* typeInfo = new TypeInfo(typeName, caster);
-		types[typeName] = typeInfo;
+		types[lowerName] = typeInfo;
 		return typeInfo;
 	}
 	else
@@ -83,10 +85,11 @@ const std::map<std::string, TypeInfo*>& TypeRegistry::getTypes() const
 
 void TypeRegistry::registerType(const char* typeName, TypeInfo* typeInfo)
 {
-	std::map<std::string, TypeInfo*>::iterator iter = types.find(typeName);
+	std::string lowerName = Tools::toLowerCase(typeName);
+	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter == types.end())
 	{
-		types[typeName] = typeInfo;
+		types[lowerName] = typeInfo;
 	}
 	else
 	{
@@ -97,7 +100,8 @@ void TypeRegistry::registerType(const char* typeName, TypeInfo* typeInfo)
 
 void TypeRegistry::removeType(const char* typeName)
 {
-	std::map<std::string, TypeInfo*>::iterator iter = types.find(typeName);
+	std::string lowerName = Tools::toLowerCase(typeName);
+	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter != types.end())
 	{
 		//TypeInfo is leaked here, but since removing types is very rare and TypeInfo* are stored everywhere, this accepable.
@@ -109,13 +113,15 @@ void TypeRegistry::removeType(const char* typeName)
 
 void TypeRegistry::renameType(const std::string& oldName, const char* newTypeName)
 {
-	std::map<std::string, TypeInfo*>::iterator iter = types.find(oldName);
-	if (iter != types.end() && types.find(newTypeName) == types.end())
+	std::string oldLower = Tools::toLowerCase(oldName);
+	std::string newLower = Tools::toLowerCase(newTypeName);
+	std::map<std::string, TypeInfo*>::iterator iter = types.find(oldLower);
+	if (iter != types.end() && types.find(newLower) == types.end())
 	{
 		TypeInfo* oldTypeInfo = iter->second;
 		types.erase(iter);
 		oldTypeInfo->setTypeName(newTypeName);
-		types[newTypeName] = oldTypeInfo;
+		types[newLower] = oldTypeInfo;
 	}
 }
 
@@ -191,7 +197,7 @@ bool TypeRegistry::loadRegistryFromXML(const std::string& filepath)
 						{
 							if (types.find(currentTypeInfo->getTypeName()) == types.end())
 							{
-								types[currentTypeInfo->getTypeName()] = currentTypeInfo;
+								types[Tools::toLowerCase(currentTypeInfo->getTypeName())] = currentTypeInfo;
 								currentTypeInfo = nullptr;
 								readState = XMLReadState::ReadingRegistry;
 							}

@@ -25,6 +25,7 @@ namespace jitcat::Grammar
 		enum class Prod
 		{
 			Root,
+			Identifier,
 			SourceFile,
 			Definitions,
 			Definition,

@@ -33,6 +33,8 @@ namespace jitcat::AST
 		CatScopeID getScopeId() const;
 		const Reflection::TypeMemberInfo* getMemberInfo() const;
 
+		const std::string& getName() const;
+
 	public:
 		std::string name;
 		CatGenericType type;

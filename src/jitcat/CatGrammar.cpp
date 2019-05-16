@@ -60,7 +60,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::ClassDefinition, {term(id, Identifier::Class), term(id, Identifier::Identifier), term(one, OneChar::BraceOpen), prod(Prod::Definitions), term(one, OneChar::BraceClose)}, classDefinition);
 
 		//Inheritance definition
-		rule(Prod::InheritanceDefinition, {term(id, Identifier::Inherits), prod(Prod::Type)}, inheritanceDefinition);
+		rule(Prod::InheritanceDefinition, {term(id, Identifier::Inherits), prod(Prod::Identifier)}, inheritanceDefinition);
 
 		//Variable definition (definition)
 		rule(Prod::VariableDefinition,  {prod(Prod::Type), term(id, Identifier::Identifier)}, variableDefinition);
@@ -101,7 +101,8 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::Return, {term(id, Identifier::Return), prod(Prod::Expression)}, returnStatement);
 
 		//Typename
-		rule(Prod::Type, {term(id, Identifier::Identifier)}, typeName);
+		rule(Prod::Type, {term(one, OneChar::Times), prod(Prod::Identifier) }, typeName);
+		rule(Prod::Type, {prod(Prod::Identifier)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Void)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Bool)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Int)}, typeName);
@@ -164,10 +165,17 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	// literals, identifiers, parentheses( ), operator new and function calls (highest precedence)
 	rule(Prod::OperatorP2, {prod(Prod::Literal)}, pass);	
 	rule(Prod::OperatorP2, {term(one, OneChar::ParenthesesOpen), prod(Prod::OperatorP11), term(one, OneChar::ParenthesesClose)}, pass);
-	rule(Prod::OperatorP2, {term(id, Identifier::Identifier)}, identifierToken);
-	rule(Prod::OperatorP2, {term(id, Identifier::New), prod(Prod::Type), prod(Prod::FunctionCallArguments)}, operatorNew);
-	rule(Prod::OperatorP2, {term(id, Identifier::Identifier), prod(Prod::FunctionCallArguments)}, functionCallToken);
+	rule(Prod::OperatorP2, {prod(Prod::Identifier)}, pass);
+	rule(Prod::OperatorP2, {prod(Prod::FunctionCall)}, pass);
 
+	if (grammarType == CatGrammarType::Full)
+	{
+		rule(Prod::OperatorP2, { term(id, Identifier::New), prod(Prod::FunctionCall)}, operatorNew);
+	}
+	
+	rule(Prod::Identifier, { term(id, Identifier::Identifier) }, identifierToken);
+
+	rule(Prod::FunctionCall, {term(id, Identifier::Identifier), prod(Prod::FunctionCallArguments) }, functionCallToken);
 	rule(Prod::FunctionCallArguments, {term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose)}, argumentListToken);
 	rule(Prod::FunctionCallArguments, {term(one, OneChar::ParenthesesOpen), prod(Prod::FunctionCallArgumentRepeat), term(one, OneChar::ParenthesesClose)}, argumentListToken);
 	rule(Prod::FunctionCallArgumentRepeat, {prod(Prod::Expression), term(one, OneChar::Comma), prod(Prod::FunctionCallArgumentRepeat)}, link);
@@ -191,6 +199,7 @@ const char* CatGrammar::getProductionName(int production) const
 	{
 		default:								return "unknown";
 		case Prod::Root:						return "root";
+		case Prod::Identifier:					return "Identifier";
 		case Prod::SourceFile:					return "source file";
 		case Prod::Definitions:					return "definitions";
 		case Prod::Definition:					return "definition";
@@ -312,7 +321,9 @@ ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParse
 
 AST::ASTNode* jitcat::Grammar::CatGrammar::inheritanceDefinition(const Parser::ASTNodeParser& nodeParser)
 {
-	CatTypeNode* typeNode = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	CatIdentifier* identifier = static_cast<CatIdentifier*>(nodeParser.getASTNodeByIndex(0));
+	CatTypeNode* typeNode = new CatTypeNode(identifier->getName(), identifier->getLexeme());
+	delete identifier;
 	return new CatInheritanceDefinition(typeNode, typeNode->getLexeme(), nodeParser.getStackLexeme());
 }
 
@@ -366,7 +377,23 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::variableDefinition(const Parser::ASTN
 
 ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& nodeParser)
 {
-	Identifier identifierType = static_cast<Identifier>(nodeParser.getTerminalByIndex(0)->getTokenSubType());
+	CatIdentifier* identifierNode = static_cast<CatIdentifier*>(nodeParser.getASTNodeByIndex(0));
+	Identifier identifierType;
+	std::string identifierName;
+	Lexeme identifierLexeme;
+	if (identifierNode != nullptr)
+	{
+		identifierType = Identifier::Identifier;
+		identifierName = identifierNode->name;
+		identifierLexeme = identifierNode->getLexeme();
+		delete identifierNode;
+	}
+	else
+	{
+		identifierType = static_cast<Identifier>(nodeParser.getTerminalByIndex(0)->getTokenSubType());
+		identifierLexeme = nodeParser.getStackLexeme();
+	}
+	
 	CatGenericType type;
 	switch (identifierType)
 	{
@@ -377,11 +404,10 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 		case Identifier::Void:		 type = CatGenericType::voidType;	break;
 		case Identifier::Identifier:
 		{
-			std::string identifierName(nodeParser.getTerminalByIndex(0)->getLexeme());
-			return new CatTypeNode(identifierName, nodeParser.getStackLexeme());
+			return new CatTypeNode(identifierName, identifierLexeme);
 		}
 	}
-	return new CatTypeNode(type, nodeParser.getStackLexeme());
+	return new CatTypeNode(type, identifierLexeme);
 }
 
 
@@ -496,9 +522,9 @@ ASTNode* CatGrammar::prefixOperator(const ASTNodeParser& nodeParser)
 
 AST::ASTNode* jitcat::Grammar::CatGrammar::operatorNew(const Parser::ASTNodeParser& nodeParser)
 {
-	CatTypeNode* typeNode = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
-	CatArgumentList* arguments = static_cast<CatArgumentList*>(nodeParser.getASTNodeByIndex(1));
-	return new CatOperatorNew(typeNode, arguments, nodeParser.getStackLexeme());
+	CatMemberFunctionCall* callNode = static_cast<CatMemberFunctionCall*>(nodeParser.getASTNodeByIndex(0));
+	
+	return new CatOperatorNew(callNode, nodeParser.getStackLexeme());
 }
 
 
@@ -567,12 +593,12 @@ ASTNode* CatGrammar::functionCallToken(const ASTNodeParser& nodeParser)
 	CatArgumentList* arguments = static_cast<CatArgumentList*>(nodeParser.getASTNodeByIndex(0));
 	if (CatFunctionCall::isBuiltInFunction(functionName.c_str(), (int)arguments->arguments.size()))
 	{
-		return new CatFunctionCall(functionName, arguments, nodeParser.getStackLexeme());
+		return new CatFunctionCall(functionName, nameToken->getLexeme(), arguments, nodeParser.getStackLexeme());
 	}
 	else
 	{
 		std::string lowerName = Tools::toLowerCase(functionName);
-		return new CatMemberFunctionCall(lowerName, nullptr, arguments, nodeParser.getStackLexeme());
+		return new CatMemberFunctionCall(lowerName, nameToken->getLexeme(), nullptr, arguments, nodeParser.getStackLexeme());
 	}
 }
 
@@ -592,7 +618,7 @@ ASTNode* CatGrammar::memberFunctionCallToken(const ASTNodeParser& nodeParser)
 	std::string functionName(nameToken->getLexeme());
 	CatTypedExpression* base = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0));
 	CatArgumentList* arguments = static_cast<CatArgumentList*>(nodeParser.getASTNodeByIndex(1));
-	return new CatMemberFunctionCall(functionName, base, arguments, nodeParser.getStackLexeme());
+	return new CatMemberFunctionCall(functionName, nameToken->getLexeme(), base, arguments, nodeParser.getStackLexeme());
 }
 
 

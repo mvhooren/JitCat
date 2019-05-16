@@ -216,7 +216,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 					CatArgumentList* arguments = new CatArgumentList(expressionLexeme);
 					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
 
-					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", arguments, expressionLexeme));
+					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", expressionLexeme, arguments, expressionLexeme));
 					parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					
 					valueType = parseResult->getNode<CatTypedExpression>()->getType();
@@ -229,12 +229,12 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 
 					if (expectedType.isFloatType())
 					{
-						parseResult->astRootNode.reset(new CatFunctionCall("toFloat", arguments, expressionLexeme));
+						parseResult->astRootNode.reset(new CatFunctionCall("toFloat", expressionLexeme, arguments, expressionLexeme));
 						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else if (expectedType.isIntType())
 					{
-						parseResult->astRootNode.reset(new CatFunctionCall("toInt", arguments, expressionLexeme));
+						parseResult->astRootNode.reset(new CatFunctionCall("toInt", expressionLexeme, arguments, expressionLexeme));
 						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else

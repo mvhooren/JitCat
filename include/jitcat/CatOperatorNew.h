@@ -8,6 +8,7 @@
 
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatGenericType.h"
+#include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatTypedExpression.h"
 
@@ -28,7 +29,7 @@ namespace jitcat::AST
 	class CatOperatorNew: public CatTypedExpression
 	{
 	public:
-		CatOperatorNew(CatTypeNode* type, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
+		CatOperatorNew(CatMemberFunctionCall* functionCall, const Tokenizer::Lexeme& lexeme);
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
@@ -39,13 +40,11 @@ namespace jitcat::AST
 
 
 	private:
-		std::unique_ptr<CatArgumentList> arguments;
+		std::unique_ptr<CatMemberFunctionCall> functionCall;
 		std::unique_ptr<CatTypeNode> type;
-		std::vector<CatGenericType> argumentTypes;
+		std::string typeName;
 		CatGenericType newType;
 		//may be nullptr
 		CatHostClass* hostClass;
-		//may be nullptr
-		jitcat::Reflection::MemberFunctionInfo* typeConstructor;
 	};
 }

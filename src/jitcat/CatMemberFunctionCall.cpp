@@ -23,9 +23,10 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
+CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	functionName(name),
+	nameLexeme(nameLexeme),
 	arguments(arguments),
 	base(base),
 	memberFunctionInfo(nullptr),
@@ -55,6 +56,12 @@ CatASTNodeType CatMemberFunctionCall::getNodeType()
 std::any CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
 {
 	std::any baseValue = base->execute(runtimeContext);
+	return executeWithBase(runtimeContext, baseValue);
+}
+
+
+std::any jitcat::AST::CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContext, std::any baseValue)
+{
 	if (memberFunctionInfo != nullptr && runtimeContext != nullptr)
 	{
 		std::vector<std::any> argumentValues;
@@ -66,7 +73,6 @@ std::any CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
 	}
 	assert(false);
 	return std::any();
-
 }
 
 
@@ -173,4 +179,27 @@ CatTypedExpression* CatMemberFunctionCall::getBase() const
 CatArgumentList* CatMemberFunctionCall::getArguments() const
 {
 	return arguments.get();
+}
+
+const std::string& jitcat::AST::CatMemberFunctionCall::getFunctionName() const
+{
+	return functionName;
+}
+
+
+void jitcat::AST::CatMemberFunctionCall::setFunctionName(const std::string& name)
+{
+	functionName = name;
+}
+
+
+void jitcat::AST::CatMemberFunctionCall::setBase(std::unique_ptr<CatTypedExpression> newBase)
+{
+	base.reset(newBase.release());
+}
+
+
+const Tokenizer::Lexeme& jitcat::AST::CatMemberFunctionCall::getNameLexeme() const
+{
+	return nameLexeme;
 }

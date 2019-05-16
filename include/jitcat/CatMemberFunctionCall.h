@@ -23,12 +23,13 @@ namespace jitcat::AST
 	class CatMemberFunctionCall: public CatTypedExpression
 	{
 	public:
-		CatMemberFunctionCall(const std::string& name, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
+		CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
 		CatMemberFunctionCall(const CatMemberFunctionCall&) = delete;
 		// Inherited via CatTypedExpression
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
+		std::any executeWithBase(CatRuntimeContext* runtimeContext, std::any baseValue);
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual CatGenericType getType() const override final;
 		virtual bool isConst() const override final;
@@ -38,9 +39,15 @@ namespace jitcat::AST
 		CatTypedExpression* getBase() const;
 		CatArgumentList* getArguments() const;
 
+		const std::string& getFunctionName() const;
+		void setFunctionName(const std::string& name);
+		void setBase(std::unique_ptr<CatTypedExpression> newBase);
+		const Tokenizer::Lexeme& getNameLexeme() const;
+
 	private:
 		Reflection::MemberFunctionInfo* memberFunctionInfo;
-		const std::string functionName;
+		std::string functionName;
+		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypedExpression> base;
 		std::unique_ptr<CatArgumentList> arguments;
 		CatGenericType returnType;

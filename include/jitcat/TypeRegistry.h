@@ -73,7 +73,8 @@ namespace jitcat::Reflection
 		TypeInfo* typeInfo = nullptr;
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).
 		const char* typeName = T::getTypeName();
-		std::map<std::string, TypeInfo*>::iterator iter = types.find(typeName);
+		std::string lowerTypeName = Tools::toLowerCase(typeName);
+		std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerTypeName);
 		if (iter != types.end())
 		{
 			return iter->second;
@@ -81,7 +82,7 @@ namespace jitcat::Reflection
 		else
 		{
 			typeInfo = createTypeInfo(typeName, new ObjectTypeCaster<T>());
-			types[typeName] = typeInfo;
+			types[lowerTypeName] = typeInfo;
 			ownedTypes.emplace_back(typeInfo);
 			T::reflect(*typeInfo);
 			return typeInfo;

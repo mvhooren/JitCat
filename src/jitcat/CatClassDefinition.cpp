@@ -7,11 +7,12 @@
 
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatAssignmentOperator.h"
+#include "jitcat/CatFunctionDefinition.h"
+#include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatInheritanceDefinition.h"
 #include "jitcat/CatLog.h"
-#include "jitcat/CatFunctionDefinition.h"
-#include "jitcat/CatFunctionParameterDefinitions.h"
+#include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatOperatorNew.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeBlock.h"
@@ -166,8 +167,8 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 	for (auto& iter : inheritanceDefinitions)
 	{
 		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
-		CatTypeNode* newType = new CatTypeNode(inheritedMember->catType, iter->getLexeme());
-		CatOperatorNew* operatorNew = new CatOperatorNew(newType, new CatArgumentList(iter->getLexeme()), iter->getLexeme());
+		CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(inheritedMember->catType.toString(), nameLexeme, nullptr, new CatArgumentList(iter->getLexeme()), nameLexeme);
+		CatOperatorNew* operatorNew = new CatOperatorNew(functionCall, iter->getLexeme());
 		CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
 		CatAssignmentOperator* assignment = new CatAssignmentOperator(id, operatorNew, iter->getLexeme());
 		statements.push_back(assignment);

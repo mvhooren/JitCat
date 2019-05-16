@@ -7,6 +7,7 @@
 
 #include "jitcat/GrammarBase.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/Production.h"
 #include "jitcat/ProductionEpsilonToken.h"
 #include "jitcat/ProductionNonTerminalToken.h"
@@ -160,19 +161,20 @@ void GrammarBase::buildEpsilonContainment()
 			}
 		}
 	}
-#ifdef DEBUG_GRAMMAR
-	CatLog::log("#######################################\n");
-	CatLog::log("# Epsilon containment for productions #\n");
-	CatLog::log("#######################################\n");
-	std::map<int, Production*>::iterator iter;
-	for (iter = productions.begin(); iter != productions.end(); iter++)
+	if constexpr (Configuration::debugGrammar)
 	{
-		CatLog::log(getProductionName(iter->first));
-		CatLog::log(": ");
-		CatLog::log((int)iter->second->getContainsEpsilon());
-		CatLog::log("\n");
+		CatLog::log("#######################################\n");
+		CatLog::log("# Epsilon containment for productions #\n");
+		CatLog::log("#######################################\n");
+		std::map<int, Production*>::iterator iter;
+		for (iter = productions.begin(); iter != productions.end(); iter++)
+		{
+			CatLog::log(getProductionName(iter->first));
+			CatLog::log(": ");
+			CatLog::log((int)iter->second->getContainsEpsilon());
+			CatLog::log("\n");
+		}
 	}
-#endif
 }
 
 
@@ -187,29 +189,30 @@ void GrammarBase::buildFirstSets()
 	{
 		iter->second->getFirstSet().flatten();
 	}
-#ifdef DEBUG_GRAMMAR
-	CatLog::log("##############\n");
-	CatLog::log("# First sets #\n");
-	CatLog::log("##############\n");
-	for (iter = productions.begin(); iter != productions.end(); iter++)
+	if constexpr (Configuration::debugGrammar)
 	{
-		CatLog::log(iter->second->getProductionName());
-		CatLog::log(": ");
-		ProductionTokenSet& set = iter->second->getFirstSet();
-		
-		for (unsigned int i = 0; i < set.getNumMembers(); i++)
+		CatLog::log("##############\n");
+		CatLog::log("# First sets #\n");
+		CatLog::log("##############\n");
+		for (iter = productions.begin(); iter != productions.end(); iter++)
 		{
-			if (i > 0)
+			CatLog::log(iter->second->getProductionName());
+			CatLog::log(": ");
+			ProductionTokenSet& set = iter->second->getFirstSet();
+
+			for (unsigned int i = 0; i < set.getNumMembers(); i++)
 			{
-				CatLog::log(", ");
+				if (i > 0)
+				{
+					CatLog::log(", ");
+				}
+				CatLog::log("'");
+				CatLog::log(set.getMember(i)->getDescription());
+				CatLog::log("'");
 			}
-			CatLog::log("'");
-			CatLog::log(set.getMember(i)->getDescription());
-			CatLog::log("'");
+			CatLog::log("\n");
 		}
-		CatLog::log("\n");
-	} 
-#endif
+	}
 }
 
 
@@ -228,7 +231,8 @@ void GrammarBase::buildFollowSets()
 	{
 		terminals[i]->getFollowSet().flatten();
 	}
-	#ifdef DEBUG_GRAMMAR
+	if constexpr (Configuration::debugGrammar)
+	{
 		CatLog::log("############################\n");
 		CatLog::log("# Follow sets, productions #\n");
 		CatLog::log("############################\n");
@@ -270,5 +274,5 @@ void GrammarBase::buildFollowSets()
 			}
 			CatLog::log("\n");
 		}
-	#endif
+	}
 }

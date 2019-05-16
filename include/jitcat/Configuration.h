@@ -50,6 +50,13 @@ public:
 #else
 		false;
 #endif
+
+	static constexpr bool debugGrammar = 
+#ifdef DEBUG_GRAMMAR
+		true;
+#else
+		false;
+#endif
 };
 
 } //namespace jitcat

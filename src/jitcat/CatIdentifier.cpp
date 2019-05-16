@@ -116,3 +116,9 @@ const TypeMemberInfo* CatIdentifier::getMemberInfo() const
 {
 	return memberInfo;
 }
+
+
+const std::string& jitcat::AST::CatIdentifier::getName() const
+{
+	return name;
+}

@@ -21,7 +21,7 @@ namespace jitcat::AST
 	class CatFunctionCall: public CatTypedExpression
 	{
 	public:
-		CatFunctionCall(const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
+		CatFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
 		CatFunctionCall(const CatFunctionCall&) = delete;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() override final;
@@ -33,6 +33,8 @@ namespace jitcat::AST
 		CatBuiltInFunctionType getFunctionType() const;
 
 		const std::string& getFunctionName() const;
+		const Tokenizer::Lexeme& getNameLexeme() const;
+
 		CatArgumentList* getArgumentList() const;
 
 		static bool isBuiltInFunction(const char* functionName, int numArguments);
@@ -49,7 +51,8 @@ namespace jitcat::AST
 	private:
 		std::unique_ptr<CatArgumentList> arguments;
 		std::vector<CatGenericType> argumentTypes;
-		const std::string name;
+		std::string name;
+		Tokenizer::Lexeme nameLexeme;
 		CatBuiltInFunctionType function;
 		CatGenericType returnType;
 	};

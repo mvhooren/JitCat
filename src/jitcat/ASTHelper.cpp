@@ -45,7 +45,7 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 		else if (targetType.isStringType()) functionName = "toString";
 
 		assert(functionName != nullptr);
-		CatFunctionCall* functionCall = new CatFunctionCall(functionName, arguments, sourceExpression->getLexeme());
+		CatFunctionCall* functionCall = new CatFunctionCall(functionName, sourceExpression->getLexeme(), arguments, sourceExpression->getLexeme());
 		uPtr.reset(functionCall);
 	}
 }

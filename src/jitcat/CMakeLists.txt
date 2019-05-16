@@ -256,6 +256,7 @@ set(Source_Reflection_TypeInfo
 	TypeInfo.cpp
 	${JitCatHeaderPath}/TypeInfo.h
 	${JitCatHeaderPath}/TypeInfoHeaderImplementation.h
+	${JitCatHeaderPath}/TypeOwnershipSemantics.h
 	${JitCatHeaderPath}/TypeTraits.h
 	${JitCatHeaderPath}/TypeTraitsHeaderImplementation.h
 	${JitCatHeaderPath}/VariableEnumerator.h

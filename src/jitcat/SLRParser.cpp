@@ -9,6 +9,7 @@
 #include "jitcat/ASTNode.h"
 #include "jitcat/ASTNodeParser.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/DFAState.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/GrammarBase.h"
@@ -61,24 +62,26 @@ void SLRParser::createNFA()
 		nfa.push_back(rootState);
 		buildNFA(rootState, nfa);
 		
-		#ifdef DEBUG_GRAMMAR
+		if constexpr (Configuration::debugGrammar)
+		{
 			CatLog::log("\n\n###### nfa #######\n\n");
 			for (unsigned int i = 0; i < nfa.size(); i++)
 			{
 				CatLog::log(nfa[i]->toString().c_str());
 				CatLog::log("\n");
 			}
-		#endif
+		}
 		convertNFAtoDFA(nfa);
-		#ifdef DEBUG_GRAMMAR
+		if constexpr (Configuration::debugGrammar)
+		{
 			CatLog::log("\n\n###### Final dfa #######\n\n");
 			for (unsigned int i = 0; i < nfa.size(); i++)
 			{
 				CatLog::log(nfa[i]->toString().c_str());
 				CatLog::log("\n");
 			}
-			scanForConflicts();
-		#endif
+		}
+		scanForConflicts();
 	}
 	else
 	{
@@ -178,11 +181,12 @@ void SLRParser::epsilonClose(DFAState* state, DFAState* currentState, std::set<D
 	{
 		state->isEpsilonClosed = true;
 		recursionSet.insert(state);
-		#ifdef DEBUG_GRAMMAR
+		if constexpr (Configuration::debugGrammar)
+		{
 			CatLog::log("Epsilon closing state: ");
 			CatLog::log(state->stateIndex);
 			CatLog::log("\n");
-		#endif
+		}
 	}
 	for (int i = 0; i < (int)currentState->transitions.size(); i++)
 	{
@@ -323,32 +327,33 @@ bool SLRParser::tryReduce(DFAState* currentState, std::vector<StackItem*>& stack
 			|| (item.rule->getNumTokens() == 1 && item.rule->getToken(0)->getType() == ProductionTokenType::Epsilon))
 			&& isStackItemInFollowSet(nextToken, item.production->getFollowSet()))
 		{
-			#ifdef DEBUG_GRAMMAR
-			if (nextToken->getProductionIfProduction())
+			if constexpr (Configuration::debugGrammar)
 			{
-				CatLog::log("Reduce move state: ");
-				CatLog::log(currentState->stateIndex);
-				CatLog::log(" item: ");
-				CatLog::log(item.toString().c_str());
-				CatLog::log(" because ");
-				CatLog::log(nextToken->getProductionIfProduction()->getProductionName());
-				CatLog::log(" is in the follow set of ");
-				CatLog::log(item.production->getProductionName());
-				CatLog::log("\n");
+				if (nextToken->getProductionIfProduction())
+				{
+					CatLog::log("Reduce move state: ");
+					CatLog::log(currentState->stateIndex);
+					CatLog::log(" item: ");
+					CatLog::log(item.toString().c_str());
+					CatLog::log(" because ");
+					CatLog::log(nextToken->getProductionIfProduction()->getProductionName());
+					CatLog::log(" is in the follow set of ");
+					CatLog::log(item.production->getProductionName());
+					CatLog::log("\n");
+				}
+				else
+				{
+					CatLog::log("Reduce move state: ");
+					CatLog::log(currentState->stateIndex);
+					CatLog::log(" item: ");
+					CatLog::log(item.toString().c_str());
+					CatLog::log(" because ");
+					CatLog::log(nextToken->getTokenIfToken()->getSubTypeName(nextToken->getTokenIfToken()->getTokenSubType()));
+					CatLog::log(" is in the follow set of ");
+					CatLog::log(item.production->getProductionName());
+					CatLog::log("\n");
+				}
 			}
-			else
-			{
-				CatLog::log("Reduce move state: ");
-				CatLog::log(currentState->stateIndex);
-				CatLog::log(" item: ");
-				CatLog::log(item.toString().c_str());
-				CatLog::log(" because ");
-				CatLog::log(nextToken->getTokenIfToken()->getSubTypeName(nextToken->getTokenIfToken()->getTokenSubType()));
-				CatLog::log(" is in the follow set of ");
-				CatLog::log(item.production->getProductionName());
-				CatLog::log("\n");
-			}
-			#endif
 			
 			StackItemProduction* reducedProduction = new StackItemProduction(item.production, item.rule);
 
@@ -391,13 +396,14 @@ DFAState* SLRParser::canShift(DFAState* currentState, StackItem* tokenToShift) c
 			if (terminal->getTokenId() == token->getTokenID()
 				&& terminal->getTokenSubType() == token->getTokenSubType())
 			{
-				#ifdef DEBUG_GRAMMAR
+				if constexpr (Configuration::debugGrammar)
+				{
 					CatLog::log("Shift terminal, state: ");
 					CatLog::log(currentState->stateIndex);
 					CatLog::log(" terminal: ");
 					CatLog::log(token->getSubTypeSymbol(token->getTokenSubType()));
 					CatLog::log("\n");
-				#endif
+				}
 				return transition.nextState;
 			}
 		}
@@ -407,13 +413,14 @@ DFAState* SLRParser::canShift(DFAState* currentState, StackItem* tokenToShift) c
 			const ProductionNonTerminalToken* nonTerminal = static_cast<const ProductionNonTerminalToken*>(transition.transitionToken);
 			if (nonTerminal->getProduction()->getProductionID() == production->getProductionID())
 			{
-				#ifdef DEBUG_GRAMMAR
+				if constexpr (Configuration::debugGrammar)
+				{
 					CatLog::log("Shift non-terminal, state: ");
 					CatLog::log(currentState->stateIndex);
 					CatLog::log(" production: ");
 					CatLog::log(production->getProductionName());
 					CatLog::log("\n");
-				#endif
+				}
 				return transition.nextState;
 			}
 		}
@@ -466,10 +473,12 @@ void SLRParser::printStack(const std::vector<StackItem*> stack) const
 
 void SLRParser::scanForConflicts() const
 {
-	CatLog::log("\n##########################\n");
-	CatLog::log("# Checking for conflicts #\n");
-	CatLog::log("##########################\n\n");
-
+	if constexpr (Configuration::debugGrammar)
+	{
+		CatLog::log("\n##########################\n");
+		CatLog::log("# Checking for conflicts #\n");
+		CatLog::log("##########################\n\n");
+	}
 	//Check for shift/reduce conflicts
 	bool foundShiftReduceConflict = false;
 	for (int i = 0; i < (int)dfa.size(); i++)
@@ -529,7 +538,10 @@ void SLRParser::scanForConflicts() const
 	}
 	if (!foundShiftReduceConflict)
 	{
-		CatLog::log("No shift-reduce conflicts.\n");
+		if constexpr (Configuration::debugGrammar)
+		{
+			CatLog::log("No shift-reduce conflicts.\n");
+		}
 	}
 
 	//Check for reduce/reduce conflicts
@@ -565,6 +577,16 @@ void SLRParser::scanForConflicts() const
 						CatLog::log("\n");
 						CatLog::log("Second: ");
 						CatLog::log(secondItem.toString().c_str());
+						CatLog::log("\nOverlapping follow set members:\n");
+						auto& followSet = firstItemProduction->getFollowSet();
+						auto& otherFollowSet = secondItemProduction->getFollowSet();
+						for (int iter = 0; iter < (int)followSet.getNumMembers(); iter++)
+						{
+							if (otherFollowSet.isInSet(followSet.getMember(iter)))
+							{
+								CatLog::log("[", followSet.getMember(iter)->getDescription(), "] ");
+							}
+						}
 						CatLog::log("\n\n");
 					}
 				}
@@ -573,11 +595,17 @@ void SLRParser::scanForConflicts() const
 	}
 	if (!foundReduceReduceConflict)
 	{
-		CatLog::log("No reduce-reduce conflicts.\n");
+		if constexpr (Configuration::debugGrammar)
+		{
+			CatLog::log("No reduce-reduce conflicts.\n");
+		}
 	}
 	if (!foundReduceReduceConflict && ! foundShiftReduceConflict)
 	{
-		CatLog::log("\nGrammar is SLR.\n\n");
+		if constexpr (Configuration::debugGrammar)
+		{
+			CatLog::log("\nGrammar is SLR.\n\n");
+		}
 	}
 	else
 	{
@@ -735,20 +763,22 @@ SLRParseResult* SLRParser::parse(const std::vector<std::unique_ptr<ParseToken>>&
 	parseStack.push_back(startingStackItem);
 
 	const Production* finalProduction = currentState->items[0].production;
-	#ifdef DEBUG_GRAMMAR
+	if constexpr (Configuration::debugGrammar)
+	{
 		CatLog::log("###############\n");
 		CatLog::log("Beginning parse\n");
 		CatLog::log("###############\n");
-	#endif
+	}
 	while (true)
 	{
-		#ifdef DEBUG_GRAMMAR
+		if constexpr (Configuration::debugGrammar)
+		{
 			CatLog::log("State ");
 			CatLog::log(currentState->stateIndex);
 			CatLog::log(" Stack: ");
 			printStack(parseStack);
-			CatLog::log("\n\n");	
-		#endif
+			CatLog::log("\n\n");
+		}
 		//Skip whitespace
 		while (tokenIndex < (int)tokens.size()
 			   && (tokens[tokenIndex]->getTokenID() == whiteSpaceTokenID
