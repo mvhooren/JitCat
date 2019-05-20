@@ -54,5 +54,31 @@ public:
 
 };
 
+class NullptrTypeCaster: public TypeCaster
+{
+public:
+	NullptrTypeCaster() {};
+	virtual ~NullptrTypeCaster() {};
+
+
+	virtual std::any cast(const std::any& pointer) const override final
+	{
+		return getNull();
+	}
+
+
+	virtual std::any cast(uintptr_t pointer) const override final
+	{
+		return getNull();
+	}
+
+
+	virtual std::any getNull() const override final
+	{
+		return static_cast<Reflectable*>(nullptr);
+	}
+
+};
+
 
 } //End namespace jitcat::Reflection

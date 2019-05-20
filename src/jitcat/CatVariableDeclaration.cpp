@@ -6,6 +6,9 @@
 */
 
 #include "jitcat/CatVariableDeclaration.h"
+#include "jitcat/CatAssignmentOperator.h"
+#include "jitcat/CatIdentifier.h"
+#include "jitcat/CatLiteral.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatTypeNode.h"
@@ -20,13 +23,17 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization):
+CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization):
 	CatStatement(lexeme),
 	type(typeNode),
 	name(name),
-	initializationExpression(initialization),
+	nameLexeme(nameLexeme),
 	memberInfo(nullptr)
 {
+	if (initialization != nullptr)
+	{
+		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), initialization, lexeme));
+	}
 }
 
 
@@ -38,11 +45,14 @@ CatVariableDeclaration::~CatVariableDeclaration()
 void CatVariableDeclaration::print() const
 {
 	type->print();
-	Tools::CatLog::log(" ", name);
+	Tools::CatLog::log(" ");
 	if (initializationExpression != nullptr)
 	{
-		Tools::CatLog::log(" = ");
 		initializationExpression->print();
+	}
+	else
+	{
+		Tools::CatLog::log(name);
 	}
 }
 
@@ -65,49 +75,29 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 		errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
-	if (initializationExpression != nullptr)
+	if (initializationExpression == nullptr)
 	{
-		if (initializationExpression->typeCheck(compiletimeContext, errorManager, errorContext))
-		{
-			CatGenericType initializationType = initializationExpression->getType();
-			if (initializationType != type->getType())
-			{
-				errorManager->compiledWithError(Tools::append("Initialization of variable \"", name, "\" returns the wrong type. Expected a ", type->getTypeName(), " but the initialization expression returns a ", initializationType.toString(), "."), errorContext, compiletimeContext->getContextName(), getLexeme());
-				return false;
-			}
-		}
-		else
-		{
-			return false;
-		}
+		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), type->getType().toValueOwnership(), nameLexeme), nameLexeme));
 	}
+
 	CatScope* currentScope = compiletimeContext->getCurrentScope();
 	if (currentScope != nullptr)
 	{
 		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
 	}
+
+	if (!initializationExpression->typeCheck(compiletimeContext, errorManager, errorContext))
+	{
+		return false;
+	}
+
 	return true;
 }
 
 
 std::any jitcat::AST::CatVariableDeclaration::execute(CatRuntimeContext* runtimeContext)
 {
-	if (memberInfo != nullptr)
-	{
-		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
-		std::any assignableRef = memberInfo->getAssignableMemberReference(runtimeContext->getCurrentScopeObject(), assignableType);
-		std::any source;
-		if (initializationExpression != nullptr)
-		{
-			source = initializationExpression->execute(runtimeContext);
-		}
-		else
-		{
-			source = type->getType().createDefault();
-		}
-		ASTHelper::doAssignment(assignableRef, source, type->getType(), assignableType);
-	}
-	return std::any();
+	return initializationExpression->execute(runtimeContext);
 }
 
 

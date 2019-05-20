@@ -138,7 +138,7 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 			errorManager->compiledWithError(Tools::append("A function with name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), nameLexeme);
 			return false;
 		}
-		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, compileTimeContext->getScopeType(currentScope->getScopeId()), this);
+		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, CatGenericType(compileTimeContext->getScopeType(currentScope->getScopeId()), type->getType().getOwnershipSemantics()), this);
 		memberFunctionInfo->visibility = visibility;
 	}
 	return true;
@@ -174,7 +174,7 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 		{
 			AssignableType assignableType = AssignableType::None;
 			std::any target = iter->executeAssignable(runtimeContext, assignableType);
-			ASTHelper::doAssignment(target, arguments[i], iter->getType(), assignableType);
+			ASTHelper::doAssignment(target, arguments[i], iter->getType(), iter->getType(), assignableType, AssignableType::None);
 			i++;
 		}
 	}

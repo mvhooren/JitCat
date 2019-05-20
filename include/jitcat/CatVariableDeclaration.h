@@ -21,11 +21,12 @@ namespace jitcat::AST
 
 	class CatTypeNode;
 	class CatTypedExpression;
+	class CatAssignmentOperator;
 
 	class CatVariableDeclaration: public CatStatement
 	{
 	public:
-		CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization = nullptr);
+		CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization = nullptr);
 		virtual ~CatVariableDeclaration();
 
 		virtual void print() const override final;
@@ -39,7 +40,9 @@ namespace jitcat::AST
 	private:
 		std::unique_ptr<CatTypeNode> type;
 		std::string name;
-		std::unique_ptr<CatTypedExpression> initializationExpression;
+		Tokenizer::Lexeme nameLexeme;
+
+		std::unique_ptr<CatAssignmentOperator> initializationExpression;
 		Reflection::TypeMemberInfo* memberInfo;
 	};
 

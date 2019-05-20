@@ -7,8 +7,11 @@
 
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatArgumentList.h"
+#include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/ReflectableHandle.h"
 
 #include <cassert>
@@ -51,11 +54,84 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 }
 
 
-void ASTHelper::doAssignment(std::any& target, const std::any& source, const CatGenericType& type, AssignableType targetAssignableType)
+std::any ASTHelper::doAssignment(CatAssignableExpression* target, CatTypedExpression* source, CatRuntimeContext* context)
+{
+	AssignableType targetAssignableType = AssignableType::None;
+	AssignableType sourceAssignableType = AssignableType::None;
+	CatGenericType targetType = target->getType();
+	CatGenericType sourceType = source->getType();
+
+	std::any targetValue = target->executeAssignable(context, targetAssignableType);
+	std::any sourceValue;
+
+	if (   (   targetType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned
+		    || targetType.getOwnershipSemantics() == TypeOwnershipSemantics::Shared)
+		&& (sourceType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
+		&& (targetAssignableType == AssignableType::HandlePointer
+			|| targetAssignableType == AssignableType::PointerPointer))
+	{
+		sourceValue = static_cast<CatAssignableExpression*>(source)->executeAssignable(context, sourceAssignableType);
+	}
+	else
+	{
+		sourceValue = source->execute(context);
+	}
+
+	return doAssignment(targetValue, sourceValue, targetType, sourceType, targetAssignableType, sourceAssignableType);
+}
+
+
+std::any jitcat::AST::ASTHelper::doGetArgument(CatTypedExpression* argument, const CatGenericType& parameterType, CatRuntimeContext* context)
+{
+	if (!parameterType.isObjectType()
+		|| (parameterType.getOwnershipSemantics() != TypeOwnershipSemantics::Owned
+			&& !(parameterType.getOwnershipSemantics() == TypeOwnershipSemantics::Shared && argument->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Owned))
+		|| argument->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)
+	{
+		return argument->execute(context);
+	}
+	else
+	{
+		assert(argument->isAssignable());
+		assert(argument->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Owned);
+		AssignableType sourceAssignableType = AssignableType::None;
+		std::any sourceValue = static_cast<CatAssignableExpression*>(argument)->executeAssignable(context, sourceAssignableType);
+		if (sourceAssignableType == AssignableType::PointerPointer)
+		{
+			Reflectable** reflectableSource = std::any_cast<Reflectable**>(sourceValue);
+			if (reflectableSource != nullptr)
+			{
+				Reflectable* value = *reflectableSource;
+				*reflectableSource = nullptr;
+				return value;
+			}
+			return (Reflectable*)nullptr;
+		}
+		else if (sourceAssignableType == AssignableType::HandlePointer)
+		{
+			ReflectableHandle* handleSource = std::any_cast<ReflectableHandle*>(sourceValue);
+			if (handleSource != nullptr)
+			{
+				Reflectable* value = handleSource->get();
+				*handleSource = nullptr;
+				return value;
+			}
+			return (Reflectable*)nullptr;
+		}
+		else
+		{
+			assert(false);
+			return (Reflectable*)nullptr;
+		}
+	}
+}
+
+
+std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const CatGenericType& targetType, const CatGenericType& sourceType, AssignableType targetAssignableType, AssignableType sourceAssignableType)
 {
 	if (targetAssignableType == AssignableType::Pointer)
 	{
-		if (type.isIntType())
+		if (targetType.isIntType())
 		{
 			int* intTarget = std::any_cast<int*>(target);
 			if (intTarget != nullptr)
@@ -63,7 +139,7 @@ void ASTHelper::doAssignment(std::any& target, const std::any& source, const Cat
 				*intTarget = std::any_cast<int>(source);
 			}
 		}
-		else if (type.isFloatType())
+		else if (targetType.isFloatType())
 		{
 			float* floatTarget = std::any_cast<float*>(target);
 			if (floatTarget != nullptr)
@@ -71,7 +147,7 @@ void ASTHelper::doAssignment(std::any& target, const std::any& source, const Cat
 				*floatTarget = std::any_cast<float>(source);
 			}
 		}
-		else if (type.isBoolType())
+		else if (targetType.isBoolType())
 		{
 			bool* boolTarget = std::any_cast<bool*>(target);
 			if (boolTarget != nullptr)
@@ -79,7 +155,7 @@ void ASTHelper::doAssignment(std::any& target, const std::any& source, const Cat
 				*boolTarget = std::any_cast<bool>(source);
 			}
 		}
-		else if (type.isStringType())
+		else if (targetType.isStringType())
 		{
 			std::string* stringTarget = std::any_cast<std::string*>(target);
 			if (stringTarget != nullptr)
@@ -87,30 +163,194 @@ void ASTHelper::doAssignment(std::any& target, const std::any& source, const Cat
 				*stringTarget = std::any_cast<std::string>(source);
 			}
 		}
-		else if (type.isObjectType())	
+		else if (targetType.isObjectType())
 		{
 			//Not supported for now. This would need to call operator= on the target object, not all objects will have implemented this.
 		}
-		return;
+		return target;
 	}
-	else if (targetAssignableType == AssignableType::PointerPointer && type.isObjectType())
+	else if (targetAssignableType == AssignableType::PointerPointer && targetType.isObjectType())
 	{
-		Reflectable** reflectableTarget = std::any_cast<Reflectable * *>(target);
+		Reflectable** reflectableTarget = std::any_cast<Reflectable **>(target);
+		
 		if (reflectableTarget != nullptr)
 		{
-			*reflectableTarget = std::any_cast<Reflectable*>(source);
+			TypeOwnershipSemantics targetOwnership = targetType.getOwnershipSemantics();
+			TypeOwnershipSemantics sourceOwnership = sourceType.getOwnershipSemantics();
+			if (targetOwnership == TypeOwnershipSemantics::Owned)
+			{
+				delete *reflectableTarget;
+			}
+			if (sourceAssignableType == AssignableType::None)
+			{
+				*reflectableTarget = std::any_cast<Reflectable*>(source);
+			}
+			else if (sourceAssignableType == AssignableType::HandlePointer)
+			{
+				ReflectableHandle* sourceHandle = std::any_cast<ReflectableHandle*>(source);
+				if (sourceHandle != nullptr)
+				{
+					*reflectableTarget = sourceHandle->get();
+					if ((targetOwnership == TypeOwnershipSemantics::Owned
+						|| targetOwnership == TypeOwnershipSemantics::Shared)
+						&& sourceOwnership == TypeOwnershipSemantics::Owned)
+					{
+						*sourceHandle = nullptr;
+					}
+				}
+				else
+				{
+					*reflectableTarget = nullptr;
+				}
+			}
+			else if (sourceAssignableType == AssignableType::PointerPointer)
+			{
+				Reflectable** sourcePointer = std::any_cast<Reflectable**>(source);
+				if (sourcePointer != nullptr)
+				{
+					*reflectableTarget = *sourcePointer;
+					if ((targetOwnership == TypeOwnershipSemantics::Owned
+						|| targetOwnership == TypeOwnershipSemantics::Shared)
+						&& sourceOwnership == TypeOwnershipSemantics::Owned)
+					{
+						*sourcePointer = nullptr;
+					}
+				}
+				else
+				{
+					*reflectableTarget = nullptr;
+				}
+			}
 		}
-		return;
+		return target;
 	}
-	else if (targetAssignableType == AssignableType::HandlePointer && type.isObjectType())	
+	else if (targetAssignableType == AssignableType::HandlePointer && targetType.isObjectType())
 	{
 		ReflectableHandle* handleTarget = std::any_cast<ReflectableHandle*>(target);
 		if (handleTarget != nullptr)
 		{
-			*handleTarget = std::any_cast<Reflectable*>(source);
+			TypeOwnershipSemantics targetOwnership = targetType.getOwnershipSemantics();
+			TypeOwnershipSemantics sourceOwnership = sourceType.getOwnershipSemantics();
+			if (targetOwnership == TypeOwnershipSemantics::Owned)
+			{
+				delete handleTarget->get();
+			}
+			if (sourceAssignableType == AssignableType::None)
+			{
+				*handleTarget = std::any_cast<Reflectable*>(source);
+			}
+			else if (sourceAssignableType == AssignableType::HandlePointer)
+			{
+				ReflectableHandle* sourceHandle = std::any_cast<ReflectableHandle*>(source);
+				if (sourceHandle != nullptr)
+				{
+					*handleTarget = sourceHandle->get();
+					if ((targetOwnership == TypeOwnershipSemantics::Owned
+						|| targetOwnership == TypeOwnershipSemantics::Shared)
+						&& sourceOwnership == TypeOwnershipSemantics::Owned)
+					{
+						*sourceHandle = nullptr;
+					}
+				}
+				else
+				{
+					*handleTarget = nullptr;
+				}
+			}
+			else if (sourceAssignableType == AssignableType::PointerPointer)
+			{
+				Reflectable** sourcePointer = std::any_cast<Reflectable**>(source);
+				if (sourcePointer != nullptr)
+				{
+					*handleTarget = *sourcePointer;
+					if ((targetOwnership == TypeOwnershipSemantics::Owned
+						|| targetOwnership == TypeOwnershipSemantics::Shared)
+						&& sourceOwnership == TypeOwnershipSemantics::Owned)
+					{
+						*sourcePointer = nullptr;
+					}
+				}
+				else
+				{
+					*handleTarget = nullptr;
+				}
+			}
 		}
-		return;
+		return target;
+	}
+	assert(false);
+	return std::any();
+}
+
+
+bool jitcat::AST::ASTHelper::checkAssignment(const CatTypedExpression* lhs, const CatTypedExpression* rhs, ExpressionErrorManager* errorManager, CatRuntimeContext* context, void* errorSource, const Tokenizer::Lexeme& lexeme)
+{
+	CatGenericType leftType = lhs->getType();
+	CatGenericType rightType = rhs->getType();
+	if (!leftType.isWritable() || leftType.isConst() || !lhs->isAssignable())
+	{
+		errorManager->compiledWithError("Assignment failed because target cannot be assigned.", errorSource, context->getContextName(), lexeme);
+		return false;
+	}
+	else if (leftType.compare(rightType, false))
+	{
+		if (!checkOwnershipSemantics(leftType, rightType, errorManager, context, errorSource, lexeme, "assign"))
+		{
+			return false;
+		}
+		return true;
+	}
+	else
+	{
+		errorManager->compiledWithError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), "."), errorSource, context->getContextName(), lexeme);
+		return false;
+	}
+}
+
+
+bool jitcat::AST::ASTHelper::checkOwnershipSemantics(const CatGenericType& targetType, const CatGenericType& sourceType, ExpressionErrorManager* errorManager, CatRuntimeContext* context, void* errorSource, const Tokenizer::Lexeme& lexeme, const std::string& operation)
+{
+	TypeOwnershipSemantics leftOwnership = targetType.getOwnershipSemantics();
+	TypeOwnershipSemantics rightOwnership = sourceType.getOwnershipSemantics();
+	if (leftOwnership == TypeOwnershipSemantics::Owned)
+	{
+		if (rightOwnership == TypeOwnershipSemantics::Shared)
+		{
+			errorManager->compiledWithError(Tools::append("Cannot ", operation, " shared ownership value to unique ownership value."), errorSource, context->getContextName(), lexeme);
+			return false;
+		}
+		else if (rightOwnership == TypeOwnershipSemantics::Weak)
+		{
+			errorManager->compiledWithError(Tools::append("Cannot ", operation, " weakly-owned value to unique ownership value."), errorSource, context->getContextName(), lexeme);
+			return false;
+		}
+	}
+	else if (leftOwnership == TypeOwnershipSemantics::Shared)
+	{
+		if (rightOwnership == TypeOwnershipSemantics::Weak)
+		{
+			errorManager->compiledWithError(Tools::append("Cannot ", operation, " weakly-owned value to shared ownership value."), errorSource, context->getContextName(), lexeme);
+			return false;
+		}
+	}
+	else if (leftOwnership == TypeOwnershipSemantics::Weak)
+	{
+		if (rightOwnership == TypeOwnershipSemantics::Value && !sourceType.isNullptrType())
+		{
+			errorManager->compiledWithError(Tools::append("Cannot ", operation, " Cannot assign owned temporary value to weak ownership value."), errorSource, context->getContextName(), lexeme);
+			return false;
+		}
 	}
 
-	assert(false);
+	if (rightOwnership == TypeOwnershipSemantics::Owned
+		&& (leftOwnership == TypeOwnershipSemantics::Owned
+			|| leftOwnership == TypeOwnershipSemantics::Shared))
+	{
+		if (!sourceType.isWritable() || sourceType.isConst())
+		{
+			errorManager->compiledWithError("Cannot write from owned value because rhs cannot be assigned.", errorSource, context->getContextName(), lexeme);
+			return false;
+		}
+	}
+	return true;
 }

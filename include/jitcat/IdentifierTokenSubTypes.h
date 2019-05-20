@@ -47,6 +47,7 @@ namespace jitcat::Tokenizer
 		Vector4,
 		Matrix,
 		String,
+		Null,
 		Last
 	};
 

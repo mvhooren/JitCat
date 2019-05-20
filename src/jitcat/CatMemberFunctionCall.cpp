@@ -6,13 +6,13 @@
 */
 
 #include "jitcat/CatMemberFunctionCall.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
-#include "jitcat/ASTHelper.h"
 #include "jitcat/TypeInfo.h"
 
 #include <cassert>
@@ -64,12 +64,19 @@ std::any jitcat::AST::CatMemberFunctionCall::executeWithBase(CatRuntimeContext* 
 {
 	if (memberFunctionInfo != nullptr && runtimeContext != nullptr)
 	{
+		bool wasReturning = runtimeContext->getIsReturning();
+		runtimeContext->setReturning(false);
 		std::vector<std::any> argumentValues;
+		std::size_t index = 0;
 		for (std::unique_ptr<CatTypedExpression>& argument : arguments->arguments)
 		{
-			argumentValues.push_back(argument->execute(runtimeContext));
+			std::any value = ASTHelper::doGetArgument(argument.get(), memberFunctionInfo->getArgumentType(index), runtimeContext);
+			argumentValues.push_back(value);
+			index++;
 		}
-		return memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
+		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
+		runtimeContext->setReturning(wasReturning);
+		return value;
 	}
 	assert(false);
 	return std::any();
@@ -118,9 +125,13 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			{
 				if (arguments->arguments[i]->typeCheck(compiletimeContext, errorManager, errorContext))
 				{
-					if (!(memberFunctionInfo->getArgumentType(i) == arguments->arguments[i]->getType()))
+					if (!memberFunctionInfo->getArgumentType(i).compare(arguments->arguments[i]->getType(), false))
 					{
 						errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
+						return false;
+					}
+					else if (!ASTHelper::checkOwnershipSemantics(memberFunctionInfo->getArgumentType(i), arguments->arguments[i]->getType(), errorManager, compiletimeContext, errorContext, arguments->arguments[i]->getLexeme(), "pass"))
+					{
 						return false;
 					}
 				}

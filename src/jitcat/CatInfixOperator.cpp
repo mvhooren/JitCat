@@ -73,7 +73,9 @@ CatGenericType CatInfixOperator::getType() const
 		case CatInfixOperatorType::Equals:
 		case CatInfixOperatorType::NotEquals:
 			if ((lhsType.isScalarType() && rhsType.isScalarType())
-				|| lhsType == rhsType)
+				|| lhsType == rhsType
+				|| (lhsType.isObjectType() && rhsType.isNullptrType())
+				|| (lhsType.isNullptrType() && rhsType.isObjectType()))
 			{
 				return CatGenericType::boolType;
 			}

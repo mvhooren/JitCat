@@ -64,6 +64,14 @@ inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtime
 			if		(rType.isBoolType())	return calculateBooleanExpression(std::any_cast<bool>(lValue), std::any_cast<bool>(rValue));
 			else if (rType.isStringType())	return calculateStringExpression(std::any_cast<bool>(lValue), std::any_cast<std::string>(rValue));
 		}
+		else if (lType.isObjectType() && rType.isObjectType())
+		{
+			switch (oper)
+			{
+				case CatInfixOperatorType::Equals:		return std::any_cast<Reflection::Reflectable*>(lValue) == std::any_cast<Reflection::Reflectable*>(rValue);
+				case CatInfixOperatorType::NotEquals:	return std::any_cast<Reflection::Reflectable*>(lValue) != std::any_cast<Reflection::Reflectable*>(rValue);
+			}
+		}
 		assert(false);
 		return std::any();
 	}

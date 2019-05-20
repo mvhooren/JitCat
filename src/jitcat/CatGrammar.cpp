@@ -186,6 +186,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	rule(Prod::Literal, {term(lit, ConstantType::FloatingPoint)}, literalToken);
 	rule(Prod::Literal, {term(lit, ConstantType::String)}, literalToken);
 	rule(Prod::Literal, {term(lit, ConstantType::Bool)}, literalToken);
+	rule(Prod::Literal, {term(id, Identifier::Null) }, literalToken);
 	
 	setRootProduction(Prod::Root, term(one, OneChar::Eof));
 
@@ -322,7 +323,7 @@ ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParse
 AST::ASTNode* jitcat::Grammar::CatGrammar::inheritanceDefinition(const Parser::ASTNodeParser& nodeParser)
 {
 	CatIdentifier* identifier = static_cast<CatIdentifier*>(nodeParser.getASTNodeByIndex(0));
-	CatTypeNode* typeNode = new CatTypeNode(identifier->getName(), identifier->getLexeme());
+	CatTypeNode* typeNode = new CatTypeNode(identifier->getName(), TypeOwnershipSemantics::Owned, identifier->getLexeme());
 	delete identifier;
 	return new CatInheritanceDefinition(typeNode, typeNode->getLexeme(), nodeParser.getStackLexeme());
 }
@@ -349,29 +350,30 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::functionParameterDefinitions(const Pa
 
 AST::ASTNode* jitcat::Grammar::CatGrammar::variableDeclaration(const Parser::ASTNodeParser& nodeParser)
 {
-	 CatTypeNode* type = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
-	 std::string name(nodeParser.getTerminalByIndex(0)->getLexeme());
-	 CatTypedExpression* initExpression = nullptr;
-	 if (nodeParser.getNumItems() > 2)
-	 {
-		 //declaration has initialization
-		 initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
-	 }
-	 return new CatVariableDeclaration(type, name, nodeParser.getStackLexeme(), initExpression);
+	CatTypeNode* type = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	Lexeme nameLexeme = nodeParser.getTerminalByIndex(0)->getLexeme();
+	std::string name(nameLexeme);
+	CatTypedExpression* initExpression = nullptr;
+	if (nodeParser.getNumItems() > 2)
+	{
+		//declaration has initialization
+		initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
+	}
+	return new CatVariableDeclaration(type, name, nameLexeme, nodeParser.getStackLexeme(), initExpression);
 }
 
 
 AST::ASTNode* jitcat::Grammar::CatGrammar::variableDefinition(const Parser::ASTNodeParser & nodeParser)
 {
-	 CatTypeNode* type = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
-	 std::string name(nodeParser.getTerminalByIndex(0)->getLexeme());
-	 CatTypedExpression* initExpression = nullptr;
-	 if (nodeParser.getNumItems() > 2)
-	 {
-		 //declaration has initialization
-		 initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
-	 }
-	 return new CatVariableDefinition(type, name, nodeParser.getStackLexeme(), initExpression);
+	CatTypeNode* type = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	std::string name(nodeParser.getTerminalByIndex(0)->getLexeme());
+	CatTypedExpression* initExpression = nullptr;
+	if (nodeParser.getNumItems() > 2)
+	{
+		//declaration has initialization
+		initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
+	}
+	return new CatVariableDefinition(type, name, nodeParser.getStackLexeme(), initExpression);
 }
 
 
@@ -381,11 +383,28 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 	Identifier identifierType;
 	std::string identifierName;
 	Lexeme identifierLexeme;
+	TypeOwnershipSemantics ownership = TypeOwnershipSemantics::Value;
 	if (identifierNode != nullptr)
 	{
 		identifierType = Identifier::Identifier;
 		identifierName = identifierNode->name;
 		identifierLexeme = identifierNode->getLexeme();
+		const OneCharToken* token = static_cast<const OneCharToken*>(nodeParser.getTerminalByIndex(0));
+		if (token != nullptr)
+		{
+			if ((OneChar)token->getTokenSubType() == OneChar::Times)
+			{
+				ownership = TypeOwnershipSemantics::Weak;
+			}
+			else if ((OneChar)token->getTokenSubType() == OneChar::BitwiseAnd)
+			{
+				ownership = TypeOwnershipSemantics::Shared;
+			}
+		}
+		else
+		{
+			ownership = TypeOwnershipSemantics::Owned;
+		}
 		delete identifierNode;
 	}
 	else
@@ -404,7 +423,7 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 		case Identifier::Void:		 type = CatGenericType::voidType;	break;
 		case Identifier::Identifier:
 		{
-			return new CatTypeNode(identifierName, identifierLexeme);
+			return new CatTypeNode(identifierName, ownership, identifierLexeme);
 		}
 	}
 	return new CatTypeNode(type, identifierLexeme);
@@ -565,6 +584,10 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 				return charLiteral;
 			}			
 		}
+	}
+	else if (literalToken->getTokenID() == Cat::id && (Identifier)literalToken->getTokenSubType() == Identifier::Null)
+	{
+		return new CatLiteral((Reflectable*)nullptr, CatGenericType::nullptrType, nodeParser.getStackLexeme());
 	}
 	return nullptr;
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "CatASTNode.h"
-#include "CatGenericType.h"
+#include "jitcat/CatASTNode.h"
+#include "jitcat/CatGenericType.h"
+#include "jitcat/TypeOwnershipSemantics.h"
 
 
 namespace jitcat::AST
@@ -11,7 +12,7 @@ namespace jitcat::AST
 	{
 	public:
 		CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme);
-		CatTypeNode(const std::string& name, const Tokenizer::Lexeme& lexeme);
+		CatTypeNode(const std::string& name, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme);
 		virtual ~CatTypeNode();
 
 		bool isKnownType() const;
@@ -26,6 +27,7 @@ namespace jitcat::AST
 		bool typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
 	private:
+		Reflection::TypeOwnershipSemantics ownershipSemantics;
 		CatGenericType type;
 		std::string name;
 		bool knownType;

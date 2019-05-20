@@ -48,12 +48,7 @@ std::any CatAssignmentOperator::execute(CatRuntimeContext* runtimeContext)
 {
 	CatAssignableExpression* lhsAssignable = static_cast<CatAssignableExpression*>(lhs.get());
 
-	AssignableType assignableType = AssignableType::None;
-	std::any target = lhsAssignable->executeAssignable(runtimeContext, assignableType);
-	std::any source = rhs->execute(runtimeContext);
-	ASTHelper::doAssignment(target, source, lhs->getType(), assignableType);
-
-	return std::any();
+	return ASTHelper::doAssignment(lhsAssignable, rhs.get(), runtimeContext);
 }
 
 
@@ -69,18 +64,11 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			//Automatic type conversion
 			ASTHelper::doTypeConversion(this->rhs, lhs->getType());
 		}
-		if (!leftType.isWritable() || leftType.isConst() || !lhs->isAssignable())
+		if (!ASTHelper::checkAssignment(lhs.get(), rhs.get(), errorManager, compiletimeContext, errorContext, getLexeme()))
 		{
-			errorManager->compiledWithError("Assignment failed because target cannot be assigned.", errorContext, compiletimeContext->getContextName(), getLexeme());
+			return false;
 		}
-		else if (leftType == rightType)
-		{
-			return true;
-		}
-		else
-		{
-			errorManager->compiledWithError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), "."), errorContext, compiletimeContext->getContextName(), getLexeme());
-		}
+		return true;
 	}
 	return false;
 }

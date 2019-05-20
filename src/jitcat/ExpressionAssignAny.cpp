@@ -86,7 +86,7 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
 		std::any target = assignable->executeAssignable(runtimeContext, assignableType);
 		value = getType().convertToType(value, valueType);
-		jitcat::AST::ASTHelper::doAssignment(target, value, getType().toWritable(), assignableType);
+		jitcat::AST::ASTHelper::doAssignment(target, value, getType().toWritable(), valueType, assignableType, AssignableType::None);
 		return true;
 	}
 	return false;

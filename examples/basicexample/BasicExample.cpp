@@ -74,7 +74,7 @@ int MAIN(int argc, char* argv[])
 	customType->addIntMember("anInt", 43);
 	customType->addStringMember("aString", "ThisIsAString");
 	TypeInfo* exampleObjectType = TypeRegistry::get()->registerType<ReflectionTestRoot>();
-	customType->addObjectMember("anObject", &exampleObject, exampleObjectType, false);
+	customType->addObjectMember("anObject", &exampleObject, exampleObjectType, TypeOwnershipSemantics::Weak, false);
 
 	//Create an instance of the runtime-defined type
 	std::unique_ptr<CustomTypeInstance> customTypeInstance(customType->createInstance());

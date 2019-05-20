@@ -21,7 +21,7 @@ using namespace jitcat::Reflection;
 
 CatScopeBlock::CatScopeBlock(const std::vector<CatStatement*>& statementList, const Tokenizer::Lexeme& lexeme):
 	CatStatement(lexeme),
-	customType(new CustomTypeInfo(nullptr)),
+	customType(new CustomTypeInfo("__ScopeLocals")),
 	scopeId(InvalidScopeID)
 {
 	for (auto& iter : statementList)

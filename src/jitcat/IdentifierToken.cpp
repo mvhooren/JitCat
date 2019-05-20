@@ -73,6 +73,7 @@ const char* IdentifierToken::getSubTypeName(int subType_) const
 	case Identifier::Vector4:			return "vector4";
 	case Identifier::Matrix:			return "matrix";
 	case Identifier::String:			return "string";
+	case Identifier::Null:				return "null";
 	}
 }
 

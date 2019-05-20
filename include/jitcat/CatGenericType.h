@@ -10,6 +10,7 @@
 #include "jitcat/CatError.h"
 #include "jitcat/CatInfixOperatorType.h"
 #include "jitcat/ContainerType.h"
+#include "jitcat/TypeOwnershipSemantics.h"
 
 #include <any>
 #include <fstream>
@@ -49,12 +50,12 @@ namespace jitcat
 			Count
 		};
 
-		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant, const CatError* error);
+		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant, const CatError* error);
 		CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 	public:
 		CatGenericType();
-		CatGenericType(Reflection::TypeInfo* objectType, bool writable = false, bool constant = false);
+		CatGenericType(Reflection::TypeInfo* objectType, Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false);
 		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable = false, bool constant = false);
 		CatGenericType(const CatError& error);
 		CatGenericType(const CatGenericType& other);
@@ -62,6 +63,7 @@ namespace jitcat
 		CatGenericType& operator=(const CatGenericType& other);
 		bool operator== (const CatGenericType& other) const;
 		bool operator!= (const CatGenericType& other) const;
+		bool compare(const CatGenericType& other, bool includeOwnershipSemantics) const;
 
 		bool isUnknown() const;
 		bool isValidType() const;
@@ -77,6 +79,7 @@ namespace jitcat
 		bool isContainerType() const;
 		bool isVectorType() const;
 		bool isMapType() const;
+		bool isNullptrType() const;
 		
 		bool isTriviallyCopyable() const;
 		bool isWritable() const;
@@ -88,6 +91,8 @@ namespace jitcat
 		CatGenericType toUnwritable() const;
 		//Copies the type but sets the writable flag to true.
 		CatGenericType toWritable() const;
+		//Copies the type but sets the ownership to Value
+		CatGenericType toValueOwnership() const;
 
 		Reflection::ContainerManipulator* getContainerManipulator() const;
 		CatGenericType getContainerItemType() const;
@@ -100,6 +105,7 @@ namespace jitcat
 		std::string toString() const;
 
 		Reflection::TypeInfo* getObjectType() const;
+		Reflection::TypeOwnershipSemantics getOwnershipSemantics() const;
 
 		//This will cast the pointer to the C++ type associated with this CatGenericType and returns it as a std::any
 		std::any createAnyOfType(uintptr_t pointer);
@@ -135,13 +141,16 @@ namespace jitcat
 		static const CatGenericType stringType;
 		static const CatGenericType voidType;
 		static const CatGenericType errorType;
+		static const CatGenericType nullptrType;
 		static const CatGenericType unknownType;
 
 	private:
 		SpecificType specificType;
 		BasicType basicType;
+
 		//not owned
 		Reflection::TypeInfo* nestedType;
+		Reflection::TypeOwnershipSemantics ownershipSemantics;
 
 		//When the member is a container, catType or nestedType will be set to the item type of the container
 		Reflection::ContainerType containerType;

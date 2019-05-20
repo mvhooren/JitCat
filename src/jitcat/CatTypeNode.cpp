@@ -1,4 +1,5 @@
 #include "jitcat/CatTypeNode.h"
+#include "jitcat/CatGenericType.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -10,16 +11,18 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatTypeNode::CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme):
+CatTypeNode::CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme) :
 	CatASTNode(lexeme),
 	type(type),
+	ownershipSemantics(type.getOwnershipSemantics()),
 	knownType(true)
 {
 }
 
 
-jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, const Tokenizer::Lexeme& lexeme):
+jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
+	ownershipSemantics(ownershipSemantics),
 	name(name),
 	knownType(false)
 {
@@ -93,7 +96,7 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 		}
 		else
 		{
-			setType(CatGenericType(typeInfo));
+			setType(CatGenericType(typeInfo, ownershipSemantics));
 		}
 	}
 	return true;

@@ -79,7 +79,7 @@ namespace jitcat::Reflection
 		{
 			TypeMemberInfo* memberInfo = getMemberInfo(memberName);
 			std::any anyValue = TypeTraits<MemberT>::getCatValue(value);
-			jitcat::AST::ASTHelper::doAssignment(*result, anyValue, memberInfo->catType, type);
+			jitcat::AST::ASTHelper::doAssignment(*result, anyValue, memberInfo->catType, memberInfo->catType, type, AssignableType::None);
 			return true;
 		}
 		return false;

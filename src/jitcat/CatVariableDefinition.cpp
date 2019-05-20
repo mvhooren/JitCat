@@ -71,7 +71,7 @@ bool CatVariableDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		if (initializationExpression->typeCheck(compileTimeContext, errorManager, this))
 		{
 			CatGenericType initializationType = initializationExpression->getType();
-			if (initializationType != type->getType())
+			if (!initializationType.compare(type->getType(), false))
 			{
 				errorManager->compiledWithError(Tools::append("Initialization of variable \"", name, "\" returns the wrong type. Expected a ", type->getTypeName(), " but the initialization expression returns a ", initializationType.toString(), "."), this, compileTimeContext->getContextName(), getLexeme());
 				return false;

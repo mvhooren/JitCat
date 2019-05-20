@@ -65,7 +65,7 @@ std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	newType = CatGenericType::errorType;
-	type.reset(new CatTypeNode(typeName, functionCall->getNameLexeme()));
+	type.reset(new CatTypeNode(typeName, TypeOwnershipSemantics::Value, functionCall->getNameLexeme()));
 
 	if (!type->typeCheck(compiletimeContext, errorManager, errorContext))
 	{

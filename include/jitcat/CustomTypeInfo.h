@@ -8,6 +8,7 @@
 #pragma once
 
 #include "jitcat/TypeInfo.h"
+#include "jitcat/TypeOwnershipSemantics.h"
 
 #include <set>
 
@@ -43,7 +44,7 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
-		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, bool isWritable = true, bool isConst = false);
+		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
 

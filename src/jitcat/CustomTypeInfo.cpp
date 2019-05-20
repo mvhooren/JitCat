@@ -103,6 +103,13 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 		{
 			unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
 			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(data + offset);
+			if (handle != nullptr)
+			{
+				if (iter->second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
+				{
+					delete handle->get();
+				}
+			}
 			handle->~ReflectableHandle();
 		}
 	}
@@ -205,7 +212,7 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 }
 
 
-TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, bool isWritable, bool isConst)
+TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics, bool isWritable, bool isConst)
 {
 	isTriviallyCopyable = false;
 	unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
@@ -221,7 +228,7 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 		new ((*iter)->data + offset) ReflectableHandle(defaultValue);
 	}
 	new (data) ReflectableHandle(defaultValue);
-	TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst));
+	TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, ownershipSemantics, isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
 	if (Tools::startsWith(memberName, "$"))
@@ -239,7 +246,7 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 	else if (type.isIntType())		return addIntMember(memberName, 0, type.isWritable(), type.isConst());
 	else if (type.isBoolType())		return addBoolMember(memberName, false, type.isWritable(), type.isConst());
 	else if (type.isStringType())	return addStringMember(memberName, "", type.isWritable(), type.isConst());
-	else if (type.isObjectType())	return addObjectMember(memberName, nullptr, type.getObjectType(), type.isWritable(), type.isConst());
+	else if (type.isObjectType())	return addObjectMember(memberName, nullptr, type.getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else							return nullptr;
 }
 
