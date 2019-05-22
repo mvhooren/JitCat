@@ -38,8 +38,8 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 		&& sourceType != targetType)
 	{
 		CatTypedExpression* sourceExpression = uPtr.release();
-		CatArgumentList* arguments = new CatArgumentList(sourceExpression->getLexeme());
-		arguments->arguments.emplace_back(sourceExpression);
+		CatArgumentList* arguments = new CatArgumentList(sourceExpression->getLexeme(), std::vector<CatTypedExpression*>({sourceExpression}));
+
 		const char* functionName = nullptr;
 
 		if		(targetType.isIntType())	functionName = "toInt";

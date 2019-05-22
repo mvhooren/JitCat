@@ -27,10 +27,13 @@ namespace jitcat::AST
 	{
 	public:
 		CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization = nullptr);
+		CatVariableDeclaration(const CatVariableDeclaration& other);
+
 		virtual ~CatVariableDeclaration();
 
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 

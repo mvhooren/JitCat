@@ -29,6 +29,19 @@ jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeO
 }
 
 
+jitcat::AST::CatTypeNode::CatTypeNode(const CatTypeNode& other):
+	CatASTNode(other),
+	name(other.name),
+	ownershipSemantics(other.ownershipSemantics)
+{
+	knownType = name != "";
+	if (knownType)
+	{
+		type = other.type;
+	}
+}
+
+
 CatTypeNode::~CatTypeNode()
 {
 }
@@ -59,13 +72,19 @@ const CatGenericType& CatTypeNode::getType() const
 }
 
 
+CatASTNode* jitcat::AST::CatTypeNode::copy() const
+{
+	return new CatTypeNode(*this);
+}
+
+
 void CatTypeNode::print() const
 {
 	CatLog::log(getTypeName());
 }
 
 
-CatASTNodeType CatTypeNode::getNodeType()
+CatASTNodeType CatTypeNode::getNodeType() const
 {
 	return CatASTNodeType::TypeName;
 }

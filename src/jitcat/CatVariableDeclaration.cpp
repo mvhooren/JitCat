@@ -37,8 +37,25 @@ CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std:
 }
 
 
+jitcat::AST::CatVariableDeclaration::CatVariableDeclaration(const CatVariableDeclaration& other):
+	CatStatement(other),
+	type(static_cast<CatTypeNode*>(other.type->copy())),
+	name(other.name),
+	nameLexeme(other.nameLexeme),
+	memberInfo(nullptr),
+	initializationExpression(other.initializationExpression != nullptr ? static_cast<CatAssignmentOperator*>(other.initializationExpression->copy()) : nullptr)
+{
+}
+
+
 CatVariableDeclaration::~CatVariableDeclaration()
 {
+}
+
+
+CatASTNode* jitcat::AST::CatVariableDeclaration::copy() const
+{
+	return new CatVariableDeclaration(*this);
 }
 
 
@@ -57,7 +74,7 @@ void CatVariableDeclaration::print() const
 }
 
 
-CatASTNodeType CatVariableDeclaration::getNodeType()
+CatASTNodeType CatVariableDeclaration::getNodeType() const
 {
 	return CatASTNodeType::VariableDeclaration;
 }

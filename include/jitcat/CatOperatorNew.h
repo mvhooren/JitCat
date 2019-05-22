@@ -29,9 +29,12 @@ namespace jitcat::AST
 	class CatOperatorNew: public CatTypedExpression
 	{
 	public:
-		CatOperatorNew(CatMemberFunctionCall* functionCall, const Tokenizer::Lexeme& lexeme);
+		CatOperatorNew(CatMemberFunctionCall* functionCall, const std::string& typeName, const Tokenizer::Lexeme& lexeme);
+		CatOperatorNew(const CatOperatorNew& other);
+
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual CatGenericType getType() const override final;

@@ -21,14 +21,17 @@ namespace jitcat::AST
 	{
 	public:
 		CatScopeRoot(CatScopeID scopeId, const Tokenizer::Lexeme& lexeme);
+		CatScopeRoot(const CatScopeRoot& other);
+
 		// Inherited via CatTypedExpression
-		virtual void print() const override;
-		virtual CatASTNodeType getNodeType() override;
-		virtual std::any execute(CatRuntimeContext* runtimeContext) override;
+		virtual CatASTNode* copy() const override final;
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() const override final;
+		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
-		virtual CatGenericType getType() const override;
-		virtual bool isConst() const override;
-		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override;
+		virtual CatGenericType getType() const override final;
+		virtual bool isConst() const override final;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 
 		CatScopeID getScopeId() const;
 

@@ -35,6 +35,24 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 }
 
 
+jitcat::AST::CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctionCall& other):
+	CatTypedExpression(other),
+	functionName(other.functionName),
+	nameLexeme(other.nameLexeme),
+	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
+	base(other.base != nullptr ? static_cast<CatTypedExpression*>(other.base->copy()) : nullptr),
+	memberFunctionInfo(nullptr),
+	returnType(CatGenericType::errorType)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatMemberFunctionCall::copy() const
+{
+	return new CatMemberFunctionCall(*this);
+}
+
+
 void CatMemberFunctionCall::print() const
 {
 	if (base != nullptr)\
@@ -47,7 +65,7 @@ void CatMemberFunctionCall::print() const
 }
 
 
-CatASTNodeType CatMemberFunctionCall::getNodeType()
+CatASTNodeType CatMemberFunctionCall::getNodeType() const
 {
 	return CatASTNodeType::MemberFunctionCall;
 }
@@ -67,13 +85,7 @@ std::any jitcat::AST::CatMemberFunctionCall::executeWithBase(CatRuntimeContext* 
 		bool wasReturning = runtimeContext->getIsReturning();
 		runtimeContext->setReturning(false);
 		std::vector<std::any> argumentValues;
-		std::size_t index = 0;
-		for (std::unique_ptr<CatTypedExpression>& argument : arguments->arguments)
-		{
-			std::any value = ASTHelper::doGetArgument(argument.get(), memberFunctionInfo->getArgumentType(index), runtimeContext);
-			argumentValues.push_back(value);
-			index++;
-		}
+		arguments->executeAllArguments(argumentValues, memberFunctionInfo->argumentTypes, runtimeContext);
 		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
 		runtimeContext->setReturning(wasReturning);
 		return value;
@@ -115,27 +127,24 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		memberFunctionInfo = baseType.getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
 		if (memberFunctionInfo != nullptr)
 		{
-			std::size_t numArgumentsSupplied = arguments->arguments.size();
+			std::size_t numArgumentsSupplied = arguments->getNumArguments();
 			if (numArgumentsSupplied != memberFunctionInfo->getNumberOfArguments())
 			{
 				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
 				return false;
 			}
+			if (!arguments->typeCheck(compiletimeContext, errorManager, errorContext))
+			{
+				return false;
+			}
 			for (unsigned int i = 0; i < numArgumentsSupplied; i++)
 			{
-				if (arguments->arguments[i]->typeCheck(compiletimeContext, errorManager, errorContext))
+				if (!memberFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false))
 				{
-					if (!memberFunctionInfo->getArgumentType(i).compare(arguments->arguments[i]->getType(), false))
-					{
-						errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
-						return false;
-					}
-					else if (!ASTHelper::checkOwnershipSemantics(memberFunctionInfo->getArgumentType(i), arguments->arguments[i]->getType(), errorManager, compiletimeContext, errorContext, arguments->arguments[i]->getLexeme(), "pass"))
-					{
-						return false;
-					}
+					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
+					return false;
 				}
-				else
+				else if (!ASTHelper::checkOwnershipSemantics(memberFunctionInfo->getArgumentType(i), arguments->getArgumentType(i), errorManager, compiletimeContext, errorContext, arguments->getArgumentLexeme(i), "pass"))
 				{
 					return false;
 				}
@@ -168,10 +177,7 @@ bool CatMemberFunctionCall::isConst() const
 CatTypedExpression* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext)
 {
 	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext));
-	for (auto& iter: arguments->arguments)
-	{
-		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
-	}
+	arguments->constCollapse(compileTimeContext);
 	return this;
 }
 

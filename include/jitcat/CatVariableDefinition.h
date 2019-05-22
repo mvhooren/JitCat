@@ -29,18 +29,19 @@ namespace jitcat::AST
 	{
 	public:
 		CatVariableDefinition(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization = nullptr);
+		CatVariableDefinition(const CatVariableDefinition& other);
+
 		virtual ~CatVariableDefinition();
 
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
-		//virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
-		//virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 
 		const std::string& getName() const;
 		const CatTypeNode& getType() const;
-		
-		CatTypedExpression* releaseInitializationExpression();
+
+		const CatTypedExpression* getInitializationExpression() const;
 
 		Reflection::MemberVisibility getVariableVisibility() const;
 		void setVariableVisibility(Reflection::MemberVisibility variableVisibility);

@@ -32,6 +32,22 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 }
 
 
+jitcat::AST::CatMemberAccess::CatMemberAccess(const CatMemberAccess& other):
+	CatAssignableExpression(other),
+	base(static_cast<CatTypedExpression*>(other.base->copy())),
+	memberName(other.memberName),
+	memberInfo(nullptr),
+	type(CatGenericType::errorType)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatMemberAccess::copy() const
+{
+	return new CatMemberAccess(*this);
+}
+
+
 void CatMemberAccess::print() const
 {
 	base->print();
@@ -40,7 +56,7 @@ void CatMemberAccess::print() const
 }
 
 
-CatASTNodeType CatMemberAccess::getNodeType()
+CatASTNodeType CatMemberAccess::getNodeType() const
 {
 	return CatASTNodeType::MemberAccess;
 }

@@ -31,10 +31,12 @@ namespace jitcat::AST
 	{
 	public:
 		CatScopeBlock(const std::vector<CatStatement*>& statementList, const Tokenizer::Lexeme& lexeme);
+		CatScopeBlock(const CatScopeBlock& other);
 		virtual ~CatScopeBlock();
 
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
@@ -47,7 +49,6 @@ namespace jitcat::AST
 		virtual CatScopeID getScopeId() const override final;
 
 		void insertStatementFront(CatStatement* statement);
-
 
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;

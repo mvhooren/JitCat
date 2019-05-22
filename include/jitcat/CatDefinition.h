@@ -20,6 +20,8 @@ namespace jitcat::AST
 	{
 	public:
 		CatDefinition(const Tokenizer::Lexeme& lexeme): CatASTNode(lexeme) {};
+		CatDefinition(const CatDefinition& other): CatASTNode(other) {}
+
 		virtual ~CatDefinition() {};
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) = 0;
 	};

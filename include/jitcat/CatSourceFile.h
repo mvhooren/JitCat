@@ -28,10 +28,12 @@ namespace jitcat::AST
 	{
 	public:
 		CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme);
+		CatSourceFile(const CatSourceFile& other);
 		virtual ~CatSourceFile();
 
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 
 		const std::vector<CatClassDefinition*>& getClassDefinitions() const;
 		const std::vector<CatFunctionDefinition*>& getFunctionDefinitions() const;
@@ -41,6 +43,9 @@ namespace jitcat::AST
 		// Inherited via CatScope
 		virtual CatScopeID getScopeId() const override;
 		virtual Reflection::CustomTypeInfo* getCustomType() override;
+
+	private:
+		void extractDefinitionLists();
 
 	private:
 		std::string name;

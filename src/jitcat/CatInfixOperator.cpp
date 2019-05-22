@@ -28,6 +28,21 @@ CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* 
 }
 
 
+jitcat::AST::CatInfixOperator::CatInfixOperator(const CatInfixOperator& other):
+	CatTypedExpression(other),
+	rhs(static_cast<CatTypedExpression*>(other.rhs->copy())),
+	lhs(static_cast<CatTypedExpression*>(other.lhs->copy())),
+	oper(other.oper)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatInfixOperator::copy() const
+{
+	return new CatInfixOperator(*this);
+}
+
+
 CatGenericType CatInfixOperator::getType() const
 {
 	const CatGenericType lhsType = lhs->getType();

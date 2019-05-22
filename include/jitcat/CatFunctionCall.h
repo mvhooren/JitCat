@@ -22,9 +22,11 @@ namespace jitcat::AST
 	{
 	public:
 		CatFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
-		CatFunctionCall(const CatFunctionCall&) = delete;
+		CatFunctionCall(const CatFunctionCall& other);
+
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual CatGenericType getType() const override final;
@@ -50,7 +52,6 @@ namespace jitcat::AST
 
 	private:
 		std::unique_ptr<CatArgumentList> arguments;
-		std::vector<CatGenericType> argumentTypes;
 		std::string name;
 		Tokenizer::Lexeme nameLexeme;
 		CatBuiltInFunctionType function;

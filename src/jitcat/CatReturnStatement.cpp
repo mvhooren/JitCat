@@ -25,8 +25,21 @@ CatReturnStatement::CatReturnStatement(const Tokenizer::Lexeme& lexeme, CatTyped
 }
 
 
+jitcat::AST::CatReturnStatement::CatReturnStatement(const CatReturnStatement& other):
+	CatTypedExpression(other),
+	returnExpression(static_cast<CatTypedExpression*>(other.returnExpression->copy()))
+{
+}
+
+
 CatReturnStatement::~CatReturnStatement()
 {
+}
+
+
+CatASTNode* jitcat::AST::CatReturnStatement::copy() const
+{
+	return new CatReturnStatement(*this);
 }
 
 
@@ -41,7 +54,7 @@ void CatReturnStatement::print() const
 }
 
 
-CatASTNodeType CatReturnStatement::getNodeType()
+CatASTNodeType CatReturnStatement::getNodeType() const
 {
 	return CatASTNodeType::ReturnStatement;
 }

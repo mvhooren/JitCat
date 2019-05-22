@@ -31,6 +31,23 @@ CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* array
 }
 
 
+jitcat::AST::CatArrayIndex::CatArrayIndex(const CatArrayIndex& other):
+	CatTypedExpression(other),
+	array(static_cast<CatTypedExpression*>(other.array->copy())),
+	index(static_cast<CatTypedExpression*>(other.index->copy())),
+	arrayType(CatGenericType::errorType),
+	indexType(CatGenericType::errorType),
+	containerItemType(CatGenericType::errorType)
+{	
+}
+
+
+CatASTNode* jitcat::AST::CatArrayIndex::copy() const
+{
+	return new CatArrayIndex(*this);
+}
+
+
 void CatArrayIndex::print() const
 {
 	array->print();
@@ -40,7 +57,7 @@ void CatArrayIndex::print() const
 }
 
 
-CatASTNodeType CatArrayIndex::getNodeType()
+CatASTNodeType CatArrayIndex::getNodeType() const
 {
 	return CatASTNodeType::ArrayIndex;
 }

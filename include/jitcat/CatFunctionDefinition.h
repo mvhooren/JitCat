@@ -40,10 +40,13 @@ namespace jitcat::AST
 	{
 	public:
 		CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme);
+		CatFunctionDefinition(const CatFunctionDefinition& other);
+
 		virtual ~CatFunctionDefinition();
 
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 		
 		std::any executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId);

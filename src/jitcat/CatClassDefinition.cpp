@@ -36,23 +36,33 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std
 	scopeId(InvalidScopeID),
 	customType(new CustomTypeInfo(this->name.c_str()))
 {
-	for (auto& iter : this->definitions)
+	extractDefinitionLists();
+}
+
+
+jitcat::AST::CatClassDefinition::CatClassDefinition(const CatClassDefinition& other):
+	CatDefinition(other),
+	name(other.name),
+	nameLexeme(other.nameLexeme),
+	scopeId(InvalidScopeID),
+	customType(new CustomTypeInfo(this->name.c_str()))
+{
+	for (auto& iter : other.definitions)
 	{
-		switch (iter->getNodeType())
-		{
-			case CatASTNodeType::ClassDefinition:		classDefinitions.push_back(static_cast<CatClassDefinition*>(iter.get())); break;
-			case CatASTNodeType::FunctionDefinition:	functionDefinitions.push_back(static_cast<CatFunctionDefinition*>(iter.get())); break;
-			case CatASTNodeType::VariableDefinition:	variableDefinitions.push_back(static_cast<CatVariableDefinition*>(iter.get())); break;
-			case CatASTNodeType::InheritanceDefinition: inheritanceDefinitions.push_back(static_cast<CatInheritanceDefinition*>(iter.get())); break;
-			default:
-				assert(false);
-		}
+		definitions.emplace_back(static_cast<CatDefinition*>(iter->copy()));
 	}
+	extractDefinitionLists();
 }
 
 
 jitcat::AST::CatClassDefinition::~CatClassDefinition()
 {
+}
+
+
+CatASTNode* jitcat::AST::CatClassDefinition::copy() const
+{
+	return new CatClassDefinition(*this);
 }
 
 
@@ -75,7 +85,7 @@ void jitcat::AST::CatClassDefinition::print() const
 }
 
 
-CatASTNodeType jitcat::AST::CatClassDefinition::getNodeType()
+CatASTNodeType jitcat::AST::CatClassDefinition::getNodeType() const
 {
 	return CatASTNodeType::ClassDefinition;
 }
@@ -168,16 +178,16 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 	{
 		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
 		CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(inheritedMember->catType.toString(), nameLexeme, nullptr, new CatArgumentList(iter->getLexeme()), nameLexeme);
-		CatOperatorNew* operatorNew = new CatOperatorNew(functionCall, iter->getLexeme());
+		CatOperatorNew* operatorNew = new CatOperatorNew(functionCall, inheritedMember->catType.toString(), iter->getLexeme());
 		CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
 		CatAssignmentOperator* assignment = new CatAssignmentOperator(id, operatorNew, iter->getLexeme());
 		statements.push_back(assignment);
 	}
 	for (auto& iter : variableDefinitions)
 	{
-		CatTypedExpression* variableInitExpr = iter->releaseInitializationExpression();
-		if (variableInitExpr != nullptr)
+		if (iter->getInitializationExpression() != nullptr)
 		{
+			CatTypedExpression* variableInitExpr = static_cast<CatTypedExpression*>(iter->getInitializationExpression()->copy());
 			CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
 			CatAssignmentOperator* assignment = new CatAssignmentOperator(id, variableInitExpr, variableInitExpr->getLexeme());
 			statements.push_back(assignment);
@@ -194,4 +204,21 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 bool jitcat::AST::CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContext)
 {
 	return true;
+}
+
+
+void jitcat::AST::CatClassDefinition::extractDefinitionLists()
+{
+	for (auto& iter : this->definitions)
+	{
+		switch (iter->getNodeType())
+		{
+		case CatASTNodeType::ClassDefinition:		classDefinitions.push_back(static_cast<CatClassDefinition*>(iter.get())); break;
+		case CatASTNodeType::FunctionDefinition:	functionDefinitions.push_back(static_cast<CatFunctionDefinition*>(iter.get())); break;
+		case CatASTNodeType::VariableDefinition:	variableDefinitions.push_back(static_cast<CatVariableDefinition*>(iter.get())); break;
+		case CatASTNodeType::InheritanceDefinition: inheritanceDefinitions.push_back(static_cast<CatInheritanceDefinition*>(iter.get())); break;
+		default:
+			assert(false);
+		}
+	}
 }

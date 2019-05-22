@@ -46,12 +46,32 @@ jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, con
 }
 
 
+jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(const CatFunctionDefinition& other):
+	CatDefinition(other),
+	type(static_cast<CatTypeNode*>(other.type->copy())),
+	name(other.name),
+	visibility(other.visibility),
+	nameLexeme(other.nameLexeme),
+	parameters(static_cast<CatFunctionParameterDefinitions*>(other.parameters->copy())),
+	scopeBlock(static_cast<CatScopeBlock*>(other.scopeBlock->copy())),
+	parametersScopeId(InvalidScopeID),
+	memberFunctionInfo(nullptr)
+{
+}
+
+
 jitcat::AST::CatFunctionDefinition::~CatFunctionDefinition()
 {
 	if (errorManagerHandle.getIsValid())
 	{
 		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 	}
+}
+
+
+CatASTNode* jitcat::AST::CatFunctionDefinition::copy() const
+{
+	return new CatFunctionDefinition(*this);
 }
 
 
@@ -65,7 +85,7 @@ void jitcat::AST::CatFunctionDefinition::print() const
 }
 
 
-CatASTNodeType jitcat::AST::CatFunctionDefinition::getNodeType()
+CatASTNodeType jitcat::AST::CatFunctionDefinition::getNodeType() const
 {
 	return CatASTNodeType::FunctionDefinition;
 }

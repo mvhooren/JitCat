@@ -24,6 +24,16 @@ jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(CatTypeNode* typ
 }
 
 
+jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(const CatInheritanceDefinition& other):
+	CatDefinition(other),
+	nameLexeme(other.nameLexeme),
+	type(static_cast<CatTypeNode*>(other.type->copy())),
+	hostClass(nullptr),
+	inheritedMember(nullptr)
+{
+}
+
+
 jitcat::AST::CatInheritanceDefinition::~CatInheritanceDefinition()
 {
 	if (errorManagerHandle.getIsValid())
@@ -33,13 +43,19 @@ jitcat::AST::CatInheritanceDefinition::~CatInheritanceDefinition()
 }
 
 
+CatASTNode* jitcat::AST::CatInheritanceDefinition::copy() const
+{
+	return new CatInheritanceDefinition(*this);
+}
+
+
 void CatInheritanceDefinition::print() const
 {
 	Tools::CatLog::log(Tools::append("inherits ", nameLexeme));
 }
 
 
-CatASTNodeType CatInheritanceDefinition::getNodeType()
+CatASTNodeType CatInheritanceDefinition::getNodeType() const
 {
 	return CatASTNodeType::InheritanceDefinition;
 }

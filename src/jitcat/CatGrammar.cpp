@@ -251,8 +251,8 @@ void unLink(ASTNode* astNode, std::vector<ItemT*>& list)
 		if (catASTNode->getNodeType() == CatASTNodeType::LinkedList)
 		{
 			CatLinkNode* linkNode = static_cast<CatLinkNode*>(catASTNode);
-			list.push_back(static_cast<ItemT*>(linkNode->me.release()));
-			catASTNode = linkNode->next.release();
+			list.push_back(static_cast<ItemT*>(linkNode->releaseMe()));
+			catASTNode = linkNode->releaseNext();
 			delete linkNode;
 		}
 		else 
@@ -273,8 +273,8 @@ void unLink(ASTNode* astNode, std::vector<std::unique_ptr<ItemT>>& list)
 		if (catASTNode->getNodeType() == CatASTNodeType::LinkedList)
 		{
 			CatLinkNode* linkNode = static_cast<CatLinkNode*>(catASTNode);
-			list.emplace_back(static_cast<ItemT*>(linkNode->me.release()));
-			catASTNode = linkNode->next.release();
+			list.emplace_back(static_cast<ItemT*>(linkNode->releaseMe()));
+			catASTNode = linkNode->releaseNext();
 			delete linkNode;
 		}
 		else 
@@ -518,24 +518,22 @@ ASTNode* CatGrammar::infixOperator(const ASTNodeParser& nodeParser)
 
 ASTNode* CatGrammar::prefixOperator(const ASTNodeParser& nodeParser)
 {
-	CatPrefixOperator* oper = new CatPrefixOperator(nodeParser.getStackLexeme());
-	oper->rhs.reset(static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0)));
 	const ParseToken* prefix = nodeParser.getTerminalByIndex(0);
-	oper->oper = CatPrefixOperator::Operator::Not;
+	CatPrefixOperator::Operator op = CatPrefixOperator::Operator::Not;
 	if (prefix->getTokenID() == Cat::one)
 	{
 		switch ((OneChar)prefix->getTokenSubType())
 		{
-			default:
-			case OneChar::Not:
-				oper->oper = CatPrefixOperator::Operator::Not;
-				break;
-			case OneChar::Minus:
-				oper->oper = CatPrefixOperator::Operator::Minus;
-				break;
+		default:
+		case OneChar::Not:
+			op = CatPrefixOperator::Operator::Not;
+			break;
+		case OneChar::Minus:
+			op = CatPrefixOperator::Operator::Minus;
+			break;
 		}
 	}
-	return oper;
+	return new CatPrefixOperator(nodeParser.getStackLexeme(), op, static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(0)));
 }
 
 
@@ -543,7 +541,7 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::operatorNew(const Parser::ASTNodePars
 {
 	CatMemberFunctionCall* callNode = static_cast<CatMemberFunctionCall*>(nodeParser.getASTNodeByIndex(0));
 	
-	return new CatOperatorNew(callNode, nodeParser.getStackLexeme());
+	return new CatOperatorNew(callNode, callNode->getFunctionName(), nodeParser.getStackLexeme());
 }
 
 
@@ -603,9 +601,10 @@ ASTNode* CatGrammar::identifierToken(const ASTNodeParser& nodeParser)
 
 ASTNode* CatGrammar::argumentListToken(const ASTNodeParser& nodeParser)
 {
-	CatArgumentList* argumentList = new CatArgumentList(nodeParser.getStackLexeme());
-	unLink(nodeParser.getASTNodeByIndex(0), argumentList->arguments);
-	return argumentList;
+	Lexeme lexeme = nodeParser.getStackLexeme();
+	std::vector<CatTypedExpression*> argumentList;
+	unLink(nodeParser.getASTNodeByIndex(0), argumentList);
+	return new CatArgumentList(lexeme, argumentList);
 }
 
 
@@ -614,7 +613,7 @@ ASTNode* CatGrammar::functionCallToken(const ASTNodeParser& nodeParser)
 	const ParseToken* nameToken = nodeParser.getTerminalByIndex(0);
 	std::string functionName(nameToken->getLexeme());
 	CatArgumentList* arguments = static_cast<CatArgumentList*>(nodeParser.getASTNodeByIndex(0));
-	if (CatFunctionCall::isBuiltInFunction(functionName.c_str(), (int)arguments->arguments.size()))
+	if (CatFunctionCall::isBuiltInFunction(functionName.c_str(), (int)arguments->getNumArguments()))
 	{
 		return new CatFunctionCall(functionName, nameToken->getLexeme(), arguments, nodeParser.getStackLexeme());
 	}

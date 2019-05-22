@@ -78,9 +78,9 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 			if (typedExpression->getNodeType() == CatASTNodeType::PrefixOperator)
 			{
 				CatPrefixOperator* prefixOp = static_cast<CatPrefixOperator*>(typedExpression);
-				if (prefixOp->rhs != nullptr
-					&& prefixOp->oper == CatPrefixOperator::Operator::Minus
-					&& prefixOp->rhs->getNodeType() == CatASTNodeType::Literal)
+				if (prefixOp->getRHS() != nullptr
+					&& prefixOp->getOperator() == CatPrefixOperator::Operator::Minus
+					&& prefixOp->getRHS()->getNodeType() == CatASTNodeType::Literal)
 				{
 					result->isLiteral = true;
 				}

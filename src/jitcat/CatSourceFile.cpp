@@ -30,22 +30,33 @@ jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<s
 	scopeType(new Reflection::CustomTypeInfo(this->name.c_str())),
 	scopeInstance(scopeType->createInstance())
 {
-	for (auto& iter : this->definitions)
+	extractDefinitionLists();
+}
+
+
+jitcat::AST::CatSourceFile::CatSourceFile(const CatSourceFile& other):
+	CatASTNode(other),
+	name(other.name),
+	staticScopeId(InvalidScopeID),
+	scopeType(new Reflection::CustomTypeInfo(this->name.c_str())),
+	scopeInstance(scopeType->createInstance())
+{
+	for (auto& iter : other.definitions)
 	{
-		switch (iter->getNodeType())
-		{
-			case CatASTNodeType::ClassDefinition:		classDefinitions.push_back(static_cast<CatClassDefinition*>(iter.get())); break;
-			case CatASTNodeType::FunctionDefinition:	functionDefinitions.push_back(static_cast<CatFunctionDefinition*>(iter.get())); break;
-			case CatASTNodeType::VariableDefinition:	variableDefinitions.push_back(static_cast<CatVariableDefinition*>(iter.get())); break;
-			default:
-				assert(false);
-		}
+		definitions.emplace_back(static_cast<CatDefinition*>(iter->copy()));
 	}
+	extractDefinitionLists();
 }
 
 
 jitcat::AST::CatSourceFile::~CatSourceFile()
 {
+}
+
+
+CatASTNode* jitcat::AST::CatSourceFile::copy() const
+{
+	return new CatSourceFile(*this);
 }
 
 
@@ -59,7 +70,7 @@ void jitcat::AST::CatSourceFile::print() const
 }
 
 
-CatASTNodeType jitcat::AST::CatSourceFile::getNodeType()
+CatASTNodeType jitcat::AST::CatSourceFile::getNodeType() const
 {
 	return CatASTNodeType::SourceFile;
 }
@@ -102,4 +113,20 @@ CatScopeID jitcat::AST::CatSourceFile::getScopeId() const
 Reflection::CustomTypeInfo* jitcat::AST::CatSourceFile::getCustomType()
 {
 	return scopeType.get();
+}
+
+
+void jitcat::AST::CatSourceFile::extractDefinitionLists()
+{
+	for (auto& iter : this->definitions)
+	{
+		switch (iter->getNodeType())
+		{
+		case CatASTNodeType::ClassDefinition:		classDefinitions.push_back(static_cast<CatClassDefinition*>(iter.get())); break;
+		case CatASTNodeType::FunctionDefinition:	functionDefinitions.push_back(static_cast<CatFunctionDefinition*>(iter.get())); break;
+		case CatASTNodeType::VariableDefinition:	variableDefinitions.push_back(static_cast<CatVariableDefinition*>(iter.get())); break;
+		default:
+			assert(false);
+		}
+	}
 }

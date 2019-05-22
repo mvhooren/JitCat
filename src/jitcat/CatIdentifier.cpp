@@ -30,6 +30,22 @@ CatIdentifier::CatIdentifier(const std::string& name, const Tokenizer::Lexeme& l
 }
 
 
+jitcat::AST::CatIdentifier::CatIdentifier(const CatIdentifier& other):
+	CatAssignableExpression(other),
+	name(other.name),
+	memberInfo(nullptr),
+	scopeId(InvalidScopeID),
+	type(CatGenericType::errorType)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatIdentifier::copy() const
+{
+	return new CatIdentifier(*this);
+}
+
+
 CatGenericType CatIdentifier::getType() const
 {
 	return type;
@@ -61,7 +77,7 @@ CatTypedExpression* CatIdentifier::constCollapse(CatRuntimeContext* compileTimeC
 }
 
 
-CatASTNodeType CatIdentifier::getNodeType()
+CatASTNodeType CatIdentifier::getNodeType() const
 {
 	return CatASTNodeType::Identifier;
 }

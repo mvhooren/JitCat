@@ -24,11 +24,12 @@ namespace jitcat::AST
 	{
 	public:
 		CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme);
-		CatInfixOperator(const CatInfixOperator&) = delete;
+		CatInfixOperator(const CatInfixOperator& other);
 
+		virtual CatASTNode* copy() const override final;
 		virtual CatGenericType getType() const override final;
 		virtual bool isConst() const override final;
-		virtual CatASTNodeType getNodeType() override final {return CatASTNodeType::InfixOperator;}
+		virtual CatASTNodeType getNodeType() const override final {return CatASTNodeType::InfixOperator;}
 
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;

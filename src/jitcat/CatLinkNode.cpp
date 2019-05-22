@@ -20,6 +20,20 @@ CatLinkNode::CatLinkNode(CatASTNode* me, CatASTNode* next, const jitcat::Tokeniz
 }
 
 
+jitcat::AST::CatLinkNode::CatLinkNode(const CatLinkNode& other):
+	CatASTNode(other),
+	me(other.me->copy()),
+	next(other.next->copy())
+{
+}
+
+
+CatASTNode* jitcat::AST::CatLinkNode::copy() const
+{
+	return new CatLinkNode(*this);
+}
+
+
 void CatLinkNode::print() const
 {
 	me->print();
@@ -31,7 +45,19 @@ void CatLinkNode::print() const
 }
 
 
-CatASTNodeType CatLinkNode::getNodeType()
+CatASTNodeType CatLinkNode::getNodeType() const
 {
 	return CatASTNodeType::LinkedList;
+}
+
+
+CatASTNode* jitcat::AST::CatLinkNode::releaseMe()
+{
+	return me.release();
+}
+
+
+CatASTNode* jitcat::AST::CatLinkNode::releaseNext()
+{
+	return next.release();
 }

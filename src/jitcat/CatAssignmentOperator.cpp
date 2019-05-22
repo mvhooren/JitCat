@@ -28,6 +28,20 @@ CatAssignmentOperator::CatAssignmentOperator(CatTypedExpression* lhs, CatTypedEx
 }
 
 
+jitcat::AST::CatAssignmentOperator::CatAssignmentOperator(const CatAssignmentOperator& other):
+	CatTypedExpression(other),
+	lhs(static_cast<CatTypedExpression*>(other.getLhs()->copy())),
+	rhs(static_cast<CatTypedExpression*>(other.getRhs()->copy()))
+{
+}
+
+
+CatASTNode* jitcat::AST::CatAssignmentOperator::copy() const
+{
+	return new CatAssignmentOperator(*this);
+}
+
+
 void CatAssignmentOperator::print() const
 {
 	CatLog::log("(");
@@ -38,7 +52,7 @@ void CatAssignmentOperator::print() const
 }
 
 
-CatASTNodeType CatAssignmentOperator::getNodeType()
+CatASTNodeType CatAssignmentOperator::getNodeType() const
 {
 	return CatASTNodeType::AssignmentOperator;
 }

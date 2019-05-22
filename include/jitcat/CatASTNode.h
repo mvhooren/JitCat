@@ -23,8 +23,11 @@ namespace jitcat::AST
 	{
 	public:
 		CatASTNode(const Tokenizer::Lexeme& lexeme): ASTNode(lexeme) {}
+		CatASTNode(const CatASTNode& other): ASTNode(other) {}
+
+		virtual CatASTNode* copy() const = 0;
 		virtual void print() const = 0;
-		virtual CatASTNodeType getNodeType() = 0;
+		virtual CatASTNodeType getNodeType() const = 0;
 	};
 
 

@@ -22,7 +22,31 @@ using namespace jitcat::Tools;
 const char* CatPrefixOperator::conversionTable[] = {"!", "-"};
 
 
-CatGenericType CatPrefixOperator::getType() const 
+jitcat::AST::CatPrefixOperator::CatPrefixOperator(const Tokenizer::Lexeme& lexeme, Operator oper, CatTypedExpression* rhs):
+	CatTypedExpression(lexeme), 
+	oper(oper),
+	rhs(rhs),
+	resultType(CatGenericType::errorType)
+{
+}
+
+
+jitcat::AST::CatPrefixOperator::CatPrefixOperator(const CatPrefixOperator& other):
+	CatTypedExpression(other),
+	oper(other.oper),
+	rhs(static_cast<CatTypedExpression*>(other.rhs->copy())),
+	resultType(CatGenericType::errorType)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatPrefixOperator::copy() const
+{
+	return new CatPrefixOperator(*this);
+}
+
+
+CatGenericType CatPrefixOperator::getType() const
 {
 	return resultType;
 }
@@ -90,6 +114,18 @@ void CatPrefixOperator::print() const
 	CatLog::log(conversionTable[(unsigned int)oper]);
 	rhs->print();
 	CatLog::log(")");
+}
+
+
+const CatTypedExpression* jitcat::AST::CatPrefixOperator::getRHS() const
+{
+	return rhs.get();
+}
+
+
+CatPrefixOperator::Operator jitcat::AST::CatPrefixOperator::getOperator() const
+{
+	return oper;
 }
 
 

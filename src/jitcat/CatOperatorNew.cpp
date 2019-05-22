@@ -23,13 +23,29 @@ using namespace jitcat::AST;
 using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
-CatOperatorNew::CatOperatorNew(CatMemberFunctionCall* functionCall, const Tokenizer::Lexeme& lexeme):
+CatOperatorNew::CatOperatorNew(CatMemberFunctionCall* functionCall, const std::string& typeName, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	functionCall(functionCall),
 	newType(CatGenericType::errorType),
 	hostClass(nullptr),
-	typeName(functionCall->getFunctionName())
+	typeName(typeName)
 {
+}
+
+
+jitcat::AST::CatOperatorNew::CatOperatorNew(const CatOperatorNew& other):
+	CatTypedExpression(other),
+	functionCall(static_cast<CatMemberFunctionCall*>(other.functionCall->copy())),
+	newType(CatGenericType::errorType),
+	hostClass(nullptr),
+	typeName(other.typeName)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatOperatorNew::copy() const
+{
+	return new CatOperatorNew(*this);
 }
 
 
@@ -40,7 +56,7 @@ void CatOperatorNew::print() const
 }
 
 
-CatASTNodeType CatOperatorNew::getNodeType()
+CatASTNodeType CatOperatorNew::getNodeType() const
 {
 	return CatASTNodeType::OperatorNew;
 }
@@ -87,7 +103,7 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 			errorManager->compiledWithError(Tools::append("Host type cannot be constructed: ", newType.toString(), ", provide a constructor and destructor through the CatHostClasses interface."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		if (functionCall->getArguments()->arguments.size() != 0)
+		if (functionCall->getArguments()->getNumArguments() != 0)
 		{
 			errorManager->compiledWithError(Tools::append("Invalid number of arguments for init function of: ", newType.toString(), " expected 0 arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;

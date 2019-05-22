@@ -26,6 +26,21 @@ CatIfStatement::CatIfStatement(CatTypedExpression* condition, CatScopeBlock* ifB
 }
 
 
+jitcat::AST::CatIfStatement::CatIfStatement(const CatIfStatement& other):
+	CatStatement(other),
+	condition(static_cast<CatTypedExpression*>(other.condition->copy())),
+	ifBody(static_cast<CatScopeBlock*>(other.ifBody->copy())),
+	elseNode(other.elseNode != nullptr ? static_cast<CatStatement*>(other.elseNode->copy()) : nullptr)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatIfStatement::copy() const
+{
+	return new CatIfStatement(*this);
+}
+
+
 void CatIfStatement::print() const
 {
 	Tools::CatLog::log("if (");
@@ -44,7 +59,7 @@ void CatIfStatement::print() const
 }
 
 
-CatASTNodeType CatIfStatement::getNodeType()
+CatASTNodeType CatIfStatement::getNodeType() const
 {
 	return CatASTNodeType::IfStatement;
 }

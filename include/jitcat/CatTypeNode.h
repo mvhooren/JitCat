@@ -13,14 +13,17 @@ namespace jitcat::AST
 	public:
 		CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme);
 		CatTypeNode(const std::string& name, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme);
-		virtual ~CatTypeNode();
+		CatTypeNode(const CatTypeNode& other);
 
+		virtual ~CatTypeNode();
+		
 		bool isKnownType() const;
 		std::string getTypeName() const;
 		const CatGenericType& getType() const;
 
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 
 		void setType(const CatGenericType& newType);
 

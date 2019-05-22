@@ -22,12 +22,26 @@ CatScopeRoot::CatScopeRoot(CatScopeID scopeId, const Tokenizer::Lexeme& lexeme):
 }
 
 
+jitcat::AST::CatScopeRoot::CatScopeRoot(const CatScopeRoot& other):
+	CatTypedExpression(other),
+	scopeId(other.scopeId),
+	type(CatGenericType::errorType)
+{
+}
+
+
+CatASTNode* jitcat::AST::CatScopeRoot::copy() const
+{
+	return new CatScopeRoot(*this);
+}
+
+
 void CatScopeRoot::print() const
 {
 }
 
 
-CatASTNodeType CatScopeRoot::getNodeType()
+CatASTNodeType CatScopeRoot::getNodeType() const
 {
 	return CatASTNodeType::ScopeRoot;
 }

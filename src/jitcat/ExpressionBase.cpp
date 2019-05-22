@@ -213,8 +213,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				if (expectedType.isVoidType())
 				{
 					//Insert an automatic type conversion to void.
-					CatArgumentList* arguments = new CatArgumentList(expressionLexeme);
-					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
+					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({parseResult->releaseNode<CatTypedExpression>()}));
 
 					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", expressionLexeme, arguments, expressionLexeme));
 					parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
@@ -224,8 +223,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				else if (expectedType.isScalarType() && valueType.isScalarType())
 				{
 					//Insert an automatic type conversion if the scalar types do not match.
-					CatArgumentList* arguments = new CatArgumentList(expressionLexeme);
-					arguments->arguments.emplace_back(parseResult->releaseNode<CatTypedExpression>());
+					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({ parseResult->releaseNode<CatTypedExpression>() }));
 
 					if (expectedType.isFloatType())
 					{
@@ -322,9 +320,9 @@ void jitcat::ExpressionBase::calculateLiteralStatus()
 		{
 			//If the expression is a minus prefix operator combined with a literal, then we need to count the whole expression as a literal.
 			CatPrefixOperator* prefixOp = parseResult->getNode<CatPrefixOperator>();
-			if (prefixOp->rhs != nullptr
-				&& prefixOp->oper == CatPrefixOperator::Operator::Minus
-				&& prefixOp->rhs->getNodeType() == CatASTNodeType::Literal)
+			if (prefixOp->getRHS() != nullptr
+				&& prefixOp->getOperator() == CatPrefixOperator::Operator::Minus
+				&& prefixOp->getRHS()->getNodeType() == CatASTNodeType::Literal)
 			{
 				expressionIsLiteral = true;
 			}

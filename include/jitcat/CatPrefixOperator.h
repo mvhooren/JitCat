@@ -17,23 +17,22 @@ namespace jitcat::AST
 	class CatPrefixOperator: public CatTypedExpression
 	{
 	public:
-		CatPrefixOperator(const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme), oper(Operator::Not), resultType(CatGenericType::errorType) {};
-		CatPrefixOperator(const CatPrefixOperator&) = delete;
-
 		enum class Operator
 		{
 			Not,
 			Minus,
 			Count
 		};
-		Operator oper;
-		std::unique_ptr<CatTypedExpression> rhs;
+
+		CatPrefixOperator(const Tokenizer::Lexeme& lexeme, Operator oper, CatTypedExpression* rhs);
+		CatPrefixOperator(const CatPrefixOperator& other);
 
 		static const char* conversionTable[(unsigned int)Operator::Count];
 
+		virtual CatASTNode* copy() const override final;
 		virtual CatGenericType getType() const override final;
 		virtual bool isConst() const override final;
-		virtual CatASTNodeType getNodeType() override final {return CatASTNodeType::PrefixOperator;}
+		virtual CatASTNodeType getNodeType() const override final {return CatASTNodeType::PrefixOperator;}
 
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
@@ -41,9 +40,14 @@ namespace jitcat::AST
 
 		virtual void print() const override final;
 
+		const CatTypedExpression* getRHS() const;
+		CatPrefixOperator::Operator getOperator() const;
+
 	private:
 		inline std::any calculateExpression(CatRuntimeContext* runtimeContext);
 		CatGenericType resultType;
+		Operator oper;
+		std::unique_ptr<CatTypedExpression> rhs;
 	};
 
 

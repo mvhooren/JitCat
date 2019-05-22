@@ -12,6 +12,8 @@ namespace jitcat::AST
 	{
 	public:
 		CatStatement(const Tokenizer::Lexeme& lexeme): CatASTNode(lexeme) {}
+		CatStatement(const CatStatement& other): CatASTNode(other) {}
+
 		virtual ~CatStatement() {};
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) = 0;
 		virtual std::any execute(jitcat::CatRuntimeContext* runtimeContext) = 0;

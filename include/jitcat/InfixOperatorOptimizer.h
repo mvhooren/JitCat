@@ -27,7 +27,7 @@ namespace jitcat::AST
 															CatInfixOperatorType infixOperator);
 		static Tokenizer::Lexeme combineLexemes(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
 
-private:
+	private:
 		static CatTypedExpression* tryCollapseMultiplication(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
 		static CatTypedExpression* tryCollapseAddition(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
 		static CatTypedExpression* tryCollapseSubtraction(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);

@@ -22,11 +22,14 @@ namespace jitcat::AST
 	{
 	public:
 		CatIdentifier(const std::string& name, const Tokenizer::Lexeme& lexeme);
+		CatIdentifier(const CatIdentifier& other);
+
+		virtual CatASTNode* copy() const override final;
 		virtual CatGenericType getType() const override final;
 		virtual void print() const override final;
 		virtual bool isConst() const override final;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, Reflection::AssignableType& assignableType) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;

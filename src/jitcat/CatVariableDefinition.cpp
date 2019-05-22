@@ -30,8 +30,25 @@ CatVariableDefinition::CatVariableDefinition(CatTypeNode* typeNode, const std::s
 }
 
 
+jitcat::AST::CatVariableDefinition::CatVariableDefinition(const CatVariableDefinition& other):
+	CatDefinition(other),
+	type(static_cast<CatTypeNode*>(other.type->copy())),
+	name(other.name),
+	visibility(other.visibility),
+	initializationExpression(other.initializationExpression != nullptr ? static_cast<CatTypedExpression*>(other.initializationExpression->copy()) : nullptr),
+	memberInfo(nullptr)
+{
+}
+
+
 CatVariableDefinition::~CatVariableDefinition()
 {
+}
+
+
+CatASTNode* jitcat::AST::CatVariableDefinition::copy() const
+{
+	return new CatVariableDefinition(*this);
 }
 
 
@@ -47,7 +64,7 @@ void CatVariableDefinition::print() const
 }
 
 
-CatASTNodeType CatVariableDefinition::getNodeType()
+CatASTNodeType CatVariableDefinition::getNodeType() const
 {
 	return CatASTNodeType::VariableDefinition;
 }
@@ -104,9 +121,9 @@ const CatTypeNode& CatVariableDefinition::getType() const
 }
 
 
-CatTypedExpression* jitcat::AST::CatVariableDefinition::releaseInitializationExpression()
+const CatTypedExpression* jitcat::AST::CatVariableDefinition::getInitializationExpression() const
 {
-	return initializationExpression.release();
+	return initializationExpression.get();
 }
 
 

@@ -18,10 +18,16 @@ namespace jitcat::AST
 	{
 	public:
 		CatLinkNode(CatASTNode* me, CatASTNode* next, const jitcat::Tokenizer::Lexeme& lexeme);
-		CatLinkNode(const CatLinkNode&) = delete;
-		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		CatLinkNode(const CatLinkNode& other);
 
+		virtual CatASTNode* copy() const override final;
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() const override final;
+
+		CatASTNode* releaseMe();
+		CatASTNode* releaseNext();
+
+	private:
 		std::unique_ptr<CatASTNode> me;
 		std::unique_ptr<CatASTNode> next;
 	};

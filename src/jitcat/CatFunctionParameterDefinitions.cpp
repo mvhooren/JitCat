@@ -27,8 +27,25 @@ CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(const std::vect
 }
 
 
+jitcat::AST::CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(const CatFunctionParameterDefinitions& other):
+	CatASTNode(other),
+	customType(new CustomTypeInfo("__ParameterPack"))
+{
+	for (auto& iter : other.parameters)
+	{
+		parameters.emplace_back(static_cast<CatVariableDeclaration*>(iter->copy()));
+	}
+}
+
+
 CatFunctionParameterDefinitions::~CatFunctionParameterDefinitions()
 {
+}
+
+
+CatASTNode* jitcat::AST::CatFunctionParameterDefinitions::copy() const
+{
+	return new CatFunctionParameterDefinitions(*this);
 }
 
 
@@ -47,7 +64,7 @@ void CatFunctionParameterDefinitions::print() const
 }
 
 
-CatASTNodeType CatFunctionParameterDefinitions::getNodeType()
+CatASTNodeType CatFunctionParameterDefinitions::getNodeType() const
 {
 	return CatASTNodeType::FunctionParameterDefinitions;
 }

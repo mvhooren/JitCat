@@ -30,11 +30,13 @@ namespace jitcat::AST
 	{
 	public:
 		CatInheritanceDefinition(CatTypeNode* typeNode, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme);
+		CatInheritanceDefinition(const CatInheritanceDefinition& other);
 		virtual ~CatInheritanceDefinition();
 
 		// Inherited via CatASTNode
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 

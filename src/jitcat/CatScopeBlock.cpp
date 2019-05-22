@@ -31,8 +31,26 @@ CatScopeBlock::CatScopeBlock(const std::vector<CatStatement*>& statementList, co
 }
 
 
+jitcat::AST::CatScopeBlock::CatScopeBlock(const CatScopeBlock& other):
+	CatStatement(other),
+	customType(new CustomTypeInfo("__ScopeLocals")),
+	scopeId(InvalidScopeID)
+{
+	for (auto& iter : other.statements)
+	{
+		statements.emplace_back(static_cast<CatStatement*>(iter->copy()));
+	}
+}
+
+
 CatScopeBlock::~CatScopeBlock()
 {
+}
+
+
+CatASTNode* jitcat::AST::CatScopeBlock::copy() const
+{
+	return new CatScopeBlock(*this);
 }
 
 
@@ -48,7 +66,7 @@ void CatScopeBlock::print() const
 }
 
 
-CatASTNodeType CatScopeBlock::getNodeType()
+CatASTNodeType CatScopeBlock::getNodeType() const
 {
 	return CatASTNodeType::ScopeBlock;
 }

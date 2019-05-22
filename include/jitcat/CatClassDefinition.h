@@ -29,10 +29,12 @@ namespace jitcat::AST
 	{
 	public:
 		CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme);
+		CatClassDefinition(const CatClassDefinition& other);
 		virtual ~CatClassDefinition();
 
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 
 		bool isTriviallyCopyable() const;
@@ -43,6 +45,8 @@ namespace jitcat::AST
 	private:
 		bool generateConstructor(CatRuntimeContext* compileTimeContext);
 		bool generateDestructor(CatRuntimeContext* compileTimeContext);
+
+		void extractDefinitionLists();
 
 	private:
 		std::string name;

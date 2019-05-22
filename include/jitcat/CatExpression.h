@@ -23,6 +23,7 @@ namespace jitcat::AST
 	{
 	public:
 		CatExpression(const Tokenizer::Lexeme& lexeme): CatStatement(lexeme) {}
+		CatExpression(const CatExpression& other): CatStatement(other) {}
 	};
 
 

@@ -8,9 +8,12 @@
 #pragma once
 
 #include "jitcat/CatASTNode.h"
+#include "jitcat/CatGenericType.h"
 
+#include <any>
 #include <memory>
 #include <vector>
+
 
 namespace jitcat::AST
 {
@@ -21,11 +24,31 @@ namespace jitcat::AST
 	class CatArgumentList: public CatASTNode
 	{
 	public:
-		CatArgumentList(const Tokenizer::Lexeme& lexeme): CatASTNode(lexeme) {}
-		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		CatArgumentList(const Tokenizer::Lexeme& lexeme, std::vector<CatTypedExpression*>& argumentList = std::vector<CatTypedExpression*>());
+		CatArgumentList(const CatArgumentList& other);
 
+		virtual CatASTNode* copy() const override final;
+		virtual void print() const override final;
+		virtual CatASTNodeType getNodeType() const override final;
+
+		bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+		void constCollapse(CatRuntimeContext* compileTimeContext);
+		bool getAllArgumentsAreConst() const;
+		bool getArgumentIsConst(std::size_t argumentIndex) const;
+		Tokenizer::Lexeme getArgumentLexeme(std::size_t argumentIndex) const;
+		CatTypedExpression* releaseArgument(std::size_t argumentIndex);
+		const CatTypedExpression* getArgument(std::size_t argumentIndex) const;
+
+		void addArgument(std::unique_ptr<CatTypedExpression> argument);
+		std::any executeArgument(std::size_t argumentIndex, CatRuntimeContext* context);
+		void executeAllArguments(std::vector<std::any>& values, const std::vector<CatGenericType>& expectedTypes, CatRuntimeContext* context);
+
+		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
+		std::size_t getNumArguments() const;
+
+	private:
 		std::vector<std::unique_ptr<CatTypedExpression>> arguments;
+		std::vector<CatGenericType> argumentTypes;
 	};
 
 

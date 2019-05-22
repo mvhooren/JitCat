@@ -24,10 +24,12 @@ namespace jitcat::AST
 	{
 	public:
 		CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
-		CatMemberFunctionCall(const CatMemberFunctionCall&) = delete;
+		CatMemberFunctionCall(const CatMemberFunctionCall& other);
+		
 		// Inherited via CatTypedExpression
+		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
-		virtual CatASTNodeType getNodeType() override final;
+		virtual CatASTNodeType getNodeType() const override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		std::any executeWithBase(CatRuntimeContext* runtimeContext, std::any baseValue);
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
