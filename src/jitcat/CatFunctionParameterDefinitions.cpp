@@ -62,13 +62,6 @@ bool jitcat::AST::CatFunctionParameterDefinitions::typeCheck(CatRuntimeContext* 
 		{
 			success = false;
 		}
-		else
-		{
-			 const CatTypeNode& parameterTypeNode = iter->getType();
-			 const std::string& parameterName = iter->getName();
-			 const CatGenericType& parameterType = parameterTypeNode.getType();
-			 customType->addMember(parameterName, parameterType);
-		}
 	}
 	return success;
 }

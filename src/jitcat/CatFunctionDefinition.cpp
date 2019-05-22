@@ -84,15 +84,17 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	{
 		return false;
 	}
+	if (parameters->getNumParameters() > 0)
+	{
+		parametersScopeId = compileTimeContext->addCustomTypeScope(parameters->getCustomType());
+	}
+	CatScope* previousScope = compileTimeContext->getCurrentScope();
+	compileTimeContext->setCurrentScope(this);
 	if (!parameters->typeCheck(compileTimeContext, errorManager, this))
 	{
 		return false;
 	}
 	compileTimeContext->setCurrentFunction(this);
-	if (parameters->getNumParameters() > 0)
-	{
-		parametersScopeId = compileTimeContext->addCustomTypeScope(parameters->getCustomType());
-	}
 	for (int i = 0; i < parameters->getNumParameters(); i++)
 	{
 		parameterAssignables.emplace_back(new CatIdentifier(parameters->getParameterName(i), parameters->getParameterLexeme(i)));
@@ -110,9 +112,11 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	if (!scopeBlock->typeCheck(compileTimeContext, errorManager, this))
 	{
 		compileTimeContext->removeScope(parametersScopeId);
+		compileTimeContext->setCurrentScope(previousScope);
 		return false;
 	}
 	compileTimeContext->removeScope(parametersScopeId);
+	compileTimeContext->setCurrentScope(previousScope);
 	compileTimeContext->setCurrentFunction(nullptr);
 	bool unreachableCodeDetected = false;
 	auto returnCheck = scopeBlock->checkControlFlow(compileTimeContext, errorManager, this, unreachableCodeDetected);
@@ -231,6 +235,18 @@ void jitcat::AST::CatFunctionDefinition::setFunctionVisibility(Reflection::Membe
 const std::string & jitcat::AST::CatFunctionDefinition::getFunctionName() const
 {
 	return name;
+}
+
+
+CatScopeID CatFunctionDefinition::getScopeId() const
+{
+	return parametersScopeId;
+}
+
+
+Reflection::CustomTypeInfo* CatFunctionDefinition::getCustomType()
+{
+	return parameters->getCustomType();
 }
 
 

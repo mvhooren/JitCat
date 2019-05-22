@@ -10,6 +10,7 @@
 
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatGenericType.h"
+#include "jitcat/CatScope.h"
 #include "jitcat/CatScopeID.h"
 #include "jitcat/CustomTypeInstance.h"
 #include "jitcat/MemberVisibility.h"
@@ -35,7 +36,7 @@ namespace jitcat::AST
 	class CatFunctionParameterDefinitions;
 	class CatScopeBlock;
 
-	class CatFunctionDefinition: public CatDefinition
+	class CatFunctionDefinition: public CatDefinition, public CatScope
 	{
 	public:
 		CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme);
@@ -65,6 +66,10 @@ namespace jitcat::AST
 
 		template<typename... ArgumentsT>
 		Reflection::CustomTypeInstance* createParameterPack(ArgumentsT... arguments);
+
+		// Inherited via CatScope
+		virtual CatScopeID getScopeId() const override final;
+		virtual Reflection::CustomTypeInfo* getCustomType() override final;
 
 	private:
 		//Reflection::CustomTypeInstance* createAnyParametersPack(const std::vector<std::any>& arguments, CatScopeID& createdScopeId);
