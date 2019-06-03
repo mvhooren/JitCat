@@ -33,7 +33,7 @@ namespace jitcat::AST
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		std::any executeWithBase(CatRuntimeContext* runtimeContext, std::any baseValue);
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
-		virtual CatGenericType getType() const override final;
+		virtual const CatGenericType& getType() const override final;
 		virtual bool isConst() const override final;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 	

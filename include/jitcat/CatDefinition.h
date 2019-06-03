@@ -8,7 +8,6 @@
 #pragma once
 
 #include "jitcat/CatASTNode.h"
-#include "jitcat/CatError.h"
 
 #include <optional>
 

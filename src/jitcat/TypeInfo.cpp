@@ -84,7 +84,7 @@ void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 }
 
 
-CatGenericType TypeInfo::getType(const std::string& dotNotation) const
+const CatGenericType& TypeInfo::getType(const std::string& dotNotation) const
 {
 	std::vector<std::string> indirectionList;
 	Tools::split(dotNotation, ".", indirectionList, false);
@@ -92,7 +92,7 @@ CatGenericType TypeInfo::getType(const std::string& dotNotation) const
 }
 
 
-CatGenericType TypeInfo::getType(const std::vector<std::string>& indirectionList, int offset) const
+const CatGenericType& TypeInfo::getType(const std::vector<std::string>& indirectionList, int offset) const
 {
 	int indirectionListSize = (int)indirectionList.size();
 	if (indirectionListSize > 0)
@@ -137,7 +137,7 @@ CatGenericType TypeInfo::getType(const std::vector<std::string>& indirectionList
 			}
 		}
 	}
-	return CatGenericType::errorType;
+	return CatGenericType::unknownType;
 }
 
 

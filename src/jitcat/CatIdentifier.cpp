@@ -25,7 +25,7 @@ CatIdentifier::CatIdentifier(const std::string& name, const Tokenizer::Lexeme& l
 	name(name),
 	memberInfo(nullptr),
 	scopeId(InvalidScopeID),
-	type(CatGenericType::errorType)
+	type(CatGenericType::unknownType)
 {
 }
 
@@ -35,7 +35,7 @@ jitcat::AST::CatIdentifier::CatIdentifier(const CatIdentifier& other):
 	name(other.name),
 	memberInfo(nullptr),
 	scopeId(InvalidScopeID),
-	type(CatGenericType::errorType)
+	type(CatGenericType::unknownType)
 {
 }
 
@@ -46,7 +46,7 @@ CatASTNode* jitcat::AST::CatIdentifier::copy() const
 }
 
 
-CatGenericType CatIdentifier::getType() const
+const CatGenericType& CatIdentifier::getType() const
 {
 	return type;
 }
@@ -101,7 +101,7 @@ bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 {
 	std::string lowerName = Tools::toLowerCase(name);
 	memberInfo = nullptr;
-	type = CatGenericType::errorType;
+	type = CatGenericType::unknownType;
 	if (compiletimeContext != nullptr)
 	{
 		memberInfo = compiletimeContext->findVariable(lowerName, scopeId);

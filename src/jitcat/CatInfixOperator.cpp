@@ -43,7 +43,7 @@ CatASTNode* jitcat::AST::CatInfixOperator::copy() const
 }
 
 
-CatGenericType CatInfixOperator::getType() const
+const CatGenericType& CatInfixOperator::getType() const
 {
 	const CatGenericType lhsType = lhs->getType();
 	const CatGenericType rhsType = rhs->getType();
@@ -75,7 +75,7 @@ CatGenericType CatInfixOperator::getType() const
 					return CatGenericType::floatType;
 				}
 			}
-			return CatGenericType("Expected scalar parameters.");
+			return CatGenericType::unknownType;
 		case CatInfixOperatorType::Greater:
 		case CatInfixOperatorType::Smaller:
 		case CatInfixOperatorType::GreaterOrEqual:
@@ -84,7 +84,7 @@ CatGenericType CatInfixOperator::getType() const
 			{
 				return CatGenericType::boolType;
 			}
-			return CatGenericType("Expected scalar parameters.");
+			return CatGenericType::unknownType;
 		case CatInfixOperatorType::Equals:
 		case CatInfixOperatorType::NotEquals:
 			if ((lhsType.isScalarType() && rhsType.isScalarType())
@@ -94,7 +94,7 @@ CatGenericType CatInfixOperator::getType() const
 			{
 				return CatGenericType::boolType;
 			}
-			return CatGenericType("Parameters cannot be compared.");
+			return CatGenericType::unknownType;
 		case CatInfixOperatorType::LogicalAnd:
 		case CatInfixOperatorType::LogicalOr:
 			if (lhsType.isBoolType()
@@ -102,10 +102,10 @@ CatGenericType CatInfixOperator::getType() const
 			{
 				return CatGenericType::boolType;;
 			}
-			return CatGenericType("Expected boolean parameters.");
+			return CatGenericType::unknownType;
 	}
 	assert(false);
-	return CatGenericType("Unexpected error.");
+	return CatGenericType::unknownType;
 }
 
 
@@ -157,7 +157,7 @@ bool CatInfixOperator::typeCheck(CatRuntimeContext* compiletimeContext, Expressi
 		CatGenericType leftType = lhs->getType();
 		CatGenericType rightType = rhs->getType();
 		resultType = leftType.getInfixOperatorResultType(oper, rightType);
-		if (resultType != CatGenericType::errorType)
+		if (resultType.isValidType())
 		{
 			return true;
 		}

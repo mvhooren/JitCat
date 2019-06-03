@@ -26,7 +26,7 @@ jitcat::AST::CatPrefixOperator::CatPrefixOperator(const Tokenizer::Lexeme& lexem
 	CatTypedExpression(lexeme), 
 	oper(oper),
 	rhs(rhs),
-	resultType(CatGenericType::errorType)
+	resultType(CatGenericType::unknownType)
 {
 }
 
@@ -35,7 +35,7 @@ jitcat::AST::CatPrefixOperator::CatPrefixOperator(const CatPrefixOperator& other
 	CatTypedExpression(other),
 	oper(other.oper),
 	rhs(static_cast<CatTypedExpression*>(other.rhs->copy())),
-	resultType(CatGenericType::errorType)
+	resultType(CatGenericType::unknownType)
 {
 }
 
@@ -46,7 +46,7 @@ CatASTNode* jitcat::AST::CatPrefixOperator::copy() const
 }
 
 
-CatGenericType CatPrefixOperator::getType() const
+const CatGenericType& CatPrefixOperator::getType() const
 {
 	return resultType;
 }

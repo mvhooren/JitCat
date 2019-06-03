@@ -68,6 +68,7 @@ std::any CatAssignmentOperator::execute(CatRuntimeContext* runtimeContext)
 
 bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	type = CatGenericType::unknownType;
 	if (lhs->typeCheck(compiletimeContext, errorManager, errorContext) && rhs->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		CatGenericType leftType = lhs->getType();
@@ -82,15 +83,16 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		{
 			return false;
 		}
+		type = lhs->getType().toUnmodified();
 		return true;
 	}
 	return false;
 }
 
 
-CatGenericType CatAssignmentOperator::getType() const
+const CatGenericType& CatAssignmentOperator::getType() const
 {
-	return lhs->getType().toUnmodified();
+	return type;
 }
 
 

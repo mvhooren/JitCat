@@ -23,7 +23,7 @@ namespace jitcat::AST
 		CatLiteral(const CatLiteral& other);
 
 		virtual CatASTNode* copy() const override final;
-		virtual CatGenericType getType() const override final {return type;} 
+		virtual const CatGenericType& getType() const override final {return type;}
 		virtual void print() const override final;
 		virtual bool isConst() const override final {return true;}
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final {return this;}

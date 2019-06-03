@@ -23,10 +23,11 @@ using namespace jitcat::AST;
 using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
+
 CatOperatorNew::CatOperatorNew(CatMemberFunctionCall* functionCall, const std::string& typeName, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	functionCall(functionCall),
-	newType(CatGenericType::errorType),
+	newType(CatGenericType::unknownType),
 	hostClass(nullptr),
 	typeName(typeName)
 {
@@ -36,7 +37,7 @@ CatOperatorNew::CatOperatorNew(CatMemberFunctionCall* functionCall, const std::s
 jitcat::AST::CatOperatorNew::CatOperatorNew(const CatOperatorNew& other):
 	CatTypedExpression(other),
 	functionCall(static_cast<CatMemberFunctionCall*>(other.functionCall->copy())),
-	newType(CatGenericType::errorType),
+	newType(CatGenericType::unknownType),
 	hostClass(nullptr),
 	typeName(other.typeName)
 {
@@ -80,7 +81,7 @@ std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 
 bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	newType = CatGenericType::errorType;
+	newType = CatGenericType::unknownType;
 	type.reset(new CatTypeNode(typeName, TypeOwnershipSemantics::Value, functionCall->getNameLexeme()));
 
 	if (!type->typeCheck(compiletimeContext, errorManager, errorContext))
@@ -131,7 +132,7 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 }
 
 
-CatGenericType CatOperatorNew::getType() const
+const CatGenericType& CatOperatorNew::getType() const
 {
 	return newType;
 }

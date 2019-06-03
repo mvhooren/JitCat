@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "jitcat/CatError.h"
 #include "jitcat/CatInfixOperatorType.h"
 #include "jitcat/ContainerType.h"
 #include "jitcat/TypeOwnershipSemantics.h"
@@ -50,14 +49,13 @@ namespace jitcat
 			Count
 		};
 
-		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant, const CatError* error);
+		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant);
 		CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 	public:
 		CatGenericType();
 		CatGenericType(Reflection::TypeInfo* objectType, Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false);
 		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable = false, bool constant = false);
-		CatGenericType(const CatError& error);
 		CatGenericType(const CatGenericType& other);
 
 		CatGenericType& operator=(const CatGenericType& other);
@@ -95,10 +93,8 @@ namespace jitcat
 		CatGenericType toValueOwnership() const;
 
 		Reflection::ContainerManipulator* getContainerManipulator() const;
-		CatGenericType getContainerItemType() const;
+		const CatGenericType& getContainerItemType() const;
 		const char* getObjectTypeName() const;
-
-		const CatError& getError() const;
 
 		CatGenericType getInfixOperatorResultType(AST::CatInfixOperatorType oper, const CatGenericType& rightType);
 
@@ -140,7 +136,7 @@ namespace jitcat
 		static const CatGenericType boolType;
 		static const CatGenericType stringType;
 		static const CatGenericType voidType;
-		static const CatGenericType errorType;
+		//static const CatGenericType errorType;
 		static const CatGenericType nullptrType;
 		static const CatGenericType unknownType;
 
@@ -160,8 +156,6 @@ namespace jitcat
 		//Type modifiers/flags. These are not taken into account when comparing CatGenericType objects using operator ==.
 		bool writable;
 		bool constant;
-
-		std::unique_ptr<CatError> error;
 	};
 
 

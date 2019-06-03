@@ -97,7 +97,7 @@ bool CatReturnStatement::typeCheck(CatRuntimeContext* compiletimeContext, Expres
 }
 
 
-CatGenericType CatReturnStatement::getType() const
+const CatGenericType& CatReturnStatement::getType() const
 {
 	if (returnExpression != nullptr)
 	{

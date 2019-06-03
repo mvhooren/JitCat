@@ -20,8 +20,6 @@ set(Source_Root
 )
 
 set(Source_Cat
-	CatError.cpp
-	${JitCatHeaderPath}/CatError.h
 	CatGenericType.cpp
 	${JitCatHeaderPath}/CatGenericType.h
 	CatGrammar.cpp

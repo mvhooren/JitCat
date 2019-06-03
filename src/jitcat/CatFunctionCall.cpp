@@ -31,7 +31,7 @@ CatFunctionCall::CatFunctionCall(const std::string& name, const Tokenizer::Lexem
 	name(name),
 	nameLexeme(nameLexeme),
 	arguments(arguments),
-	returnType(CatGenericType::errorType),
+	returnType(CatGenericType::unknownType),
 	function(toFunction(name.c_str(), (int)(arguments->getNumArguments())))
 {
 }
@@ -42,7 +42,7 @@ jitcat::AST::CatFunctionCall::CatFunctionCall(const CatFunctionCall& other):
 	name(other.name),
 	nameLexeme(other.nameLexeme),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
-	returnType(CatGenericType::errorType),
+	returnType(CatGenericType::unknownType),
 	function(toFunction(name.c_str(), (int)(arguments->getNumArguments())))
 {
 }
@@ -376,7 +376,7 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	function = toFunction(name.c_str(), (int)arguments->getNumArguments());
-	returnType = CatGenericType::errorType;
+	returnType = CatGenericType::unknownType;
 	std::size_t numArgumentsSupplied = arguments->getNumArguments();
 	if (function >= CatBuiltInFunctionType::Count)
 	{
@@ -638,7 +638,7 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 }
 
 
-CatGenericType CatFunctionCall::getType() const
+const CatGenericType& CatFunctionCall::getType() const
 {
 	return returnType;
 }

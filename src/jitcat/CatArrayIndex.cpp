@@ -23,9 +23,9 @@ CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* array
 	CatTypedExpression(lexeme),
 	array(base),
 	index(arrayIndex),
-	arrayType(CatGenericType::errorType),
-	indexType(CatGenericType::errorType),
-	containerItemType(CatGenericType::errorType)
+	arrayType(CatGenericType::unknownType),
+	indexType(CatGenericType::unknownType),
+	containerItemType(CatGenericType::unknownType)
 {
 
 }
@@ -35,9 +35,9 @@ jitcat::AST::CatArrayIndex::CatArrayIndex(const CatArrayIndex& other):
 	CatTypedExpression(other),
 	array(static_cast<CatTypedExpression*>(other.array->copy())),
 	index(static_cast<CatTypedExpression*>(other.index->copy())),
-	arrayType(CatGenericType::errorType),
-	indexType(CatGenericType::errorType),
-	containerItemType(CatGenericType::errorType)
+	arrayType(CatGenericType::unknownType),
+	indexType(CatGenericType::unknownType),
+	containerItemType(CatGenericType::unknownType)
 {	
 }
 
@@ -112,7 +112,7 @@ bool CatArrayIndex::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 }
 
 
-CatGenericType CatArrayIndex::getType() const
+const CatGenericType& CatArrayIndex::getType() const
 {
 	return containerItemType;
 }

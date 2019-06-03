@@ -268,7 +268,7 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 	{
 		expressionIsLiteral = false;
 		isConstant = false;
-		valueType = CatGenericType::errorType;
+		valueType = CatGenericType::unknownType;
 	}
 	else
 	{

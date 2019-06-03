@@ -79,10 +79,10 @@ namespace jitcat::Reflection
 		void addDeserializedMemberFunction(MemberFunctionInfo* memberFunction);
 
 		//Given a dot notated string like "bla.blep.blip", returns the CatGenericType of "blip".
-		CatGenericType getType(const std::string& dotNotation) const;
+		const CatGenericType& getType(const std::string& dotNotation) const;
 		//Similar to above, but instead it takes a vector that contains the strings splitted on "." and an offset from where to start.
 		//The offset should point to a variable of the type described by this TypeInfo.
-		CatGenericType getType(const std::vector<std::string>& indirectionList, int offset) const;
+		const CatGenericType& getType(const std::vector<std::string>& indirectionList, int offset) const;
 	
 		//Gets the type information of a member variable given its name.
 		TypeMemberInfo* getMemberInfo(const std::string& identifier) const;

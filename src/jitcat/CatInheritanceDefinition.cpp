@@ -114,7 +114,7 @@ CatGenericType jitcat::AST::CatInheritanceDefinition::getType() const
 	{
 		return type->getType();
 	}
-	return CatGenericType::errorType;
+	return CatGenericType::unknownType;
 }
 
 

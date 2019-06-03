@@ -27,7 +27,7 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 	base(base),
 	memberName(memberName),
 	memberInfo(nullptr),
-	type(CatGenericType::errorType)
+	type(CatGenericType::unknownType)
 {
 }
 
@@ -37,7 +37,7 @@ jitcat::AST::CatMemberAccess::CatMemberAccess(const CatMemberAccess& other):
 	base(static_cast<CatTypedExpression*>(other.base->copy())),
 	memberName(other.memberName),
 	memberInfo(nullptr),
-	type(CatGenericType::errorType)
+	type(CatGenericType::unknownType)
 {
 }
 
@@ -93,7 +93,7 @@ std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext, A
 bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	memberInfo = nullptr;
-	type = CatGenericType::errorType;
+	type = CatGenericType::unknownType;
 	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		CatGenericType baseType = base->getType();
@@ -118,7 +118,7 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 }
 
 
-CatGenericType CatMemberAccess::getType() const
+const CatGenericType& CatMemberAccess::getType() const
 {
 	return type;
 }

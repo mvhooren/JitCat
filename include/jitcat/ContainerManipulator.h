@@ -27,9 +27,9 @@ namespace jitcat::Reflection
 		virtual int getIndexOf(std::any container, std::any key) = 0;
 		virtual std::any createAnyPointer(uintptr_t pointer) = 0;
 		virtual std::any getKeyAtIndex(std::any container, int index) const = 0;
-		virtual CatGenericType getKeyType() const = 0;
-		virtual CatGenericType getValueType() const = 0;
-	};
+		virtual const CatGenericType& getKeyType() const = 0;
+		virtual const CatGenericType& getValueType() const = 0;
+	};								
 
 
 	//Used for deserialized type information, not backed by actual reflected type.
@@ -43,8 +43,8 @@ namespace jitcat::Reflection
 		virtual int getIndexOf(std::any container, std::any key) { return -1; }
 		virtual std::any createAnyPointer(uintptr_t pointer) { return nullptr; }
 		virtual std::any getKeyAtIndex(std::any container, int index) const { return std::any(); }
-		virtual CatGenericType getKeyType() const { return keyType; }
-		virtual CatGenericType getValueType() const { return valueType; }
+		virtual const CatGenericType& getKeyType() const { return keyType; }
+		virtual const CatGenericType& getValueType() const { return valueType; }
 	private:
 		CatGenericType keyType;
 		CatGenericType valueType;
@@ -106,13 +106,13 @@ namespace jitcat::Reflection
 		}
 
 
-		virtual CatGenericType getKeyType() const override final
+		virtual const CatGenericType& getKeyType() const override final
 		{
 			return CatGenericType::intType;
 		}
 
 
-		virtual CatGenericType getValueType() const override final
+		virtual const CatGenericType& getValueType() const override final
 		{
 			return TypeTraits<typename VectorT::value_type>::toGenericType();
 		}
@@ -247,13 +247,13 @@ namespace jitcat::Reflection
 		}
 
 
-		virtual CatGenericType getKeyType() const override final
+		virtual const CatGenericType& getKeyType() const override final
 		{
 			return TypeTraits<typename MapT::key_type>::toGenericType();
 		}
 
 
-		virtual CatGenericType getValueType() const override final
+		virtual const CatGenericType& getValueType() const override final
 		{
 			return TypeTraits<typename MapT::mapped_type>::toGenericType();
 		}

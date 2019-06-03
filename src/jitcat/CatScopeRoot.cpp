@@ -17,7 +17,7 @@ using namespace jitcat::AST;
 CatScopeRoot::CatScopeRoot(CatScopeID scopeId, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	scopeId(scopeId),
-	type(CatGenericType::errorType)
+	type(CatGenericType::unknownType)
 {
 }
 
@@ -25,7 +25,7 @@ CatScopeRoot::CatScopeRoot(CatScopeID scopeId, const Tokenizer::Lexeme& lexeme):
 jitcat::AST::CatScopeRoot::CatScopeRoot(const CatScopeRoot& other):
 	CatTypedExpression(other),
 	scopeId(other.scopeId),
-	type(CatGenericType::errorType)
+	type(CatGenericType::unknownType)
 {
 }
 
@@ -55,7 +55,7 @@ std::any CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
 
 bool CatScopeRoot::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	type = CatGenericType::errorType;
+	type = CatGenericType::unknownType;
 	if (compiletimeContext != nullptr)
 	{
 		type = CatGenericType(compiletimeContext->getScopeType(scopeId), Reflection::TypeOwnershipSemantics::Weak);
@@ -72,7 +72,7 @@ bool CatScopeRoot::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionEr
 }
 
 
-CatGenericType CatScopeRoot::getType() const
+const CatGenericType& CatScopeRoot::getType() const
 {
 	return type;
 }

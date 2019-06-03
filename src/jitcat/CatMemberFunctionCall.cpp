@@ -30,7 +30,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 	arguments(arguments),
 	base(base),
 	memberFunctionInfo(nullptr),
-	returnType(CatGenericType::errorType)
+	returnType(CatGenericType::unknownType)
 {
 }
 
@@ -42,7 +42,7 @@ jitcat::AST::CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctio
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	base(other.base != nullptr ? static_cast<CatTypedExpression*>(other.base->copy()) : nullptr),
 	memberFunctionInfo(nullptr),
-	returnType(CatGenericType::errorType)
+	returnType(CatGenericType::unknownType)
 {
 }
 
@@ -97,7 +97,7 @@ std::any jitcat::AST::CatMemberFunctionCall::executeWithBase(CatRuntimeContext* 
 
 bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	returnType = CatGenericType::errorType;
+	returnType = CatGenericType::unknownType;
 	if (base == nullptr)
 	{
 		//function call without a base. Check Scopes.
@@ -162,7 +162,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 }
 
 
-CatGenericType CatMemberFunctionCall::getType() const
+const CatGenericType& CatMemberFunctionCall::getType() const
 {
 	return returnType;
 }

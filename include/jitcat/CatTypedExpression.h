@@ -19,7 +19,7 @@ namespace jitcat::AST
 		CatTypedExpression(const Tokenizer::Lexeme& lexeme): CatExpression(lexeme) {}
 		CatTypedExpression(const CatTypedExpression& other): CatExpression(other) {}
 
-		virtual CatGenericType getType() const = 0;
+		virtual const CatGenericType& getType() const = 0;
 		virtual bool isConst() const = 0;
 		virtual bool isAssignable() const {return false;}
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) = 0;

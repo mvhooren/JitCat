@@ -25,7 +25,7 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant, const CatError* error_):
+CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant):
 	specificType(specificType),
 	basicType(basicType),
 	nestedType(nestedType),
@@ -35,10 +35,7 @@ CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, T
 	writable(writable),
 	constant(constant)
 {
-	if (error_ != nullptr)
-	{
-		error.reset(new CatError(*error_));
-	}
+
 }
 
 
@@ -49,7 +46,6 @@ CatGenericType::CatGenericType(BasicType basicType, bool writable, bool constant
 	ownershipSemantics(TypeOwnershipSemantics::Value),
 	containerType(ContainerType::None),
 	containerManipulator(nullptr),
-	error(nullptr),
 	writable(writable),
 	constant(constant)
 {
@@ -63,7 +59,6 @@ CatGenericType::CatGenericType():
 	ownershipSemantics(TypeOwnershipSemantics::Value),
 	containerType(ContainerType::None),
 	containerManipulator(nullptr),
-	error(nullptr),
 	writable(false),
 	constant(false)
 {
@@ -77,7 +72,6 @@ CatGenericType::CatGenericType(TypeInfo* objectType, Reflection::TypeOwnershipSe
 	ownershipSemantics(ownershipSemantics),
 	containerType(ContainerType::None),
 	containerManipulator(nullptr),
-	error(nullptr),
 	writable(writable),
 	constant(constant)
 {
@@ -91,23 +85,8 @@ CatGenericType::CatGenericType(ContainerType containerType, Reflection::Containe
 	ownershipSemantics(TypeOwnershipSemantics::Weak),
 	containerType(containerType),
 	containerManipulator(containerManipulator),
-	error(nullptr),
 	writable(writable),
 	constant(constant)
-{
-}
-
-
-CatGenericType::CatGenericType(const CatError& error):
-	specificType(SpecificType::Error),
-	basicType(BasicType::None),
-	nestedType(nullptr),
-	ownershipSemantics(TypeOwnershipSemantics::Value),
-	containerType(ContainerType::None),
-	containerManipulator(nullptr),
-	error(new CatError(error)),
-	writable(false),
-	constant(false)
 {
 }
 
@@ -119,14 +98,9 @@ CatGenericType::CatGenericType(const CatGenericType& other):
 	ownershipSemantics(other.ownershipSemantics),
 	containerType(other.containerType),
 	containerManipulator(other.containerManipulator),
-	error(nullptr),
 	writable(other.writable),
 	constant(other.constant)
 {
-	if (other.error.get() != nullptr)
-	{
-		error.reset(new CatError(*other.error.get()));
-	}
 }
 
 
@@ -140,14 +114,6 @@ CatGenericType& CatGenericType::operator=(const CatGenericType& other)
 	containerManipulator = other.containerManipulator;
 	writable = other.writable;
 	constant = other.constant;
-	if (other.error.get() != nullptr)
-	{
-		error.reset(new CatError(other.getError()));
-	}
-	else
-	{
-		error.reset(nullptr);
-	}
 	return *this;
 }
 
@@ -172,7 +138,6 @@ bool jitcat::CatGenericType::compare(const CatGenericType& other, bool includeOw
 		{
 		default:
 		case SpecificType::None:		return true;
-		case SpecificType::Error:		return error == other.error;
 		case SpecificType::Basic:		return basicType == other.basicType;
 		case SpecificType::Object:		return nestedType->getTypeName() == other.nestedType->getTypeName() || isNullptrType() || other.isNullptrType();
 		case SpecificType::Container:	return containerType == other.containerType && containerManipulator == other.containerManipulator;
@@ -305,24 +270,24 @@ bool CatGenericType::isConst() const
 
 CatGenericType CatGenericType::toUnmodified() const
 {
-	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, false, false, error.get());
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, false, false);
 }
 
 
 CatGenericType CatGenericType::toUnwritable() const
 {
-	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, false, constant, error.get());
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, false, constant);
 }
 
 
 CatGenericType CatGenericType::toWritable() const
 {
-	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, true, constant, error.get());
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, true, constant);
 }
 
 CatGenericType jitcat::CatGenericType::toValueOwnership() const
 {
-	return CatGenericType(specificType, basicType, nestedType, TypeOwnershipSemantics::Value, containerType, containerManipulator, true, constant, error.get());
+	return CatGenericType(specificType, basicType, nestedType, TypeOwnershipSemantics::Value, containerType, containerManipulator, true, constant);
 }
 
 
@@ -332,7 +297,7 @@ Reflection::ContainerManipulator* jitcat::CatGenericType::getContainerManipulato
 }
 
 
-CatGenericType CatGenericType::getContainerItemType() const
+const CatGenericType& CatGenericType::getContainerItemType() const
 {
 	if (specificType == SpecificType::Container)
 	{
@@ -340,7 +305,7 @@ CatGenericType CatGenericType::getContainerItemType() const
 	}
 	else
 	{
-		return CatGenericType(CatError("Not a container."));
+		return CatGenericType::unknownType;
 	}
 }
 
@@ -355,19 +320,6 @@ const char* CatGenericType::getObjectTypeName() const
 	else
 	{
 		return nullptr;
-	}
-}
-
-
-const CatError& CatGenericType::getError() const
-{
-	if (error.get() != nullptr)
-	{
-		return *error.get();
-	}
-	else
-	{
-		return CatError::defaultError;
 	}
 }
 
@@ -435,7 +387,7 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 		}
 	}
 
-	return CatGenericType::errorType;
+	return CatGenericType::unknownType;
 }
 
 
@@ -897,6 +849,5 @@ const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Floa
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool);
 const CatGenericType CatGenericType::stringType		= CatGenericType(BasicType::String);
 const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void);
-const CatGenericType CatGenericType::errorType		= CatGenericType("Generic error.");
 const CatGenericType CatGenericType::nullptrType	= CatGenericType(new TypeInfo("nullptr", new NullptrTypeCaster()), TypeOwnershipSemantics::Value);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();

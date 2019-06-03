@@ -30,7 +30,7 @@ namespace jitcat::AST
 		static const char* conversionTable[(unsigned int)Operator::Count];
 
 		virtual CatASTNode* copy() const override final;
-		virtual CatGenericType getType() const override final;
+		virtual const CatGenericType& getType() const override final;
 		virtual bool isConst() const override final;
 		virtual CatASTNodeType getNodeType() const override final {return CatASTNodeType::PrefixOperator;}
 

@@ -74,7 +74,7 @@ bool jitcat::AST::CatArgumentList::typeCheck(CatRuntimeContext* compiletimeConte
 		}
 		else
 		{
-			argumentTypes.push_back(CatGenericType::errorType);
+			argumentTypes.push_back(CatGenericType::unknownType);
 			noErrors = false;
 		}
 	}

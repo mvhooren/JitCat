@@ -25,7 +25,7 @@ namespace jitcat::AST
 		CatIdentifier(const CatIdentifier& other);
 
 		virtual CatASTNode* copy() const override final;
-		virtual CatGenericType getType() const override final;
+		virtual const CatGenericType& getType() const override final;
 		virtual void print() const override final;
 		virtual bool isConst() const override final;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
