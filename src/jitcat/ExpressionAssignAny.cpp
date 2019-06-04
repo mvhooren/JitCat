@@ -1,5 +1,4 @@
 #include "jitcat/ExpressionAssignAny.h"
-#include "jitcat/AssignableType.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatRuntimeContext.h"
@@ -57,7 +56,7 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 			else if (myType.isFloatType())	reinterpret_cast<void(*)(CatRuntimeContext*, float)>(nativeFunctionAddress)(runtimeContext, std::any_cast<float>(convertedValue));
 			else if (myType.isBoolType())	reinterpret_cast<void(*)(CatRuntimeContext*, bool)>(nativeFunctionAddress)(runtimeContext, std::any_cast<bool>(convertedValue));
 			else if (myType.isStringType())	reinterpret_cast<void(*)(CatRuntimeContext*, const std::string&)>(nativeFunctionAddress)(runtimeContext, std::any_cast<std::string>(convertedValue));
-			else if (myType.isObjectType())
+			else if (myType.isPointerToReflectableObjectType())
 			{
 				//Use the type caster to cast the object contained in value to a std::any containing a Reflectable*;
 				//std::any reflectableAny = valueType.getObjectType()->getTypeCaster()->cast(value);
@@ -83,10 +82,9 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 	if (parseResult->astRootNode != nullptr && parseResult->getNode<AST::CatTypedExpression>()->isAssignable())
 	{
 		jitcat::AST::CatAssignableExpression* assignable = parseResult->getNode<AST::CatAssignableExpression>();
-		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
-		std::any target = assignable->executeAssignable(runtimeContext, assignableType);
+		std::any target = assignable->executeAssignable(runtimeContext);
 		value = getType().convertToType(value, valueType);
-		jitcat::AST::ASTHelper::doAssignment(target, value, getType().toWritable(), valueType, assignableType, AssignableType::None);
+		jitcat::AST::ASTHelper::doAssignment(target, value, getType().toWritable().toPointer(), valueType);
 		return true;
 	}
 	return false;
@@ -107,13 +105,13 @@ void ExpressionAssignAny::handleCompiledFunction(uintptr_t functionAddress)
 
 bool jitcat::ExpressionAssignAny::assignUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType)
 {
-	std::any reflectableAny = valueType.getObjectType()->getTypeCaster()->cast(pointerValue);
+	std::any reflectableAny = valueType.getPointeeType()->getObjectType()->getTypeCaster()->cast(pointerValue);
 	return assignValue(runtimeContext, reflectableAny, valueType);
 }
 
 
 bool jitcat::ExpressionAssignAny::assignInterpretedUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType)
 {
-	std::any reflectableValue = valueType.getObjectType()->getTypeCaster()->cast(pointerValue);
+	std::any reflectableValue = valueType.getPointeeType()->getObjectType()->getTypeCaster()->cast(pointerValue);
 	return assignInterpretedValue(runtimeContext, reflectableValue, valueType);
 }

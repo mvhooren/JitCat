@@ -3618,7 +3618,7 @@ TEST_CASE("Assign tests", "[assign]" )
 	SECTION("Assign custom object")
 	{
 		Expression<void> testExpression(&context, "myObject = nestedSelfObject");
-		checkAssignmentCustom(typeInstance.get(), "myObject", (Reflectable*)reflectedObject.nestedSelfObject, false, false, false, testExpression, context);		
+		checkAssignmentCustom(typeInstance.get(), "myObject", reflectedObject.nestedSelfObject, false, false, false, testExpression, context);		
 	}
 }
 

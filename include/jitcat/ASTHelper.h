@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "jitcat/AssignableType.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/TypeOwnershipSemantics.h"
@@ -39,7 +38,7 @@ namespace jitcat::AST
 		static std::any doGetArgument(CatTypedExpression* argument, const CatGenericType& parameterType, CatRuntimeContext* context);
 
 		//Source and target must be of the same type and target must be a writable type. Source must be a writable type if its ownership semantics are Owned and the target type's ownership semantics is Owned or Shared.
-		static std::any doAssignment(std::any& target, const std::any& source, const CatGenericType& targetType, const CatGenericType& sourceType, Reflection::AssignableType targetAssignableType, Reflection::AssignableType sourceAssignableType);
+		static std::any doAssignment(std::any& target, const std::any& source, const CatGenericType& targetType, const CatGenericType& sourceType);
 
 		static bool checkAssignment(const CatTypedExpression* lhs, const CatTypedExpression* rhs, ExpressionErrorManager* errorManager, CatRuntimeContext* context, void* errorSource, const Tokenizer::Lexeme& lexeme);
 		static bool checkOwnershipSemantics(const CatGenericType& targetType, const CatGenericType& sourceType, ExpressionErrorManager* errorManager, CatRuntimeContext* context, void* errorSource, const Tokenizer::Lexeme& lexeme, const std::string& operation);

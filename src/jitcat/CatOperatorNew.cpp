@@ -88,10 +88,10 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	{
 		return false;
 	}
-	newType = type->getType();
+	newType = type->getType().toPointer(TypeOwnershipSemantics::Owned);
 	
 
-	if (!newType.isObjectType())
+	if (!newType.isPointerToReflectableObjectType())
 	{
 		errorManager->compiledWithError(Tools::append("Operator new only supports object types, ", newType.toString(), " not yet supported."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;

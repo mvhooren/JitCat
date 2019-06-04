@@ -6,7 +6,6 @@
 */
 
 #include "jitcat/CatAssignmentOperator.h"
-#include "jitcat/AssignableType.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatLog.h"

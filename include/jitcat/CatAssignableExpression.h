@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "jitcat/AssignableType.h"
 #include "jitcat/CatTypedExpression.h"
 
 namespace jitcat::AST
@@ -20,7 +19,8 @@ namespace jitcat::AST
 		CatAssignableExpression(const CatAssignableExpression& other): CatTypedExpression(other) {}
 
 		virtual bool isAssignable() const override final {return true;}
-		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, Reflection::AssignableType& assignableType) = 0;
+		virtual const CatGenericType& getAssignableType() const = 0;
+		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) = 0;
 	};
 
 

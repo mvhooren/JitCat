@@ -31,9 +31,11 @@ namespace jitcat
 		enum class SpecificType
 		{
 			None,
-			Error,
 			Basic,
-			Object,
+			Pointer,
+			ReflectableHandle,
+			ReflectableObject,
+			StructObject,
 			Container,
 			Count
 		};
@@ -49,13 +51,14 @@ namespace jitcat
 			Count
 		};
 
-		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant);
+		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, CatGenericType* pointeeType, bool writable, bool constant);
 		CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 	public:
 		CatGenericType();
-		CatGenericType(Reflection::TypeInfo* objectType, Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false);
+		CatGenericType(Reflection::TypeInfo* reflectableType, bool writable = false, bool constant = false);
 		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable = false, bool constant = false);
+		CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable = false, bool constant = false);
 		CatGenericType(const CatGenericType& other);
 
 		CatGenericType& operator=(const CatGenericType& other);
@@ -65,7 +68,6 @@ namespace jitcat
 
 		bool isUnknown() const;
 		bool isValidType() const;
-		bool isError() const;
 		bool isBasicType() const;
 		bool isBoolType() const;
 		bool isIntType() const;
@@ -73,7 +75,14 @@ namespace jitcat
 		bool isStringType() const;
 		bool isScalarType() const;
 		bool isVoidType() const;
-		bool isObjectType() const;
+		bool isReflectableObjectType() const;
+		bool isReflectableHandleType() const;
+		bool isPointerToReflectableObjectType() const;
+		bool isReflectablePointerOrHandle() const;
+		bool isStructType() const;
+		bool isPointerType() const;
+		bool isPointerToPointerType() const;
+		bool isPointerToHandleType() const;
 		bool isContainerType() const;
 		bool isVectorType() const;
 		bool isMapType() const;
@@ -91,6 +100,9 @@ namespace jitcat
 		CatGenericType toWritable() const;
 		//Copies the type but sets the ownership to Value
 		CatGenericType toValueOwnership() const;
+		//Gets a pointer type to this type
+		CatGenericType toPointer(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
+		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 
 		Reflection::ContainerManipulator* getContainerManipulator() const;
 		const CatGenericType& getContainerItemType() const;
@@ -99,6 +111,8 @@ namespace jitcat
 		CatGenericType getInfixOperatorResultType(AST::CatInfixOperatorType oper, const CatGenericType& rightType);
 
 		std::string toString() const;
+		
+		CatGenericType* getPointeeType() const;
 
 		Reflection::TypeInfo* getObjectType() const;
 		Reflection::TypeOwnershipSemantics getOwnershipSemantics() const;
@@ -146,12 +160,14 @@ namespace jitcat
 
 		//not owned
 		Reflection::TypeInfo* nestedType;
-		Reflection::TypeOwnershipSemantics ownershipSemantics;
 
 		//When the member is a container, catType or nestedType will be set to the item type of the container
 		Reflection::ContainerType containerType;
 		//not owned, non null when the type is a container.
 		Reflection::ContainerManipulator* containerManipulator;
+
+		Reflection::TypeOwnershipSemantics ownershipSemantics;
+		std::unique_ptr<CatGenericType> pointeeType;
 
 		//Type modifiers/flags. These are not taken into account when comparing CatGenericType objects using operator ==.
 		bool writable;

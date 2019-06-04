@@ -25,7 +25,7 @@ TypeInfo& TypeInfo::addMember(const std::string& identifier_, U T::* member, Mem
 	if (memberInfo != nullptr)
 	{
 		members.emplace(identifier, memberInfo);
-		if (memberInfo->catType.isObjectType() && Tools::startsWith(identifier, "$"))
+		if (memberInfo->catType.isPointerToReflectableObjectType() && Tools::startsWith(identifier, "$"))
 		{
 			addDeferredMembers(memberInfo);
 		}

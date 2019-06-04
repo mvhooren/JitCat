@@ -27,7 +27,8 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 	base(base),
 	memberName(memberName),
 	memberInfo(nullptr),
-	type(CatGenericType::unknownType)
+	type(CatGenericType::unknownType),
+	assignableType(CatGenericType::unknownType)
 {
 }
 
@@ -37,7 +38,8 @@ jitcat::AST::CatMemberAccess::CatMemberAccess(const CatMemberAccess& other):
 	base(static_cast<CatTypedExpression*>(other.base->copy())),
 	memberName(other.memberName),
 	memberInfo(nullptr),
-	type(CatGenericType::unknownType)
+	type(CatGenericType::unknownType),
+	assignableType(CatGenericType::unknownType)
 {
 }
 
@@ -74,16 +76,12 @@ std::any CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType)
+std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext)
 {
 	std::any baseValue = base->execute(runtimeContext);
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		return memberInfo->getAssignableMemberReference(std::any_cast<Reflectable*>(baseValue), assignableType);
-	}
-	else
-	{
-		assignableType = AssignableType::None;
+		return memberInfo->getAssignableMemberReference(std::any_cast<Reflectable*>(baseValue));
 	}
 	assert(false);
 	return std::any();
@@ -94,18 +92,20 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 {
 	memberInfo = nullptr;
 	type = CatGenericType::unknownType;
+	assignableType = CatGenericType::unknownType;
 	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		CatGenericType baseType = base->getType();
-		if (!baseType.isObjectType())
+		if (!baseType.isPointerToReflectableObjectType())
 		{
 			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		memberInfo = baseType.getObjectType()->getMemberInfo(Tools::toLowerCase(memberName));
+		memberInfo = baseType.getPointeeType()->getObjectType()->getMemberInfo(Tools::toLowerCase(memberName));
 		if (memberInfo != nullptr)
 		{
 			type = memberInfo->catType;
+			assignableType = type.toPointer();
 			return true;
 		}
 		else
@@ -121,6 +121,12 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 const CatGenericType& CatMemberAccess::getType() const
 {
 	return type;
+}
+
+
+const CatGenericType& jitcat::AST::CatMemberAccess::getAssignableType() const
+{
+	return assignableType;
 }
 
 

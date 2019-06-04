@@ -32,9 +32,8 @@ inline std::any ContainerMemberInfo<T, U>::getMemberReference(Reflectable* base)
 
 
 template<typename T, typename U>
-inline std::any ContainerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any ContainerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
 {
-	assignableType = AssignableType::Pointer;
 	return getMemberReference(base);
 }
 
@@ -195,9 +194,8 @@ inline std::any ClassPointerMemberInfo<T, U>::getMemberReference(Reflectable* ba
 }
 
 template<typename T, typename U>
-inline std::any ClassPointerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any ClassPointerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
 {
-	assignableType = AssignableType::PointerPointer;
 	T* baseObject = static_cast<T*>(base);
 	if (baseObject != nullptr)
 	{
@@ -280,10 +278,9 @@ inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(Reflectable* bas
 
 
 template<typename T, typename U>
-inline std::any ClassObjectMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any ClassObjectMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
 {
 	//Not supported for now (would require implementing calling of operator= on target object)
-	assignableType = AssignableType::None;
 	return getMemberReference(base);
 }
 
@@ -339,11 +336,10 @@ inline std::any ClassUniquePtrMemberInfo<T, U>::getMemberReference(Reflectable* 
 
 
 template<typename T, typename U>
-inline std::any ClassUniquePtrMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any ClassUniquePtrMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
 {
 	//Cannot assing unique_ptr, this would transfer ownership and potentially delete the pointer at some point. Bad idea.
 	//The pointer may for example have come from another unique_ptr.
-	assignableType = AssignableType::None;
 	return std::any((U*)nullptr);
 }
 
@@ -383,9 +379,8 @@ inline std::any BasicTypeMemberInfo<T, U>::getMemberReference(Reflectable* base)
 
 
 template<typename T, typename U>
-inline std::any BasicTypeMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any BasicTypeMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
 {
-	assignableType = AssignableType::Pointer;
 	T* objectPointer = static_cast<T*>(base);
 	if (objectPointer != nullptr)
 	{

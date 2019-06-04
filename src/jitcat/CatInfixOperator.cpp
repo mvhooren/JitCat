@@ -89,8 +89,8 @@ const CatGenericType& CatInfixOperator::getType() const
 		case CatInfixOperatorType::NotEquals:
 			if ((lhsType.isScalarType() && rhsType.isScalarType())
 				|| lhsType == rhsType
-				|| (lhsType.isObjectType() && rhsType.isNullptrType())
-				|| (lhsType.isNullptrType() && rhsType.isObjectType()))
+				|| (lhsType.isPointerToReflectableObjectType() && rhsType.isNullptrType())
+				|| (lhsType.isNullptrType() && rhsType.isPointerToReflectableObjectType()))
 			{
 				return CatGenericType::boolType;
 			}

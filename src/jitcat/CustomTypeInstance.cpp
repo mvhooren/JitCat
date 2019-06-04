@@ -48,12 +48,12 @@ std::optional<std::any> CustomTypeInstance::getMemberAnyValue(const std::string&
 }
 
 
-std::optional<std::any> CustomTypeInstance::getMemberAnyValueReference(const std::string& memberName, AssignableType& assignableType)
+std::optional<std::any> CustomTypeInstance::getMemberAnyValueReference(const std::string& memberName)
 {
 	TypeMemberInfo* memberInfo = getMemberInfo(memberName);
 	if (memberInfo != nullptr)
 	{
-		return memberInfo->getAssignableMemberReference(this, assignableType);
+		return memberInfo->getAssignableMemberReference(this);
 	}
 	return std::optional<std::any>();
 }

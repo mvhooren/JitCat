@@ -81,11 +81,10 @@ inline bool ExpressionAssignment<ExpressionT>::assignInterpretedValue(CatRuntime
 	if (parseResult->astRootNode != nullptr && parseResult->getNode<AST::CatTypedExpression>()->isAssignable())
 	{
 		jitcat::AST::CatAssignableExpression* assignable = parseResult->getNode<AST::CatAssignableExpression>();
-		Reflection::AssignableType assignableType = Reflection::AssignableType::None;
-		std::any target = assignable->executeAssignable(runtimeContext, assignableType);
+		std::any target = assignable->executeAssignable(runtimeContext);
 		std::any anyValue = TypeTraits<ExpressionT>::getCatValue(value);
 		CatGenericType expectedType = getExpectedCatType();
-		jitcat::AST::ASTHelper::doAssignment(target, anyValue, expectedType, expectedType, assignableType, Reflection::AssignableType::None);
+		jitcat::AST::ASTHelper::doAssignment(target, anyValue, assignable->getAssignableType(), expectedType);
 		return true;
 	}
 	return false;

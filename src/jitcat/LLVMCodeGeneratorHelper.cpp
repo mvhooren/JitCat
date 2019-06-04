@@ -179,13 +179,14 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 
 llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 {
-	if		(type.isFloatType())	return LLVMTypes::floatType;
-	else if (type.isIntType())		return LLVMTypes::intType;
-	else if (type.isBoolType())		return LLVMTypes::boolType;
-	else if (type.isStringType())	return LLVMTypes::stringPtrType;
-	else if (type.isObjectType())	return LLVMTypes::pointerType;
-	else if (type.isContainerType())return LLVMTypes::pointerType;
-	else							return LLVMTypes::voidType;
+	if		(type.isFloatType())						return LLVMTypes::floatType;
+	else if (type.isIntType())							return LLVMTypes::intType;
+	else if (type.isBoolType())							return LLVMTypes::boolType;
+	else if (type.isStringType())						return LLVMTypes::stringPtrType;
+	else if (type.isReflectableHandleType())			return LLVMTypes::pointerType;
+	else if (type.isPointerType())						return LLVMTypes::pointerType;
+	else if (type.isContainerType())					return LLVMTypes::pointerType;
+	else												return LLVMTypes::voidType;
 }
 
 llvm::Type* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& type)

@@ -25,7 +25,8 @@ CatIdentifier::CatIdentifier(const std::string& name, const Tokenizer::Lexeme& l
 	name(name),
 	memberInfo(nullptr),
 	scopeId(InvalidScopeID),
-	type(CatGenericType::unknownType)
+	type(CatGenericType::unknownType),
+	assignableType(CatGenericType::unknownType)
 {
 }
 
@@ -35,7 +36,8 @@ jitcat::AST::CatIdentifier::CatIdentifier(const CatIdentifier& other):
 	name(other.name),
 	memberInfo(nullptr),
 	scopeId(InvalidScopeID),
-	type(CatGenericType::unknownType)
+	type(CatGenericType::unknownType),
+	assignableType(CatGenericType::unknownType)
 {
 }
 
@@ -49,6 +51,12 @@ CatASTNode* jitcat::AST::CatIdentifier::copy() const
 const CatGenericType& CatIdentifier::getType() const
 {
 	return type;
+}
+
+
+const CatGenericType& jitcat::AST::CatIdentifier::getAssignableType() const
+{
+	return assignableType;
 }
 
 
@@ -90,10 +98,10 @@ std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext, AssignableType& assignableType)
+std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext)
 {
 	Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
-	return memberInfo->getAssignableMemberReference(rootObject, assignableType);
+	return memberInfo->getAssignableMemberReference(rootObject);
 }
 
 
@@ -102,6 +110,7 @@ bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 	std::string lowerName = Tools::toLowerCase(name);
 	memberInfo = nullptr;
 	type = CatGenericType::unknownType;
+	assignableType = CatGenericType::unknownType;
 	if (compiletimeContext != nullptr)
 	{
 		memberInfo = compiletimeContext->findVariable(lowerName, scopeId);
@@ -109,8 +118,9 @@ bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 	if (memberInfo != nullptr)
 	{
 		type = memberInfo->catType;
+		assignableType = type.toPointer(TypeOwnershipSemantics::Weak, type.isWritable(), false);
 	}
-	if (type.isValidType())
+	if (type.isValidType() && assignableType.isValidType())
 	{
 		return true;
 	}

@@ -92,11 +92,11 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 						addOptionsFromBuiltIn(results, memberPrefix, expression, completionOffset);
 					}
 				}
-				else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isObjectType())
+				else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isPointerToReflectableObjectType())
 				{
 					addOptionsFromTypeInfo(currentMemberInfo->catType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
-				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isObjectType())
+				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isPointerToReflectableObjectType())
 				{
 					addOptionsFromTypeInfo(currentFunctionInfo->returnType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
@@ -114,7 +114,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					currentFunctionInfo = context->findFunction(lowercaseIdentifier, scopeId);
 				}
 			}
-			else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isObjectType())
+			else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isPointerToReflectableObjectType())
 			{
 				TypeMemberInfo* currentMember = currentMemberInfo;
 				currentMemberInfo = currentMemberInfo->catType.getObjectType()->getMemberInfo(lowercaseIdentifier);
@@ -128,7 +128,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					}
 				}
 			}
-			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isObjectType())
+			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isPointerToReflectableObjectType())
 			{
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
 				bool isInheritedHostClass = false;

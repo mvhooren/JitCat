@@ -25,7 +25,7 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable, bool constant):
+CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, CatGenericType* pointee, bool writable, bool constant):
 	specificType(specificType),
 	basicType(basicType),
 	nestedType(nestedType),
@@ -35,7 +35,10 @@ CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, T
 	writable(writable),
 	constant(constant)
 {
-
+	if (pointee != nullptr)
+	{
+		pointeeType.reset(new CatGenericType(*pointee));
+	}
 }
 
 
@@ -65,11 +68,11 @@ CatGenericType::CatGenericType():
 }
 
 
-CatGenericType::CatGenericType(TypeInfo* objectType, Reflection::TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant):
-	specificType(SpecificType::Object),
+CatGenericType::CatGenericType(TypeInfo* reflectableType, bool writable, bool constant):
+	specificType(SpecificType::ReflectableObject),
 	basicType(BasicType::None),
-	nestedType(objectType),
-	ownershipSemantics(ownershipSemantics),
+	nestedType(reflectableType),
+	ownershipSemantics(TypeOwnershipSemantics::Value),
 	containerType(ContainerType::None),
 	containerManipulator(nullptr),
 	writable(writable),
@@ -91,6 +94,20 @@ CatGenericType::CatGenericType(ContainerType containerType, Reflection::Containe
 }
 
 
+jitcat::CatGenericType::CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable, bool constant) :
+	specificType(isHandle ? SpecificType::ReflectableHandle : SpecificType::Pointer),
+	basicType(BasicType::None),
+	nestedType(nullptr),
+	ownershipSemantics(ownershipSemantics),
+	containerType(ContainerType::None),
+	containerManipulator(nullptr),
+	writable(writable),
+	constant(constant),
+	pointeeType(new CatGenericType(pointee))
+{
+}
+
+
 CatGenericType::CatGenericType(const CatGenericType& other):
 	specificType(other.specificType),
 	basicType(other.basicType),
@@ -101,6 +118,10 @@ CatGenericType::CatGenericType(const CatGenericType& other):
 	writable(other.writable),
 	constant(other.constant)
 {
+	if (other.pointeeType.get() != nullptr)
+	{
+		pointeeType.reset(new CatGenericType(*other.pointeeType.get()));
+	}
 }
 
 
@@ -114,6 +135,14 @@ CatGenericType& CatGenericType::operator=(const CatGenericType& other)
 	containerManipulator = other.containerManipulator;
 	writable = other.writable;
 	constant = other.constant;
+	if (other.pointeeType != nullptr)
+	{
+		pointeeType.reset(new CatGenericType(*other.pointeeType.get()));
+	}
+	else
+	{
+		pointeeType.reset(nullptr);
+	}
 	return *this;
 }
 
@@ -132,15 +161,19 @@ bool CatGenericType::operator!=(const CatGenericType& other) const
 
 bool jitcat::CatGenericType::compare(const CatGenericType& other, bool includeOwnershipSemantics) const
 {
-	if (specificType == other.specificType && (!includeOwnershipSemantics || ownershipSemantics == other.ownershipSemantics))
+	if ((specificType == other.specificType 
+		|| (specificType == SpecificType::ReflectableHandle && other.specificType == SpecificType::Pointer)
+		|| (specificType == SpecificType::Pointer && other.specificType == SpecificType::ReflectableHandle))
+		&& (!includeOwnershipSemantics || ownershipSemantics == other.ownershipSemantics))
 	{
 		switch (specificType)
 		{
 		default:
-		case SpecificType::None:		return true;
-		case SpecificType::Basic:		return basicType == other.basicType;
-		case SpecificType::Object:		return nestedType->getTypeName() == other.nestedType->getTypeName() || isNullptrType() || other.isNullptrType();
-		case SpecificType::Container:	return containerType == other.containerType && containerManipulator == other.containerManipulator;
+		case SpecificType::None:				return true;
+		case SpecificType::Basic:				return basicType == other.basicType;
+		case SpecificType::Pointer:				return pointeeType->compare(*other.getPointeeType(), includeOwnershipSemantics);
+		case SpecificType::ReflectableObject:	return nestedType == other.nestedType || isNullptrType() || other.isNullptrType();
+		case SpecificType::Container:			return containerType == other.containerType && containerManipulator == other.containerManipulator;
 		}
 	}
 	else
@@ -158,17 +191,12 @@ bool CatGenericType::isUnknown() const
 
 bool CatGenericType::isValidType() const
 {
-	return specificType != SpecificType::Error 
-		   && specificType != SpecificType::None 
-		   && (specificType != SpecificType::Basic || (basicType != BasicType::None))
-		   && (specificType != SpecificType::Object || nestedType != nullptr)
-		   && (specificType != SpecificType::Container || containerManipulator != nullptr);
-}
-
-
-bool CatGenericType::isError() const
-{
-	return specificType == SpecificType::Error;
+	return		specificType != SpecificType::None
+			&& (specificType != SpecificType::Basic || (basicType != BasicType::None))
+			&& (specificType != SpecificType::ReflectableObject || nestedType != nullptr)
+			&& (specificType != SpecificType::Container || containerManipulator != nullptr)
+			&& (specificType != SpecificType::Pointer || (pointeeType.get() != nullptr && pointeeType->isValidType()))
+			&& (specificType != SpecificType::ReflectableHandle || (pointeeType.get() != nullptr && pointeeType->isValidType()));
 }
 
 
@@ -220,9 +248,52 @@ bool CatGenericType::isVoidType() const
 }
 
 
-bool CatGenericType::isObjectType() const
+bool CatGenericType::isReflectableObjectType() const
 {
-	return specificType == SpecificType::Object;
+	return specificType == SpecificType::ReflectableObject;
+}
+
+
+bool jitcat::CatGenericType::isReflectableHandleType() const
+{
+	return specificType == SpecificType::ReflectableHandle;
+}
+
+
+bool jitcat::CatGenericType::isPointerToReflectableObjectType() const
+{
+	return specificType == SpecificType::Pointer && pointeeType->isReflectableObjectType();
+}
+
+
+bool jitcat::CatGenericType::isReflectablePointerOrHandle() const
+{
+	return (specificType == SpecificType::Pointer && pointeeType->isReflectableObjectType()) 
+		    || specificType == SpecificType::ReflectableHandle;
+}
+
+
+bool CatGenericType::isStructType() const
+{
+	return specificType == SpecificType::StructObject;
+}
+
+
+bool jitcat::CatGenericType::isPointerType() const
+{
+	return specificType == SpecificType::Pointer;
+}
+
+
+bool jitcat::CatGenericType::isPointerToPointerType() const
+{
+	return specificType == SpecificType::Pointer && pointeeType->isPointerType();
+}
+
+
+bool jitcat::CatGenericType::isPointerToHandleType() const
+{
+	return specificType == SpecificType::Pointer && pointeeType->isReflectableHandleType();
 }
 
 
@@ -270,24 +341,35 @@ bool CatGenericType::isConst() const
 
 CatGenericType CatGenericType::toUnmodified() const
 {
-	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, false, false);
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, pointeeType.get(), false, false);
 }
 
 
 CatGenericType CatGenericType::toUnwritable() const
 {
-	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, false, constant);
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, pointeeType.get(), false, constant);
 }
 
 
 CatGenericType CatGenericType::toWritable() const
 {
-	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, true, constant);
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, pointeeType.get(), true, constant);
 }
 
 CatGenericType jitcat::CatGenericType::toValueOwnership() const
 {
-	return CatGenericType(specificType, basicType, nestedType, TypeOwnershipSemantics::Value, containerType, containerManipulator, true, constant);
+	return CatGenericType(specificType, basicType, nestedType, TypeOwnershipSemantics::Value, containerType, containerManipulator, pointeeType.get(), true, constant);
+}
+
+
+CatGenericType jitcat::CatGenericType::toPointer(TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant) const
+{
+	return CatGenericType(*this, ownershipSemantics, false, writable, constant);
+}
+
+CatGenericType jitcat::CatGenericType::toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant) const
+{
+	return CatGenericType(*this, ownershipSemantics, true, writable, constant);
 }
 
 
@@ -312,7 +394,7 @@ const CatGenericType& CatGenericType::getContainerItemType() const
 
 const char* CatGenericType::getObjectTypeName() const
 {
-	if (specificType == SpecificType::Object
+	if (specificType == SpecificType::ReflectableObject
 		&& nestedType != nullptr)
 	{
 		return nestedType->getTypeName();
@@ -395,10 +477,11 @@ std::string CatGenericType::toString() const
 {
 	switch (specificType)
 	{
-		default:						return "Unknown";
-		case SpecificType::Error:		return "Error";
-		case SpecificType::Basic:		return toString(basicType);
-		case SpecificType::Object:		return nestedType->getTypeName();
+		default:								return "Unknown";
+		case SpecificType::Basic:				return toString(basicType);
+		case SpecificType::ReflectableObject:	return nestedType->getTypeName();
+		case SpecificType::Pointer:				return Tools::append("Pointer to ", pointeeType->toString());
+		case SpecificType::ReflectableHandle:	return Tools::append("Handle to ", pointeeType->toString());
 		case SpecificType::Container:
 			if (containerType == ContainerType::Vector)
 			{
@@ -413,6 +496,12 @@ std::string CatGenericType::toString() const
 				return "Unknown";
 			}
 	}
+}
+
+
+CatGenericType* jitcat::CatGenericType::getPointeeType() const
+{
+	return pointeeType.get();
 }
 
 
@@ -442,7 +531,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 				case BasicType::String:	return std::any(reinterpret_cast<std::string*>(pointer));
 			}
 		} break;
-		case SpecificType::Object:
+		case SpecificType::ReflectableObject:
 		{
 			return nestedType->getTypeCaster()->cast(pointer);
 		} break;
@@ -469,7 +558,7 @@ std::any CatGenericType::createDefault() const
 				case BasicType::String:	return std::string();
 			}
 		} break;
-		case SpecificType::Object:
+		case SpecificType::ReflectableObject:
 		{
 			return nestedType->getTypeCaster()->getNull();
 		} break;
@@ -566,7 +655,7 @@ void CatGenericType::printValue(std::any& value)
 				case BasicType::String:	CatLog::log("\""); CatLog::log(std::any_cast<std::string>(value)); CatLog::log("\""); break;
 			}
 		} break;
-		case SpecificType::Object:
+		case SpecificType::ReflectableObject:
 		{
 			 CatLog::log(Tools::makeString(std::any_cast<Reflectable*>(value))); 		
 		} break;
@@ -672,7 +761,7 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 						return CatGenericType::unknownType;
 					}
 					break;
-				case SpecificType::Object:
+				case SpecificType::ReflectableObject:
 					if (objectTypeName != "")
 					{
 						TypeInfo* objectType = XMLHelper::findOrCreateTypeInfo(objectTypeName, typeInfos);
@@ -741,7 +830,7 @@ void CatGenericType::writeToXML(std::ofstream& xmlFile, const char* linePrefixCh
 		}
 		xmlFile << linePrefixCharacters << "<ContainerItemTypeName>" << getContainerItemType().getObjectTypeName() << "</ContainerItemTypeName>\n";		
 	}
-	else if (isObjectType())
+	else if (isReflectableObjectType())
 	{
 		xmlFile << linePrefixCharacters << "<Type>ObjectType</Type>\n";		
 		xmlFile << linePrefixCharacters << "<ObjectTypeName>" << getObjectTypeName() << "</ObjectTypeName>\n";		
@@ -816,11 +905,10 @@ const char* CatGenericType::toString(SpecificType type)
 	switch (type)
 	{
 		default:
-		case SpecificType::None:		return "none";
-		case SpecificType::Error:		return "error";
-		case SpecificType::Basic:		return "basic";
-		case SpecificType::Object:		return "object";
-		case SpecificType::Container:	return "container";
+		case SpecificType::None:				return "none";
+		case SpecificType::Basic:				return "basic";
+		case SpecificType::ReflectableObject:	return "object";
+		case SpecificType::Container:			return "container";
 	}
 }
 
@@ -849,5 +937,5 @@ const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Floa
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool);
 const CatGenericType CatGenericType::stringType		= CatGenericType(BasicType::String);
 const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void);
-const CatGenericType CatGenericType::nullptrType	= CatGenericType(new TypeInfo("nullptr", new NullptrTypeCaster()), TypeOwnershipSemantics::Value);
+const CatGenericType CatGenericType::nullptrType	= CatGenericType(new TypeInfo("nullptr", new NullptrTypeCaster()), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();

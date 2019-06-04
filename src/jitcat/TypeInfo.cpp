@@ -128,7 +128,7 @@ const CatGenericType& TypeInfo::getType(const std::vector<std::string>& indirect
 					}
 				}
 			}
-			else if (memberInfo->catType.isObjectType())
+			else if (memberInfo->catType.isPointerToReflectableObjectType())
 			{
 				if (indirectionListSize > offset + 1)
 				{
@@ -225,7 +225,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 			enumerator->addVariable(iter->second->memberName, catTypeName, iter->second->catType.isWritable(), iter->second->catType.isConst());
 			break;
 		}
-		else if (memberType.isObjectType())
+		else if (memberType.isPointerToReflectableObjectType())
 		{
 			std::string nestedTypeName = memberType.toString();
 			if (allowEmptyStructs || memberType.getObjectType()->getMembers().size() > 0)

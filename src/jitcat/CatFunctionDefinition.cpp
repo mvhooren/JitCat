@@ -196,9 +196,8 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 		int i = 0;
 		for (auto& iter : parameterAssignables)
 		{
-			AssignableType assignableType = AssignableType::None;
-			std::any target = iter->executeAssignable(runtimeContext, assignableType);
-			ASTHelper::doAssignment(target, arguments[i], iter->getType(), iter->getType(), assignableType, AssignableType::None);
+			std::any target = iter->executeAssignable(runtimeContext);
+			ASTHelper::doAssignment(target, arguments[i], iter->getAssignableType(), iter->getType());
 			i++;
 		}
 	}

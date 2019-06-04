@@ -190,18 +190,18 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				parseResult->success = false;
  				errorManager->compiledWithError(std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
 			}
-			if (expectedType.isObjectType())
+			if (expectedType.isPointerToReflectableObjectType())
 			{
-				const std::string typeName = expectedType.getObjectTypeName();
-				if (!valueType.isObjectType())
+				const std::string typeName = expectedType.getPointeeType()->getObjectTypeName();
+				if (!valueType.isPointerToReflectableObjectType())
 				{
 					parseResult->success = false;
 					errorManager->compiledWithError(Tools::append("Expected a ", typeName), errorContext, context->getContextName(), expressionLexeme);
 				}
-				else if (valueType.getObjectTypeName() != typeName)
+				else if (valueType.getPointeeType()->getObjectTypeName() != typeName)
 				{
 					parseResult->success = false;
-					errorManager->compiledWithError(Tools::append("Expected a ", typeName, ", got a ", valueType.getObjectTypeName()), errorContext, context->getContextName(), expressionLexeme);
+					errorManager->compiledWithError(Tools::append("Expected a ", typeName, ", got a ", valueType.getPointeeType()->getObjectTypeName()), errorContext, context->getContextName(), expressionLexeme);
 				}
 			}
 			else if (expectedType.isVoidType() && valueType.isVoidType())

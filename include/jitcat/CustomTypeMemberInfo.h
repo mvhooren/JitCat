@@ -26,7 +26,7 @@ namespace jitcat::Reflection
 		CustomBasicTypeMemberInfo(const std::string& memberName, unsigned int memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
 
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) override final;
+		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
 		unsigned long long getMemberOffset() const;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
@@ -43,7 +43,7 @@ namespace jitcat::Reflection
 		CustomTypeObjectMemberInfo(const std::string& memberName, unsigned int memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
 
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base, AssignableType& assignableType) override final;
+		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
 		unsigned long long getMemberOffset() const;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;

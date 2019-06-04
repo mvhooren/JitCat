@@ -222,7 +222,6 @@ set(Source_Reflection
 )
 
 set(Source_Reflection_Enums
-	${JitCatHeaderPath}/AssignableType.h
 	ContainerType.cpp
 	${JitCatHeaderPath}/ContainerType.h
 	${JitCatHeaderPath}/MemberFlags.h

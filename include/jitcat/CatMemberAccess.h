@@ -30,9 +30,10 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
-		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext, Reflection::AssignableType& assignableType) override final;
+		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual const CatGenericType& getType() const override final;
+		virtual const CatGenericType& getAssignableType() const override final;
 		virtual bool isConst() const override final;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
 
@@ -45,6 +46,7 @@ namespace jitcat::AST
 		std::unique_ptr<CatTypedExpression> base;
 		Reflection::TypeMemberInfo* memberInfo;
 		CatGenericType type;
+		CatGenericType assignableType;
 		const std::string memberName;
 	};
 

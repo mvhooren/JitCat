@@ -665,7 +665,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 		llvm::Value* stringObjectAddress = helper->createIntPtrConstant(reinterpret_cast<std::uintptr_t>(&stringReference), "stringLiteralAddress");
 		return builder->CreateIntToPtr(stringObjectAddress, LLVMTypes::stringPtrType);			
 	}
-	else if (literalType.isObjectType())
+	else if (literalType.isPointerToReflectableObjectType())
 	{
 		Reflectable* reflectable = std::any_cast<Reflectable*>(literal->getValue());
 		llvm::Value* reflectableAddress = helper->createIntPtrConstant(reinterpret_cast<std::uintptr_t>(reflectable), "literalObjectAddress");

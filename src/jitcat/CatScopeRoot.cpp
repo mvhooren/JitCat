@@ -58,7 +58,7 @@ bool CatScopeRoot::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionEr
 	type = CatGenericType::unknownType;
 	if (compiletimeContext != nullptr)
 	{
-		type = CatGenericType(compiletimeContext->getScopeType(scopeId), Reflection::TypeOwnershipSemantics::Weak);
+		type = CatGenericType(compiletimeContext->getScopeType(scopeId)).toPointer(Reflection::TypeOwnershipSemantics::Weak);
 	}
 	if (type.isValidType())
 	{

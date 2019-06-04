@@ -17,7 +17,7 @@ inline std::any TypeMemberInfo::getMemberReference(Reflectable* base)
 }
 
 
-inline std::any TypeMemberInfo::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any TypeMemberInfo::getAssignableMemberReference(Reflectable* base)
 {
 	return std::any();
 }
@@ -53,9 +53,9 @@ inline std::any DeferredMemberInfo::getMemberReference(Reflectable* base)
 }
 
 
-inline std::any DeferredMemberInfo::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any DeferredMemberInfo::getAssignableMemberReference(Reflectable* base)
 {
-	return deferredMember->getAssignableMemberReference(std::any_cast<Reflectable*>(baseMember->getMemberReference(base)), assignableType);
+	return deferredMember->getAssignableMemberReference(std::any_cast<Reflectable*>(baseMember->getMemberReference(base)));
 }
 
 

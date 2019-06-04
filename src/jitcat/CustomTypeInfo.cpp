@@ -99,7 +99,7 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 			memcpy(&string, &data[offset], sizeof(std::string*));
 			delete string;
 		}
-		else if (iter->second->catType.isObjectType())
+		else if (iter->second->catType.isReflectableHandleType())
 		{
 			unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
 			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(data + offset);
@@ -228,7 +228,7 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 		new ((*iter)->data + offset) ReflectableHandle(defaultValue);
 	}
 	new (data) ReflectableHandle(defaultValue);
-	TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, ownershipSemantics, isWritable, isConst));
+	TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
 	if (Tools::startsWith(memberName, "$"))
@@ -242,11 +242,11 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 
 TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string& memberName, const CatGenericType& type)
 {
-	if		(type.isFloatType())	return addFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
-	else if (type.isIntType())		return addIntMember(memberName, 0, type.isWritable(), type.isConst());
-	else if (type.isBoolType())		return addBoolMember(memberName, false, type.isWritable(), type.isConst());
-	else if (type.isStringType())	return addStringMember(memberName, "", type.isWritable(), type.isConst());
-	else if (type.isObjectType())	return addObjectMember(memberName, nullptr, type.getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
+	if		(type.isFloatType())						return addFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
+	else if (type.isIntType())							return addIntMember(memberName, 0, type.isWritable(), type.isConst());
+	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
+	else if (type.isStringType())						return addStringMember(memberName, "", type.isWritable(), type.isConst());
+	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else							return nullptr;
 }
 
@@ -359,7 +359,7 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned
 					std::string* stringCopy = new std::string(*originalString);
 					memcpy(instanceData + offset, &stringCopy, sizeof(std::string*));
 				}
-				else if (iter->second->catType.isObjectType())
+				else if (iter->second->catType.isPointerToReflectableObjectType())
 				{
 					unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
 					ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(&otherData[offset]);

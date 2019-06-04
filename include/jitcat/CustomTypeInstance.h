@@ -8,7 +8,6 @@
 #pragma once
 
 
-#include "jitcat/AssignableType.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/Reflectable.h"
@@ -47,7 +46,7 @@ namespace jitcat::Reflection
 
 		std::any getValue(TypeMemberInfo* memberInfo);
 		std::optional<std::any> getMemberAnyValue(const std::string& memberName);
-		std::optional<std::any> getMemberAnyValueReference(const std::string& memberName, AssignableType& assignableType);
+		std::optional<std::any> getMemberAnyValueReference(const std::string& memberName);
 
 	public:
 		virtual ~CustomTypeInstance();
@@ -73,13 +72,12 @@ namespace jitcat::Reflection
 	template<typename MemberT>
 	inline bool CustomTypeInstance::setMemberValue(const std::string& memberName, const MemberT& value)
 	{
-		AssignableType type = AssignableType::None;
-		auto result = getMemberAnyValueReference(memberName, type);
+		auto result = getMemberAnyValueReference(memberName);
 		if (result.has_value())
 		{
 			TypeMemberInfo* memberInfo = getMemberInfo(memberName);
 			std::any anyValue = TypeTraits<MemberT>::getCatValue(value);
-			jitcat::AST::ASTHelper::doAssignment(*result, anyValue, memberInfo->catType, memberInfo->catType, type, AssignableType::None);
+			jitcat::AST::ASTHelper::doAssignment(*result, anyValue, memberInfo->catType.toPointer(), TypeTraits<MemberT>::toGenericType());
 			return true;
 		}
 		return false;

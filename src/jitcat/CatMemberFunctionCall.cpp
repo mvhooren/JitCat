@@ -119,12 +119,12 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		ASTHelper::updatePointerIfChanged(base, base->constCollapse(compiletimeContext));
 
 		CatGenericType baseType = base->getType();
-		if (!baseType.isObjectType())
+		if (!baseType.isPointerToReflectableObjectType())
 		{
 			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		memberFunctionInfo = baseType.getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
+		memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
 		if (memberFunctionInfo != nullptr)
 		{
 			std::size_t numArgumentsSupplied = arguments->getNumArguments();

@@ -42,9 +42,8 @@ inline std::any CustomBasicTypeMemberInfo<T>::getMemberReference(Reflectable* ba
 
 
 template<typename T>
-inline std::any CustomBasicTypeMemberInfo<T>::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any CustomBasicTypeMemberInfo<T>::getAssignableMemberReference(Reflectable* base)
 {
-	assignableType = AssignableType::Pointer;
 	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(base);
 	if (baseObject != nullptr)
 	{
@@ -207,9 +206,8 @@ inline std::any CustomTypeObjectMemberInfo::getMemberReference(Reflectable* base
 }
 
 
-inline std::any CustomTypeObjectMemberInfo::getAssignableMemberReference(Reflectable* base, AssignableType& assignableType)
+inline std::any CustomTypeObjectMemberInfo::getAssignableMemberReference(Reflectable* base)
 {
-	assignableType = AssignableType::HandlePointer;
 	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
 	if (baseObject != nullptr)
 	{

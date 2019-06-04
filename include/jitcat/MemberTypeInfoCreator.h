@@ -22,7 +22,7 @@ namespace jitcat::Reflection
 		{
 			static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
 			TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
-			return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, TypeOwnershipSemantics::Weak, false, isConst));
+			return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, false, isConst));
 		}
 	};
 
@@ -92,7 +92,7 @@ namespace jitcat::Reflection
 		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<U> ClassType::* member, bool isConst, bool isWritable) 
 		{
 			TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-			return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, TypeOwnershipSemantics::Weak, false, isConst));
+			return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, false, isConst));
 		}
 	};
 
@@ -105,7 +105,7 @@ namespace jitcat::Reflection
 		static TypeMemberInfo* getMemberInfo(const std::string& memberName, U* ClassType::* member, bool isConst, bool isWritable) 
 		{
 			TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-			return new ClassPointerMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, TypeOwnershipSemantics::Weak, isWritable, isConst));
+			return new ClassPointerMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, isWritable, isConst));
 		}
 	};
 

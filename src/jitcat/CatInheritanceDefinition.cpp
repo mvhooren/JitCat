@@ -78,7 +78,7 @@ bool jitcat::AST::CatInheritanceDefinition::typeCheck(CatRuntimeContext* compile
 	else
 	{
 		CatGenericType inheritedType = type->getType();
-		if (!inheritedType.isObjectType())
+		if (!inheritedType.isReflectableObjectType())
 		{
 			errorManager->compiledWithError(Tools::append("Inheritance only supports object types, ", inheritedType.toString(), " not supported."), this, compiletimeContext->getContextName(), getLexeme());
 			return false;
