@@ -17,41 +17,40 @@ namespace jitcat::LLVM
 {
 	class LLVMMemoryManager;
 
-	enum CodeSectionMemoryAllocationStatus
+	enum class SectionPurpose
+	{
+		Code,
+		Data
+	};
+	enum class SectionMemoryAllocationStatus
 	{
 		Pending,
-		//ReadyForFinalization,
 		Finalized,
 		Freed
 	};
-	struct CodeSectionMemoryBlock;
-	struct CodeSectionMemoryAllocation
+	struct SectionMemoryBlock;
+	struct SectionMemoryAllocation
 	{
-		CodeSectionMemoryBlock* block;
-		CodeSectionMemoryAllocationStatus status;
+		SectionMemoryBlock* block;
+		SectionMemoryAllocationStatus status;
 		uint8_t* data;
 		std::size_t size;
+		std::size_t alignment;
 	};
-	struct CodeSectionMemoryBlock
+	struct SectionMemoryBlock
 	{
+		SectionPurpose purpose;
 		uint8_t* block;
 		std::size_t blockSize;
 		std::size_t usedSpace;
 		llvm::sys::MemoryBlock llvmMemoryBlock;
-		std::vector<std::unique_ptr<CodeSectionMemoryAllocation>> allocations;
+		std::vector<std::unique_ptr<SectionMemoryAllocation>> allocations;
 	};
 
 	//Manages all memory used for storing executable code and data sections by a single expression or source file.
 	//This allocator attempts to reduce the size of memory allocations by compacting multiple expressions' code and data segment into a single page.
 	class LLVMExpressionMemoryAllocator: public llvm::RTDyldMemoryManager
 	{
-		struct DataSectionAllocation
-		{
-			uint8_t* data;
-			uint8_t* alignedData;
-			std::size_t size;
-			unsigned int alignment;
-		};
 	public:
 		LLVMExpressionMemoryAllocator(LLVMMemoryManager* memoryManager);
 		LLVMExpressionMemoryAllocator(const LLVMExpressionMemoryAllocator&) = delete;
@@ -94,18 +93,14 @@ namespace jitcat::LLVM
 		//for re-use untill all allocators that share the page have freed their memory.
 		void freeMemory();
 
-		//This must be called by the expression before any code is executed.
-		//It will change memory permissions to executable and read-only for all the pages that this allocator allocated memory in.
-		//Any other LLVMExpressionMemoryAllocators that shared pages with this allocator will also have their code section finalized.
-		//If another LLVMExpressionMemoryAllocator that shared a page with this allocator has not called finalizeMemory yet, an error will be generated.
-		//void finalizeExpressionMemory();
-
+		//Get the llvm memory block that was last allocated for code.
+		llvm::sys::MemoryBlock* getLastCodeBlock() const;
 
 	private:
 		LLVMMemoryManager* memoryManager;
 		//Data sections are just allocated directly and stored in this vector since we do not need to set page permissions (read only data is allocated as read/write).
-		std::vector<DataSectionAllocation> dataSectionMemoryAllocations;
-		std::vector<CodeSectionMemoryAllocation*> codeSectionMemoryAllocations;
+		std::vector<SectionMemoryAllocation*> dataSectionMemoryAllocations;
+		std::vector<SectionMemoryAllocation*> codeSectionMemoryAllocations;
 	};
 
 
@@ -118,15 +113,16 @@ namespace jitcat::LLVM
 		//Allocate a read/write code section with its status set to pending.
 		//When the caller is done writing code into the code section, it should call markCodeSectionReadyForFinalization.
 		//When the caller then wants to execute the code, it should call finalizeCodeSection.
-		CodeSectionMemoryAllocation* allocateCodeSection(uintptr_t size, unsigned int alignment);
+		SectionMemoryAllocation* allocateCodeSection(uintptr_t size, unsigned int alignment, LLVMExpressionMemoryAllocator* allocator);
+		SectionMemoryAllocation* allocateDataSection(uintptr_t size, unsigned int alignment, LLVMExpressionMemoryAllocator* allocator);
 
-		//Marks the code section as ready for finalization.
-		//void markCodeSectionReadyForFinalization(CodeSectionMemoryAllocation* allocation);
-
-		//Will set execution permission for the code section's memory and the memory for any other code sections that share pages with this allocation.
+		//If a code section is passed, will set execution permission for the code section's memory and the memory for any other code sections that share pages with this allocation.
 		//If another code section shares a page with this allocation and that other code section is not yet marked ready for finalization, an error is generated.
-		void finalizeCodeSection(CodeSectionMemoryAllocation* allocation);
-		void freeCodeSection(CodeSectionMemoryAllocation* allocation);
+		//If a data section is passed, the data page will be set to read only once there are no more pending data sections.
+		void finalizeSection(SectionMemoryAllocation* allocation);
+
+		void freeCodeSection(SectionMemoryAllocation* allocation);
+		void freeDataSection(SectionMemoryAllocation* allocation);
 
 		//Get the total size of all code sections
 		std::size_t getAllocatedCodeMemory();
@@ -134,14 +130,23 @@ namespace jitcat::LLVM
 		std::size_t getReservedCodeMemory();
 
 	private:
-		void updateBlockPermissions(CodeSectionMemoryBlock* block);
+		static void updateBlockPermissions(SectionMemoryBlock* block);
+
+		static SectionMemoryAllocation* alloccateFromSection(uintptr_t size, unsigned int alignment, LLVMExpressionMemoryAllocator* allocator, SectionPurpose sectionPurpose,
+															 std::vector<std::unique_ptr<SectionMemoryBlock>>& blocks, 
+															 std::map<std::size_t, std::multimap<std::size_t, SectionMemoryAllocation*>>& freedAllocations);
 
 	private:
-		std::vector<std::unique_ptr<CodeSectionMemoryBlock>> blocks;
-		//A map of freed allocations that allows for re-use.
-		std::multimap<std::size_t, CodeSectionMemoryAllocation*> freedAllocations;
-		//The maximum difference in size between an allocation request and a re-used CodeSectionMemoryAllocation.
-		const int maxReAllocationSizeDifference;
+		std::vector<std::unique_ptr<SectionMemoryBlock>> codeSectionBlocks;
+		std::vector<std::unique_ptr<SectionMemoryBlock>> dataSectionBlocks;
+
+		//A map of freed code section allocations that allows for re-use.
+		std::map<std::size_t, std::multimap<std::size_t, SectionMemoryAllocation*>> freedCodeSectionAllocations;
+		//A map of freed data section allocations that allows for re-use.
+		std::map<std::size_t, std::multimap<std::size_t, SectionMemoryAllocation*>> freedDataSectionAllocations;
+
+		//The maximum difference in size between an allocation request and a re-used SectionMemoryAllocation.
+		static const int maxReAllocationSizeDifference;
 	};
 
 }

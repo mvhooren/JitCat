@@ -21,7 +21,7 @@ LLVMExpressionMemoryAllocator::~LLVMExpressionMemoryAllocator()
 
 uint8_t* jitcat::LLVM::LLVMExpressionMemoryAllocator::allocateCodeSection(uintptr_t size, unsigned alignment, unsigned sectionID, llvm::StringRef sectionName)
 {
-	CodeSectionMemoryAllocation* allocation = memoryManager->allocateCodeSection(size, alignment);
+	SectionMemoryAllocation* allocation = memoryManager->allocateCodeSection(size, alignment, this);
 	codeSectionMemoryAllocations.push_back(allocation);
 	return allocation->data;
 }
@@ -29,23 +29,9 @@ uint8_t* jitcat::LLVM::LLVMExpressionMemoryAllocator::allocateCodeSection(uintpt
 
 uint8_t* jitcat::LLVM::LLVMExpressionMemoryAllocator::allocateDataSection(uintptr_t size, unsigned alignment, unsigned sectionID, llvm::StringRef sectionName, bool isReadOnly)
 {
-	LLVMExpressionMemoryAllocator::DataSectionAllocation allocation;
-	allocation.alignment = alignment;
-	allocation.size = size;
-	unsigned int minMallocAlignment = alignof(std::max_align_t);
-	if (alignment <= minMallocAlignment)
-	{
-		allocation.data = (uint8_t*)malloc(size);
-		allocation.alignedData = allocation.data;
-	}
-	else
-	{
-		allocation.size = (alignment - minMallocAlignment) + size;
-		allocation.data = (uint8_t*)malloc(allocation.size);
-		allocation.alignedData = (uint8_t*)(((uintptr_t)allocation.data + alignment - 1) & ~((uintptr_t)alignment - 1));
-	}
+	SectionMemoryAllocation* allocation = memoryManager->allocateDataSection(size, alignment, this);
 	dataSectionMemoryAllocations.push_back(allocation);
-	return allocation.alignedData;
+	return allocation->data;
 }
 
 
@@ -53,8 +39,11 @@ bool jitcat::LLVM::LLVMExpressionMemoryAllocator::finalizeMemory(std::string* er
 {
 	for (auto& iter : codeSectionMemoryAllocations)
 	{
-		//memoryManager->markCodeSectionReadyForFinalization(iter);
-		memoryManager->finalizeCodeSection(iter);
+		memoryManager->finalizeSection(iter);
+	}
+	for (auto& iter : dataSectionMemoryAllocations)
+	{
+		memoryManager->finalizeSection(iter);
 	}
 	return false;
 }
@@ -69,23 +58,23 @@ void jitcat::LLVM::LLVMExpressionMemoryAllocator::freeMemory()
 	codeSectionMemoryAllocations.clear();
 	for (auto& iter : dataSectionMemoryAllocations)
 	{
-		free(iter.data);
+		memoryManager->freeDataSection(iter);
 	}
 	dataSectionMemoryAllocations.clear();
 }
 
 
-/*void jitcat::LLVM::LLVMExpressionMemoryAllocator::finalizeExpressionMemory()
+llvm::sys::MemoryBlock* jitcat::LLVM::LLVMExpressionMemoryAllocator::getLastCodeBlock() const
 {
-	for (auto& iter : codeSectionMemoryAllocations)
+	if (codeSectionMemoryAllocations.size() > 0)
 	{
-		memoryManager->finalizeCodeSection(iter);
+		return &codeSectionMemoryAllocations.back()->block->llvmMemoryBlock;
 	}
-}*/
+	return nullptr;
+}
 
 
-LLVMMemoryManager::LLVMMemoryManager():
-	maxReAllocationSizeDifference(16)
+LLVMMemoryManager::LLVMMemoryManager()
 {
 }
 
@@ -96,84 +85,53 @@ std::unique_ptr<LLVMExpressionMemoryAllocator> LLVMMemoryManager::createExpressi
 }
 
 
-CodeSectionMemoryAllocation* LLVMMemoryManager::allocateCodeSection(uintptr_t size, unsigned int alignment)
+SectionMemoryAllocation* LLVMMemoryManager::allocateCodeSection(uintptr_t size, unsigned int alignment, LLVMExpressionMemoryAllocator* allocator)
 {
-	//First try to find a freed allocation that is the same, or close, size and alignment.
-	auto freeIter = freedAllocations.lower_bound(size + alignment);
-	if (freeIter != freedAllocations.end() && (freeIter->first - (size + alignment)) < maxReAllocationSizeDifference)
-	{
-		CodeSectionMemoryAllocation* allocation = freeIter->second;
-		allocation->status = CodeSectionMemoryAllocationStatus::Pending;
-		updateBlockPermissions(allocation->block);
-		freedAllocations.erase(freeIter);
-		return allocation;
-	}
-	//Then try to find an existing code block with space left to fit this allocation.
-	for (auto& iter : blocks)
-	{
-		//Check if  there is enough space left in the block to store the aligned object.
-		if (iter->blockSize - iter->usedSpace >= size + alignment)
-		{
-			CodeSectionMemoryAllocation* allocation = new CodeSectionMemoryAllocation();
-			allocation->block = iter.get();
-			uintptr_t alignedAllocationAddress = (uintptr_t(iter->block + iter->usedSpace) + alignment - 1) & ~((uintptr_t)alignment - 1);
-			uintptr_t difference = alignedAllocationAddress - uintptr_t(iter->block + iter->usedSpace);
-			//The previously allocated memory block can now grow to contain the difference caused by alignment.
-			if (iter->allocations.size() > 0 && difference > 0)
-			{
-				iter->allocations.back()->size += difference;
-			}
-			iter->usedSpace = alignedAllocationAddress - (uintptr_t)iter->block + size;
-			allocation->data = (uint8_t*)alignedAllocationAddress;
-			allocation->size = size;
-			allocation->status = CodeSectionMemoryAllocationStatus::Pending;
-			iter->allocations.emplace_back(allocation);
-			updateBlockPermissions(iter.get());
-			return allocation;
-		}
-	}
-	//Then finally create a new block if no space could be found.
-	CodeSectionMemoryBlock* block = new CodeSectionMemoryBlock();
-	std::error_code error;
-	std::size_t blockSize = Tools::roundUp(size + alignment, 1 << 16);
-	block->llvmMemoryBlock = llvm::sys::Memory::allocateMappedMemory(blockSize, nullptr, llvm::sys::Memory::MF_READ | llvm::sys::Memory::MF_WRITE, error);
-	//Waiting for a llvm patch to be accepted that will add allocatedSize: block->blockSize = block->llvmMemoryBlock.allocatedSize();
-	block->blockSize = block->llvmMemoryBlock.allocatedSize();
-	block->usedSpace = 0;
-	block->block = (uint8_t*)block->llvmMemoryBlock.base();
-	blocks.emplace_back(block);
-	CodeSectionMemoryAllocation* allocation = new CodeSectionMemoryAllocation();
-	allocation->block = block;
-	uintptr_t alignedAllocationAddress = (uintptr_t(block->block + block->usedSpace) + alignment - 1) & ~((uintptr_t)alignment - 1);
-	block->usedSpace = alignedAllocationAddress - (uintptr_t)block->block + size;
-	allocation->data = (uint8_t*)alignedAllocationAddress;
-	allocation->size = size;
-	allocation->status = CodeSectionMemoryAllocationStatus::Pending;
-	block->allocations.emplace_back(allocation);
-	updateBlockPermissions(block);
-	return allocation;
+	return alloccateFromSection(size, alignment, allocator, SectionPurpose::Code, codeSectionBlocks, freedCodeSectionAllocations);
 }
 
 
-/*void jitcat::LLVM::LLVMMemoryManager::markCodeSectionReadyForFinalization(CodeSectionMemoryAllocation* allocation)
+SectionMemoryAllocation* jitcat::LLVM::LLVMMemoryManager::allocateDataSection(uintptr_t size, unsigned int alignment, LLVMExpressionMemoryAllocator* allocator)
 {
-	assert(allocation->status == CodeSectionMemoryAllocationStatus::Pending
-		   || allocation->status == CodeSectionMemoryAllocationStatus::ReadyForFinalization);
-	allocation->status = CodeSectionMemoryAllocationStatus::ReadyForFinalization;
-}*/
+	return alloccateFromSection(size, alignment, allocator, SectionPurpose::Data, dataSectionBlocks, freedDataSectionAllocations);
+}
 
 
-void jitcat::LLVM::LLVMMemoryManager::finalizeCodeSection(CodeSectionMemoryAllocation* allocation)
+void jitcat::LLVM::LLVMMemoryManager::finalizeSection(SectionMemoryAllocation* allocation)
 {
-	allocation->status = CodeSectionMemoryAllocationStatus::Finalized;
+	allocation->status = SectionMemoryAllocationStatus::Finalized;
 	updateBlockPermissions(allocation->block);
 }
 
 
-void LLVMMemoryManager::freeCodeSection(CodeSectionMemoryAllocation* allocation)
+void LLVMMemoryManager::freeCodeSection(SectionMemoryAllocation* allocation)
 {
-	allocation->status = CodeSectionMemoryAllocationStatus::Freed;
-	freedAllocations.insert({ allocation->size, allocation });
+	allocation->status = SectionMemoryAllocationStatus::Freed;
+	auto& iter = freedCodeSectionAllocations.find(allocation->alignment);
+	if (iter != freedCodeSectionAllocations.end())
+	{
+		iter->second.insert({ allocation->size, allocation });
+	}
+	else
+	{
+		freedCodeSectionAllocations[allocation->alignment].insert({ allocation->size, allocation });
+	}
+	updateBlockPermissions(allocation->block);
+}
+
+
+void jitcat::LLVM::LLVMMemoryManager::freeDataSection(SectionMemoryAllocation* allocation)
+{
+	allocation->status = SectionMemoryAllocationStatus::Freed;
+	auto& iter = freedDataSectionAllocations.find(allocation->alignment);
+	if (iter != freedDataSectionAllocations.end())
+	{
+		iter->second.insert({ allocation->size, allocation });
+	}
+	else
+	{
+		freedDataSectionAllocations[allocation->alignment].insert({ allocation->size, allocation });
+	}
 	updateBlockPermissions(allocation->block);
 }
 
@@ -181,7 +139,7 @@ void LLVMMemoryManager::freeCodeSection(CodeSectionMemoryAllocation* allocation)
 std::size_t jitcat::LLVM::LLVMMemoryManager::getAllocatedCodeMemory()
 {
 	std::size_t total = 0;
-	for (auto& iter : blocks)
+	for (auto& iter : codeSectionBlocks)
 	{
 		for (auto& iter2 : iter->allocations)
 		{
@@ -195,7 +153,7 @@ std::size_t jitcat::LLVM::LLVMMemoryManager::getAllocatedCodeMemory()
 std::size_t jitcat::LLVM::LLVMMemoryManager::getReservedCodeMemory()
 {
 	std::size_t total = 0;
-	for (auto& iter : blocks)
+	for (auto& iter : codeSectionBlocks)
 	{
 		total += iter->blockSize;
 	}
@@ -203,23 +161,99 @@ std::size_t jitcat::LLVM::LLVMMemoryManager::getReservedCodeMemory()
 }
 
 
-void jitcat::LLVM::LLVMMemoryManager::updateBlockPermissions(CodeSectionMemoryBlock* block)
+void jitcat::LLVM::LLVMMemoryManager::updateBlockPermissions(SectionMemoryBlock* block)
 {
 	bool allFinalizedOrFree = true;
 	bool anyFinalized = false;
 	for (auto& iter : block->allocations)
 	{
-		allFinalizedOrFree &= (iter->status == CodeSectionMemoryAllocationStatus::Finalized || iter->status == CodeSectionMemoryAllocationStatus::Freed);
-		anyFinalized |= iter->status == CodeSectionMemoryAllocationStatus::Finalized;
+		allFinalizedOrFree &= (iter->status == SectionMemoryAllocationStatus::Finalized || iter->status == SectionMemoryAllocationStatus::Freed);
+		anyFinalized |= iter->status == SectionMemoryAllocationStatus::Finalized;
 	}
 	unsigned int flags = llvm::sys::Memory::MF_READ;
 	if (!allFinalizedOrFree)
 	{
 		flags |= llvm::sys::Memory::MF_WRITE;
 	}
-	if (anyFinalized)
+	if (anyFinalized && block->purpose == SectionPurpose::Code)
 	{
 		flags |= llvm::sys::Memory::MF_EXEC;
 	}
 	llvm::sys::Memory::protectMappedMemory(block->llvmMemoryBlock, flags);
 }
+
+
+SectionMemoryAllocation* jitcat::LLVM::LLVMMemoryManager::alloccateFromSection(uintptr_t size, unsigned int alignment, LLVMExpressionMemoryAllocator* allocator, SectionPurpose sectionPurpose,
+																			   std::vector<std::unique_ptr<SectionMemoryBlock>>& blocks, 
+																			   std::map<std::size_t, std::multimap<std::size_t, SectionMemoryAllocation*>>& freedAllocations)
+{
+	//First try to find a freed allocation that is the same, or close, size and alignment.
+	for (auto& iter : freedAllocations)
+	{
+		if (iter.first >= alignment)
+		{
+			auto freeIter = iter.second.lower_bound(size);
+			if (freeIter != iter.second.end() && (freeIter->first - size) < maxReAllocationSizeDifference)
+			{
+				SectionMemoryAllocation* allocation = freeIter->second;
+				allocation->status = SectionMemoryAllocationStatus::Pending;
+				updateBlockPermissions(allocation->block);
+				iter.second.erase(freeIter);
+				assert(allocation->block->purpose == sectionPurpose);
+				return allocation;
+			}
+		}
+	}
+
+	//Then try to find an existing code block with space left to fit this allocation.
+	for (auto& iter : blocks)
+	{
+		//Check if  there is enough space left in the block to store the aligned object.
+		if (iter->blockSize - iter->usedSpace >= size + alignment)
+		{
+			SectionMemoryAllocation* allocation = new SectionMemoryAllocation();
+			allocation->block = iter.get();
+			uintptr_t alignedAllocationAddress = (uintptr_t(iter->block + iter->usedSpace) + alignment - 1) & ~((uintptr_t)alignment - 1);
+			uintptr_t difference = alignedAllocationAddress - uintptr_t(iter->block + iter->usedSpace);
+			//The previously allocated memory block can now grow to contain the difference caused by alignment.
+			if (iter->allocations.size() > 0 && difference > 0)
+			{
+				iter->allocations.back()->size += difference;
+			}
+			iter->usedSpace = alignedAllocationAddress - (uintptr_t)iter->block + size;
+			allocation->data = (uint8_t*)alignedAllocationAddress;
+			allocation->size = size;
+			allocation->alignment = alignment;
+			allocation->status = SectionMemoryAllocationStatus::Pending;
+			iter->allocations.emplace_back(allocation);
+			updateBlockPermissions(iter.get());
+			assert(allocation->block->purpose == sectionPurpose);
+			return allocation;
+		}
+	}
+	//Then finally create a new block if no space could be found.
+	SectionMemoryBlock* block = new SectionMemoryBlock();
+	std::error_code error;
+	std::size_t blockSize = Tools::roundUp(size + alignment, 1 << 16);
+	block->llvmMemoryBlock = llvm::sys::Memory::allocateMappedMemory(blockSize, allocator->getLastCodeBlock(), llvm::sys::Memory::MF_READ | llvm::sys::Memory::MF_WRITE, error);
+	//Waiting for a llvm patch to be accepted that will add allocatedSize: block->blockSize = block->llvmMemoryBlock.allocatedSize();
+	block->blockSize = block->llvmMemoryBlock.allocatedSize();
+	block->purpose = sectionPurpose;
+	block->usedSpace = 0;
+	block->block = (uint8_t*)block->llvmMemoryBlock.base();
+	blocks.emplace_back(block);
+	SectionMemoryAllocation* allocation = new SectionMemoryAllocation();
+	allocation->block = block;
+	uintptr_t alignedAllocationAddress = (uintptr_t(block->block + block->usedSpace) + alignment - 1) & ~((uintptr_t)alignment - 1);
+	block->usedSpace = alignedAllocationAddress - (uintptr_t)block->block + size;
+	allocation->data = (uint8_t*)alignedAllocationAddress;
+	allocation->size = size;
+	allocation->alignment = alignment;
+	allocation->status = SectionMemoryAllocationStatus::Pending;
+	block->allocations.emplace_back(allocation);
+	updateBlockPermissions(block);
+	return allocation;
+}
+
+
+const int jitcat::LLVM::LLVMMemoryManager::maxReAllocationSizeDifference = 16;
