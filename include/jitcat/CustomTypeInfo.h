@@ -66,7 +66,7 @@ namespace jitcat::Reflection
 		//Returns a pointer to the start of the newly added size
 		unsigned char* increaseDataSize(unsigned int amount);
 		void increaseDataSize(unsigned char*& data, unsigned int amount, unsigned int currentSize);
-		unsigned char* createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy);
+		unsigned char* createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy, unsigned int sizeOfSource);
 
 	private:
 		CustomTypeInstance* defaultInstance;

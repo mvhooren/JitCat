@@ -55,7 +55,7 @@ CustomTypeInstance* CustomTypeInfo::createInstanceCopy(CustomTypeInstance* sourc
 {
 	if (!isConstType)
 	{
-		CustomTypeInstance* instance = new CustomTypeInstance(createDataCopy(source->data, typeSize), this);
+		CustomTypeInstance* instance = new CustomTypeInstance(createDataCopy(source->data, typeSize, typeSize), this);
 		instances.insert(instance);
 		return instance;
 	}
@@ -68,7 +68,7 @@ CustomTypeInstance* CustomTypeInfo::createInstanceCopy(CustomTypeInstance* sourc
 
 unsigned char* CustomTypeInfo::instanceConstructor()
 {
-	return createDataCopy(defaultData, typeSize);
+	return createDataCopy(defaultData, typeSize, typeSize);
 }
 
 
@@ -322,7 +322,7 @@ void CustomTypeInfo::increaseDataSize(unsigned char*& data, unsigned int amount,
 	if (oldData != nullptr
 		&& oldSize != 0)
 	{
-		data = createDataCopy(oldData, newSize);
+		data = createDataCopy(oldData, newSize, currentSize);
 		instanceDestructor(oldData);
 	}
 	else
@@ -334,14 +334,14 @@ void CustomTypeInfo::increaseDataSize(unsigned char*& data, unsigned int amount,
 }
 
 
-unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy)
+unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy, unsigned int sizeOfSource)
 {
-	assert(sizeOfCopy >= typeSize);
+	assert(sizeOfCopy >= sizeOfSource);
 	//Create copies of strings and member references
 	if (otherData != nullptr)
 	{
 		unsigned char* instanceData = new unsigned char[sizeOfCopy];
-		memcpy(instanceData, otherData, typeSize);
+		memcpy(instanceData, otherData, sizeOfSource);
 		if (!isTriviallyCopyable)
 		{
 			auto end = members.end();
