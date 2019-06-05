@@ -246,8 +246,8 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 	else if (type.isIntType())							return addIntMember(memberName, 0, type.isWritable(), type.isConst());
 	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
 	else if (type.isStringType())						return addStringMember(memberName, "", type.isWritable(), type.isConst());
-	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
-	else							return nullptr;
+	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
+	else												return nullptr;
 }
 
 
@@ -359,7 +359,7 @@ unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned
 					std::string* stringCopy = new std::string(*originalString);
 					memcpy(instanceData + offset, &stringCopy, sizeof(std::string*));
 				}
-				else if (iter->second->catType.isPointerToReflectableObjectType())
+				else if (iter->second->catType.isReflectableHandleType())
 				{
 					unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
 					ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(&otherData[offset]);

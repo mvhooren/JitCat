@@ -19,7 +19,7 @@ namespace jitcat::Reflection
 		ReflectableHandle(Reflectable* reflectable);
 		ReflectableHandle(const ReflectableHandle& other);
 		ReflectableHandle(const ReflectableHandle&& other) = delete;
-		virtual ~ReflectableHandle();
+		~ReflectableHandle();
 		//Returns nullptr if reflectable is deleted
 		Reflectable* get() const;
 		bool getIsValid() const;

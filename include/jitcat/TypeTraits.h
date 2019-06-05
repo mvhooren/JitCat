@@ -32,7 +32,7 @@ namespace jitcat
 		static bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static const char* getTypeName() { return T::getTypeName(); }
-		static std::any getCatValue(void) { return std::any();}
+		static std::any getCatValue(void) { return std::any((Reflectable*)nullptr);}
 		static std::any getCatValue(T& value);
 		static constexpr Reflection::Reflectable* getDefaultValue() { return nullptr; }
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<T>::getDefaultValue()); }
@@ -228,7 +228,7 @@ namespace jitcat
 		static bool isSerialisableContainer() { return true; }
 		static constexpr bool isReflectableType() { return false; }
 		static const char* getTypeName() { return ""; }
-		static std::any getCatValue(void) { return std::any();}
+		static std::any getCatValue(void) { return std::any((std::vector<ItemType, AllocatorT>*)nullptr);}
 		static constexpr std::vector<ItemType, AllocatorT>* getDefaultValue() { return nullptr; }
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::vector<ItemType, AllocatorT> >::getDefaultValue()); }
 		static std::vector<ItemType, AllocatorT>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType, AllocatorT>*>(value); }
@@ -249,7 +249,7 @@ namespace jitcat
 		static bool isSerialisableContainer() { return true; }
 		static constexpr bool isReflectableType() { return false; }
 		static const char* getTypeName() { return ""; }
-		static std::any getCatValue(void) { return std::any();}
+		static std::any getCatValue(void) { return std::any((std::map<KeyType, ItemType, ComparatorT, AllocatorT>*)nullptr);}
 		static constexpr std::map<KeyType, ItemType, ComparatorT, AllocatorT>* getDefaultValue() { return nullptr; }
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::map<KeyType, ItemType, ComparatorT, AllocatorT> >::getDefaultValue()); }
 		static std::map<KeyType, ItemType, ComparatorT, AllocatorT>& getValue(const std::any& value) { return *std::any_cast<std::map<KeyType, ItemType, ComparatorT, AllocatorT>*>(value);}

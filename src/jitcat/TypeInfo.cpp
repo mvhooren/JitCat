@@ -123,7 +123,7 @@ const CatGenericType& TypeInfo::getType(const std::vector<std::string>& indirect
 						}
 						else if (indirectionListSize > offset + 1)
 						{
-							return memberInfo->catType.getContainerItemType().getObjectType()->getType(indirectionList, offset + 1);
+							return memberInfo->catType.getContainerItemType().getPointeeType()->getObjectType()->getType(indirectionList, offset + 1);
 						}
 					}
 				}
@@ -132,7 +132,7 @@ const CatGenericType& TypeInfo::getType(const std::vector<std::string>& indirect
 			{
 				if (indirectionListSize > offset + 1)
 				{
-					return memberInfo->catType.getObjectType()->getType(indirectionList, offset + 1);
+					return memberInfo->catType.getPointeeType()->getObjectType()->getType(indirectionList, offset + 1);
 				}
 			}
 		}
@@ -225,16 +225,16 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 			enumerator->addVariable(iter->second->memberName, catTypeName, iter->second->catType.isWritable(), iter->second->catType.isConst());
 			break;
 		}
-		else if (memberType.isPointerToReflectableObjectType())
+		else if (memberType.isPointerToReflectableObjectType() || memberType.isReflectableHandleType())
 		{
 			std::string nestedTypeName = memberType.toString();
-			if (allowEmptyStructs || memberType.getObjectType()->getMembers().size() > 0)
+			if (allowEmptyStructs || memberType.getPointeeType()->getObjectType()->getMembers().size() > 0)
 			{
 				enumerator->enterNameSpace(iter->second->memberName, nestedTypeName, NamespaceType::Object);
 				if (!Tools::isInList(enumerator->loopDetectionTypeStack, nestedTypeName))
 				{
 					enumerator->loopDetectionTypeStack.push_back(nestedTypeName);
-					memberType.getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
+					memberType.getPointeeType()->getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
 					enumerator->loopDetectionTypeStack.pop_back();
 				}
 				enumerator->exitNameSpace();
@@ -249,7 +249,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 			if (!Tools::isInList(enumerator->loopDetectionTypeStack, itemType))
 			{
 				enumerator->loopDetectionTypeStack.push_back(itemType);
-				memberType.getContainerItemType().getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
+				memberType.getContainerItemType().getPointeeType()->getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
 				enumerator->loopDetectionTypeStack.pop_back();
 			}
 			enumerator->exitNameSpace();
@@ -290,8 +290,8 @@ const TypeCaster* TypeInfo::getTypeCaster() const
 
 void jitcat::Reflection::TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
 {
-	auto& deferredMembers = deferredMember->catType.getObjectType()->getMembers();
-	auto& deferredMemberFunctions = deferredMember->catType.getObjectType()->getMemberFunctions();
+	auto& deferredMembers = deferredMember->catType.getPointeeType()->getObjectType()->getMembers();
+	auto& deferredMemberFunctions = deferredMember->catType.getPointeeType()->getObjectType()->getMemberFunctions();
 
 	for (auto& member : deferredMembers)
 	{

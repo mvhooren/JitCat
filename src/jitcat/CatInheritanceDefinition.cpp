@@ -77,18 +77,18 @@ bool jitcat::AST::CatInheritanceDefinition::typeCheck(CatRuntimeContext* compile
 	}
 	else
 	{
-		CatGenericType inheritedType = type->getType();
-		if (!inheritedType.isReflectableObjectType())
+		CatGenericType* inheritedType = type->getType().getPointeeType();
+		if (!inheritedType->isReflectableObjectType())
 		{
-			errorManager->compiledWithError(Tools::append("Inheritance only supports object types, ", inheritedType.toString(), " not supported."), this, compiletimeContext->getContextName(), getLexeme());
+			errorManager->compiledWithError(Tools::append("Inheritance only supports object types, ", inheritedType->toString(), " not supported."), this, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		else if (!inheritedType.getObjectType()->isCustomType())
+		else if (!inheritedType->getObjectType()->isCustomType())
 		{
-			hostClass = compiletimeContext->getHostClasses()->getHostClass(inheritedType.getObjectType()->getTypeName());
+			hostClass = compiletimeContext->getHostClasses()->getHostClass(inheritedType->getObjectType()->getTypeName());
 			if (hostClass == nullptr || !hostClass->isInheritable())
 			{
-				errorManager->compiledWithError(Tools::append("Host type cannot be inherited: ", inheritedType.toString(), ", enable inheritance through the CatHostClasses interface."), this, compiletimeContext->getContextName(), getLexeme());
+				errorManager->compiledWithError(Tools::append("Host type cannot be inherited: ", inheritedType->toString(), ", enable inheritance through the CatHostClasses interface."), this, compiletimeContext->getContextName(), getLexeme());
 				return false;
 			}
 			if (!hostClass->inheritTypeCheck(compiletimeContext, compiletimeContext->getCurrentClass(), errorManager, this))
@@ -99,7 +99,7 @@ bool jitcat::AST::CatInheritanceDefinition::typeCheck(CatRuntimeContext* compile
 		CatScope* currentScope = compiletimeContext->getCurrentScope();
 		if (currentScope != nullptr)
 		{
-			inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType.toString()), inheritedType.toWritable());
+			inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType->toString()), type->getType().toWritable());
 			inheritedMember->visibility = Reflection::MemberVisibility::Hidden;
 		}
 	}

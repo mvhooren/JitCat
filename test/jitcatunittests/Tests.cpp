@@ -4528,7 +4528,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	std::unique_ptr<ReflectedObject> objectUniquePtr(new ReflectedObject());
 	ExpressionErrorManager errorManager;
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
-	CatGenericType genericType = CatGenericType(objectTypeInfo);
+
 	const char* customTypeName2 = "MyType2";
 	TypeRegistry::get()->removeType(customTypeName2);
 	std::unique_ptr<CustomTypeInfo> customType(new CustomTypeInfo(customTypeName2));

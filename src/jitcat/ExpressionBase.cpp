@@ -185,15 +185,15 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 		Lexeme expressionLexeme = parseResult->getNode<CatTypedExpression>()->getLexeme();
 		if (!expectedType.isUnknown())
 		{
-			if (expectAssignable && !valueType.isWritable())
+			if (expectAssignable && !parseResult->getNode<CatAssignableExpression>()->getAssignableType().isAssignableType())
 			{
 				parseResult->success = false;
  				errorManager->compiledWithError(std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
 			}
-			if (expectedType.isPointerToReflectableObjectType())
+			if (expectedType.isPointerToReflectableObjectType() || expectedType.isReflectableHandleType())
 			{
 				const std::string typeName = expectedType.getPointeeType()->getObjectTypeName();
-				if (!valueType.isPointerToReflectableObjectType())
+				if (!valueType.isPointerToReflectableObjectType() && !valueType.isReflectableHandleType())
 				{
 					parseResult->success = false;
 					errorManager->compiledWithError(Tools::append("Expected a ", typeName), errorContext, context->getContextName(), expressionLexeme);
@@ -208,7 +208,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 			{
 				parseResult->success = true;
 			}
-			else if (valueType != expectedType)
+			else if (!valueType.compare(expectedType, true))
 			{
 				if (expectedType.isVoidType())
 				{

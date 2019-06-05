@@ -115,7 +115,7 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 		}
 		else
 		{
-			setType(CatGenericType(typeInfo, ownershipSemantics));
+			setType(CatGenericType(CatGenericType(typeInfo), ownershipSemantics, false));
 		}
 	}
 	return true;

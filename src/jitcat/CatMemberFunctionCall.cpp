@@ -119,7 +119,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		ASTHelper::updatePointerIfChanged(base, base->constCollapse(compiletimeContext));
 
 		CatGenericType baseType = base->getType();
-		if (!baseType.isPointerToReflectableObjectType())
+		if (!baseType.isPointerToReflectableObjectType() || baseType.isReflectableHandleType())
 		{
 			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;

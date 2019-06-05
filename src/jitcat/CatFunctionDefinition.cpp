@@ -8,6 +8,7 @@
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatArgumentList.h"
+#include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLog.h"
@@ -112,6 +113,8 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	compileTimeContext->setCurrentScope(this);
 	if (!parameters->typeCheck(compileTimeContext, errorManager, this))
 	{
+		compileTimeContext->setCurrentScope(previousScope);
+		compileTimeContext->removeScope(parametersScopeId);
 		return false;
 	}
 	compileTimeContext->setCurrentFunction(this);
@@ -120,12 +123,12 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 		parameterAssignables.emplace_back(new CatIdentifier(parameters->getParameterName(i), parameters->getParameterLexeme(i)));
 		parameterAssignables.back()->typeCheck(compileTimeContext, errorManager, this);
 	}
-	if (compileTimeContext->getCurrentScope() != nullptr && Tools::equalsWhileIgnoringCase(name, "init"))
+	if (compileTimeContext->getCurrentClass() != nullptr && Tools::equalsWhileIgnoringCase(name, "init"))
 	{
 		visibility = MemberVisibility::Constructor;
 		//init function is a special case. We should call the auto generated __init function first.
 		CatArgumentList* arguments = new CatArgumentList(lexeme);
-		CatScopeRoot* scopeRoot = new CatScopeRoot(compileTimeContext->getCurrentScope()->getScopeId(), lexeme);
+		CatScopeRoot* scopeRoot = new CatScopeRoot(compileTimeContext->getCurrentClass()->getScopeId(), lexeme);
 		CatMemberFunctionCall* callAutoInit = new CatMemberFunctionCall("__init", nameLexeme, scopeRoot, arguments, lexeme);
 		scopeBlock->insertStatementFront(callAutoInit);
 	}

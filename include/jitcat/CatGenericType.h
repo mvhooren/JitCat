@@ -83,6 +83,7 @@ namespace jitcat
 		bool isPointerType() const;
 		bool isPointerToPointerType() const;
 		bool isPointerToHandleType() const;
+		bool isAssignableType() const;
 		bool isContainerType() const;
 		bool isVectorType() const;
 		bool isMapType() const;
@@ -116,6 +117,7 @@ namespace jitcat
 
 		Reflection::TypeInfo* getObjectType() const;
 		Reflection::TypeOwnershipSemantics getOwnershipSemantics() const;
+		void setOwnershipSemantics(Reflection::TypeOwnershipSemantics semantics);
 
 		//This will cast the pointer to the C++ type associated with this CatGenericType and returns it as a std::any
 		std::any createAnyOfType(uintptr_t pointer);

@@ -368,6 +368,7 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		default:
 		case CatBuiltInFunctionType::Count:
 		case CatBuiltInFunctionType::Invalid:
+			assert(false);
 			return std::any();
 	}
 }

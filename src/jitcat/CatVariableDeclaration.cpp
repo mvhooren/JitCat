@@ -17,6 +17,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/TypeOwnershipSemantics.h"
 #include "jitcat/Tools.h"
 
 using namespace jitcat;
@@ -94,7 +95,18 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 	}
 	if (initializationExpression == nullptr)
 	{
-		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), type->getType().toValueOwnership(), nameLexeme), nameLexeme));
+		Reflection::TypeOwnershipSemantics initExpressionOwnership = Reflection::TypeOwnershipSemantics::Value;
+		if (type->getType().isPointerToReflectableObjectType() || type->getType().isReflectableHandleType())
+		{
+			if (type->getType().getOwnershipSemantics() != Reflection::TypeOwnershipSemantics::Owned
+				&& type->getType().getOwnershipSemantics() != Reflection::TypeOwnershipSemantics::Shared)
+			{
+				initExpressionOwnership = Reflection::TypeOwnershipSemantics::Weak;
+			}
+		}
+		CatGenericType initExpressionType = type->getType();
+		initExpressionType.setOwnershipSemantics(initExpressionOwnership);
+		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), initExpressionType, nameLexeme), nameLexeme));
 	}
 
 	CatScope* currentScope = compiletimeContext->getCurrentScope();

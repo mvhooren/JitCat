@@ -177,8 +177,8 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 	for (auto& iter : inheritanceDefinitions)
 	{
 		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
-		CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(inheritedMember->catType.toString(), nameLexeme, nullptr, new CatArgumentList(iter->getLexeme()), nameLexeme);
-		CatOperatorNew* operatorNew = new CatOperatorNew(functionCall, inheritedMember->catType.toString(), iter->getLexeme());
+		CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(inheritedMember->catType.getPointeeType()->toString(), nameLexeme, nullptr, new CatArgumentList(iter->getLexeme()), nameLexeme);
+		CatOperatorNew* operatorNew = new CatOperatorNew(functionCall, inheritedMember->catType.getPointeeType()->toString(), iter->getLexeme());
 		CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
 		CatAssignmentOperator* assignment = new CatAssignmentOperator(id, operatorNew, iter->getLexeme());
 		statements.push_back(assignment);

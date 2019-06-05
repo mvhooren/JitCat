@@ -62,10 +62,10 @@ std::any ASTHelper::doAssignment(CatAssignableExpression* target, CatTypedExpres
 	std::any targetValue = target->executeAssignable(context);
 	std::any sourceValue;
 
-	if (   (   targetType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned
-		    || targetType.getOwnershipSemantics() == TypeOwnershipSemantics::Shared)
-		&& (sourceType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
-		&& (targetType.isPointerToHandleType() || targetType.isPointerToPointerType()))
+	if ((targetType.isPointerToHandleType() || targetType.isPointerToPointerType())
+		 &&	(   targetType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Owned
+		    || targetType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Shared)
+		&& (sourceType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned))
 	{
 		sourceValue = static_cast<CatAssignableExpression*>(source)->executeAssignable(context);
 		sourceType = static_cast<CatAssignableExpression*>(source)->getAssignableType();
@@ -227,13 +227,13 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 		ReflectableHandle* handleTarget = std::any_cast<ReflectableHandle*>(target);
 		if (handleTarget != nullptr)
 		{
-			TypeOwnershipSemantics targetOwnership = targetType.getOwnershipSemantics();
-			TypeOwnershipSemantics sourceOwnership = sourceType.getOwnershipSemantics();
+			TypeOwnershipSemantics targetOwnership = targetType.getPointeeType()->getOwnershipSemantics();
 			if (targetOwnership == TypeOwnershipSemantics::Owned)
 			{
 				delete handleTarget->get();
 			}
-			if (sourceType.isPointerToReflectableObjectType())
+			if (sourceType.isPointerToReflectableObjectType()
+				|| sourceType.isReflectableHandleType())
 			{
 				*handleTarget = std::any_cast<Reflectable*>(source);
 			}
@@ -245,7 +245,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 					*handleTarget = sourceHandle->get();
 					if ((targetOwnership == TypeOwnershipSemantics::Owned
 						|| targetOwnership == TypeOwnershipSemantics::Shared)
-						&& sourceOwnership == TypeOwnershipSemantics::Owned)
+						&& sourceType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
 					{
 						*sourceHandle = nullptr;
 					}
@@ -263,7 +263,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 					*handleTarget = *sourcePointer;
 					if ((targetOwnership == TypeOwnershipSemantics::Owned
 						|| targetOwnership == TypeOwnershipSemantics::Shared)
-						&& sourceOwnership == TypeOwnershipSemantics::Owned)
+						&& sourceType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
 					{
 						*sourcePointer = nullptr;
 					}
@@ -290,18 +290,21 @@ bool jitcat::AST::ASTHelper::checkAssignment(const CatTypedExpression* lhs, cons
 		errorManager->compiledWithError("Assignment failed because target cannot be assigned.", errorSource, context->getContextName(), lexeme);
 		return false;
 	}
-	else if (leftType.compare(rightType, false))
-	{
-		if (!checkOwnershipSemantics(leftType, rightType, errorManager, context, errorSource, lexeme, "assign"))
-		{
-			return false;
-		}
-		return true;
-	}
 	else
 	{
-		errorManager->compiledWithError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), "."), errorSource, context->getContextName(), lexeme);
-		return false;
+		if (leftType.compare(rightType, false))
+		{
+			if (!checkOwnershipSemantics(leftType, rightType, errorManager, context, errorSource, lexeme, "assign"))
+			{
+				return false;
+			}
+			return true;
+		}
+		else
+		{
+			errorManager->compiledWithError(Tools::append("Cannot assign ", rightType.toString(), " to ", leftType.toString(), "."), errorSource, context->getContextName(), lexeme);
+			return false;
+		}
 	}
 }
 
@@ -335,7 +338,7 @@ bool jitcat::AST::ASTHelper::checkOwnershipSemantics(const CatGenericType& targe
 	{
 		if (rightOwnership == TypeOwnershipSemantics::Value && !sourceType.isNullptrType())
 		{
-			errorManager->compiledWithError(Tools::append("Cannot ", operation, " Cannot assign owned temporary value to weak ownership value."), errorSource, context->getContextName(), lexeme);
+			errorManager->compiledWithError(Tools::append("Cannot ", operation, " owned temporary value to weak ownership value."), errorSource, context->getContextName(), lexeme);
 			return false;
 		}
 	}

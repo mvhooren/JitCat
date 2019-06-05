@@ -59,7 +59,7 @@ CatGenericType::CatGenericType():
 	specificType(SpecificType::None),
 	basicType(BasicType::None),
 	nestedType(nullptr),
-	ownershipSemantics(TypeOwnershipSemantics::Value),
+	ownershipSemantics(TypeOwnershipSemantics::Weak),
 	containerType(ContainerType::None),
 	containerManipulator(nullptr),
 	writable(false),
@@ -297,6 +297,17 @@ bool jitcat::CatGenericType::isPointerToHandleType() const
 }
 
 
+bool jitcat::CatGenericType::isAssignableType() const
+{
+	return specificType == SpecificType::Pointer
+		   && pointeeType->isWritable()
+		   && (	  (pointeeType->isBasicType())
+			   || (pointeeType->isReflectableHandleType())
+			   || (pointeeType->isPointerType() && pointeeType->pointeeType->isReflectableObjectType()));
+		
+}
+
+
 bool CatGenericType::isContainerType() const
 {
 	return specificType == SpecificType::Container;
@@ -517,27 +528,69 @@ Reflection::TypeOwnershipSemantics jitcat::CatGenericType::getOwnershipSemantics
 }
 
 
+void jitcat::CatGenericType::setOwnershipSemantics(Reflection::TypeOwnershipSemantics semantics)
+{
+	ownershipSemantics = semantics;
+}
+
+
 std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 {
 	switch (specificType)
 	{
-		case SpecificType::Basic:
+		case SpecificType::ReflectableHandle:
 		{
-			switch (basicType)
-			{
-				case BasicType::Int:		return std::any(reinterpret_cast<int*>(pointer));
-				case BasicType::Float:	return std::any(reinterpret_cast<float*>(pointer));
-				case BasicType::Bool:		return std::any(reinterpret_cast<bool*>(pointer));
-				case BasicType::String:	return std::any(reinterpret_cast<std::string*>(pointer));
-			}
-		} break;
-		case SpecificType::ReflectableObject:
-		{
-			return nestedType->getTypeCaster()->cast(pointer);
+			return pointeeType->getObjectType()->getTypeCaster()->cast(pointer);
 		} break;
 		case SpecificType::Container:
 		{
-			return containerManipulator->createAnyPointer(pointer);
+			return pointeeType->containerManipulator->createAnyPointer(pointer);
+		} break;
+		case SpecificType::Pointer:
+		{
+			switch (pointeeType->specificType)
+			{
+				case SpecificType::Basic:
+				{
+					switch (basicType)
+					{
+					case BasicType::Int:	return std::any(reinterpret_cast<int*>(pointer));
+					case BasicType::Float:	return std::any(reinterpret_cast<float*>(pointer));
+					case BasicType::Bool:	return std::any(reinterpret_cast<bool*>(pointer));
+					case BasicType::String:	return std::any(reinterpret_cast<std::string*>(pointer));
+					}
+				} break;
+				case SpecificType::ReflectableObject:
+				{
+					return pointeeType->getObjectType()->getTypeCaster()->cast(pointer);
+				} break;
+				case SpecificType::ReflectableHandle:
+				{
+					return std::any(reinterpret_cast<ReflectableHandle*>(pointer));
+				}
+				case SpecificType::Container:
+				{
+					return pointeeType->containerManipulator->createAnyPointer(pointer);
+				} break;
+				case SpecificType::Pointer:
+				{
+					switch (pointeeType->pointeeType->specificType)
+					{
+						case SpecificType::ReflectableObject:
+						{
+							return std::any(reinterpret_cast<Reflectable**>(pointer));
+						}
+						default:
+						{
+							assert(false);
+						}
+					}
+				}
+			}
+		} break;
+		default:
+		{
+			assert(false);
 		} break;
 	}
 	return std::any();
@@ -552,10 +605,11 @@ std::any CatGenericType::createDefault() const
 		{
 			switch (basicType)
 			{
-				case BasicType::Int:		return 0;
+				case BasicType::Int:	return 0;
 				case BasicType::Float:	return 0.0f;
 				case BasicType::Bool:	return false;
 				case BasicType::String:	return std::string();
+				case BasicType::Void:	return std::any();
 			}
 		} break;
 		case SpecificType::ReflectableObject:
@@ -566,7 +620,52 @@ std::any CatGenericType::createDefault() const
 		{
 			return containerManipulator->createAnyPointer(0);
 		} break;
+		case SpecificType::Pointer:
+		{
+			switch (pointeeType->specificType)
+			{
+				case SpecificType::Basic:
+				{
+					switch (pointeeType->basicType)
+					{
+						case BasicType::Int:	return 0;
+						case BasicType::Float:	return 0.0f;
+						case BasicType::Bool:	return false;
+						case BasicType::String:	return std::string();
+						case BasicType::Void:	return std::any((void*)(nullptr));
+					}
+				}
+				case SpecificType::ReflectableObject:
+				{
+					return (Reflectable*)(nullptr);
+				}
+				case SpecificType::Container:
+				{
+					return containerManipulator->createAnyPointer(0);
+				} break;
+				case SpecificType::Pointer:
+				{
+					if (pointeeType->pointeeType->specificType == SpecificType::ReflectableObject)
+					{
+						return (Reflectable**)(nullptr);
+					}
+					else
+					{
+						assert(false);
+					}
+				}
+				case SpecificType::ReflectableHandle:
+				{
+					return (ReflectableHandle*)(nullptr);
+				}
+			}
+		}
+		case SpecificType::ReflectableHandle:
+		{
+			return std::any((Reflectable*)(nullptr));
+		}
 	}
+	assert(false);
 	return std::any();
 }
 

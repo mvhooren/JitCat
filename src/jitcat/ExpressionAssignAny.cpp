@@ -56,10 +56,8 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 			else if (myType.isFloatType())	reinterpret_cast<void(*)(CatRuntimeContext*, float)>(nativeFunctionAddress)(runtimeContext, std::any_cast<float>(convertedValue));
 			else if (myType.isBoolType())	reinterpret_cast<void(*)(CatRuntimeContext*, bool)>(nativeFunctionAddress)(runtimeContext, std::any_cast<bool>(convertedValue));
 			else if (myType.isStringType())	reinterpret_cast<void(*)(CatRuntimeContext*, const std::string&)>(nativeFunctionAddress)(runtimeContext, std::any_cast<std::string>(convertedValue));
-			else if (myType.isPointerToReflectableObjectType())
+			else if (myType.isReflectableHandleType() || myType.isPointerToReflectableObjectType())
 			{
-				//Use the type caster to cast the object contained in value to a std::any containing a Reflectable*;
-				//std::any reflectableAny = valueType.getObjectType()->getTypeCaster()->cast(value);
 				reinterpret_cast<void(*)(CatRuntimeContext*, Reflectable*)>(nativeFunctionAddress)(runtimeContext, std::any_cast<Reflectable*>(value));
 			}
 			else

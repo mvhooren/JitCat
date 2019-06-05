@@ -94,11 +94,11 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				}
 				else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isPointerToReflectableObjectType())
 				{
-					addOptionsFromTypeInfo(currentMemberInfo->catType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					addOptionsFromTypeInfo(currentMemberInfo->catType.getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
 				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isPointerToReflectableObjectType())
 				{
-					addOptionsFromTypeInfo(currentFunctionInfo->returnType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					addOptionsFromTypeInfo(currentFunctionInfo->returnType.getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
 				else
 				{
@@ -117,10 +117,10 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isPointerToReflectableObjectType())
 			{
 				TypeMemberInfo* currentMember = currentMemberInfo;
-				currentMemberInfo = currentMemberInfo->catType.getObjectType()->getMemberInfo(lowercaseIdentifier);
+				currentMemberInfo = currentMemberInfo->catType.getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
 				if (currentMemberInfo == nullptr)
 				{
-					currentFunctionInfo = currentMember->catType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
+					currentFunctionInfo = currentMember->catType.getPointeeType()->getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
 					if (currentFunctionInfo == nullptr)
 					{
 						//failed
@@ -133,10 +133,10 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
 				bool isInheritedHostClass = false;
 				std::string inheritedHostClassName;
-				currentFunctionInfo = currentFunctionInfo->returnType.getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
+				currentFunctionInfo = currentFunctionInfo->returnType.getPointeeType()->getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
 				if (currentFunctionInfo == nullptr)
 				{
-					currentMemberInfo = currentFunction->returnType.getObjectType()->getMemberInfo(lowercaseIdentifier);
+					currentMemberInfo = currentFunction->returnType.getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
 					if (currentMemberInfo == nullptr)
 					{
 						//failed
