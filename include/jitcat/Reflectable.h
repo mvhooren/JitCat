@@ -7,15 +7,15 @@
 
 #pragma once
 
-
+#include <unordered_map>
 #include <vector>
 #include <string>
+
 
 namespace jitcat::Reflection
 {
 	class ReflectableHandle;
-	class TypeInfo;
-
+	class ReflectedTypeInfo;
 
 	class Reflectable
 	{
@@ -26,14 +26,17 @@ namespace jitcat::Reflection
 		Reflectable(Reflectable&& other) noexcept;
 
 		Reflectable& operator=(const Reflectable& other);
+	protected:
+		~Reflectable();
 
-		virtual ~Reflectable();
-
+	public:
 		void addObserver(ReflectableHandle* observer);
 		void removeObserver(ReflectableHandle* observer);
 
+		static void destruct(Reflectable* reflectable);
+
 	private:
-		std::vector<ReflectableHandle*> observers;
+		static std::unordered_multimap<Reflectable*, ReflectableHandle*> observers;
 	};
 
 } //End namespace jitcat::Reflection

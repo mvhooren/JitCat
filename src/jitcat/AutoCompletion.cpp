@@ -16,6 +16,8 @@
 #include "jitcat/ErrorToken.h"
 #include "jitcat/IdentifierToken.h"
 #include "jitcat/Lexeme.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/OneCharToken.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"

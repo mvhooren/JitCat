@@ -21,25 +21,47 @@ namespace jitcat
 	class CatDeferredHostClass : public CatHostClass
 	{
 	public:
-		CatDeferredHostClass(bool constructible, bool inheritable,
+		CatDeferredHostClass(bool constructible, bool placementConstructible, bool inheritable,
 							 std::function<Reflection::Reflectable* ()>& constructor,
-							 std::function<void (Reflection::Reflectable*)>& destructor) :
-			CatHostClass(constructible, inheritable),
+							 std::function<void (Reflection::Reflectable*)>& destructor,
+							 std::function<void (unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
+							 std::function<void (unsigned char* buffer, std::size_t bufferSize)>& placementDestructor):
+			CatHostClass(constructible, placementConstructible, inheritable),
 			constructor(constructor),
-			destructor(destructor)
+			destructor(destructor),
+			placementConstructor(placementConstructor),
+			placementDestructor(placementDestructor)
 		{}
+
+
 		virtual Reflection::Reflectable* construct() override final
 		{
 			return constructor();
 		}
+
+
 		virtual void destruct(Reflection::Reflectable* object) override final
 		{
 			destructor(object);
 		}
 
+
+		virtual void placementConstruct(unsigned char* data, std::size_t dataSize) override final
+		{
+			placementConstructor(data, dataSize);
+		}
+
+
+		virtual void placementDestruct(unsigned char* data, std::size_t dataSize) override final
+		{
+			placementDestructor(data, dataSize);
+		}
+
 	private:
 		std::function<Reflection::Reflectable* ()> constructor;
 		std::function<void(Reflection::Reflectable*)> destructor;
+		std::function<void (unsigned char* buffer, std::size_t bufferSize)> placementConstructor;
+		std::function<void (unsigned char* buffer, std::size_t bufferSize)> placementDestructor;
 	};
 
 }

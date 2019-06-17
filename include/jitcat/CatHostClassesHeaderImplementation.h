@@ -1,3 +1,11 @@
+/*
+  This file is part of the JitCat library.
+	
+  Copyright (C) Machiel van Hooren 2018
+  Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
+*/
+
+
 #pragma once
 
 #include "jitcat/CatBasicHostClass.h"
@@ -9,7 +17,7 @@
 namespace jitcat
 {
 	template<typename ReflectableT>
-	inline void CatHostClasses::addHostClass(bool constructible, bool inheritable)
+	inline void CatHostClasses::addHostClass(bool constructible, bool placementConstructible, bool inheritable)
 	{
 		Reflection::TypeRegistry::get()->registerType<ReflectableT>();
 		static_assert(std::is_base_of<Reflection::Reflectable, ReflectableT>::value, "ReflectableT should inherit from Reflectable.");
@@ -17,12 +25,12 @@ namespace jitcat
 		std::string lowerCaseTypeName = Tools::toLowerCase(ReflectableT::getTypeName());
 		if (hostClasses.find(lowerCaseTypeName) == hostClasses.end())
 		{
-			hostClasses.emplace(lowerCaseTypeName, new CatBasicHostClass<ReflectableT>(constructible, inheritable));
+			hostClasses.emplace(lowerCaseTypeName, new CatBasicHostClass<ReflectableT>(constructible, placementConstructible, inheritable));
 		}
 	}
 
 	template<typename ReflectableT>
-	inline void CatHostClasses::addHostClass(bool constructible, bool inheritable,
+	inline void CatHostClasses::addHostClass(bool constructible, bool placementConstructible, bool inheritable,
 											std::function<ReflectableT* ()> constructor,
 											std::function<void(ReflectableT*)> destructor)
 	{
@@ -31,7 +39,7 @@ namespace jitcat
 		std::string lowerCaseTypeName = Tools::toLowerCase(ReflectableT::getTypeName());
 		if (hostClasses.find(lowerCaseTypeName) = hostClasses.end())
 		{
-			hostClasses.emplace(lowerCaseTypeName, new CatDeferredHostClass<ReflectableT>(constructible, inheritable, constructor, destructor));
+			hostClasses.emplace(lowerCaseTypeName, new CatDeferredHostClass<ReflectableT>(constructible, placementConstructible, inheritable, constructor, destructor));
 		}
 	}
 }

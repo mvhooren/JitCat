@@ -25,10 +25,10 @@ namespace jitcat
 		void addHostClass(std::unique_ptr<CatHostClass>& hostClass, const std::string& className);
 
 		template<typename ReflectableT>
-		inline void addHostClass(bool constructible, bool inheritable);
+		inline void addHostClass(bool constructible, bool placementConstructible, bool inheritable);
 
 		template<typename ReflectableT>
-		inline void addHostClass(bool constructible, bool inheritable,
+		inline void addHostClass(bool constructible, bool placementConstructible, bool inheritable,
 								std::function<ReflectableT* ()> constructor,
 								std::function<void(ReflectableT*)> destructor = [](ReflectableT * object) {delete object; });
 

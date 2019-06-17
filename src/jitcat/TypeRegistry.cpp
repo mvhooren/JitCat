@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/TypeRegistry.h"
+#include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/XMLHelper.h"
 
@@ -60,13 +61,15 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 }
 
 
-TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, TypeCaster* caster)
+TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, std::function<Reflectable*()>& constructor,
+											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
+											std::function<void (Reflectable*)>& destructor)
 {
 	std::string lowerName = Tools::toLowerCase(typeName);
 	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter == types.end())
 	{
-		TypeInfo* typeInfo = new TypeInfo(typeName, caster);
+		TypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, constructor, placementConstructor, destructor);
 		types[lowerName] = typeInfo;
 		return typeInfo;
 	}
@@ -307,9 +310,11 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 }
 
 
-TypeInfo* TypeRegistry::createTypeInfo(const char* typeName, TypeCaster* typeCaster)
+ReflectedTypeInfo* TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, std::function<Reflectable*()>& constructor,
+												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
+												std::function<void (Reflectable*)>& destructor)
 {
-	return new TypeInfo(typeName, typeCaster);
+	return new ReflectedTypeInfo(typeName, typeSize, typeCaster, constructor, placementConstructor, destructor);
 }
 
 

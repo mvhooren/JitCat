@@ -209,7 +209,7 @@ TypeInfo* XMLHelper::findOrCreateTypeInfo(const std::string& typeName, std::map<
 		char* name = (char*)malloc(typeName.size() + 1);
 		memcpy(name, typeName.c_str(), typeName.size() + 1);
 		staticNames.push_back(name);
-		TypeInfo* newInfo = new TypeInfo(name, nullptr);
+		TypeInfo* newInfo = new TypeInfo(name, 0, nullptr);
 		typeInfos[name] = newInfo;
 		return newInfo;
 	}

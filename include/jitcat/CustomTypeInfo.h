@@ -33,11 +33,12 @@ namespace jitcat::Reflection
 		CustomTypeInfo(const char* typeName, bool isConstType = false);
 		virtual ~CustomTypeInfo();
 
-		CustomTypeInstance* createInstance();
-		CustomTypeInstance* createInstanceCopy(CustomTypeInstance* source);
-		unsigned char* instanceConstructor();
+		unsigned char* instanceConstructor() const;
+		void instanceConstructorInPlace(unsigned char* buffer, std::size_t bufferSize);
+
 		void instanceDestructor(CustomTypeInstance* instance);
 		void instanceDestructor(unsigned char* data);
+		void instanceDestructorInPlace(unsigned char* data);
 
 		//Instances that have been created before members are added will be updated.
 		TypeMemberInfo* addFloatMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
@@ -62,11 +63,18 @@ namespace jitcat::Reflection
 
 		virtual bool isCustomType() const;
 
+		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const override final;
+		virtual Reflectable* construct() const override final;
+		virtual void destruct(Reflectable* object) override final;
+
 	private:
+
+		std::size_t addReflectableHandle(Reflectable* defaultValue);
+		std::size_t addObjectDataMember(TypeInfo* type);
 		//Returns a pointer to the start of the newly added size
-		unsigned char* increaseDataSize(unsigned int amount);
-		void increaseDataSize(unsigned char*& data, unsigned int amount, unsigned int currentSize);
-		unsigned char* createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy, unsigned int sizeOfSource);
+		unsigned char* increaseDataSize(std::size_t amount);
+		void increaseDataSize(unsigned char*& data, std::size_t amount, std::size_t currentSize);
+		void createDataCopy(unsigned char* sourceData, std::size_t sourceSize, unsigned char* copyData, std::size_t copySize) const;
 
 	private:
 		CustomTypeInstance* defaultInstance;
@@ -75,8 +83,6 @@ namespace jitcat::Reflection
 
 		bool isConstType;
 		unsigned char* defaultData;
-
-		unsigned int typeSize;
 
 		bool isTriviallyCopyable;
 

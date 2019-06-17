@@ -13,6 +13,7 @@
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
+#include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/TypeInfo.h"
 
 #include <cassert>

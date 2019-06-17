@@ -102,6 +102,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 
 		//Typename
 		rule(Prod::Type, {term(one, OneChar::Times), prod(Prod::Identifier) }, typeName);
+		rule(Prod::Type, {term(one, OneChar::Plus), prod(Prod::Identifier) }, typeName);
 		rule(Prod::Type, {prod(Prod::Identifier)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Void)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Bool)}, typeName);
@@ -392,13 +393,12 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 		const OneCharToken* token = static_cast<const OneCharToken*>(nodeParser.getTerminalByIndex(0));
 		if (token != nullptr)
 		{
-			if ((OneChar)token->getTokenSubType() == OneChar::Times)
+			switch ((OneChar)token->getTokenSubType())
 			{
-				ownership = TypeOwnershipSemantics::Weak;
-			}
-			else if ((OneChar)token->getTokenSubType() == OneChar::BitwiseAnd)
-			{
-				ownership = TypeOwnershipSemantics::Shared;
+				default:
+				case OneChar::Times:		ownership = TypeOwnershipSemantics::Weak;	break;
+				case OneChar::BitwiseAnd:	ownership = TypeOwnershipSemantics::Shared; break;
+				case OneChar::Plus:			ownership = TypeOwnershipSemantics::Value;	break;
 			}
 		}
 		else

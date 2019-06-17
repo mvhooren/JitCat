@@ -19,9 +19,8 @@ using namespace jitcat::Reflection;
 
 
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
-	TypeInfo(typeName, new ObjectTypeCaster<CustomTypeInstance>()),
+	TypeInfo(typeName, 0, new ObjectTypeCaster<CustomTypeInstance>()),
 	defaultData(nullptr),
-	typeSize(0),
 	isTriviallyCopyable(true),
 	isConstType(isConstType)
 {
@@ -36,39 +35,17 @@ CustomTypeInfo::~CustomTypeInfo()
 }
 
 
-CustomTypeInstance* CustomTypeInfo::createInstance()
+unsigned char* CustomTypeInfo::instanceConstructor() const
 {
-	if (!isConstType)
-	{
-		CustomTypeInstance* instance = new CustomTypeInstance(this);
-		instances.insert(instance);
-		return instance;
-	}
-	else
-	{
-		return nullptr;
-	}
+	unsigned char* data = new unsigned char[typeSize];
+	createDataCopy(defaultData, typeSize, data, typeSize);
+	return data;
 }
 
 
-CustomTypeInstance* CustomTypeInfo::createInstanceCopy(CustomTypeInstance* source)
+void jitcat::Reflection::CustomTypeInfo::instanceConstructorInPlace(unsigned char* buffer, std::size_t bufferSize)
 {
-	if (!isConstType)
-	{
-		CustomTypeInstance* instance = new CustomTypeInstance(createDataCopy(source->data, typeSize, typeSize), this);
-		instances.insert(instance);
-		return instance;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
-
-unsigned char* CustomTypeInfo::instanceConstructor()
-{
-	return createDataCopy(defaultData, typeSize, typeSize);
+	createDataCopy(defaultData, typeSize, buffer, bufferSize);
 }
 
 
@@ -85,6 +62,13 @@ void CustomTypeInfo::instanceDestructor(CustomTypeInstance* instance)
 
 void CustomTypeInfo::instanceDestructor(unsigned char* data)
 {
+	instanceDestructorInPlace(data);
+	delete[] data;
+}
+
+
+void jitcat::Reflection::CustomTypeInfo::instanceDestructorInPlace(unsigned char* data)
+{
 	auto end = members.end();
 	for (auto iter = members.begin(); iter != end; ++iter)
 	{
@@ -95,25 +79,25 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 		if (iter->second->catType.isStringType())
 		{
 			std::string* string;
-			unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
+			std::size_t offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
 			memcpy(&string, &data[offset], sizeof(std::string*));
 			delete string;
 		}
 		else if (iter->second->catType.isReflectableHandleType())
 		{
-			unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
+			CustomTypeObjectMemberInfo* memberInfo = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get());
+			std::size_t offset = memberInfo->memberOffset;
 			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(data + offset);
 			if (handle != nullptr)
 			{
 				if (iter->second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
 				{
-					delete handle->get();
+					memberInfo->catType.getPointeeType()->getObjectType()->destruct(handle->get());
 				}
 			}
 			handle->~ReflectableHandle();
 		}
 	}
-	delete[] data;
 }
 
 
@@ -215,22 +199,23 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics, bool isWritable, bool isConst)
 {
 	isTriviallyCopyable = false;
-	unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
-	unsigned int offset = (unsigned int)(data - defaultData);
-	if (defaultData == nullptr)
+	std::size_t offset = 0;
+	TypeMemberInfo* memberInfo = nullptr;
+	if (ownershipSemantics != TypeOwnershipSemantics::Value)
 	{
-		offset = 0;
+		CatGenericType type = CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst);
+		offset = addReflectableHandle(defaultValue);
+		memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst));
+	}
+	else
+	{
+
 	}
 
-	std::set<CustomTypeInstance*>::iterator end = instances.end();
-	for (std::set<CustomTypeInstance*>::iterator iter = instances.begin(); iter != end; ++iter)
-	{
-		new ((*iter)->data + offset) ReflectableHandle(defaultValue);
-	}
-	new (data) ReflectableHandle(defaultValue);
-	TypeMemberInfo* memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst));
+	
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	members.emplace(lowerCaseMemberName, memberInfo);
+	
 	if (Tools::startsWith(memberName, "$"))
 	{
 		addDeferredMembers(memberInfo);
@@ -296,9 +281,57 @@ bool CustomTypeInfo::isCustomType() const
 }
 
 
-unsigned char* CustomTypeInfo::increaseDataSize(unsigned int amount)
+void jitcat::Reflection::CustomTypeInfo::construct(unsigned char* buffer, std::size_t bufferSize) const
 {
-	unsigned int oldSize = typeSize;
+	createDataCopy(defaultData, typeSize, buffer, bufferSize);
+}
+
+
+Reflectable* jitcat::Reflection::CustomTypeInfo::construct() const
+{
+	return reinterpret_cast<Reflectable*>(instanceConstructor());
+}
+
+
+void jitcat::Reflection::CustomTypeInfo::destruct(Reflectable* object)
+{
+	instanceDestructorInPlace((unsigned char*)object);
+	Reflectable::destruct(object);
+
+}
+
+
+std::size_t jitcat::Reflection::CustomTypeInfo::addReflectableHandle(Reflectable* defaultValue)
+{
+	unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
+	std::size_t offset = (data - defaultData);
+	if (defaultData == nullptr)
+	{
+		offset = 0;
+	}
+
+	std::set<CustomTypeInstance*>::iterator end = instances.end();
+	for (std::set<CustomTypeInstance*>::iterator iter = instances.begin(); iter != end; ++iter)
+	{
+		new ((*iter)->data + offset) ReflectableHandle(defaultValue);
+	}
+	new (data) ReflectableHandle(defaultValue);
+	return offset;
+}
+
+
+std::size_t jitcat::Reflection::CustomTypeInfo::addObjectDataMember(TypeInfo* type)
+{
+	unsigned char* data = increaseDataSize(type->getTypeSize());
+	std::size_t offset = (data - defaultData);
+	//QQQ
+	return offset;
+}
+
+
+unsigned char* CustomTypeInfo::increaseDataSize(std::size_t amount)
+{
+	std::size_t oldSize = typeSize;
 	increaseDataSize(defaultData, amount, typeSize);
 	defaultInstance->data = defaultData;
 	typeSize += amount;
@@ -313,16 +346,17 @@ unsigned char* CustomTypeInfo::increaseDataSize(unsigned int amount)
 }
 
 
-void CustomTypeInfo::increaseDataSize(unsigned char*& data, unsigned int amount, unsigned int currentSize)
+void CustomTypeInfo::increaseDataSize(unsigned char*& data, std::size_t amount, std::size_t currentSize)
 {
 	unsigned char* oldData = data;
-	unsigned int oldSize = currentSize;
-	unsigned int newSize = oldSize + amount;
+	std::size_t oldSize = currentSize;
+	std::size_t newSize = oldSize + amount;
 
 	if (oldData != nullptr
 		&& oldSize != 0)
 	{
-		data = createDataCopy(oldData, newSize, currentSize);
+		data = new unsigned char[newSize];
+		createDataCopy(oldData, currentSize, data, newSize);
 		instanceDestructor(oldData);
 	}
 	else
@@ -334,43 +368,36 @@ void CustomTypeInfo::increaseDataSize(unsigned char*& data, unsigned int amount,
 }
 
 
-unsigned char* CustomTypeInfo::createDataCopy(unsigned char* otherData, unsigned int sizeOfCopy, unsigned int sizeOfSource)
+void CustomTypeInfo::createDataCopy(unsigned char* sourceData, std::size_t sourceSize, unsigned char* copyData, std::size_t copySize) const
 {
-	assert(sizeOfCopy >= sizeOfSource);
+	assert(copySize >= sourceSize);
+	assert(sourceData != nullptr);
+	assert(copyData != nullptr);
 	//Create copies of strings and member references
-	if (otherData != nullptr)
+	memcpy(copyData, sourceData, sourceSize);
+	if (!isTriviallyCopyable)
 	{
-		unsigned char* instanceData = new unsigned char[sizeOfCopy];
-		memcpy(instanceData, otherData, sizeOfSource);
-		if (!isTriviallyCopyable)
+		auto end = members.end();
+		for (auto iter = members.begin(); iter != end; ++iter)
 		{
-			auto end = members.end();
-			for (auto iter = members.begin(); iter != end; ++iter)
+			if (iter->second->isDeferred())
 			{
-				if (iter->second->isDeferred())
-				{
-					continue;
-				}
-				if (iter->second->catType.isStringType())
-				{
-					std::string* originalString;
-					unsigned int offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
-					memcpy(&originalString, &otherData[offset], sizeof(std::string*));
-					std::string* stringCopy = new std::string(*originalString);
-					memcpy(instanceData + offset, &stringCopy, sizeof(std::string*));
-				}
-				else if (iter->second->catType.isReflectableHandleType())
-				{
-					unsigned int offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
-					ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(&otherData[offset]);
-					new (instanceData + offset) ReflectableHandle(handle->get());
-				}
+				continue;
+			}
+			if (iter->second->catType.isStringType())
+			{
+				std::string* originalString;
+				std::size_t offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
+				memcpy(&originalString, &sourceData[offset], sizeof(std::string*));
+				std::string* stringCopy = new std::string(*originalString);
+				memcpy(copyData + offset, &stringCopy, sizeof(std::string*));
+			}
+			else if (iter->second->catType.isReflectableHandleType())
+			{
+				std::size_t offset = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get())->memberOffset;
+				ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(&sourceData[offset]);
+				new (copyData + offset) ReflectableHandle(handle->get());
 			}
 		}
-		return instanceData;
-	}
-	else
-	{
-		return nullptr;
 	}
 }

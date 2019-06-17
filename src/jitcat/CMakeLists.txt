@@ -240,6 +240,7 @@ set(Source_Reflection_TypeInfo
 	CustomTypeInstance.cpp
 	${JitCatHeaderPath}/CustomTypeInstance.h
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
+	CustomTypeMemberInfo.cpp
 	${JitCatHeaderPath}/CustomTypeMemberInfo.h
 	${JitCatHeaderPath}/CustomTypeMemberInfoHeaderImplementation.h
 	MemberFunctionInfo.cpp
@@ -249,10 +250,12 @@ set(Source_Reflection_TypeInfo
 	${JitCatHeaderPath}/MemberInfoHeaderImplementation.h
 	${JitCatHeaderPath}/MemberTypeInfoCreator.h
 	${JitCatHeaderPath}/MemberVisibility.h
+	ReflectedTypeInfo.cpp
+	${JitCatHeaderPath}/ReflectedTypeInfo.h
+	${JitCatHeaderPath}/ReflectedTypeInfoHeaderImplementation.h
 	${JitCatHeaderPath}/TypeCaster.h
 	TypeInfo.cpp
 	${JitCatHeaderPath}/TypeInfo.h
-	${JitCatHeaderPath}/TypeInfoHeaderImplementation.h
 	${JitCatHeaderPath}/TypeOwnershipSemantics.h
 	${JitCatHeaderPath}/TypeTraits.h
 	${JitCatHeaderPath}/TypeTraitsHeaderImplementation.h

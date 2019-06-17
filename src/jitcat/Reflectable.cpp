@@ -8,6 +8,8 @@
 #include "jitcat/Reflectable.h"
 #include "jitcat/ReflectableHandle.h"
 
+#include <algorithm>
+
 using namespace jitcat::Reflection;
 
 
@@ -25,9 +27,16 @@ Reflectable::Reflectable()
 
 Reflectable::Reflectable(Reflectable&& other) noexcept
 {
-	while (!other.observers.empty())
+	while (true)
 	{
-		(*other.observers.begin())->operator=(this);
+		if (auto& iter = observers.find(&other); iter != observers.end())
+		{
+			iter->second->operator=(this);
+		}
+		else
+		{
+			break;
+		}
 	}
 }
 
@@ -42,27 +51,45 @@ Reflectable& jitcat::Reflection::Reflectable::operator=(const Reflectable& other
 
 Reflectable::~Reflectable()
 {
-	for (unsigned int i = 0; i < observers.size(); i++)
+	while (true)
 	{
-		observers[i]->notifyDeletion();
+		if (auto& iter = observers.find(this); iter != observers.end())
+		{
+			iter->second->notifyDeletion();
+			observers.erase(iter);
+		}
+		else
+		{
+			break;
+		}
 	}
 }
 
 
 void Reflectable::addObserver(ReflectableHandle* observer)
 {
-	observers.push_back(observer);
+	observers.insert(std::pair<Reflectable*,ReflectableHandle*>(this, observer));
 }
 
 
 void Reflectable::removeObserver(ReflectableHandle* observer)
 {
-	for (unsigned int i = 0; i < observers.size(); i++)
+	auto& range = observers.equal_range(this);
+	for (auto& iter = range.first; iter != range.second; ++iter)
 	{
-		if (observers[i] == observer)
+		if (iter->second == observer)
 		{
-			observers.erase(observers.begin() + (int)i);
+			observers.erase(iter);
 			break;
 		}
 	}
 }
+
+
+void jitcat::Reflection::Reflectable::destruct(Reflectable* reflectable)
+{
+	delete reflectable;
+}
+
+
+std::unordered_multimap<Reflectable*, ReflectableHandle*> Reflectable::observers = std::unordered_multimap<Reflectable*, ReflectableHandle*>();

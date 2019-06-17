@@ -19,6 +19,11 @@
 #include <memory>
 #include <vector>
 
+namespace jitcat
+{
+	class CatHostClass;
+}
+
 namespace jitcat::Reflection
 {
 	struct MemberFunctionInfo;
@@ -54,19 +59,8 @@ namespace jitcat::Reflection
 	{
 	public:
 		//The type name must be a static const char* because types are compared based on the pointer value of their type names.
-		TypeInfo(const char* typeName, TypeCaster* caster);
+		TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster);
 		virtual ~TypeInfo();
-
-		//Adds information of a member of type U inside struct/class T
-		//A second function exists to differentiate between U and U*
-		template <typename T, typename U>
-		TypeInfo& addMember(const std::string& identifier, U T::* member, MemberFlags flags = MF::none);
-
-		template <typename T, typename U, typename ... Args>
-		TypeInfo& addMember(const std::string& identifier, U (T::*function)(Args...));
-
-		template <typename T, typename U, typename ... Args>
-		TypeInfo& addMember(const std::string& identifier, U (T::*function)(Args...) const);
 
 		//Add a nested type to this type. Return true if the type was added, false if a type with this name already exists.
 		bool addType(TypeInfo* type);
@@ -77,6 +71,9 @@ namespace jitcat::Reflection
 
 		void addDeserializedMember(TypeMemberInfo* memberInfo);
 		void addDeserializedMemberFunction(MemberFunctionInfo* memberFunction);
+
+		//Returns the size of the type in bytes
+		std::size_t getTypeSize() const;
 
 		//Given a dot notated string like "bla.blep.blip", returns the CatGenericType of "blip".
 		const CatGenericType& getType(const std::string& dotNotation) const;
@@ -110,6 +107,10 @@ namespace jitcat::Reflection
 		//May be nullptr when type info was read from XML
 		const TypeCaster* getTypeCaster() const;
 
+		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const;
+		virtual Reflectable* construct() const;
+		virtual void destruct(Reflectable* object);
+
 	protected:
 		//Adds members from a member object that will automatically be forwarded.
 		void addDeferredMembers(TypeMemberInfo* deferredMember);
@@ -125,7 +126,8 @@ namespace jitcat::Reflection
 		std::map<std::string, TypeInfo*> types;
 		//The parent of this type if this type is nested into another type. nullptr otherwise.
 		TypeInfo* parentType;
+		//Size of the type in bytes
+		std::size_t typeSize;
 	};
 
 }
-#include "jitcat/TypeInfoHeaderImplementation.h"

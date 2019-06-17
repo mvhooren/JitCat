@@ -40,7 +40,7 @@ namespace jitcat
 			std::string message;
 			void* errorSource;
 
-			static void reflect(Reflection::TypeInfo& typeInfo);
+			static void reflect(Reflection::ReflectedTypeInfo& typeInfo);
 			static const char* getTypeName();
 
 		};
@@ -64,7 +64,7 @@ namespace jitcat
 		//This is used by the user interface to track changes and update the error list accordingly.
 		unsigned int getErrorsRevision() const;
 
-		static void reflect(Reflection::TypeInfo& typeInfo);
+		static void reflect(Reflection::ReflectedTypeInfo& typeInfo);
 		static const char* getTypeName();
 
 	private:

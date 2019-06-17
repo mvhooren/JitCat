@@ -16,7 +16,7 @@ class ReflectionTestObject2: public jitcat::Reflection::Reflectable
 public:
 	ReflectionTestObject2();
 
-	static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
+	static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 	static const char* getTypeName();
 
 	std::string getWhat();

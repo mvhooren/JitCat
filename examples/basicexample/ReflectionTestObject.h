@@ -19,7 +19,7 @@ class ReflectionTestObject: public jitcat::Reflection::Reflectable
 public:
 	ReflectionTestObject(std::string text);
 
-	static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
+	static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 	static const char* getTypeName();
 
 	int getRandomInt();

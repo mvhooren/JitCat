@@ -7,8 +7,8 @@
 
 #include "ReflectionTestObject.h"
 #include "ReflectionTestObject2.h"
+#include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
-#include "jitcat/TypeInfo.h"
 
 #include <random>
 
@@ -32,7 +32,7 @@ ReflectionTestObject::ReflectionTestObject(std::string text):
 }
 
 
-void ReflectionTestObject::reflect(TypeInfo& typeInfo)
+void ReflectionTestObject::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo.addMember("text", &ReflectionTestObject::text);
 	typeInfo.addMember("getTest2", &ReflectionTestObject::getTest2);

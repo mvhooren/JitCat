@@ -13,6 +13,7 @@
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/ReflectableHandle.h"
+#include "jitcat/TypeInfo.h"
 
 #include <cassert>
 
@@ -177,7 +178,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			TypeOwnershipSemantics sourceOwnership = sourceType.getOwnershipSemantics();
 			if (targetOwnership == TypeOwnershipSemantics::Owned)
 			{
-				delete *reflectableTarget;
+				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(*reflectableTarget);
 			}
 			if (sourceType.isPointerToReflectableObjectType())
 			{
@@ -230,7 +231,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			TypeOwnershipSemantics targetOwnership = targetType.getPointeeType()->getOwnershipSemantics();
 			if (targetOwnership == TypeOwnershipSemantics::Owned)
 			{
-				delete handleTarget->get();
+				targetType.getPointeeType()->getObjectType()->destruct(handleTarget->get());
 			}
 			if (sourceType.isPointerToReflectableObjectType()
 				|| sourceType.isReflectableHandleType())

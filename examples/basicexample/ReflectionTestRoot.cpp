@@ -7,7 +7,7 @@
 
 #include "ReflectionTestRoot.h"
 #include "ReflectionTestObject.h"
-#include "jitcat/TypeInfo.h"
+#include "jitcat/ReflectedTypeInfo.h"
 
 using namespace jitcat::Reflection;
 
@@ -31,7 +31,7 @@ ReflectionTestRoot::~ReflectionTestRoot()
 }
 
 
-void ReflectionTestRoot::reflect(TypeInfo& typeInfo)
+void ReflectionTestRoot::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo.addMember("test", &ReflectionTestRoot::testObject, MF::isConst);
 	typeInfo.addMember("test2", &ReflectionTestRoot::testObject2);

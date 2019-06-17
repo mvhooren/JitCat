@@ -1036,5 +1036,5 @@ const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Floa
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool);
 const CatGenericType CatGenericType::stringType		= CatGenericType(BasicType::String);
 const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void);
-const CatGenericType CatGenericType::nullptrType	= CatGenericType(new TypeInfo("nullptr", new NullptrTypeCaster()), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
+const CatGenericType CatGenericType::nullptrType	= CatGenericType(new TypeInfo("nullptr", 0, new NullptrTypeCaster()), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();

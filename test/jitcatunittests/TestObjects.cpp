@@ -6,6 +6,7 @@
 */
 
 #include "TestObjects.h"
+#include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 
@@ -26,7 +27,7 @@ NestedReflectedObject::NestedReflectedObject():
 }
 
 
-void NestedReflectedObject::reflect(TypeInfo& typeInfo)
+void NestedReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo
 		.addMember("someString", &NestedReflectedObject::someString)
@@ -108,7 +109,7 @@ void ReflectedObject::createNullObjects()
 }
 
 
-void ReflectedObject::reflect(TypeInfo& typeInfo)
+void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo
 		.addMember("getFloat", &ReflectedObject::getFloat)

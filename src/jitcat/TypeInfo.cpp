@@ -6,6 +6,8 @@
 */
 
 #include "jitcat/TypeInfo.h"
+#include "jitcat/MemberInfo.h"
+#include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeRegistry.h"
@@ -17,10 +19,11 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
-TypeInfo::TypeInfo(const char* typeName, TypeCaster* caster):
+TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster):
 	typeName(typeName),
 	caster(caster),
-	parentType(nullptr)
+	parentType(nullptr),
+	typeSize(typeSize)
 {
 }
 
@@ -81,6 +84,12 @@ void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 {
 	std::string lowerCaseMemberFunctionName = Tools::toLowerCase(memberFunction->memberFunctionName);
 	memberFunctions.emplace(lowerCaseMemberFunctionName, memberFunction);
+}
+
+
+std::size_t jitcat::Reflection::TypeInfo::getTypeSize() const
+{
+	return typeSize;
 }
 
 
@@ -285,6 +294,22 @@ const std::map<std::string, TypeInfo*>& jitcat::Reflection::TypeInfo::getTypes()
 const TypeCaster* TypeInfo::getTypeCaster() const
 {
 	return caster.get();
+}
+
+
+void jitcat::Reflection::TypeInfo::construct(unsigned char* buffer, std::size_t bufferSize) const
+{
+}
+
+
+Reflectable* jitcat::Reflection::TypeInfo::construct() const
+{
+	return nullptr;
+}
+
+
+void jitcat::Reflection::TypeInfo::destruct(Reflectable* object)
+{
 }
 
 

@@ -19,7 +19,7 @@ public:
 	ReflectionTestRoot();
 	~ReflectionTestRoot();
 
-	static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
+	static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 	static const char* getTypeName();
 
 	float getPi() const;

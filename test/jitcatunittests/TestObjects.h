@@ -34,7 +34,7 @@ namespace TestObjects
 	public:
 		NestedReflectedObject();
 
-		static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 		static const char* getTypeName();
 
 		public:
@@ -57,7 +57,7 @@ namespace TestObjects
 		void createNestedObjects();
 		void createNullObjects();
 
-		static void reflect(jitcat::Reflection::TypeInfo& typeInfo);
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 		static const char* getTypeName();
 
 		//All supported return types

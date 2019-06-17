@@ -11,6 +11,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
+#include "jitcat/MemberInfo.h"
 
 #include <cassert>
 

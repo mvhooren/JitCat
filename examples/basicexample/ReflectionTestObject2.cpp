@@ -6,7 +6,7 @@
 */
 
 #include "ReflectionTestObject2.h"
-#include "jitcat/TypeInfo.h"
+#include "jitcat/ReflectedTypeInfo.h"
 
 using namespace jitcat::Reflection;
 
@@ -18,7 +18,7 @@ ReflectionTestObject2::ReflectionTestObject2():
 }
 
 
-void ReflectionTestObject2::reflect(TypeInfo& typeInfo)
+void ReflectionTestObject2::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo.addMember("what", &ReflectionTestObject2::what);
 	typeInfo.addMember("getWhat", &ReflectionTestObject2::getWhat);

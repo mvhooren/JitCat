@@ -8,7 +8,7 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Document.h"
 #include "jitcat/Tools.h"
-#include "jitcat/TypeInfo.h"
+#include "jitcat/ReflectedTypeInfo.h"
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
@@ -101,7 +101,7 @@ unsigned int ExpressionErrorManager::getErrorsRevision() const
 }
 
 
-void ExpressionErrorManager::reflect(TypeInfo& typeInfo)
+void ExpressionErrorManager::reflect(ReflectedTypeInfo& typeInfo)
 {
 	//typeInfo.addMember("errors", &ExpressionErrorManager::errors);
 }
@@ -119,7 +119,7 @@ void ExpressionErrorManager::deleteErrorsFromSource(void* errorSource)
 }
 
 
-void ExpressionErrorManager::Error::reflect(TypeInfo& typeInfo)
+void ExpressionErrorManager::Error::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo.addMember("message", &ExpressionErrorManager::Error::message);
 }
