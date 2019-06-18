@@ -92,4 +92,26 @@ void jitcat::Reflection::Reflectable::destruct(Reflectable* reflectable)
 }
 
 
+void jitcat::Reflection::Reflectable::placementDestruct(Reflectable* reflectable)
+{
+	reflectable->~Reflectable();
+}
+
+
+void jitcat::Reflection::Reflectable::replaceReflectable(Reflectable* oldReflectable, Reflectable* newReflectable)
+{
+	while (true)
+	{
+		if (auto& iter = observers.find(oldReflectable); iter != observers.end())
+		{
+			(*iter->second) = newReflectable;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+
 std::unordered_multimap<Reflectable*, ReflectableHandle*> Reflectable::observers = std::unordered_multimap<Reflectable*, ReflectableHandle*>();

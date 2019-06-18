@@ -12,9 +12,10 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScope.h"
 #include "jitcat/CatScopeID.h"
-#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/MemberVisibility.h"
 #include "jitcat/ReflectableHandle.h"
+#include "jitcat/ReflectableInstance.h"
+#include "jitcat/TypeTraits.h"
 
 #include <any>
 #include <cassert>
@@ -24,9 +25,9 @@
 
 namespace jitcat::Reflection
 {
-	class CustomTypeInstance;
 	class CustomTypeInfo;
 	struct CustomTypeMemberFunctionInfo;
+	class Reflectable;
 }
 
 namespace jitcat::AST
@@ -67,17 +68,13 @@ namespace jitcat::AST
 
 		const std::string& getFunctionName() const;
 
-		template<typename... ArgumentsT>
-		Reflection::CustomTypeInstance* createParameterPack(ArgumentsT... arguments);
-
 		// Inherited via CatScope
 		virtual CatScopeID getScopeId() const override final;
 		virtual Reflection::CustomTypeInfo* getCustomType() override final;
 
 	private:
-		//Reflection::CustomTypeInstance* createAnyParametersPack(const std::vector<std::any>& arguments, CatScopeID& createdScopeId);
-		Reflection::CustomTypeInstance* createCustomTypeInstance() const;
-		CatScopeID pushScope(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* instance);
+		Reflection::Reflectable* createCustomTypeInstance() const;
+		CatScopeID pushScope(CatRuntimeContext* runtimeContext, Reflection::Reflectable* instance);
 
 	private:
 		std::string name;
@@ -96,6 +93,8 @@ namespace jitcat::AST
 	};
 
 
+
+
 	template<typename ...ArgumentsT>
 	inline std::any CatFunctionDefinition::executeFunction(CatRuntimeContext* runtimeContext, ArgumentsT... arguments)
 	{
@@ -105,21 +104,13 @@ namespace jitcat::AST
 		}
 		else
 		{
-			std::unique_ptr<Reflection::CustomTypeInstance> instance(createParameterPack(std::forward<ArgumentsT>(arguments)...));
-			CatScopeID scopeId = pushScope(runtimeContext, instance.get());
-			return executeFunctionWithPack(runtimeContext, scopeId);
+			std::size_t numParameters = (std::size_t)getNumParameters();
+			std::vector<std::any> anyArguments(numParameters);
+			assert(sizeof...(ArgumentsT) == numParameters);
+			int i = 0;
+			int dummy[] = { 0, ( anyArguments[i++] = jitcat::TypeTraits<ArgumentsT>::getCatValue(std::forward<ArgumentsT>(arguments)), 0) ... };
+			return executeFunctionWithArguments(runtimeContext, anyArguments);
 		}
-	}
-
-
-	template<typename... ArgumentsT>
-	inline Reflection::CustomTypeInstance* CatFunctionDefinition::createParameterPack(ArgumentsT... arguments)
-	{
-		Reflection::CustomTypeInstance* instance = createCustomTypeInstance();
-		assert(sizeof...(ArgumentsT) == (std::size_t)getNumParameters());
-		int i = 0;
-		(instance->setMemberValue(getParameterName(i++), (std::forward<ArgumentsT>(arguments))), ...);
-		return instance;
 	}
 
 };

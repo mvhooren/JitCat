@@ -10,6 +10,7 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
+#include "jitcat/CatGenericType.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatMemberFunctionCall.h"
@@ -18,9 +19,9 @@
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/CustomTypeInfo.h"
-#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/ReflectableInstance.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
 
@@ -107,7 +108,7 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	}
 	if (parameters->getNumParameters() > 0)
 	{
-		parametersScopeId = compileTimeContext->addCustomTypeScope(parameters->getCustomType());
+		parametersScopeId = compileTimeContext->addScope(parameters->getCustomType(), nullptr, false);
 	}
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 	compileTimeContext->setCurrentScope(this);
@@ -165,7 +166,8 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 			errorManager->compiledWithError(Tools::append("A function with name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), nameLexeme);
 			return false;
 		}
-		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, CatGenericType(compileTimeContext->getScopeType(currentScope->getScopeId()), type->getType().getOwnershipSemantics()), this);
+		CatGenericType thisType(compileTimeContext->getScopeType(currentScope->getScopeId()), false, false);
+		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, thisType, this);
 		memberFunctionInfo->visibility = visibility;
 	}
 	return true;
@@ -185,14 +187,13 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 {
 	assert(parameterAssignables.size() == arguments.size());
 	CatScopeID scopeId = InvalidScopeID;
-	std::unique_ptr<CustomTypeInstance> parametersInstance;
+	unsigned char* scopeMem = nullptr;
 	if (parameters->getNumParameters() > 0)
 	{
-		parametersInstance.reset(createCustomTypeInstance());
-		//The parameter values should be of the correct type.
-		assert(parametersInstance->typeInfo == parameters->getCustomType());
+		scopeMem = static_cast<unsigned char*>(alloca(parameters->getCustomType()->getTypeSize()));
+		parameters->getCustomType()->construct(scopeMem, parameters->getCustomType()->getTypeSize());
 
-		scopeId = pushScope(runtimeContext, parametersInstance.get());
+		scopeId = pushScope(runtimeContext, reinterpret_cast<Reflectable*>(scopeMem));
 		//The scopeId should match the scopeId that was obtained during type checking.
 		assert(scopeId == parametersScopeId);
 
@@ -204,7 +205,12 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 			i++;
 		}
 	}
-	return executeFunctionWithPack(runtimeContext, scopeId);
+	std::any result = executeFunctionWithPack(runtimeContext, scopeId);
+	if (scopeMem != nullptr)
+	{
+		parameters->getCustomType()->destruct(scopeMem, parameters->getCustomType()->getTypeSize());
+	}
+	return result;
 }
 
 
@@ -272,13 +278,13 @@ Reflection::CustomTypeInfo* CatFunctionDefinition::getCustomType()
 }
 
 
-Reflection::CustomTypeInstance* jitcat::AST::CatFunctionDefinition::createCustomTypeInstance() const
+Reflection::Reflectable* jitcat::AST::CatFunctionDefinition::createCustomTypeInstance() const
 {
-	return parameters->getCustomType()->createInstance();
+	return parameters->getCustomType()->construct();
 }
 
 
-CatScopeID jitcat::AST::CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, Reflection::CustomTypeInstance* instance)
+CatScopeID jitcat::AST::CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, Reflection::Reflectable* instance)
 {
-	return runtimeContext->addCustomTypeScope(parameters->getCustomType(), instance);
+	return runtimeContext->addScope(parameters->getCustomType(), instance, false);
 }

@@ -24,11 +24,12 @@ namespace jitcat::Reflection
 	public:
 		ReflectedTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, std::function<Reflectable*()>& constructor,
 						  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-						  std::function<void (Reflectable*)>& destructor): 
+						  std::function<void (Reflectable*)>& destructor, std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor): 
 			TypeInfo(typeName, typeSize, typeCaster),
 			constructor(constructor),
 			placementConstructor(placementConstructor),
-			destructor(destructor)
+			destructor(destructor),
+			placementDestructor(placementDestructor)
 		{}
 
 		virtual ~ReflectedTypeInfo() {};
@@ -44,14 +45,16 @@ namespace jitcat::Reflection
 		template <typename ReflectedT, typename MemberT, typename ... Args>
 		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT (ReflectedT::*function)(Args...) const);
 
-		inline virtual void construct(unsigned char* buffer, std::size_t bufferSize) const override final;
-		inline virtual Reflectable* construct() const override final;
-		inline virtual void destruct(Reflectable* object) override final;
+		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const override final;
+		virtual Reflectable* construct() const override final;
+		virtual void destruct(Reflectable* object) override final;
+		virtual void destruct(unsigned char* buffer, std::size_t bufferSize) override final;
 
 	private:
 		std::function<Reflectable*()> constructor;
 		std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementConstructor;
 		std::function<void (Reflectable*)> destructor;
+		std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor;
 	};
 
 }

@@ -14,6 +14,7 @@
 
 namespace jitcat::Reflection
 {
+	class CustomTypeInfo;
 	class ReflectableHandle;
 	class ReflectedTypeInfo;
 
@@ -34,9 +35,11 @@ namespace jitcat::Reflection
 		void removeObserver(ReflectableHandle* observer);
 
 		static void destruct(Reflectable* reflectable);
+		static void placementDestruct(Reflectable* reflectable);
+		//Will replace the reflectable in all ReflectableHandle observers with the newReflectable.
+		static void replaceReflectable(Reflectable* oldReflectable, Reflectable* newReflectable);
 
 	private:
 		static std::unordered_multimap<Reflectable*, ReflectableHandle*> observers;
 	};
-
 } //End namespace jitcat::Reflection

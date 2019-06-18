@@ -313,6 +313,11 @@ void jitcat::Reflection::TypeInfo::destruct(Reflectable* object)
 }
 
 
+void jitcat::Reflection::TypeInfo::destruct(unsigned char* buffer, std::size_t bufferSize)
+{
+}
+
+
 void jitcat::Reflection::TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
 {
 	auto& deferredMembers = deferredMember->catType.getPointeeType()->getObjectType()->getMembers();

@@ -13,7 +13,6 @@
 #include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CustomTypeInfo.h"
-#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
@@ -71,8 +70,8 @@ std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 	}
 	else
 	{
-		CustomTypeInstance* instance = static_cast<CustomTypeInfo*>(newType.getPointeeType()->getObjectType())->createInstance();
-		functionCall->executeWithBase(runtimeContext, static_cast<Reflectable*>(instance));
+		Reflectable* instance = static_cast<CustomTypeInfo*>(newType.getPointeeType()->getObjectType())->construct();
+		functionCall->executeWithBase(runtimeContext, instance);
 		return std::any((Reflectable*)instance);
 	}
 	return nullptr;

@@ -44,7 +44,8 @@ namespace jitcat::Reflection
 		//Never returns nullptr, creates a new empty TypeInfo if typeName does not exist.
 		TypeInfo* getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, std::function<Reflectable*()>& constructor,
 									  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-									  std::function<void (Reflectable*)>& destructor);
+									  std::function<void (Reflectable*)>& destructor,
+									  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
 
 		const std::map<std::string, TypeInfo*>& getTypes() const;
 	
@@ -66,7 +67,9 @@ namespace jitcat::Reflection
 		//This function exists to prevent circular includes via TypeInfo.h
 		static ReflectedTypeInfo* createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, std::function<Reflectable*()>& constructor,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-												std::function<void (Reflectable*)>& destructor);
+												std::function<void (Reflectable*)>& destructor,
+												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
+		static TypeInfo* castToTypeInfo(ReflectedTypeInfo* reflectedTypeInfo);
 
 	private:
 		std::map<std::string, TypeInfo*> types;
@@ -93,6 +96,7 @@ namespace jitcat::Reflection
 			std::function<jitcat::Reflection::Reflectable*()> constructor;
 			std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementConstructor;
 			std::function<void (jitcat::Reflection::Reflectable*)> destructor;
+			std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementDestructor;
 			std::size_t typeSize = sizeof(ReflectableT);
 			jitcat::Reflection::ObjectTypeCaster<ReflectableT>* typeCaster = new jitcat::Reflection::ObjectTypeCaster<ReflectableT>();
 
@@ -111,14 +115,16 @@ namespace jitcat::Reflection
 			if constexpr (std::is_destructible<ReflectableT>::value)
 			{
 				destructor = [](jitcat::Reflection::Reflectable* object){delete static_cast<ReflectableT*>(object);};
+				placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){reinterpret_cast<ReflectableT*>(buffer)->~ReflectableT();};
 			}
 			else
 			{
 				destructor = [](jitcat::Reflection::Reflectable* object){};
+				placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){};
 			}
 
-			jitcat::Reflection::ReflectedTypeInfo* reflectedInfo = createTypeInfo(typeName, typeSize, typeCaster, constructor, placementConstructor, destructor);
-			typeInfo = reflectedInfo;
+			jitcat::Reflection::ReflectedTypeInfo* reflectedInfo = createTypeInfo(typeName, typeSize, typeCaster, constructor, placementConstructor, destructor, placementDestructor);
+			typeInfo = castToTypeInfo(reflectedInfo);
 			types[lowerTypeName] = typeInfo;
 			ownedTypes.emplace_back(typeInfo);
 			ReflectableT::reflect(*reflectedInfo);

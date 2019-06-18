@@ -14,7 +14,6 @@ namespace jitcat::LLVM
 namespace jitcat::Reflection
 {
 	class CustomTypeInfo;
-	class CustomTypeInstance;
 	struct MemberFunctionInfo;
 	class Reflectable;
 	class TypeInfo;
@@ -49,7 +48,7 @@ namespace jitcat
 	//A CatRuntimeContext provides variables and functions for use in expressions. (See Expression.h, ExpressionAny.h)
 	//It can contain multiple "scopes" of variables.
 	//Variables can come from classes that inherit from Reflectable (and implement the static functions required for reflection, see TypeInfo.h) or
-	//from a CustomTypeInfo / CustomTypeInstance, which represent a struct that is defined at runtime.
+	//from a CustomTypeInfo instance, which represent a struct that is defined at runtime.
 	//It also provides a context for errors that are generated when expressions are compiled using a CatRuntimeContext.
 	//It does this by providing a context name as well as a stack of error contexts that provide better descriptions for any errors that are generated.
 	//Errors are managed by the ExpressionErrorManager. An ExpressionErrorManager can be passed to the constructor to use one ExpressionErrorManager for multiple CatRuntimeContexts.
@@ -82,11 +81,9 @@ namespace jitcat
 		//scopeObjects are not owned/deleted by the CatRuntimeContext.
 		//Adding a scope returns a ScopeID that can later be used to remove or change the scope object.
 		template<typename ReflectableType>
-		CatScopeID addScope(ReflectableType* scopeObject = nullptr, bool isStatic = false);
+		CatScopeID addScope(ReflectableType* scopeObject, bool isStatic);
 		//Same as above addObject, but explicitly specify type and scopeObject instead of deriving typeInfo from the scopeObject;
-		CatScopeID addScope(Reflection::TypeInfo* typeInfo, Reflection::Reflectable* scopeObject = nullptr, bool isStatic = false);
-		//Same as addScope but uses a custom type (a struct defined at runtime) instead of a reflected C++ class.
-		CatScopeID addCustomTypeScope(Reflection::CustomTypeInfo* typeInfo, Reflection::CustomTypeInstance* scopeObject = nullptr, bool isStatic = false);
+		CatScopeID addScope(Reflection::TypeInfo* typeInfo, Reflection::Reflectable* scopeObject, bool isStatic);
 
 		void pushStackFrame();
 		void popStackFrame();

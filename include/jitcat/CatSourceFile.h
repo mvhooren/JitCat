@@ -11,14 +11,16 @@
 #include "jitcat/CatASTNodesDeclares.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScope.h"
+#include "jitcat/ReflectableInstance.h"
 
 #include <vector>
 
 namespace jitcat::Reflection
 {
 	class CustomTypeInfo;
-	class CustomTypeInstance;
+	class Reflectable;
 }
+
 namespace jitcat::AST
 {
 	class CatDefinition;
@@ -64,7 +66,7 @@ namespace jitcat::AST
 
 		CatScopeID staticScopeId;
 		std::unique_ptr<Reflection::CustomTypeInfo> scopeType;
-		std::unique_ptr<Reflection::CustomTypeInstance> scopeInstance;
+		Reflection::ReflectableInstance scopeInstance;
 	};
 
 };

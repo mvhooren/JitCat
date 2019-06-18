@@ -9,6 +9,7 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/CatASTNodes.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/ContainerManipulator.h"
 #include "jitcat/Document.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/SLRParseResult.h"

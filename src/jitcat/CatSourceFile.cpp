@@ -13,7 +13,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatVariableDefinition.h"
 #include "jitcat/CustomTypeInfo.h"
-#include "jitcat/CustomTypeInstance.h"
+#include "jitcat/Reflectable.h"
 
 #include <cassert>
 
@@ -28,7 +28,7 @@ jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<s
 	definitions(std::move(definitions)),
 	staticScopeId(InvalidScopeID),
 	scopeType(new Reflection::CustomTypeInfo(this->name.c_str())),
-	scopeInstance(scopeType->createInstance())
+	scopeInstance(scopeType->construct(), scopeType.get())
 {
 	extractDefinitionLists();
 }
@@ -39,7 +39,7 @@ jitcat::AST::CatSourceFile::CatSourceFile(const CatSourceFile& other):
 	name(other.name),
 	staticScopeId(InvalidScopeID),
 	scopeType(new Reflection::CustomTypeInfo(this->name.c_str())),
-	scopeInstance(scopeType->createInstance())
+	scopeInstance(scopeType->construct(), scopeType.get())
 {
 	for (auto& iter : other.definitions)
 	{
@@ -90,7 +90,7 @@ const std::vector<CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFuncti
 
 bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	staticScopeId = compiletimeContext->addCustomTypeScope(scopeType.get(), scopeInstance.get(), true);
+	staticScopeId = compiletimeContext->addScope(scopeType.get(), scopeInstance.getReflectable(), true);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;

@@ -20,6 +20,8 @@
 #include "jitcat/CatVariableDefinition.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/MemberInfo.h"
+
 #include <cassert>
 
 using namespace jitcat;
@@ -96,7 +98,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
 	compileTimeContext->setCurrentClass(this);
 	bool noErrors = true;
-	scopeId = compileTimeContext->addCustomTypeScope(customType.get());
+	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 	compileTimeContext->setCurrentScope(this);
 

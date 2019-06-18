@@ -54,6 +54,34 @@ public:
 
 };
 
+
+class CustomObjectTypeCaster: public TypeCaster
+{
+public:
+	CustomObjectTypeCaster() {};
+	virtual ~CustomObjectTypeCaster() {};
+
+
+	virtual std::any cast(const std::any& pointer) const override final
+	{
+		return pointer;
+	}
+
+
+	virtual std::any cast(uintptr_t pointer) const override final
+	{
+		return std::any(reinterpret_cast<Reflectable*>(pointer));
+	}
+
+
+	virtual std::any getNull() const override final
+	{
+		return static_cast<Reflectable*>(nullptr);
+	}
+
+};
+
+
 class NullptrTypeCaster: public TypeCaster
 {
 public:

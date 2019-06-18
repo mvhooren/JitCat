@@ -8,7 +8,6 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CustomTypeInfo.h"
-#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ErrorContext.h"
 #include "jitcat/ExpressionErrorManager.h"
 #ifdef ENABLE_LLVM
@@ -74,21 +73,10 @@ std::string CatRuntimeContext::getContextName()
 
 CatScopeID CatRuntimeContext::addScope(TypeInfo* typeInfo, Reflectable* scopeObject, bool isStatic)
 {
-	return createScope(scopeObject, typeInfo, isStatic);
-}
-
-
-CatScopeID CatRuntimeContext::addCustomTypeScope(CustomTypeInfo* typeInfo, CustomTypeInstance* scopeObject, bool isStatic)
-{
 	assert(typeInfo != nullptr);
 	//If this is a static scope, scopeObject must not be nullptr.
 	assert(!isStatic || scopeObject != nullptr);
-	if (scopeObject != nullptr)
-	{
-		//The provided scopeObject must be of the same type as the typeInfo.
-		assert(scopeObject->typeInfo == typeInfo);
-	}
-	return createScope(scopeObject, typeInfo, isStatic);	
+	return createScope(scopeObject, typeInfo, isStatic);
 }
 
 
@@ -140,10 +128,6 @@ void CatRuntimeContext::removeScope(CatScopeID id)
 void CatRuntimeContext::setScopeObject(CatScopeID id, Reflectable* scopeObject)
 {
 	Scope* scope = getScope(id);
-	if (scope->scopeType->isCustomType())
-	{
-		assert(static_cast<CustomTypeInstance*>(scopeObject)->typeInfo == scope->scopeType);
-	}
 	scope->scopeObject = scopeObject;
 }
 

@@ -8,9 +8,9 @@
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CustomTypeInfo.h"
-#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/Expression.h"
 #include "jitcat/ExpressionAny.h"
+#include "jitcat/ReflectableInstance.h"
 #include "ReflectionTestRoot.h"
 
 #include <string>
@@ -77,10 +77,10 @@ int MAIN(int argc, char* argv[])
 	customType->addObjectMember("anObject", &exampleObject, exampleObjectType, TypeOwnershipSemantics::Weak, false);
 
 	//Create an instance of the runtime-defined type
-	std::unique_ptr<CustomTypeInstance> customTypeInstance(customType->createInstance());
+	ReflectableInstance customTypeInstance(customType->construct(), customType);
 
 	//Add the type to the context so we can access the variables in an expression
-	context.addCustomTypeScope(customType, customTypeInstance.get());
+	context.addScope(customType, customTypeInstance.getReflectable(), false);
 
 	//This time we do not provide the context in the constructor so we need to call compile before calling getValue.
 	//We use the built-in function abs. A list of all built-in functions can be found in the CatBuiltInFunctionType header.

@@ -110,6 +110,7 @@ namespace jitcat::Reflection
 		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const;
 		virtual Reflectable* construct() const;
 		virtual void destruct(Reflectable* object);
+		virtual void destruct(unsigned char* buffer, std::size_t bufferSize);
 
 	protected:
 		//Adds members from a member object that will automatically be forwarded.

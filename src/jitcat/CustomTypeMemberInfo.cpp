@@ -9,10 +9,10 @@ using namespace jitcat::Reflection;
 
 std::any CustomTypeObjectMemberInfo::getMemberReference(Reflectable* base)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
-	if (baseObject != nullptr)
+	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
+	if (baseData != nullptr)
 	{
-		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseObject->data[memberOffset]);
+		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseData[memberOffset]);
 		return objectPointer->get();
 	}
 	return (Reflectable*)nullptr;
@@ -21,55 +21,23 @@ std::any CustomTypeObjectMemberInfo::getMemberReference(Reflectable* base)
 
 std::any CustomTypeObjectMemberInfo::getAssignableMemberReference(Reflectable* base)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
-	if (baseObject != nullptr)
+	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
+	if (baseData != nullptr)
 	{
-		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseObject->data[memberOffset]);
+		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseData[memberOffset]);
 		return objectPointer;
 	}
 	return (ReflectableHandle*)nullptr;
 }
 
 
-std::size_t CustomTypeObjectMemberInfo::getMemberOffset() const
-{
-	std::size_t dataPointerOffset = 0;
-	//Get the offset to a the "data" member of the CustomTypeInstance object that is pointed to by parentObjectPointer.
-	unsigned char* CustomTypeInstance::* dataMemberPointer = &CustomTypeInstance::data;
-	
-	static_assert(sizeof(dataMemberPointer) == 4 || sizeof(dataMemberPointer) == 8, "Expected pointer to CustomTypeInstance::data member to be 4 or 8 bytes in size.");
-
-	if constexpr (sizeof(dataMemberPointer) == 4)
-	{
-		unsigned int memberPointer = 0;
-		memcpy(&memberPointer, &dataMemberPointer, 4);
-		dataPointerOffset = memberPointer;
-	}
-	else if constexpr (sizeof(dataMemberPointer) == 8)
-	{
-		memcpy(&dataPointerOffset, &dataMemberPointer, 8);
-	}
-	return dataPointerOffset;
-}
-
-
 llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	std::size_t dataPointerOffset = getMemberOffset();
-
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		//Create an llvm constant that contains the offset to "data"
-		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
-		//Convert pointer to int so it can be used in createAdd
-		llvm::Value* parentAddressInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
-		//Add the offset to the address of the CustomTypeInstance object
-		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentAddressInt, dataPointerOffsetValue, "dataPtr_IntPtr");
-		//Load the data pointer stored inside the CustomTypeInstance object
-		llvm::Value* dataPointer = context->helper->loadPointerAtAddress(dataPointerAddressValue, "data_Ptr");
 		//Convert to int so we can add the offset
-		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(dataPointer, "data_IntPtr");
+		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
 		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
@@ -89,20 +57,10 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	std::size_t dataPointerOffset = getMemberOffset();
-
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		//Create an llvm constant that contains the offset to "data"
-		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
-		//Convert pointer to int so it can be used in createAdd
-		llvm::Value* parentAddressInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
-		//Add the offset to the address of the CustomTypeInstance object
-		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentAddressInt, dataPointerOffsetValue, "dataPtr_IntPtr");
-		//Load the data pointer stored inside the CustomTypeInstance object
-		llvm::Value* dataPointer = context->helper->loadPointerAtAddress(dataPointerAddressValue, "data_Ptr");
 		//Convert to int so we can add the offset
-		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(dataPointer, "data_IntPtr");
+		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
 		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
@@ -122,10 +80,10 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 
 void CustomTypeObjectMemberInfo::assign(std::any& base, std::any& valueToSet)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
-	if (baseObject != nullptr)
+	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
+	if (baseData != nullptr)
 	{
-		ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(baseObject->data + memberOffset);
+		ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(baseData + memberOffset);
 		*handle = ReflectableHandle(std::any_cast<Reflectable*>(valueToSet));
 	}
 }
@@ -133,10 +91,10 @@ void CustomTypeObjectMemberInfo::assign(std::any& base, std::any& valueToSet)
 
 std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getMemberReference(Reflectable* base)
 {
-	CustomTypeInstance* baseObject = static_cast<CustomTypeInstance*>(std::any_cast<Reflectable*>(base));
-	if (baseObject != nullptr)
+	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
+	if (baseData != nullptr)
 	{
-		Reflectable* objectPointer = reinterpret_cast<Reflectable*>(&baseObject->data[memberOffset]);
+		Reflectable* objectPointer = reinterpret_cast<Reflectable*>(&baseData[memberOffset]);
 		return objectPointer;
 	}
 	return (Reflectable*)nullptr;
@@ -150,29 +108,13 @@ std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getAssignableMember
 }
 
 
-std::size_t jitcat::Reflection::CustomTypeObjectDataMemberInfo::getMemberOffset() const
-{
-	return 0;
-}
-
-
 llvm::Value* jitcat::Reflection::CustomTypeObjectDataMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	std::size_t dataPointerOffset = getMemberOffset();
-
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		//Create an llvm constant that contains the offset to "data"
-		llvm::Value* dataPointerOffsetValue = context->helper->createIntPtrConstant((unsigned long long)dataPointerOffset, "offsetTo_CustomTypeInstance.data");
-		//Convert pointer to int so it can be used in createAdd
-		llvm::Value* parentAddressInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
-		//Add the offset to the address of the CustomTypeInstance object
-		llvm::Value* dataPointerAddressValue = context->helper->createAdd(parentAddressInt, dataPointerOffsetValue, "dataPtr_IntPtr");
-		//Load the data pointer stored inside the CustomTypeInstance object
-		llvm::Value* dataPointer = context->helper->loadPointerAtAddress(dataPointerAddressValue, "data_Ptr");
 		//Convert to int so we can add the offset
-		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(dataPointer, "data_IntPtr");
+		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
 		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.

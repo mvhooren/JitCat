@@ -63,13 +63,14 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 
 TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, std::function<Reflectable*()>& constructor,
 											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-											std::function<void (Reflectable*)>& destructor)
+											std::function<void (Reflectable*)>& destructor,
+											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
 {
 	std::string lowerName = Tools::toLowerCase(typeName);
 	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter == types.end())
 	{
-		TypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, constructor, placementConstructor, destructor);
+		TypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, constructor, placementConstructor, destructor, placementDestructor);
 		types[lowerName] = typeInfo;
 		return typeInfo;
 	}
@@ -312,9 +313,16 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 
 ReflectedTypeInfo* TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, std::function<Reflectable*()>& constructor,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-												std::function<void (Reflectable*)>& destructor)
+												std::function<void (Reflectable*)>& destructor,
+												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
 {
-	return new ReflectedTypeInfo(typeName, typeSize, typeCaster, constructor, placementConstructor, destructor);
+	return new ReflectedTypeInfo(typeName, typeSize, typeCaster, constructor, placementConstructor, destructor, placementDestructor);
+}
+
+
+TypeInfo* jitcat::Reflection::TypeRegistry::castToTypeInfo(ReflectedTypeInfo* reflectedTypeInfo)
+{
+	return static_cast<TypeInfo*>(reflectedTypeInfo);
 }
 
 

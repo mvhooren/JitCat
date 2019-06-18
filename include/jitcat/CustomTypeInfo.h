@@ -19,24 +19,19 @@ namespace jitcat::AST
 
 namespace jitcat::Reflection
 {
-	class CustomTypeInstance;
 	struct CustomTypeMemberFunctionInfo;
 
 	//Represents the type of a struct that can be defined at runtime.
 	//Fields can be added to the struct using the addMember functions.
 	//An instance of the struct can be created using createInstance();
 	//Instances are tracked and when a member is added after instances have been created, all instances will be updated.
-	//The CustomTypeInstance can then be used to provide variables for an expression by adding it to a CatRuntimeContext.
+	//The Reflectable can then be used to provide variables for an expression by adding it to a CatRuntimeContext.
 	class CustomTypeInfo: public TypeInfo
 	{
 	public:
 		CustomTypeInfo(const char* typeName, bool isConstType = false);
 		virtual ~CustomTypeInfo();
 
-		unsigned char* instanceConstructor() const;
-		void instanceConstructorInPlace(unsigned char* buffer, std::size_t bufferSize);
-
-		void instanceDestructor(CustomTypeInstance* instance);
 		void instanceDestructor(unsigned char* data);
 		void instanceDestructorInPlace(unsigned char* data);
 
@@ -59,13 +54,14 @@ namespace jitcat::Reflection
 		void renameMember(const std::string& oldMemberName, const std::string& newMemberName);
 
 		//For creating a "static" data type, this instance points directly to the default data.
-		CustomTypeInstance* getDefaultInstance();
+		Reflectable* getDefaultInstance();
 
 		virtual bool isCustomType() const;
 
 		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const override final;
 		virtual Reflectable* construct() const override final;
 		virtual void destruct(Reflectable* object) override final;
+		virtual void destruct(unsigned char* buffer, std::size_t bufferSize) override final;
 
 	private:
 
@@ -76,10 +72,10 @@ namespace jitcat::Reflection
 		void increaseDataSize(unsigned char*& data, std::size_t amount, std::size_t currentSize);
 		void createDataCopy(unsigned char* sourceData, std::size_t sourceSize, unsigned char* copyData, std::size_t copySize) const;
 
-	private:
-		CustomTypeInstance* defaultInstance;
+		void removeInstance(Reflectable* instance);
 
-		std::set<CustomTypeInstance*> instances;
+	private:
+		mutable std::set<Reflectable*> instances;
 
 		bool isConstType;
 		unsigned char* defaultData;

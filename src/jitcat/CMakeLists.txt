@@ -215,6 +215,8 @@ set(Source_Parser
 set(Source_Reflection
 	Reflectable.cpp
 	${JitCatHeaderPath}/Reflectable.h
+	ReflectableInstance.cpp
+	${JitCatHeaderPath}/ReflectableInstance.h
 	ReflectableHandle.cpp
 	${JitCatHeaderPath}/ReflectableHandle.h
 	TypeRegistry.cpp
@@ -237,8 +239,6 @@ set(Source_Reflection_TypeInfo
 	${JitCatHeaderPath}/ContainerManipulator.h
 	CustomTypeInfo.cpp
 	${JitCatHeaderPath}/CustomTypeInfo.h
-	CustomTypeInstance.cpp
-	${JitCatHeaderPath}/CustomTypeInstance.h
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
 	CustomTypeMemberInfo.cpp
 	${JitCatHeaderPath}/CustomTypeMemberInfo.h

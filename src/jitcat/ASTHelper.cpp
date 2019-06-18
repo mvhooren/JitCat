@@ -176,7 +176,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 		{
 			TypeOwnershipSemantics targetOwnership = targetType.getOwnershipSemantics();
 			TypeOwnershipSemantics sourceOwnership = sourceType.getOwnershipSemantics();
-			if (targetOwnership == TypeOwnershipSemantics::Owned)
+			if (targetOwnership == TypeOwnershipSemantics::Owned && *reflectableTarget != nullptr)
 			{
 				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(*reflectableTarget);
 			}
@@ -229,9 +229,9 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 		if (handleTarget != nullptr)
 		{
 			TypeOwnershipSemantics targetOwnership = targetType.getPointeeType()->getOwnershipSemantics();
-			if (targetOwnership == TypeOwnershipSemantics::Owned)
+			if (targetOwnership == TypeOwnershipSemantics::Owned && handleTarget->getIsValid())
 			{
-				targetType.getPointeeType()->getObjectType()->destruct(handleTarget->get());
+				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(handleTarget->get());
 			}
 			if (sourceType.isPointerToReflectableObjectType()
 				|| sourceType.isReflectableHandleType())

@@ -11,8 +11,8 @@
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatVariableDeclaration.h"
 #include "jitcat/CustomTypeInfo.h"
-#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/ReflectableInstance.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -74,7 +74,7 @@ CatASTNodeType CatScopeBlock::getNodeType() const
 
 bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatScopeID myScopeId = compiletimeContext->addCustomTypeScope(customType.get());
+	CatScopeID myScopeId = compiletimeContext->addScope(customType.get(), nullptr, false);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
@@ -90,9 +90,9 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 
 std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 {
-	std::unique_ptr<CustomTypeInstance> scopeInstance;
-	scopeInstance.reset(customType->createInstance());
-	scopeId = runtimeContext->addCustomTypeScope(customType.get(), scopeInstance.get());
+	unsigned char* scopeMem = static_cast<unsigned char*>(alloca(customType->getTypeSize()));
+	customType->construct(scopeMem, customType->getTypeSize());
+	scopeId = runtimeContext->addScope(customType.get(), reinterpret_cast<Reflectable*>(scopeMem), false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 	std::any result = std::any();
@@ -110,6 +110,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 	}
 	runtimeContext->removeScope(scopeId);
 	runtimeContext->setCurrentScope(previousScope);
+	customType->destruct(scopeMem, customType->getTypeSize());
 	return result;
 }
 

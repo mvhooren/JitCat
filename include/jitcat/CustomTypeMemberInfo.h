@@ -12,7 +12,6 @@ namespace jitcat::LLVM
 	struct LLVMCompileTimeContext;
 }
 
-#include "jitcat/CustomTypeInstance.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberInfo.h"
 
@@ -27,7 +26,6 @@ namespace jitcat::Reflection
 
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
-		std::size_t getMemberOffset() const;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
@@ -44,7 +42,6 @@ namespace jitcat::Reflection
 
 		virtual std::any getMemberReference(Reflectable* base) override final;
 		virtual std::any getAssignableMemberReference(Reflectable* base) override final;
-		std::size_t getMemberOffset() const;
 		virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
@@ -61,7 +58,6 @@ namespace jitcat::Reflection
 
 		virtual std::any getMemberReference(Reflectable* base) override final;
 		virtual std::any getAssignableMemberReference(Reflectable* base) override final;
-		std::size_t getMemberOffset() const;
 		virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
