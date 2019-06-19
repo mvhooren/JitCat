@@ -17,11 +17,18 @@
 #include <any>
 #include <map>
 #include <memory>
+#include <set>
 #include <vector>
+
 
 namespace jitcat
 {
-	class CatHostClass;
+	class CatRuntimeContext;
+	class ExpressionErrorManager;
+	namespace AST
+	{
+		class CatClassDefinition;
+	}
 }
 
 namespace jitcat::Reflection
@@ -60,7 +67,13 @@ namespace jitcat::Reflection
 	public:
 		//The type name must be a static const char* because types are compared based on the pointer value of their type names.
 		TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster);
+	protected:
 		virtual ~TypeInfo();
+	public:
+		//Destroy should be called instead of deleting a type. 
+		//It will ensure that the type is only deleted when there are no more dependencies.
+		static void destroy(TypeInfo* type);
+		static void updateTypeDestruction();
 
 		//Add a nested type to this type. Return true if the type was added, false if a type with this name already exists.
 		bool addType(TypeInfo* type);
@@ -99,6 +112,9 @@ namespace jitcat::Reflection
 		//Returns true if this is a CustomTypeInfo.
 		virtual bool isCustomType() const;
 
+		//Returns true if the type can be copied using memcpy without adverse side effects.
+		virtual bool isTriviallyCopyable() const;
+
 		//Beware that these lists are case insensitive because the keys have been converted to lower case
 		const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;
 		const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
@@ -111,6 +127,16 @@ namespace jitcat::Reflection
 		virtual Reflectable* construct() const;
 		virtual void destruct(Reflectable* object);
 		virtual void destruct(unsigned char* buffer, std::size_t bufferSize);
+
+		virtual bool getAllowInheritance() const;
+		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext);
+		virtual bool getAllowConstruction() const;
+
+		//Returns true if the type has no dependencies and can be deleted.
+		virtual bool canBeDeleted() const;
+
+		void addDependentType(TypeInfo* otherType);
+		void removeDependentType(TypeInfo* otherType);
 
 	protected:
 		//Adds members from a member object that will automatically be forwarded.
@@ -129,6 +155,13 @@ namespace jitcat::Reflection
 		TypeInfo* parentType;
 		//Size of the type in bytes
 		std::size_t typeSize;
+
+		//A set of types that use this type as an object data member or inherit from this type
+		std::set<TypeInfo*> dependentTypes;
+
+		//Keep a list of types that are to be deleted.
+		//Types are only deleted if there are no more dependencies on that type.
+		static std::vector<TypeInfo*> typeDeletionList;
 	};
 
 }

@@ -72,7 +72,7 @@ namespace jitcat::AST
 		std::unique_ptr<CatFunctionDefinition> generatedDestructor;
 
 		CatScopeID scopeId;
-		std::unique_ptr<Reflection::CustomTypeInfo> customType;
+		Reflection::CustomTypeInfo* customType;
 	};
 
 };

@@ -25,7 +25,10 @@ TypeRegistry::TypeRegistry()
 
 TypeRegistry::~TypeRegistry()
 {
-
+	for (auto& iter: ownedTypes)
+	{
+		TypeInfo::destroy(iter);
+	}
 }
 
 
@@ -61,7 +64,8 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 }
 
 
-TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, std::function<Reflectable*()>& constructor,
+TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, bool allowConstruction, 
+											std::function<Reflectable*()>& constructor,
 											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 											std::function<void (Reflectable*)>& destructor,
 											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
@@ -70,7 +74,7 @@ TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t ty
 	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter == types.end())
 	{
-		TypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, constructor, placementConstructor, destructor, placementDestructor);
+		TypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, allowConstruction, constructor, placementConstructor, destructor, placementDestructor);
 		types[lowerName] = typeInfo;
 		return typeInfo;
 	}
@@ -311,12 +315,13 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 }
 
 
-ReflectedTypeInfo* TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, std::function<Reflectable*()>& constructor,
+ReflectedTypeInfo* TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction, 
+												std::function<Reflectable*()>& constructor,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												std::function<void (Reflectable*)>& destructor,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
 {
-	return new ReflectedTypeInfo(typeName, typeSize, typeCaster, constructor, placementConstructor, destructor, placementDestructor);
+	return new ReflectedTypeInfo(typeName, typeSize, typeCaster, allowConstruction, constructor, placementConstructor, destructor, placementDestructor);
 }
 
 

@@ -30,10 +30,9 @@ namespace jitcat::Reflection
 	{
 	public:
 		CustomTypeInfo(const char* typeName, bool isConstType = false);
+	protected:
 		virtual ~CustomTypeInfo();
-
-		void instanceDestructor(unsigned char* data);
-		void instanceDestructorInPlace(unsigned char* data);
+	public:
 
 		//Instances that have been created before members are added will be updated.
 		TypeMemberInfo* addFloatMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
@@ -41,6 +40,7 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
+		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
 
@@ -63,10 +63,15 @@ namespace jitcat::Reflection
 		virtual void destruct(Reflectable* object) override final;
 		virtual void destruct(unsigned char* buffer, std::size_t bufferSize) override final;
 
+		virtual bool isTriviallyCopyable() const;
+
+		virtual bool canBeDeleted() const override final;
+
 	private:
+		void instanceDestructor(unsigned char* data);
+		void instanceDestructorInPlace(unsigned char* data);
 
 		std::size_t addReflectableHandle(Reflectable* defaultValue);
-		std::size_t addObjectDataMember(TypeInfo* type);
 		//Returns a pointer to the start of the newly added size
 		unsigned char* increaseDataSize(std::size_t amount);
 		void increaseDataSize(unsigned char*& data, std::size_t amount, std::size_t currentSize);
@@ -80,7 +85,7 @@ namespace jitcat::Reflection
 		bool isConstType;
 		unsigned char* defaultData;
 
-		bool isTriviallyCopyable;
+		bool triviallyCopyable;
 
 		std::vector<std::unique_ptr<TypeMemberInfo>> removedMembers;
 	};

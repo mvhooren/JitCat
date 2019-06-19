@@ -21,7 +21,7 @@ using namespace jitcat::Reflection;
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 	TypeInfo(typeName, 0, new CustomObjectTypeCaster()),
 	defaultData(nullptr),
-	isTriviallyCopyable(true),
+	triviallyCopyable(true),
 	isConstType(isConstType)
 {
 }
@@ -29,49 +29,10 @@ CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 
 CustomTypeInfo::~CustomTypeInfo()
 {
-	Reflectable::destruct(reinterpret_cast<Reflectable*>(defaultData));
-}
-
-
-void CustomTypeInfo::instanceDestructor(unsigned char* data)
-{
-	instanceDestructorInPlace(data);
-	delete[] data;
-}
-
-
-void jitcat::Reflection::CustomTypeInfo::instanceDestructorInPlace(unsigned char* data)
-{
-	auto end = members.end();
-	for (auto iter = members.begin(); iter != end; ++iter)
+	if (defaultData != nullptr)
 	{
-		if (iter->second->isDeferred())
-		{
-			continue;
-		}
-		if (iter->second->catType.isStringType())
-		{
-			std::string* string;
-			std::size_t offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
-			memcpy(&string, &data[offset], sizeof(std::string*));
-			delete string;
-		}
-		else if (iter->second->catType.isReflectableHandleType())
-		{
-			CustomTypeObjectMemberInfo* memberInfo = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get());
-			std::size_t offset = memberInfo->memberOffset;
-			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(data + offset);
-			if (handle != nullptr)
-			{
-				if (iter->second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
-				{
-					memberInfo->catType.getPointeeType()->getObjectType()->destruct(handle->get());
-				}
-			}
-			handle->~ReflectableHandle();
-		}
+		instanceDestructor(defaultData);
 	}
-	Reflectable::placementDestruct(reinterpret_cast<Reflectable*>(data));
 }
 
 
@@ -146,7 +107,7 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 
 TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable, bool isConst)
 {
-	isTriviallyCopyable = false;
+	triviallyCopyable = false;
 	unsigned char* data = increaseDataSize(sizeof(std::string*));
 	unsigned int offset = (unsigned int)(data - defaultData);
 	if (defaultData == nullptr)
@@ -172,18 +133,19 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 
 TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics, bool isWritable, bool isConst)
 {
-	isTriviallyCopyable = false;
+	triviallyCopyable = false;
 	std::size_t offset = 0;
 	TypeMemberInfo* memberInfo = nullptr;
 	if (ownershipSemantics != TypeOwnershipSemantics::Value)
 	{
 		CatGenericType type = CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst);
 		offset = addReflectableHandle(defaultValue);
+		objectTypeInfo->addDependentType(this);
 		memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst));
 	}
 	else
 	{
-
+		assert(false);
 	}
 
 	
@@ -199,6 +161,44 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 }
 
 
+TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo)
+{
+	if (objectTypeInfo != this)
+	{
+		triviallyCopyable = triviallyCopyable && objectTypeInfo->isTriviallyCopyable();
+		unsigned char* data = increaseDataSize(objectTypeInfo->getTypeSize());
+		unsigned int offset = (unsigned int)(data - defaultData);
+		if (defaultData == nullptr)
+		{
+			offset = 0;
+		}
+
+		std::set<Reflectable*>::iterator end = instances.end();
+		for (std::set<Reflectable*>::iterator iter = instances.begin(); iter != end; ++iter)
+		{
+			objectTypeInfo->construct((unsigned char*)(*iter) + offset, objectTypeInfo->getTypeSize());
+		}
+		objectTypeInfo->construct(data, objectTypeInfo->getTypeSize());
+		TypeMemberInfo* memberInfo = new  CustomTypeObjectDataMemberInfo(memberName, offset, CatGenericType(CatGenericType(objectTypeInfo, false, false), TypeOwnershipSemantics::Value, false, false, false));
+		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+		members.emplace(lowerCaseMemberName, memberInfo);
+		objectTypeInfo->addDependentType(this);
+		
+		if (Tools::startsWith(memberName, "$"))
+		{
+			addDeferredMembers(memberInfo);
+		}
+
+		return memberInfo;
+	}
+	else
+	{
+		assert(false);
+		return nullptr;
+	}
+}
+
+
 TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string& memberName, const CatGenericType& type)
 {
 	if		(type.isFloatType())						return addFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
@@ -206,6 +206,7 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
 	else if (type.isStringType())						return addStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
+	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType());
 	else												return nullptr;
 }
 
@@ -282,8 +283,8 @@ Reflectable* jitcat::Reflection::CustomTypeInfo::construct() const
 void jitcat::Reflection::CustomTypeInfo::destruct(Reflectable* object)
 {
 	instanceDestructorInPlace((unsigned char*)object);
-	Reflectable::destruct(object);
 	removeInstance(object);
+	delete[] reinterpret_cast<unsigned char*>(object);
 }
 
 
@@ -291,6 +292,66 @@ void jitcat::Reflection::CustomTypeInfo::destruct(unsigned char* buffer, std::si
 {
 	instanceDestructorInPlace(buffer);
 	removeInstance(reinterpret_cast<Reflectable*>(buffer));
+}
+
+
+bool jitcat::Reflection::CustomTypeInfo::isTriviallyCopyable() const
+{
+	return triviallyCopyable;
+}
+
+
+bool jitcat::Reflection::CustomTypeInfo::canBeDeleted() const
+{
+	return dependentTypes.size() == 0 && instances.size() == 0;
+}
+
+
+void CustomTypeInfo::instanceDestructor(unsigned char* data)
+{
+	instanceDestructorInPlace(data);
+	delete[] data;
+}
+
+
+void jitcat::Reflection::CustomTypeInfo::instanceDestructorInPlace(unsigned char* data)
+{
+	auto end = members.end();
+	for (auto iter = members.begin(); iter != end; ++iter)
+	{
+		if (iter->second->isDeferred())
+		{
+			continue;
+		}
+		if (iter->second->catType.isStringType())
+		{
+			std::string* string;
+			std::size_t offset = static_cast<CustomBasicTypeMemberInfo<std::string>*>(iter->second.get())->memberOffset;
+			memcpy(&string, &data[offset], sizeof(std::string*));
+			delete string;
+		}
+		else if (iter->second->catType.isReflectableHandleType())
+		{
+			CustomTypeObjectMemberInfo* memberInfo = static_cast<CustomTypeObjectMemberInfo*>(iter->second.get());
+			std::size_t offset = memberInfo->memberOffset;
+			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(data + offset);
+			if (handle != nullptr && handle->getIsValid())
+			{
+				if (iter->second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
+				{
+					memberInfo->catType.getPointeeType()->getObjectType()->destruct(handle->get());
+				}
+				handle->~ReflectableHandle();
+			}
+		}
+		else if (iter->second->catType.isPointerToReflectableObjectType() && iter->second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
+		{
+			CustomTypeObjectDataMemberInfo* memberInfo = static_cast<CustomTypeObjectDataMemberInfo*>(iter->second.get());
+			std::size_t offset = memberInfo->memberOffset;
+			iter->second->catType.getPointeeType()->getObjectType()->destruct(data + offset, iter->second->catType.getPointeeType()->getObjectType()->getTypeSize());
+		}
+	}
+	Reflectable::placementDestruct(reinterpret_cast<Reflectable*>(data));
 }
 
 
@@ -309,15 +370,6 @@ std::size_t jitcat::Reflection::CustomTypeInfo::addReflectableHandle(Reflectable
 		new ((unsigned char*)(*iter) + offset) ReflectableHandle(defaultValue);
 	}
 	new (data) ReflectableHandle(defaultValue);
-	return offset;
-}
-
-
-std::size_t jitcat::Reflection::CustomTypeInfo::addObjectDataMember(TypeInfo* type)
-{
-	unsigned char* data = increaseDataSize(type->getTypeSize());
-	std::size_t offset = (data - defaultData);
-	//QQQ
 	return offset;
 }
 
@@ -372,7 +424,7 @@ void CustomTypeInfo::createDataCopy(unsigned char* sourceData, std::size_t sourc
 	assert(copyData != nullptr);
 	//Create copies of strings and member references
 	memcpy(copyData, sourceData, sourceSize);
-	if (!isTriviallyCopyable)
+	if (!triviallyCopyable)
 	{
 		auto end = members.end();
 		for (auto iter = members.begin(); iter != end; ++iter)
@@ -395,6 +447,23 @@ void CustomTypeInfo::createDataCopy(unsigned char* sourceData, std::size_t sourc
 				ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(&sourceData[offset]);
 				new (copyData + offset) ReflectableHandle(handle->get());
 			}
+			else if (iter->second->catType.isPointerToReflectableObjectType() && iter->second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
+			{
+				CustomTypeObjectDataMemberInfo* member = static_cast<CustomTypeObjectDataMemberInfo*>(iter->second.get());
+				std::size_t offset = member->memberOffset;
+
+				if (member->catType.getPointeeType()->getObjectType()->isCustomType())
+				{
+					CustomTypeInfo* nestedCustomType = static_cast<CustomTypeInfo*>(member->catType.getPointeeType()->getObjectType());
+					nestedCustomType->createDataCopy(&sourceData[offset], nestedCustomType->getTypeSize(), &copyData[offset], nestedCustomType->getTypeSize());
+				}
+				else
+				{
+					//QQQ if is not a CustomType, we should call a copy constructor.
+					//For now just call constructor.
+					member->catType.getPointeeType()->getObjectType()->construct(&copyData[offset], member->catType.getPointeeType()->getObjectType()->getTypeSize());
+				}
+			}
 		}
 	}
 }
@@ -406,9 +475,5 @@ void jitcat::Reflection::CustomTypeInfo::removeInstance(Reflectable* instance)
 	if (iter != instances.end())
 	{
 		instances.erase(iter);
-	}
-	else
-	{
-		assert(false);
 	}
 }

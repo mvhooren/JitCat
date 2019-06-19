@@ -15,7 +15,6 @@
 
 namespace jitcat
 {
-	class CatHostClass;
 	namespace Reflection
 	{
 		struct TypeMemberInfo;
@@ -40,16 +39,12 @@ namespace jitcat::AST
 
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 
-
 		CatGenericType getType() const;
-		CatHostClass* getHostClass() const;
 		Reflection::TypeMemberInfo* getInheritedMember() const;
 
 	private:
 		const Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypeNode> type;
-		//may be nullptr
-		CatHostClass* hostClass;
 
 		Reflection::TypeMemberInfo* inheritedMember;
 

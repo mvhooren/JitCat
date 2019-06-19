@@ -59,6 +59,7 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const CatClassDefinition& ot
 
 jitcat::AST::CatClassDefinition::~CatClassDefinition()
 {
+	TypeInfo::destroy(customType);
 }
 
 
@@ -98,7 +99,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
 	compileTimeContext->setCurrentClass(this);
 	bool noErrors = true;
-	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
+	scopeId = compileTimeContext->addScope(customType, nullptr, false);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 	compileTimeContext->setCurrentScope(this);
 
@@ -132,7 +133,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 	compileTimeContext->setCurrentScope(previousScope);
 	compileTimeContext->setCurrentClass(parentClass);
 
-	if (!compileTimeContext->getCurrentScope()->getCustomType()->addType(customType.get()))
+	if (!compileTimeContext->getCurrentScope()->getCustomType()->addType(customType))
 	{
 		compileTimeContext->getErrorManager()->compiledWithError(Tools::append("A type with name ", name, " already exists."), this, compileTimeContext->getContextName(), nameLexeme);
 		noErrors = false;
@@ -161,7 +162,7 @@ bool jitcat::AST::CatClassDefinition::isTriviallyCopyable() const
 
 Reflection::CustomTypeInfo* jitcat::AST::CatClassDefinition::getCustomType()
 {
-	return customType.get();
+	return customType;
 }
 
 
@@ -179,11 +180,19 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 	for (auto& iter : inheritanceDefinitions)
 	{
 		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
-		CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(inheritedMember->catType.getPointeeType()->toString(), nameLexeme, nullptr, new CatArgumentList(iter->getLexeme()), nameLexeme);
-		CatOperatorNew* operatorNew = new CatOperatorNew(functionCall, inheritedMember->catType.getPointeeType()->toString(), iter->getLexeme());
-		CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
-		CatAssignmentOperator* assignment = new CatAssignmentOperator(id, operatorNew, iter->getLexeme());
-		statements.push_back(assignment);
+		TypeInfo* inheritedType = inheritedMember->catType.getPointeeType()->getObjectType();
+		if (inheritedType->isCustomType())
+		{
+			//Call constructor for inherited type
+			CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
+			std::string constructorName = "__init";
+			if (inheritedType->getMemberFunctionInfo("init") != nullptr)
+			{
+				constructorName = "init";
+			}
+			CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme()), nameLexeme);
+			statements.push_back(functionCall);
+		}
 	}
 	for (auto& iter : variableDefinitions)
 	{
@@ -193,6 +202,23 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 			CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
 			CatAssignmentOperator* assignment = new CatAssignmentOperator(id, variableInitExpr, variableInitExpr->getLexeme());
 			statements.push_back(assignment);
+		}
+		else if (iter->getType().getType().isReflectableObjectType() 
+			     && iter->getType().getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)
+		{
+			TypeInfo* dateMemberType = iter->getType().getType().getObjectType();
+			if (dateMemberType->isCustomType())
+			{
+				//Call constructor for data member type
+				CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
+				std::string constructorName = "__init";
+				if (dateMemberType->getMemberFunctionInfo("init") != nullptr)
+				{
+					constructorName = "init";
+				}
+				CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme()), nameLexeme);
+				statements.push_back(functionCall);
+			}
 		}
 	}
 	CatScopeBlock* scopeBlock = new CatScopeBlock(statements, nameLexeme);

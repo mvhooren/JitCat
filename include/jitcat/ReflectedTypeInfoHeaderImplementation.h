@@ -30,6 +30,10 @@ namespace jitcat::Reflection
 		TypeMemberInfo* memberInfo = MemberTypeInfoCreator<MemberT>::getMemberInfo(identifier_, member, isConst, isWritable);
 		if (memberInfo != nullptr)
 		{
+			if (memberInfo->catType.isReflectableHandleType() || memberInfo->catType.isPointerToReflectableObjectType())
+			{
+				memberInfo->catType.getPointeeType()->getObjectType()->addDependentType(this);
+			}
 			members.emplace(identifier, memberInfo);
 			if (memberInfo->catType.isPointerToReflectableObjectType() && Tools::startsWith(identifier, "$"))
 			{

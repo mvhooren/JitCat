@@ -45,7 +45,7 @@ namespace jitcat::AST
 
 	private:
 		std::vector<std::unique_ptr<CatVariableDeclaration>> parameters;
-		std::unique_ptr<Reflection::CustomTypeInfo> customType;
+		Reflection::CustomTypeInfo* customType;
 	};
 
 }

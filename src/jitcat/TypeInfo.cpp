@@ -30,6 +30,15 @@ TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caste
 
 TypeInfo::~TypeInfo()
 {
+	for (auto& iter : members)
+	{
+		if (iter.second->catType.isPointerToReflectableObjectType()
+			|| iter.second->catType.isReflectableHandleType())
+		{
+			TypeInfo* typeInfo = iter.second->catType.getPointeeType()->getObjectType();
+			typeInfo->removeDependentType(this);
+		}
+	}
 	if (parentType != nullptr)
 	{
 		parentType->removeType(getTypeName());
@@ -38,6 +47,43 @@ TypeInfo::~TypeInfo()
 	{
 		iter.second->setParentType(nullptr);
 	}
+}
+
+
+void jitcat::Reflection::TypeInfo::destroy(TypeInfo* type)
+{
+	if (type->canBeDeleted())
+	{
+		delete type;
+	}
+	else
+	{
+		typeDeletionList.push_back(type);
+	}
+	updateTypeDestruction();
+}
+
+
+void jitcat::Reflection::TypeInfo::updateTypeDestruction()
+{
+	bool foundDeletion = false;
+	do
+	{
+		foundDeletion = false;
+		int numTypes = (int)typeDeletionList.size();
+
+		//Reverse iterate because that is typically the order in which dependent types are deleted.
+		for (int i = numTypes - 1; i >= 0; i--)
+		{
+			if (typeDeletionList[i]->canBeDeleted())
+			{
+				delete typeDeletionList[i];
+				typeDeletionList[i] = typeDeletionList.back();
+				typeDeletionList.pop_back();
+				foundDeletion = true;
+			}
+		}
+	} while (foundDeletion);
 }
 
 
@@ -273,6 +319,12 @@ bool TypeInfo::isCustomType() const
 }
 
 
+bool jitcat::Reflection::TypeInfo::isTriviallyCopyable() const
+{
+	return false;
+}
+
+
 const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& TypeInfo::getMembers() const
 {
 	return members;
@@ -299,22 +351,70 @@ const TypeCaster* TypeInfo::getTypeCaster() const
 
 void jitcat::Reflection::TypeInfo::construct(unsigned char* buffer, std::size_t bufferSize) const
 {
+	assert(false);
 }
 
 
 Reflectable* jitcat::Reflection::TypeInfo::construct() const
 {
+	assert(false);
 	return nullptr;
 }
 
 
 void jitcat::Reflection::TypeInfo::destruct(Reflectable* object)
 {
+	assert(false);
 }
 
 
 void jitcat::Reflection::TypeInfo::destruct(unsigned char* buffer, std::size_t bufferSize)
 {
+	assert(false);
+}
+
+
+bool jitcat::Reflection::TypeInfo::getAllowInheritance() const
+{
+	return true;
+}
+
+
+bool jitcat::Reflection::TypeInfo::inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	return true;
+}
+
+
+bool jitcat::Reflection::TypeInfo::getAllowConstruction() const
+{
+	return true;
+}
+
+
+bool jitcat::Reflection::TypeInfo::canBeDeleted() const
+{
+	return dependentTypes.size() == 0;
+}
+
+
+void jitcat::Reflection::TypeInfo::addDependentType(TypeInfo* otherType)
+{
+	assert(otherType != this);
+	if (dependentTypes.find(otherType) == dependentTypes.end())
+	{
+		dependentTypes.insert(otherType);
+	}
+}
+
+
+void jitcat::Reflection::TypeInfo::removeDependentType(TypeInfo* otherType)
+{
+	auto& iter = dependentTypes.find(otherType);
+	if (iter != dependentTypes.end())
+	{
+		dependentTypes.erase(iter);
+	}
 }
 
 
@@ -341,3 +441,4 @@ void jitcat::Reflection::TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMe
 	}
 }
 
+std::vector<TypeInfo*> jitcat::Reflection::TypeInfo::typeDeletionList = std::vector<TypeInfo*>();

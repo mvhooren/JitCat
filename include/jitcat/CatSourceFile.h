@@ -65,7 +65,7 @@ namespace jitcat::AST
 		std::vector<CatVariableDefinition*> variableDefinitions;
 
 		CatScopeID staticScopeId;
-		std::unique_ptr<Reflection::CustomTypeInfo> scopeType;
+		Reflection::CustomTypeInfo* scopeType;
 		Reflection::ReflectableInstance scopeInstance;
 	};
 

@@ -1,6 +1,4 @@
 #include "jitcat/CatInheritanceDefinition.h"
-#include "jitcat/CatHostClass.h"
-#include "jitcat/CatHostClasses.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScope.h"
@@ -19,7 +17,6 @@ jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(CatTypeNode* typ
 	CatDefinition(lexeme),
 	nameLexeme(nameLexeme),
 	type(typeNode),
-	hostClass(nullptr),
 	inheritedMember(nullptr)
 {
 }
@@ -29,7 +26,6 @@ jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(const CatInherit
 	CatDefinition(other),
 	nameLexeme(other.nameLexeme),
 	type(static_cast<CatTypeNode*>(other.type->copy())),
-	hostClass(nullptr),
 	inheritedMember(nullptr)
 {
 }
@@ -71,36 +67,33 @@ bool jitcat::AST::CatInheritanceDefinition::typeCheck(CatRuntimeContext* compile
 	}
 	ExpressionErrorManager* errorManager = compiletimeContext->getErrorManager();
 	errorManagerHandle = errorManager;
-	hostClass = nullptr;
 	if (!type->typeCheck(compiletimeContext, errorManager, this))
 	{
 		return false;
 	}
 	else
 	{
-		CatGenericType* inheritedType = type->getType().getPointeeType();
-		if (!inheritedType->isReflectableObjectType())
+		const CatGenericType& inheritedType = type->getType();
+		if (!inheritedType.isReflectableObjectType())
 		{
-			errorManager->compiledWithError(Tools::append("Inheritance only supports object types, ", inheritedType->toString(), " not supported."), this, compiletimeContext->getContextName(), getLexeme());
+			errorManager->compiledWithError(Tools::append("Inheritance only supports object types, ", inheritedType.toString(), " not supported."), this, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		else if (!inheritedType->getObjectType()->isCustomType())
+		else if (!inheritedType.getObjectType()->getAllowInheritance())
 		{
-			hostClass = compiletimeContext->getHostClasses()->getHostClass(inheritedType->getObjectType()->getTypeName());
-			if (hostClass == nullptr || !hostClass->isInheritable())
-			{
-				errorManager->compiledWithError(Tools::append("Host type cannot be inherited: ", inheritedType->toString(), ", enable inheritance through the CatHostClasses interface."), this, compiletimeContext->getContextName(), getLexeme());
-				return false;
-			}
-			if (!hostClass->inheritTypeCheck(compiletimeContext, compiletimeContext->getCurrentClass(), errorManager, this))
-			{
-				return false;
-			}
+			errorManager->compiledWithError(Tools::append("Inheritance from, ", inheritedType.toString(), " is not allowed."), this, compiletimeContext->getContextName(), getLexeme());
+			return false;
 		}
+		else if (!inheritedType.getObjectType()->inheritTypeCheck(compiletimeContext, compiletimeContext->getCurrentClass(), errorManager, this))
+		{
+			return false;
+		}
+
 		CatScope* currentScope = compiletimeContext->getCurrentScope();
 		if (currentScope != nullptr)
 		{
-			inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType->toString()), type->getType().toWritable());
+			//QQQ add check allow inherit
+			inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType.toString()), type->getType());
 			inheritedMember->visibility = Reflection::MemberVisibility::Hidden;
 		}
 	}
@@ -116,12 +109,6 @@ CatGenericType jitcat::AST::CatInheritanceDefinition::getType() const
 		return type->getType();
 	}
 	return CatGenericType::unknownType;
-}
-
-
-CatHostClass* jitcat::AST::CatInheritanceDefinition::getHostClass() const
-{
-	return hostClass;
 }
 
 

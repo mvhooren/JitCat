@@ -21,7 +21,7 @@ using namespace jitcat;
 using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 
-CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionErrorManager* errorManager, CatHostClasses* hostClasses):
+CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionErrorManager* errorManager):
 	contextName(contextName),
 	errorManager(errorManager),
 	ownsErrorManager(false),
@@ -33,8 +33,7 @@ CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionE
 	currentFunctionDefinition(nullptr),
 	currentClassDefinition(nullptr),
 	currentScope(nullptr),
-	returning(false),
-	hostClasses(hostClasses)
+	returning(false)
 {
 	if (errorManager == nullptr)
 	{
@@ -314,18 +313,6 @@ Reflection::Reflectable* jitcat::CatRuntimeContext::getCurrentScopeObject() cons
 		return getScopeObject(currentScope->getScopeId());
 	}
 	return nullptr;
-}
-
-
-CatHostClasses* jitcat::CatRuntimeContext::getHostClasses() const
-{
-	return hostClasses;
-}
-
-
-void jitcat::CatRuntimeContext::setHostClasses(CatHostClasses* hostClasses_)
-{
-	hostClasses = hostClasses_;
 }
 
 

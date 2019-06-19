@@ -52,7 +52,7 @@ namespace jitcat::AST
 
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;
-		std::unique_ptr<Reflection::CustomTypeInfo> customType;
+		Reflection::CustomTypeInfo* customType;
 		CatScopeID scopeId;
 	};
 

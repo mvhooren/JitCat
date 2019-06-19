@@ -7,7 +7,6 @@
 
 
 #include "jitcat/CatOperatorNew.h"
-#include "jitcat/CatHostClasses.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatMemberFunctionCall.h"
@@ -27,7 +26,6 @@ CatOperatorNew::CatOperatorNew(CatMemberFunctionCall* functionCall, const std::s
 	CatTypedExpression(lexeme),
 	functionCall(functionCall),
 	newType(CatGenericType::unknownType),
-	hostClass(nullptr),
 	typeName(typeName)
 {
 }
@@ -37,7 +35,6 @@ jitcat::AST::CatOperatorNew::CatOperatorNew(const CatOperatorNew& other):
 	CatTypedExpression(other),
 	functionCall(static_cast<CatMemberFunctionCall*>(other.functionCall->copy())),
 	newType(CatGenericType::unknownType),
-	hostClass(nullptr),
 	typeName(other.typeName)
 {
 }
@@ -64,17 +61,12 @@ CatASTNodeType CatOperatorNew::getNodeType() const
 
 std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 {
-	if (hostClass != nullptr)
+	Reflectable* instance = static_cast<CustomTypeInfo*>(newType.getPointeeType()->getObjectType())->construct();
+	if (functionCall != nullptr)
 	{
-		return std::any(static_cast<Reflectable*>(hostClass->construct()));
-	}
-	else
-	{
-		Reflectable* instance = static_cast<CustomTypeInfo*>(newType.getPointeeType()->getObjectType())->construct();
 		functionCall->executeWithBase(runtimeContext, instance);
-		return std::any((Reflectable*)instance);
 	}
-	return nullptr;
+	return std::any((Reflectable*)instance);
 }
 
 
@@ -87,28 +79,22 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	{
 		return false;
 	}
-	newType = type->getType();
-	newType.setOwnershipSemantics(TypeOwnershipSemantics::Value);
-	
+	newType = type->getType().toPointer(TypeOwnershipSemantics::Value);
 
 	if (!newType.isPointerToReflectableObjectType())
 	{
 		errorManager->compiledWithError(Tools::append("Operator new only supports object types, ", newType.toString(), " not yet supported."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
+	else if (!newType.getPointeeType()->getObjectType()->getAllowConstruction())
+	{
+		errorManager->compiledWithError(Tools::append("Construction of ", newType.toString(), " is not allowed."), errorContext, compiletimeContext->getContextName(), getLexeme());
+		return false;
+	}
 	else if (!newType.getPointeeType()->getObjectType()->isCustomType())
 	{
-		hostClass = compiletimeContext->getHostClasses()->getHostClass(newType.getPointeeType()->getObjectType()->getTypeName());
-		if (hostClass == nullptr || !hostClass->isConstructible())
-		{
-			errorManager->compiledWithError(Tools::append("Host type cannot be constructed: ", newType.toString(), ", provide a constructor and destructor through the CatHostClasses interface."), errorContext, compiletimeContext->getContextName(), getLexeme());
-			return false;
-		}
-		if (functionCall->getArguments()->getNumArguments() != 0)
-		{
-			errorManager->compiledWithError(Tools::append("Invalid number of arguments for init function of: ", newType.toString(), " expected 0 arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
-			return false;
-		}
+
+		return true;
 	}
 	else
 	{

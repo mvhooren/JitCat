@@ -40,6 +40,7 @@ jitcat::AST::CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(co
 
 CatFunctionParameterDefinitions::~CatFunctionParameterDefinitions()
 {
+	TypeInfo::destroy(customType);
 }
 
 
@@ -86,7 +87,7 @@ bool jitcat::AST::CatFunctionParameterDefinitions::typeCheck(CatRuntimeContext* 
 
 Reflection::CustomTypeInfo* jitcat::AST::CatFunctionParameterDefinitions::getCustomType() const
 {
-	return customType.get();
+	return customType;
 }
 
 
