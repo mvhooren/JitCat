@@ -191,7 +191,7 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 	if (parameters->getNumParameters() > 0)
 	{
 		scopeMem = static_cast<unsigned char*>(alloca(parameters->getCustomType()->getTypeSize()));
-		parameters->getCustomType()->construct(scopeMem, parameters->getCustomType()->getTypeSize());
+		parameters->getCustomType()->placementConstruct(scopeMem, parameters->getCustomType()->getTypeSize());
 
 		scopeId = pushScope(runtimeContext, reinterpret_cast<Reflectable*>(scopeMem));
 		//The scopeId should match the scopeId that was obtained during type checking.
@@ -208,7 +208,7 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 	std::any result = executeFunctionWithPack(runtimeContext, scopeId);
 	if (scopeMem != nullptr)
 	{
-		parameters->getCustomType()->destruct(scopeMem, parameters->getCustomType()->getTypeSize());
+		parameters->getCustomType()->placementDestruct(scopeMem, parameters->getCustomType()->getTypeSize());
 	}
 	return result;
 }

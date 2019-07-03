@@ -84,6 +84,7 @@ namespace jitcat::Grammar
 		static AST::ASTNode* functionParameterDefinitions(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* variableDeclaration(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* variableDefinition(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* arrayTypeName(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* typeName(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* ifStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* returnStatement(const Parser::ASTNodeParser& nodeParser);

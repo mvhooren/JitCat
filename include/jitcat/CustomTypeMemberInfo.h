@@ -18,11 +18,17 @@ namespace jitcat::LLVM
 namespace jitcat::Reflection
 {
 
+	struct CustomMemberInfo: public TypeMemberInfo
+	{
+		CustomMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
+
+		std::size_t memberOffset;
+	};
 
 	template<typename T>
-	struct CustomBasicTypeMemberInfo: public TypeMemberInfo
+	struct CustomBasicTypeMemberInfo: public CustomMemberInfo
 	{
-		CustomBasicTypeMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
+		CustomBasicTypeMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): CustomMemberInfo(memberName, memberOffset, type) {}
 
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
@@ -30,15 +36,13 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
 		void assign(std::any& base, const T& valueToSet);
-
-		std::size_t memberOffset;
 	};
 
 
 	//Implements a TypeMemberInfo for class/struct pointer types that are reflectable.
-	struct CustomTypeObjectMemberInfo: public TypeMemberInfo
+	struct CustomTypeObjectMemberInfo: public CustomMemberInfo
 	{
-		CustomTypeObjectMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
+		CustomTypeObjectMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): CustomMemberInfo(memberName, memberOffset, type) {}
 
 		virtual std::any getMemberReference(Reflectable* base) override final;
 		virtual std::any getAssignableMemberReference(Reflectable* base) override final;
@@ -46,15 +50,13 @@ namespace jitcat::Reflection
 		virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
 		void assign(std::any& base, std::any& valueToSet);
-	
-		std::size_t memberOffset;
 	};
 
 
 	//Implements a TypeMemberInfo for class/struct inline data types that are reflectable.
-	struct CustomTypeObjectDataMemberInfo: public TypeMemberInfo
+	struct CustomTypeObjectDataMemberInfo: public CustomMemberInfo
 	{
-		CustomTypeObjectDataMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
+		CustomTypeObjectDataMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): CustomMemberInfo(memberName, memberOffset, type) {}
 
 		virtual std::any getMemberReference(Reflectable* base) override final;
 		virtual std::any getAssignableMemberReference(Reflectable* base) override final;
@@ -62,8 +64,6 @@ namespace jitcat::Reflection
 		virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
 		void assign(std::any& base, std::any& valueToSet);
-	
-		std::size_t memberOffset;
 	};
 
 }//End namespace jitcat::Reflection

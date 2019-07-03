@@ -48,6 +48,7 @@ namespace jitcat::Tokenizer
 		Matrix,
 		String,
 		Null,
+		Array,
 		Last
 	};
 

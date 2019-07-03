@@ -109,6 +109,9 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::Type, {term(id, Identifier::Int)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Float)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::String)}, typeName);
+		//Array type name
+		//rule(Prod::Type, {term(one, OneChar::Times), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::Type), term(one, OneChar::Greater), prod(Prod::Identifier)}, arrayTypeName);
+		rule(Prod::Type, {term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::Type), term(one, OneChar::Greater)}, arrayTypeName);
 	}
 
 	//Expressions
@@ -375,6 +378,20 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::variableDefinition(const Parser::ASTN
 		initExpression = static_cast<CatTypedExpression*>(nodeParser.getASTNodeByIndex(1));
 	}
 	return new CatVariableDefinition(type, name, nodeParser.getStackLexeme(), initExpression);
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::arrayTypeName(const Parser::ASTNodeParser& nodeParser)
+{
+	CatTypeNode* typeNode = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	TypeOwnershipSemantics ownership = TypeOwnershipSemantics::Owned;
+	const ParseToken* firstTerminal = nodeParser.getTerminalByIndex(0);
+	if (firstTerminal->getTokenID() == OneCharToken::getID()
+		&& (OneChar)firstTerminal->getTokenSubType() == OneChar::Times)
+	{
+		ownership = TypeOwnershipSemantics::Weak;
+	}
+	return new CatTypeNode(typeNode, ownership, nodeParser.getStackLexeme());
 }
 
 

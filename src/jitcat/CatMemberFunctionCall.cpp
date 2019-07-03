@@ -11,6 +11,7 @@
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeRoot.h"
+#include "jitcat/ContainerManipulator.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
@@ -120,12 +121,22 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		ASTHelper::updatePointerIfChanged(base, base->constCollapse(compiletimeContext));
 
 		CatGenericType baseType = base->getType();
-		if (!baseType.isPointerToReflectableObjectType() || baseType.isReflectableHandleType())
+		if (baseType.isPointerToReflectableObjectType()
+			|| baseType.isReflectableHandleType())
+		{
+			memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
+		}
+		else if (baseType.isPointerToArrayType())
+		{
+			memberFunctionInfo = baseType.getPointeeType()->getContainerManipulator()->getMemberFunctionInfo(functionName);
+		}
+		else
 		{
 			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
+
+		
 		if (memberFunctionInfo != nullptr)
 		{
 			std::size_t numArgumentsSupplied = arguments->getNumArguments();

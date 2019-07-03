@@ -123,14 +123,19 @@ namespace jitcat::Reflection
 		//May be nullptr when type info was read from XML
 		const TypeCaster* getTypeCaster() const;
 
-		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const;
-		virtual Reflectable* construct() const;
-		virtual void destruct(Reflectable* object);
-		virtual void destruct(unsigned char* buffer, std::size_t bufferSize);
+		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const;
+		Reflectable* construct() const;
+		void destruct(Reflectable* object);
+		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize);
+		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const;
 
 		virtual bool getAllowInheritance() const;
 		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext);
 		virtual bool getAllowConstruction() const;
+		virtual bool getAllowCopyConstruction() const;
+		virtual bool getAllowMoveConstruction() const;
 
 		//Returns true if the type has no dependencies and can be deleted.
 		virtual bool canBeDeleted() const;

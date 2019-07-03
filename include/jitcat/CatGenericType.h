@@ -35,7 +35,6 @@ namespace jitcat
 			Pointer,
 			ReflectableHandle,
 			ReflectableObject,
-			StructObject,
 			Container,
 			Count
 		};
@@ -79,12 +78,13 @@ namespace jitcat
 		bool isReflectableHandleType() const;
 		bool isPointerToReflectableObjectType() const;
 		bool isReflectablePointerOrHandle() const;
-		bool isStructType() const;
 		bool isPointerType() const;
 		bool isPointerToPointerType() const;
 		bool isPointerToHandleType() const;
 		bool isAssignableType() const;
 		bool isContainerType() const;
+		bool isArrayType() const;
+		bool isPointerToArrayType() const;
 		bool isVectorType() const;
 		bool isMapType() const;
 		bool isNullptrType() const;
@@ -92,6 +92,8 @@ namespace jitcat
 		bool isTriviallyCopyable() const;
 		bool isWritable() const;
 		bool isConst() const;
+
+		bool isDependentOn(Reflection::TypeInfo* objectType) const;
 
 		//Copies the type but sets all modifiers (const, writable) to false.
 		CatGenericType toUnmodified() const;
@@ -104,6 +106,7 @@ namespace jitcat
 		//Gets a pointer type to this type
 		CatGenericType toPointer(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
+		CatGenericType convertPointerToHandle() const;
 
 		Reflection::ContainerManipulator* getContainerManipulator() const;
 		const CatGenericType& getContainerItemType() const;
@@ -121,7 +124,12 @@ namespace jitcat
 
 		//This will cast the pointer to the C++ type associated with this CatGenericType and returns it as a std::any
 		std::any createAnyOfType(uintptr_t pointer);
+		//This will cast and dereference the pointer to the C++ type associate with this CatGenericType and returns it as a std::any.
+		std::any createAnyOfTypeAt(uintptr_t pointer);
+
 		std::any createDefault() const;
+
+		std::size_t getTypeSize() const;
 
 		//Converts value of valueType to this type if possible, otherwise returns default value
 		std::any convertToType(std::any value, const CatGenericType& valueType) const;
@@ -134,6 +142,23 @@ namespace jitcat
 		static std::string convertToString(std::any value, const CatGenericType& valueType);
 		static CatGenericType readFromXML(std::ifstream& xmlFile, const std::string& closingTag, std::map<std::string, Reflection::TypeInfo*>& typeInfos);
 		void writeToXML(std::ofstream& xmlFile, const char* linePrefixCharacters);
+
+		bool isConstructible() const;
+		bool isCopyConstructible() const;
+		bool isMoveConstructible() const;
+		bool isDestructible() const;
+
+		//Construct and default-initialize this type into the supplied buffer. 
+		//Buffer size must be greater or equal to getTypeSize(). Returns true if succesful.
+		bool placementConstruct(unsigned char* buffer, std::size_t bufferSize);
+		//Copy construct this type from the sourceBuffer to the target buffer. Returns true if succesful.
+		bool copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		//Move construct this type form the sourceBuffer to the target buffer. Returns true if succesful.
+		bool moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		//Destruct this type located in the supplied buffer. Returns true if succesful.
+		bool placementDestruct(unsigned char* buffer, std::size_t bufferSize);
+		//Casts the contents of value to a unsigned char* and gets the size of the value
+		void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const;
 
 		static CatGenericType createIntType(bool isWritable, bool isConst);
 		static CatGenericType createFloatType(bool isWritable, bool isConst);

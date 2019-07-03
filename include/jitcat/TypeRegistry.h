@@ -43,9 +43,10 @@ namespace jitcat::Reflection
 		TypeInfo* getTypeInfo(const std::string& typeName);
 		//Never returns nullptr, creates a new empty TypeInfo if typeName does not exist.
 		TypeInfo* getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, bool allowConstruction,
-									  std::function<Reflectable*()>& constructor,
+									  bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 									  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-									  std::function<void (Reflectable*)>& destructor,
+									  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
+									  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 									  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
 
 		const std::map<std::string, TypeInfo*>& getTypes() const;
@@ -67,10 +68,11 @@ namespace jitcat::Reflection
 	private:
 		//This function exists to prevent circular includes via TypeInfo.h
 		static ReflectedTypeInfo* createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction,
-												std::function<Reflectable*()>& constructor,
-												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-												std::function<void (Reflectable*)>& destructor,
-												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
+												 bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
+												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
+												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
+												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
+												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
 		static TypeInfo* castToTypeInfo(ReflectedTypeInfo* reflectedTypeInfo);
 
 	private:
@@ -95,9 +97,9 @@ namespace jitcat::Reflection
 		else
 		{
 
-			std::function<jitcat::Reflection::Reflectable*()> constructor;
 			std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementConstructor;
-			std::function<void (jitcat::Reflection::Reflectable*)> destructor;
+			std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)> copyConstructor;
+			std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)> moveConstructor;
 			std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementDestructor;
 			std::size_t typeSize = sizeof(ReflectableT);
 			jitcat::Reflection::ObjectTypeCaster<ReflectableT>* typeCaster = new jitcat::Reflection::ObjectTypeCaster<ReflectableT>();
@@ -106,27 +108,54 @@ namespace jitcat::Reflection
 											 && std::is_destructible<ReflectableT>::value;
 			if constexpr (isConstructible)
 			{
-				constructor = [](){return new ReflectableT();};
 				placementConstructor = [](unsigned char* buffer, std::size_t bufferSize) {assert(sizeof(ReflectableT) <= bufferSize); new(buffer) ReflectableT();};
 			}
 			else
 			{
-				constructor = [](){return nullptr;};
 				placementConstructor = [](unsigned char* buffer, std::size_t bufferSize) {};
+			}
+
+			constexpr bool isCopyConstructible = std::is_copy_constructible<ReflectableT>::value;
+			if constexpr (isCopyConstructible)
+			{
+				copyConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+								  {
+									new(targetBuffer) ReflectableT(*reinterpret_cast<const ReflectableT*>(sourceBuffer));
+								  };
+			}
+			else
+			{
+				copyConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) {};
+			}
+
+			constexpr bool isMoveConstructible = std::is_move_constructible<ReflectableT>::value;
+			if constexpr (isMoveConstructible)
+			{
+				moveConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+								  {
+									new(targetBuffer) ReflectableT(std::move(*reinterpret_cast<ReflectableT*>(sourceBuffer)));
+								  };
+			}
+			else
+			{
+				moveConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) {};
 			}
 
 			if constexpr (std::is_destructible<ReflectableT>::value)
 			{
-				destructor = [](jitcat::Reflection::Reflectable* object){delete static_cast<ReflectableT*>(object);};
 				placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){reinterpret_cast<ReflectableT*>(buffer)->~ReflectableT();};
 			}
 			else
 			{
-				destructor = [](jitcat::Reflection::Reflectable* object){};
 				placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){};
 			}
 
-			jitcat::Reflection::ReflectedTypeInfo* reflectedInfo = createTypeInfo(typeName, typeSize, typeCaster, isConstructible, constructor, placementConstructor, destructor, placementDestructor);
+			//When a type within JitCat is triviallyCopyable it implies that it is also trivially destructible.
+			//This is not always true for C++ types and so we also need to check for is_trivially_destructible.
+			constexpr bool triviallyCopyable = std::is_trivially_copyable<ReflectableT>::value && std::is_trivially_destructible<ReflectableT>::value;
+
+			jitcat::Reflection::ReflectedTypeInfo* reflectedInfo = createTypeInfo(typeName, typeSize, typeCaster, isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
+																				  placementConstructor, copyConstructor, moveConstructor, placementDestructor);
 			typeInfo = castToTypeInfo(reflectedInfo);
 			types[lowerTypeName] = typeInfo;
 			ownedTypes.push_back(typeInfo);

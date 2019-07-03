@@ -11,8 +11,9 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/ASTHelper.h"
-#include "jitcat/TypeInfo.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
+#include "jitcat/TypeOwnershipSemantics.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -67,7 +68,11 @@ std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 {
 	std::any arrayValue = array->execute(runtimeContext);
 	std::any indexValue = index->execute(runtimeContext);
-	if (arrayType.isMapType())
+	if (arrayType.isVectorType() || arrayType.isArrayType())
+	{
+		return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<int>(indexValue));
+	}
+	else if (arrayType.isMapType())
 	{
 		if (indexType.isIntType() && !arrayType.getContainerManipulator()->getKeyType().isIntType())
 		{
@@ -77,10 +82,6 @@ std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 		{
 			return arrayType.getContainerManipulator()->getItemAt(arrayValue, indexValue);
 		}
-	}
-	else if (arrayType.isVectorType())
-	{
-		return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<int>(indexValue));
 	}
 	return containerItemType.createDefault();
 }
@@ -92,6 +93,10 @@ bool CatArrayIndex::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 		&& index->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		arrayType = array->getType();
+		if (arrayType.isPointerType() && arrayType.getPointeeType()->isArrayType())
+		{
+			arrayType = *arrayType.getPointeeType();
+		}
 		if (!arrayType.isContainerType())
 		{
 			errorManager->compiledWithError(Tools::append(arrayType.toString(), " is not a list."), errorContext, compiletimeContext->getContextName(), getLexeme());
@@ -106,6 +111,10 @@ bool CatArrayIndex::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 		}
 		
 		containerItemType = arrayType.getContainerItemType();
+		if (containerItemType.isReflectableObjectType())
+		{
+			containerItemType = containerItemType.toPointer(Reflection::TypeOwnershipSemantics::Weak, false, false);
+		}
 		return true;
 	}
 	return false;

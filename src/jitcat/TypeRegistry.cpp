@@ -65,16 +65,26 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 
 
 TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, bool allowConstruction, 
-											std::function<Reflectable*()>& constructor,
+											bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-											std::function<void (Reflectable*)>& destructor,
+											std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
+											std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
 {
 	std::string lowerName = Tools::toLowerCase(typeName);
 	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter == types.end())
 	{
-		TypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, allowConstruction, constructor, placementConstructor, destructor, placementDestructor);
+		ReflectedTypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
+		if (allowCopyConstruction)
+		{
+			typeInfo->enableCopyConstruction();
+		}
+		if (allowMoveConstruction)
+		{
+			typeInfo->enableMoveConstruction();
+		}
+		typeInfo->setTriviallyCopyable(triviallyCopyable);
 		types[lowerName] = typeInfo;
 		return typeInfo;
 	}
@@ -316,12 +326,23 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 
 
 ReflectedTypeInfo* TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction, 
-												std::function<Reflectable*()>& constructor,
+												bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-												std::function<void (Reflectable*)>& destructor,
+												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
+												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
 {
-	return new ReflectedTypeInfo(typeName, typeSize, typeCaster, allowConstruction, constructor, placementConstructor, destructor, placementDestructor);
+	ReflectedTypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, typeCaster, allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
+	if (allowCopyConstruction)
+	{
+		typeInfo->enableCopyConstruction();
+	}
+	if (allowMoveConstruction)
+	{
+		typeInfo->enableMoveConstruction();
+	}
+	typeInfo->setTriviallyCopyable(triviallyCopyable);
+	return typeInfo;
 }
 
 

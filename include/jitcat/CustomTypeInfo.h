@@ -41,6 +41,7 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
+		TypeMemberInfo* addArrayMember(const std::string& memberName, const CatGenericType& arrayType);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
 
@@ -58,10 +59,10 @@ namespace jitcat::Reflection
 
 		virtual bool isCustomType() const;
 
-		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const override final;
-		virtual Reflectable* construct() const override final;
-		virtual void destruct(Reflectable* object) override final;
-		virtual void destruct(unsigned char* buffer, std::size_t bufferSize) override final;
+		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const override final;
+		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize) override final;
+		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
+		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 
 		virtual bool isTriviallyCopyable() const;
 
@@ -75,7 +76,7 @@ namespace jitcat::Reflection
 		//Returns a pointer to the start of the newly added size
 		unsigned char* increaseDataSize(std::size_t amount);
 		void increaseDataSize(unsigned char*& data, std::size_t amount, std::size_t currentSize);
-		void createDataCopy(unsigned char* sourceData, std::size_t sourceSize, unsigned char* copyData, std::size_t copySize) const;
+		void createDataCopy(const unsigned char* sourceData, std::size_t sourceSize, unsigned char* copyData, std::size_t copySize) const;
 
 		void removeInstance(Reflectable* instance);
 

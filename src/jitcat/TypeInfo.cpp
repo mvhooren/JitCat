@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/TypeInfo.h"
+#include "jitcat/ContainerManipulator.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/Tools.h"
@@ -30,6 +31,7 @@ TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caste
 
 TypeInfo::~TypeInfo()
 {
+	ArrayManipulator::deleteArrayManipulatorsOfType(this);
 	for (auto& iter : members)
 	{
 		if (iter.second->catType.isPointerToReflectableObjectType()
@@ -349,7 +351,7 @@ const TypeCaster* TypeInfo::getTypeCaster() const
 }
 
 
-void jitcat::Reflection::TypeInfo::construct(unsigned char* buffer, std::size_t bufferSize) const
+void jitcat::Reflection::TypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
 {
 	assert(false);
 }
@@ -357,20 +359,48 @@ void jitcat::Reflection::TypeInfo::construct(unsigned char* buffer, std::size_t 
 
 Reflectable* jitcat::Reflection::TypeInfo::construct() const
 {
-	assert(false);
-	return nullptr;
+	std::size_t typeSize = getTypeSize();
+	unsigned char* buffer = new unsigned char[typeSize];
+	placementConstruct(buffer, typeSize);
+	return reinterpret_cast<Reflectable*>(buffer);
 }
 
 
 void jitcat::Reflection::TypeInfo::destruct(Reflectable* object)
 {
+	placementDestruct(reinterpret_cast<unsigned char*>(object), getTypeSize());
+	delete[] reinterpret_cast<unsigned char*>(object);
+}
+
+
+void jitcat::Reflection::TypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
+{
 	assert(false);
 }
 
 
-void jitcat::Reflection::TypeInfo::destruct(unsigned char* buffer, std::size_t bufferSize)
+void jitcat::Reflection::TypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	assert(false);
+}
+
+
+void jitcat::Reflection::TypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+{
+	assert(false);
+}
+
+
+void jitcat::Reflection::TypeInfo::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
+{
+	if (caster != nullptr)
+	{
+		caster->toBuffer(value, buffer, bufferSize);
+	}
+	else
+	{
+		assert(false);
+	}
 }
 
 
@@ -387,6 +417,18 @@ bool jitcat::Reflection::TypeInfo::inheritTypeCheck(CatRuntimeContext* context, 
 
 
 bool jitcat::Reflection::TypeInfo::getAllowConstruction() const
+{
+	return true;
+}
+
+
+bool jitcat::Reflection::TypeInfo::getAllowCopyConstruction() const
+{
+	return true;
+}
+
+
+bool jitcat::Reflection::TypeInfo::getAllowMoveConstruction() const
 {
 	return true;
 }

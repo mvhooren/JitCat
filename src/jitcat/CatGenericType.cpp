@@ -273,12 +273,6 @@ bool jitcat::CatGenericType::isReflectablePointerOrHandle() const
 }
 
 
-bool CatGenericType::isStructType() const
-{
-	return specificType == SpecificType::StructObject;
-}
-
-
 bool jitcat::CatGenericType::isPointerType() const
 {
 	return specificType == SpecificType::Pointer;
@@ -314,6 +308,18 @@ bool CatGenericType::isContainerType() const
 }
 
 
+bool jitcat::CatGenericType::isArrayType() const
+{
+	return specificType == SpecificType::Container && containerType == ContainerType::Array;
+}
+
+
+bool jitcat::CatGenericType::isPointerToArrayType() const
+{
+	return specificType == SpecificType::Pointer && pointeeType->isArrayType();
+}
+
+
 bool CatGenericType::isVectorType() const
 {
 	return specificType == SpecificType::Container && containerType == ContainerType::Vector;
@@ -334,7 +340,8 @@ bool jitcat::CatGenericType::isNullptrType() const
 
 bool jitcat::CatGenericType::isTriviallyCopyable() const
 {
-	return isBasicType() && basicType != BasicType::String;
+	return (isBasicType() && basicType != BasicType::String)
+		   || (isReflectableObjectType() && nestedType->isTriviallyCopyable());
 }
 
 
@@ -347,6 +354,20 @@ bool CatGenericType::isWritable() const
 bool CatGenericType::isConst() const
 {
 	return constant;
+}
+
+
+bool jitcat::CatGenericType::isDependentOn(Reflection::TypeInfo* objectType) const
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:				return false;
+		case SpecificType::Container:			return containerManipulator->getValueType().isDependentOn(objectType) || containerManipulator->getKeyType().isDependentOn(objectType);
+		case SpecificType::ReflectableHandle:
+		case SpecificType::Pointer:				return pointeeType->isDependentOn(objectType);
+		case SpecificType::ReflectableObject:	return nestedType == objectType;
+		default:								assert(false); return false;
+	}
 }
 
 
@@ -381,6 +402,13 @@ CatGenericType jitcat::CatGenericType::toPointer(TypeOwnershipSemantics ownershi
 CatGenericType jitcat::CatGenericType::toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant) const
 {
 	return CatGenericType(*this, ownershipSemantics, true, writable, constant);
+}
+
+
+CatGenericType jitcat::CatGenericType::convertPointerToHandle() const
+{
+	assert(specificType == SpecificType::Pointer);
+	return CatGenericType(SpecificType::ReflectableHandle, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, pointeeType.get(), writable, constant);
 }
 
 
@@ -597,6 +625,65 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 }
 
 
+std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
+{
+	switch (specificType)
+	{
+		case SpecificType::ReflectableHandle:
+		{
+			return reinterpret_cast<ReflectableHandle*>(pointer)->get();
+		} break;
+		case SpecificType::Container:
+		{
+			return pointeeType->containerManipulator->createAnyPointer(pointer);
+		} break;
+		case SpecificType::Basic:
+		{
+			switch (basicType)
+			{
+			case BasicType::Int:	return std::any(*reinterpret_cast<int*>(pointer));
+			case BasicType::Float:	return std::any(*reinterpret_cast<float*>(pointer));
+			case BasicType::Bool:	return std::any(*reinterpret_cast<bool*>(pointer));
+			case BasicType::String:	return std::any(*reinterpret_cast<std::string*>(pointer));
+			}
+		} break;
+		case SpecificType::ReflectableObject:
+		{
+			return reinterpret_cast<Reflectable*>(pointer);
+		}
+		case SpecificType::Pointer:
+		{
+			switch (pointeeType->specificType)
+			{
+				case SpecificType::Basic:
+				{
+					switch (basicType)
+					{
+					case BasicType::Int:	return std::any(*reinterpret_cast<int**>(pointer));
+					case BasicType::Float:	return std::any(*reinterpret_cast<float**>(pointer));
+					case BasicType::Bool:	return std::any(*reinterpret_cast<bool**>(pointer));
+					case BasicType::String:	return std::any(*reinterpret_cast<std::string**>(pointer));
+					}
+				} break;
+				case SpecificType::ReflectableObject:
+				{
+					return *reinterpret_cast<Reflectable**>(pointer);
+				} break;
+				case SpecificType::ReflectableHandle:
+				{
+					return std::any((*reinterpret_cast<ReflectableHandle**>(pointer))->get());
+				}
+			}
+		} break;
+		default:
+		{
+			assert(false);
+		} break;
+	}
+	return std::any();
+}
+
+
 std::any CatGenericType::createDefault() const
 {
 	switch (specificType)
@@ -667,6 +754,47 @@ std::any CatGenericType::createDefault() const
 	}
 	assert(false);
 	return std::any();
+}
+
+
+std::size_t jitcat::CatGenericType::getTypeSize() const
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:
+			switch (basicType)
+			{
+				case BasicType::Bool:	return sizeof(bool);
+				case BasicType::Float:	return sizeof(float);
+				case BasicType::Int:	return sizeof(int);
+				case BasicType::String:	return sizeof(std::string);
+				case BasicType::Void:	return 0;
+			}
+			break;
+		case SpecificType::Container:
+			switch (containerType)
+			{
+			case ContainerType::Array:			return sizeof(ArrayManipulator::Array);
+			case ContainerType::Map:	
+			case ContainerType::Vector:			return sizeof(uintptr_t);
+			}
+			break;
+		case SpecificType::Pointer:				
+		{
+			if (ownershipSemantics == TypeOwnershipSemantics::Value)
+			{
+				return getPointeeType()->getTypeSize();
+			}
+			else
+			{
+				return sizeof(uintptr_t);
+			}
+		}
+		case SpecificType::ReflectableHandle:	return sizeof(ReflectableHandle);
+		case SpecificType::ReflectableObject:	return nestedType->getTypeSize();
+	}
+	assert(false);
+	return 0;
 }
 
 
@@ -755,6 +883,7 @@ void CatGenericType::printValue(std::any& value)
 			}
 		} break;
 		case SpecificType::ReflectableObject:
+		case SpecificType::Pointer:
 		{
 			 CatLog::log(Tools::makeString(std::any_cast<Reflectable*>(value))); 		
 		} break;
@@ -866,7 +995,7 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 						TypeInfo* objectType = XMLHelper::findOrCreateTypeInfo(objectTypeName, typeInfos);
 						//QQQ store and load ownership semantics
 						return CatGenericType(objectType, TypeOwnershipSemantics::Weak, writable, constant);
-}
+					}
 					else
 					{
 						return CatGenericType::unknownType;
@@ -937,6 +1066,483 @@ void CatGenericType::writeToXML(std::ofstream& xmlFile, const char* linePrefixCh
 	else
 	{
 		xmlFile << linePrefixCharacters << "<Type>None</Type>\n";		
+	}
+}
+
+
+bool jitcat::CatGenericType::isConstructible() const
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:				return true;
+		case SpecificType::Container:			return containerType == ContainerType::Array;
+		case SpecificType::ReflectableObject:	return nestedType->getAllowConstruction();
+		case SpecificType::ReflectableHandle:
+		case SpecificType::Pointer:
+		{
+			if ((ownershipSemantics == TypeOwnershipSemantics::Owned 
+				|| ownershipSemantics == TypeOwnershipSemantics::Value)
+				&& (isPointerToReflectableObjectType() || isPointerToHandleType()))
+			{
+				return pointeeType->isConstructible();
+			}
+			else
+			{
+				return true;
+			}
+		}
+		default: assert(false); return false;
+	}
+}
+
+
+bool jitcat::CatGenericType::isCopyConstructible() const
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:				return true;
+		case SpecificType::Container:			return containerType == ContainerType::Array;
+		case SpecificType::ReflectableObject:	return nestedType->getAllowCopyConstruction();
+		case SpecificType::ReflectableHandle:
+		case SpecificType::Pointer:
+		{
+			if ((ownershipSemantics == TypeOwnershipSemantics::Owned 
+				|| ownershipSemantics == TypeOwnershipSemantics::Value)
+				&& (isPointerToReflectableObjectType() || isPointerToHandleType()))
+			{
+				return pointeeType->isCopyConstructible();
+			}
+			else
+			{
+				return true;
+			}
+		}
+		default: assert(false); return false;
+	}
+}
+
+
+bool jitcat::CatGenericType::isMoveConstructible() const
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:				return true;
+		case SpecificType::Container:			return containerType == ContainerType::Array;
+		case SpecificType::ReflectableObject:	return nestedType->getAllowMoveConstruction();
+		case SpecificType::ReflectableHandle:
+		case SpecificType::Pointer:
+		{
+			if ((ownershipSemantics == TypeOwnershipSemantics::Owned 
+				|| ownershipSemantics == TypeOwnershipSemantics::Value)
+				&& (isPointerToReflectableObjectType() || isPointerToHandleType()))
+			{
+				return pointeeType->isMoveConstructible();
+			}
+			else
+			{
+				return true;
+			}
+		}
+		default: assert(false); return false;
+	}
+}
+
+
+bool jitcat::CatGenericType::isDestructible() const
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:				return true;
+		case SpecificType::Container:			return containerType == ContainerType::Array;
+		case SpecificType::ReflectableObject:	return nestedType->getAllowConstruction(); //If an object is constructible it must also be destructible
+		case SpecificType::ReflectableHandle:
+		case SpecificType::Pointer:
+		{
+			if ((ownershipSemantics == TypeOwnershipSemantics::Owned 
+				|| ownershipSemantics == TypeOwnershipSemantics::Value)
+				&& (isPointerToReflectableObjectType() || isPointerToHandleType()))
+			{
+				return pointeeType->isDestructible();
+			}
+			else
+			{
+				return true;
+			}
+		}
+		default: assert(false); return false;
+	}
+}
+
+
+bool jitcat::CatGenericType::placementConstruct(unsigned char* buffer, std::size_t bufferSize)
+{
+	std::size_t typeSize = getTypeSize();
+	if (typeSize > bufferSize)
+	{
+		assert(false);
+		return false;
+	}
+	switch (specificType)
+	{
+		case SpecificType::Basic:
+		{
+			switch (basicType)
+			{
+				default:
+				case BasicType::Void:
+				case BasicType::None:
+					return false;
+				case BasicType::Float:	*reinterpret_cast<float*>(buffer) = 0.0f;	break;
+				case BasicType::Int:	*reinterpret_cast<int*>(buffer) = 0;		break;
+				case BasicType::Bool:	*reinterpret_cast<bool*>(buffer) = false;	break;
+				case BasicType::String: new(buffer) std::string();					break;
+			} 
+		} return true;
+		case SpecificType::Container:
+		{
+			switch(containerType)
+			{
+				default:
+				case ContainerType::Map:
+				case ContainerType::Vector:
+					return false;
+				case ContainerType::Array:
+					memset(buffer, 0, typeSize);
+					return true;
+			}
+		} break;
+		case SpecificType::Pointer:
+		{
+			if (ownershipSemantics != TypeOwnershipSemantics::Value)
+			{
+				memset(buffer, 0, typeSize);
+			}
+			else
+			{
+				pointeeType->placementConstruct(buffer, typeSize);
+			}
+			return true;
+		}
+		case SpecificType::ReflectableHandle:
+		{
+			new(buffer) ReflectableHandle(nullptr);
+			return true;
+		}
+		case SpecificType::ReflectableObject:
+		{
+			nestedType->placementConstruct(buffer, bufferSize);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+{
+	std::size_t typeSize = getTypeSize();
+	if (typeSize > targetBufferSize || typeSize > sourceBufferSize)
+	{
+		assert(false);
+		return false;
+	}
+	switch (specificType)
+	{
+		case SpecificType::Basic:
+		{
+			switch (basicType)
+			{
+				default:
+				case BasicType::Void:
+				case BasicType::None:
+					return false;
+				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<const float*>(sourceBuffer);	break;
+				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<const int*>(sourceBuffer);		break;
+				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<const bool*>(sourceBuffer);	break;
+				case BasicType::String: new(targetBuffer) std::string(*reinterpret_cast<const std::string*>(sourceBuffer));		break;
+			} 
+		} return true;
+		case SpecificType::Container:
+		{
+			switch(containerType)
+			{
+				default:
+				case ContainerType::Map:
+				case ContainerType::Vector:
+					return false;
+				case ContainerType::Array:
+					static_cast<ArrayManipulator*>(containerManipulator)->copy(targetBuffer, targetBufferSize, sourceBuffer, sourceBufferSize);
+					return true;
+			}
+		} break;
+		case SpecificType::Pointer:
+		{
+			switch (ownershipSemantics)
+			{
+				case TypeOwnershipSemantics::Owned:
+				{
+					//Allocate heap memory for the object and copy-construct into it.
+					//Then store the pointer to the heap memory.
+					std::size_t objectSize = pointeeType->getTypeSize();
+					unsigned char* objectMemory = new unsigned char[objectSize];
+					pointeeType->copyConstruct(objectMemory, objectSize, reinterpret_cast<const unsigned char*>(*reinterpret_cast<Reflectable* const *>(sourceBuffer)), objectSize);
+					*reinterpret_cast<Reflectable**>(targetBuffer) = reinterpret_cast<Reflectable*>(objectMemory);
+					break;
+				}
+				case TypeOwnershipSemantics::Value:
+				{
+					//Create a copy of the object in-place.
+					pointeeType->copyConstruct(targetBuffer, targetBufferSize, sourceBuffer, sourceBufferSize);
+					break;
+				}
+				default:
+				case TypeOwnershipSemantics::Weak: //Weak and shared pointers should only exist as ReflectableHandles
+				case TypeOwnershipSemantics::Shared:
+					assert(false); return false;;
+			}
+			return true;
+		}
+		case SpecificType::ReflectableHandle:
+		{
+			switch (ownershipSemantics)
+			{
+				case TypeOwnershipSemantics::Owned:
+				{
+					const ReflectableHandle* sourceHandle = reinterpret_cast<const ReflectableHandle*>(sourceBuffer);
+					unsigned char* objectMemory = nullptr;
+					if (sourceHandle->getIsValid())
+					{
+						//Allocate heap memory for the object and copy-construct into it.
+						//Then store the pointer to the heap memory in a ReflectableHandle.
+						std::size_t objectSize = pointeeType->getTypeSize();
+						objectMemory = new unsigned char[objectSize];
+						pointeeType->copyConstruct(objectMemory, objectSize, reinterpret_cast<unsigned char*>(sourceHandle->get()), objectSize);
+					}
+					new(targetBuffer) ReflectableHandle(reinterpret_cast<Reflectable*>(objectMemory));
+				} break;
+				case TypeOwnershipSemantics::Weak:
+				{
+					//Simply assign one handle to the other.
+					*reinterpret_cast<ReflectableHandle*>(targetBuffer) = reinterpret_cast<const ReflectableHandle*>(sourceBuffer)->get();
+				} break;
+				case TypeOwnershipSemantics::Shared: //Shared pointers not yet implemented
+				default:
+				case TypeOwnershipSemantics::Value: assert(false); return false;
+			}
+			
+			return true;
+		}
+		case SpecificType::ReflectableObject:
+		{
+			//Implies value ownership, copy contruct
+			nestedType->copyConstruct(targetBuffer, targetBufferSize, sourceBuffer, sourceBufferSize);
+			return false;
+		}
+		default:
+		{
+			assert(false);
+			return false;
+		}
+	}
+}
+
+
+bool jitcat::CatGenericType::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+{
+	std::size_t typeSize = getTypeSize();
+	if (typeSize > targetBufferSize || typeSize > sourceBufferSize)
+	{
+		assert(false);
+		return false;
+	}
+	switch (specificType)
+	{
+		case SpecificType::Basic:
+		{
+			switch (basicType)
+			{
+				default:
+				case BasicType::Void:
+				case BasicType::None:
+					return false;
+				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<float*>(sourceBuffer);	break;
+				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<int*>(sourceBuffer);		break;
+				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<bool*>(sourceBuffer);	break;
+				case BasicType::String:	new (targetBuffer) std::string(std::move(*reinterpret_cast<std::string*>(sourceBuffer))); break;
+			} 
+		} return true;
+		case SpecificType::Container:
+		{
+			switch(containerType)
+			{
+				default:
+				case ContainerType::Map:
+				case ContainerType::Vector:
+					return false;
+				case ContainerType::Array:
+					static_cast<ArrayManipulator*>(containerManipulator)->move(targetBuffer, targetBufferSize, sourceBuffer, sourceBufferSize);
+					return true;
+			}
+		} break;
+		case SpecificType::Pointer:
+		{
+			switch (ownershipSemantics)
+			{
+				case TypeOwnershipSemantics::Owned:
+				{
+					//Simply copy the pointer and then set the source pointer to nullptr. Ownership is now moved.
+					*reinterpret_cast<Reflectable**>(targetBuffer) = *reinterpret_cast<Reflectable**>(sourceBuffer);
+					*reinterpret_cast<Reflectable**>(sourceBuffer) = nullptr;
+					break;
+				}
+				case TypeOwnershipSemantics::Value:
+				{
+					//Call the move constructor of the pointee-type.
+					pointeeType->moveConstruct(targetBuffer, targetBufferSize, sourceBuffer, sourceBufferSize);
+					break;
+				}
+				default:
+				case TypeOwnershipSemantics::Weak: //Weak and shared pointers should only exist as ReflectableHandles
+				case TypeOwnershipSemantics::Shared:
+					assert(false); return false;;
+			}
+			return true;
+		}
+		case SpecificType::ReflectableHandle:
+		{
+			switch (ownershipSemantics)
+			{
+				case TypeOwnershipSemantics::Owned:
+				case TypeOwnershipSemantics::Weak:
+				{
+					//Simply copy the pointer and then set the source pointer to nullptr. Ownership is now moved.
+					*reinterpret_cast<ReflectableHandle*>(targetBuffer) = reinterpret_cast<ReflectableHandle*>(sourceBuffer)->get();
+					reinterpret_cast<ReflectableHandle*>(sourceBuffer)->operator=(nullptr);
+				} break;
+				case TypeOwnershipSemantics::Shared: //Shared pointers not yet implemented
+				default:
+				case TypeOwnershipSemantics::Value: assert(false); return false;
+			}
+			return true;
+		}
+		case SpecificType::ReflectableObject:
+		{
+			//Move contruct
+			nestedType->moveConstruct(targetBuffer, targetBufferSize, sourceBuffer, sourceBufferSize);
+			return true;
+		}
+		default:
+		{
+			assert(false);
+			return false;
+		}
+	}
+}
+
+
+bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:
+		{
+			if (basicType == BasicType::String)
+			{
+				reinterpret_cast<std::string*>(buffer)->~basic_string();
+			}
+			return true;
+		} break;
+		case SpecificType::Container:
+		{
+			if (containerType == ContainerType::Array)
+			{
+				static_cast<ArrayManipulator*>(containerManipulator)->placementDestruct(buffer, bufferSize);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		} break;
+		case SpecificType::Pointer:
+		{
+			switch (ownershipSemantics)
+			{
+				case TypeOwnershipSemantics::Value:
+				{
+					pointeeType->placementDestruct(buffer, getTypeSize());
+					return true;
+				} break;
+				case TypeOwnershipSemantics::Owned:
+				{
+					pointeeType->placementDestruct(*reinterpret_cast<unsigned char**>(buffer), pointeeType->getTypeSize());
+					delete[] *reinterpret_cast<unsigned char**>(buffer);
+				} break;
+				case TypeOwnershipSemantics::Weak: //Weak and shared pointers should only exist as ReflectableHandles
+				case TypeOwnershipSemantics::Shared:
+					assert(false); return false;;
+			}
+
+			return true;
+		}
+		case SpecificType::ReflectableHandle:
+		{
+			assert(ownershipSemantics != TypeOwnershipSemantics::Value); //ReflectableHandles cant be value owned
+			assert(ownershipSemantics != TypeOwnershipSemantics::Shared); //Shared ownership not yet implemented.
+			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(buffer);
+			Reflectable* reflectable = handle->get();
+			handle->~ReflectableHandle();
+			if (ownershipSemantics == TypeOwnershipSemantics::Owned)
+			{
+				pointeeType->placementDestruct(reinterpret_cast<unsigned char*>(reflectable), pointeeType->getTypeSize());
+				Reflectable::destruct(reflectable);
+			}
+			return true;
+		}
+		case SpecificType::ReflectableObject:
+		{
+			Reflectable::placementDestruct(reinterpret_cast<Reflectable*>(buffer));
+			nestedType->placementDestruct(buffer, bufferSize);
+			return true;
+		}
+	}
+	return true;
+}
+
+
+void jitcat::CatGenericType::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
+{
+	bufferSize = getTypeSize();
+	switch (specificType)
+	{
+		case SpecificType::Basic:
+		{
+			switch (basicType)
+			{
+				default:
+				case BasicType::Void:
+				case BasicType::None:
+					assert(false); break;
+				case BasicType::Float:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const float>(&value)); break;
+				case BasicType::Int:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const int>(&value));			break;
+				case BasicType::Bool:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const bool>(&value));		break;
+				case BasicType::String: buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const std::string>(&value));	break;
+			} 
+		} break;
+		case SpecificType::Container:
+		{
+			switch(containerType)
+			{
+				default:
+				case ContainerType::Map:
+				case ContainerType::Vector:	assert(false); break;
+				case ContainerType::Array:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<Reflectable*>(&value)); break;
+			}
+		} break;
+		case SpecificType::Pointer:
+		case SpecificType::ReflectableHandle:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<Reflectable*>(&value)); break;
+		case SpecificType::ReflectableObject:	nestedType->toBuffer(value, buffer, bufferSize); break;
+		default: assert(false); break;
 	}
 }
 

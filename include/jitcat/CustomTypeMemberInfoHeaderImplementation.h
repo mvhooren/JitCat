@@ -13,20 +13,6 @@
 namespace jitcat::Reflection
 {
 
-template<>
-inline std::any CustomBasicTypeMemberInfo<std::string>::getMemberReference(Reflectable* base)
-{
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(base);
-	if (baseData != nullptr)
-	{
-		std::string* stringPointer;
-		memcpy(&stringPointer, &baseData[memberOffset], sizeof(std::string*));
-		std::string& value = *stringPointer;
-		return value;
-	}
-	return std::string("");
-}
-
 
 template<typename T>
 inline std::any CustomBasicTypeMemberInfo<T>::getMemberReference(Reflectable* base)
@@ -47,17 +33,8 @@ inline std::any CustomBasicTypeMemberInfo<T>::getAssignableMemberReference(Refle
 	unsigned char* baseData = reinterpret_cast<unsigned char*>(base);
 	if (baseData != nullptr)
 	{
-		if constexpr (std::is_same<T, std::string>::value)
-		{
-			std::string* stringPtr = nullptr;
-			memcpy(&stringPtr, &baseData[memberOffset], sizeof(std::string*));
-			return stringPtr;
-		}
-		else
-		{
-			T* value = reinterpret_cast<T*>(&baseData[memberOffset]);
-			return value;
-		}
+		T* value = reinterpret_cast<T*>(&baseData[memberOffset]);
+		return value;
 	}
 	return (T*)nullptr;
 }
@@ -81,7 +58,7 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::
 		llvm::Value* addressValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		if constexpr (loadString)
 		{
-			return generatorHelper->loadPointerAtAddress(addressValue, memberName, LLVM::LLVMTypes::stringPtrType);
+			return generatorHelper->convertToPointer(addressValue, memberName, LLVM::LLVMTypes::stringPtrType);
 		}
 		else
 		{
@@ -112,7 +89,8 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateAssignCode(llvm::Value
 		llvm::Value* addressIntValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		if constexpr (isString)
 		{
-			llvm::Value* lValue = generatorHelper->loadPointerAtAddress(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
+			//llvm::Value* lValue = generatorHelper->loadPointerAtAddress(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
+			llvm::Value* lValue = generatorHelper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
 			context->helper->createCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "stringAssign");
 		}
 		else
@@ -126,18 +104,6 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateAssignCode(llvm::Value
 #else
 	return nullptr;
 #endif // ENABLE_LLVM
-}
-
-
-template<>
-inline void CustomBasicTypeMemberInfo<std::string>::assign(std::any& base, const std::string& valueToSet)
-{
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
-	if (baseData != nullptr)
-	{
-		std::string*& value = *reinterpret_cast<std::string**>(&baseData[memberOffset]);
-		*value = valueToSet;
-	}
 }
 
 

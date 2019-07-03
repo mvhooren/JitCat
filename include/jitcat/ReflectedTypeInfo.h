@@ -23,9 +23,10 @@ namespace jitcat::Reflection
 	{
 	public:
 		ReflectedTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction,
-						  std::function<Reflectable*()>& constructor,
 						  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-						  std::function<void (Reflectable*)>& destructor, std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
+						  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
+						  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
+						  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
 	protected:
 		virtual ~ReflectedTypeInfo() {};
 	public:
@@ -43,35 +44,47 @@ namespace jitcat::Reflection
 
 		ReflectedTypeInfo& enableConstruction();
 		ReflectedTypeInfo& disableConstruction();
+		ReflectedTypeInfo& enableCopyConstruction();
+		ReflectedTypeInfo& disableCopyConstruction();
+		ReflectedTypeInfo& enableMoveConstruction();
+		ReflectedTypeInfo& disableMoveConstruction();
+		void setTriviallyCopyable(bool triviallyCopyable_);
+
 		ReflectedTypeInfo& enableInheritance();
 		ReflectedTypeInfo& disableInheritance();
 		ReflectedTypeInfo& setInheritanceChecker(std::function<bool (CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)>& checkFunction);
-		ReflectedTypeInfo& setConstructors(std::function<Reflectable*()>& constructor,
- 										   std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-										   std::function<void (Reflectable*)>& destructor, 
+		ReflectedTypeInfo& setConstructors(std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
+										   std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
+										   std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 										   std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
 		ReflectedTypeInfo& setTypeSize(std::size_t newSize);
 
-		virtual void construct(unsigned char* buffer, std::size_t bufferSize) const override final;
-		virtual Reflectable* construct() const override final;
-		virtual void destruct(Reflectable* object) override final;
-		virtual void destruct(unsigned char* buffer, std::size_t bufferSize) override final;
+		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const override final;
+		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize) override final;
+		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
+		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 
 		virtual bool getAllowInheritance() const override final;
 		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual bool getAllowConstruction() const override final;
+		virtual bool getAllowCopyConstruction() const override final;
+		virtual bool getAllowMoveConstruction() const override final;
 
 		virtual bool isTriviallyCopyable() const override final;
 
+
 	private:
-		std::function<Reflectable*()> constructor;
 		std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementConstructor;
-		std::function<void (Reflectable*)> destructor;
+		std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)> copyConstructor;
+		std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)> moveConstructor;			;
 		std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementDestructor;
 		std::function<bool (CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)> inheritanceCheckFunction;
 
 		bool allowConstruction;
+		bool allowCopyConstruction;
+		bool allowMoveConstruction;
 		bool allowInheritance;
+		bool triviallyCopyable;
 	};
 
 }

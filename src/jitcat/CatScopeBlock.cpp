@@ -92,7 +92,7 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 {
 	unsigned char* scopeMem = static_cast<unsigned char*>(alloca(customType->getTypeSize()));
-	customType->construct(scopeMem, customType->getTypeSize());
+	customType->placementConstruct(scopeMem, customType->getTypeSize());
 	scopeId = runtimeContext->addScope(customType, reinterpret_cast<Reflectable*>(scopeMem), false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
@@ -111,7 +111,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 	}
 	runtimeContext->removeScope(scopeId);
 	runtimeContext->setCurrentScope(previousScope);
-	customType->destruct(scopeMem, customType->getTypeSize());
+	customType->placementDestruct(scopeMem, customType->getTypeSize());
 	return result;
 }
 

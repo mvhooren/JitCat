@@ -61,7 +61,7 @@ CatASTNodeType CatOperatorNew::getNodeType() const
 
 std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 {
-	Reflectable* instance = static_cast<CustomTypeInfo*>(newType.getPointeeType()->getObjectType())->construct();
+	Reflectable* instance = newType.getPointeeType()->getObjectType()->construct();
 	if (functionCall != nullptr)
 	{
 		functionCall->executeWithBase(runtimeContext, instance);
@@ -93,7 +93,7 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	}
 	else if (!newType.getPointeeType()->getObjectType()->isCustomType())
 	{
-
+		functionCall = nullptr;
 		return true;
 	}
 	else

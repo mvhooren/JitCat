@@ -227,6 +227,9 @@ set(Source_Reflection_Serialisation
 )
 
 set(Source_Reflection_TypeInfo
+	ArrayMemberFunctionInfo.cpp
+	${JitCatHeaderPath}/ArrayMemberFunctionInfo.h
+	ContainerManipulator.cpp
 	${JitCatHeaderPath}/ContainerManipulator.h
 	CustomTypeInfo.cpp
 	${JitCatHeaderPath}/CustomTypeInfo.h

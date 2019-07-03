@@ -13,6 +13,7 @@ namespace jitcat::AST
 	public:
 		CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme);
 		CatTypeNode(const std::string& name, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme);
+		CatTypeNode(CatTypeNode* arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnership, const Tokenizer::Lexeme& lexeme);
 		CatTypeNode(const CatTypeNode& other);
 
 		virtual ~CatTypeNode();
@@ -34,6 +35,8 @@ namespace jitcat::AST
 		CatGenericType type;
 		std::string name;
 		bool knownType;
+		bool isArrayType;
+		std::unique_ptr<CatTypeNode> arrayItemType;
 	};
 
 };

@@ -2,6 +2,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/ContainerManipulator.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/TypeRegistry.h"
 
@@ -15,7 +16,8 @@ CatTypeNode::CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& le
 	CatASTNode(lexeme),
 	type(type),
 	ownershipSemantics(type.getOwnershipSemantics()),
-	knownType(true)
+	knownType(true),
+	isArrayType(false)
 {
 }
 
@@ -24,7 +26,18 @@ jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeO
 	CatASTNode(lexeme),
 	ownershipSemantics(ownershipSemantics),
 	name(name),
-	knownType(false)
+	knownType(false),
+	isArrayType(false)
+{
+}
+
+
+jitcat::AST::CatTypeNode::CatTypeNode(CatTypeNode* arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnership, const Tokenizer::Lexeme& lexeme):
+	CatASTNode(lexeme),
+	ownershipSemantics(arrayOwnership),
+	knownType(false),
+	isArrayType(true),
+	arrayItemType(arrayItemType)
 {
 }
 
@@ -102,27 +115,46 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 	//Check the return type
 	if (!isKnownType())
 	{
-		CatScopeID typeScope = InvalidScopeID;
-		TypeInfo* typeInfo = compileTimeContext->findType(Tools::toLowerCase(getTypeName()), typeScope);
-		if (typeInfo == nullptr)
+		if (!isArrayType)
 		{
-			typeInfo = TypeRegistry::get()->getTypeInfo(getTypeName());
-		}
-		if (typeInfo == nullptr)
-		{
-			errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), this, compileTimeContext->getContextName(), getLexeme());
-			return false;
-		}
-		else
-		{
-			if (ownershipSemantics != TypeOwnershipSemantics::Value)
+			CatScopeID typeScope = InvalidScopeID;
+			TypeInfo* typeInfo = compileTimeContext->findType(Tools::toLowerCase(getTypeName()), typeScope);
+			if (typeInfo == nullptr)
 			{
-				setType(CatGenericType(CatGenericType(typeInfo), ownershipSemantics, false));
+				typeInfo = TypeRegistry::get()->getTypeInfo(getTypeName());
+			}
+			if (typeInfo == nullptr)
+			{
+				errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), this, compileTimeContext->getContextName(), getLexeme());
+				return false;
 			}
 			else
 			{
-				setType(CatGenericType(typeInfo, false, false));
+				if (ownershipSemantics != TypeOwnershipSemantics::Value)
+				{
+					setType(CatGenericType(CatGenericType(typeInfo), ownershipSemantics, false));
+				}
+				else
+				{
+					setType(CatGenericType(typeInfo, false, false));
+				}
 			}
+		}
+		else
+		{
+			if (!arrayItemType->typeCheck(compileTimeContext, errorManager, errorContext))
+			{
+				return false;
+			}
+			CatGenericType itemGenericType = arrayItemType->getType();
+			if (itemGenericType.isPointerToReflectableObjectType() 
+				&& itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Owned 
+				&& itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
+			{
+				itemGenericType = itemGenericType.convertPointerToHandle();
+			}
+
+			setType(CatGenericType(ContainerType::Array, &ArrayManipulator::createArrayManipulatorOf(itemGenericType), false, false));
 		}
 	}
 	return true;

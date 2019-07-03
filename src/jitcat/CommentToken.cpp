@@ -63,7 +63,10 @@ ParseToken* CommentToken::createIfMatch(Document* document, const char* currentP
 				previousCharacterIsStar = currentPosition[offset] == '*';
 				offset++;
 			}
-			offset++;
+			if (offset <= documentLength && currentPosition[offset] == '/' && previousCharacterIsStar)
+			{
+				offset++;
+			}
 		}
 	}
 
