@@ -16,10 +16,23 @@ using namespace jitcat::Reflection;
 
 
 jitcat::Reflection::ArrayManipulator::ArrayManipulator(CatGenericType valueType):
-	valueType(valueType),
-	addFunction(new ArrayTypeMemberFunctionInfo(ArrayTypeMemberFunctionInfo::Operation::Add, CatGenericType(ContainerType::Array, this, false, false))),
-	removeFunction(new ArrayTypeMemberFunctionInfo(ArrayTypeMemberFunctionInfo::Operation::Remove, CatGenericType(ContainerType::Array, this, false, false))),
-	sizeFunction(new ArrayTypeMemberFunctionInfo(ArrayTypeMemberFunctionInfo::Operation::Size, CatGenericType(ContainerType::Array, this, false, false)))
+	TypeInfo("array", sizeof(Array), new ObjectTypeCaster<Array>()),
+	valueType(valueType)
+{
+	memberFunctions.emplace("add", new ArrayTypeMemberFunctionInfo(ArrayTypeMemberFunctionInfo::Operation::Add, CatGenericType(this, false, false)));
+	memberFunctions.emplace("remove", new ArrayTypeMemberFunctionInfo(ArrayTypeMemberFunctionInfo::Operation::Remove, CatGenericType(this, false, false)));
+	memberFunctions.emplace("size", new ArrayTypeMemberFunctionInfo(ArrayTypeMemberFunctionInfo::Operation::Size, CatGenericType(this, false, false)));
+	valueType.addDependentType(this);
+	if (valueType.isBasicType()
+		|| valueType.isPointerToReflectableObjectType()
+		|| valueType.isReflectableHandleType())
+	{
+		assignableValueType = valueType.toPointer();
+	}
+}
+
+
+jitcat::Reflection::ArrayManipulator::~ArrayManipulator()
 {
 }
 
@@ -34,7 +47,7 @@ std::size_t jitcat::Reflection::ArrayManipulator::getContainerSize(std::any cont
 std::any jitcat::Reflection::ArrayManipulator::getItemAt(std::any container, int index)
 {
 	Array* array = static_cast<Array*>(std::any_cast<Reflectable*>(container));
-	if (index >= 0 && index < array->size)
+	if (array != nullptr && index >= 0 && index < array->size)
 	{
 		unsigned char* itemPtr = &array->arrayData[index * valueType.getTypeSize()];
 		return valueType.createAnyOfTypeAt(reinterpret_cast<uintptr_t>(itemPtr));
@@ -42,6 +55,21 @@ std::any jitcat::Reflection::ArrayManipulator::getItemAt(std::any container, int
 	else
 	{
 		return valueType.createDefault();
+	}
+}
+
+
+std::any jitcat::Reflection::ArrayManipulator::getAssignableItemAt(std::any container, int index)
+{
+	Array* array = static_cast<Array*>(std::any_cast<Reflectable*>(container));
+	if (array != nullptr && index >= 0 && index < array->size)
+	{
+		unsigned char* itemPtr = &array->arrayData[index * valueType.getTypeSize()];
+		return assignableValueType.createAnyOfType(reinterpret_cast<uintptr_t>(itemPtr));
+	}
+	else
+	{
+		return assignableValueType.createDefault();
 	}
 }
 
@@ -82,18 +110,18 @@ const CatGenericType& jitcat::Reflection::ArrayManipulator::getValueType() const
 }
 
 
-MemberFunctionInfo* jitcat::Reflection::ArrayManipulator::getMemberFunctionInfo(const std::string& functionName)
+const CatGenericType& jitcat::Reflection::ArrayManipulator::getAssignableValueType() const
 {
-	std::string lowerName = Tools::toLowerCase(functionName);
-		 if (lowerName == "add")	return getAddFunction();
-	else if (lowerName == "remove")	return getRemoveFunction();
-	else if (lowerName == "size")	return getSizeFunction();
-	else							return nullptr;
+	return assignableValueType;
 }
 
 
 int jitcat::Reflection::ArrayManipulator::add(Array* array, const std::any& value)
 {
+	if (array == nullptr)
+	{
+		return -1;
+	}
 	const unsigned char* valueBuffer = nullptr;
 	std::size_t valueSize = 0;
 	if (!valueType.isReflectableObjectType())
@@ -154,6 +182,10 @@ int jitcat::Reflection::ArrayManipulator::add(Array* array, const std::any& valu
 
 void jitcat::Reflection::ArrayManipulator::remove(Array* array, int index)
 {
+	if (array == nullptr)
+	{
+		return;
+	}
 	std::size_t valueSize = valueType.getTypeSize();
 	if (index >= array->size || index < 0)
 	{
@@ -180,7 +212,13 @@ void jitcat::Reflection::ArrayManipulator::remove(Array* array, int index)
 }
 
 
-void jitcat::Reflection::ArrayManipulator::placementConstruct(unsigned char* buffer, std::size_t bufferSize)
+bool jitcat::Reflection::ArrayManipulator::isArrayType() const
+{
+	return true;
+}
+
+
+void jitcat::Reflection::ArrayManipulator::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
 {
 	assert(bufferSize >= sizeof(Array));
 	new(buffer) Array();
@@ -189,6 +227,10 @@ void jitcat::Reflection::ArrayManipulator::placementConstruct(unsigned char* buf
 
 void jitcat::Reflection::ArrayManipulator::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
 {
+	if (buffer == nullptr)
+	{
+		return;
+	}
 	Array* array = reinterpret_cast<Array*>(buffer);
 	std::size_t typeSize = valueType.getTypeSize();
 	if (array->arrayData != nullptr)
@@ -208,13 +250,14 @@ void jitcat::Reflection::ArrayManipulator::placementDestruct(unsigned char* buff
 }
 
 
-void jitcat::Reflection::ArrayManipulator::copy(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void jitcat::Reflection::ArrayManipulator::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	assert(targetBufferSize >= sizeof(Array));
 	assert(sourceBufferSize >= sizeof(Array));
 	assert(targetBuffer != sourceBuffer);
 	assert(valueType.isCopyConstructible());
-	Array* target = reinterpret_cast<Array*>(targetBuffer);
+	Array* target = new(targetBuffer) Array();
+	
 	const Array* source = reinterpret_cast<const Array*>(sourceBuffer);
 
 	assert(target->arrayData == nullptr);
@@ -237,7 +280,7 @@ void jitcat::Reflection::ArrayManipulator::copy(unsigned char* targetBuffer, std
 }
 
 
-void jitcat::Reflection::ArrayManipulator::move(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void jitcat::Reflection::ArrayManipulator::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	assert(targetBufferSize >= sizeof(Array));
 	assert(sourceBufferSize >= sizeof(Array));
@@ -256,17 +299,47 @@ void jitcat::Reflection::ArrayManipulator::move(unsigned char* targetBuffer, std
 }
 
 
+bool jitcat::Reflection::ArrayManipulator::getAllowInheritance() const
+{
+	return false;
+}
+
+
+bool jitcat::Reflection::ArrayManipulator::inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	return false;
+}
+
+
+bool jitcat::Reflection::ArrayManipulator::getAllowConstruction() const
+{
+	return true;
+}
+
+
+bool jitcat::Reflection::ArrayManipulator::getAllowCopyConstruction() const
+{
+	return true;
+}
+
+
+bool jitcat::Reflection::ArrayManipulator::getAllowMoveConstruction() const
+{
+	return true;
+}
+
+
 ArrayManipulator& jitcat::Reflection::ArrayManipulator::createArrayManipulatorOf(CatGenericType valueType)
 {
 	for (auto& iter : manipulators)
 	{
 		if (iter->getValueType().compare(valueType, true))
 		{
-			return *iter.get();
+			return *iter;
 		}
 	}
 	ArrayManipulator* newManipilator = new ArrayManipulator(valueType);
-	manipulators.emplace_back(newManipilator);
+	manipulators.push_back(newManipilator);
 	return *newManipilator;
 }
 
@@ -277,6 +350,7 @@ void jitcat::Reflection::ArrayManipulator::deleteArrayManipulatorsOfType(TypeInf
 	{
 		if (manipulators[i]->getValueType().isDependentOn(objectType))
 		{
+			TypeInfo::destroy(manipulators[i]);
 			manipulators.erase(manipulators.begin() + i);
 			i--;
 		}
@@ -284,22 +358,4 @@ void jitcat::Reflection::ArrayManipulator::deleteArrayManipulatorsOfType(TypeInf
 }
 
 
-ArrayTypeMemberFunctionInfo* jitcat::Reflection::ArrayManipulator::getAddFunction()
-{
-	return addFunction.get();
-}
-
-
-ArrayTypeMemberFunctionInfo* jitcat::Reflection::ArrayManipulator::getRemoveFunction()
-{
-	return removeFunction.get();
-}
-
-
-ArrayTypeMemberFunctionInfo* jitcat::Reflection::ArrayManipulator::getSizeFunction()
-{
-	return sizeFunction.get();;
-}
-
-
-std::vector<std::unique_ptr<ArrayManipulator>> jitcat::Reflection::ArrayManipulator::manipulators = std::vector<std::unique_ptr<ArrayManipulator>>();
+std::vector<ArrayManipulator*> jitcat::Reflection::ArrayManipulator::manipulators = std::vector<ArrayManipulator*>();

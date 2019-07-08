@@ -126,10 +126,6 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		{
 			memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
 		}
-		else if (baseType.isPointerToArrayType())
-		{
-			memberFunctionInfo = baseType.getPointeeType()->getContainerManipulator()->getMemberFunctionInfo(functionName);
-		}
 		else
 		{
 			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());

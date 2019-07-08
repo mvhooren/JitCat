@@ -93,6 +93,7 @@ namespace jitcat
 		bool isWritable() const;
 		bool isConst() const;
 
+		void addDependentType(Reflection::TypeInfo* objectType);
 		bool isDependentOn(Reflection::TypeInfo* objectType) const;
 
 		//Copies the type but sets all modifiers (const, writable) to false.
@@ -148,6 +149,8 @@ namespace jitcat
 		bool isMoveConstructible() const;
 		bool isDestructible() const;
 
+		//Construct and default-initialize this type.
+		std::any construct();
 		//Construct and default-initialize this type into the supplied buffer. 
 		//Buffer size must be greater or equal to getTypeSize(). Returns true if succesful.
 		bool placementConstruct(unsigned char* buffer, std::size_t bufferSize);

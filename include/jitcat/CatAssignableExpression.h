@@ -18,7 +18,7 @@ namespace jitcat::AST
 		CatAssignableExpression(const Tokenizer::Lexeme& lexeme): CatTypedExpression(lexeme) {}
 		CatAssignableExpression(const CatAssignableExpression& other): CatTypedExpression(other) {}
 
-		virtual bool isAssignable() const override final {return true;}
+		virtual bool isAssignable() const override {return true;}
 		virtual const CatGenericType& getAssignableType() const = 0;
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) = 0;
 	};

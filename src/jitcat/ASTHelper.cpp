@@ -174,8 +174,8 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 		
 		if (reflectableTarget != nullptr)
 		{
-			TypeOwnershipSemantics targetOwnership = targetType.getOwnershipSemantics();
-			TypeOwnershipSemantics sourceOwnership = sourceType.getOwnershipSemantics();
+			TypeOwnershipSemantics targetOwnership = targetType.getPointeeType()->getOwnershipSemantics();
+			TypeOwnershipSemantics sourceOwnership = sourceType.getPointeeType()->getOwnershipSemantics();
 			if (targetOwnership == TypeOwnershipSemantics::Owned && *reflectableTarget != nullptr)
 			{
 				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(*reflectableTarget);

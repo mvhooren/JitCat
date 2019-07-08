@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/TypeInfo.h"
+#include "jitcat/ArrayMemberFunctionInfo.h"
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
@@ -31,7 +32,6 @@ TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caste
 
 TypeInfo::~TypeInfo()
 {
-	ArrayManipulator::deleteArrayManipulatorsOfType(this);
 	for (auto& iter : members)
 	{
 		if (iter.second->catType.isPointerToReflectableObjectType()
@@ -316,6 +316,12 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 
 
 bool TypeInfo::isCustomType() const
+{
+	return false;
+}
+
+
+bool jitcat::Reflection::TypeInfo::isArrayType() const
 {
 	return false;
 }

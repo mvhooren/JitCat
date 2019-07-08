@@ -9,11 +9,13 @@
 
 namespace jitcat::AST
 {
-
+	class CatArgumentList;
 	class CatArrayIndex;
 	class CatAssignableExpression;
 	class CatAssignmentOperator;
+	class CatASTNode;
 	class CatClassDefinition;
+	class CatExpression;
 	class CatFunctionCall;
 	class CatFunctionDefinition;
 	class CatFunctionParameterDefinitions;
@@ -21,10 +23,12 @@ namespace jitcat::AST
 	class CatIfStatement;
 	class CatInfixOperator;
 	class CatInheritanceDefinition;
+	class CatLinkNode;
 	class CatLiteral;
 	class CatMemberAccess;
 	class CatMemberFunctionCall;
 	class CatOperatorNew;
+	class CatOperatorNewArray;
 	class CatPrefixOperator;
 	class CatReturnStatement;
 	class CatScopeBlock;

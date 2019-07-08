@@ -9,6 +9,7 @@
 
 #include "jitcat/Reflectable.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
 #include "jitcat/TypeTraits.h"
 #include <any>
 #include <map>
@@ -31,7 +32,6 @@ namespace jitcat::Reflection
 		virtual std::any getKeyAtIndex(std::any container, int index) const = 0;
 		virtual const CatGenericType& getKeyType() const = 0;
 		virtual const CatGenericType& getValueType() const = 0;
-		virtual MemberFunctionInfo* getMemberFunctionInfo(const std::string& functionName) = 0;
 	};								
 
 
@@ -48,7 +48,6 @@ namespace jitcat::Reflection
 		virtual std::any getKeyAtIndex(std::any container, int index) const override final  { return std::any(); }
 		virtual const CatGenericType& getKeyType() const override final { return keyType; }
 		virtual const CatGenericType& getValueType() const override final { return valueType; }
-		virtual MemberFunctionInfo* getMemberFunctionInfo(const std::string& functionName) override final {return nullptr;}
 	private:
 		CatGenericType keyType;
 		CatGenericType valueType;
@@ -56,7 +55,7 @@ namespace jitcat::Reflection
 
 	struct ArrayTypeMemberFunctionInfo;
 
-	class ArrayManipulator: public ContainerManipulator
+	class ArrayManipulator: public ContainerManipulator, public TypeInfo
 	{
 	public:
 		struct Array: public Reflectable
@@ -74,41 +73,44 @@ namespace jitcat::Reflection
 		};
 	private:
 		ArrayManipulator(CatGenericType valueType);
+	protected:
+		virtual ~ArrayManipulator();
 	public:
 		virtual std::size_t getContainerSize(std::any container) const override final;
 		virtual std::any getItemAt(std::any container, int index) override final;
+		std::any getAssignableItemAt(std::any container, int index);
 		virtual std::any getItemAt(std::any container, std::any key) override final;
 		virtual int getIndexOf(std::any container, std::any key) override final;
 		virtual std::any createAnyPointer(uintptr_t pointer) override final;
 		virtual std::any getKeyAtIndex(std::any container, int index) const override final;
 		virtual const CatGenericType& getKeyType() const override final;
 		virtual const CatGenericType& getValueType() const override final;
-		virtual MemberFunctionInfo* getMemberFunctionInfo(const std::string& functionName) override final;
+		const CatGenericType& getAssignableValueType() const;
 
 		int add(Array* array, const std::any& value);
 		void remove(Array* array, int index);
 
-		static void placementConstruct(unsigned char* buffer, std::size_t bufferSize);
-		void placementDestruct(unsigned char* buffer, std::size_t bufferSize);
-		void copy(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize);
-		void move(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize);
-
 		static ArrayManipulator& createArrayManipulatorOf(CatGenericType valueType);
 		static void deleteArrayManipulatorsOfType(TypeInfo* objectType);
 
-		ArrayTypeMemberFunctionInfo* getAddFunction();
-		ArrayTypeMemberFunctionInfo* getRemoveFunction();
-		ArrayTypeMemberFunctionInfo* getSizeFunction();
+		//from TypeInfo:
+		virtual bool isArrayType() const override final;
+		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const override final;
+		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize) override final;
+		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
+		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
+
+		virtual bool getAllowInheritance() const;
+		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext);
+		virtual bool getAllowConstruction() const;
+		virtual bool getAllowCopyConstruction() const;
+		virtual bool getAllowMoveConstruction() const;
 
 	private:
 		CatGenericType valueType;
+		CatGenericType assignableValueType;
 
-		std::unique_ptr<ArrayTypeMemberFunctionInfo> addFunction;
-		std::unique_ptr<ArrayTypeMemberFunctionInfo> removeFunction;
-		std::unique_ptr<ArrayTypeMemberFunctionInfo> sizeFunction;
-
-		static std::vector<std::unique_ptr<ArrayManipulator>> manipulators;
-
+		static std::vector<ArrayManipulator*> manipulators;
 	};
 
 
@@ -177,8 +179,6 @@ namespace jitcat::Reflection
 		{
 			return TypeTraits<typename VectorT::value_type>::toGenericType();
 		}
-
-		virtual MemberFunctionInfo* getMemberFunctionInfo(const std::string& functionName) override final {return nullptr;}
 	};
 
 
@@ -320,8 +320,6 @@ namespace jitcat::Reflection
 		{
 			return TypeTraits<typename MapT::mapped_type>::toGenericType();
 		}
-
-		virtual MemberFunctionInfo* getMemberFunctionInfo(const std::string& functionName) override final {return nullptr;}
 	};
 
 }

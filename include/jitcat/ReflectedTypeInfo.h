@@ -28,7 +28,7 @@ namespace jitcat::Reflection
 						  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 						  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
 	protected:
-		virtual ~ReflectedTypeInfo() {};
+		virtual ~ReflectedTypeInfo();
 	public:
 
 		//Adds information of a member of type U inside struct/class T

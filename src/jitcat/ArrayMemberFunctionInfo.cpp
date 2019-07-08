@@ -22,20 +22,21 @@ jitcat::Reflection::ArrayTypeMemberFunctionInfo::ArrayTypeMemberFunctionInfo(Ope
 	MemberFunctionInfo(toString(operation), CatGenericType::voidType),
 	operation(operation),
 	arrayType(arrayType),
-	arrayManipulator(static_cast<ArrayManipulator*>(arrayType.getContainerManipulator()))
+	arrayManipulator(static_cast<ArrayManipulator*>(arrayType.getObjectType()))
 {
+	
 	switch (operation)
 	{
 		case Operation::Add:
 		{
 			returnType = CatGenericType::intType;
-			if (!arrayType.getContainerItemType().isReflectableObjectType())
+			if (!arrayManipulator->getValueType().isReflectableObjectType())
 			{
-				argumentTypes.push_back(arrayType.getContainerItemType());
+				argumentTypes.push_back(arrayManipulator->getValueType());
 			}
 			else
 			{
-				argumentTypes.push_back(arrayType.getContainerItemType().toPointer(TypeOwnershipSemantics::Owned, false, false));
+				argumentTypes.push_back(arrayManipulator->getValueType().toPointer(TypeOwnershipSemantics::Owned, false, false));
 			}
 			
 		} break;
@@ -74,7 +75,14 @@ std::any jitcat::Reflection::ArrayTypeMemberFunctionInfo::call(CatRuntimeContext
 			case Operation::Size:
 			{
 				assert(parameters.size() == 0);
-				return baseArray->size;
+				if (baseArray != nullptr)
+				{
+					return baseArray->size;
+				}
+				else
+				{
+					return 0;
+				}
 			}
 		}			
 		

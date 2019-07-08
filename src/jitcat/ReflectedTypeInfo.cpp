@@ -24,6 +24,12 @@ jitcat::Reflection::ReflectedTypeInfo::ReflectedTypeInfo(const char* typeName, s
 }
 
 
+jitcat::Reflection::ReflectedTypeInfo::~ReflectedTypeInfo()
+{
+	ArrayManipulator::deleteArrayManipulatorsOfType(this);
+}
+
+
 ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::enableConstruction()
 {
 	allowConstruction = true;

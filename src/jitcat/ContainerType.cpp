@@ -20,7 +20,6 @@ const char* jitcat::Reflection::toString(ContainerType type)
 	{
 		default:
 		case ContainerType::None:	return "None";
-		case ContainerType::Array:	return "Array";
 		case ContainerType::Vector:	return "Vector";
 		case ContainerType::Map:	return "Map";
 	}

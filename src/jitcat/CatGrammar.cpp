@@ -101,8 +101,8 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::Return, {term(id, Identifier::Return), prod(Prod::Expression)}, returnStatement);
 
 		//Typename
-		rule(Prod::Type, {term(one, OneChar::Times), prod(Prod::Identifier) }, typeName);
-		rule(Prod::Type, {term(one, OneChar::Plus), prod(Prod::Identifier) }, typeName);
+		rule(Prod::Type, {term(one, OneChar::BitwiseAnd), prod(Prod::Identifier) }, typeName);
+		rule(Prod::Type, {term(one, OneChar::At), prod(Prod::Identifier) }, typeName);
 		rule(Prod::Type, {prod(Prod::Identifier)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Void)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::Bool)}, typeName);
@@ -110,7 +110,8 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::Type, {term(id, Identifier::Float)}, typeName);
 		rule(Prod::Type, {term(id, Identifier::String)}, typeName);
 		//Array type name
-		//rule(Prod::Type, {term(one, OneChar::Times), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::Type), term(one, OneChar::Greater), prod(Prod::Identifier)}, arrayTypeName);
+		rule(Prod::Type, {term(one, OneChar::BitwiseAnd), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::Type), term(one, OneChar::Greater)}, arrayTypeName);
+		rule(Prod::Type, {term(one, OneChar::At), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::Type), term(one, OneChar::Greater)}, arrayTypeName);
 		rule(Prod::Type, {term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::Type), term(one, OneChar::Greater)}, arrayTypeName);
 	}
 
@@ -175,6 +176,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	if (grammarType == CatGrammarType::Full)
 	{
 		rule(Prod::OperatorP2, { term(id, Identifier::New), prod(Prod::FunctionCall)}, operatorNew);
+		rule(Prod::OperatorP2, { term(id, Identifier::New), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::Type), term(one, OneChar::Greater)}, operatorNewArray);
 	}
 	
 	rule(Prod::Identifier, { term(id, Identifier::Identifier) }, identifierToken);
@@ -386,10 +388,16 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::arrayTypeName(const Parser::ASTNodePa
 	CatTypeNode* typeNode = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
 	TypeOwnershipSemantics ownership = TypeOwnershipSemantics::Owned;
 	const ParseToken* firstTerminal = nodeParser.getTerminalByIndex(0);
-	if (firstTerminal->getTokenID() == OneCharToken::getID()
-		&& (OneChar)firstTerminal->getTokenSubType() == OneChar::Times)
+	if (firstTerminal->getTokenID() == OneCharToken::getID())
 	{
-		ownership = TypeOwnershipSemantics::Weak;
+		if ((OneChar)firstTerminal->getTokenSubType() == OneChar::BitwiseAnd)
+		{
+			ownership = TypeOwnershipSemantics::Weak;
+		}
+		else  if ((OneChar)firstTerminal->getTokenSubType() == OneChar::At)
+		{
+			ownership = TypeOwnershipSemantics::Value;
+		}
 	}
 	return new CatTypeNode(typeNode, ownership, nodeParser.getStackLexeme());
 }
@@ -413,9 +421,9 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 			switch ((OneChar)token->getTokenSubType())
 			{
 				default:
-				case OneChar::Times:		ownership = TypeOwnershipSemantics::Weak;	break;
-				case OneChar::BitwiseAnd:	ownership = TypeOwnershipSemantics::Shared; break;
-				case OneChar::Plus:			ownership = TypeOwnershipSemantics::Value;	break;
+				case OneChar::BitwiseAnd:		ownership = TypeOwnershipSemantics::Weak;	break;
+				//case OneChar::BitwiseAnd:	ownership = TypeOwnershipSemantics::Shared; break;
+				case OneChar::At:			ownership = TypeOwnershipSemantics::Value;	break;
 			}
 		}
 		else
@@ -559,6 +567,13 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::operatorNew(const Parser::ASTNodePars
 	CatMemberFunctionCall* callNode = static_cast<CatMemberFunctionCall*>(nodeParser.getASTNodeByIndex(0));
 	
 	return new CatOperatorNew(callNode, callNode->getFunctionName(), nodeParser.getStackLexeme());
+}
+
+
+AST::ASTNode* jitcat::Grammar::CatGrammar::operatorNewArray(const Parser::ASTNodeParser& nodeParser)
+{
+	CatTypeNode* arrayItemTypeNode = static_cast<CatTypeNode*>(nodeParser.getASTNodeByIndex(0));
+	return new CatOperatorNewArray(arrayItemTypeNode, nodeParser.getStackLexeme());
 }
 
 

@@ -14,7 +14,6 @@ namespace jitcat::Reflection
 	enum class ContainerType
 	{
 		None,
-		Array,
 		Vector,
 		Map,
 		Count

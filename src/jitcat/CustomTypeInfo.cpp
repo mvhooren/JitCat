@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
@@ -15,6 +16,7 @@
 #include "jitcat/TypeRegistry.h"
 
 #include <cassert>
+#include <iostream>
 
 using namespace jitcat::Reflection;
 
@@ -30,6 +32,7 @@ CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 
 CustomTypeInfo::~CustomTypeInfo()
 {
+	ArrayManipulator::deleteArrayManipulatorsOfType(this);
 	if (defaultData != nullptr)
 	{
 		instanceDestructor(defaultData);
@@ -145,7 +148,7 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 	}
 	else
 	{
-		assert(false);
+		return addDataObjectMember(memberName, objectTypeInfo);
 	}
 
 	
@@ -199,31 +202,6 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDataObjectMember(const st
 }
 
 
-TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addArrayMember(const std::string& memberName, const CatGenericType& arrayType)
-{
-	triviallyCopyable = false;
-	unsigned char* data = increaseDataSize(sizeof(ArrayManipulator::Array));
-	unsigned int offset = (unsigned int)(data - defaultData);
-	if (defaultData == nullptr)
-	{
-		offset = 0;
-	}
-
-	std::set<Reflectable*>::iterator end = instances.end();
-	for (std::set<Reflectable*>::iterator iter = instances.begin(); iter != end; ++iter)
-	{
-		static_cast<ArrayManipulator*>(arrayType.getContainerManipulator())->placementConstruct((unsigned char*)(*iter) + offset, sizeof(ArrayManipulator::Array));
-	}
-	static_cast<ArrayManipulator*>(arrayType.getContainerManipulator())->placementConstruct(data, sizeof(ArrayManipulator::Array));
-
-	TypeMemberInfo* memberInfo = new  CustomTypeObjectDataMemberInfo(memberName, offset, CatGenericType(arrayType, TypeOwnershipSemantics::Value, false, false, false));
-	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members.emplace(lowerCaseMemberName, memberInfo);
-
-	return memberInfo;
-}
-
-
 TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string& memberName, const CatGenericType& type)
 {
 	if		(type.isFloatType())						return addFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
@@ -232,7 +210,6 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 	else if (type.isStringType())						return addStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType());
-	else if (type.isArrayType())						return addArrayMember(memberName, type);
 	else												return nullptr;
 }
 
@@ -290,6 +267,13 @@ void jitcat::Reflection::CustomTypeInfo::placementConstruct(unsigned char* buffe
 		instances.insert(reinterpret_cast<Reflectable*>(buffer));
 	}
 	createDataCopy(defaultData, typeSize, buffer, bufferSize);
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		if (bufferSize > 0 && buffer != nullptr)
+		{
+			std::cout << "Placement constructed " << typeName << " at "<< std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+		}
+	}
 }
 
 
@@ -297,6 +281,13 @@ void jitcat::Reflection::CustomTypeInfo::placementDestruct(unsigned char* buffer
 {
 	instanceDestructorInPlace(buffer);
 	removeInstance(reinterpret_cast<Reflectable*>(buffer));
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		if (bufferSize > 0 && buffer != nullptr)
+		{
+			std::cout << "Placement destructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+		}
+	}
 }
 
 
@@ -305,6 +296,13 @@ void jitcat::Reflection::CustomTypeInfo::copyConstruct(unsigned char* targetBuff
 	std::size_t typeSize = getTypeSize();
 	assert(typeSize <= targetBufferSize && typeSize <= sourceBufferSize);
 	createDataCopy(sourceBuffer, typeSize, targetBuffer, typeSize);
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		if (targetBufferSize > 0 && targetBuffer != nullptr)
+		{
+			std::cout << "Copy constructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(targetBuffer) << " from " << std::hex << reinterpret_cast<uintptr_t>(sourceBuffer) << "\n";
+		}
+	}
 }
 
 
@@ -329,6 +327,13 @@ void jitcat::Reflection::CustomTypeInfo::moveConstruct(unsigned char* targetBuff
 			}
 			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second.get())->memberOffset;
 			iter->second->catType.moveConstruct(&targetBuffer[memberOffset], iter->second->catType.getTypeSize(), &sourceBuffer[memberOffset], iter->second->catType.getTypeSize());
+		}
+	}
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		if (targetBufferSize > 0 && targetBuffer != nullptr)
+		{
+			std::cout << "Move constructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(targetBuffer) << " from " << std::hex << reinterpret_cast<uintptr_t>(sourceBuffer) << "\n";
 		}
 	}
 }

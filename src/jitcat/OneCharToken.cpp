@@ -67,6 +67,7 @@ const char* OneCharToken::getSubTypeName(int subType_) const
 		case OneChar::BitwiseXor:		return "bitwise xor";
 		case OneChar::Not:				return "bitwise not";
 		case OneChar::Dot:				return "dot";
+		case OneChar::At:				return "at";
 		case OneChar::Eof:				return "EOF";
 	}
 }
@@ -99,6 +100,7 @@ const char* OneCharToken::getSubTypeSymbol(int subType_) const
 		case OneChar::BitwiseXor:		return "^";
 		case OneChar::Not:				return "!";
 		case OneChar::Dot:				return ".";
+		case OneChar::At:				return "@";
 		case OneChar::Eof:				return "$";
 	}
 }
@@ -150,6 +152,7 @@ ParseToken* OneCharToken::createIfMatch(Document* document, const char* currentP
 			case '^':	type = OneChar::BitwiseXor;			break;
 			case '!':	type = OneChar::Not;				break;
 			case '.':	type = OneChar::Dot;				break;
+			case '@':	type = OneChar::At;					break;
 		}
 		if (type != OneChar::Unknown)
 		{

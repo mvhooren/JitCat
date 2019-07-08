@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatArrayIndex.h"
+#include "jitcat/ContainerManipulator.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -17,28 +18,31 @@
 
 using namespace jitcat;
 using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
 CatArrayIndex::CatArrayIndex(CatTypedExpression* base, CatTypedExpression* arrayIndex, const Tokenizer::Lexeme& lexeme):
-	CatTypedExpression(lexeme),
+	CatAssignableExpression(lexeme),
 	array(base),
 	index(arrayIndex),
 	arrayType(CatGenericType::unknownType),
 	indexType(CatGenericType::unknownType),
-	containerItemType(CatGenericType::unknownType)
+	containerItemType(CatGenericType::unknownType),
+	assignableItemType(CatGenericType::unknownType)
 {
 
 }
 
 
 jitcat::AST::CatArrayIndex::CatArrayIndex(const CatArrayIndex& other):
-	CatTypedExpression(other),
+	CatAssignableExpression(other),
 	array(static_cast<CatTypedExpression*>(other.array->copy())),
 	index(static_cast<CatTypedExpression*>(other.index->copy())),
 	arrayType(CatGenericType::unknownType),
 	indexType(CatGenericType::unknownType),
-	containerItemType(CatGenericType::unknownType)
+	containerItemType(CatGenericType::unknownType),
+	assignableItemType(CatGenericType::unknownType)
 {	
 }
 
@@ -68,9 +72,13 @@ std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 {
 	std::any arrayValue = array->execute(runtimeContext);
 	std::any indexValue = index->execute(runtimeContext);
-	if (arrayType.isVectorType() || arrayType.isArrayType())
+	if (arrayType.isVectorType())
 	{
 		return arrayType.getContainerManipulator()->getItemAt(arrayValue, std::any_cast<int>(indexValue));
+	}
+	else if (arrayType.isArrayType())
+	{
+		return static_cast<ArrayManipulator*>(arrayType.getObjectType())->getItemAt(arrayValue, std::any_cast<int>(indexValue));
 	}
 	else if (arrayType.isMapType())
 	{
@@ -93,24 +101,40 @@ bool CatArrayIndex::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 		&& index->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		arrayType = array->getType();
-		if (arrayType.isPointerType() && arrayType.getPointeeType()->isArrayType())
+		if ((arrayType.isPointerType() || arrayType.isReflectableHandleType()) && arrayType.getPointeeType()->isArrayType())
 		{
 			arrayType = *arrayType.getPointeeType();
 		}
-		if (!arrayType.isContainerType())
+		if (!arrayType.isContainerType() && !arrayType.isArrayType())
 		{
 			errorManager->compiledWithError(Tools::append(arrayType.toString(), " is not a list."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		CatGenericType keyType = arrayType.getContainerManipulator()->getKeyType();
+
+		CatGenericType keyType;
+		if (arrayType.isArrayType())
+		{
+			keyType = static_cast<ArrayManipulator*>(arrayType.getObjectType())->getKeyType();
+		}
+		else 
+		{
+			keyType = arrayType.getContainerManipulator()->getKeyType();
+		}
 		indexType = index->getType();
 		if (indexType != keyType && !indexType.isIntType())
 		{
 			errorManager->compiledWithError(Tools::append("Key type ", indexType.toString(), " does not match key type of container. Expected a ", keyType.toString(), " or an int."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		
-		containerItemType = arrayType.getContainerItemType();
+		if (arrayType.isArrayType())
+		{
+			containerItemType = static_cast<ArrayManipulator*>(arrayType.getObjectType())->getValueType();
+			assignableItemType = static_cast<ArrayManipulator*>(arrayType.getObjectType())->getValueType().toPointer();
+		}
+		else
+		{
+			containerItemType = arrayType.getContainerItemType();
+		}
 		if (containerItemType.isReflectableObjectType())
 		{
 			containerItemType = containerItemType.toPointer(Reflection::TypeOwnershipSemantics::Weak, false, false);
@@ -138,6 +162,34 @@ CatTypedExpression* CatArrayIndex::constCollapse(CatRuntimeContext* compileTimeC
 	ASTHelper::updatePointerIfChanged(array, array->constCollapse(compileTimeContext));
 	ASTHelper::updatePointerIfChanged(index, index->constCollapse(compileTimeContext));
 	return this;
+}
+
+
+bool jitcat::AST::CatArrayIndex::isAssignable() const
+{
+	return arrayType.isArrayType();
+}
+
+
+const CatGenericType& jitcat::AST::CatArrayIndex::getAssignableType() const
+{
+	return assignableItemType;
+}
+
+
+std::any jitcat::AST::CatArrayIndex::executeAssignable(CatRuntimeContext* runtimeContext)
+{
+	std::any arrayValue = array->execute(runtimeContext);
+	std::any indexValue = index->execute(runtimeContext);
+	if (arrayType.isArrayType())
+	{
+		return static_cast<ArrayManipulator*>(arrayType.getObjectType())->getAssignableItemAt(arrayValue, std::any_cast<int>(indexValue));
+	}
+	else
+	{
+		assert(false);
+	}
+	return assignableItemType.createDefault();
 }
 
 

@@ -41,7 +41,6 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
-		TypeMemberInfo* addArrayMember(const std::string& memberName, const CatGenericType& arrayType);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
 

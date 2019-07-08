@@ -57,6 +57,13 @@ public:
 #else
 		false;
 #endif
+
+	static constexpr bool logJitCatObjectConstructionEvents = 
+#ifdef _DEBUG
+		false;
+#else
+		false;
+#endif
 };
 
 } //namespace jitcat

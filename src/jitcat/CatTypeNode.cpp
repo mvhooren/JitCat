@@ -35,19 +35,36 @@ jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeO
 jitcat::AST::CatTypeNode::CatTypeNode(CatTypeNode* arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnership, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	ownershipSemantics(arrayOwnership),
-	knownType(false),
+	knownType(arrayItemType->isKnownType()),
 	isArrayType(true),
 	arrayItemType(arrayItemType)
 {
+	if (knownType)
+	{
+		setType(CatGenericType(&ArrayManipulator::createArrayManipulatorOf(arrayItemType->getType()), true, false).toPointer(ownershipSemantics, false, false));
+	}
 }
 
 
 jitcat::AST::CatTypeNode::CatTypeNode(const CatTypeNode& other):
 	CatASTNode(other),
 	name(other.name),
-	ownershipSemantics(other.ownershipSemantics)
+	ownershipSemantics(other.ownershipSemantics),
+	knownType(false),
+	isArrayType(other.isArrayType)
 {
-	knownType = name != "";
+	if (other.arrayItemType != nullptr)
+	{
+		arrayItemType.reset(static_cast<CatTypeNode*>(other.arrayItemType->copy()));
+	}
+	if (!isArrayType)
+	{
+		knownType = name == "";
+	}
+	else
+	{
+		knownType = arrayItemType->isKnownType();
+	}
 	if (knownType)
 	{
 		type = other.type;
@@ -136,7 +153,7 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 				}
 				else
 				{
-					setType(CatGenericType(typeInfo, false, false));
+					setType(CatGenericType(typeInfo, true, false));
 				}
 			}
 		}
@@ -147,6 +164,15 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 				return false;
 			}
 			CatGenericType itemGenericType = arrayItemType->getType();
+			if (itemGenericType.isPointerToReflectableObjectType() && itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
+			{
+				itemGenericType = itemGenericType.toWritable();
+			}
+			if (!itemGenericType.isConstructible())
+			{
+				errorManager->compiledWithError(Tools::append("Invalid array because ", itemGenericType.toString(), " is not constructible."), this, compileTimeContext->getContextName(), getLexeme());
+				return false;
+			}
 			if (itemGenericType.isPointerToReflectableObjectType() 
 				&& itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Owned 
 				&& itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
@@ -154,7 +180,7 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 				itemGenericType = itemGenericType.convertPointerToHandle();
 			}
 
-			setType(CatGenericType(ContainerType::Array, &ArrayManipulator::createArrayManipulatorOf(itemGenericType), false, false));
+			setType(CatGenericType(&ArrayManipulator::createArrayManipulatorOf(itemGenericType), true, false).toPointer(ownershipSemantics, true, false));
 		}
 	}
 	return true;

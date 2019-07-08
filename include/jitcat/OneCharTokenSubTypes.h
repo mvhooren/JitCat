@@ -34,6 +34,7 @@ namespace jitcat::Tokenizer
 		BitwiseXor,
 		Not,
 		Dot,
+		At,
 		Eof
 	};
 

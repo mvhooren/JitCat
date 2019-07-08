@@ -111,6 +111,8 @@ namespace jitcat::Reflection
 
 		//Returns true if this is a CustomTypeInfo.
 		virtual bool isCustomType() const;
+		//Returns true if this is an ArrayManipulator.
+		virtual bool isArrayType() const;
 
 		//Returns true if the type can be copied using memcpy without adverse side effects.
 		virtual bool isTriviallyCopyable() const;
