@@ -16,6 +16,7 @@ namespace jitcat::AST
 	class CatASTNode;
 	class CatClassDefinition;
 	class CatExpression;
+	class CatForLoop;
 	class CatFunctionCall;
 	class CatFunctionDefinition;
 	class CatFunctionParameterDefinitions;
@@ -30,6 +31,7 @@ namespace jitcat::AST
 	class CatOperatorNew;
 	class CatOperatorNewArray;
 	class CatPrefixOperator;
+	class CatRange;
 	class CatReturnStatement;
 	class CatScopeBlock;
 	class CatScopeRoot;

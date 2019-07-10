@@ -30,6 +30,8 @@ namespace jitcat::Tokenizer
 		While,
 		Do,
 		For,
+		In,
+		Range,
 		Continue,
 		Break,
 		Switch,

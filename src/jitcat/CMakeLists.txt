@@ -50,6 +50,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatClassDefinition.h
 	${JitCatHeaderPath}/CatDefinition.h
 	${JitCatHeaderPath}/CatExpression.h
+	CatForLoop.cpp
+	${JitCatHeaderPath}/CatForLoop.h
 	CatFunctionCall.cpp
 	${JitCatHeaderPath}/CatFunctionCall.h
 	CatFunctionDefinition.cpp
@@ -81,6 +83,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatOperatorNewArray.h
 	CatPrefixOperator.cpp
 	${JitCatHeaderPath}/CatPrefixOperator.h
+	CatRange.cpp
+	${JitCatHeaderPath}/CatRange.h
 	CatReturnStatement.cpp
 	${JitCatHeaderPath}/CatReturnStatement.h
 	${JitCatHeaderPath}/CatScope.h

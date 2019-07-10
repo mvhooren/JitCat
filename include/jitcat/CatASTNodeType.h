@@ -35,6 +35,8 @@ namespace jitcat::AST
 		VariableDeclaration,
 		VariableDefinition,
 		IfStatement,
+		ForLoop,
+		Range,
 		ReturnStatement,
 		ScopeBlock
 	};

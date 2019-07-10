@@ -34,6 +34,8 @@ namespace jitcat::Parser
 		int getNumItems() const;
 		Parser::StackItem* getItem(unsigned int index) const;
 		AST::ASTNode* getASTNodeByIndex(unsigned int index) const;
+		template<typename ASTNodeT>
+		ASTNodeT* getASTNodeByIndex(unsigned int index) const;
 		const Tokenizer::ParseToken* getTerminalByIndex(unsigned int index) const;
 		RuntimeContext* getContext() const;
 		Tokenizer::Lexeme getStackLexeme() const;
@@ -46,5 +48,11 @@ namespace jitcat::Parser
 		//not owned
 		RuntimeContext* context;
 	};
+
+	template<typename ASTNodeT>
+	inline ASTNodeT* ASTNodeParser::getASTNodeByIndex(unsigned int index) const
+	{
+		return static_cast<ASTNodeT*>(getASTNodeByIndex(index));
+	}
 
 } //End namespace jitcat::AST

@@ -55,6 +55,10 @@ namespace jitcat::Grammar
 			IfThen,
 			Else,
 			ElseBody,
+			ForLoop,
+			Range,
+			Continue,
+			Break,
 			Type,
 			FunctionCall,
 			FunctionCallArguments,
@@ -89,6 +93,10 @@ namespace jitcat::Grammar
 		static AST::ASTNode* ifStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* returnStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* scopeBlock(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* forLoop(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* range(const Parser::ASTNodeParser& nodeParser);
+		
+
 
 		static AST::ASTNode* assignmentOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* infixOperator(const Parser::ASTNodeParser& nodeParser);

@@ -56,6 +56,8 @@ const char* IdentifierToken::getSubTypeName(int subType_) const
 		case Identifier::While:		return "while";
 		case Identifier::Do:		return "do";
 		case Identifier::For:		return "for";
+		case Identifier::In:		return "in";
+		case Identifier::Range:		return "range";
 		case Identifier::Continue:	return "continue";
 		case Identifier::Break:		return "break";
 		case Identifier::Switch:	return "switch";
