@@ -7,6 +7,7 @@
 
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
@@ -1222,6 +1223,10 @@ std::any jitcat::CatGenericType::construct()
 			else
 			{
 				unsigned char* buffer = new unsigned char[typeSize];
+				if constexpr (Configuration::logJitCatObjectConstructionEvents)
+				{
+					std::cout << "(CatGenericType::construct Value ownership pointer) Allocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+				}
 				nestedType->placementConstruct(buffer, typeSize);
 				return reinterpret_cast<Reflectable*>(buffer);
 			}
@@ -1229,6 +1234,10 @@ std::any jitcat::CatGenericType::construct()
 		case SpecificType::ReflectableObject:
 		{
 			unsigned char* buffer = new unsigned char[typeSize];
+			if constexpr (Configuration::logJitCatObjectConstructionEvents)
+			{
+				std::cout << "(CatGenericType::construct ReflectableObject) Allocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+			}
 			nestedType->placementConstruct(buffer, typeSize);
 			return reinterpret_cast<Reflectable*>(buffer);
 		}
@@ -1330,6 +1339,10 @@ bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::siz
 					//Then store the pointer to the heap memory.
 					std::size_t objectSize = pointeeType->getTypeSize();
 					unsigned char* objectMemory = new unsigned char[objectSize];
+					if constexpr (Configuration::logJitCatObjectConstructionEvents)
+					{
+						std::cout << "(CatGenericType::copyConstruct) Allocated buffer of size " << std::dec << objectSize << ": " << std::hex << reinterpret_cast<uintptr_t>(objectMemory) << "\n";
+					}
 					pointeeType->copyConstruct(objectMemory, objectSize, reinterpret_cast<const unsigned char*>(*reinterpret_cast<Reflectable* const *>(sourceBuffer)), objectSize);
 					*reinterpret_cast<Reflectable**>(targetBuffer) = reinterpret_cast<Reflectable*>(objectMemory);
 					break;
@@ -1361,6 +1374,10 @@ bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::siz
 						//Then store the pointer to the heap memory in a ReflectableHandle.
 						std::size_t objectSize = pointeeType->getTypeSize();
 						objectMemory = new unsigned char[objectSize];
+						if constexpr (Configuration::logJitCatObjectConstructionEvents)
+						{
+							std::cout << "(CatGenericType::copyConstruct) Allocated buffer of size " << std::dec << objectSize << ": " << std::hex << reinterpret_cast<uintptr_t>(objectMemory) << "\n";
+						}
 						pointeeType->copyConstruct(objectMemory, objectSize, reinterpret_cast<unsigned char*>(sourceHandle->get()), objectSize);
 					}
 					new(targetBuffer) ReflectableHandle(reinterpret_cast<Reflectable*>(objectMemory));
@@ -1505,6 +1522,10 @@ bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_
 				{
 					pointeeType->placementDestruct(*reinterpret_cast<unsigned char**>(buffer), pointeeType->getTypeSize());
 					delete[] *reinterpret_cast<unsigned char**>(buffer);
+					if constexpr (Configuration::logJitCatObjectConstructionEvents)
+					{
+						std::cout << "(CatGenericType::placementDestruc) deallocated buffer of size " << std::dec << pointeeType->getTypeSize() << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+					}
 				} break;
 				case TypeOwnershipSemantics::Weak: //Weak and shared pointers should only exist as ReflectableHandles
 				case TypeOwnershipSemantics::Shared:

@@ -7,6 +7,7 @@
 
 #include "jitcat/TypeInfo.h"
 #include "jitcat/ArrayMemberFunctionInfo.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
@@ -15,6 +16,7 @@
 #include "jitcat/TypeRegistry.h"
 #include "jitcat/VariableEnumerator.h"
 
+#include <iostream>
 #include <sstream>
 
 using namespace jitcat;
@@ -367,6 +369,10 @@ Reflectable* jitcat::Reflection::TypeInfo::construct() const
 {
 	std::size_t typeSize = getTypeSize();
 	unsigned char* buffer = new unsigned char[typeSize];
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		std::cout << "(TypeInfo::construct) Allocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+	}
 	placementConstruct(buffer, typeSize);
 	return reinterpret_cast<Reflectable*>(buffer);
 }
@@ -376,6 +382,10 @@ void jitcat::Reflection::TypeInfo::destruct(Reflectable* object)
 {
 	placementDestruct(reinterpret_cast<unsigned char*>(object), getTypeSize());
 	delete[] reinterpret_cast<unsigned char*>(object);
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		std::cout << "(TypeInfo::destruct) Deallocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(object) << "\n";
+	}
 }
 
 

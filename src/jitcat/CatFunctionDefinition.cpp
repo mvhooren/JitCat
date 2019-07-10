@@ -191,6 +191,13 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 	if (parameters->getNumParameters() > 0)
 	{
 		scopeMem = static_cast<unsigned char*>(alloca(parameters->getCustomType()->getTypeSize()));
+		if constexpr (Configuration::logJitCatObjectConstructionEvents)
+		{
+			if (parameters->getCustomType()->getTypeSize() > 0)
+			{
+				std::cout << "(CatFunctionDefinition::executeFunctionWithArguments) Stack-allocated buffer of size " << std::dec << parameters->getCustomType()->getTypeSize() << ": " << std::hex << reinterpret_cast<uintptr_t>(scopeMem) << "\n";
+			}
+		}
 		parameters->getCustomType()->placementConstruct(scopeMem, parameters->getCustomType()->getTypeSize());
 
 		scopeId = pushScope(runtimeContext, reinterpret_cast<Reflectable*>(scopeMem));

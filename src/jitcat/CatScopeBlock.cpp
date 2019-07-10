@@ -10,9 +10,12 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatVariableDeclaration.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/ReflectableInstance.h"
+
+#include <iostream>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -92,6 +95,13 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 {
 	unsigned char* scopeMem = static_cast<unsigned char*>(alloca(customType->getTypeSize()));
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		if (customType->getTypeSize() > 0)
+		{
+			std::cout << "(CatScopeBlock::execute) Stack-allocated buffer of size " << std::dec << customType->getTypeSize() << ": " << std::hex << reinterpret_cast<uintptr_t>(scopeMem) << "\n";
+		}
+	}
 	customType->placementConstruct(scopeMem, customType->getTypeSize());
 	scopeId = runtimeContext->addScope(customType, reinterpret_cast<Reflectable*>(scopeMem), false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();

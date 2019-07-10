@@ -7,9 +7,12 @@
 
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/ArrayMemberFunctionInfo.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/ReflectableHandle.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
+
+#include <iostream>
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
@@ -140,6 +143,10 @@ int jitcat::Reflection::ArrayManipulator::add(Array* array, const std::any& valu
 		int newReserved = array->reserved * 2;
 		if (newReserved == 0)	newReserved = 1;
 		unsigned char* newArrayBuffer = new unsigned char[newReserved * valueSize];
+		if constexpr (Configuration::logJitCatObjectConstructionEvents)
+		{
+			std::cout << "(ArrayManipulator::add) Allocated buffer of size " << std::dec << newReserved * valueSize << ": " << std::hex << reinterpret_cast<uintptr_t>(newArrayBuffer) << "\n";
+		}
 		if (array->size > 0)
 		{
 			if (valueType.isTriviallyCopyable())
@@ -156,6 +163,10 @@ int jitcat::Reflection::ArrayManipulator::add(Array* array, const std::any& valu
 			}
 		}
 		delete[] array->arrayData;
+		if constexpr (Configuration::logJitCatObjectConstructionEvents)
+		{
+			std::cout << "(ArrayManipulator::add) Deallocated buffer of size " << std::dec << array->reserved * valueSize << ": " << std::hex << reinterpret_cast<uintptr_t>(array->arrayData) << "\n";
+		}
 		array->arrayData = newArrayBuffer;
 		array->reserved = newReserved;
 	}
@@ -243,6 +254,10 @@ void jitcat::Reflection::ArrayManipulator::placementDestruct(unsigned char* buff
 			}
 		}
 		delete[] array->arrayData;
+		if constexpr (Configuration::logJitCatObjectConstructionEvents)
+		{
+			std::cout << "(ArrayManipulator::placementDestruct) deallocated buffer of size " << std::dec << array->reserved * typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(array->arrayData) << "\n";
+		}
 		array->arrayData = nullptr;
 		array->reserved = 0;
 		array->size = 0;
@@ -265,6 +280,12 @@ void jitcat::Reflection::ArrayManipulator::copyConstruct(unsigned char* targetBu
 	target->size = source->size;
 	target->reserved = source->reserved;
 	target->arrayData = new unsigned char[target->reserved * valueSize];
+
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		std::cout << "(ArrayManipulator::copyConstruct) Allocated buffer of size " << std::dec << target->reserved * valueSize << ": " << std::hex << reinterpret_cast<uintptr_t>(target->arrayData) << "\n";
+	}
+
 	if (valueType.isTriviallyCopyable())
 	{
 		memcpy(target->arrayData, source->arrayData, target->size * valueSize);

@@ -271,7 +271,7 @@ void jitcat::Reflection::CustomTypeInfo::placementConstruct(unsigned char* buffe
 	{
 		if (bufferSize > 0 && buffer != nullptr)
 		{
-			std::cout << "Placement constructed " << typeName << " at "<< std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+			std::cout << "(CustomTypeInfo::placementConstruct) Placement constructed " << typeName << " at "<< std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
 		}
 	}
 }
@@ -285,7 +285,7 @@ void jitcat::Reflection::CustomTypeInfo::placementDestruct(unsigned char* buffer
 	{
 		if (bufferSize > 0 && buffer != nullptr)
 		{
-			std::cout << "Placement destructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
+			std::cout << "(CustomTypeInfo::placementDestruct) Placement destructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
 		}
 	}
 }
@@ -300,7 +300,7 @@ void jitcat::Reflection::CustomTypeInfo::copyConstruct(unsigned char* targetBuff
 	{
 		if (targetBufferSize > 0 && targetBuffer != nullptr)
 		{
-			std::cout << "Copy constructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(targetBuffer) << " from " << std::hex << reinterpret_cast<uintptr_t>(sourceBuffer) << "\n";
+			std::cout << "(CustomTypeInfo::copyConstruct) Copy constructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(targetBuffer) << " from " << std::hex << reinterpret_cast<uintptr_t>(sourceBuffer) << "\n";
 		}
 	}
 }
@@ -333,7 +333,7 @@ void jitcat::Reflection::CustomTypeInfo::moveConstruct(unsigned char* targetBuff
 	{
 		if (targetBufferSize > 0 && targetBuffer != nullptr)
 		{
-			std::cout << "Move constructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(targetBuffer) << " from " << std::hex << reinterpret_cast<uintptr_t>(sourceBuffer) << "\n";
+			std::cout << "(CustomTypeInfo::moveConstruct) Move constructed " << typeName << " at " << std::hex << reinterpret_cast<uintptr_t>(targetBuffer) << " from " << std::hex << reinterpret_cast<uintptr_t>(sourceBuffer) << "\n";
 		}
 	}
 }
@@ -355,6 +355,10 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 {
 	instanceDestructorInPlace(data);
 	delete[] data;
+	if constexpr (Configuration::logJitCatObjectConstructionEvents)
+	{
+		std::cout << "(CustomTypeInfo::instanceDestructor) deallocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(data) << "\n";
+	}
 }
 
 
@@ -425,6 +429,10 @@ void CustomTypeInfo::increaseDataSize(unsigned char*& data, std::size_t amount, 
 		&& oldSize != 0)
 	{
 		data = new unsigned char[newSize];
+		if constexpr (Configuration::logJitCatObjectConstructionEvents)
+		{
+			std::cout << "(CustomTypeInfo::increaseDataSize) Allocated buffer of size " << std::dec << newSize << ": " << std::hex << reinterpret_cast<uintptr_t>(data) << "\n";
+		}
 		createDataCopy(oldData, currentSize, data, newSize);
 		Reflectable::replaceReflectable(reinterpret_cast<Reflectable*>(oldData), reinterpret_cast<Reflectable*>(data));
 		instanceDestructor(oldData);
@@ -432,6 +440,10 @@ void CustomTypeInfo::increaseDataSize(unsigned char*& data, std::size_t amount, 
 	else
 	{
 		data = new unsigned char[newSize];
+		if constexpr (Configuration::logJitCatObjectConstructionEvents)
+		{
+			std::cout << "(CustomTypeInfo::increaseDataSize) Allocated buffer of size " << std::dec << newSize << ": " << std::hex << reinterpret_cast<uintptr_t>(data) << "\n";
+		}
 		Reflectable::replaceReflectable(reinterpret_cast<Reflectable*>(oldData), reinterpret_cast<Reflectable*>(data));
 	}
 	//Initialise the additional memory to zero
