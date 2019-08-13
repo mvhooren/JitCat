@@ -38,6 +38,7 @@ namespace jitcat::AST
 		virtual CatASTNodeType getNodeType() const override final;
 
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
+		bool postTypeCheck(CatRuntimeContext* compileTimeContext);
 
 		CatGenericType getType() const;
 		Reflection::TypeMemberInfo* getInheritedMember() const;

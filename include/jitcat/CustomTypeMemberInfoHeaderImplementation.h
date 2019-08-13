@@ -14,38 +14,38 @@ namespace jitcat::Reflection
 {
 
 
-template<typename T>
-inline std::any CustomBasicTypeMemberInfo<T>::getMemberReference(Reflectable* base)
+template<typename BasicT>
+inline std::any CustomBasicTypeMemberInfo<BasicT>::getMemberReference(Reflectable* base)
 {
 	unsigned char* baseData = reinterpret_cast<unsigned char*>(base);
 	if (baseData != nullptr)
 	{
-		T& value = *reinterpret_cast<T*>(&baseData[memberOffset]);
+		BasicT& value = *reinterpret_cast<BasicT*>(&baseData[memberOffset]);
 		return value;
 	}
-	return T();
+	return BasicT();
 }
 
 
-template<typename T>
-inline std::any CustomBasicTypeMemberInfo<T>::getAssignableMemberReference(Reflectable* base)
+template<typename BasicT>
+inline std::any CustomBasicTypeMemberInfo<BasicT>::getAssignableMemberReference(Reflectable* base)
 {
 	unsigned char* baseData = reinterpret_cast<unsigned char*>(base);
 	if (baseData != nullptr)
 	{
-		T* value = reinterpret_cast<T*>(&baseData[memberOffset]);
+		BasicT* value = reinterpret_cast<BasicT*>(&baseData[memberOffset]);
 		return value;
 	}
-	return (T*)nullptr;
+	return (BasicT*)nullptr;
 }
 
 
-template<typename T>
-inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
+template<typename BasicT>
+inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 
-	static const bool loadString = std::is_same<T, std::string>::value;
+	static const bool loadString = std::is_same<BasicT, std::string>::value;
 
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
@@ -72,11 +72,11 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateDereferenceCode(llvm::
 }
 
 
-template<typename T>
-inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
+template<typename BasicT>
+inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	static const bool isString = std::is_same<T, std::string>::value;
+	static const bool isString = std::is_same<BasicT, std::string>::value;
 
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
@@ -107,13 +107,13 @@ inline llvm::Value* CustomBasicTypeMemberInfo<T>::generateAssignCode(llvm::Value
 }
 
 
-template<typename T>
-inline void CustomBasicTypeMemberInfo<T>::assign(std::any& base, const T& valueToSet)
+template<typename BasicT>
+inline void CustomBasicTypeMemberInfo<BasicT>::assign(std::any& base, const BasicT& valueToSet)
 {
 	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
 	if (baseData != nullptr)
 	{
-		T& value = *reinterpret_cast<T*>(&baseData[memberOffset]);
+		BasicT& value = *reinterpret_cast<BasicT*>(&baseData[memberOffset]);
 		value = valueToSet;
 	}
 }

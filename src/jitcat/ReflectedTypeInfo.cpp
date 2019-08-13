@@ -95,7 +95,7 @@ ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::disableInheritance()
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::setInheritanceChecker(std::function<bool(CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)>& checkFunction)
+ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::setInheritanceChecker(const std::function<bool(CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)>& checkFunction)
 {
 	inheritanceCheckFunction = checkFunction;
 	return *this;
@@ -119,6 +119,12 @@ ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::setTypeSize(std::size_
 {
 	typeSize = newSize;
 	return *this;
+}
+
+
+bool jitcat::Reflection::ReflectedTypeInfo::isReflectedType() const
+{
+	return true;
 }
 
 

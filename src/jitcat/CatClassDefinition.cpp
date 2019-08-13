@@ -138,6 +138,16 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 		compileTimeContext->getErrorManager()->compiledWithError(Tools::append("A type with name ", name, " already exists."), this, compileTimeContext->getContextName(), nameLexeme);
 		noErrors = false;
 	}
+
+	if (noErrors)
+	{
+		//Another pass to allow inheritance definitions to inspect the finalized, type-checked class.
+		for (auto& iter : inheritanceDefinitions)
+		{
+			noErrors &= iter->postTypeCheck(compileTimeContext);
+		}
+	}
+
 	if (noErrors)
 	{
 		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
@@ -169,6 +179,19 @@ Reflection::CustomTypeInfo* jitcat::AST::CatClassDefinition::getCustomType()
 CatScopeID jitcat::AST::CatClassDefinition::getScopeId() const
 {
 	return scopeId;
+}
+
+
+CatVariableDefinition* jitcat::AST::CatClassDefinition::getVariableDefinitionByName(const std::string& name)
+{
+	for (auto& iter : variableDefinitions)
+	{
+		if (Tools::equalsWhileIgnoringCase(iter->getName(), name))
+		{
+			return iter;
+		}
+	}
+	return nullptr;
 }
 
 

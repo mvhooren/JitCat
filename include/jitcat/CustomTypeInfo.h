@@ -20,12 +20,18 @@ namespace jitcat::AST
 namespace jitcat::Reflection
 {
 	struct CustomTypeMemberFunctionInfo;
+	struct StaticMemberInfo;
 
-	//Represents the type of a struct that can be defined at runtime.
-	//Fields can be added to the struct using the addMember functions.
-	//An instance of the struct can be created using createInstance();
+	//Represents a compound type that can be defined at runtime.
+
+	//Members can be added to the type using the addMember functions.
+
+	//An instance of the struct can be created using construction functions.
+
 	//Instances are tracked and when a member is added after instances have been created, all instances will be updated.
-	//The Reflectable can then be used to provide variables for an expression by adding it to a CatRuntimeContext.
+	//Instances should be held in a ReflectableHandle in order to receive updates caused by the addition of members. 
+	//Naked pointers to an instance will become invalid after members are added.
+
 	class CustomTypeInfo: public TypeInfo
 	{
 	public:
@@ -43,6 +49,16 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
+
+		//Add a static member variable
+		StaticMemberInfo* addStaticFloatMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
+		StaticMemberInfo* addStaticIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
+		StaticMemberInfo* addStaticBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
+		StaticMemberInfo* addStaticStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
+		StaticMemberInfo* addStaticObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
+		StaticMemberInfo* addStaticDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
+
+		StaticMemberInfo* addStaticMember(const std::string& memberName, const CatGenericType& type);
 
 		CustomTypeMemberFunctionInfo* addMemberFunction(const std::string& memberFunctionName, const CatGenericType& thisType, AST::CatFunctionDefinition* functionDefinition);
 
@@ -84,6 +100,8 @@ namespace jitcat::Reflection
 
 		bool isConstType;
 		unsigned char* defaultData;
+
+		std::vector<std::unique_ptr<unsigned char>> staticData;
 
 		bool triviallyCopyable;
 

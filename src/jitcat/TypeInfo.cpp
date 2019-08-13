@@ -11,6 +11,7 @@
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
+#include "jitcat/StaticMemberInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeRegistry.h"
@@ -214,6 +215,20 @@ TypeMemberInfo* TypeInfo::getMemberInfo(const std::string& identifier) const
 }
 
 
+StaticMemberInfo* jitcat::Reflection::TypeInfo::getStaticMemberInfo(const std::string& identifier) const
+{
+	auto iter = staticMembers.find(Tools::toLowerCase(identifier));
+	if (iter != staticMembers.end())
+	{
+		return iter->second.get();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+
 MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifier) const
 {
 	auto iter = memberFunctions.find(Tools::toLowerCase(identifier));
@@ -318,6 +333,12 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 
 
 bool TypeInfo::isCustomType() const
+{
+	return false;
+}
+
+
+bool jitcat::Reflection::TypeInfo::isReflectedType() const
 {
 	return false;
 }

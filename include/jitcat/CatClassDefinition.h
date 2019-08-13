@@ -42,6 +42,8 @@ namespace jitcat::AST
 		virtual Reflection::CustomTypeInfo* getCustomType() override final;
 		virtual CatScopeID getScopeId() const override final;
 
+		CatVariableDefinition* getVariableDefinitionByName(const std::string& name);
+
 	private:
 		bool generateConstructor(CatRuntimeContext* compileTimeContext);
 		bool generateDestructor(CatRuntimeContext* compileTimeContext);

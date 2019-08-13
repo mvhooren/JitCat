@@ -34,34 +34,36 @@ namespace jitcat
 namespace jitcat::Reflection
 {
 	struct MemberFunctionInfo;
+	struct StaticMemberInfo;
 	class TypeCaster;
-	class TypeInfo;
 	struct TypeMemberInfo;
 	class VariableEnumerator;
 
 
 	//TypeInfo stores a tree of type member information about a class or struct.
 	//This allows members to be accessed by string. (For example Root.Member[10].Member().Member)
-	//Each member is described by a class that inherits from TypeMemberInfo. (See TypeMemberInfo.h)
-	//Going from a string to a reference is done by calling dereference on a TypeInfo. This will return a std::any object.
-	//See TypeDereferencer.h
-
+	
+	//There are two main sources of type information, both are represented by a class that derives from TypeInfo.
+	//The first source is through reflection of c++ classes and structs. This is done through the ReflectedTypeInfo class. 
+	//(See ReflectedTypeInfo.h)
+	//The second source is through custom type creation. In this case a type is defined at runtime through the CustomTypeInfo class.
+	//(See CustomTypeInfo.h)
+	
 	//The TypeInfo system can store information about the following types:
 	//- Common basic types: int, bool, float and std::string
-	//- Common containers: std::vector<T>, std::map<std::string, T> where T is itself a reflectable class/struct
-	//- Structs and classes that have been made reflectable
+	//- Common containers: std::vector<T>, std::map<U, T> where T and U are themselves a reflectable class/struct.
+	//- Structs and classes that have been made reflectable.
+	//- Member functions that use supported types as parameters and return value (including void).
 
-	//Any class or struct can be made reflectable as follows:
-	//		Inherit from Reflectable so that references to the object stored when dereferencing can check if the object has been deleted.
-	//		static void reflect(TypeInfo& typeInfo); //Add class members inside this function using typeInfo.addMember
-	//		static const char* getTypeName(); //Return the name of the class
+	//Members are described by classes that inherit from TypeMemberInfo. (See MemberInfo.h)
+	//Member functions are described by classes that inherit from MemberFunctionInfo. (See MemberFunctionInfo.h)
+	//Finally, static members are described by classes that inherit from StaticMemberInfo. (See StaticMemberInfo.h)
 
 	//These types should be enough to implement most common data structures. Adding more types is possible, but it would lead to a lot more template-nastyness in TypeInfo.h
 	//Also, this system is designed to work with JitCat, which currently only supportes the basic types mentioned above.
 
-	//Creating an instance of TypeInfo and then passing it into the static reflect member of a class or struct will fill the datastructure with type information.
-	//Notice that the addMember function does not require an instance of the class to exist. Generating type information is done entirely statically.
-	//This class uses various template tricks to derive types from the parameter passed to addMember
+	//TypeInfo can also construct and delete instances of the type it represents, if construction/deletion is allowed. 
+
 	class TypeInfo
 	{
 	public:
@@ -97,6 +99,9 @@ namespace jitcat::Reflection
 		//Gets the type information of a member variable given its name.
 		TypeMemberInfo* getMemberInfo(const std::string& identifier) const;
 
+		//Gets the type information of a static member variable given its name.
+		StaticMemberInfo* getStaticMemberInfo(const std::string& identifier) const;
+
 		//Gets the type information of a member function given its name.
 		MemberFunctionInfo* getMemberFunctionInfo(const std::string& identifier) const;
 
@@ -111,6 +116,8 @@ namespace jitcat::Reflection
 
 		//Returns true if this is a CustomTypeInfo.
 		virtual bool isCustomType() const;
+		//Returns true if this is a ReflectedTypeInfo.
+		virtual bool isReflectedType() const;
 		//Returns true if this is an ArrayManipulator.
 		virtual bool isArrayType() const;
 
@@ -154,6 +161,8 @@ namespace jitcat::Reflection
 		std::unique_ptr<TypeCaster> caster;
 		//Member variables of this type
 		std::map<std::string, std::unique_ptr<TypeMemberInfo>> members;
+		//Static member variables of this type
+		std::map<std::string, std::unique_ptr<StaticMemberInfo>> staticMembers;
 		//Member functions of this type
 		std::map<std::string, std::unique_ptr<MemberFunctionInfo>> memberFunctions;
 		//Nested type definitions within this type. These are not owned here.

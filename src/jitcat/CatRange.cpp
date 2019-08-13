@@ -152,6 +152,36 @@ bool CatRange::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorM
 		return false;
 	}
 
+	if (rangeStep->getType().isConst())
+	{
+		int step = std::any_cast<int>(rangeMin->execute(compiletimeContext));
+		if (step == 0)
+		{
+			errorManager->compiledWithError(Tools::append("Infinite loop: step is always 0."), errorContext, compiletimeContext->getContextName(), rangeStep->getLexeme());
+			return false;
+		}
+		if (rangeMin->getType().isConst()
+			&& rangeMax->getType().isConst())
+		{
+			int min = std::any_cast<int>(rangeMin->execute(compiletimeContext));
+			int max = std::any_cast<int>(rangeMin->execute(compiletimeContext));
+
+			if (isDefaultStep && min > max)
+			{
+				rangeStep.reset(new CatLiteral(-1, rangeMax->getLexeme()));
+				rangeStep->typeCheck(compiletimeContext, errorManager, errorContext);
+				step = -1;
+			}
+
+			if ((min < max && step < 0)
+				|| (min > max && step > 0))
+			{
+				errorManager->compiledWithError(Tools::append("Infinite loop. Step goes in the wrong direction."), errorContext, compiletimeContext->getContextName(), rangeStep->getLexeme());
+				return false;
+			}
+		}
+	}
+
 	return true;
 }
 

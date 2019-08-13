@@ -18,28 +18,28 @@ namespace jitcat::Reflection
 {
 
 
-template<typename T, typename U>
-inline std::any ContainerMemberInfo<T, U>::getMemberReference(Reflectable* base)
+template<typename BaseT, typename ContainerT>
+inline std::any ContainerMemberInfo<BaseT, ContainerT>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(base);
+	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
-		U& container = baseObject->*memberPointer;
+		ContainerT& container = baseObject->*memberPointer;
 		return &container;
 	}
-	return (U*)nullptr;
+	return (ContainerT*)nullptr;
 }
 
 
-template<typename T, typename U>
-inline std::any ContainerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
+template<typename BaseT, typename ContainerT>
+inline std::any ContainerMemberInfo<BaseT, ContainerT>::getAssignableMemberReference(Reflectable* base)
 {
 	return getMemberReference(base);
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename ContainerT>
+inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
@@ -68,9 +68,9 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 }
 
 
-template<typename T, typename U>
+template<typename BaseT, typename ContainerT>
 template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<T, U>::getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index)
+inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<BaseT, ContainerT>::getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index)
 {
 	int count = 0;
 	for (auto& iter : (*map))
@@ -85,9 +85,9 @@ inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMembe
 }
 
 
-template<typename T, typename U>
+template<typename BaseT, typename ContainerT>
 template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<T, U>::getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index)
+inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<BaseT, ContainerT>::getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index)
 {
 	if constexpr (std::is_same<ContainerKeyType, std::string>::value)
 	{
@@ -113,9 +113,9 @@ inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMembe
 }
 
 
-template<typename T, typename U>
+template<typename BaseT, typename ContainerT>
 template<typename ContainerItemType, typename AllocatorT>
-inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<T, U>::getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index)
+inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<BaseT, ContainerT>::getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index)
 {
 	if (index >= 0 && index < (int)vector->size())
 	{
@@ -125,16 +125,16 @@ inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMembe
 }
 
 
-template<typename T, typename U>
+template<typename BaseT, typename ContainerT>
 template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
+inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	if (!context->helper->isInt(index) || std::is_same<int, ContainerKeyType>::value)
 	{
 		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
-			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapKeyIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
+			static auto functionPointer = &ContainerMemberInfo<BaseT, ContainerT>::getMapKeyIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
 			return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapKeyIndex");
 		};
 		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
@@ -143,7 +143,7 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<ContainerK
 	{
 		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
-			static auto functionPointer = &ContainerMemberInfo<T, U>::getMapIntIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
+			static auto functionPointer = &ContainerMemberInfo<BaseT, ContainerT>::getMapIntIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
 			return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapIntIndex");
 		};
 		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
@@ -154,14 +154,14 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::map<ContainerK
 }
 
 
-template<typename T, typename U>
+template<typename BaseT, typename ContainerT>
 template<typename ContainerItemType, typename AllocatorT>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<ContainerItemType, AllocatorT>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
+inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateIndex(std::vector<ContainerItemType, AllocatorT>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		static auto functionPointer = &ContainerMemberInfo<T, U>::getVectorIndex<ContainerItemType, AllocatorT>;
+		static auto functionPointer = &ContainerMemberInfo<BaseT, ContainerT>::getVectorIndex<ContainerItemType, AllocatorT>;
 		return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getVectorIndex");
 	};
 	return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
@@ -171,43 +171,43 @@ inline llvm::Value* ContainerMemberInfo<T, U>::generateIndex(std::vector<Contain
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* ContainerMemberInfo<T, U>::generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename ContainerT>
+inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
 	//Index can either be an int or a string
-	//container is a pointer to a vector or a map (of type T)
-	U* nullContainer = nullptr;
+	//container is a pointer to a vector or a map (of type ContainerT)
+	ContainerT* nullContainer = nullptr;
 	return generateIndex(nullContainer, container, index, context);
 }
 
 
-template<typename T, typename U>
-inline std::any ClassPointerMemberInfo<T, U>::getMemberReference(Reflectable* base)
+template<typename BaseT, typename ClassT>
+inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(base);
+	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
-		U* member = baseObject->*memberPointer;
+		ClassT* member = baseObject->*memberPointer;
 		return static_cast<Reflectable*>(member);
 	}
 	return static_cast<Reflectable*>(nullptr);
 }
 
-template<typename T, typename U>
-inline std::any ClassPointerMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
+template<typename BaseT, typename ClassT>
+inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getAssignableMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(base);
+	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
-		U** member = &(baseObject->*memberPointer);
+		ClassT** member = &(baseObject->*memberPointer);
 		return reinterpret_cast<Reflectable**>(member);
 	}
 	return static_cast<Reflectable**>(nullptr);
 }
 
 
-template<typename T, typename U>
-inline unsigned long long ClassPointerMemberInfo<T, U>::getMemberPointerOffset() const
+template<typename BaseT, typename ClassT>
+inline unsigned long long ClassPointerMemberInfo<BaseT, ClassT>::getMemberPointerOffset() const
 {
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
@@ -225,8 +225,8 @@ inline unsigned long long ClassPointerMemberInfo<T, U>::getMemberPointerOffset()
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename ClassT>
+inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
@@ -244,8 +244,8 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateDereferenceCode(llvm::
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* ClassPointerMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename ClassT>
+inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
@@ -265,10 +265,10 @@ inline llvm::Value* ClassPointerMemberInfo<T, U>::generateAssignCode(llvm::Value
 }
 
 
-template<typename T, typename U>
-inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(Reflectable* base)
+template<typename BaseT, typename ClassT>
+inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(base);
+	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
 		return static_cast<Reflectable*>(&(baseObject->*memberPointer));
@@ -277,16 +277,16 @@ inline std::any ClassObjectMemberInfo<T, U>::getMemberReference(Reflectable* bas
 }
 
 
-template<typename T, typename U>
-inline std::any ClassObjectMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
+template<typename BaseT, typename ClassT>
+inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getAssignableMemberReference(Reflectable* base)
 {
 	//Not supported for now (would require implementing calling of operator= on target object)
 	return getMemberReference(base);
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename ClassT>
+inline llvm::Value* ClassObjectMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
@@ -315,18 +315,18 @@ inline llvm::Value* ClassObjectMemberInfo<T, U>::generateDereferenceCode(llvm::V
 }
 
 
-template<typename T, typename U>
-inline U* ClassUniquePtrMemberInfo<T, U>::getPointer(T* parentObject, ClassUniquePtrMemberInfo<T, U>* info)
+template<typename BaseT, typename ClassT>
+inline ClassT* ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer(BaseT* parentObject, ClassUniquePtrMemberInfo<BaseT, ClassT>* info)
  {
-	std::unique_ptr<U> T::* memberPointer = info->memberPointer;
+	std::unique_ptr<ClassT> BaseT::* memberPointer = info->memberPointer;
 	return (parentObject->*memberPointer).get();
 }
 
 
-template<typename T, typename U>
-inline std::any ClassUniquePtrMemberInfo<T, U>::getMemberReference(Reflectable* base)
+template<typename BaseT, typename ClassT>
+inline std::any ClassUniquePtrMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
 {
-	T* baseObject = static_cast<T*>(base);
+	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
 		return static_cast<Reflectable*>((baseObject->*memberPointer).get());
@@ -335,17 +335,17 @@ inline std::any ClassUniquePtrMemberInfo<T, U>::getMemberReference(Reflectable* 
 }
 
 
-template<typename T, typename U>
-inline std::any ClassUniquePtrMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
+template<typename BaseT, typename ClassT>
+inline std::any ClassUniquePtrMemberInfo<BaseT, ClassT>::getAssignableMemberReference(Reflectable* base)
 {
 	//Cannot assing unique_ptr, this would transfer ownership and potentially delete the pointer at some point. Bad idea.
 	//The pointer may for example have come from another unique_ptr.
-	return std::any((U*)nullptr);
+	return std::any((ClassT*)nullptr);
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename ClassT>
+inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	llvm::Value* thisPointerAsInt = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr");
@@ -356,7 +356,7 @@ inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* thisPointer = context->helper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
-		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<T,U>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
+		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
@@ -365,34 +365,34 @@ inline llvm::Value* ClassUniquePtrMemberInfo<T, U>::generateDereferenceCode(llvm
 }
 
 
-template<typename T, typename U>
-inline std::any BasicTypeMemberInfo<T, U>::getMemberReference(Reflectable* base)
+template<typename BaseT, typename BasicT>
+inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getMemberReference(Reflectable* base)
 {
-	T* objectPointer = static_cast<T*>(base);
+	BaseT* objectPointer = static_cast<BaseT*>(base);
 	if (objectPointer != nullptr)
 	{
-		U& value = objectPointer->*memberPointer;
+		BasicT& value = objectPointer->*memberPointer;
 		return value;
 	}
-	return U();
+	return BasicT();
 }
 
 
-template<typename T, typename U>
-inline std::any BasicTypeMemberInfo<T, U>::getAssignableMemberReference(Reflectable* base)
+template<typename BaseT, typename BasicT>
+inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getAssignableMemberReference(Reflectable* base)
 {
-	T* objectPointer = static_cast<T*>(base);
+	BaseT* objectPointer = static_cast<BaseT*>(base);
 	if (objectPointer != nullptr)
 	{
-		U& value = objectPointer->*memberPointer;
+		BasicT& value = objectPointer->*memberPointer;
 		return &value;
 	}
-	return (U*)nullptr;
+	return (BasicT*)nullptr;
 }
 
 
-template<typename T, typename U>
-inline unsigned long long BasicTypeMemberInfo<T, U>::getMemberPointerOffset() const
+template<typename BaseT, typename BasicT>
+inline unsigned long long BasicTypeMemberInfo<BaseT, BasicT>::getMemberPointerOffset() const
 {
 	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
 	unsigned long long offset = 0;
@@ -410,8 +410,8 @@ inline unsigned long long BasicTypeMemberInfo<T, U>::getMemberPointerOffset() co
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename BasicT>
+inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
@@ -420,7 +420,7 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
-		if constexpr (std::is_same<U, std::string>::value)
+		if constexpr (std::is_same<BasicT, std::string>::value)
 		{
 			//std::string case (returns a pointer to the std::string)
 			return context->helper->convertToPointer(addressValue, memberName, LLVM::LLVMTypes::stringPtrType);
@@ -438,8 +438,8 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateDereferenceCode(llvm::Val
 }
 
 
-template<typename T, typename U>
-inline llvm::Value* BasicTypeMemberInfo<T, U>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
+template<typename BaseT, typename BasicT>
+inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
@@ -448,7 +448,7 @@ inline llvm::Value* BasicTypeMemberInfo<T, U>::generateAssignCode(llvm::Value* p
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
-		if constexpr (std::is_same<U, std::string>::value)
+		if constexpr (std::is_same<BasicT, std::string>::value)
 		{
 			llvm::Value* lValue = context->helper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
 			context->helper->createCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");

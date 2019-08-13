@@ -11,6 +11,7 @@
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ReflectableHandle.h"
+#include "jitcat/StaticMemberInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeRegistry.h"
@@ -145,22 +146,20 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 		offset = addReflectableHandle(defaultValue);
 		objectTypeInfo->addDependentType(this);
 		memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst));
+		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+		members.emplace(lowerCaseMemberName, memberInfo);
+	
+		if (Tools::startsWith(memberName, "$"))
+		{
+			addDeferredMembers(memberInfo);
+		}
+	
+		return memberInfo;
 	}
 	else
 	{
 		return addDataObjectMember(memberName, objectTypeInfo);
 	}
-
-	
-	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members.emplace(lowerCaseMemberName, memberInfo);
-	
-	if (Tools::startsWith(memberName, "$"))
-	{
-		addDeferredMembers(memberInfo);
-	}
-	
-	return memberInfo;
 }
 
 
@@ -210,6 +209,119 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 	else if (type.isStringType())						return addStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType());
+	else												return nullptr;
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticFloatMember(const std::string& memberName, float defaultValue, bool isWritable, bool isConst)
+{
+	constexpr std::size_t dataSize = sizeof(float);
+	unsigned char* memberData = new unsigned char[dataSize];
+	staticData.emplace_back(memberData);
+	memcpy(memberData, &defaultValue, dataSize);
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	StaticMemberInfo* memberInfo = new StaticBasicTypeMemberInfo<float>(memberName, reinterpret_cast<float*>(memberData), CatGenericType::floatType);
+	staticMembers.emplace(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticIntMember(const std::string& memberName, int defaultValue, bool isWritable, bool isConst)
+{
+	constexpr std::size_t dataSize = sizeof(int);
+	unsigned char* memberData = new unsigned char[dataSize];
+	staticData.emplace_back(memberData);
+	memcpy(memberData, &defaultValue, dataSize);
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	StaticMemberInfo* memberInfo = new StaticBasicTypeMemberInfo<int>(memberName, reinterpret_cast<int*>(memberData), CatGenericType::intType);
+	staticMembers.emplace(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticBoolMember(const std::string& memberName, bool defaultValue, bool isWritable, bool isConst)
+{
+	constexpr std::size_t dataSize = sizeof(bool);
+	unsigned char* memberData = new unsigned char[dataSize];
+	staticData.emplace_back(memberData);
+	memcpy(memberData, &defaultValue, dataSize);
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	StaticMemberInfo* memberInfo = new StaticBasicTypeMemberInfo<bool>(memberName, reinterpret_cast<bool*>(memberData), CatGenericType::boolType);
+	staticMembers.emplace(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable, bool isConst)
+{
+	constexpr std::size_t dataSize = sizeof(std::string);
+	unsigned char* memberData = new unsigned char[dataSize];
+	staticData.emplace_back(memberData);
+	new (memberData) std::string(memberName);
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	StaticMemberInfo* memberInfo = new StaticBasicTypeMemberInfo<std::string>(memberName, reinterpret_cast<std::string*>(memberData), CatGenericType::stringType);
+	staticMembers.emplace(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticObjectMember(const std::string& memberName, Reflectable* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics, bool isWritable, bool isConst)
+{
+	if (ownershipSemantics != TypeOwnershipSemantics::Value)
+	{
+		CatGenericType type = CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst);
+		constexpr std::size_t dataSize = sizeof(ReflectableHandle);
+		unsigned char* memberData = new unsigned char[dataSize];		
+		staticData.emplace_back(memberData);
+		objectTypeInfo->addDependentType(this);
+		ReflectableHandle handle(defaultValue);
+		objectTypeInfo->copyConstruct(memberData, dataSize, reinterpret_cast<unsigned char*>(&handle), dataSize); 
+		StaticMemberInfo* memberInfo = new StaticClassHandleMemberInfo(memberName, reinterpret_cast<ReflectableHandle*>(memberData), type);
+		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+		staticMembers.emplace(lowerCaseMemberName, memberInfo);
+		return memberInfo;
+	}
+	else
+	{
+		return addStaticDataObjectMember(memberName, objectTypeInfo);
+	}
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo)
+{
+	if (objectTypeInfo != this)
+	{
+		std::size_t dataSize = objectTypeInfo->getTypeSize();
+		unsigned char* memberData = new unsigned char[dataSize];
+		staticData.emplace_back(memberData);
+
+		objectTypeInfo->placementConstruct(memberData, objectTypeInfo->getTypeSize());
+		StaticMemberInfo* memberInfo = new StaticClassObjectMemberInfo(memberName, reinterpret_cast<Reflectable*>(memberData), CatGenericType(CatGenericType(objectTypeInfo, false, false), TypeOwnershipSemantics::Value, false, false, false));
+
+		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+		staticMembers.emplace(lowerCaseMemberName, memberInfo);
+
+		objectTypeInfo->addDependentType(this);
+
+		return memberInfo;
+	}
+	else
+	{
+		assert(false);
+		return nullptr;
+	}
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticMember(const std::string& memberName, const CatGenericType& type)
+{
+	if		(type.isFloatType())						return addStaticFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
+	else if (type.isIntType())							return addStaticIntMember(memberName, 0, type.isWritable(), type.isConst());
+	else if (type.isBoolType())							return addStaticBoolMember(memberName, false, type.isWritable(), type.isConst());
+	else if (type.isStringType())						return addStaticStringMember(memberName, "", type.isWritable(), type.isConst());
+	else if (type.isPointerToReflectableObjectType())	return addStaticObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
+	else if (type.isReflectableObjectType())			return addStaticDataObjectMember(memberName, type.getObjectType());
 	else												return nullptr;
 }
 

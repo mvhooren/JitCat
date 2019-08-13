@@ -50,6 +50,7 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const;
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
 		inline virtual bool isDeferred() const { return false; }
+
 		TypeMemberInfo* toDeferredTypeMemberInfo(TypeMemberInfo* baseMember);
 
 		CatGenericType catType;
@@ -57,6 +58,7 @@ namespace jitcat::Reflection
 
 		std::string memberName;
 	};
+
 
 	struct DeferredMemberInfo: public TypeMemberInfo
 	{
@@ -78,10 +80,10 @@ namespace jitcat::Reflection
 
 
 	//Implements a TypeMemberInfo for container types.
-	template<typename T, typename U>
+	template<typename BaseT, typename ContainerT>
 	struct ContainerMemberInfo: public TypeMemberInfo
 	{
-		ContainerMemberInfo(const std::string& memberName, U T::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		ContainerMemberInfo(const std::string& memberName, ContainerT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
@@ -105,15 +107,15 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
 
 
-		U T::* memberPointer;
+		ContainerT BaseT::* memberPointer;
 	};
 
 
 	//Implements a TypeMemberInfo for class/struct pointer types that are reflectable.
-	template<typename T, typename U>
+	template<typename BaseT, typename ClassT>
 	struct ClassPointerMemberInfo: public TypeMemberInfo
 	{
-		ClassPointerMemberInfo(const std::string& memberName, U* T::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		ClassPointerMemberInfo(const std::string& memberName, ClassT* BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
@@ -121,44 +123,44 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
-		U* T::* memberPointer;
+		ClassT* BaseT::* memberPointer;
 	};
 
 	//Implements a TypeMemberInfo for class/struct types that are reflectable.
-	template<typename T, typename U>
+	template<typename BaseT, typename ClassT>
 	struct ClassObjectMemberInfo: public TypeMemberInfo
 	{
-		ClassObjectMemberInfo(const std::string& memberName, U T::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		ClassObjectMemberInfo(const std::string& memberName, ClassT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
 
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 
-		U T::* memberPointer;
+		ClassT BaseT::* memberPointer;
 	};
 
 
 	//Implements a TypeMemberInfo for a unique_ptr to class/struct types that are reflectable.
-	template<typename T, typename U>
+	template<typename BaseT, typename ClassT>
 	struct ClassUniquePtrMemberInfo: public TypeMemberInfo
 	{
-		ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<U> T::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
-		static U* getPointer(T* parentObject, ClassUniquePtrMemberInfo<T, U>* info);
+		ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT> BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		static ClassT* getPointer(BaseT* parentObject, ClassUniquePtrMemberInfo<BaseT, ClassT>* info);
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 
-		std::unique_ptr<U> T::* memberPointer;
+		std::unique_ptr<ClassT> BaseT::* memberPointer;
 	};
 
 
 
 	//Implements a TypeMemberInfo for basic types.
-	template<typename T, typename U>
+	template<typename BaseT, typename BasicT>
 	struct BasicTypeMemberInfo: public TypeMemberInfo
 	{
-		BasicTypeMemberInfo(const std::string& memberName, U T::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		BasicTypeMemberInfo(const std::string& memberName, BasicT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 	
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
@@ -168,7 +170,7 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
 
-		U T::* memberPointer;
+		BasicT BaseT::* memberPointer;
 	};
 
 } //End namespace jitcat::Reflection

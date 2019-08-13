@@ -95,6 +95,8 @@ set(Source_Cat_ASTNodes
 	CatTypeNode.cpp
 	CatSourceFile.cpp
 	${JitCatHeaderPath}/CatSourceFile.h
+	CatStaticIdentifier.cpp
+	${JitCatHeaderPath}/CatStaticIdentifier.h
 	${JitCatHeaderPath}/CatStatement.h
 	${JitCatHeaderPath}/CatTypeNode.h
 	${JitCatHeaderPath}/CatTypedExpression.h
@@ -226,36 +228,47 @@ set(Source_Reflection_Enums
 	${JitCatHeaderPath}/MemberFlags.h
 )
 
-
 set(Source_Reflection_Serialisation
 	XMLHelper.cpp
 	${JitCatHeaderPath}/XMLHelper.h
 )
 
 set(Source_Reflection_TypeInfo
-	ArrayMemberFunctionInfo.cpp
-	${JitCatHeaderPath}/ArrayMemberFunctionInfo.h
-	ContainerManipulator.cpp
-	${JitCatHeaderPath}/ContainerManipulator.h
 	CustomTypeInfo.cpp
 	${JitCatHeaderPath}/CustomTypeInfo.h
-	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
-	CustomTypeMemberInfo.cpp
-	${JitCatHeaderPath}/CustomTypeMemberInfo.h
-	${JitCatHeaderPath}/CustomTypeMemberInfoHeaderImplementation.h
-	MemberFunctionInfo.cpp
-	${JitCatHeaderPath}/MemberFunctionInfo.h
-	MemberInfo.cpp
-	${JitCatHeaderPath}/MemberInfo.h
-	${JitCatHeaderPath}/MemberInfoHeaderImplementation.h
-	${JitCatHeaderPath}/MemberTypeInfoCreator.h
-	${JitCatHeaderPath}/MemberVisibility.h
 	ReflectedTypeInfo.cpp
 	${JitCatHeaderPath}/ReflectedTypeInfo.h
 	${JitCatHeaderPath}/ReflectedTypeInfoHeaderImplementation.h
-	${JitCatHeaderPath}/TypeCaster.h
 	TypeInfo.cpp
 	${JitCatHeaderPath}/TypeInfo.h
+)
+
+set(Source_Reflection_TypeInfo_Members
+	CustomTypeMemberInfo.cpp
+	${JitCatHeaderPath}/CustomTypeMemberInfo.h
+	${JitCatHeaderPath}/CustomTypeMemberInfoHeaderImplementation.h
+	MemberInfo.cpp
+	${JitCatHeaderPath}/MemberInfo.h
+	${JitCatHeaderPath}/MemberInfoHeaderImplementation.h
+	StaticMemberInfo.cpp
+	${JitCatHeaderPath}/StaticMemberInfo.h
+	${JitCatHeaderPath}/StaticMemberInfoHeaderImplementation.h
+)
+
+set(Source_Reflection_TypeInfo_MemberFunctions
+	ArrayMemberFunctionInfo.cpp
+	${JitCatHeaderPath}/ArrayMemberFunctionInfo.h
+	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
+	MemberFunctionInfo.cpp
+	${JitCatHeaderPath}/MemberFunctionInfo.h
+)
+
+set(Source_Reflection_TypeInfo_Helper
+	ContainerManipulator.cpp
+	${JitCatHeaderPath}/ContainerManipulator.h
+	${JitCatHeaderPath}/MemberTypeInfoCreator.h
+	${JitCatHeaderPath}/MemberVisibility.h
+	${JitCatHeaderPath}/TypeCaster.h
 	${JitCatHeaderPath}/TypeOwnershipSemantics.h
 	${JitCatHeaderPath}/TypeTraits.h
 	${JitCatHeaderPath}/TypeTraitsHeaderImplementation.h
@@ -307,7 +320,6 @@ set(Source_Tools
 	${JitCatHeaderPath}/ToolsHeaderImplementation.h
 )
 
-
 #Project file organisation
 source_group(Cat FILES ${Source_Cat})
 source_group(Cat\\ASTNodes FILES ${Source_Cat_ASTNodes})
@@ -322,7 +334,10 @@ source_group(Parser FILES ${Source_Parser})
 source_group(Reflection FILES ${Source_Reflection})
 source_group(Reflection\\Enums FILES ${Source_Reflection_Enums})
 source_group(Reflection\\Serialisation FILES ${Source_Reflection_Serialisation})
-source_group(Reflection\\TypeInfo FILES	${Source_Reflection_TypeInfo})
+source_group(Reflection\\TypeInfo FILES ${Source_Reflection_TypeInfo})
+source_group(Reflection\\TypeInfo\\Members FILES ${Source_Reflection_TypeInfo_Members})
+source_group(Reflection\\TypeInfo\\MemberFunctions FILES ${Source_Reflection_TypeInfo_MemberFunctions})
+source_group(Reflection\\TypeInfo\\Helper FILES ${Source_Reflection_TypeInfo_Helper})
 source_group(Tokenizer FILES ${Source_Tokenizer})
 source_group(Tokenizer\\Tokens FILES ${Source_Tokenizer_Tokens})
 source_group(Tools FILES ${Source_Tools})
@@ -349,6 +364,9 @@ add_library(JitCat STATIC
 	${Source_Reflection_MemberReference}
 	${Source_Reflection_Serialisation}
 	${Source_Reflection_TypeInfo}
+	${Source_Reflection_TypeInfo_Members}
+	${Source_Reflection_TypeInfo_MemberFunctions}
+	${Source_Reflection_TypeInfo_Helper}
 	${Source_Tokenizer}
 	${Source_Tokenizer_Tokens}
 	${Source_Tools}

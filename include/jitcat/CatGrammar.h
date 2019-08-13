@@ -26,6 +26,7 @@ namespace jitcat::Grammar
 		{
 			Root,
 			Identifier,
+			StaticIdentifier,
 			SourceFile,
 			Definitions,
 			Definition,
@@ -96,8 +97,6 @@ namespace jitcat::Grammar
 		static AST::ASTNode* forLoop(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* range(const Parser::ASTNodeParser& nodeParser);
 		
-
-
 		static AST::ASTNode* assignmentOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* infixOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* prefixOperator(const Parser::ASTNodeParser& nodeParser);
@@ -105,6 +104,8 @@ namespace jitcat::Grammar
 		static AST::ASTNode* operatorNewArray(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* literalToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* identifierToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* staticIdentifier(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* nestedStaticIdentifier(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* argumentListToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionCallToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* memberAccessToken(const Parser::ASTNodeParser& nodeParser);

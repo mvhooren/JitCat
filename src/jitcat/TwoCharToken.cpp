@@ -64,6 +64,7 @@ const char* TwoCharToken::getSubTypeName(int subType_) const
 		case TwoChar::BitshiftRight:	return "bitshift right";
 		case TwoChar::Increment:		return "increment";
 		case TwoChar::Decrement:		return "decrement";
+		case TwoChar::StaticAccessor:	return "static accessor";
 	}
 }
 
@@ -89,6 +90,7 @@ const char* TwoCharToken::getSubTypeSymbol(int subType_) const
 		case TwoChar::BitshiftRight:	return ">>";
 		case TwoChar::Increment:		return "++";
 		case TwoChar::Decrement:		return "--";
+		case TwoChar::StaticAccessor:	return "::";
 		default:						return "??";
 	}
 		
@@ -128,6 +130,7 @@ ParseToken* TwoCharToken::createIfMatch(Document* document, const char* currentP
 		else if (lex == ">>")		type = TwoChar::BitshiftRight;
 		else if (lex == "++")		type = TwoChar::Increment;
 		else if (lex == "--")		type = TwoChar::Decrement;
+		else if (lex == "::")		type = TwoChar::StaticAccessor;
 
 		if (type != TwoChar::Unknown)
 		{

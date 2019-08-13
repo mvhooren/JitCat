@@ -19,6 +19,18 @@ namespace jitcat::Reflection
 	class Reflectable;
 	class TypeCaster;
 
+	//ReflectedTypeInfo represents type information about a C++ class or struct that is made to be Reflectable.
+
+	//Any class or struct can be made reflectable as follows:
+	//		Inherit from Reflectable so that a ReflectableHandle to the object can track if the object has been deleted.
+	//		implement: static void reflect(ReflectedTypeInfo& typeInfo); //Add class members inside this function using typeInfo.addMember
+	//		implement: static const char* getTypeName(); //Return the name of the class
+
+	//Creating an instance of ReflectedTypeInfo and then passing it into the static reflect member of a class or struct will fill the datastructure with type information.
+	//This is typically done through the TypeRegistry class (see TypeRegistry.h)
+
+	//Notice that the addMember function does not require an instance of the class to exist. Generating type information is done entirely statically.
+
 	class ReflectedTypeInfo: public TypeInfo
 	{
 	public:
@@ -36,29 +48,48 @@ namespace jitcat::Reflection
 		template <typename ReflectedT, typename MemberT>
 		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT ReflectedT::* member, MemberFlags flags = MF::none);
 
+		template <typename MemberT>
+		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT* member, MemberFlags flags = MF::none);
+
 		template <typename ReflectedT, typename MemberT, typename ... Args>
 		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT (ReflectedT::*function)(Args...));
 
 		template <typename ReflectedT, typename MemberT, typename ... Args>
 		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT (ReflectedT::*function)(Args...) const);
 
+		//Set weither or not construction is allowed.
 		ReflectedTypeInfo& enableConstruction();
 		ReflectedTypeInfo& disableConstruction();
+
+		//Set weither or not copy construction is allowed.
 		ReflectedTypeInfo& enableCopyConstruction();
 		ReflectedTypeInfo& disableCopyConstruction();
+
+		//Set weither or not move construction is allowed.
 		ReflectedTypeInfo& enableMoveConstruction();
 		ReflectedTypeInfo& disableMoveConstruction();
+
+		//Set weither or not the type is trivially copyable.
 		void setTriviallyCopyable(bool triviallyCopyable_);
 
+		//Set weither or not custom types can inherit from this type.
 		ReflectedTypeInfo& enableInheritance();
 		ReflectedTypeInfo& disableInheritance();
-		ReflectedTypeInfo& setInheritanceChecker(std::function<bool (CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)>& checkFunction);
+
+		//Sets a callback that can check a derived type for compatibility.
+		ReflectedTypeInfo& setInheritanceChecker(const std::function<bool (CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)>& checkFunction);
+
+		//Sets callbacks for construction and destruction.
 		ReflectedTypeInfo& setConstructors(std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 										   std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 										   std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 										   std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
+		//Sets the size of the type.
 		ReflectedTypeInfo& setTypeSize(std::size_t newSize);
 
+		virtual bool isReflectedType() const override final;
+
+		//Construct or destruct instances of the type (if allowed)
 		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const override final;
 		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize) override final;
 		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;

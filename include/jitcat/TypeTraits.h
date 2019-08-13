@@ -29,8 +29,11 @@ namespace jitcat
 	{
 	public:
 		static inline const CatGenericType& toGenericType();
-		static bool isSerialisableContainer() { return false; }
+
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static const char* getTypeName() { return T::getTypeName(); }
 		static std::any getCatValue(void) { return std::any((Reflectable*)nullptr);}
 		static std::any getCatValue(T& value);
@@ -54,8 +57,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType() { return CatGenericType::voidType; }
-		static bool isSerialisableContainer() { return false; }
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		template <typename U>
 		static std::any getCatValue(const U& param) { return std::any();}
 		static constexpr void getDefaultValue() { return; }
@@ -83,8 +88,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType() { return CatGenericType::floatType; }
-		static bool isSerialisableContainer() { return false; }
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static std::any getCatValue(float value) { return std::any(value);}
 		static constexpr float getDefaultValue() { return 0.0f; }
 		static std::any getDefaultCatValue() { return std::any(0.0f); }
@@ -108,8 +115,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType() { return CatGenericType::intType; }
-		static bool isSerialisableContainer() { return false; }
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static std::any getCatValue(int value) { return std::any(value);}
 		static constexpr int getDefaultValue() { return 0; }
 		static std::any getDefaultCatValue() { return std::any(0); }
@@ -132,8 +141,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType() { return CatGenericType::boolType; }
-		static bool isSerialisableContainer() { return false; }
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static std::any getCatValue(bool value) { return std::any(value);}
 		static constexpr bool getDefaultValue() { return false; }
 		static std::any getDefaultCatValue() { return std::any(false); }
@@ -157,8 +168,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType() { return CatGenericType::stringType; }
-		static bool isSerialisableContainer() { return false; }
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static std::any getCatValue(const std::string& value) { return std::any(value);}
 		static std::string getDefaultValue() { return Tools::empty; }
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::string>::getDefaultValue()); }
@@ -181,8 +194,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType();
-		static bool isSerialisableContainer() { return false; }
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
+		static constexpr bool isUniquePtr() { return true; }
+
 		static const char* getTypeName() { return U::getTypeName(); }
 		static std::any getCatValue(std::unique_ptr<U>& value);
 		static constexpr Reflection::Reflectable* getDefaultValue() { return nullptr; }
@@ -203,8 +218,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType();
-		static bool isSerialisableContainer() { return false; }
+		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static const char* getTypeName() { return U::getTypeName(); }
 		static std::any getCatValue(U* value);
 		static constexpr Reflection::Reflectable* getDefaultValue() { return nullptr; }
@@ -225,8 +242,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType();
-		static bool isSerialisableContainer() { return true; }
+		static constexpr bool isSerialisableContainer() { return true; }
 		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static const char* getTypeName() { return ""; }
 		static std::any getCatValue(void) { return std::any((std::vector<ItemType, AllocatorT>*)nullptr);}
 		static constexpr std::vector<ItemType, AllocatorT>* getDefaultValue() { return nullptr; }
@@ -246,8 +265,10 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType();
-		static bool isSerialisableContainer() { return true; }
+		static constexpr bool isSerialisableContainer() { return true; }
 		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
 		static const char* getTypeName() { return ""; }
 		static std::any getCatValue(void) { return std::any((std::map<KeyType, ItemType, ComparatorT, AllocatorT>*)nullptr);}
 		static constexpr std::map<KeyType, ItemType, ComparatorT, AllocatorT>* getDefaultValue() { return nullptr; }

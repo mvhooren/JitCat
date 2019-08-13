@@ -35,6 +35,7 @@
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/CatSourceFile.h"
 #include "jitcat/CatStatement.h"
+#include "jitcat/CatStaticIdentifier.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatVariableDeclaration.h"

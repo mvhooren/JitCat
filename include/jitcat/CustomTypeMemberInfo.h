@@ -25,7 +25,7 @@ namespace jitcat::Reflection
 		std::size_t memberOffset;
 	};
 
-	template<typename T>
+	template<typename BasicT>
 	struct CustomBasicTypeMemberInfo: public CustomMemberInfo
 	{
 		CustomBasicTypeMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): CustomMemberInfo(memberName, memberOffset, type) {}
@@ -35,7 +35,7 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
-		void assign(std::any& base, const T& valueToSet);
+		void assign(std::any& base, const BasicT& valueToSet);
 	};
 
 

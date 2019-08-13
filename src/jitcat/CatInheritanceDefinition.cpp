@@ -84,20 +84,33 @@ bool jitcat::AST::CatInheritanceDefinition::typeCheck(CatRuntimeContext* compile
 			errorManager->compiledWithError(Tools::append("Inheritance from, ", inheritedType.toString(), " is not allowed."), this, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
-		else if (!inheritedType.getObjectType()->inheritTypeCheck(compiletimeContext, compiletimeContext->getCurrentClass(), errorManager, this))
-		{
-			return false;
-		}
 
 		CatScope* currentScope = compiletimeContext->getCurrentScope();
 		if (currentScope != nullptr)
 		{
-			//QQQ add check allow inherit
 			inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType.toString()), type->getType());
 			inheritedMember->visibility = Reflection::MemberVisibility::Hidden;
 		}
 	}
 
+	return true;
+}
+
+
+bool jitcat::AST::CatInheritanceDefinition::postTypeCheck(CatRuntimeContext* compileTimeContext)
+{
+	if (errorManagerHandle.getIsValid())
+	{
+		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		errorManagerHandle = nullptr;
+	}
+	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
+	errorManagerHandle = errorManager;
+	const CatGenericType& inheritedType = type->getType();
+	if (!inheritedType.getObjectType()->inheritTypeCheck(compileTimeContext, compileTimeContext->getCurrentClass(), errorManager, this))
+	{
+		return false;
+	}
 	return true;
 }
 

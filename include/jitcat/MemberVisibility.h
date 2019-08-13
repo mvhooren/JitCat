@@ -9,7 +9,7 @@
 
 namespace jitcat::Reflection
 {
-	enum MemberVisibility
+	enum class MemberVisibility
 	{
 		Public,
 		Private,
