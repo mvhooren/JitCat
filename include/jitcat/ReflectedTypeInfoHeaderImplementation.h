@@ -57,33 +57,38 @@ namespace jitcat::Reflection
 		bool isConst = (flags & MF::isConst) != 0
 						|| (flags & MF::isStaticConst) != 0;
 		bool isWritable = (flags & MF::isWritable) != 0;
+		if constexpr (std::is_const<MemberT>::value)
+		{
+			isWritable = false;
+			isConst = true;
+		}
 		StaticMemberInfo* memberInfo = nullptr;
 		if constexpr (std::is_same<MemberT, float>::value
 					  || std::is_same<MemberT, int>::value
 					  || std::is_same<MemberT, bool>::value
 					  || std::is_same<MemberT, std::string>::value)
 		{
-			memberInfo = new StaticBasicTypeMemberInfo(identifier, member, TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticBasicTypeMemberInfo(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (TypeTraits<MemberT>::isSerialisableContainer())
 		{
-			memberInfo = new StaticContainerMemberInfo<MemberT>(identifier, member, TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticContainerMemberInfo<MemberT>(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (TypeTraits<MemberT>::isUniquePtr())
 		{
-			memberInfo = new StaticClassUniquePtrMemberInfo<MemberT>(identifier, member, TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassUniquePtrMemberInfo<MemberT>(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_same<MemberT, ReflectableHandle>::value)
 		{
-			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, member, TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_pointer<MemberT>::value)
 		{
-			memberInfo = new StaticClassPointerMemberInfo(identifier, member, TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassPointerMemberInfo(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_class<MemberT>::value)
 		{
-			memberInfo = new StaticClassObjectMemberInfo(identifier, member, TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassObjectMemberInfo(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else
 		{

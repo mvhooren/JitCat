@@ -44,7 +44,7 @@ namespace jitcat
 		static Reflection::Reflectable* stripValue(T& value) { return static_cast<Reflection::Reflectable*>(&value); }
 		static Reflection::Reflectable* stripValue(T* value) {return static_cast<Reflection::Reflectable*>(value);}
 		
-
+		typedef T* getValueType;
 		typedef T type;
 		typedef T cachedType;
 		typedef T functionParameterType;
@@ -75,7 +75,7 @@ namespace jitcat
 			return "void"; 
 		}
 
-
+		typedef void getValueType;
 		typedef void type;
 		typedef int cachedType;
 		typedef int functionParameterType;
@@ -102,7 +102,7 @@ namespace jitcat
 			return "float"; 
 		}
 
-
+		typedef float getValueType;
 		typedef float type;
 		typedef float cachedType;
 		typedef float functionParameterType;
@@ -129,6 +129,7 @@ namespace jitcat
 			return "int";
 		}
 
+		typedef int getValueType;
 		typedef int type;
 		typedef int cachedType;
 		typedef int functionParameterType;
@@ -156,6 +157,7 @@ namespace jitcat
 			return "bool";
 		}
 
+		typedef bool getValueType;
 		typedef bool type;
 		typedef bool cachedType;
 		typedef bool functionParameterType;
@@ -182,6 +184,7 @@ namespace jitcat
 			return "string";
 		}
 
+		typedef std::string getValueType;
 		typedef std::string type;
 		typedef std::string cachedType;
 		typedef const std::string& functionParameterType;
@@ -206,6 +209,7 @@ namespace jitcat
 		static Reflection::Reflectable* stripValue(std::unique_ptr<U>& value) { return static_cast<Reflection::Reflectable*>(value.get()); }
 		static Reflection::TypeInfo* getTypeInfo() {return Reflection::TypeRegistry::get()->registerType<U>();}
 
+		typedef U* getValueType;
 		typedef U type;
 		typedef U* cachedType;
 		typedef U* functionParameterType;
@@ -230,6 +234,7 @@ namespace jitcat
 		static Reflection::Reflectable* stripValue(U* value) {return static_cast<Reflection::Reflectable*>(value);}
 		static Reflection::TypeInfo* getTypeInfo() {return Reflection::TypeRegistry::get()->registerType<U>();}
 
+		typedef U* getValueType;
 		typedef U type;
 		typedef U* cachedType;
 		typedef U* functionParameterType;
@@ -253,6 +258,7 @@ namespace jitcat
 		static std::vector<ItemType, AllocatorT>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType, AllocatorT>*>(value); }
 		static std::vector<ItemType, AllocatorT>* stripValue(std::vector<ItemType, AllocatorT>* value) { return value; }
 
+		typedef std::vector<ItemType, AllocatorT>& getValueType;
 		typedef ItemType type;
 		typedef std::vector<ItemType, AllocatorT> cachedType;
 		typedef std::vector<ItemType, AllocatorT>* functionParameterType;
@@ -276,6 +282,7 @@ namespace jitcat
 		static std::map<KeyType, ItemType, ComparatorT, AllocatorT>& getValue(const std::any& value) { return *std::any_cast<std::map<KeyType, ItemType, ComparatorT, AllocatorT>*>(value);}
 		static std::map<KeyType, ItemType, ComparatorT, AllocatorT>* stripValue(std::map<KeyType, ItemType, ComparatorT, AllocatorT>* value) { return value; }
 
+		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>& getValueType;
 		typedef ItemType type;
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT> cachedType;
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* functionParameterType;
