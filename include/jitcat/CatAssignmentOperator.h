@@ -13,11 +13,13 @@
 
 namespace jitcat::AST
 {
+	class CatMemberFunctionCall;
+
 
 	class CatAssignmentOperator: public CatTypedExpression
 	{
 	public:
-		CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, const Tokenizer::Lexeme& lexeme);
+		CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& operatorLexeme);
 		CatAssignmentOperator(const CatAssignmentOperator& other);
 
 		// Inherited via CatTypedExpression
@@ -34,8 +36,10 @@ namespace jitcat::AST
 		CatTypedExpression* getRhs() const;
 
 	private:
+		std::unique_ptr<CatMemberFunctionCall> operatorFunction;
 		std::unique_ptr<CatTypedExpression> lhs;
 		std::unique_ptr<CatTypedExpression> rhs;
+		Tokenizer::Lexeme operatorLexeme;
 		CatGenericType type;
 	};
 

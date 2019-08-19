@@ -35,6 +35,12 @@ void jitcat::ExpressionErrorManager::setCurrentDocument(Tokenizer::Document* doc
 }
 
 
+Tokenizer::Document* jitcat::ExpressionErrorManager::getCurrentDocument() const
+{
+	return currentDocument;
+}
+
+
 void ExpressionErrorManager::clear()
 {
 	errors.clear();

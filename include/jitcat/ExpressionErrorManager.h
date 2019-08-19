@@ -51,6 +51,7 @@ namespace jitcat
 		//The error manager needs to know about the current document if it wants to properly translate lexemes to line and column numbers.
 		//errorLine, errorColumn and errorLength will be set to 0 on all errors if a document is not set.
 		void setCurrentDocument(Tokenizer::Document* document);
+		Tokenizer::Document* getCurrentDocument() const;
 
 		void clear();
 		//Adds an error to the list. The void* serves as a unique id so that error messages disappear once the error is fixed.

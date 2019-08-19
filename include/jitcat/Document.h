@@ -34,7 +34,8 @@ namespace jitcat::Tokenizer
 		int offsetToLineNumber(int offset) const;
 		void clearLineLookup();
 		void addNewLine(int offset);
-
+	
+		bool isValidLexeme(const Lexeme& lexeme) const;
 
 	private:
 		std::string document;

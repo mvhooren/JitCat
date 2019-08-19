@@ -21,9 +21,11 @@ namespace jitcat::Reflection
 	struct CustomMemberInfo: public TypeMemberInfo
 	{
 		CustomMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
+		virtual unsigned long long getOrdinal() const override final;
 
 		std::size_t memberOffset;
 	};
+
 
 	template<typename BasicT>
 	struct CustomBasicTypeMemberInfo: public CustomMemberInfo

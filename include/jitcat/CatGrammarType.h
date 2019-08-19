@@ -4,5 +4,6 @@
 enum class CatGrammarType
 {
 	Expression,
+	Statement,
 	Full
 };

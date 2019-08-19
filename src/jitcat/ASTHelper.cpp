@@ -175,17 +175,17 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 		if (reflectableTarget != nullptr)
 		{
 			TypeOwnershipSemantics targetOwnership = targetType.getPointeeType()->getOwnershipSemantics();
-			TypeOwnershipSemantics sourceOwnership = sourceType.getPointeeType()->getOwnershipSemantics();
 			if (targetOwnership == TypeOwnershipSemantics::Owned && *reflectableTarget != nullptr)
 			{
 				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(*reflectableTarget);
 			}
-			if (sourceType.isPointerToReflectableObjectType())
+			if (sourceType.isPointerToReflectableObjectType() || sourceType.isReflectableHandleType())
 			{
 				*reflectableTarget = std::any_cast<Reflectable*>(source);
 			}
 			else if (sourceType.isPointerToHandleType())
 			{
+				TypeOwnershipSemantics sourceOwnership = sourceType.getPointeeType()->getOwnershipSemantics();
 				ReflectableHandle* sourceHandle = std::any_cast<ReflectableHandle*>(source);
 				if (sourceHandle != nullptr)
 				{
@@ -204,6 +204,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			}
 			else if (sourceType.isPointerToPointerType() && sourceType.getPointeeType()->isPointerToReflectableObjectType())
 			{
+				TypeOwnershipSemantics sourceOwnership = sourceType.getPointeeType()->getOwnershipSemantics();
 				Reflectable** sourcePointer = std::any_cast<Reflectable**>(source);
 				if (sourcePointer != nullptr)
 				{
@@ -335,14 +336,14 @@ bool jitcat::AST::ASTHelper::checkOwnershipSemantics(const CatGenericType& targe
 			return false;
 		}
 	}
-	else if (leftOwnership == TypeOwnershipSemantics::Weak)
+	/*else if (leftOwnership == TypeOwnershipSemantics::Weak)
 	{
 		if (rightOwnership == TypeOwnershipSemantics::Value && !sourceType.isNullptrType())
 		{
 			errorManager->compiledWithError(Tools::append("Cannot ", operation, " owned temporary value to weak ownership value."), errorSource, context->getContextName(), lexeme);
 			return false;
 		}
-	}
+	}*/
 
 	if (rightOwnership == TypeOwnershipSemantics::Owned
 		&& (leftOwnership == TypeOwnershipSemantics::Owned

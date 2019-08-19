@@ -24,7 +24,8 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization):
+CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, 
+											   const Tokenizer::Lexeme& initializationOperatorLexeme, CatTypedExpression* initialization):
 	CatStatement(lexeme),
 	type(typeNode),
 	name(name),
@@ -33,7 +34,7 @@ CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std:
 {
 	if (initialization != nullptr)
 	{
-		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), initialization, lexeme));
+		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), initialization, lexeme, initializationOperatorLexeme));
 	}
 }
 
@@ -106,7 +107,7 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 		}
 		CatGenericType initExpressionType = type->getType();
 		initExpressionType.setOwnershipSemantics(initExpressionOwnership);
-		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), initExpressionType, nameLexeme), nameLexeme));
+		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), initExpressionType, nameLexeme), nameLexeme, nameLexeme));
 	}
 
 	CatScope* currentScope = compiletimeContext->getCurrentScope();

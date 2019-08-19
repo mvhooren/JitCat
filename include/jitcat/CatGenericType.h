@@ -113,7 +113,7 @@ namespace jitcat
 		const CatGenericType& getContainerItemType() const;
 		const char* getObjectTypeName() const;
 
-		CatGenericType getInfixOperatorResultType(AST::CatInfixOperatorType oper, const CatGenericType& rightType);
+		CatGenericType getInfixOperatorResultType(AST::CatInfixOperatorType oper, const CatGenericType& rightType, bool& isOverloadedOperator);
 
 		std::string toString() const;
 		

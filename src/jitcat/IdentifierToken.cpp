@@ -100,7 +100,7 @@ ParseToken* IdentifierToken::createIfMatch(Document* document, const char* curre
 	std::size_t documentLength = document->getDocumentSize() - docOffset;
 	if (documentLength > 0)
 	{
-		if (ParseHelper::isAlphaNumeric(currentPosition[offset]))
+		if (ParseHelper::isAlphaNumeric(currentPosition[offset]) || currentPosition[offset] == '_')
 		{
 			offset++;
 			while (offset < documentLength

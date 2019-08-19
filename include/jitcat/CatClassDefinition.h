@@ -11,6 +11,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScope.h"
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -42,7 +43,17 @@ namespace jitcat::AST
 		virtual Reflection::CustomTypeInfo* getCustomType() override final;
 		virtual CatScopeID getScopeId() const override final;
 
+		const std::string& getClassName() const;
+		Tokenizer::Lexeme getClassNameLexeme() const;
+
 		CatVariableDefinition* getVariableDefinitionByName(const std::string& name);
+		CatFunctionDefinition* getFunctionDefinitionByName(const std::string& name);
+
+		void enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const;
+
+		//Parses and injects code at the end of the function if it exists.
+		//Injected code must be a single statement.
+		bool injectCode(const std::string& functionName, const std::string& statement, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
 	private:
 		bool generateConstructor(CatRuntimeContext* compileTimeContext);

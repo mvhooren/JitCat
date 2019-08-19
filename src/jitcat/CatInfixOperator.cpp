@@ -6,8 +6,10 @@
 */
 
 #include "jitcat/CatInfixOperator.h"
+#include "jitcat/CatArgumentList.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/InfixOperatorOptimizer.h"
 #include "jitcat/ASTHelper.h"
@@ -19,20 +21,24 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme):
+CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& operatorLexeme):
 	CatTypedExpression(lexeme),
+	resultType(CatGenericType::unknownType),
 	rhs(rhs),
 	lhs(lhs),
-	oper(operatorType)
+	oper(operatorType),
+	operatorLexeme(operatorLexeme)
 {
 }
 
 
 jitcat::AST::CatInfixOperator::CatInfixOperator(const CatInfixOperator& other):
 	CatTypedExpression(other),
+	resultType(CatGenericType::unknownType),
 	rhs(static_cast<CatTypedExpression*>(other.rhs->copy())),
 	lhs(static_cast<CatTypedExpression*>(other.lhs->copy())),
-	oper(other.oper)
+	oper(other.oper),
+	operatorLexeme(other.operatorLexeme)
 {
 }
 
@@ -45,78 +51,37 @@ CatASTNode* jitcat::AST::CatInfixOperator::copy() const
 
 const CatGenericType& CatInfixOperator::getType() const
 {
-	const CatGenericType lhsType = lhs->getType();
-	const CatGenericType rhsType = rhs->getType();
-
-	switch (oper)
+	if (overloadedOperator != nullptr)
 	{
-		case CatInfixOperatorType::Plus:
-			if ((lhsType.isStringType()
-				 && (rhsType.isStringType()
-				     || rhsType.isBasicType()))
-				|| (lhsType.isBasicType()
-					&& rhsType.isStringType()))
-			{
-				return CatGenericType::stringType;
-			}
-			//Intentional fall-through
-		case CatInfixOperatorType::Minus:
-		case CatInfixOperatorType::Multiply:
-		case CatInfixOperatorType::Divide:
-		case CatInfixOperatorType::Modulo:
-			if (lhsType.isScalarType() && rhsType.isScalarType())
-			{
-				if (lhsType.isIntType() && rhsType.isIntType())
-				{
-					return CatGenericType::intType;
-				}
-				else
-				{
-					return CatGenericType::floatType;
-				}
-			}
-			return CatGenericType::unknownType;
-		case CatInfixOperatorType::Greater:
-		case CatInfixOperatorType::Smaller:
-		case CatInfixOperatorType::GreaterOrEqual:
-		case CatInfixOperatorType::SmallerOrEqual:
-			if (lhsType.isScalarType() && rhsType.isScalarType())
-			{
-				return CatGenericType::boolType;
-			}
-			return CatGenericType::unknownType;
-		case CatInfixOperatorType::Equals:
-		case CatInfixOperatorType::NotEquals:
-			if ((lhsType.isScalarType() && rhsType.isScalarType())
-				|| lhsType == rhsType
-				|| (lhsType.isPointerToReflectableObjectType() && rhsType.isNullptrType())
-				|| (lhsType.isNullptrType() && rhsType.isPointerToReflectableObjectType()))
-			{
-				return CatGenericType::boolType;
-			}
-			return CatGenericType::unknownType;
-		case CatInfixOperatorType::LogicalAnd:
-		case CatInfixOperatorType::LogicalOr:
-			if (lhsType.isBoolType()
-				&& rhsType.isBoolType())
-			{
-				return CatGenericType::boolType;;
-			}
-			return CatGenericType::unknownType;
+		return overloadedOperator->getType();
 	}
-	assert(false);
-	return CatGenericType::unknownType;
+	else
+	{
+		return resultType;
+	}
 }
 
 
 bool CatInfixOperator::isConst() const 
 {
-	return lhs->isConst() && rhs->isConst();
+	if (overloadedOperator != nullptr)
+	{
+		return overloadedOperator->isConst();
+	}
+	else
+	{
+		return lhs->isConst() && rhs->isConst();
+	}
 }
 
 
 CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTimeContext)
 {
+	if (overloadedOperator != nullptr)
+	{
+		return overloadedOperator.release();
+	}
+
 	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext));
 	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
 
@@ -145,7 +110,14 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 
 std::any CatInfixOperator::execute(CatRuntimeContext* runtimeContext)
 {
-	return calculateExpression(runtimeContext);
+	if (overloadedOperator != nullptr)
+	{
+		return overloadedOperator->execute(runtimeContext);
+	}
+	else
+	{
+		return calculateExpression(runtimeContext);
+	}
 }
 
 
@@ -156,10 +128,22 @@ bool CatInfixOperator::typeCheck(CatRuntimeContext* compiletimeContext, Expressi
 	{
 		CatGenericType leftType = lhs->getType();
 		CatGenericType rightType = rhs->getType();
-		resultType = leftType.getInfixOperatorResultType(oper, rightType);
+		bool isOverloaded = false;
+		resultType = leftType.getInfixOperatorResultType(oper, rightType, isOverloaded);
 		if (resultType.isValidType())
 		{
+			if (isOverloaded)
+			{
+				std::vector<CatTypedExpression*> arguments = {rhs.release()};
+				overloadedOperator.reset(new CatMemberFunctionCall(::toString(oper), operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme()));
+				return overloadedOperator->typeCheck(compiletimeContext, errorManager, errorContext);
+			}
 			return true;
+		}
+		else if (isOverloaded)
+		{
+			errorManager->compiledWithError(Tools::append("Operator ", ::toString(oper), " not implemented for ", leftType.toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
+			return false;
 		}
 		else
 		{

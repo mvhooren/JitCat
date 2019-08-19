@@ -9,6 +9,7 @@
 #include "jitcat/CatLog.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/ContainerManipulator.h"
+#include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/XMLHelper.h"
@@ -349,7 +350,7 @@ bool jitcat::CatGenericType::isTriviallyCopyable() const
 
 bool CatGenericType::isWritable() const
 {
-	return writable;
+	return writable || (isPointerToReflectableObjectType() && ownershipSemantics == TypeOwnershipSemantics::Value && pointeeType->isWritable());
 }
 
 
@@ -461,8 +462,9 @@ const char* CatGenericType::getObjectTypeName() const
 }
 
 
-CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType oper, const CatGenericType& rightType)
+CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType oper, const CatGenericType& rightType, bool& isOverloadedOperator)
 {
+	isOverloadedOperator = false;
 	if (!rightType.isValidType())
 	{
 		return rightType;
@@ -521,6 +523,21 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 					return CatGenericType::boolType;
 				}
 				break;
+		}
+	}
+	else if (isReflectablePointerOrHandle() 
+			 && rightType.isReflectablePointerOrHandle()
+		     && compare(rightType, false))
+	{
+		MemberFunctionInfo* memberFunctionInfo = pointeeType->nestedType->getMemberFunctionInfo(::toString(oper));
+		isOverloadedOperator = true;
+		if (memberFunctionInfo != nullptr)
+		{
+			if (memberFunctionInfo->getNumberOfArguments() == 1
+				&& memberFunctionInfo->argumentTypes[0].compare(rightType, false))
+			{
+				return memberFunctionInfo->returnType;
+			}
 		}
 	}
 

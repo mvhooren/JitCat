@@ -40,7 +40,7 @@ namespace jitcat::Reflection
 			{
 				memberInfo->catType.getPointeeType()->getObjectType()->addDependentType(this);
 			}
-			members.emplace(identifier, memberInfo);
+			TypeInfo::addMember(identifier, memberInfo);
 			if (memberInfo->catType.isPointerToReflectableObjectType() && Tools::startsWith(identifier, "$"))
 			{
 				addDeferredMembers(memberInfo);
@@ -50,14 +50,15 @@ namespace jitcat::Reflection
 	}
 
 
-	template<typename MemberT>
-	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberT* member, MemberFlags flags)
+	template<typename MemberCVT>
+	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberCVT* member, MemberFlags flags)
 	{
+		typedef std::remove_cv<MemberCVT>::type MemberT;
 		std::string identifier = Tools::toLowerCase(identifier_);
 		bool isConst = (flags & MF::isConst) != 0
 						|| (flags & MF::isStaticConst) != 0;
 		bool isWritable = (flags & MF::isWritable) != 0;
-		if constexpr (std::is_const<MemberT>::value)
+		if constexpr (std::is_const<MemberCVT>::value)
 		{
 			isWritable = false;
 			isConst = true;
@@ -68,33 +69,36 @@ namespace jitcat::Reflection
 					  || std::is_same<MemberT, bool>::value
 					  || std::is_same<MemberT, std::string>::value)
 		{
-			memberInfo = new StaticBasicTypeMemberInfo(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticBasicTypeMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (TypeTraits<MemberT>::isSerialisableContainer())
 		{
-			memberInfo = new StaticContainerMemberInfo<MemberT>(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticContainerMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (TypeTraits<MemberT>::isUniquePtr())
 		{
-			memberInfo = new StaticClassUniquePtrMemberInfo<MemberT>(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassUniquePtrMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_same<MemberT, ReflectableHandle>::value)
 		{
-			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_pointer<MemberT>::value)
 		{
-			memberInfo = new StaticClassPointerMemberInfo(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassPointerMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_class<MemberT>::value)
 		{
-			memberInfo = new StaticClassObjectMemberInfo(identifier, const_cast<typename std::remove_cv<MemberT>::type*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassObjectMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+		}
+		else if constexpr (std::is_enum<MemberT>::value)
+		{
+			return addMember(identifier_, reinterpret_cast<typename std::underlying_type_t<MemberT>*>(const_cast<MemberT*>(member)), flags);
 		}
 		else
 		{
 			static_assert(false, "Static member type not supported.");
 		}
-		
 		staticMembers.emplace(identifier, memberInfo);
 		return *this;
 	}

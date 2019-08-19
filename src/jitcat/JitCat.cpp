@@ -37,9 +37,11 @@ using namespace jitcat::Tokenizer;
 JitCat::JitCat():
 	tokenizer(new CatTokenizer()),
 	expressionGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Expression)),
+	statementGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Statement)),
 	fullGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Full))
 {
 	expressionParser = expressionGrammar->createSLRParser();
+	statementParser = statementGrammar->createSLRParser();
 	fullParser = fullGrammar->createSLRParser();
 }
 
@@ -65,6 +67,16 @@ Parser::SLRParseResult* jitcat::JitCat::parseExpression(Tokenizer::Document* exp
 	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
 	tokenizer->tokenize(expression, tokens, eofToken);
 	SLRParseResult* result = expressionParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context, errorManager, errorContext);
+	return result;
+}
+
+
+Parser::SLRParseResult* jitcat::JitCat::parseStatement(Tokenizer::Document* statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+{
+	std::vector<std::unique_ptr<ParseToken>> tokens;
+	OneCharToken* eofToken = new OneCharToken(statement->createLexeme(statement->getDocumentSize(), 0), OneChar::Eof);
+	tokenizer->tokenize(statement, tokens, eofToken);
+	SLRParseResult* result = statementParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context, errorManager, errorContext);
 	return result;
 }
 

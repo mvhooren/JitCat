@@ -19,11 +19,12 @@
 
 namespace jitcat::AST
 {
+	class CatMemberFunctionCall;
 
 	class CatInfixOperator: public CatTypedExpression
 	{
 	public:
-		CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme);
+		CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& operatorLexeme);
 		CatInfixOperator(const CatInfixOperator& other);
 
 		virtual CatASTNode* copy() const override final;
@@ -56,6 +57,9 @@ namespace jitcat::AST
 		inline std::any calculateBooleanExpression(bool lValue, bool rValue);
 
 	private:
+		std::unique_ptr<CatMemberFunctionCall> overloadedOperator;
+		Tokenizer::Lexeme operatorLexeme;
+
 		std::unique_ptr<CatTypedExpression> lhs;
 		CatInfixOperatorType oper;
 		std::unique_ptr<CatTypedExpression> rhs;

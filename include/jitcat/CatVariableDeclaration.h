@@ -26,7 +26,8 @@ namespace jitcat::AST
 	class CatVariableDeclaration: public CatStatement
 	{
 	public:
-		CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization = nullptr);
+		CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, 
+							   const Tokenizer::Lexeme& initializationOperatorLexeme, CatTypedExpression* initialization = nullptr);
 		CatVariableDeclaration(const CatVariableDeclaration& other);
 
 		virtual ~CatVariableDeclaration();

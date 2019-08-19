@@ -39,6 +39,7 @@ namespace jitcat
 	public:
 		static JitCat* get();
 		Parser::SLRParseResult* parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
+		Parser::SLRParseResult* parseStatement(Tokenizer::Document* statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
 		Parser::SLRParseResult* parseFull(Tokenizer::Document* expression, std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
 		Parser::SLRParseResult* parseFull(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
 		
@@ -51,9 +52,13 @@ namespace jitcat
 		static JitCat* instance;
 
 		std::unique_ptr<Tokenizer::CatTokenizer> tokenizer;
+		
 		std::unique_ptr<Grammar::CatGrammar> expressionGrammar;
+		std::unique_ptr<Grammar::CatGrammar> statementGrammar;
 		std::unique_ptr<Grammar::CatGrammar> fullGrammar;
+
 		std::unique_ptr<Parser::SLRParser> expressionParser;
+		std::unique_ptr<Parser::SLRParser> statementParser;
 		std::unique_ptr<Parser::SLRParser> fullParser;
 	};
 

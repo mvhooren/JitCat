@@ -149,3 +149,10 @@ void jitcat::Tokenizer::Document::addNewLine(int offset)
 	lineNumberLookup[offset] = currentLineIndex;
 	currentLineIndex++;
 }
+
+
+bool jitcat::Tokenizer::Document::isValidLexeme(const Lexeme& lexeme) const
+{
+	return  lexeme.data() >= document.c_str() 
+			 && (lexeme.data() + lexeme.size()) <= document.c_str() + document.size();
+}

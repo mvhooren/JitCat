@@ -7,10 +7,13 @@
 
 #include "jitcat/CatAssignmentOperator.h"
 #include "jitcat/ASTHelper.h"
+#include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 
 using namespace jitcat;
@@ -19,10 +22,11 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatAssignmentOperator::CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, const Tokenizer::Lexeme& lexeme):
+CatAssignmentOperator::CatAssignmentOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& operatorLexeme):
 	CatTypedExpression(lexeme),
 	lhs(lhs),
-	rhs(rhs)
+	rhs(rhs),
+	operatorLexeme(operatorLexeme)
 {
 }
 
@@ -59,9 +63,16 @@ CatASTNodeType CatAssignmentOperator::getNodeType() const
 
 std::any CatAssignmentOperator::execute(CatRuntimeContext* runtimeContext)
 {
-	CatAssignableExpression* lhsAssignable = static_cast<CatAssignableExpression*>(lhs.get());
+	if (operatorFunction != nullptr)
+	{
+		return operatorFunction->execute(runtimeContext);
+	}
+	else
+	{
+		CatAssignableExpression* lhsAssignable = static_cast<CatAssignableExpression*>(lhs.get());
 
-	return ASTHelper::doAssignment(lhsAssignable, rhs.get(), runtimeContext);
+		return ASTHelper::doAssignment(lhsAssignable, rhs.get(), runtimeContext);
+	}
 }
 
 
@@ -83,6 +94,13 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			return false;
 		}
 		type = lhs->getType().toUnmodified();
+		if (lhs->getType().isPointerToReflectableObjectType()
+			&& lhs->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)
+		{
+			 std::vector<CatTypedExpression*> arguments = {rhs.release()};
+			 operatorFunction.reset(new CatMemberFunctionCall("=", operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme()));
+			 return operatorFunction->typeCheck(compiletimeContext, errorManager, errorContext);
+		}
 		return true;
 	}
 	return false;
@@ -91,6 +109,10 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 
 const CatGenericType& CatAssignmentOperator::getType() const
 {
+	if (operatorFunction != nullptr)
+	{
+		return operatorFunction->getType();
+	}
 	return type;
 }
 
@@ -103,6 +125,10 @@ bool CatAssignmentOperator::isConst() const
 
 CatTypedExpression* CatAssignmentOperator::constCollapse(CatRuntimeContext* compileTimeContext)
 {
+	if (operatorFunction != nullptr)
+	{
+		return operatorFunction.release();
+	}
 	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext));
 	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
 	return this;

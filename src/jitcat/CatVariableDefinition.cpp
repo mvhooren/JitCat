@@ -19,13 +19,14 @@
 using namespace jitcat;
 using namespace jitcat::AST;
 
-CatVariableDefinition::CatVariableDefinition(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization):
+CatVariableDefinition::CatVariableDefinition(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& initializationOperatorLexeme, CatTypedExpression* initialization):
 	CatDefinition(lexeme),
 	type(typeNode),
 	name(name),
 	visibility(Reflection::MemberVisibility::Public),
 	initializationExpression(initialization),
-	memberInfo(nullptr)
+	memberInfo(nullptr),
+	initOperatorLexeme(initializationOperatorLexeme)
 {
 }
 
@@ -124,6 +125,12 @@ const CatTypeNode& CatVariableDefinition::getType() const
 const CatTypedExpression* jitcat::AST::CatVariableDefinition::getInitializationExpression() const
 {
 	return initializationExpression.get();
+}
+
+
+Tokenizer::Lexeme jitcat::AST::CatVariableDefinition::getInitializationOperatorLexeme() const
+{
+	return initOperatorLexeme;
 }
 
 

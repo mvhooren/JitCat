@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "ContainerManipulator.h"
+#include "jitcat/ContainerManipulator.h"
+#include "jitcat/TypeOwnershipSemantics.h"
 
 
 namespace jitcat
@@ -49,6 +50,13 @@ namespace jitcat
 	std::any TypeTraits<std::unique_ptr<U>>::getCatValue(std::unique_ptr<U>& value) 
 	{ 
 		return static_cast<Reflection::Reflectable*>(value.get()); 
+	}
+
+
+	template <typename RefT>
+	inline const CatGenericType& TypeTraits<RefT&>::toGenericType()
+	{
+		return TypeTraits<RefT*>::toGenericType();
 	}
 
 

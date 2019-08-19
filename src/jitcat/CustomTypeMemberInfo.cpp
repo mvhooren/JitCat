@@ -142,3 +142,9 @@ void jitcat::Reflection::CustomTypeObjectDataMemberInfo::assign(std::any& base, 
 {
 	assert(false);
 }
+
+
+unsigned long long jitcat::Reflection::CustomMemberInfo::getOrdinal() const
+{
+	return memberOffset;
+}

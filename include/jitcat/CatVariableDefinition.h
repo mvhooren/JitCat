@@ -28,7 +28,7 @@ namespace jitcat::AST
 	class CatVariableDefinition: public CatDefinition
 	{
 	public:
-		CatVariableDefinition(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, CatTypedExpression* initialization = nullptr);
+		CatVariableDefinition(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& initializationOperatorLexeme, CatTypedExpression* initialization = nullptr);
 		CatVariableDefinition(const CatVariableDefinition& other);
 
 		virtual ~CatVariableDefinition();
@@ -42,15 +42,19 @@ namespace jitcat::AST
 		const CatTypeNode& getType() const;
 
 		const CatTypedExpression* getInitializationExpression() const;
+		Tokenizer::Lexeme getInitializationOperatorLexeme() const;
 
 		Reflection::MemberVisibility getVariableVisibility() const;
 		void setVariableVisibility(Reflection::MemberVisibility variableVisibility);
+
 
 	private:
 		std::unique_ptr<CatTypeNode> type;
 		std::string name;
 		Reflection::MemberVisibility visibility;
 		std::unique_ptr<CatTypedExpression> initializationExpression;
+
+		Tokenizer::Lexeme initOperatorLexeme;
 
 		Reflection::TypeMemberInfo* memberInfo;
 	};

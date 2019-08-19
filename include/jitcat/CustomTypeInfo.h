@@ -67,8 +67,7 @@ namespace jitcat::Reflection
 		//Because of this, the CustomTypeInfo remains compatible with existing instances.
 		//It is assumed that this does not happen very often.
 		void removeMember(const std::string& memberName);
-		void renameMember(const std::string& oldMemberName, const std::string& newMemberName);
-
+		
 		//For creating a "static" data type, this instance points directly to the default data.
 		Reflectable* getDefaultInstance();
 

@@ -17,6 +17,24 @@
 namespace jitcat::Reflection
 {
 
+template<typename BaseT, typename MemberT>
+inline unsigned long long getOffset(MemberT BaseT::* memberPointer)
+{
+	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
+	unsigned long long offset = 0;
+	if constexpr (sizeof(memberPointer) == 4)
+	{
+		unsigned int smallOffset = 0;
+		memcpy(&smallOffset, &memberPointer, 4);
+		offset = smallOffset;
+	}
+	else
+	{
+		memcpy(&offset, &memberPointer, 8);
+	}
+	return offset;
+}
+
 
 template<typename BaseT, typename ContainerT>
 inline std::any ContainerMemberInfo<BaseT, ContainerT>::getMemberReference(Reflectable* base)
@@ -42,18 +60,7 @@ template<typename BaseT, typename ContainerT>
 inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned long long offset = 0;
-	if constexpr (sizeof(memberPointer) == 4)
-	{
-		unsigned int smallOffset = 0;
-		memcpy(&smallOffset, &memberPointer, 4);
-		offset = smallOffset;
-	}
-	else
-	{
-		memcpy(&offset, &memberPointer, 8);
-	}
+	unsigned long long offset = getOffset(memberPointer);
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
@@ -181,6 +188,13 @@ inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateArrayIndexCo
 }
 
 
+template<typename BaseT, typename ContainerT>
+inline unsigned long long ContainerMemberInfo<BaseT, ContainerT>::getOrdinal() const
+{
+	return getOffset(memberPointer);
+}
+
+
 template<typename BaseT, typename ClassT>
 inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
 {
@@ -209,19 +223,7 @@ inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getAssignableMemberRefere
 template<typename BaseT, typename ClassT>
 inline unsigned long long ClassPointerMemberInfo<BaseT, ClassT>::getMemberPointerOffset() const
 {
-	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned long long offset = 0;
-	if constexpr (sizeof(memberPointer) == 4)
-	{
-		unsigned int smallOffset = 0;
-		memcpy(&smallOffset, &memberPointer, 4);
-		offset = smallOffset;
-	}
-	else
-	{
-		memcpy(&offset, &memberPointer, 8);
-	}
-	return offset;
+	return getOffset(memberPointer);
 }
 
 
@@ -264,6 +266,12 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateAssignCode(ll
 #endif // ENABLE_LLVM
 }
 
+template<typename BaseT, typename ClassT>
+inline unsigned long long ClassPointerMemberInfo<BaseT, ClassT>::getOrdinal() const
+{
+	return getMemberPointerOffset();
+}
+
 
 template<typename BaseT, typename ClassT>
 inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
@@ -289,18 +297,7 @@ template<typename BaseT, typename ClassT>
 inline llvm::Value* ClassObjectMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned long long offset = 0;
-	if constexpr (sizeof(memberPointer) == 4)
-	{
-		unsigned int smallOffset = 0;
-		memcpy(&smallOffset, &memberPointer, 4);
-		offset = smallOffset;
-	}
-	else
-	{
-		memcpy(&offset, &memberPointer, 8);
-	}
+	unsigned long long offset = getOffset(memberPointer);;
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
@@ -312,6 +309,12 @@ inline llvm::Value* ClassObjectMemberInfo<BaseT, ClassT>::generateDereferenceCod
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
+}
+
+template<typename BaseT, typename ClassT>
+inline unsigned long long ClassObjectMemberInfo<BaseT, ClassT>::getOrdinal() const
+{
+	return getOffset(memberPointer);
 }
 
 
@@ -365,6 +368,13 @@ inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereference
 }
 
 
+template<typename BaseT, typename ClassT>
+inline unsigned long long ClassUniquePtrMemberInfo<BaseT, ClassT>::getOrdinal() const
+{
+	return getOffset(memberPointer);
+}
+
+
 template<typename BaseT, typename BasicT>
 inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getMemberReference(Reflectable* base)
 {
@@ -394,19 +404,7 @@ inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getAssignableMemberReference
 template<typename BaseT, typename BasicT>
 inline unsigned long long BasicTypeMemberInfo<BaseT, BasicT>::getMemberPointerOffset() const
 {
-	static_assert(sizeof(memberPointer) == 4 || sizeof(memberPointer) == 8, "Expected a 4 or 8 byte member pointer. Object may use virtual inheritance which is not supported.");
-	unsigned long long offset = 0;
-	if constexpr (sizeof(memberPointer) == 4)
-	{
-		unsigned int smallOffset = 0;
-		memcpy(&smallOffset, &memberPointer, 4);
-		offset = smallOffset;
-	}
-	else
-	{
-		memcpy(&offset, &memberPointer, 8);
-	}
-	return offset;
+	return getOffset(memberPointer);
 }
 
 
@@ -465,6 +463,12 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateAssignCode(llvm:
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
+}
+
+template<typename BaseT, typename BasicT>
+inline unsigned long long BasicTypeMemberInfo<BaseT, BasicT>::getOrdinal() const
+{
+	return getMemberPointerOffset();
 }
 
 

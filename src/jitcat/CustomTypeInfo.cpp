@@ -59,7 +59,7 @@ TypeMemberInfo* CustomTypeInfo::addFloatMember(const std::string& memberName, fl
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<float>(memberName, offset, CatGenericType::createFloatType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members.emplace(lowerCaseMemberName, memberInfo);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
@@ -82,7 +82,7 @@ TypeMemberInfo* CustomTypeInfo::addIntMember(const std::string& memberName, int 
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<int>(memberName, offset, CatGenericType::createIntType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members.emplace(lowerCaseMemberName, memberInfo);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
@@ -105,7 +105,7 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<bool>(memberName, offset, CatGenericType::createBoolType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members.emplace(lowerCaseMemberName, memberInfo);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
@@ -130,7 +130,7 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 
 	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<std::string>(memberName, offset, CatGenericType::createStringType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	members.emplace(lowerCaseMemberName, memberInfo);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
 
@@ -147,7 +147,7 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, R
 		objectTypeInfo->addDependentType(this);
 		memberInfo = new CustomTypeObjectMemberInfo(memberName, offset, CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst));
 		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-		members.emplace(lowerCaseMemberName, memberInfo);
+		TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 	
 		if (Tools::startsWith(memberName, "$"))
 		{
@@ -181,9 +181,9 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDataObjectMember(const st
 			objectTypeInfo->placementConstruct((unsigned char*)(*iter) + offset, objectTypeInfo->getTypeSize());
 		}
 		objectTypeInfo->placementConstruct(data, objectTypeInfo->getTypeSize());
-		TypeMemberInfo* memberInfo = new  CustomTypeObjectDataMemberInfo(memberName, offset, CatGenericType(CatGenericType(objectTypeInfo, false, false), TypeOwnershipSemantics::Value, false, false, false));
+		TypeMemberInfo* memberInfo = new  CustomTypeObjectDataMemberInfo(memberName, offset, CatGenericType(CatGenericType(objectTypeInfo, true, false), TypeOwnershipSemantics::Value, false, false, false));
 		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-		members.emplace(lowerCaseMemberName, memberInfo);
+		TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 		objectTypeInfo->addDependentType(this);
 		
 		if (Tools::startsWith(memberName, "$"))
@@ -275,7 +275,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticObjectMember(cons
 		staticData.emplace_back(memberData);
 		objectTypeInfo->addDependentType(this);
 		ReflectableHandle handle(defaultValue);
-		objectTypeInfo->copyConstruct(memberData, dataSize, reinterpret_cast<unsigned char*>(&handle), dataSize); 
+		type.copyConstruct(memberData, dataSize, reinterpret_cast<unsigned char*>(&handle), dataSize); 
 		StaticMemberInfo* memberInfo = new StaticClassHandleMemberInfo(memberName, reinterpret_cast<ReflectableHandle*>(memberData), type);
 		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 		staticMembers.emplace(lowerCaseMemberName, memberInfo);
@@ -336,25 +336,10 @@ CustomTypeMemberFunctionInfo* jitcat::Reflection::CustomTypeInfo::addMemberFunct
 
 void CustomTypeInfo::removeMember(const std::string& memberName)
 {
-	auto iter = members.find(Tools::toLowerCase(memberName));
-	if (iter != members.end() && !iter->second->isDeferred())
+	TypeMemberInfo* memberInfo = releaseMember(memberName);
+	if (memberInfo != nullptr)
 	{
-		removedMembers.push_back(std::move(iter->second));
-		members.erase(iter);
-	}
-}
-
-
-void CustomTypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
-{
-	auto iter = members.find(Tools::toLowerCase(oldMemberName));
-	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end() && !iter->second->isDeferred())
-	{
-		std::unique_ptr<TypeMemberInfo> memberInfo = std::move(iter->second);
-		memberInfo->memberName = newMemberName;
-		members.erase(iter);
-		std::string lowerCaseMemberName = Tools::toLowerCase(newMemberName);
-		members.emplace(lowerCaseMemberName, std::move(memberInfo));
+		removedMembers.emplace_back(memberInfo);
 	}
 }
 
@@ -430,14 +415,14 @@ void jitcat::Reflection::CustomTypeInfo::moveConstruct(unsigned char* targetBuff
 	}
 	else
 	{
-		auto end = members.end();
-		for (auto iter = members.begin(); iter != end; ++iter)
+		auto end = membersByOrdinal.end();
+		for (auto iter = membersByOrdinal.begin(); iter != end; ++iter)
 		{
 			if (iter->second->isDeferred())
 			{
 				continue;
 			}
-			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second.get())->memberOffset;
+			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second)->memberOffset;
 			iter->second->catType.moveConstruct(&targetBuffer[memberOffset], iter->second->catType.getTypeSize(), &sourceBuffer[memberOffset], iter->second->catType.getTypeSize());
 		}
 	}
@@ -476,8 +461,8 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 
 void jitcat::Reflection::CustomTypeInfo::instanceDestructorInPlace(unsigned char* data)
 {
-	auto end = members.end();
-	for (auto iter = members.begin(); iter != end; ++iter)
+	auto end = membersByOrdinal.end();
+	for (auto iter = membersByOrdinal.begin(); iter != end; ++iter)
 	{
 		if (iter->second->isDeferred())
 		{
@@ -485,7 +470,7 @@ void jitcat::Reflection::CustomTypeInfo::instanceDestructorInPlace(unsigned char
 		}
 		else
 		{
-			CustomMemberInfo* customMember = static_cast<CustomMemberInfo*>(iter->second.get());
+			CustomMemberInfo* customMember = static_cast<CustomMemberInfo*>(iter->second);
 			iter->second->catType.placementDestruct(&data[customMember->memberOffset], customMember->catType.getTypeSize());
 		}
 	}
@@ -572,14 +557,14 @@ void CustomTypeInfo::createDataCopy(const unsigned char* sourceData, std::size_t
 	memcpy(copyData, sourceData, sourceSize);
 	if (!triviallyCopyable)
 	{
-		auto end = members.end();
-		for (auto iter = members.begin(); iter != end; ++iter)
+		auto end = membersByOrdinal.end();
+		for (auto iter = membersByOrdinal.begin(); iter != end; ++iter)
 		{
 			if (iter->second->isDeferred())
 			{
 				continue;
 			}
-			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second.get())->memberOffset;
+			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second)->memberOffset;
 			iter->second->catType.copyConstruct(&copyData[memberOffset], iter->second->catType.getTypeSize(), &sourceData[memberOffset], iter->second->catType.getTypeSize());
 		}
 	}

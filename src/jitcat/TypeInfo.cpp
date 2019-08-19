@@ -332,6 +332,15 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 }
 
 
+void jitcat::Reflection::TypeInfo::enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const
+{
+	for (auto& iter : membersByOrdinal)
+	{
+		enumerator(iter.second->catType, iter.second->memberName);
+	}
+}
+
+
 bool TypeInfo::isCustomType() const
 {
 	return false;
@@ -519,5 +528,48 @@ void jitcat::Reflection::TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMe
 		}
 	}
 }
+
+
+void jitcat::Reflection::TypeInfo::addMember(const std::string& memberName, TypeMemberInfo* memberInfo)
+{
+	members.emplace(memberName, memberInfo);
+	membersByOrdinal[memberInfo->getOrdinal()] = memberInfo;
+}
+
+
+void jitcat::Reflection::TypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
+{
+	auto iter = members.find(Tools::toLowerCase(oldMemberName));
+	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end() && !iter->second->isDeferred())
+	{
+		std::unique_ptr<TypeMemberInfo> memberInfo = std::move(iter->second);
+		memberInfo->memberName = newMemberName;
+		members.erase(iter);
+		std::string lowerCaseMemberName = Tools::toLowerCase(newMemberName);
+		members.emplace(lowerCaseMemberName, std::move(memberInfo));
+	}
+}
+
+
+TypeMemberInfo* jitcat::Reflection::TypeInfo::releaseMember(const std::string& memberName)
+{
+	auto& iter = members.find(memberName);
+	if (iter != members.end())
+	{
+		TypeMemberInfo* memberInfo = iter->second.release();
+
+		members.erase(iter);
+
+		auto& oridinalIter = membersByOrdinal.find(memberInfo->getOrdinal());
+		if (oridinalIter != membersByOrdinal.end())
+		{
+			membersByOrdinal.erase(oridinalIter);
+		}
+
+		return memberInfo;
+	}
+	return nullptr;
+}
+
 
 std::vector<TypeInfo*> jitcat::Reflection::TypeInfo::typeDeletionList = std::vector<TypeInfo*>();

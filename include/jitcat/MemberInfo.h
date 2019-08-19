@@ -50,6 +50,7 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const;
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
 		inline virtual bool isDeferred() const { return false; }
+		inline virtual unsigned long long getOrdinal() const { return 0;}
 
 		TypeMemberInfo* toDeferredTypeMemberInfo(TypeMemberInfo* baseMember);
 
@@ -74,6 +75,8 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual bool isDeferred() const override final { return true; }
+		inline virtual unsigned long long getOrdinal() const override final;
+
 		TypeMemberInfo* baseMember;
 		TypeMemberInfo* deferredMember;
 	};
@@ -106,6 +109,7 @@ namespace jitcat::Reflection
 
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
 
+		inline virtual unsigned long long getOrdinal() const override final;
 
 		ContainerT BaseT::* memberPointer;
 	};
@@ -123,6 +127,8 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
+		inline virtual unsigned long long getOrdinal() const override final;
+
 		ClassT* BaseT::* memberPointer;
 	};
 
@@ -137,6 +143,8 @@ namespace jitcat::Reflection
 
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 
+		inline virtual unsigned long long getOrdinal() const override final;
+
 		ClassT BaseT::* memberPointer;
 	};
 
@@ -150,6 +158,8 @@ namespace jitcat::Reflection
 		inline virtual std::any getMemberReference(Reflectable* base) override final;
 		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
+
+		inline virtual unsigned long long getOrdinal() const override final;
 
 		std::unique_ptr<ClassT> BaseT::* memberPointer;
 	};
@@ -168,7 +178,7 @@ namespace jitcat::Reflection
 		unsigned long long getMemberPointerOffset() const;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
-
+		inline virtual unsigned long long getOrdinal() const override final;
 
 		BasicT BaseT::* memberPointer;
 	};

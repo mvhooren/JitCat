@@ -177,6 +177,10 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId)
 {
 	std::any result = scopeBlock->execute(runtimeContext);
+	if (epilogBlock != nullptr)
+	{
+		epilogBlock->execute(runtimeContext);
+	}
 	runtimeContext->setReturning(false);
 	runtimeContext->removeScope(packScopeId);
 	return result;
@@ -270,6 +274,29 @@ void jitcat::AST::CatFunctionDefinition::setFunctionVisibility(Reflection::Membe
 const std::string & jitcat::AST::CatFunctionDefinition::getFunctionName() const
 {
 	return name;
+}
+
+
+CatScopeBlock* jitcat::AST::CatFunctionDefinition::getScopeBlock() const
+{
+	return scopeBlock.get();
+}
+
+
+CatScopeBlock* jitcat::AST::CatFunctionDefinition::getEpilogBlock() const
+{
+	return epilogBlock.get();
+}
+
+
+CatScopeBlock* jitcat::AST::CatFunctionDefinition::getOrCreateEpilogBlock(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	if (epilogBlock == nullptr)
+	{
+		epilogBlock.reset(new CatScopeBlock({}, nameLexeme));
+		epilogBlock->typeCheck(compileTimeContext, errorManager, errorContext);
+	}
+	return epilogBlock.get();
 }
 
 

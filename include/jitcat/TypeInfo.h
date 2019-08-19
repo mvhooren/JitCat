@@ -15,6 +15,7 @@
 #include "jitcat/Tools.h"
 
 #include <any>
+#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -111,8 +112,10 @@ namespace jitcat::Reflection
 		const char* getTypeName() const;
 		void setTypeName(const char* newTypeName);
 
-		//Enumerates all the members of the class described by this TypeInfo by passing them to the VariableEnumerator
+		//Enumerates all the members of the class described by this TypeInfo by passing them to the VariableEnumerator in alphabetical order
 		void enumerateVariables(VariableEnumerator* enumerator, bool allowEmptyStructs) const;
+		//Enumerats all the member variables of the class described by this TypeInfo by passing them to the enumerator function in ordinal order
+		void enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const;
 
 		//Returns true if this is a CustomTypeInfo.
 		virtual bool isCustomType() const;
@@ -155,12 +158,20 @@ namespace jitcat::Reflection
 	protected:
 		//Adds members from a member object that will automatically be forwarded.
 		void addDeferredMembers(TypeMemberInfo* deferredMember);
+		void addMember(const std::string& memberName, TypeMemberInfo* memberInfo);
+		void renameMember(const std::string& oldMemberName, const std::string& newMemberName);
+		TypeMemberInfo* releaseMember(const std::string& memberName);
 
 	protected:
 		const char* typeName;
 		std::unique_ptr<TypeCaster> caster;
 		//Member variables of this type
+	private:
 		std::map<std::string, std::unique_ptr<TypeMemberInfo>> members;
+
+	protected:
+		std::map<unsigned long long, TypeMemberInfo*> membersByOrdinal;
+
 		//Static member variables of this type
 		std::map<std::string, std::unique_ptr<StaticMemberInfo>> staticMembers;
 		//Member functions of this type

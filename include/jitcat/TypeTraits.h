@@ -52,6 +52,33 @@ namespace jitcat
 	};
 
 
+	template <typename RefT>
+	class TypeTraits<RefT&>
+	{
+	public:
+		static inline const CatGenericType& toGenericType();
+
+		static constexpr bool isSerialisableContainer() { return false; }
+		static constexpr bool isReflectableType() { return true; }
+		static constexpr bool isUniquePtr() { return false; }
+
+		static const char* getTypeName() { return RefT::getTypeName(); }
+		static std::any getCatValue(void) { return std::any((Reflectable*)nullptr);}
+		static std::any getCatValue(RefT& value) { return std::any((Reflection::Reflectable*)&value);};
+		static constexpr Reflection::Reflectable* getDefaultValue() { return nullptr; }
+		static std::any getDefaultCatValue() { return std::any(TypeTraits<RefT&>::getDefaultValue()); }
+		static RefT* getValue(const std::any& value)  { return static_cast<RefT*>(std::any_cast<Reflection::Reflectable*>(value));}
+		static Reflection::TypeInfo* getTypeInfo() {return Reflection::TypeRegistry::get()->registerType<RefT>();}
+		static Reflection::Reflectable* stripValue(RefT& value) { return static_cast<Reflection::Reflectable*>(&value); }
+		
+		typedef RefT* getValueType;
+		typedef RefT type;
+		typedef RefT& cachedType;
+		typedef RefT& functionParameterType;
+		typedef Reflection::Reflectable* functionReturnType;
+	};
+
+
 	template <>
 	class TypeTraits<void>
 	{

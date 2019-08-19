@@ -78,3 +78,9 @@ inline llvm::Value* DeferredMemberInfo::generateArrayIndexCode(llvm::Value* cont
 	llvm::Value* parent = baseMember->generateDereferenceCode(container, context);
 	return deferredMember->generateArrayIndexCode(parent, index, context);
 }
+
+
+inline unsigned long long jitcat::Reflection::DeferredMemberInfo::getOrdinal() const
+{
+	return baseMember->getOrdinal() + deferredMember->getOrdinal();
+}

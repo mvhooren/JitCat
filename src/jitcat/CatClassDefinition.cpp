@@ -19,8 +19,12 @@
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatVariableDefinition.h"
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/Document.h"
+#include "jitcat/ErrorContext.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/JitCat.h"
 #include "jitcat/MemberInfo.h"
+#include "jitcat/SLRParseResult.h"
 
 #include <cassert>
 
@@ -108,6 +112,12 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 		noErrors &= iter->typeCheck(compileTimeContext);
 	}
 
+	if (!previousScope->getCustomType()->addType(customType))
+	{
+		compileTimeContext->getErrorManager()->compiledWithError(Tools::append("A type with name ", name, " already exists."), this, compileTimeContext->getContextName(), nameLexeme);
+		noErrors = false;
+	}
+
 	for (auto& iter : classDefinitions)
 	{
 		noErrors &= iter->typeCheck(compileTimeContext);
@@ -128,17 +138,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 	{
 		noErrors &= iter->typeCheck(compileTimeContext);;
 	}
-
-	compileTimeContext->removeScope(scopeId);
-	compileTimeContext->setCurrentScope(previousScope);
-	compileTimeContext->setCurrentClass(parentClass);
-
-	if (!compileTimeContext->getCurrentScope()->getCustomType()->addType(customType))
-	{
-		compileTimeContext->getErrorManager()->compiledWithError(Tools::append("A type with name ", name, " already exists."), this, compileTimeContext->getContextName(), nameLexeme);
-		noErrors = false;
-	}
-
+	
 	if (noErrors)
 	{
 		//Another pass to allow inheritance definitions to inspect the finalized, type-checked class.
@@ -147,6 +147,10 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 			noErrors &= iter->postTypeCheck(compileTimeContext);
 		}
 	}
+
+	compileTimeContext->removeScope(scopeId);
+	compileTimeContext->setCurrentScope(previousScope);
+	compileTimeContext->setCurrentClass(parentClass);
 
 	if (noErrors)
 	{
@@ -182,6 +186,18 @@ CatScopeID jitcat::AST::CatClassDefinition::getScopeId() const
 }
 
 
+const std::string& jitcat::AST::CatClassDefinition::getClassName() const
+{
+	return name;
+}
+
+
+Tokenizer::Lexeme jitcat::AST::CatClassDefinition::getClassNameLexeme() const
+{
+	return nameLexeme;
+}
+
+
 CatVariableDefinition* jitcat::AST::CatClassDefinition::getVariableDefinitionByName(const std::string& name)
 {
 	for (auto& iter : variableDefinitions)
@@ -192,6 +208,87 @@ CatVariableDefinition* jitcat::AST::CatClassDefinition::getVariableDefinitionByN
 		}
 	}
 	return nullptr;
+}
+
+CatFunctionDefinition* jitcat::AST::CatClassDefinition::getFunctionDefinitionByName(const std::string& name)
+{
+	for (auto& iter : functionDefinitions)
+	{
+		if (Tools::equalsWhileIgnoringCase(iter->getFunctionName(), name))
+		{
+			return iter;
+		}
+	}
+	if (name == "__init" || name == "init")
+	{
+		return generatedConstructor.get();
+	}
+	return nullptr;
+}
+
+
+void jitcat::AST::CatClassDefinition::enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const
+{
+	customType->enumerateMemberVariables(enumerator);
+}
+
+
+bool jitcat::AST::CatClassDefinition::injectCode(const std::string& functionName, const std::string& statement, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	ErrorContext errorContextName(compileTimeContext, Tools::append("Injected code in ", functionName, ": ", statement));
+
+	if (compileTimeContext->getCurrentScope() != this
+		|| compileTimeContext->getCurrentClass() != this)
+	{
+		//code can only be injected while in the class' scope.
+		assert(false);
+	}
+
+	Tokenizer::Document* previousDocument = errorManager->getCurrentDocument();
+
+	CatFunctionDefinition* functionDefinition = getFunctionDefinitionByName(functionName);
+	if (functionDefinition != nullptr)
+	{
+		Tokenizer::Document doc(statement);
+		errorManager->setCurrentDocument(&doc);
+		Parser::SLRParseResult* parseResult = JitCat::get()->parseStatement(&doc, compileTimeContext, errorManager, errorContext);
+		if (parseResult->success)
+		{
+			CatStatement* statement = static_cast<CatStatement*>(parseResult->astRootNode.release());
+			delete parseResult;
+
+			//Build the context as it would have been in the function scope block
+			CatScopeID functionParamsScopeId = InvalidScopeID;
+			if (functionDefinition->getNumParameters() > 0)
+			{
+				functionParamsScopeId = compileTimeContext->addScope(functionDefinition->getParametersType(), nullptr, false);
+			}
+			compileTimeContext->setCurrentFunction(functionDefinition);
+			
+			if (!statement->typeCheck(compileTimeContext, errorManager, errorContext))
+			{
+				errorManager->setCurrentDocument(previousDocument);
+				return false;
+			}
+			errorManager->setCurrentDocument(previousDocument);
+			CatScopeBlock* functionEpilogBlock = functionDefinition->getOrCreateEpilogBlock(compileTimeContext, errorManager, errorContext);
+			functionEpilogBlock->insertStatementFront(statement);
+
+			compileTimeContext->removeScope(functionParamsScopeId);
+			compileTimeContext->setCurrentFunction(nullptr);
+			compileTimeContext->setCurrentScope(this);
+		}
+		else
+		{
+			errorManager->setCurrentDocument(previousDocument);
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+	return true;
 }
 
 
@@ -223,7 +320,7 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 		{
 			CatTypedExpression* variableInitExpr = static_cast<CatTypedExpression*>(iter->getInitializationExpression()->copy());
 			CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
-			CatAssignmentOperator* assignment = new CatAssignmentOperator(id, variableInitExpr, variableInitExpr->getLexeme());
+			CatAssignmentOperator* assignment = new CatAssignmentOperator(id, variableInitExpr, variableInitExpr->getLexeme(), variableInitExpr->getLexeme());
 			statements.push_back(assignment);
 		}
 		else if (iter->getType().getType().isReflectableObjectType() 

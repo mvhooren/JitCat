@@ -68,6 +68,10 @@ namespace jitcat::AST
 
 		const std::string& getFunctionName() const;
 
+		CatScopeBlock* getScopeBlock() const;
+		CatScopeBlock* getEpilogBlock() const;
+		CatScopeBlock* getOrCreateEpilogBlock(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+
 		// Inherited via CatScope
 		virtual CatScopeID getScopeId() const override final;
 		virtual Reflection::CustomTypeInfo* getCustomType() override final;
@@ -85,7 +89,10 @@ namespace jitcat::AST
 
 		std::vector<std::unique_ptr<CatAssignableExpression>> parameterAssignables;
 		CatScopeID parametersScopeId;
+
 		std::unique_ptr<CatScopeBlock> scopeBlock;
+		std::unique_ptr<CatScopeBlock> epilogBlock;
+
 		Reflection::ReflectableHandle errorManagerHandle;
 		
 		//not owned
