@@ -95,6 +95,8 @@ set(Source_Cat_ASTNodes
 	CatTypeNode.cpp
 	CatSourceFile.cpp
 	${JitCatHeaderPath}/CatSourceFile.h
+	CatStaticFunctionCall.cpp
+	${JitCatHeaderPath}/CatStaticFunctionCall.h
 	CatStaticIdentifier.cpp
 	${JitCatHeaderPath}/CatStaticIdentifier.h
 	${JitCatHeaderPath}/CatStatement.h
@@ -258,9 +260,12 @@ set(Source_Reflection_TypeInfo_Members
 set(Source_Reflection_TypeInfo_MemberFunctions
 	ArrayMemberFunctionInfo.cpp
 	${JitCatHeaderPath}/ArrayMemberFunctionInfo.h
+	${JitCatHeaderPath}/BuildIndicesHelper.h
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
 	MemberFunctionInfo.cpp
 	${JitCatHeaderPath}/MemberFunctionInfo.h
+	${JitCatHeaderPath}/StaticMemberFunctionInfo.h
+	${JitCatHeaderPath}/TypeConversionCastHelper.h
 )
 
 set(Source_Reflection_TypeInfo_Helper

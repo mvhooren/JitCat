@@ -138,14 +138,14 @@ bool CatStaticIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, Expre
 		{
 			return false;
 		}
-		CatGenericType* scopeType = baseType->getType().getPointeeType();
+		const CatGenericType& scopeType = baseType->getType();
 
-		if (scopeType == nullptr || !scopeType->isReflectableObjectType())
+		if (scopeType == nullptr || !scopeType.isReflectableObjectType())
 		{
 			errorManager->compiledWithError(std::string("Not a static scope: ") + baseType->getTypeName(), errorContext, compiletimeContext->getContextName(), baseType->getLexeme());
 			return false;
 		}
-		typeInfo = scopeType->getObjectType();
+		typeInfo = scopeType.getObjectType();
 	}
 	else if (idBaseType != nullptr)
 	{
@@ -211,6 +211,13 @@ const Reflection::StaticMemberInfo* CatStaticIdentifier::getMemberInfo() const
 {
 	return memberInfo;
 }
+
+
+const Reflection::TypeInfo* jitcat::AST::CatStaticIdentifier::getTypeInfo() const
+{
+	return nestedType;
+}
+
 
 const std::string& CatStaticIdentifier::getName() const
 {

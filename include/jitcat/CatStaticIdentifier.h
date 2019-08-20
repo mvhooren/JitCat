@@ -44,10 +44,12 @@ namespace jitcat::AST
 		bool isStaticMember() const;
 
 		const Reflection::StaticMemberInfo* getMemberInfo() const;
+		const Reflection::TypeInfo* getTypeInfo() const;
+
 
 		const std::string& getName() const;
 
-	public:
+	private:
 		std::string name;
 		Tokenizer::Lexeme nameLexeme;
 

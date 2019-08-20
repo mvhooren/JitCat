@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "jitcat/BuildIndicesHelper.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/MemberVisibility.h"
@@ -26,50 +27,6 @@ namespace jitcat::Reflection
 {
 	struct TypeMemberInfo;
 	struct DeferredMemberFunctionInfo;
-
-	class TypeConversionCast
-	{
-	public:
-		template<typename OutCVT, typename InT>
-		static inline OutCVT convertCast(InT&& in)
-		{
-			constexpr bool outIsConst = std::is_const<OutCVT>::value;
-			typedef typename std::remove_cv<OutCVT>::type OutT;
-			if constexpr (std::is_same<InT, OutT>::value)
-			{
-				return in;
-			}
-			else if constexpr (std::is_reference<OutT>::value)
-			{
-				//Out&
-				if constexpr (std::is_pointer<InT>::value)
-				{
-					return *in;
-				}
-				else
-				{
-					return in;
-				}
-			}
-			else if constexpr (std::is_pointer<OutT>::value)
-			{
-				//Out*
-				return &in;
-			}
-			else
-			{
-				//Out
-				if constexpr (std::is_pointer<InT>::value)
-				{
-					return *in;
-				}
-				else
-				{
-					return in;
-				}
-			}
-		}
-	};
 
 	struct MemberFunctionCallData
 	{
@@ -130,18 +87,6 @@ namespace jitcat::Reflection
 	};
 
 
-////Indices trick
-//https://stackoverflow.com/questions/15014096/c-index-of-type-during-variadic-template-expansion
-//Allows getting indices per template in variadic template expansion
-template <std::size_t... Is>
-struct Indices {};
- 
-template <std::size_t N, std::size_t... Is>
-struct BuildIndices
-    : BuildIndices<N-1, N-1, Is...> {};
- 
-template <std::size_t... Is>
-struct BuildIndices<0, Is...> : Indices<Is...> {};
 
 #ifdef _MSC_VER
 	#pragma warning (disable:4189)

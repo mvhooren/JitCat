@@ -11,6 +11,7 @@
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/StaticMemberInfo.h"
+#include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeRegistry.h"
@@ -104,13 +105,13 @@ namespace jitcat::Reflection
 	}
 
 
-	template <typename ReflectedT, typename MemberT, typename ... Args>
-	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberT (ReflectedT::*function)(Args...))
+	template <typename ReflectedT, typename ReturnT, typename ... Args>
+	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, ReturnT (ReflectedT::*function)(Args...))
 	{
 		std::string identifier = Tools::toLowerCase(identifier_);
-		if constexpr (!std::is_void<MemberT>::value)
+		if constexpr (!std::is_void<ReturnT>::value)
 		{
-			memberFunctions.emplace(identifier, new MemberFunctionInfoWithArgs<ReflectedT, MemberT, Args...>(identifier_, function));
+			memberFunctions.emplace(identifier, new MemberFunctionInfoWithArgs<ReflectedT, ReturnT, Args...>(identifier_, function));
 		}
 		else
 		{
@@ -120,18 +121,27 @@ namespace jitcat::Reflection
 	}
 
 
-	template <typename ReflectedT, typename MemberT, typename ... Args>
-	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberT (ReflectedT::*function)(Args...) const)
+	template <typename ReflectedT, typename ReturnT, typename ... Args>
+	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, ReturnT (ReflectedT::*function)(Args...) const)
 	{
 		std::string identifier = Tools::toLowerCase(identifier_);
-		if constexpr (!std::is_void<MemberT>::value)
+		if constexpr (!std::is_void<ReturnT>::value)
 		{
-			memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<ReflectedT, MemberT, Args...>(identifier_, function));
+			memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<ReflectedT, ReturnT, Args...>(identifier_, function));
 		}
 		else
 		{
 			memberFunctions.emplace(identifier, new ConstMemberVoidFunctionInfoWithArgs<ReflectedT, Args...>(identifier_, function));
 		}
+		return *this;
+	}
+	
+
+	template <typename ReturnT, typename ... Args>
+	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, ReturnT (*function)(Args...))
+	{
+		std::string identifier = Tools::toLowerCase(identifier_);
+		staticFunctions.emplace(identifier, new StaticFunctionInfoWithArgs<ReturnT, Args...>(identifier_, function));
 		return *this;
 	}
 

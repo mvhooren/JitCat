@@ -12,6 +12,7 @@
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/StaticMemberInfo.h"
+#include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeRegistry.h"
@@ -233,6 +234,20 @@ MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifie
 {
 	auto iter = memberFunctions.find(Tools::toLowerCase(identifier));
 	if (iter != memberFunctions.end())
+	{
+		return iter->second.get();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+
+StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(const std::string& identifier) const
+{
+	auto iter = staticFunctions.find(Tools::toLowerCase(identifier));
+	if (iter != staticFunctions.end())
 	{
 		return iter->second.get();
 	}

@@ -32,6 +32,17 @@ jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeO
 }
 
 
+jitcat::AST::CatTypeNode::CatTypeNode(CatTypeNode* parentType, const std::string& name, const Tokenizer::Lexeme& lexeme):
+	CatASTNode(lexeme),
+	ownershipSemantics(TypeOwnershipSemantics::Value),
+	name(name),
+	parentType(parentType),
+	knownType(false),
+	isArrayType(false)
+{
+}
+
+
 jitcat::AST::CatTypeNode::CatTypeNode(CatTypeNode* arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnership, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	ownershipSemantics(arrayOwnership),
@@ -110,6 +121,11 @@ CatASTNode* jitcat::AST::CatTypeNode::copy() const
 
 void CatTypeNode::print() const
 {
+	if (parentType != nullptr)
+	{
+		parentType->print();
+		CatLog::log("::");
+	}
 	CatLog::log(getTypeName());
 }
 
@@ -134,12 +150,37 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 	{
 		if (!isArrayType)
 		{
+
 			CatScopeID typeScope = InvalidScopeID;
-			TypeInfo* typeInfo = compileTimeContext->findType(Tools::toLowerCase(getTypeName()), typeScope);
-			if (typeInfo == nullptr)
+
+			TypeInfo* typeInfo = nullptr;
+			if (parentType == nullptr)
 			{
-				typeInfo = TypeRegistry::get()->getTypeInfo(getTypeName());
+				typeInfo = compileTimeContext->findType(Tools::toLowerCase(getTypeName()), typeScope);
+				if (typeInfo == nullptr)
+				{
+					typeInfo = TypeRegistry::get()->getTypeInfo(getTypeName());
+				}
 			}
+			else
+			{
+				if (!parentType->typeCheck(compileTimeContext, errorManager, errorContext))
+				{
+					return false;
+				}
+				else
+				{
+					if (parentType->getType().isReflectablePointerOrHandle())
+					{
+						typeInfo = parentType->getType().getPointeeType()->getObjectType()->getTypeInfo(getTypeName());
+					}
+					else
+					{
+						typeInfo = parentType->getType().getObjectType()->getTypeInfo(getTypeName());
+					}
+				}
+			}
+
 			if (typeInfo == nullptr)
 			{
 				errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), this, compileTimeContext->getContextName(), getLexeme());
@@ -184,4 +225,10 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 		}
 	}
 	return true;
+}
+
+
+void CatTypeNode::setOwnershipSemantics(Reflection::TypeOwnershipSemantics ownership)
+{
+	ownershipSemantics = ownership;
 }

@@ -37,6 +37,7 @@ namespace jitcat::AST
 	class CatScopeRoot;
 	class CatSourceFile;
 	class CatStatement;
+	class CatStaticFunctionCall;
 	class CatStaticIdentifier;
 	class CatTypedExpression;
 	class CatTypeNode;

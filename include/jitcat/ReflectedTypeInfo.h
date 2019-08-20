@@ -48,14 +48,17 @@ namespace jitcat::Reflection
 		template <typename ReflectedT, typename MemberT>
 		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT ReflectedT::* member, MemberFlags flags = MF::none);
 
-		template <typename MemberT>
-		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT* member, MemberFlags flags = MF::none);
+		template <typename MemberCVT>
+		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberCVT* member, MemberFlags flags = MF::none);
 
-		template <typename ReflectedT, typename MemberT, typename ... Args>
-		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT (ReflectedT::*function)(Args...));
+		template <typename ReflectedT, typename ReturnT, typename ... Args>
+		inline ReflectedTypeInfo& addMember(const std::string& identifier, ReturnT (ReflectedT::*function)(Args...));
 
-		template <typename ReflectedT, typename MemberT, typename ... Args>
-		inline ReflectedTypeInfo& addMember(const std::string& identifier, MemberT (ReflectedT::*function)(Args...) const);
+		template <typename ReflectedT, typename ReturnT, typename ... Args>
+		inline ReflectedTypeInfo& addMember(const std::string& identifier, ReturnT (ReflectedT::*function)(Args...) const);
+
+		template <typename ReturnT, typename ... Args>
+		inline ReflectedTypeInfo& addMember(const std::string& identifier, ReturnT (*function)(Args...));
 
 		//Set weither or not construction is allowed.
 		ReflectedTypeInfo& enableConstruction();

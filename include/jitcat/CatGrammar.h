@@ -26,7 +26,9 @@ namespace jitcat::Grammar
 		{
 			Root,
 			Identifier,
+			StaticAccessor,
 			StaticIdentifier,
+			StaticFunctionCall,
 			SourceFile,
 			Definitions,
 			Definition,
@@ -61,6 +63,7 @@ namespace jitcat::Grammar
 			Continue,
 			Break,
 			Type,
+			StorageType,
 			FunctionCall,
 			FunctionCallArguments,
 			FunctionCallArgumentRepeat,
@@ -91,6 +94,9 @@ namespace jitcat::Grammar
 		static AST::ASTNode* variableDefinition(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* arrayTypeName(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* typeName(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* nestedTypeName(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* basicTypeName(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* storageType(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* ifStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* returnStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* scopeBlock(const Parser::ASTNodeParser& nodeParser);
@@ -106,6 +112,7 @@ namespace jitcat::Grammar
 		static AST::ASTNode* identifierToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* staticIdentifier(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* nestedStaticIdentifier(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* staticFunctionCall(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* argumentListToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionCallToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* memberAccessToken(const Parser::ASTNodeParser& nodeParser);

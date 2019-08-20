@@ -35,6 +35,7 @@ namespace jitcat
 namespace jitcat::Reflection
 {
 	struct MemberFunctionInfo;
+	class StaticFunctionInfo;
 	struct StaticMemberInfo;
 	class TypeCaster;
 	struct TypeMemberInfo;
@@ -106,6 +107,10 @@ namespace jitcat::Reflection
 		//Gets the type information of a member function given its name.
 		MemberFunctionInfo* getMemberFunctionInfo(const std::string& identifier) const;
 
+		//Gets the type information of a static function given its name.
+		StaticFunctionInfo* getStaticMemberFunctionInfo(const std::string& identifier) const;
+
+		//Gets a nested type given its name
 		TypeInfo* getTypeInfo(const std::string& typeName) const;
 
 		//Returns the type name of the class/struct
@@ -172,12 +177,16 @@ namespace jitcat::Reflection
 	protected:
 		std::map<unsigned long long, TypeMemberInfo*> membersByOrdinal;
 
-		//Static member variables of this type
-		std::map<std::string, std::unique_ptr<StaticMemberInfo>> staticMembers;
 		//Member functions of this type
 		std::map<std::string, std::unique_ptr<MemberFunctionInfo>> memberFunctions;
+		//Static member variables of this type
+		std::map<std::string, std::unique_ptr<StaticMemberInfo>> staticMembers;
+		//Static functions of this type
+		std::map<std::string, std::unique_ptr<StaticFunctionInfo>> staticFunctions;
+
 		//Nested type definitions within this type. These are not owned here.
 		std::map<std::string, TypeInfo*> types;
+
 		//The parent of this type if this type is nested into another type. nullptr otherwise.
 		TypeInfo* parentType;
 		//Size of the type in bytes

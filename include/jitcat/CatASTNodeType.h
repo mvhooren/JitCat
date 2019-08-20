@@ -36,6 +36,7 @@ namespace jitcat::AST
 		ScopeBlock,
 		ScopeRoot,
 		SourceFile,
+		StaticFunctionCall,
 		StaticIdentifier,
 		TypeName,
 		VariableDeclaration,
