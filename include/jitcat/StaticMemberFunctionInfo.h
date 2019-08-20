@@ -27,6 +27,9 @@ namespace jitcat::Reflection
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
 		inline virtual uintptr_t getFunctionAddress() const {return 0;}
 
+		const std::vector<CatGenericType>& getArgumentTypes() const {return argumentTypes;}
+		const CatGenericType& getReturnType() const {return returnType;}
+
 		template<typename ArgumentT>
 		inline void addParameterTypeInfo()
 		{
