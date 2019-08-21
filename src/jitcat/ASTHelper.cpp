@@ -8,7 +8,7 @@
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignableExpression.h"
-#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatBuiltInFunctionCall.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -49,7 +49,7 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 		else if (targetType.isStringType()) functionName = "toString";
 
 		assert(functionName != nullptr);
-		CatFunctionCall* functionCall = new CatFunctionCall(functionName, sourceExpression->getLexeme(), arguments, sourceExpression->getLexeme());
+		CatBuiltInFunctionCall* functionCall = new CatBuiltInFunctionCall(functionName, sourceExpression->getLexeme(), arguments, sourceExpression->getLexeme());
 		uPtr.reset(functionCall);
 	}
 }

@@ -2,6 +2,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatStaticScope.h"
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/TypeRegistry.h"
@@ -32,11 +33,11 @@ jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeO
 }
 
 
-jitcat::AST::CatTypeNode::CatTypeNode(CatTypeNode* parentType, const std::string& name, const Tokenizer::Lexeme& lexeme):
+jitcat::AST::CatTypeNode::CatTypeNode(CatStaticScope* parentScope, const std::string& name, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	ownershipSemantics(TypeOwnershipSemantics::Value),
 	name(name),
-	parentType(parentType),
+	parentScope(parentScope),
 	knownType(false),
 	isArrayType(false)
 {
@@ -121,9 +122,9 @@ CatASTNode* jitcat::AST::CatTypeNode::copy() const
 
 void CatTypeNode::print() const
 {
-	if (parentType != nullptr)
+	if (parentScope != nullptr)
 	{
-		parentType->print();
+		parentScope->print();
 		CatLog::log("::");
 	}
 	CatLog::log(getTypeName());
@@ -154,7 +155,7 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 			CatScopeID typeScope = InvalidScopeID;
 
 			TypeInfo* typeInfo = nullptr;
-			if (parentType == nullptr)
+			if (parentScope == nullptr)
 			{
 				typeInfo = compileTimeContext->findType(Tools::toLowerCase(getTypeName()), typeScope);
 				if (typeInfo == nullptr)
@@ -164,20 +165,13 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 			}
 			else
 			{
-				if (!parentType->typeCheck(compileTimeContext, errorManager, errorContext))
+				if (!parentScope->typeCheck(compileTimeContext, errorManager, errorContext))
 				{
 					return false;
 				}
 				else
 				{
-					if (parentType->getType().isReflectablePointerOrHandle())
-					{
-						typeInfo = parentType->getType().getPointeeType()->getObjectType()->getTypeInfo(getTypeName());
-					}
-					else
-					{
-						typeInfo = parentType->getType().getObjectType()->getTypeInfo(getTypeName());
-					}
+					typeInfo = parentScope->getScopeType();
 				}
 			}
 
@@ -224,6 +218,7 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 			setType(CatGenericType(&ArrayManipulator::createArrayManipulatorOf(itemGenericType), true, false).toPointer(ownershipSemantics, true, false));
 		}
 	}
+
 	return true;
 }
 

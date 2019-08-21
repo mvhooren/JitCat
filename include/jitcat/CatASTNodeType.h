@@ -18,6 +18,7 @@ namespace jitcat::AST
 		ForLoop,
 		FunctionCall,
 		FunctionDefinition,
+		FunctionOrConstructorCall,
 		FunctionParameterDefinitions,
 		Identifier,
 		IfStatement,
@@ -38,9 +39,13 @@ namespace jitcat::AST
 		SourceFile,
 		StaticFunctionCall,
 		StaticIdentifier,
+		StaticScope,
 		TypeName,
+		TypeOrIdentifier,
 		VariableDeclaration,
-		VariableDefinition
+		VariableDefinition,
+		OwnershipSemantics,
+		ErrorExpression,
 	};
 
 } //End namespace jitcat::AST

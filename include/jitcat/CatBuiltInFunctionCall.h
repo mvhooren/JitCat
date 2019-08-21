@@ -18,11 +18,11 @@ namespace jitcat::AST
 {
 	class CatArgumentList;
 
-	class CatFunctionCall: public CatTypedExpression
+	class CatBuiltInFunctionCall: public CatTypedExpression
 	{
 	public:
-		CatFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
-		CatFunctionCall(const CatFunctionCall& other);
+		CatBuiltInFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
+		CatBuiltInFunctionCall(const CatBuiltInFunctionCall& other);
 
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;

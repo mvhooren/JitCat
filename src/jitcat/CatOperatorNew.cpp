@@ -7,10 +7,12 @@
 
 
 #include "jitcat/CatOperatorNew.h"
+#include "jitcat/CatArgumentList.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTypeNode.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
@@ -22,20 +24,20 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatOperatorNew::CatOperatorNew(CatMemberFunctionCall* functionCall, const std::string& typeName, const Tokenizer::Lexeme& lexeme):
+CatOperatorNew::CatOperatorNew(CatTypeNode* type, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
-	functionCall(functionCall),
-	newType(CatGenericType::unknownType),
-	typeName(typeName)
+	type(type),
+	arguments(arguments),
+	newType(CatGenericType::unknownType)
 {
 }
 
 
 jitcat::AST::CatOperatorNew::CatOperatorNew(const CatOperatorNew& other):
 	CatTypedExpression(other),
-	functionCall(static_cast<CatMemberFunctionCall*>(other.functionCall->copy())),
-	newType(CatGenericType::unknownType),
-	typeName(other.typeName)
+	type(static_cast<CatTypeNode*>(other.type->copy())),
+	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
+	newType(CatGenericType::unknownType)
 {
 }
 
@@ -48,8 +50,9 @@ CatASTNode* jitcat::AST::CatOperatorNew::copy() const
 
 void CatOperatorNew::print() const
 {
-	CatLog::log("new ", newType.toString());
-	functionCall->getArguments()->print();
+	CatLog::log("new ");
+	type->print();
+	arguments->print();
 }
 
 
@@ -61,20 +64,18 @@ CatASTNodeType CatOperatorNew::getNodeType() const
 
 std::any CatOperatorNew::execute(CatRuntimeContext* runtimeContext)
 {
-	Reflectable* instance = newType.getPointeeType()->getObjectType()->construct();
+	std::any instance = newType.getPointeeType()->construct();
 	if (functionCall != nullptr)
 	{
-		functionCall->executeWithBase(runtimeContext, instance);
+		std::any result = functionCall->executeWithBase(runtimeContext, instance);
 	}
-	return std::any((Reflectable*)instance);
+	return instance;
 }
 
 
 bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	newType = CatGenericType::unknownType;
-	type.reset(new CatTypeNode(typeName, TypeOwnershipSemantics::Value, functionCall->getNameLexeme()));
-
 	if (!type->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		return false;
@@ -99,16 +100,15 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	else
 	{
 		MemberFunctionInfo* typeConstructor = newType.getPointeeType()->getObjectType()->getMemberFunctionInfo("init");
+		std::string initName = "init";
 		if (typeConstructor == nullptr)
 		{
 			//If there is no custom-defined init function, call the auto generated init function if it exists.
 			functionCall->setFunctionName("__init");
 		}
-		else
-		{
-			functionCall->setFunctionName("init");
-		}
-		functionCall->setBase(std::make_unique<CatLiteral>(std::any((Reflectable*)nullptr), newType, functionCall->getNameLexeme()));
+		
+		functionCall.reset(new CatMemberFunctionCall(initName, type->getLexeme(), new CatLiteral(std::any((Reflectable*)nullptr), newType, type->getLexeme()), static_cast<CatArgumentList*>(arguments->copy()), lexeme));
+
 		if (!functionCall->typeCheck(compiletimeContext, errorManager, errorContext))
 		{
 			return false;

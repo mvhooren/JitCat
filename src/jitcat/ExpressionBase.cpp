@@ -8,7 +8,7 @@
 #include "jitcat/ExpressionBase.h"
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignableExpression.h"
-#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatBuiltInFunctionCall.h"
 #include "jitcat/CatPrefixOperator.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
@@ -215,7 +215,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 					//Insert an automatic type conversion to void.
 					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({parseResult->releaseNode<CatTypedExpression>()}));
 
-					parseResult->astRootNode.reset(new CatFunctionCall("toVoid", expressionLexeme, arguments, expressionLexeme));
+					parseResult->astRootNode.reset(new CatBuiltInFunctionCall("toVoid", expressionLexeme, arguments, expressionLexeme));
 					parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					
 					valueType = parseResult->getNode<CatTypedExpression>()->getType();
@@ -227,12 +227,12 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 
 					if (expectedType.isFloatType())
 					{
-						parseResult->astRootNode.reset(new CatFunctionCall("toFloat", expressionLexeme, arguments, expressionLexeme));
+						parseResult->astRootNode.reset(new CatBuiltInFunctionCall("toFloat", expressionLexeme, arguments, expressionLexeme));
 						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else if (expectedType.isIntType())
 					{
-						parseResult->astRootNode.reset(new CatFunctionCall("toInt", expressionLexeme, arguments, expressionLexeme));
+						parseResult->astRootNode.reset(new CatBuiltInFunctionCall("toInt", expressionLexeme, arguments, expressionLexeme));
 						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else

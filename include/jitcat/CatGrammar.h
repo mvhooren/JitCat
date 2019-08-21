@@ -25,7 +25,7 @@ namespace jitcat::Grammar
 		enum class Prod
 		{
 			Root,
-			Identifier,
+			TypeOrIdentifier,
 			StaticAccessor,
 			StaticIdentifier,
 			StaticFunctionCall,
@@ -62,9 +62,8 @@ namespace jitcat::Grammar
 			Range,
 			Continue,
 			Break,
-			Type,
-			StorageType,
-			FunctionCall,
+			OwnershipSemantics,
+			FunctionOrConstructorCall,
 			FunctionCallArguments,
 			FunctionCallArgumentRepeat,
 			Literal,
@@ -96,7 +95,7 @@ namespace jitcat::Grammar
 		static AST::ASTNode* typeName(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* nestedTypeName(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* basicTypeName(const Parser::ASTNodeParser& nodeParser);
-		static AST::ASTNode* storageType(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* ownershipSemantics(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* ifStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* returnStatement(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* scopeBlock(const Parser::ASTNodeParser& nodeParser);
@@ -106,18 +105,16 @@ namespace jitcat::Grammar
 		static AST::ASTNode* assignmentOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* infixOperator(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* prefixOperator(const Parser::ASTNodeParser& nodeParser);
-		static AST::ASTNode* operatorNew(const Parser::ASTNodeParser& nodeParser);
-		static AST::ASTNode* operatorNewArray(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* toOperatorNew(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* literalToken(const Parser::ASTNodeParser& nodeParser);
-		static AST::ASTNode* identifierToken(const Parser::ASTNodeParser& nodeParser);
-		static AST::ASTNode* staticIdentifier(const Parser::ASTNodeParser& nodeParser);
-		static AST::ASTNode* nestedStaticIdentifier(const Parser::ASTNodeParser& nodeParser);
-		static AST::ASTNode* staticFunctionCall(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* argumentListToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionCallToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* memberAccessToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* memberFunctionCallToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* arrayIndexToken(const Parser::ASTNodeParser& nodeParser);
+
+		static AST::ASTNode* toIdentifier(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* toFunctionCall(const Parser::ASTNodeParser& nodeParser);
 	};
 
 } //End namespace jitcat::Grammar

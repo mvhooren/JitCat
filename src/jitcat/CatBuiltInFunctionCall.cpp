@@ -5,7 +5,7 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatBuiltInFunctionCall.h"
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
@@ -26,7 +26,7 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Tools;
 
 
-CatFunctionCall::CatFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
+CatBuiltInFunctionCall::CatBuiltInFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	name(name),
 	nameLexeme(nameLexeme),
@@ -37,7 +37,7 @@ CatFunctionCall::CatFunctionCall(const std::string& name, const Tokenizer::Lexem
 }
 
 
-jitcat::AST::CatFunctionCall::CatFunctionCall(const CatFunctionCall& other):
+jitcat::AST::CatBuiltInFunctionCall::CatBuiltInFunctionCall(const CatBuiltInFunctionCall& other):
 	CatTypedExpression(other),
 	name(other.name),
 	nameLexeme(other.nameLexeme),
@@ -48,26 +48,26 @@ jitcat::AST::CatFunctionCall::CatFunctionCall(const CatFunctionCall& other):
 }
 
 
-CatASTNode* jitcat::AST::CatFunctionCall::copy() const
+CatASTNode* jitcat::AST::CatBuiltInFunctionCall::copy() const
 {
-	return new CatFunctionCall(*this);
+	return new CatBuiltInFunctionCall(*this);
 }
 
 
-void CatFunctionCall::print() const
+void CatBuiltInFunctionCall::print() const
 {
 	CatLog::log(name);
 	arguments->print();
 }
 
 
-CatASTNodeType CatFunctionCall::getNodeType() const
+CatASTNodeType CatBuiltInFunctionCall::getNodeType() const
 {
 	return CatASTNodeType::FunctionCall;
 }
 
 
-std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
+std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 {
 	std::size_t numArgumentsSupplied = arguments->getNumArguments();
 	//At most 3 arguments, check for errors
@@ -374,7 +374,7 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	function = toFunction(name.c_str(), (int)arguments->getNumArguments());
 	returnType = CatGenericType::unknownType;
@@ -639,13 +639,13 @@ bool CatFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 }
 
 
-const CatGenericType& CatFunctionCall::getType() const
+const CatGenericType& CatBuiltInFunctionCall::getType() const
 {
 	return returnType;
 }
 
 
-bool CatFunctionCall::isConst() const
+bool CatBuiltInFunctionCall::isConst() const
 {
 	if (isDeterministic())
 	{
@@ -658,7 +658,7 @@ bool CatFunctionCall::isConst() const
 }
 
 
-CatTypedExpression* CatFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatBuiltInFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext)
 {
 	arguments->constCollapse(compileTimeContext);
 	if (isDeterministic() && arguments->getAllArgumentsAreConst())
@@ -682,50 +682,50 @@ CatTypedExpression* CatFunctionCall::constCollapse(CatRuntimeContext* compileTim
 }
 
 
-CatBuiltInFunctionType CatFunctionCall::getFunctionType() const
+CatBuiltInFunctionType CatBuiltInFunctionCall::getFunctionType() const
 {
 	return function;
 }
 
 
-const std::string& CatFunctionCall::getFunctionName() const
+const std::string& CatBuiltInFunctionCall::getFunctionName() const
 {
 	return name;
 }
 
 
-const Tokenizer::Lexeme& jitcat::AST::CatFunctionCall::getNameLexeme() const
+const Tokenizer::Lexeme& jitcat::AST::CatBuiltInFunctionCall::getNameLexeme() const
 {
 	return nameLexeme;
 }
 
 
-CatArgumentList* CatFunctionCall::getArgumentList() const
+CatArgumentList* CatBuiltInFunctionCall::getArgumentList() const
 {
 	return arguments.get();
 }
 
 
-bool CatFunctionCall::isBuiltInFunction(const char* functionName, int numArguments)
+bool CatBuiltInFunctionCall::isBuiltInFunction(const char* functionName, int numArguments)
 {
 	return toFunction(functionName, numArguments) != CatBuiltInFunctionType::Invalid;
 }
 
 
-const std::vector<std::string>& CatFunctionCall::getAllBuiltInFunctions()
+const std::vector<std::string>& CatBuiltInFunctionCall::getAllBuiltInFunctions()
 {
 	return functionTable;
 }
 
 
-bool CatFunctionCall::isDeterministic() const
+bool CatBuiltInFunctionCall::isDeterministic() const
 {
 	return function != CatBuiltInFunctionType::Random 
 		   && function != CatBuiltInFunctionType::RandomRange;
 }
 
 
-bool CatFunctionCall::checkArgumentCount(std::size_t count) const
+bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 {
 	switch (function)
 	{
@@ -766,7 +766,7 @@ bool CatFunctionCall::checkArgumentCount(std::size_t count) const
 }
 
 
-CatBuiltInFunctionType CatFunctionCall::toFunction(const char* functionName, int numArguments)
+CatBuiltInFunctionType CatBuiltInFunctionCall::toFunction(const char* functionName, int numArguments)
 {
 	for (unsigned int i = 0; i < (unsigned int)CatBuiltInFunctionType::Count; i++)
 	{
@@ -787,7 +787,7 @@ CatBuiltInFunctionType CatFunctionCall::toFunction(const char* functionName, int
 }
 
 
-std::vector<std::string> CatFunctionCall::functionTable = 	
+std::vector<std::string> CatBuiltInFunctionCall::functionTable = 	
 {
 	 "toVoid",				//CatBuiltInFunctionType::ToVoid
 	 "toInt",				//CatBuiltInFunctionType::ToInt

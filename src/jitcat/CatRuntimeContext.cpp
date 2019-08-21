@@ -230,20 +230,20 @@ Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& low
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		TypeInfo* memberFunctionInfo = scopes[i]->scopeType->getTypeInfo(lowercaseName);
-		if (memberFunctionInfo != nullptr)
+		TypeInfo* scopeInfo = scopes[i]->scopeType->getTypeInfo(lowercaseName);
+		if (scopeInfo != nullptr)
 		{
 			scopeId = i;
-			return memberFunctionInfo;
+			return scopeInfo;
 		}
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		TypeInfo* memberFunctionInfo = staticScopes[i]->scopeType->getTypeInfo(lowercaseName);
-		if (memberFunctionInfo != nullptr)
+		TypeInfo* scopeInfo = staticScopes[i]->scopeType->getTypeInfo(lowercaseName);
+		if (scopeInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
-			return memberFunctionInfo;
+			return scopeInfo;
 		}
 	}
 	return nullptr;

@@ -11,6 +11,7 @@ namespace jitcat::Reflection
 {
 	enum class TypeOwnershipSemantics
 	{
+		None,
 		Value,
 		Owned,
 		Shared,

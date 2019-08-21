@@ -327,6 +327,11 @@ bool SLRParser::tryReduce(DFAState* currentState, std::vector<StackItem*>& stack
 			|| (item.rule->getNumTokens() == 1 && item.rule->getToken(0)->getType() == ProductionTokenType::Epsilon))
 			&& isStackItemInFollowSet(nextToken, item.production->getFollowSet()))
 		{
+			if (item.rule->getNumTokens() == 0 && canShift(currentState, nextToken))
+			{
+				//If the rule is empty, prefer to shift if possible.
+				return false;
+			}
 			if constexpr (Configuration::debugGrammar)
 			{
 				if (nextToken->getProductionIfProduction())
@@ -493,6 +498,7 @@ void SLRParser::scanForConflicts() const
 				const Item& item = state->items[k];
 				if ((item.tokenOffset >= item.rule->getNumTokens()
 					|| (item.rule->getNumTokens() == 1 && item.rule->getToken(0)->getType() == ProductionTokenType::Epsilon))
+					&& item.rule->getNumTokens() != 0 // An empty rule is not a conflict because shifting is preferred in this case
 					&& item.production->getFollowSet().isInSet(transitionToken))
 				{
 					conflictCount++;

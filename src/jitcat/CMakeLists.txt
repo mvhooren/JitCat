@@ -45,17 +45,21 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatASTNodeType.h 
 	${JitCatHeaderPath}/CatAssignmentOperator.h 
 	CatAssignmentOperator.cpp 
+	CatBuiltInFunctionCall.cpp
+	${JitCatHeaderPath}/CatBuiltInFunctionCall.h
 	${JitCatHeaderPath}/CatBuiltInFunctionType.h
 	CatClassDefinition.cpp
 	${JitCatHeaderPath}/CatClassDefinition.h
 	${JitCatHeaderPath}/CatDefinition.h
+	CatErrorExpression.cpp
+	${JitCatHeaderPath}/CatErrorExpression.h
 	${JitCatHeaderPath}/CatExpression.h
 	CatForLoop.cpp
 	${JitCatHeaderPath}/CatForLoop.h
-	CatFunctionCall.cpp
-	${JitCatHeaderPath}/CatFunctionCall.h
 	CatFunctionDefinition.cpp
 	${JitCatHeaderPath}/CatFunctionDefinition.h
+	CatFunctionOrConstructor.cpp
+	${JitCatHeaderPath}/CatFunctionOrConstructor.h
 	CatFunctionParameterDefinitions.cpp
 	${JitCatHeaderPath}/CatFunctionParameterDefinitions.h
 	CatIdentifier.cpp
@@ -79,8 +83,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatMemberFunctionCall.h
 	CatOperatorNew.cpp
 	${JitCatHeaderPath}/CatOperatorNew.h
-	CatOperatorNewArray.cpp
-	${JitCatHeaderPath}/CatOperatorNewArray.h
+	CatOwnershipSemanticsNode.cpp
+	${JitCatHeaderPath}/CatOwnershipSemanticsNode.h
 	CatPrefixOperator.cpp
 	${JitCatHeaderPath}/CatPrefixOperator.h
 	CatRange.cpp
@@ -92,7 +96,11 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatScopeBlock.h
 	CatScopeRoot.cpp
 	${JitCatHeaderPath}/CatScopeRoot.h
+	CatStaticScope.cpp
+	${JitCatHeaderPath}/CatStaticScope.h
 	CatTypeNode.cpp
+	CatTypeOrIdentifier.cpp
+	${JitCatHeaderPath}/CatTypeOrIdentifier.h
 	CatSourceFile.cpp
 	${JitCatHeaderPath}/CatSourceFile.h
 	CatStaticFunctionCall.cpp

@@ -127,7 +127,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 		case CatASTNodeType::InfixOperator:			return generate(static_cast<const CatInfixOperator*>(expression), context);	
 		case CatASTNodeType::AssignmentOperator:	return generate(static_cast<const CatAssignmentOperator*>(expression), context);	
 		case CatASTNodeType::PrefixOperator:		return generate(static_cast<const CatPrefixOperator*>(expression), context);	
-		case CatASTNodeType::FunctionCall:			return generate(static_cast<const CatFunctionCall*>(expression), context);		
+		case CatASTNodeType::FunctionCall:			return generate(static_cast<const CatBuiltInFunctionCall*>(expression), context);		
 		case CatASTNodeType::MemberAccess:			return generate(static_cast<const CatMemberAccess*>(expression), context);		
 		case CatASTNodeType::ArrayIndex:			return generate(static_cast<const CatArrayIndex*>(expression), context);		
 		case CatASTNodeType::MemberFunctionCall:	return generate(static_cast<const CatMemberFunctionCall*>(expression), context);
@@ -294,7 +294,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatIdentifier* identifier, LLVMCo
 }
 
 
-llvm::Value* LLVMCodeGenerator::generate(const CatFunctionCall* functionCall, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context)
 {
 	CatArgumentList* arguments = functionCall->getArgumentList();
 	switch (functionCall->getFunctionType())

@@ -14,11 +14,13 @@ namespace jitcat::AST
 	class CatAssignableExpression;
 	class CatAssignmentOperator;
 	class CatASTNode;
+	class CatBuiltInFunctionCall;
 	class CatClassDefinition;
+	class CatErrorExpression;
 	class CatExpression;
 	class CatForLoop;
-	class CatFunctionCall;
 	class CatFunctionDefinition;
+	class CatFunctionOrConstructor;
 	class CatFunctionParameterDefinitions;
 	class CatIdentifier;
 	class CatIfStatement;
@@ -29,7 +31,7 @@ namespace jitcat::AST
 	class CatMemberAccess;
 	class CatMemberFunctionCall;
 	class CatOperatorNew;
-	class CatOperatorNewArray;
+	class CatOwnershipSemanticsNode;
 	class CatPrefixOperator;
 	class CatRange;
 	class CatReturnStatement;
@@ -39,8 +41,10 @@ namespace jitcat::AST
 	class CatStatement;
 	class CatStaticFunctionCall;
 	class CatStaticIdentifier;
+	class CatStaticScope;
 	class CatTypedExpression;
 	class CatTypeNode;
+	class CatTypeOrIdentifier;
 	class CatVariableDeclaration;
 	class CatVariableDefinition;
 

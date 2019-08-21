@@ -7,13 +7,14 @@
 
 namespace jitcat::AST
 {
+	class CatStaticScope;
 
 	class CatTypeNode: public CatASTNode
 	{
 	public:
 		CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme);
 		CatTypeNode(const std::string& name, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme);
-		CatTypeNode(CatTypeNode* parentType, const std::string& name, const Tokenizer::Lexeme& lexeme);
+		CatTypeNode(CatStaticScope* parentScope, const std::string& name, const Tokenizer::Lexeme& lexeme);
 		CatTypeNode(CatTypeNode* arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnership, const Tokenizer::Lexeme& lexeme);
 		CatTypeNode(const CatTypeNode& other);
 
@@ -40,7 +41,7 @@ namespace jitcat::AST
 		bool knownType;
 		bool isArrayType;
 		std::unique_ptr<CatTypeNode> arrayItemType;
-		std::unique_ptr<CatTypeNode> parentType;
+		std::unique_ptr<CatStaticScope> parentScope;
 	};
 
 };

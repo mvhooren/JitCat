@@ -19,12 +19,12 @@ namespace jitcat::AST
 {
 	class CatClassDefinition;
 	class CatTypeNode;
+	class CatStaticScope;
 
 	class CatStaticIdentifier: public CatAssignableExpression
 	{
 	public:
-		CatStaticIdentifier(CatTypeNode* baseType, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme);
-		CatStaticIdentifier(CatStaticIdentifier* idBaseType, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme);
+		CatStaticIdentifier(CatStaticScope* baseScope, const Tokenizer::Lexeme& identifierLexeme, const Tokenizer::Lexeme& lexeme);
 		CatStaticIdentifier(const CatStaticIdentifier& other);
 
 		virtual CatASTNode* copy() const override final;
@@ -40,30 +40,16 @@ namespace jitcat::AST
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
-		bool isNestedType() const;
-		bool isStaticMember() const;
-
-		const Reflection::StaticMemberInfo* getMemberInfo() const;
-		const Reflection::TypeInfo* getTypeInfo() const;
-
-
-		const std::string& getName() const;
-
 	private:
-		std::string name;
-		Tokenizer::Lexeme nameLexeme;
+		std::string identifier;
+		Tokenizer::Lexeme identifierLexeme;
 
 		CatGenericType type;
 		CatGenericType assignableType;
 
-		//Either of these must be non-null;
-		std::unique_ptr<CatTypeNode> baseType;
-		std::unique_ptr<CatStaticIdentifier> idBaseType;
+		std::unique_ptr<CatStaticScope> baseScope;
 
-		//A static identifier refers to either a class or a static class member.
-		//In the future it might also refer to a namespace.
-		Reflection::StaticMemberInfo* memberInfo;
-		Reflection::TypeInfo* nestedType;
+		Reflection::StaticMemberInfo* staticMemberInfo;
 	};
 
 

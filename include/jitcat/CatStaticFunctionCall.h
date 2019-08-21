@@ -19,12 +19,12 @@ namespace jitcat::Reflection
 namespace jitcat::AST
 {
 	class CatArgumentList;
-	class CatTypeNode;
+	class CatStaticScope;
 
 	class CatStaticFunctionCall: public CatTypedExpression
 	{
 	public:
-		CatStaticFunctionCall(CatTypeNode* parentType, const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme);
+		CatStaticFunctionCall(CatStaticScope* parentScope, const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme);
 		CatStaticFunctionCall(const CatStaticFunctionCall& other);
 		
 		// Inherited via CatTypedExpression
@@ -40,7 +40,7 @@ namespace jitcat::AST
 	private:
 		Reflection::StaticFunctionInfo* staticFunctionInfo;
 		
-		std::unique_ptr<CatTypeNode> parentType;
+		std::unique_ptr<CatStaticScope> parentScope;
 		std::string name;
 		Tokenizer::Lexeme nameLexeme;
 

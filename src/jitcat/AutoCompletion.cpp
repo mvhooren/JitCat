@@ -6,7 +6,7 @@
 */
 
 #include "jitcat/AutoCompletion.h"
-#include "jitcat/CatFunctionCall.h"
+#include "jitcat/CatBuiltInFunctionCall.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTokenizer.h"
 #include "jitcat/CommentToken.h"
@@ -349,7 +349,7 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 void AutoCompletion::addOptionsFromBuiltIn(std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, 
 										   const std::string& originalExpression, std::size_t prefixOffset)
 {
-	auto& allFunctions = jitcat::AST::CatFunctionCall::getAllBuiltInFunctions();
+	auto& allFunctions = jitcat::AST::CatBuiltInFunctionCall::getAllBuiltInFunctions();
 	for (auto& iter : allFunctions)
 	{
 		addIfPartialMatch(iter + "(", results, lowercasePrefix, originalExpression, prefixOffset);

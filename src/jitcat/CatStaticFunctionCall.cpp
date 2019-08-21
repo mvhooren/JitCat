@@ -7,7 +7,9 @@
 #include "jitcat/CatStaticFunctionCall.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatArgumentList.h"
+#include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatStaticScope.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/StaticMemberFunctionInfo.h"
@@ -17,12 +19,13 @@
 using namespace jitcat;
 using namespace jitcat::AST;
 using namespace jitcat::Reflection;
+using namespace jitcat::Tools;
 
 
-CatStaticFunctionCall::CatStaticFunctionCall(CatTypeNode* parentType, const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme):
+CatStaticFunctionCall::CatStaticFunctionCall(CatStaticScope* parentScope, const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme):
 	CatTypedExpression(lexeme),
 	staticFunctionInfo(nullptr),
-	parentType(parentType),
+	parentScope(parentScope),
 	name(name),
 	nameLexeme(nameLexeme),
 	arguments(arguments),
@@ -36,7 +39,7 @@ CatStaticFunctionCall::CatStaticFunctionCall(const CatStaticFunctionCall& other)
 	staticFunctionInfo(nullptr),
 	name(other.name),
 	nameLexeme(other.nameLexeme),
-	parentType(static_cast<CatTypeNode*>(other.parentType->copy())),
+	parentScope(static_cast<CatStaticScope*>(other.parentScope->copy())),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	returnType(CatGenericType::unknownType)
 {
@@ -51,7 +54,8 @@ CatASTNode* CatStaticFunctionCall::copy() const
 
 void CatStaticFunctionCall::print() const
 {
-	parentType->print();
+	parentScope->print();
+	CatLog::log("::", name);
 	arguments->print();
 }
 
@@ -76,51 +80,44 @@ std::any CatStaticFunctionCall::execute(CatRuntimeContext* runtimeContext)
 
 bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	if (!parentType->typeCheck(compiletimeContext, errorManager, errorContext)
+	if (!parentScope->typeCheck(compiletimeContext, errorManager, errorContext)
 		|| !arguments->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		return false;
 	}
-	TypeInfo* parentObjectType =  parentType->getType().getObjectType();
-	if (parentObjectType != nullptr)
+	TypeInfo* parentObjectType =  parentScope->getScopeType();
+
+	staticFunctionInfo = parentObjectType->getStaticMemberFunctionInfo(name);
+	if (staticFunctionInfo != nullptr)
 	{
-		staticFunctionInfo = parentObjectType->getStaticMemberFunctionInfo(name);
-		if (staticFunctionInfo != nullptr)
+		std::size_t numArgumentsSupplied = arguments->getNumArguments();
+		if (numArgumentsSupplied != staticFunctionInfo->getNumberOfArguments())
 		{
-			std::size_t numArgumentsSupplied = arguments->getNumArguments();
-			if (numArgumentsSupplied != staticFunctionInfo->getNumberOfArguments())
-			{
-				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", name, " expected ", staticFunctionInfo->getNumberOfArguments(), " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
-				return false;
-			}
-			if (!arguments->typeCheck(compiletimeContext, errorManager, errorContext))
-			{
-				return false;
-			}
-			for (unsigned int i = 0; i < numArgumentsSupplied; i++)
-			{
-				if (!staticFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false))
-				{
-					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", name, " argument nr: ", i, " expected: ", staticFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
-					return false;
-				}
-				else if (!ASTHelper::checkOwnershipSemantics(staticFunctionInfo->getArgumentType(i), arguments->getArgumentType(i), errorManager, compiletimeContext, errorContext, arguments->getArgumentLexeme(i), "pass"))
-				{
-					return false;
-				}
-			}
-			returnType = staticFunctionInfo->getReturnType();
-			return true;
-		}
-		else
-		{
-			errorManager->compiledWithError(Tools::append("Static function not found: ", name), errorContext, compiletimeContext->getContextName(), nameLexeme);
+			errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", name, " expected ", staticFunctionInfo->getNumberOfArguments(), " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
+		if (!arguments->typeCheck(compiletimeContext, errorManager, errorContext))
+		{
+			return false;
+		}
+		for (unsigned int i = 0; i < numArgumentsSupplied; i++)
+		{
+			if (!staticFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false))
+			{
+				errorManager->compiledWithError(Tools::append("Invalid argument for function: ", name, " argument nr: ", i, " expected: ", staticFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
+				return false;
+			}
+			else if (!ASTHelper::checkOwnershipSemantics(staticFunctionInfo->getArgumentType(i), arguments->getArgumentType(i), errorManager, compiletimeContext, errorContext, arguments->getArgumentLexeme(i), "pass"))
+			{
+				return false;
+			}
+		}
+		returnType = staticFunctionInfo->getReturnType();
+		return true;
 	}
 	else
 	{
-		errorManager->compiledWithError(Tools::append("Expression to the left of '::' is not a class type."), errorContext, compiletimeContext->getContextName(), getLexeme());
+		errorManager->compiledWithError(Tools::append("Static function not found: ", name), errorContext, compiletimeContext->getContextName(), nameLexeme);
 		return false;
 	}
 }

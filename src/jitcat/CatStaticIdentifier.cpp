@@ -8,55 +8,40 @@
 #include "jitcat/CatStaticIdentifier.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatStaticScope.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/TypeInfo.h"
 
+#include <cassert>
+
 using namespace jitcat;
 using namespace jitcat::AST;
 using namespace jitcat::Reflection;
 
 
-CatStaticIdentifier::CatStaticIdentifier(CatTypeNode* baseType, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme):
+CatStaticIdentifier::CatStaticIdentifier(CatStaticScope* baseScope, const Tokenizer::Lexeme& identifierLexeme, const Tokenizer::Lexeme& lexeme):
 	CatAssignableExpression(lexeme),
-	baseType(baseType),
-	idBaseType(nullptr),
-	name(nameLexeme),
-	nameLexeme(nameLexeme),
+	baseScope(baseScope),
+	identifier(identifierLexeme),
+	identifierLexeme(identifierLexeme),
 	type(CatGenericType::unknownType),
 	assignableType(CatGenericType::unknownType),
-	memberInfo(nullptr),
-	nestedType(nullptr)
-{
-}
-
-
-CatStaticIdentifier::CatStaticIdentifier(CatStaticIdentifier* idBaseType, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme):
-	CatAssignableExpression(lexeme),
-	baseType(nullptr),
-	idBaseType(idBaseType),
-	name(nameLexeme),
-	nameLexeme(nameLexeme),
-	type(CatGenericType::unknownType),
-	assignableType(CatGenericType::unknownType),
-	memberInfo(nullptr),
-	nestedType(nullptr)
+	staticMemberInfo(nullptr)
 {
 }
 
 
 CatStaticIdentifier::CatStaticIdentifier(const CatStaticIdentifier& other):
 	CatAssignableExpression(other),
-	baseType(other.baseType != nullptr ? static_cast<CatTypeNode*>(other.baseType->copy()) : nullptr),
-	idBaseType(other.idBaseType != nullptr ? static_cast<CatStaticIdentifier*>(other.idBaseType->copy()) : nullptr),
-	name(other.name),
-	nameLexeme(other.nameLexeme),
+	baseScope(other.baseScope != nullptr ? static_cast<CatStaticScope*>(other.baseScope->copy()) : nullptr),
+	identifier(other.identifier),
+	identifierLexeme(other.identifierLexeme),
 	type(other.type),
 	assignableType(other.assignableType),
-	memberInfo(nullptr),
-	nestedType(nullptr)
+	staticMemberInfo(nullptr)
 {
 }
 
@@ -81,20 +66,20 @@ const CatGenericType& CatStaticIdentifier::getAssignableType() const
 
 bool jitcat::AST::CatStaticIdentifier::isAssignable() const
 {
-	return !isNestedType() && !type.isConst();
+	return !type.isConst();
 }
 
 
 void CatStaticIdentifier::print() const
 {
-	baseType->print();
-	Tools::CatLog::log("::", name);
+	baseScope->print();
+	Tools::CatLog::log("::", identifier);
 }
 
 
 bool CatStaticIdentifier::isConst() const
 {
-	return isNestedType() || type.isConst();
+	return type.isConst();
 }
 
 
@@ -112,67 +97,35 @@ CatASTNodeType CatStaticIdentifier::getNodeType() const
 
 std::any CatStaticIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
-	assert(isStaticMember());
-	return memberInfo->getMemberReference();
+	return staticMemberInfo->getMemberReference();
 }
 
 
 std::any CatStaticIdentifier::executeAssignable(CatRuntimeContext* runtimeContext)
 {
-	assert(isStaticMember());
-	return memberInfo->getAssignableMemberReference();
+	return staticMemberInfo->getAssignableMemberReference();
 }
 
 
 bool CatStaticIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	std::string lowerName = Tools::toLowerCase(name);
-	memberInfo = nullptr;
-	nestedType = nullptr;
+	std::string lowerName = Tools::toLowerCase(identifier);
+	staticMemberInfo = nullptr;
+	
 	type = CatGenericType::unknownType;
 	assignableType = CatGenericType::unknownType;
-	TypeInfo* typeInfo = nullptr;
-	if (baseType != nullptr)
+	assert(baseScope != nullptr);
+	if (!baseScope->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
-		if (!baseType->typeCheck(compiletimeContext, errorManager, errorContext))
-		{
-			return false;
-		}
-		const CatGenericType& scopeType = baseType->getType();
-
-		if (scopeType == nullptr || !scopeType.isReflectableObjectType())
-		{
-			errorManager->compiledWithError(std::string("Not a static scope: ") + baseType->getTypeName(), errorContext, compiletimeContext->getContextName(), baseType->getLexeme());
-			return false;
-		}
-		typeInfo = scopeType.getObjectType();
+		return false;
 	}
-	else if (idBaseType != nullptr)
-	{
-		if (!idBaseType->typeCheck(compiletimeContext, errorManager, errorContext))
-		{
-			return false;
-		}
-		if (idBaseType->nestedType != nullptr)
-		{
-			typeInfo = idBaseType->nestedType;
-		}
-		else
-		{
-			errorManager->compiledWithError(std::string("Not a static scope: ") + idBaseType->name, errorContext, compiletimeContext->getContextName(), idBaseType->nameLexeme);
-			return false;
-		}
-	}
-	else
-	{
-		assert(false);
-	}
+	TypeInfo* typeInfo = baseScope->getScopeType();
 
-	memberInfo = typeInfo->getStaticMemberInfo(lowerName);
+	staticMemberInfo = typeInfo->getStaticMemberInfo(lowerName);
 
-	if (memberInfo != nullptr)
+	if (staticMemberInfo != nullptr)
 	{
-		type = memberInfo->catType;
+		type = staticMemberInfo->catType;
 		if (type.isPointerType() && type.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
 		{
 			type.setOwnershipSemantics(TypeOwnershipSemantics::Weak);
@@ -181,45 +134,8 @@ bool CatStaticIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, Expre
 	}
 	else
 	{
-		//Static member does not exist. 
-		//Perhaps it is a nested type.
-		nestedType = typeInfo->getTypeInfo(name);
-	}
-	if ((memberInfo == nullptr && nestedType == nullptr)
-		|| (memberInfo != nullptr && (!type.isValidType() || !assignableType.isValidType())))
-	{
-		errorManager->compiledWithError(std::string("Nested type or static member not found: ") + name, errorContext, compiletimeContext->getContextName(), getLexeme());
+		errorManager->compiledWithError(std::string("Static member not found: ") + identifier, errorContext, compiletimeContext->getContextName(), identifierLexeme);
 		return false;
 	}
 	return true;
-}
-
-
-bool CatStaticIdentifier::isNestedType() const
-{
-	return nestedType != nullptr;
-}
-
-
-bool CatStaticIdentifier::isStaticMember() const
-{
-	return memberInfo != nullptr;
-}
-
-
-const Reflection::StaticMemberInfo* CatStaticIdentifier::getMemberInfo() const
-{
-	return memberInfo;
-}
-
-
-const Reflection::TypeInfo* jitcat::AST::CatStaticIdentifier::getTypeInfo() const
-{
-	return nestedType;
-}
-
-
-const std::string& CatStaticIdentifier::getName() const
-{
-	return name;
 }
