@@ -104,7 +104,7 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 		if (typeConstructor == nullptr)
 		{
 			//If there is no custom-defined init function, call the auto generated init function if it exists.
-			functionCall->setFunctionName("__init");
+			initName = "__init";
 		}
 		
 		functionCall.reset(new CatMemberFunctionCall(initName, type->getLexeme(), new CatLiteral(std::any((Reflectable*)nullptr), newType, type->getLexeme()), static_cast<CatArgumentList*>(arguments->copy()), lexeme));

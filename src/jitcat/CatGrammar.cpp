@@ -178,6 +178,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	rule(Prod::OwnershipSemantics, {}, ownershipSemantics); // Werkt dit???
 
 	//Typename or identifier
+	rule(Prod::TypeOrIdentifier, {prod(Prod::TypeOrIdentifier), term(two, TwoChar::StaticAccessor), term(id, Identifier::Identifier)}, nestedTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Identifier)}, typeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Void)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Bool)}, basicTypeName);
@@ -185,7 +186,6 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Float)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::String)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::TypeOrIdentifier), term(one, OneChar::Greater)}, arrayTypeName);
-	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), prod(Prod::TypeOrIdentifier), term(two, TwoChar::StaticAccessor), term(id, Identifier::Identifier)}, nestedTypeName);
 
 	rule(Prod::FunctionOrConstructorCall, {prod(Prod::TypeOrIdentifier), prod(Prod::FunctionCallArguments) }, functionCallToken);
 	rule(Prod::FunctionCallArguments, {term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose)}, argumentListToken);
@@ -419,8 +419,8 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::arrayTypeName(const Parser::ASTNodePa
 	CatOwnershipSemanticsNode* ownershipSemantics = nodeParser.getASTNodeByIndex<CatOwnershipSemanticsNode>(0);
 	CatTypeOrIdentifier* arrayItemTypeId = nodeParser.getASTNodeByIndex<CatTypeOrIdentifier>(1);
 	CatTypeNode* arrayItemType = arrayItemTypeId->toType();
-	CatTypeNode* arrayType = new CatTypeNode(arrayItemType, ownershipSemantics->getOwnershipSemantics(), nodeParser.getStackLexeme());
-	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(arrayType, ownershipSemantics->getOwnershipSemantics(), nodeParser.getStackLexeme());
+	CatTypeNode* arrayType = new CatTypeNode(arrayItemType, ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
+	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(arrayType, ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
 	delete ownershipSemantics;
 	delete arrayItemTypeId;
 	return typeOrIdentifier;
@@ -431,7 +431,7 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 {
 	std::string name(nodeParser.getTerminalByIndex(0)->getLexeme());	
 	CatOwnershipSemanticsNode* ownershipSemantics = nodeParser.getASTNodeByIndex<CatOwnershipSemanticsNode>(0);
-	CatTypeOrIdentifier* typeNode = new CatTypeOrIdentifier(name, nodeParser.getTerminalByIndex(0)->getLexeme(), ownershipSemantics->getOwnershipSemantics(), nodeParser.getStackLexeme());
+	CatTypeOrIdentifier* typeNode = new CatTypeOrIdentifier(name, nodeParser.getTerminalByIndex(0)->getLexeme(), ownershipSemantics->getOwnershipSemantics(false), nodeParser.getStackLexeme());
 	delete ownershipSemantics;
 	return typeNode;
 }
@@ -439,14 +439,12 @@ ASTNode* jitcat::Grammar::CatGrammar::typeName(const Parser::ASTNodeParser& node
 
 AST::ASTNode* jitcat::Grammar::CatGrammar::nestedTypeName(const Parser::ASTNodeParser& nodeParser)
 {
-	CatOwnershipSemanticsNode* ownershipSemantics = nodeParser.getASTNodeByIndex<CatOwnershipSemanticsNode>(0);
-	CatTypeOrIdentifier* typeOrIdentifier = nodeParser.getASTNodeByIndex<CatTypeOrIdentifier>(1);
+	CatTypeOrIdentifier* typeOrIdentifier = nodeParser.getASTNodeByIndex<CatTypeOrIdentifier>(0);
 	CatStaticScope* staticScope = typeOrIdentifier->toStaticScope();
 	Lexeme nameLexeme = nodeParser.getTerminalByIndex(1)->getLexeme();
 	std::string name(nameLexeme);
-	CatTypeOrIdentifier* typeNode = new CatTypeOrIdentifier(staticScope, name, nameLexeme, ownershipSemantics->getOwnershipSemantics(), nodeParser.getStackLexeme());
+	CatTypeOrIdentifier* typeNode = new CatTypeOrIdentifier(staticScope, name, nameLexeme, typeOrIdentifier->getOwnershipSemantics(), nodeParser.getStackLexeme());
 	delete typeOrIdentifier;
-	delete ownershipSemantics;
 	return typeNode;
 }
 
@@ -464,7 +462,7 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::basicTypeName(const Parser::ASTNodePa
 		case Identifier::String:	 type = CatGenericType::stringType; break;
 		case Identifier::Void:		 type = CatGenericType::voidType;	break;
 	}
-	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(type, nodeParser.getStackLexeme()), ownershipSemantics->getOwnershipSemantics(), nodeParser.getStackLexeme());
+	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(type, nodeParser.getStackLexeme()), ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
 	delete ownershipSemantics;
 	return typeOrIdentifier;
 }
@@ -481,7 +479,7 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::ownershipSemantics(const Parser::ASTN
 			default:
 			case OneChar::BitwiseAnd:		semantics = TypeOwnershipSemantics::Weak;	break;
 			//case OneChar::BitwiseAnd:	ownership = TypeOwnershipSemantics::Shared; break;
-			case OneChar::At:				semantics = TypeOwnershipSemantics::Value;	break;
+			case OneChar::At:				semantics = TypeOwnershipSemantics::Owned;	break;
 		}
 	}
 	return new CatOwnershipSemanticsNode(semantics, nodeParser.getStackLexeme());

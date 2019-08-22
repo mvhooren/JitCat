@@ -97,7 +97,7 @@ void CatTypeOrIdentifier::print() const
 	switch (ownershipSemantics)
 	{
 		case TypeOwnershipSemantics::Weak:		CatLog::log("&"); break;
-		case TypeOwnershipSemantics::Value:		CatLog::log("@"); break;
+		case TypeOwnershipSemantics::Owned:		CatLog::log("@"); break;
 	}
 	
 	if (parentScope != nullptr)
@@ -133,6 +133,12 @@ bool jitcat::AST::CatTypeOrIdentifier::hasParentScope() const
 }
 
 
+Reflection::TypeOwnershipSemantics jitcat::AST::CatTypeOrIdentifier::getOwnershipSemantics() const
+{
+	return ownershipSemantics;
+}
+
+
 CatIdentifier* CatTypeOrIdentifier::toIdentifier()
 {
 	return new CatIdentifier(identifier, lexeme);
@@ -154,7 +160,7 @@ CatTypeNode* CatTypeOrIdentifier::toType()
 	CatTypeNode* typeNode = new CatTypeNode(parentScope.release(), identifier, lexeme);
 	if (ownershipSemantics == TypeOwnershipSemantics::None)
 	{
-		ownershipSemantics = TypeOwnershipSemantics::Owned;
+		ownershipSemantics = TypeOwnershipSemantics::Value;
 	}
 	typeNode->setOwnershipSemantics(ownershipSemantics);
 	return typeNode;

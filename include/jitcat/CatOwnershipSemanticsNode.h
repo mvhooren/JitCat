@@ -26,7 +26,7 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
 
-		Reflection::TypeOwnershipSemantics getOwnershipSemantics() const;
+		Reflection::TypeOwnershipSemantics getOwnershipSemantics(bool valueOwnershipIfNoneSpecified) const;
 
 	private:
 		Reflection::TypeOwnershipSemantics ownershipSemantics;

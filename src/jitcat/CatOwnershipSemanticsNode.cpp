@@ -56,8 +56,12 @@ CatASTNodeType CatOwnershipSemanticsNode::getNodeType() const
 }
 
 
-Reflection::TypeOwnershipSemantics jitcat::AST::CatOwnershipSemanticsNode::getOwnershipSemantics() const
+Reflection::TypeOwnershipSemantics jitcat::AST::CatOwnershipSemanticsNode::getOwnershipSemantics(bool valueOwnershipIfNoneSpecified) const
 {
+	if (valueOwnershipIfNoneSpecified && ownershipSemantics == TypeOwnershipSemantics::None)
+	{
+		return TypeOwnershipSemantics::Value;
+	}
 	return ownershipSemantics;
 }
 

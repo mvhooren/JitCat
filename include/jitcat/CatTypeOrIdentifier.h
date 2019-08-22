@@ -48,6 +48,8 @@ namespace jitcat::AST
 		bool isAmbiguous() const;
 		bool hasParentScope() const;
 
+		Reflection::TypeOwnershipSemantics getOwnershipSemantics() const;
+
 		//Calling one of these functions will potentially release the parentNode or typeNode unique pointers
 		//After calling these, this class should be destructed.
 		CatIdentifier* toIdentifier();
