@@ -22,31 +22,31 @@
 namespace jitcat
 {
 
-	template<typename T>
-	Expression<T>::Expression():
+	template<typename ExpressionResultT>
+	Expression<ExpressionResultT>::Expression():
 		getValueFunc(&getDefaultValue)
 	{
 	}
 
 
-	template<typename T>
-	inline Expression<T>::Expression(const char* expression):
+	template<typename ExpressionResultT>
+	inline Expression<ExpressionResultT>::Expression(const char* expression):
 		ExpressionBase(expression),
 		getValueFunc(&getDefaultValue)
 	{
 	}
 
 
-	template<typename T>
-	Expression<T>::Expression(const std::string& expression):
+	template<typename ExpressionResultT>
+	Expression<ExpressionResultT>::Expression(const std::string& expression):
 		ExpressionBase(expression),
 		getValueFunc(&getDefaultValue)
 	{
 	}
 
 	
-	template<typename T>
-	Expression<T>::Expression(CatRuntimeContext* compileContext, const std::string& expression):
+	template<typename ExpressionResultT>
+	Expression<ExpressionResultT>::Expression(CatRuntimeContext* compileContext, const std::string& expression):
 		ExpressionBase(compileContext, expression),
 		getValueFunc(&getDefaultValue)
 	{
@@ -54,22 +54,22 @@ namespace jitcat
 	}
 
 
-	template<typename T>
-	Expression<T>::~Expression()
+	template<typename ExpressionResultT>
+	Expression<ExpressionResultT>::~Expression()
 	{
 
 	}
 
 
-	template<typename T>
-	void Expression<T>::compile(CatRuntimeContext* context)
+	template<typename ExpressionResultT>
+	void Expression<ExpressionResultT>::compile(CatRuntimeContext* context)
 	{
 		if (context == nullptr)
 		{
 			context = &CatRuntimeContext::defaultContext;
 			context->getErrorManager()->clear();
 		}
-		if (!parse(context, context->getErrorManager(), this, TypeTraits<T>::toGenericType()))
+		if (!parse(context, context->getErrorManager(), this, TypeTraits<ExpressionResultT>::toGenericType()))
 		{
 			getValueFunc = &getDefaultValue;
 		}
@@ -77,7 +77,7 @@ namespace jitcat
 		{
 			if (isConstant)
 			{
-				if constexpr (!std::is_same<void, T>::value)
+				if constexpr (!std::is_same<void, ExpressionResultT>::value)
 				{
 					cachedValue = getActualValue(parseResult->getNode<AST::CatTypedExpression>()->execute(context));
 				}
@@ -86,19 +86,19 @@ namespace jitcat
 	}
 
 
-	template<typename T>
-	inline void Expression<T>::handleCompiledFunction(uintptr_t functionAddress)
+	template<typename ExpressionResultT>
+	inline void Expression<ExpressionResultT>::handleCompiledFunction(uintptr_t functionAddress)
 	{
-		getValueFunc = reinterpret_cast<const T(*)(CatRuntimeContext*)>(functionAddress);
+		getValueFunc = reinterpret_cast<const ExpressionResultT(*)(CatRuntimeContext*)>(functionAddress);
 	}
 
 
-	template<typename T>
-	inline const T Expression<T>::getValue(CatRuntimeContext* runtimeContext)
+	template<typename ExpressionResultT>
+	inline const ExpressionResultT Expression<ExpressionResultT>::getValue(CatRuntimeContext* runtimeContext)
 	{
 		if (isConstant)
 		{
-			if constexpr (!std::is_same<void, T>::value)
+			if constexpr (!std::is_same<void, ExpressionResultT>::value)
 			{
 				return cachedValue;
 			}
@@ -115,7 +115,7 @@ namespace jitcat
 			}
 			if constexpr (Configuration::enableLLVM)
 			{
-				if constexpr (!std::is_same<void, T>::value)
+				if constexpr (!std::is_same<void, ExpressionResultT>::value)
 				{
 					return getValueFunc(runtimeContext);
 				}
@@ -129,7 +129,7 @@ namespace jitcat
 			{
 				if (parseResult->success)
 				{
-					if constexpr (!std::is_same<void, T>::value)
+					if constexpr (!std::is_same<void, ExpressionResultT>::value)
 					{
 						std::any value = parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 						return getActualValue(value);
@@ -142,21 +142,21 @@ namespace jitcat
 				}
 				else
 				{
-					return T();
+					return ExpressionResultT();
 				}
 			}
 		}
 	}
 
 
-	template<typename T>
-	inline const T Expression<T>::getInterpretedValue(CatRuntimeContext* runtimeContext)
+	template<typename ExpressionResultT>
+	inline const ExpressionResultT Expression<ExpressionResultT>::getInterpretedValue(CatRuntimeContext* runtimeContext)
 	{
 		if (isConstant)
 		{
-			if constexpr (!std::is_same<void, T>::value)
+			if constexpr (!std::is_same<void, ExpressionResultT>::value)
 			{
-				return cachedValue;
+				return cachedValue; 
 			}
 			else
 			{
@@ -169,7 +169,7 @@ namespace jitcat
 			{
 				runtimeContext = &CatRuntimeContext::defaultContext;
 			}
-			if constexpr (!std::is_same<void, T>::value)
+			if constexpr (!std::is_same<void, ExpressionResultT>::value)
 			{
 				std::any value = parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 				return getActualValue(value);
@@ -182,29 +182,29 @@ namespace jitcat
 		}
 		else
 		{
-			return T();
+			return ExpressionResultT();
 		}
 	}
 
 
-	template<typename T>
-	CatGenericType Expression<T>::getExpectedCatType() const
+	template<typename ExpressionResultT>
+	CatGenericType Expression<ExpressionResultT>::getExpectedCatType() const
 	{
-		return TypeTraits<T>::toGenericType();
+		return TypeTraits<ExpressionResultT>::toGenericType();
 	}
 
 
-	template<typename T>
-	inline T Expression<T>::getActualValue(const std::any& catValue)
+	template<typename ExpressionResultT>
+	inline ExpressionResultT Expression<ExpressionResultT>::getActualValue(const std::any& catValue)
 	{
-		return TypeTraits<T>::getValue(catValue);
+		return TypeTraits<ExpressionResultT>::getValue(catValue);
 	}
 
 
-	template<typename T>
-	inline const T Expression<T>::getDefaultValue(CatRuntimeContext*)
+	template<typename ExpressionResultT>
+	inline const ExpressionResultT Expression<ExpressionResultT>::getDefaultValue(CatRuntimeContext*)
 	{
-		return T();
+		return ExpressionResultT();
 	}
 
 }//End namespace jitcat

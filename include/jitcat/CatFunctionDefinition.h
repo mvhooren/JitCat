@@ -12,6 +12,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScope.h"
 #include "jitcat/CatScopeID.h"
+#include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberVisibility.h"
 #include "jitcat/ReflectableHandle.h"
 #include "jitcat/ReflectableInstance.h"
@@ -37,7 +38,7 @@ namespace jitcat::AST
 	class CatFunctionParameterDefinitions;
 	class CatScopeBlock;
 
-	class CatFunctionDefinition: public CatDefinition, public CatScope
+	class CatFunctionDefinition: public CatDefinition, public CatScope, public Reflection::FunctionSignature
 	{
 	public:
 		CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme);
@@ -59,13 +60,15 @@ namespace jitcat::AST
 
 		jitcat::Reflection::CustomTypeInfo* getParametersType() const;
 		CatTypeNode* getReturnTypeNode() const;
-		int getNumParameters() const;
+		virtual int getNumParameters() const override final;
 		const std::string& getParameterName(int index) const;
-		const CatTypeNode* getParameterType(int index) const;
+		//const CatTypeNode* getParameterType(int index) const;
+		virtual const CatGenericType& getParameterType(int index) const override final;
 
 		Reflection::MemberVisibility getFunctionVisibility() const;
 		void setFunctionVisibility(Reflection::MemberVisibility functionVisibility);
 
+		virtual const std::string& getLowerCaseFunctionName() const;
 		const std::string& getFunctionName() const;
 
 		CatScopeBlock* getScopeBlock() const;
@@ -82,6 +85,7 @@ namespace jitcat::AST
 
 	private:
 		std::string name;
+		std::string lowerCaseName;
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypeNode> type;
 		std::unique_ptr<CatFunctionParameterDefinitions> parameters;

@@ -10,7 +10,9 @@
 
 #include "jitcat/BuildIndicesHelper.h"
 #include "jitcat/CatGenericType.h"
+#include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberVisibility.h"
+#include "jitcat/Tools.h"
 #include "jitcat/TypeConversionCastHelper.h"
 #include "jitcat/TypeTraits.h"
 
@@ -26,10 +28,10 @@ namespace jitcat
 
 namespace jitcat::Reflection
 {
-	class StaticFunctionInfo
+	class StaticFunctionInfo: public FunctionSignature
 	{
 	public:
-		StaticFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): memberFunctionName(memberFunctionName), returnType(returnType), visibility(MemberVisibility::Public){};
+		StaticFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType);
 		virtual ~StaticFunctionInfo() {}
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, const std::vector<std::any>& parameters) { return std::any(); }
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
@@ -44,25 +46,22 @@ namespace jitcat::Reflection
 			argumentTypes.push_back(TypeTraits<typename std::remove_cv<ArgumentT>::type >::toGenericType());
 		}
 
-		const CatGenericType& getArgumentType(std::size_t argumentIndex) const
-		{
-			if (argumentIndex < argumentTypes.size())
-			{
-				return argumentTypes[argumentIndex];
-			}
-			else
-			{
-				return CatGenericType::unknownType;
-			}
-		}
+		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
 
+
+		// Inherited via FunctionSignature
+		virtual const std::string& getLowerCaseFunctionName() const override;
+		virtual int getNumParameters() const override;
+		virtual const CatGenericType& getParameterType(int index) const override;
 
 	private:
 		std::string memberFunctionName;
+		std::string lowerCaseFunctionName;
 		CatGenericType returnType;
 		MemberVisibility visibility;
 
 		std::vector<CatGenericType> argumentTypes;
+
 	};
 
 

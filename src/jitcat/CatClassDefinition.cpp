@@ -306,7 +306,7 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 			//Call constructor for inherited type
 			CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
 			std::string constructorName = "__init";
-			if (inheritedType->getMemberFunctionInfo("init") != nullptr)
+			if (inheritedType->getFirstMemberFunctionInfo("init") != nullptr)
 			{
 				constructorName = "init";
 			}
@@ -332,7 +332,7 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 				//Call constructor for data member type
 				CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
 				std::string constructorName = "__init";
-				if (dateMemberType->getMemberFunctionInfo("init") != nullptr)
+				if (dateMemberType->getFirstMemberFunctionInfo("init") != nullptr)
 				{
 					constructorName = "init";
 				}

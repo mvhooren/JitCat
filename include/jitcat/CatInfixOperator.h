@@ -19,8 +19,6 @@
 
 namespace jitcat::AST
 {
-	class CatMemberFunctionCall;
-
 	class CatInfixOperator: public CatTypedExpression
 	{
 	public:
@@ -57,7 +55,8 @@ namespace jitcat::AST
 		inline std::any calculateBooleanExpression(bool lValue, bool rValue);
 
 	private:
-		std::unique_ptr<CatMemberFunctionCall> overloadedOperator;
+		std::unique_ptr<CatTypedExpression> overloadedOperator;
+		
 		Tokenizer::Lexeme operatorLexeme;
 
 		std::unique_ptr<CatTypedExpression> lhs;

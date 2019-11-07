@@ -10,6 +10,7 @@
 #include "jitcat/BuildIndicesHelper.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberVisibility.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeTraits.h"
@@ -44,9 +45,14 @@ namespace jitcat::Reflection
 	};
 
 
-	struct MemberFunctionInfo
+	struct MemberFunctionInfo: public FunctionSignature
 	{
-		MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): memberFunctionName(memberFunctionName), returnType(returnType), visibility(MemberVisibility::Public){};
+		MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): 
+			memberFunctionName(memberFunctionName), 
+			lowerCaseMemberFunctionName(Tools::toLowerCase(memberFunctionName)),
+			returnType(returnType), 
+			visibility(MemberVisibility::Public)
+		{};
 		virtual ~MemberFunctionInfo() {}
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
@@ -65,10 +71,16 @@ namespace jitcat::Reflection
 
 
 		std::string memberFunctionName;
+		std::string lowerCaseMemberFunctionName;
 		CatGenericType returnType;
 		MemberVisibility visibility;
 
 		std::vector<CatGenericType> argumentTypes;
+
+		// Inherited via FunctionSignature
+		virtual const std::string& getLowerCaseFunctionName() const override final;
+		virtual int getNumParameters() const override final; 
+		virtual const CatGenericType& getParameterType(int index) const override final;
 	};
 
 	struct DeferredMemberFunctionInfo : public MemberFunctionInfo

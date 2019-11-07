@@ -121,6 +121,8 @@ set(Source_Cat_ASTNodes_ASTHelper
 	${JitCatHeaderPath}/InfixOperatorOptimizer.h
 	ASTHelper.cpp
 	${JitCatHeaderPath}/ASTHelper.h
+	InfixOperatorResultInfo.cpp
+	${JitCatHeaderPath}/InfixOperatorResultInfo.h
 )
 
 set(Source_Cat_CodeGeneration_LLVM
@@ -270,8 +272,11 @@ set(Source_Reflection_TypeInfo_MemberFunctions
 	${JitCatHeaderPath}/ArrayMemberFunctionInfo.h
 	${JitCatHeaderPath}/BuildIndicesHelper.h
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
+	FunctionSignature.cpp
+	${JitCatHeaderPath}/FunctionSignature.h
 	MemberFunctionInfo.cpp
 	${JitCatHeaderPath}/MemberFunctionInfo.h
+	StaticMemberFunctionInfo.cpp
 	${JitCatHeaderPath}/StaticMemberFunctionInfo.h
 	${JitCatHeaderPath}/TypeConversionCastHelper.h
 )

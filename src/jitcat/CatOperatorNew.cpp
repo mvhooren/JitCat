@@ -99,8 +99,8 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	}
 	else
 	{
-		MemberFunctionInfo* typeConstructor = newType.getPointeeType()->getObjectType()->getMemberFunctionInfo("init");
 		std::string initName = "init";
+		MemberFunctionInfo* typeConstructor = newType.getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(initName);
 		if (typeConstructor == nullptr)
 		{
 			//If there is no custom-defined init function, call the auto generated init function if it exists.

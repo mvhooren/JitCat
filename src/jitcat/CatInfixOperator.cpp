@@ -10,6 +10,8 @@
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatMemberFunctionCall.h"
+#include "jitcat/CatStaticFunctionCall.h"
+#include "jitcat/CatStaticScope.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/InfixOperatorOptimizer.h"
 #include "jitcat/ASTHelper.h"
@@ -123,24 +125,37 @@ std::any CatInfixOperator::execute(CatRuntimeContext* runtimeContext)
 
 bool CatInfixOperator::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	if (overloadedOperator != nullptr)
+	{
+		return overloadedOperator->typeCheck(compiletimeContext, errorManager, errorContext);
+	}
 	if (lhs->typeCheck(compiletimeContext, errorManager, errorContext)
 		&& rhs->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		CatGenericType leftType = lhs->getType();
 		CatGenericType rightType = rhs->getType();
-		bool isOverloaded = false;
-		resultType = leftType.getInfixOperatorResultType(oper, rightType, isOverloaded);
+		InfixOperatorResultInfo resultInfo = leftType.getInfixOperatorResultInfo(oper, rightType);
+		resultType = resultInfo.getResultType();
 		if (resultType.isValidType())
 		{
-			if (isOverloaded)
+			if (resultInfo.getIsOverloaded())
 			{
-				std::vector<CatTypedExpression*> arguments = {rhs.release()};
-				overloadedOperator.reset(new CatMemberFunctionCall(::toString(oper), operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme()));
-				return overloadedOperator->typeCheck(compiletimeContext, errorManager, errorContext);
+				if (!resultInfo.getIsStaticOverloaded())
+				{
+					std::vector<CatTypedExpression*> arguments = {rhs.release()};
+					overloadedOperator.reset(new CatMemberFunctionCall(::toString(oper), operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme()));
+					return overloadedOperator->typeCheck(compiletimeContext, errorManager, errorContext);
+				}
+				else
+				{
+					std::vector<CatTypedExpression*> arguments = {lhs.release(), rhs.release()};
+					overloadedOperator.reset(new CatStaticFunctionCall(new CatStaticScope(true, nullptr, resultInfo.getStaticOverloadedType()->getTypeName(), operatorLexeme, operatorLexeme), ::toString(oper), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme(),  operatorLexeme));
+					return overloadedOperator->typeCheck(compiletimeContext, errorManager, errorContext);
+				}
 			}
 			return true;
 		}
-		else if (isOverloaded)
+		else if (resultInfo.getIsOverloaded())
 		{
 			errorManager->compiledWithError(Tools::append("Operator ", ::toString(oper), " not implemented for ", leftType.toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;

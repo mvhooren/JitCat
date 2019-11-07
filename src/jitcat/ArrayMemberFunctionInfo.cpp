@@ -3,10 +3,11 @@
 
 #include <cassert>
 
+using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
-const char* jitcat::Reflection::ArrayTypeMemberFunctionInfo::toString(Operation operation)
+const char* ArrayTypeMemberFunctionInfo::toString(Operation operation)
 {
 	switch (operation)
 	{
@@ -18,7 +19,7 @@ const char* jitcat::Reflection::ArrayTypeMemberFunctionInfo::toString(Operation 
 }
 
 
-jitcat::Reflection::ArrayTypeMemberFunctionInfo::ArrayTypeMemberFunctionInfo(Operation operation, const CatGenericType& arrayType):
+ArrayTypeMemberFunctionInfo::ArrayTypeMemberFunctionInfo(Operation operation, const CatGenericType& arrayType):
 	MemberFunctionInfo(toString(operation), CatGenericType::voidType),
 	operation(operation),
 	arrayType(arrayType),
@@ -53,7 +54,7 @@ jitcat::Reflection::ArrayTypeMemberFunctionInfo::ArrayTypeMemberFunctionInfo(Ope
 }
 
 
-std::any jitcat::Reflection::ArrayTypeMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
+std::any ArrayTypeMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
 { 
 	if (base.has_value())
 	{
@@ -97,8 +98,7 @@ std::any jitcat::Reflection::ArrayTypeMemberFunctionInfo::call(CatRuntimeContext
 }
 
 
-MemberFunctionCallData jitcat::Reflection::ArrayTypeMemberFunctionInfo::getFunctionAddress() const
+MemberFunctionCallData ArrayTypeMemberFunctionInfo::getFunctionAddress() const
 {
 	return MemberFunctionCallData();
 }
-;

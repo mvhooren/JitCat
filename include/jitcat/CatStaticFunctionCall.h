@@ -11,6 +11,7 @@ namespace jitcat::Reflection
 	class StaticFunctionInfo;
 }
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/FunctionSignature.h"
 
 #include <memory>
 #include <string>
@@ -21,7 +22,7 @@ namespace jitcat::AST
 	class CatArgumentList;
 	class CatStaticScope;
 
-	class CatStaticFunctionCall: public CatTypedExpression
+	class CatStaticFunctionCall: public CatTypedExpression, public Reflection::FunctionSignature
 	{
 	public:
 		CatStaticFunctionCall(CatStaticScope* parentScope, const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme);
@@ -42,9 +43,16 @@ namespace jitcat::AST
 		
 		std::unique_ptr<CatStaticScope> parentScope;
 		std::string name;
+		std::string lowerCaseName;
+
 		Tokenizer::Lexeme nameLexeme;
 
 		std::unique_ptr<CatArgumentList> arguments;
 		CatGenericType returnType;
+
+		// Inherited via FunctionSignature
+		virtual const std::string& getLowerCaseFunctionName() const override;
+		virtual int getNumParameters() const override;
+		virtual const CatGenericType& getParameterType(int index) const override;
 	};
 };

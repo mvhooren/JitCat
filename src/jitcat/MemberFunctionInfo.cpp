@@ -32,6 +32,24 @@ DeferredMemberFunctionInfo* MemberFunctionInfo::toDeferredMemberFunction(TypeMem
 }
 
 
+const std::string& jitcat::Reflection::MemberFunctionInfo::getLowerCaseFunctionName() const
+{
+	return lowerCaseMemberFunctionName;
+}
+
+
+int jitcat::Reflection::MemberFunctionInfo::getNumParameters() const
+{
+	return (int)argumentTypes.size();
+}
+
+
+const CatGenericType& jitcat::Reflection::MemberFunctionInfo::getParameterType(int index) const
+{
+	return argumentTypes[index];
+}
+
+
 DeferredMemberFunctionInfo::DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, MemberFunctionInfo* deferredFunction):
 	MemberFunctionInfo(deferredFunction->memberFunctionName, deferredFunction->returnType),
 	baseMember(baseMember), deferredFunction(deferredFunction)

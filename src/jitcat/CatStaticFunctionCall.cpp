@@ -27,6 +27,7 @@ CatStaticFunctionCall::CatStaticFunctionCall(CatStaticScope* parentScope, const 
 	staticFunctionInfo(nullptr),
 	parentScope(parentScope),
 	name(name),
+	lowerCaseName(Tools::toLowerCase(name)),
 	nameLexeme(nameLexeme),
 	arguments(arguments),
 	returnType(CatGenericType::unknownType)
@@ -38,6 +39,7 @@ CatStaticFunctionCall::CatStaticFunctionCall(const CatStaticFunctionCall& other)
 	CatTypedExpression(other),
 	staticFunctionInfo(nullptr),
 	name(other.name),
+	lowerCaseName(other.lowerCaseName),
 	nameLexeme(other.nameLexeme),
 	parentScope(static_cast<CatStaticScope*>(other.parentScope->copy())),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
@@ -87,7 +89,7 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	}
 	TypeInfo* parentObjectType =  parentScope->getScopeType();
 
-	staticFunctionInfo = parentObjectType->getStaticMemberFunctionInfo(name);
+	staticFunctionInfo = parentObjectType->getStaticMemberFunctionInfo(this);
 	if (staticFunctionInfo != nullptr)
 	{
 		std::size_t numArgumentsSupplied = arguments->getNumArguments();
@@ -139,4 +141,22 @@ CatTypedExpression* CatStaticFunctionCall::constCollapse(CatRuntimeContext* comp
 {
 	arguments->constCollapse(compileTimeContext);
 	return this;
+}
+
+
+const std::string& CatStaticFunctionCall::getLowerCaseFunctionName() const
+{
+	return lowerCaseName;
+}
+
+
+int CatStaticFunctionCall::getNumParameters() const
+{
+	return (int)arguments->getNumArguments();
+}
+
+
+const CatGenericType& CatStaticFunctionCall::getParameterType(int index) const
+{
+	return arguments->getArgumentType(index);
 }

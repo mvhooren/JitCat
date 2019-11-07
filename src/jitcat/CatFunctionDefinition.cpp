@@ -38,6 +38,7 @@ jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, con
 	CatDefinition(lexeme),
 	type(type),
 	name(name),
+	lowerCaseName(Tools::toLowerCase(name)),
 	visibility(MemberVisibility::Public),
 	nameLexeme(nameLexeme),
 	parameters(parameters),
@@ -52,6 +53,7 @@ jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(const CatFunctionDefin
 	CatDefinition(other),
 	type(static_cast<CatTypeNode*>(other.type->copy())),
 	name(other.name),
+	lowerCaseName(other.lowerCaseName),
 	visibility(other.visibility),
 	nameLexeme(other.nameLexeme),
 	parameters(static_cast<CatFunctionParameterDefinitions*>(other.parameters->copy())),
@@ -161,9 +163,9 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	if (currentScope != nullptr)
 	{
 		CatScopeID existingFunctionScopeId = InvalidScopeID;
-		if (compileTimeContext->findFunction(Tools::toLowerCase(name), existingFunctionScopeId) != nullptr && existingFunctionScopeId == currentScope->getScopeId())
+		if (compileTimeContext->findMemberFunction(this, existingFunctionScopeId) != nullptr && existingFunctionScopeId == currentScope->getScopeId())
 		{
-			errorManager->compiledWithError(Tools::append("A function with name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), nameLexeme);
+			errorManager->compiledWithError(Tools::append("A member function with the same signature and name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), nameLexeme);
 			return false;
 		}
 		CatGenericType thisType(compileTimeContext->getScopeType(currentScope->getScopeId()), false, false);
@@ -248,11 +250,16 @@ const std::string& jitcat::AST::CatFunctionDefinition::getParameterName(int inde
 	return parameters->getParameterName(index);
 }
 
+const CatGenericType& jitcat::AST::CatFunctionDefinition::getParameterType(int index) const
+{
+	return parameters->getParameterType(index)->getType();
+}
 
-const CatTypeNode* jitcat::AST::CatFunctionDefinition::getParameterType(int index) const
+
+/*const CatTypeNode* jitcat::AST::CatFunctionDefinition::getParameterType(int index) const
 {
 	return parameters->getParameterType(index);
-}
+}*/
 
 
 Reflection::MemberVisibility jitcat::AST::CatFunctionDefinition::getFunctionVisibility() const
@@ -268,6 +275,12 @@ void jitcat::AST::CatFunctionDefinition::setFunctionVisibility(Reflection::Membe
 	{
 		memberFunctionInfo->visibility = visibility;
 	}
+}
+
+
+const std::string& jitcat::AST::CatFunctionDefinition::getLowerCaseFunctionName() const
+{
+	return lowerCaseName;
 }
 
 

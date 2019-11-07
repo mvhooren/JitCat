@@ -12,6 +12,7 @@ namespace jitcat::Reflection
 	struct MemberFunctionInfo;
 }
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/FunctionSignature.h"
 
 #include <memory>
 
@@ -20,7 +21,7 @@ namespace jitcat::AST
 	class CatArgumentList;
 
 
-	class CatMemberFunctionCall: public CatTypedExpression
+	class CatMemberFunctionCall: public CatTypedExpression, public Reflection::FunctionSignature
 	{
 	public:
 		CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
@@ -49,10 +50,16 @@ namespace jitcat::AST
 	private:
 		Reflection::MemberFunctionInfo* memberFunctionInfo;
 		std::string functionName;
+		std::string lowerCaseFunctionName;
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypedExpression> base;
 		std::unique_ptr<CatArgumentList> arguments;
 		CatGenericType returnType;
+
+		// Inherited via FunctionSignature
+		virtual const std::string& getLowerCaseFunctionName() const override;
+		virtual int getNumParameters() const override;
+		virtual const CatGenericType& getParameterType(int index) const override;
 	};
 
 

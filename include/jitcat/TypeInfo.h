@@ -34,6 +34,7 @@ namespace jitcat
 
 namespace jitcat::Reflection
 {
+	class FunctionSignature;
 	struct MemberFunctionInfo;
 	class StaticFunctionInfo;
 	struct StaticMemberInfo;
@@ -105,10 +106,18 @@ namespace jitcat::Reflection
 		StaticMemberInfo* getStaticMemberInfo(const std::string& identifier) const;
 
 		//Gets the type information of a member function given its name.
-		MemberFunctionInfo* getMemberFunctionInfo(const std::string& identifier) const;
+		MemberFunctionInfo* getFirstMemberFunctionInfo(const std::string& identifier) const;
+		
+		//Gets the type information of a member function given its name.
+		MemberFunctionInfo* getMemberFunctionInfo(const FunctionSignature* functionSignature) const;
+		MemberFunctionInfo* getMemberFunctionInfo(const FunctionSignature& functionSignature) const;
 
 		//Gets the type information of a static function given its name.
-		StaticFunctionInfo* getStaticMemberFunctionInfo(const std::string& identifier) const;
+		StaticFunctionInfo* getFirstStaticMemberFunctionInfo(const std::string& identifier) const;
+
+		//Gets the type information of a static function given its name.
+		StaticFunctionInfo* getStaticMemberFunctionInfo(const FunctionSignature* functionSignature) const;
+		StaticFunctionInfo* getStaticMemberFunctionInfo(const FunctionSignature& functionSignature) const;
 
 		//Gets a nested type given its name
 		TypeInfo* getTypeInfo(const std::string& typeName) const;
@@ -134,7 +143,7 @@ namespace jitcat::Reflection
 
 		//Beware that these lists are case insensitive because the keys have been converted to lower case
 		const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;
-		const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
+		const std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
 		const std::map<std::string, TypeInfo*>& getTypes() const;
 
 		//May be nullptr when type info was read from XML
@@ -170,19 +179,19 @@ namespace jitcat::Reflection
 	protected:
 		const char* typeName;
 		std::unique_ptr<TypeCaster> caster;
-		//Member variables of this type
-	private:
-		std::map<std::string, std::unique_ptr<TypeMemberInfo>> members;
-
 	protected:
+		
+		//Member variables of this type
+		std::map<std::string, std::unique_ptr<TypeMemberInfo>> members;
+		//Member variables sorted by their offset / ordinal
 		std::map<unsigned long long, TypeMemberInfo*> membersByOrdinal;
 
-		//Member functions of this type
-		std::map<std::string, std::unique_ptr<MemberFunctionInfo>> memberFunctions;
+		//Member functions of this type, member function overloading is allowed
+		std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>> memberFunctions;
 		//Static member variables of this type
 		std::map<std::string, std::unique_ptr<StaticMemberInfo>> staticMembers;
-		//Static functions of this type
-		std::map<std::string, std::unique_ptr<StaticFunctionInfo>> staticFunctions;
+		//Static functions of this type, static function overloading is allowed
+		std::multimap<std::string, std::unique_ptr<StaticFunctionInfo>> staticFunctions;
 
 		//Nested type definitions within this type. These are not owned here.
 		std::map<std::string, TypeInfo*> types;

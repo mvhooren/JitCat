@@ -27,9 +27,8 @@ namespace jitcat
 
 	//An expression that can evaluate to several possible types (those types defined by CatGenericType.h)
 	//This uses the JitCat compiler for parsing and executing expressions.
-	//Supported operators: + - / * % || && ! == != > < >= <= ( ) 
 	//The application can provide variables for the expression through a CatRuntimeContext
-	template<typename T>
+	template<typename ExpressionResultT>
 	class Expression: public ExpressionBase
 	{
 	public:
@@ -43,11 +42,11 @@ namespace jitcat
 		//Executes the expression and returns the value.
 		//If isConst() == true then context may be nullptr, otherwise a context needs to be provided
 		//This will execute the native-code version of the expression if the LLVM backend is enabled, otherwise it will use the interpreter.
-		const T getValue(CatRuntimeContext* runtimeContext);
+		const ExpressionResultT getValue(CatRuntimeContext* runtimeContext);
 
 		//Same as getValue but will always execute the expression using the interpreter.
 		//Should always return the same value as getValue. Used for testing the interpreter when the LLVM backend is enabled.
-		const T getInterpretedValue(CatRuntimeContext* runtimeContext);
+		const ExpressionResultT getInterpretedValue(CatRuntimeContext* runtimeContext);
 
 		//Parses the expression, checks for errors and compiles the expression to native code if the LLVM backend is enabled.
 		virtual void compile(CatRuntimeContext* context) override final;
@@ -57,14 +56,14 @@ namespace jitcat
 
 	private:
 		CatGenericType getExpectedCatType() const;
-		static inline T getActualValue(const std::any& catValue);
-		static inline const T getDefaultValue(CatRuntimeContext*);
+		static inline ExpressionResultT getActualValue(const std::any& catValue);
+		static inline const ExpressionResultT getDefaultValue(CatRuntimeContext*);
 
 	private:
-		const T (*getValueFunc)(CatRuntimeContext* runtimeContext);
+		const ExpressionResultT (*getValueFunc)(CatRuntimeContext* runtimeContext);
 
 		//If the expression is a constant, then the value is cached for performance;
-		typename TypeTraits<T>::cachedType cachedValue;
+		typename TypeTraits<ExpressionResultT>::cachedType cachedValue;
 	};
 
 

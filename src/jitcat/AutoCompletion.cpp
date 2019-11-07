@@ -113,7 +113,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				currentMemberInfo = context->findVariable(lowercaseIdentifier, scopeId);
 				if (currentMemberInfo == nullptr)
 				{
-					currentFunctionInfo = context->findFunction(lowercaseIdentifier, scopeId);
+					currentFunctionInfo = context->findFirstMemberFunction(lowercaseIdentifier, scopeId);
 				}
 			}
 			else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isPointerToReflectableObjectType())
@@ -122,7 +122,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				currentMemberInfo = currentMemberInfo->catType.getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
 				if (currentMemberInfo == nullptr)
 				{
-					currentFunctionInfo = currentMember->catType.getPointeeType()->getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
+					currentFunctionInfo = currentMember->catType.getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
 					if (currentFunctionInfo == nullptr)
 					{
 						//failed
@@ -135,7 +135,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
 				bool isInheritedHostClass = false;
 				std::string inheritedHostClassName;
-				currentFunctionInfo = currentFunctionInfo->returnType.getPointeeType()->getObjectType()->getMemberFunctionInfo(lowercaseIdentifier);
+				currentFunctionInfo = currentFunctionInfo->returnType.getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
 				if (currentFunctionInfo == nullptr)
 				{
 					currentMemberInfo = currentFunction->returnType.getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);

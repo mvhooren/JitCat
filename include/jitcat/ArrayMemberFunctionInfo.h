@@ -8,6 +8,7 @@
 #pragma once
 
 #include "jitcat/CatGenericType.h"
+#include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberFunctionInfo.h"
 
 #include <vector>

@@ -15,6 +15,7 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
+#include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 
 #include <cassert>
@@ -28,6 +29,7 @@ using namespace jitcat::Tools;
 CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	functionName(name),
+	lowerCaseFunctionName(Tools::toLowerCase(name)),
 	nameLexeme(nameLexeme),
 	arguments(arguments),
 	base(base),
@@ -37,9 +39,10 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 }
 
 
-jitcat::AST::CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctionCall& other):
+CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctionCall& other):
 	CatTypedExpression(other),
 	functionName(other.functionName),
+	lowerCaseFunctionName(other.lowerCaseFunctionName),
 	nameLexeme(other.nameLexeme),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	base(other.base != nullptr ? static_cast<CatTypedExpression*>(other.base->copy()) : nullptr),
@@ -49,7 +52,7 @@ jitcat::AST::CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctio
 }
 
 
-CatASTNode* jitcat::AST::CatMemberFunctionCall::copy() const
+CatASTNode* CatMemberFunctionCall::copy() const
 {
 	return new CatMemberFunctionCall(*this);
 }
@@ -80,7 +83,7 @@ std::any CatMemberFunctionCall::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-std::any jitcat::AST::CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContext, std::any baseValue)
+std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContext, std::any baseValue)
 {
 	if (memberFunctionInfo != nullptr && runtimeContext != nullptr)
 	{
@@ -99,12 +102,16 @@ std::any jitcat::AST::CatMemberFunctionCall::executeWithBase(CatRuntimeContext* 
 
 bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	if (!arguments->typeCheck(compiletimeContext, errorManager, errorContext))
+	{
+		return false;
+	}
 	returnType = CatGenericType::unknownType;
 	if (base == nullptr)
 	{
 		//function call without a base. Check Scopes.
 		CatScopeID scopeId = InvalidScopeID;
-		MemberFunctionInfo* memberFunctionInfo = compiletimeContext->findFunction(Tools::toLowerCase(functionName), scopeId);
+		MemberFunctionInfo* memberFunctionInfo = compiletimeContext->findMemberFunction(this, scopeId);
 		if (memberFunctionInfo != nullptr && scopeId != InvalidScopeID)
 		{
 			base.reset(new CatScopeRoot(scopeId, getLexeme()));
@@ -124,7 +131,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		if (baseType.isPointerToReflectableObjectType()
 			|| baseType.isReflectableHandleType())
 		{
-			memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(Tools::toLowerCase(functionName));
+			memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(this);
 		}
 		else
 		{
@@ -141,10 +148,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
 				return false;
 			}
-			if (!arguments->typeCheck(compiletimeContext, errorManager, errorContext))
-			{
-				return false;
-			}
+
 			for (unsigned int i = 0; i < numArgumentsSupplied; i++)
 			{
 				if (!memberFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false))
@@ -206,25 +210,44 @@ CatArgumentList* CatMemberFunctionCall::getArguments() const
 	return arguments.get();
 }
 
-const std::string& jitcat::AST::CatMemberFunctionCall::getFunctionName() const
+const std::string& CatMemberFunctionCall::getFunctionName() const
 {
 	return functionName;
 }
 
 
-void jitcat::AST::CatMemberFunctionCall::setFunctionName(const std::string& name)
+void CatMemberFunctionCall::setFunctionName(const std::string& name)
 {
 	functionName = name;
+	lowerCaseFunctionName = Tools::toLowerCase(name);
 }
 
 
-void jitcat::AST::CatMemberFunctionCall::setBase(std::unique_ptr<CatTypedExpression> newBase)
+void CatMemberFunctionCall::setBase(std::unique_ptr<CatTypedExpression> newBase)
 {
 	base.reset(newBase.release());
 }
 
 
-const Tokenizer::Lexeme& jitcat::AST::CatMemberFunctionCall::getNameLexeme() const
+const Tokenizer::Lexeme& CatMemberFunctionCall::getNameLexeme() const
 {
 	return nameLexeme;
+}
+
+
+const std::string& CatMemberFunctionCall::getLowerCaseFunctionName() const
+{
+	return lowerCaseFunctionName;
+}
+
+
+int CatMemberFunctionCall::getNumParameters() const
+{
+	return (int)arguments->getNumArguments();
+}
+
+
+const CatGenericType& CatMemberFunctionCall::getParameterType(int index) const
+{
+	return arguments->getArgumentType(index);
 }

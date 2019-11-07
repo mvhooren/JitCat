@@ -9,6 +9,7 @@
 #include "jitcat/ArrayMemberFunctionInfo.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/ContainerManipulator.h"
+#include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/StaticMemberInfo.h"
@@ -230,7 +231,7 @@ StaticMemberInfo* jitcat::Reflection::TypeInfo::getStaticMemberInfo(const std::s
 }
 
 
-MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifier) const
+MemberFunctionInfo* TypeInfo::getFirstMemberFunctionInfo(const std::string& identifier) const
 {
 	auto iter = memberFunctions.find(Tools::toLowerCase(identifier));
 	if (iter != memberFunctions.end())
@@ -244,7 +245,29 @@ MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const std::string& identifie
 }
 
 
-StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(const std::string& identifier) const
+MemberFunctionInfo* jitcat::Reflection::TypeInfo::getMemberFunctionInfo(const FunctionSignature* functionSignature) const
+{
+	return getMemberFunctionInfo(*functionSignature);
+}
+
+
+MemberFunctionInfo* jitcat::Reflection::TypeInfo::getMemberFunctionInfo(const FunctionSignature& functionSignature) const
+{
+	std::string lowerCaseFunctionName = functionSignature.getLowerCaseFunctionName();
+	auto lowerBound = memberFunctions.lower_bound(lowerCaseFunctionName);
+	auto upperBound = memberFunctions.upper_bound(lowerCaseFunctionName);
+	for (auto& iter = lowerBound; iter != upperBound; ++iter)
+	{
+		if (iter->second->compare(functionSignature))
+		{
+			return iter->second.get();
+		}
+	}
+	return nullptr;
+}
+
+
+StaticFunctionInfo* jitcat::Reflection::TypeInfo::getFirstStaticMemberFunctionInfo(const std::string& identifier) const
 {
 	auto iter = staticFunctions.find(Tools::toLowerCase(identifier));
 	if (iter != staticFunctions.end())
@@ -255,6 +278,28 @@ StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(co
 	{
 		return nullptr;
 	}
+}
+
+
+StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(const FunctionSignature* functionSignature) const
+{
+	return getStaticMemberFunctionInfo(*functionSignature);
+}
+
+
+StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(const FunctionSignature& functionSignature) const
+{
+	std::string lowerCaseFunctionName = functionSignature.getLowerCaseFunctionName();
+	auto lowerBound = staticFunctions.lower_bound(lowerCaseFunctionName);
+	auto upperBound = staticFunctions.upper_bound(lowerCaseFunctionName);
+	for (auto& iter = lowerBound; iter != upperBound; ++iter)
+	{
+		if (iter->second->compare(functionSignature))
+		{
+			return iter->second.get();
+		}
+	}
+	return nullptr;
 }
 
 
@@ -386,7 +431,7 @@ const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& TypeInfo::getMembe
 }
 
 
-const std::map<std::string, std::unique_ptr<MemberFunctionInfo>>& TypeInfo::getMemberFunctions() const
+const std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>>& TypeInfo::getMemberFunctions() const
 {
 	return memberFunctions;
 }

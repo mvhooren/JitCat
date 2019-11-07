@@ -202,11 +202,11 @@ TypeMemberInfo* CatRuntimeContext::findVariable(const std::string& lowercaseName
 }
 
 
-MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercaseName, CatScopeID& scopeId)
+MemberFunctionInfo* CatRuntimeContext::findFirstMemberFunction(const std::string& lowercaseName, CatScopeID& scopeId)
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getMemberFunctionInfo(lowercaseName);
+		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getFirstMemberFunctionInfo(lowercaseName);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = i;
@@ -215,7 +215,31 @@ MemberFunctionInfo* CatRuntimeContext::findFunction(const std::string& lowercase
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getMemberFunctionInfo(lowercaseName);
+		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getFirstMemberFunctionInfo(lowercaseName);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = InvalidScopeID - i - 1;
+			return memberFunctionInfo;
+		}
+	}
+	return nullptr;
+}
+
+
+Reflection::MemberFunctionInfo* jitcat::CatRuntimeContext::findMemberFunction(const FunctionSignature* functionSignature, CatScopeID& scopeId)
+{
+	for (int i = (int)scopes.size() - 1; i >= 0; i--)
+	{
+		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getMemberFunctionInfo(functionSignature);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = i;
+			return memberFunctionInfo;
+		}
+	}
+	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
+	{
+		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getMemberFunctionInfo(functionSignature);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;

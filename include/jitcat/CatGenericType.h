@@ -9,6 +9,7 @@
 
 #include "jitcat/CatInfixOperatorType.h"
 #include "jitcat/ContainerType.h"
+#include "jitcat/InfixOperatorResultInfo.h"
 #include "jitcat/TypeOwnershipSemantics.h"
 
 #include <any>
@@ -113,7 +114,7 @@ namespace jitcat
 		const CatGenericType& getContainerItemType() const;
 		const char* getObjectTypeName() const;
 
-		CatGenericType getInfixOperatorResultType(AST::CatInfixOperatorType oper, const CatGenericType& rightType, bool& isOverloadedOperator);
+		AST::InfixOperatorResultInfo getInfixOperatorResultInfo(AST::CatInfixOperatorType oper, const CatGenericType& rightType);
 
 		std::string toString() const;
 		

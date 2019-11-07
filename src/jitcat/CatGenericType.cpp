@@ -10,6 +10,7 @@
 #include "jitcat/Configuration.h"
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/MemberFunctionInfo.h"
+#include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/XMLHelper.h"
@@ -462,16 +463,19 @@ const char* CatGenericType::getObjectTypeName() const
 }
 
 
-CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType oper, const CatGenericType& rightType, bool& isOverloadedOperator)
+InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOperatorType oper, const CatGenericType& rightType)
 {
-	isOverloadedOperator = false;
+	InfixOperatorResultInfo resultInfo;
+	resultInfo.setIsOverloaded(false);
 	if (!rightType.isValidType())
 	{
-		return rightType;
+		resultInfo.setResultType(rightType);
+		return resultInfo;
 	}
 	else if (!isValidType())
 	{
-		return *this;
+		resultInfo.setResultType(*this);
+		return resultInfo;
 	}
 	else if (isBasicType()
 			 && rightType.isBasicType())
@@ -482,7 +486,8 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 			case CatInfixOperatorType::Plus:			
 				if (isStringType() || rightType.isStringType())
 				{
-					return CatGenericType::stringType;
+					resultInfo.setResultType(CatGenericType::stringType);
+					return resultInfo;
 				}
 				//Intentional lack of break
 			case CatInfixOperatorType::Minus:
@@ -490,13 +495,15 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 			case CatInfixOperatorType::Divide:
 				if (isScalarType() && rightType.isScalarType())
 				{
-					return CatGenericType((isIntType() && rightType.isIntType()) ? BasicType::Int : BasicType::Float);
+					resultInfo.setResultType(CatGenericType((isIntType() && rightType.isIntType()) ? BasicType::Int : BasicType::Float));
+					return resultInfo;
 				}
 				break;
 			case CatInfixOperatorType::Modulo:
 				if (isScalarType() && rightType.isScalarType())
 				{
-					return CatGenericType(basicType);
+					resultInfo.setResultType(CatGenericType(basicType));
+					return resultInfo;
 				}
 				break;
 			case CatInfixOperatorType::Greater:
@@ -505,7 +512,8 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 			case CatInfixOperatorType::SmallerOrEqual:
 				if (isScalarType() && rightType.isScalarType())
 				{
-					return CatGenericType::boolType;
+					resultInfo.setResultType(CatGenericType::boolType);
+					return resultInfo;
 				}
 				break;
 			case CatInfixOperatorType::Equals:
@@ -513,35 +521,66 @@ CatGenericType CatGenericType::getInfixOperatorResultType(CatInfixOperatorType o
 				if (*this == rightType
 					|| (isScalarType() && rightType.isScalarType()))
 				{
-					return CatGenericType::boolType;
+					resultInfo.setResultType(CatGenericType::boolType);
+					return resultInfo;
 				}
 				break;
 			case CatInfixOperatorType::LogicalAnd:
 			case CatInfixOperatorType::LogicalOr:
 				if (isBoolType() && rightType.isBoolType())
 				{
-					return CatGenericType::boolType;
+					resultInfo.setResultType(CatGenericType::boolType);
+					return resultInfo;
 				}
 				break;
 		}
 	}
-	else if (isReflectablePointerOrHandle() 
-			 && rightType.isReflectablePointerOrHandle()
-		     && compare(rightType, false))
+	else 
 	{
-		MemberFunctionInfo* memberFunctionInfo = pointeeType->nestedType->getMemberFunctionInfo(::toString(oper));
-		isOverloadedOperator = true;
+		//First check if there is a member function overloading this operator.
+		MemberFunctionInfo* memberFunctionInfo = nullptr;
+		if (isReflectablePointerOrHandle())
+		{
+			SearchFunctionSignature signature(::toString(oper), {rightType});
+			memberFunctionInfo = pointeeType->nestedType->getMemberFunctionInfo(&signature);
+		}
+		resultInfo.setIsOverloaded(true);
 		if (memberFunctionInfo != nullptr)
 		{
-			if (memberFunctionInfo->getNumberOfArguments() == 1
-				&& memberFunctionInfo->argumentTypes[0].compare(rightType, false))
+			resultInfo.setResultType(memberFunctionInfo->returnType);
+			return resultInfo;
+		}
+		else
+		{
+			//If there is no member function, check for a static member function in either type.
+			SearchFunctionSignature staticSignature(::toString(oper), {*this, rightType});
+			StaticFunctionInfo* staticMemberFunctionInfo = nullptr;
+			if (isReflectablePointerOrHandle())
 			{
-				return memberFunctionInfo->returnType;
+				staticMemberFunctionInfo = pointeeType->nestedType->getStaticMemberFunctionInfo(&staticSignature);
+				if (staticMemberFunctionInfo != nullptr)
+				{
+					resultInfo.setStaticOverloadType(pointeeType->nestedType);
+				}
+			}
+			if (staticMemberFunctionInfo == nullptr && rightType.isReflectablePointerOrHandle())
+			{
+				staticMemberFunctionInfo = rightType.getPointeeType()->nestedType->getStaticMemberFunctionInfo(&staticSignature);
+				if (staticMemberFunctionInfo != nullptr)
+				{
+					resultInfo.setStaticOverloadType(rightType.getPointeeType()->nestedType);
+				}
+			}
+
+			if (staticMemberFunctionInfo != nullptr)
+			{
+				resultInfo.setResultType(staticMemberFunctionInfo->getReturnType());
+				return resultInfo;
 			}
 		}
 	}
 
-	return CatGenericType::unknownType;
+	return resultInfo;
 }
 
 

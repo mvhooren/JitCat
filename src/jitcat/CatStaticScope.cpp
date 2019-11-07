@@ -84,7 +84,12 @@ bool CatStaticScope::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 		else
 		{
 			CatScopeID scopeId = InvalidScopeID;
-			scopeType = compiletimeContext->findType(Tools::toLowerCase(scopeName), scopeId);
+			std::string lowerScopeName = Tools::toLowerCase(scopeName);
+			scopeType = compiletimeContext->findType(lowerScopeName, scopeId);
+			if (scopeType == nullptr)
+			{
+				scopeType = TypeRegistry::get()->getTypeInfo(lowerScopeName);
+			}
 		}
 		if (scopeType == nullptr)
 		{

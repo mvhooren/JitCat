@@ -40,9 +40,15 @@ namespace jitcat
 	template <typename U>
 	const CatGenericType& TypeTraits<U*>::toGenericType()
 	{
-		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<U>();
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(CatGenericType(typeInfo), TypeOwnershipSemantics::Weak, false));
-		return *type.get();
+		if constexpr (std::is_fundamental<U>::value || std::is_same<std::string, U>::value)
+		{
+			static std::unique_ptr<CatGenericType> type(new CatGenericType(TypeTraits<U>::toGenericType(), TypeOwnershipSemantics::Weak, false));
+			return *type.get();
+		}
+		else
+		{
+			return TypeTraits<U>::toGenericType();
+		}
 	}
 
 

@@ -30,7 +30,7 @@ namespace jitcat::Reflection
 			int numParameters = functionDefinition->getNumParameters(); 
 			for (int i = 0; i < numParameters; i++)
 			{
-				argumentTypes.push_back(functionDefinition->getParameterType(i)->getType());
+				argumentTypes.push_back(functionDefinition->getParameterType(i));
 			}
 		};
 
