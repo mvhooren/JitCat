@@ -31,4 +31,5 @@ source_group("" FILES
 add_compile_definitions(JITCATVALIDATOR_EXPORTS)
 
 target_link_libraries(JitCatValidator PRIVATE JitCat)
-					  
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER JitCat)

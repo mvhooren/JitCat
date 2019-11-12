@@ -18,3 +18,5 @@ target_link_libraries(JitCatValidatorTool JitCatValidator)
 if(UNIX)
 	set_target_properties(JitCatValidatorTool PROPERTIES INSTALL_RPATH "./")
 endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER JitCat)

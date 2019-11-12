@@ -30,3 +30,5 @@ add_executable(JitCatUnitTests
 add_dependencies(JitCatUnitTests JitCat)
 
 target_link_libraries(JitCatUnitTests JitCat)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER JitCat)

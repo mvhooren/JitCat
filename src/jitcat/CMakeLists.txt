@@ -390,3 +390,4 @@ add_library(JitCat STATIC
 	${Source_Tools}
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER JitCat)

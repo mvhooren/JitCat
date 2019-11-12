@@ -34,3 +34,5 @@ add_executable(BasicExample
 add_dependencies(BasicExample JitCat)
 
 target_link_libraries(BasicExample JitCat)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER JitCat)
