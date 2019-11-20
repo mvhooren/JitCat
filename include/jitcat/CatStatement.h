@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CatASTNode.h"
+#include "jitcat/CatASTNode.h"
 
 #include <any>
 #include <optional>

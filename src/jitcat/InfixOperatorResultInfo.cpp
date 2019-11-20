@@ -22,7 +22,7 @@ InfixOperatorResultInfo::InfixOperatorResultInfo():
 
 void InfixOperatorResultInfo::setResultType(const CatGenericType& result)
 {
-	resultType.get()->operator=(result);
+	resultType->operator=(result);
 }
 
 

@@ -17,7 +17,7 @@
 #include "jitcat/TypeRegistry.h"
 #include "jitcat/TypeTraits.h"
 #include "jitcat/MemberTypeInfoCreator.h"
-#include "ReflectedTypeInfo.h"
+#include "jitcat/ReflectedTypeInfo.h"
 
 
 #include <type_traits>

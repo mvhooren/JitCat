@@ -49,7 +49,7 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseMultiplication(std::uniqu
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseAddition(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs)
 {
-	if (lhs.get()->getType().isStringType() || rhs.get()->getType().isStringType())	return nullptr;
+	if (lhs->getType().isStringType() || rhs->getType().isStringType())	return nullptr;
 	else if (typedExpressionEqualsConstant(lhs.get(), 0.0f))						return rhs.release();
 	else if (typedExpressionEqualsConstant(rhs.get(), 0.0f))						return lhs.release();
 	else																			return nullptr;

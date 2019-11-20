@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "CatScopeID.h"
+#include "jitcat/CatScopeID.h"
 
 namespace jitcat::Reflection
 {
