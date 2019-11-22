@@ -82,33 +82,20 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			}
 		}
 		case CatBuiltInFunctionType::ToFixedLengthString:	return LLVMCatIntrinsics::intToFixedLengthString(std::any_cast<int>(argumentValues[0]), std::any_cast<int>(argumentValues[1]));
+
 		case CatBuiltInFunctionType::Sin:
-			if (argumentTypes[0].isFloatType())
-			{
-				return (float)std::sin(std::any_cast<float>(argumentValues[0]));
-			}
-			else
-			{
-				return (float)std::sin((float)std::any_cast<int>(argumentValues[0]));
-			}
+			return (float)std::sin(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
 		case CatBuiltInFunctionType::Cos:
-			if (argumentTypes[0].isFloatType())
-			{
-				return (float)std::cos(std::any_cast<float>(argumentValues[0]));
-			}
-			else
-			{
-				return (float)std::cos((float)std::any_cast<int>(argumentValues[0]));
-			}
+			return (float)std::cos(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
 		case CatBuiltInFunctionType::Tan:
-			if (argumentTypes[0].isFloatType())
-			{
-				return (float)std::tan(std::any_cast<float>(argumentValues[0]));
-			}
-			else
-			{
-				return (float)std::tan((float)std::any_cast<int>(argumentValues[0]));
-			}
+			return (float)std::tan(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Asin:
+			return (float)std::asin(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Acos:
+			return (float)std::acos(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Atan:
+			return (float)std::atan(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+
 		case CatBuiltInFunctionType::Random:		return std::any(static_cast<float> (std::rand()) / static_cast <float> (RAND_MAX));
 		case CatBuiltInFunctionType::RandomRange:
 		{
@@ -398,6 +385,9 @@ CatGenericType CatFunctionCall::typeCheck()
 			case CatBuiltInFunctionType::Sin:
 			case CatBuiltInFunctionType::Cos:
 			case CatBuiltInFunctionType::Tan:
+			case CatBuiltInFunctionType::Asin:
+			case CatBuiltInFunctionType::Acos:
+			case CatBuiltInFunctionType::Atan:
 				if (argumentTypes[0].isScalarType())
 				{
 					return CatGenericType::floatType;
@@ -635,6 +625,9 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::Sin:
 			case CatBuiltInFunctionType::Cos:
 			case CatBuiltInFunctionType::Tan:
+			case CatBuiltInFunctionType::Asin:
+			case CatBuiltInFunctionType::Acos:
+			case CatBuiltInFunctionType::Atan:
 			case CatBuiltInFunctionType::Random:
 			case CatBuiltInFunctionType::Log:
 			case CatBuiltInFunctionType::Pow:
@@ -767,6 +760,9 @@ bool CatFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::Sin:
 		case CatBuiltInFunctionType::Cos:
 		case CatBuiltInFunctionType::Tan:
+		case CatBuiltInFunctionType::Asin:
+		case CatBuiltInFunctionType::Acos:
+		case CatBuiltInFunctionType::Atan:
 		case CatBuiltInFunctionType::Log:
 		case CatBuiltInFunctionType::Sqrt:
 		case CatBuiltInFunctionType::Ceil:
@@ -823,6 +819,9 @@ std::vector<std::string> CatFunctionCall::functionTable =
 	 "sin",					//CatBuiltInFunctionType::Sin
 	 "cos",					//CatBuiltInFunctionType::Cos
 	 "tan",					//CatBuiltInFunctionType::Tan
+	 "asin",				//CatBuiltInFunctionType::Asin
+	 "acos",				//CatBuiltInFunctionType::Acos
+	 "atan",				//CatBuiltInFunctionType::Atan
 	 "rand",				//CatBuiltInFunctionType::Random
 	 "rand",				//CatBuiltInFunctionType::RandomRange
 	 "round",				//CatBuiltInFunctionType::Round
