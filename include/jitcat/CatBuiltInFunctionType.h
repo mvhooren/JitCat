@@ -40,6 +40,8 @@ namespace jitcat::AST
 		Min,
 		Max,
 		Log,
+		Ln,
+		Exp,
 		Sqrt,
 		Pow,
 		Ceil,

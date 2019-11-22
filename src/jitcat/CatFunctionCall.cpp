@@ -246,6 +246,10 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			{
 				return std::any((float)std::log10((float)std::any_cast<int>(argumentValues[0])));
 			}
+		case CatBuiltInFunctionType::Ln:
+			return (float)std::log(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Exp:
+			return (float)std::exp(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
 		case CatBuiltInFunctionType::Sqrt:
 			if (argumentTypes[0].isFloatType())
 			{
@@ -509,6 +513,8 @@ CatGenericType CatFunctionCall::typeCheck()
 					return CatGenericType(Tools::append(name, ": expected two numbers as arguments."));
 				}
 			case CatBuiltInFunctionType::Log:
+			case CatBuiltInFunctionType::Ln:
+			case CatBuiltInFunctionType::Exp:
 			case CatBuiltInFunctionType::Sqrt:
 			case CatBuiltInFunctionType::Ceil:
 			case CatBuiltInFunctionType::Floor:
@@ -655,6 +661,8 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::Atanh:
 			case CatBuiltInFunctionType::Random:
 			case CatBuiltInFunctionType::Log:
+			case CatBuiltInFunctionType::Ln:
+			case CatBuiltInFunctionType::Exp:
 			case CatBuiltInFunctionType::Pow:
 			case CatBuiltInFunctionType::Sqrt:
 			case CatBuiltInFunctionType::Ceil:
@@ -795,6 +803,8 @@ bool CatFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::Acosh:
 		case CatBuiltInFunctionType::Atanh:
 		case CatBuiltInFunctionType::Log:
+		case CatBuiltInFunctionType::Ln:
+		case CatBuiltInFunctionType::Exp:
 		case CatBuiltInFunctionType::Sqrt:
 		case CatBuiltInFunctionType::Ceil:
 		case CatBuiltInFunctionType::Floor:
@@ -868,6 +878,8 @@ std::vector<std::string> CatFunctionCall::functionTable =
 	 "min",					//CatBuiltInFunctionType::Min 
 	 "max",					//CatBuiltInFunctionType::Max
 	 "log",					//CatBuiltInFunctionType::Log
+	 "ln",					//CatBuiltInFunctionType::Ln
+	 "exp",					//CatBuiltInFunctionType::Exp
 	 "sqrt",				//CatBuiltInFunctionType::Sqrt
 	 "pow",					//CatBuiltInFunctionType::Pow
 	 "ceil",				//CatBuiltInFunctionType::Ceil
