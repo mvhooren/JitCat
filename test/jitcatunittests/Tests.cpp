@@ -352,6 +352,11 @@ TEST_CASE("Regression testing", "[regression]")
 		doCommonChecks(&testExpression, false, true, true, context);
 		CHECK(testExpression.getType().isFloatType());
 	}
+	SECTION("Constant with extraneous negative")
+	{
+		Expression<float> testExpression(&context, "1.-1");
+		doChecks(0.0f, false, true, false, testExpression, context);
+	}
 }
 
 
