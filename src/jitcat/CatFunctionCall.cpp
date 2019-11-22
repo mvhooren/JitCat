@@ -96,6 +96,19 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		case CatBuiltInFunctionType::Atan:
 			return (float)std::atan(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
 
+		case CatBuiltInFunctionType::Sinh:
+			return (float)std::sinh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Cosh:
+			return (float)std::cosh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Tanh:
+			return (float)std::tanh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Asinh:
+			return (float)std::asinh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Acosh:
+			return (float)std::acosh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Atanh:
+			return (float)std::atanh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+
 		case CatBuiltInFunctionType::Random:		return std::any(static_cast<float> (std::rand()) / static_cast <float> (RAND_MAX));
 		case CatBuiltInFunctionType::RandomRange:
 		{
@@ -388,6 +401,12 @@ CatGenericType CatFunctionCall::typeCheck()
 			case CatBuiltInFunctionType::Asin:
 			case CatBuiltInFunctionType::Acos:
 			case CatBuiltInFunctionType::Atan:
+			case CatBuiltInFunctionType::Sinh:
+			case CatBuiltInFunctionType::Cosh:
+			case CatBuiltInFunctionType::Tanh:
+			case CatBuiltInFunctionType::Asinh:
+			case CatBuiltInFunctionType::Acosh:
+			case CatBuiltInFunctionType::Atanh:
 				if (argumentTypes[0].isScalarType())
 				{
 					return CatGenericType::floatType;
@@ -628,6 +647,12 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::Asin:
 			case CatBuiltInFunctionType::Acos:
 			case CatBuiltInFunctionType::Atan:
+			case CatBuiltInFunctionType::Sinh:
+			case CatBuiltInFunctionType::Cosh:
+			case CatBuiltInFunctionType::Tanh:
+			case CatBuiltInFunctionType::Asinh:
+			case CatBuiltInFunctionType::Acosh:
+			case CatBuiltInFunctionType::Atanh:
 			case CatBuiltInFunctionType::Random:
 			case CatBuiltInFunctionType::Log:
 			case CatBuiltInFunctionType::Pow:
@@ -763,6 +788,12 @@ bool CatFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::Asin:
 		case CatBuiltInFunctionType::Acos:
 		case CatBuiltInFunctionType::Atan:
+		case CatBuiltInFunctionType::Sinh:
+		case CatBuiltInFunctionType::Cosh:
+		case CatBuiltInFunctionType::Tanh:
+		case CatBuiltInFunctionType::Asinh:
+		case CatBuiltInFunctionType::Acosh:
+		case CatBuiltInFunctionType::Atanh:
 		case CatBuiltInFunctionType::Log:
 		case CatBuiltInFunctionType::Sqrt:
 		case CatBuiltInFunctionType::Ceil:
@@ -822,6 +853,12 @@ std::vector<std::string> CatFunctionCall::functionTable =
 	 "asin",				//CatBuiltInFunctionType::Asin
 	 "acos",				//CatBuiltInFunctionType::Acos
 	 "atan",				//CatBuiltInFunctionType::Atan
+	 "sinh",				//CatBuiltInFunctionType::Sinh
+	 "cosh",				//CatBuiltInFunctionType::Cosh
+	 "tanh",				//CatBuiltInFunctionType::Tanh
+	 "asinh",				//CatBuiltInFunctionType::Asinh
+	 "acosh",				//CatBuiltInFunctionType::Acosh
+	 "atanh",				//CatBuiltInFunctionType::Atanh
 	 "rand",				//CatBuiltInFunctionType::Random
 	 "rand",				//CatBuiltInFunctionType::RandomRange
 	 "round",				//CatBuiltInFunctionType::Round
