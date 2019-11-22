@@ -18,7 +18,7 @@ using namespace jitcat::LLVM;
 
 
 LLVMJit::LLVMJit():
-	context(new llvm::orc::ThreadSafeContext(llvm::make_unique<llvm::LLVMContext>())),
+	context(new llvm::orc::ThreadSafeContext(std::make_unique<llvm::LLVMContext>())),
 	targetMachineBuilder(llvm::cantFail(llvm::orc::JITTargetMachineBuilder::detectHost())),
 	targetMachine(std::move(llvm::cantFail(targetMachineBuilder.createTargetMachine()))),
 	dataLayout(new llvm::DataLayout(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),

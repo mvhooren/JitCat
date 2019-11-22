@@ -178,7 +178,7 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 		offset++;
 		return ConstantType::FloatingPoint;
 	}
-	else if (pastDot && ParseHelper::isNumber(text[offset - 1]))
+	else if (pastDot && offset > 1)
 	{
 		return ConstantType::FloatingPoint;
 	}

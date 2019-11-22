@@ -96,7 +96,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
 	helper->setCurrentModule(currentModule.get());
 	// Create a new pass manager attached to it.
-	passManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
+	passManager = std::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
 
 	// Do simple "peephole" optimizations and bit-twiddling optzns.
 	passManager->add(llvm::createInstructionCombiningPass());
@@ -919,7 +919,7 @@ void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
 
 	// Create a new pass manager attached to it.
-	passManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
+	passManager = std::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
 
 	// Do simple "peephole" optimizations and bit-twiddling optzns.
 	passManager->add(llvm::createInstructionCombiningPass());
