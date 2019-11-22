@@ -83,6 +83,7 @@ ConstantType ConstantToken::parseConstant(const char* text, std::size_t textLeng
 {
 	if (offset >= textLength)								return ConstantType::NoType;
 	else if (ParseHelper::isNonZeroNumber(text[offset]))	return parseIntOrFloat(text, textLength, ++offset);
+	else if (text[offset] == '.')							return parseFloat(text, textLength, ++offset, true, false);
 	else if (text[offset] == '0')							return parseFloatOrHexOrOct(text, textLength, ++offset);
 	else if (text[offset] == '"')							return parseString(text, textLength, ++offset, false);
 	else if (text[offset] == '\'')							return parseChar(text, textLength, ++offset);
@@ -96,6 +97,8 @@ ConstantType ConstantToken::parseIntOrFloat(const char* text, std::size_t textLe
 	if (offset >= textLength)						return ConstantType::Integer;
 	else if (ParseHelper::isNumber(text[offset]))	return parseIntOrFloat(text, textLength, ++offset);
 	else if (text[offset] == '.')					return parseFloat(text, textLength, ++offset, true, false);
+	else if ((text[offset] == 'e')
+			 || (text[offset] == 'E'))				return parseFloatWithExponent(text, textLength, ++offset, false);
 	else											return ConstantType::Integer;
 }
 
@@ -106,6 +109,8 @@ ConstantType ConstantToken::parseFloatOrHexOrOct(const char* text, std::size_t t
 	else if (ParseHelper::isOctNumber(text[offset]))	return parseFloatOrOct(text, textLength, ++offset);
 	else if (ParseHelper::isNumber(text[offset]))		return parseFloat(text, textLength, ++offset, false, false);
 	else if (text[offset] == '.')						return parseFloat(text, textLength, ++offset, true, false);
+	else if ((text[offset] == 'e')
+			 || (text[offset] == 'E'))					return parseFloatWithExponent(text, textLength, ++offset, false);
 	else if (text[offset] == 'x'
 			 || text[offset] == 'X')					return parseHex(text, textLength, ++offset);
 	else												return ConstantType::Integer;
@@ -142,7 +147,7 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 {
 	if (offset >= textLength)
 	{
-		if (pastDot && ParseHelper::isNumber(text[offset - 1]))
+		if (pastDot || pastExponent)
 		{
 			return ConstantType::FloatingPoint;
 		}
@@ -156,33 +161,18 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 	{
 		return parseFloat(text, textLength, ++offset, pastDot, pastExponent);
 	}
-	else if (!pastDot
+	else if (!pastDot && !pastExponent
 			 && text[offset] == '.')
 	{
 		return parseFloat(text, textLength, ++offset, true, pastExponent);
 	}
 	else if (pastDot && !pastExponent 
-		     && (text[offset] == 'e' || text[offset] == 'E'))
+		     && (text[offset] == 'e' || text[offset] == 'E')
+		     && offset > 1)
 	{
-		std::size_t  exponentOffset = 0;
-		if (parseFloatExponent(text + offset + 1, textLength, exponentOffset))
-		{
-			offset += exponentOffset + 1;
-			return parseFloat(text, textLength, offset, pastDot, true);
-		}
-		else
-		{
-			if (pastDot && ParseHelper::isNumber(text[offset - 1]))
-			{
-				return ConstantType::FloatingPoint;
-			}
-			else
-			{
-				return ConstantType::NoType;
-			}
-		}
+		return parseFloatWithExponent(text, textLength, ++offset, pastDot);
 	}
-	else if (pastDot && ParseHelper::isNumber(text[offset - 1]) 
+	else if (((pastDot && offset > 1) || pastExponent) 
 		     && (text[offset] == 'f' || text[offset] == 'F'))
 	{
 		offset++;
@@ -195,6 +185,28 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 	else
 	{
 		return ConstantType::NoType;
+	}
+}
+
+
+ConstantType jitcat::Tokenizer::ConstantToken::parseFloatWithExponent(const char* text, std::size_t textLength, std::size_t& offset, bool pastDot) const
+{
+	std::size_t  exponentOffset = 0;
+	if (parseFloatExponent(text + offset, textLength, exponentOffset))
+	{
+		offset += exponentOffset;
+		return parseFloat(text, textLength, offset, pastDot, true);
+	}
+	else
+	{
+		if (pastDot && ParseHelper::isNumber(text[offset - 1]))
+		{
+			return ConstantType::FloatingPoint;
+		}
+		else
+		{
+			return ConstantType::NoType;
+		}
 	}
 }
 
