@@ -31,6 +31,8 @@ namespace jitcat::AST
 		Asinh,
 		Acosh,
 		Atanh,
+		Atan2,
+		Hypot,
 		Random,
 		RandomRange,
 		Round,

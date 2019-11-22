@@ -108,6 +108,18 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			return (float)std::acosh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
 		case CatBuiltInFunctionType::Atanh:
 			return (float)std::atanh(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+		case CatBuiltInFunctionType::Atan2:
+		{
+			float y = CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]);
+			float x = CatGenericType::convertToFloat(argumentValues[1], argumentTypes[1]);
+			return (float)std::atan2(y, x);
+		}
+		case CatBuiltInFunctionType::Hypot:
+		{
+			float x = CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]);
+			float y = CatGenericType::convertToFloat(argumentValues[1], argumentTypes[1]);
+			return (float)std::hypot(x, y);
+		}
 
 		case CatBuiltInFunctionType::Random:		return std::any(static_cast<float> (std::rand()) / static_cast <float> (RAND_MAX));
 		case CatBuiltInFunctionType::RandomRange:
@@ -419,6 +431,24 @@ CatGenericType CatFunctionCall::typeCheck()
 				{
 					return CatGenericType(Tools::append(name, ": expected a number as argument."));
 				}
+			case CatBuiltInFunctionType::Atan2:
+				if (argumentTypes[0].isScalarType() && argumentTypes[1].isScalarType())
+				{
+					return CatGenericType::floatType;
+				}
+				else
+				{
+					return CatGenericType(Tools::append(name, ": expected two numbers as arguments."));
+				}
+			case CatBuiltInFunctionType::Hypot:
+				if (argumentTypes[0].isScalarType() && argumentTypes[1].isScalarType())
+				{
+					return CatGenericType::floatType;
+				}
+				else
+				{
+					return CatGenericType(Tools::append(name, ": expected two numbers as arguments."));
+				}
 			case CatBuiltInFunctionType::Random:		return CatGenericType::floatType;
 			case CatBuiltInFunctionType::RandomRange:
 			{
@@ -659,6 +689,8 @@ CatGenericType CatFunctionCall::getType() const
 			case CatBuiltInFunctionType::Asinh:
 			case CatBuiltInFunctionType::Acosh:
 			case CatBuiltInFunctionType::Atanh:
+			case CatBuiltInFunctionType::Atan2:
+			case CatBuiltInFunctionType::Hypot:
 			case CatBuiltInFunctionType::Random:
 			case CatBuiltInFunctionType::Log:
 			case CatBuiltInFunctionType::Ln:
@@ -809,6 +841,8 @@ bool CatFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::Ceil:
 		case CatBuiltInFunctionType::Floor:
 			return count == 1;
+		case CatBuiltInFunctionType::Atan2:
+		case CatBuiltInFunctionType::Hypot:
 		case CatBuiltInFunctionType::Round:
 		case CatBuiltInFunctionType::RandomRange:
 		case CatBuiltInFunctionType::StringRound:
@@ -869,6 +903,8 @@ std::vector<std::string> CatFunctionCall::functionTable =
 	 "asinh",				//CatBuiltInFunctionType::Asinh
 	 "acosh",				//CatBuiltInFunctionType::Acosh
 	 "atanh",				//CatBuiltInFunctionType::Atanh
+	 "atan2",				//CatBuiltInFunctionType::Atan2
+	 "hypot",				//CatBuiltInFunctionType::Hypot
 	 "rand",				//CatBuiltInFunctionType::Random
 	 "rand",				//CatBuiltInFunctionType::RandomRange
 	 "round",				//CatBuiltInFunctionType::Round
