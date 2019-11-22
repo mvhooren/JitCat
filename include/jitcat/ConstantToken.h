@@ -33,6 +33,7 @@ namespace jitcat::Tokenizer
 		ConstantType parseFloatOrHexOrOct(const char* text, std::size_t textLength, std::size_t & offset) const;
 		ConstantType parseFloatOrOct(const char* text, std::size_t textLength, std::size_t & offset) const;
 		ConstantType parseFloat(const char* text, std::size_t textLength, std::size_t & offset, bool pastDot, bool pastExponent) const;
+		ConstantType parseFloatWithExponent(const char* text, std::size_t textLength, std::size_t & offset, bool pastDot) const;
 		bool parseFloatExponent(const char* text, std::size_t textLength, std::size_t & offset) const;
 		ConstantType parseHex(const char* text, std::size_t textLength, std::size_t & offset) const;
 		ConstantType parseString(const char* text, std::size_t textLength, std::size_t & offset, bool escaped) const;

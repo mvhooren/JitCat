@@ -346,6 +346,12 @@ TEST_CASE("Regression testing", "[regression]")
 		Expression<void> testExpression(&context, "0");
 		doCommonChecks(&testExpression, false, true, true, context);
 	}
+	SECTION("Floating point literal with no decimal digits")
+	{
+		ExpressionAny testExpression(&context, "1.");
+		doCommonChecks(&testExpression, false, true, true, context);
+		CHECK(testExpression.getType().isFloatType());
+	}
 }
 
 
@@ -355,11 +361,110 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("floatTests", &errorManager);
 	context.addScope(&reflectedObject, true);	
-
 	SECTION("Constant")
 	{
 		Expression<float> testExpression(&context, "42.0f");
 		doChecks(42.0f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Decimal digits")
+	{
+		Expression<float> testExpression(&context, "42.");
+		doChecks(42.0f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Decimal digits 2")
+	{
+		Expression<float> testExpression(&context, "0.");
+		doChecks(0.0f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Integer digits")
+	{
+		Expression<float> testExpression(&context, ".05");
+		doChecks(.05f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Integer digits 2")
+	{
+		Expression<float> testExpression(&context, ".0");
+		doChecks(.0f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Integer digits, with 'f'")
+	{
+		Expression<float> testExpression(&context, ".05f");
+		doChecks(.05f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Integer digits 2, with 'f'")
+	{
+		Expression<float> testExpression(&context, ".0f");
+		doChecks(.0f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Decimal digits, with 'f'")
+	{
+		Expression<float> testExpression(&context, "42.f");
+		doChecks(42.0f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent")
+	{
+		Expression<float> testExpression(&context, "1.0e10");
+		doChecks(1e10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with negative exponent")
+	{
+		Expression<float> testExpression(&context, "1.0e-10");
+		doChecks(1e-10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent no decimal point")
+	{
+		Expression<float> testExpression(&context, "1e10");
+		doChecks(1e10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with capital exponent no decimal point")
+	{
+		Expression<float> testExpression(&context, "1E10");
+		doChecks(1e10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent no decimal point and 'f'")
+	{
+		Expression<float> testExpression(&context, "1e10f");
+		doChecks(1e10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent no decimal digits")
+	{
+		Expression<float> testExpression(&context, "1.e10");
+		doChecks(1e10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent no decimal digits, with 'f'")
+	{
+		Expression<float> testExpression(&context, "1.e10f");
+		doChecks(1e10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent and 'f'")
+	{
+		Expression<float> testExpression(&context, "1.0e10f");
+		doChecks(1e10f, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent and no floating point digits")
+	{
+		Expression<float> testExpression(&context, ".e10");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Constant with exponent and no exponent digits")
+	{
+		Expression<float> testExpression(&context, "1.0e");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Constant with exponent and no exponent digits, with 'f'")
+	{
+		Expression<float> testExpression(&context, "1.0ef");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Constant with negative exponent and no exponent digits")
+	{
+		Expression<float> testExpression(&context, "1.0e-");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Constant with exponent and extraneous 'f'")
+	{
+		Expression<float> testExpression(&context, "1.0fe10");
+		doChecks(0.0f, true, false, false, testExpression, context);
 	}
 	SECTION("Constant_2")
 	{
