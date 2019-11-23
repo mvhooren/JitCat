@@ -3303,6 +3303,206 @@ TEST_CASE("Builtin functions test: Exp", "[builtins][exp]")
 }
 
 
+TEST_CASE("Builtin functions test: Atan2", "[builtins][atan2]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Atan2", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Atan2_cc1")
+	{
+		Expression<float> testExpression(&context, "atan2(11.1f, 1)");
+		doChecks<float>(atan2(11.1f, 1.f), false, true, false, testExpression, context);
+	}
+	SECTION("Atan2_cc2")
+	{
+		Expression<float> testExpression(&context, "atan2(0, 11.0f)");
+		doChecks<float>(atan2(0.f, 11.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Atan2_cc3")
+	{
+		Expression<float> testExpression(&context, "atan2(9, -9)");
+		doChecks<float>(atan2(9.f, -9.f), false, true, false, testExpression, context);
+	}
+	SECTION("Atan2_cc4")
+	{
+		Expression<float> testExpression(&context, "atan2(-11.1f, 999.0f)");
+		doChecks<float>(atan2(-11.1f, 999.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Atan2_float_int")
+	{
+		Expression<float> testExpression(&context, "atan2(aFloat, theInt)");
+		doChecks<float>(atan2(reflectedObject.aFloat, (float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_int_float")
+	{
+		Expression<float> testExpression(&context, "atan2(theInt, aFloat)");
+		doChecks<float>(atan2((float)reflectedObject.theInt, reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_float_const")
+	{
+		Expression<float> testExpression(&context, "atan2(aFloat, 1000.0f)");
+		doChecks<float>(atan2(reflectedObject.aFloat, 1000.0f), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_float_float")
+	{
+		Expression<float> testExpression(&context, "atan2(-aFloat, aFloat)");
+		doChecks<float>(atan2(-reflectedObject.aFloat, reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_int_const")
+	{
+		Expression<float> testExpression(&context, "atan2(theInt, 10)");
+		doChecks<float>(atan2((float)reflectedObject.theInt, (float)10), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_int_int")
+	{
+		Expression<float> testExpression(&context, "atan2(theInt, largeInt)");
+		doChecks<float>(atan2((float)reflectedObject.theInt, (float)reflectedObject.largeInt), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_int_int2")
+	{
+		Expression<float> testExpression(&context, "atan2(-theInt, -largeInt)");
+		doChecks<float>(atan2((float)-reflectedObject.theInt, (float)-reflectedObject.largeInt), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_bool")
+	{
+		Expression<float> testExpression(&context, "atan2(aBoolean, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan2_stringConst")
+	{
+		Expression<float> testExpression(&context, "atan2(\"10\", 10)");
+		doChecks(0.0f, true, true, false, testExpression, context);
+	}
+	SECTION("Atan2_string")
+	{
+		Expression<float> testExpression(&context, "atan2(numberString, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan2_string2")
+	{
+		Expression<float> testExpression(&context, "atan2(text, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan2_noarg")
+	{
+		Expression<float> testExpression(&context, "atan2()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan2_morearg")
+	{
+		Expression<float> testExpression(&context, "atan2(theInt, aFloat, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan2_obj")
+	{
+		Expression<float> testExpression(&context, "atan2(nestedObject, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Hypot", "[builtins][hypot]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Hypot", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Hypot_cc1")
+	{
+		Expression<float> testExpression(&context, "hypot(11.1f, 1)");
+		doChecks<float>(hypot(11.1f, 1.f), false, true, false, testExpression, context);
+	}
+	SECTION("Hypot_cc2")
+	{
+		Expression<float> testExpression(&context, "hypot(0, 11.0f)");
+		doChecks<float>(hypot(0.f, 11.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Hypot_cc3")
+	{
+		Expression<float> testExpression(&context, "hypot(9, -9)");
+		doChecks<float>(hypot(9.f, -9.f), false, true, false, testExpression, context);
+	}
+	SECTION("Hypot_cc4")
+	{
+		Expression<float> testExpression(&context, "hypot(-11.1f, 999.0f)");
+		doChecks<float>(hypot(-11.1f, 999.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Hypot_float_int")
+	{
+		Expression<float> testExpression(&context, "hypot(aFloat, theInt)");
+		doChecks<float>(hypot(reflectedObject.aFloat, (float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_int_float")
+	{
+		Expression<float> testExpression(&context, "hypot(theInt, aFloat)");
+		doChecks<float>(hypot((float)reflectedObject.theInt, reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_float_const")
+	{
+		Expression<float> testExpression(&context, "hypot(aFloat, 1000.0f)");
+		doChecks<float>(hypot(reflectedObject.aFloat, 1000.0f), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_float_float")
+	{
+		Expression<float> testExpression(&context, "hypot(-aFloat, aFloat)");
+		doChecks<float>(hypot(-reflectedObject.aFloat, reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_int_const")
+	{
+		Expression<float> testExpression(&context, "hypot(theInt, 10)");
+		doChecks<float>(hypot((float)reflectedObject.theInt, (float)10), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_int_int")
+	{
+		Expression<float> testExpression(&context, "hypot(theInt, largeInt)");
+		doChecks<float>(hypot((float)reflectedObject.theInt, (float)reflectedObject.largeInt), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_int_int2")
+	{
+		Expression<float> testExpression(&context, "hypot(-theInt, -largeInt)");
+		doChecks<float>(hypot((float)-reflectedObject.theInt, (float)-reflectedObject.largeInt), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_bool")
+	{
+		Expression<float> testExpression(&context, "hypot(aBoolean, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Hypot_stringConst")
+	{
+		Expression<float> testExpression(&context, "hypot(\"10\", 10)");
+		doChecks(0.0f, true, true, false, testExpression, context);
+	}
+	SECTION("Hypot_string")
+	{
+		Expression<float> testExpression(&context, "hypot(numberString, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Hypot_string2")
+	{
+		Expression<float> testExpression(&context, "hypot(text, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Hypot_noarg")
+	{
+		Expression<float> testExpression(&context, "hypot()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Hypot_morearg")
+	{
+		Expression<float> testExpression(&context, "hypot(theInt, aFloat, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Hypot_obj")
+	{
+		Expression<float> testExpression(&context, "hypot(nestedObject, 10)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" ) 
 {
 	ReflectedObject reflectedObject;
