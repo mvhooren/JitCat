@@ -1832,6 +1832,166 @@ TEST_CASE("Builtin functions test: Tan", "[builtins][tan]" )
 }
 
 
+TEST_CASE("Builtin functions test: Asin", "[builtins][asin]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Asin", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Asin_Constant")
+	{
+		Expression<float> testExpression(&context, "asin(0.5f)");
+		doChecks<float>(asin(0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Asin_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "asin(-0.5f)");
+		doChecks<float>(asin(-0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Asin_Variable")
+	{
+		Expression<float> testExpression(&context, "asin(smallFloat)");
+		doChecks<float>(asin(reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Asin_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "asin(-smallFloat)");
+		doChecks<float>(asin(-reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Asin_string")
+	{
+		Expression<float> testExpression(&context, "asin(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Asin_noarg")
+	{
+		Expression<float> testExpression(&context, "asin()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Asin_morearg")
+	{
+		Expression<float> testExpression(&context, "asin(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Asin_obj")
+	{
+		Expression<float> testExpression(&context, "asin(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Acos", "[builtins][acos]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Acos", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Acos_Constant")
+	{
+		Expression<float> testExpression(&context, "acos(0.5f)");
+		doChecks<float>(acos(0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Acos_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "acos(-0.5f)");
+		doChecks<float>(acos(-0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Acos_Variable")
+	{
+		Expression<float> testExpression(&context, "acos(smallFloat)");
+		doChecks<float>(acos(reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Acos_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "acos(-smallFloat)");
+		doChecks<float>(acos(-reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Acos_string")
+	{
+		Expression<float> testExpression(&context, "acos(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Acos_noarg")
+	{
+		Expression<float> testExpression(&context, "acos()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Acos_morearg")
+	{
+		Expression<float> testExpression(&context, "acos(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Acos_obj")
+	{
+		Expression<float> testExpression(&context, "acos(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Atan", "[builtins][atan]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Atan", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Atan_Constant")
+	{
+		Expression<float> testExpression(&context, "atan(42.0f)");
+		doChecks<float>(atan(42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Atan_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "atan(-42.0f)");
+		doChecks<float>(atan(-42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Atan_Int_Constant")
+	{
+		Expression<float> testExpression(&context, "atan(3)");
+		doChecks<float>(atan((float)3), false, true, false, testExpression, context);
+	}
+	SECTION("Atan_Variable")
+	{
+		Expression<float> testExpression(&context, "atan(aFloat)");
+		doChecks<float>(atan(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atan_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "atan(-aFloat)");
+		doChecks<float>(atan(-reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atan_Int_Variable")
+	{
+		Expression<float> testExpression(&context, "atan(theInt)");
+		doChecks<float>(atan((float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Atan_string")
+	{
+		Expression<float> testExpression(&context, "atan(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan_noarg")
+	{
+		Expression<float> testExpression(&context, "atan()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan_morearg")
+	{
+		Expression<float> testExpression(&context, "atan(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atan_obj")
+	{
+		Expression<float> testExpression(&context, "atan(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" ) 
 {
 	ReflectedObject reflectedObject;
