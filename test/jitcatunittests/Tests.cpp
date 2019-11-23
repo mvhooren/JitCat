@@ -3168,6 +3168,141 @@ TEST_CASE("Builtin functions test: Log", "[builtins][log]" )
 }
 
 
+TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Ln", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Ln_Constant")
+	{
+		Expression<float> testExpression(&context, "ln(42.0f)");
+		doChecks(log(42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Ln_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "ln(-42.0f)");
+		doChecksFn<float>([](float value) {return std::isnan(value); }, false, true, false, testExpression, context);
+	}
+	SECTION("Ln_Int_Constant")
+	{
+		Expression<float> testExpression(&context, "ln(3)");
+		doChecks(log(3.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Ln_Negative_Int_Constant")
+	{
+		Expression<float> testExpression(&context, "ln(-3)");
+		doChecksFn<float>([](float value) {return std::isnan(value); }, false, true, false, testExpression, context);
+	}
+	SECTION("Ln_Zero_Variable")
+	{
+		Expression<float> testExpression(&context, "ln(zeroFloat)");
+		doChecks(-std::numeric_limits<float>::infinity(), false, false, false, testExpression, context);
+	}
+	SECTION("Ln_Variable")
+	{
+		Expression<float> testExpression(&context, "ln(aFloat)");
+		doChecks(log(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Ln_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "ln(-aFloat)");
+		doChecksFn<float>([](float value) {return std::isnan(value); }, false, false, false, testExpression, context);
+	}
+	SECTION("Ln_Int_Variable")
+	{
+		Expression<float> testExpression(&context, "ln(theInt)");
+		doChecks(log((float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Ln_Negative_Int_Variable")
+	{
+		Expression<float> testExpression(&context, "ln(-theInt)");
+		doChecksFn<float>([](float value) {return std::isnan(value); }, false, false, false, testExpression, context);
+	}
+	SECTION("Ln_string")
+	{
+		Expression<float> testExpression(&context, "ln(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Ln_noarg")
+	{
+		Expression<float> testExpression(&context, "ln()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Ln_morearg")
+	{
+		Expression<float> testExpression(&context, "ln(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Ln_obj")
+	{
+		Expression<float> testExpression(&context, "ln(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Exp", "[builtins][exp]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Exp", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Exp_Constant")
+	{
+		Expression<float> testExpression(&context, "exp(42.0f)");
+		doChecks<float>(exp(42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Exp_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "exp(-42.0f)");
+		doChecks<float>(exp(-42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Exp_Int_Constant")
+	{
+		Expression<float> testExpression(&context, "exp(3)");
+		doChecks<float>(exp((float)3), false, true, false, testExpression, context);
+	}
+	SECTION("Exp_Variable")
+	{
+		Expression<float> testExpression(&context, "exp(aFloat)");
+		doChecks<float>(exp(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Exp_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "exp(-aFloat)");
+		doChecks<float>(exp(-reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Exp_Int_Variable")
+	{
+		Expression<float> testExpression(&context, "exp(theInt)");
+		doChecks<float>(exp((float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Exp_string")
+	{
+		Expression<float> testExpression(&context, "exp(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Exp_noarg")
+	{
+		Expression<float> testExpression(&context, "exp()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Exp_morearg")
+	{
+		Expression<float> testExpression(&context, "exp(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Exp_obj")
+	{
+		Expression<float> testExpression(&context, "exp(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" ) 
 {
 	ReflectedObject reflectedObject;
