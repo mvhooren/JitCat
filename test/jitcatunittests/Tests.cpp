@@ -1992,6 +1992,336 @@ TEST_CASE("Builtin functions test: Atan", "[builtins][atan]")
 }
 
 
+TEST_CASE("Builtin functions test: Sinh", "[builtins][sinh]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Sinh", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Sinh_Constant")
+	{
+		Expression<float> testExpression(&context, "sinh(42.0f)");
+		doChecks<float>(sinh(42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Sinh_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "sinh(-42.0f)");
+		doChecks<float>(sinh(-42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Sinh_Int_Constant")
+	{
+		Expression<float> testExpression(&context, "sinh(3)");
+		doChecks<float>(sinh((float)3), false, true, false, testExpression, context);
+	}
+	SECTION("Sinh_Variable")
+	{
+		Expression<float> testExpression(&context, "sinh(aFloat)");
+		doChecks<float>(sinh(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Sinh_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "sinh(-aFloat)");
+		doChecks<float>(sinh(-reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Sinh_Int_Variable")
+	{
+		Expression<float> testExpression(&context, "sinh(theInt)");
+		doChecks<float>(sinh((float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Sinh_string")
+	{
+		Expression<float> testExpression(&context, "sinh(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Sinh_noarg")
+	{
+		Expression<float> testExpression(&context, "sinh()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Sinh_morearg")
+	{
+		Expression<float> testExpression(&context, "sinh(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Sinh_obj")
+	{
+		Expression<float> testExpression(&context, "sinh(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Cosh", "[builtins][cosh]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Cosh", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Cosh_Constant")
+	{
+		Expression<float> testExpression(&context, "cosh(42.0f)");
+		doChecks<float>(cosh(42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Cosh_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "cosh(-42.0f)");
+		doChecks<float>(cosh(-42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Cosh_Int_Constant")
+	{
+		Expression<float> testExpression(&context, "cosh(3)");
+		doChecks<float>(cosh((float)3), false, true, false, testExpression, context);
+	}
+	SECTION("Cosh_Variable")
+	{
+		Expression<float> testExpression(&context, "cosh(aFloat)");
+		doChecks<float>(cosh(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Cosh_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "cosh(-aFloat)");
+		doChecks<float>(cosh(-reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Cosh_Int_Variable")
+	{
+		Expression<float> testExpression(&context, "cosh(theInt)");
+		doChecks<float>(cosh((float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Cosh_string")
+	{
+		Expression<float> testExpression(&context, "cosh(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Cosh_noarg")
+	{
+		Expression<float> testExpression(&context, "cosh()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Cosh_morearg")
+	{
+		Expression<float> testExpression(&context, "cosh(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Cosh_obj")
+	{
+		Expression<float> testExpression(&context, "cosh(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Tanh", "[builtins][tanh]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Tanh", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Tanh_Constant")
+	{
+		Expression<float> testExpression(&context, "tanh(42.0f)");
+		doChecks<float>(tanh(42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Tanh_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "tanh(-42.0f)");
+		doChecks<float>(tanh(-42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Tanh_Int_Constant")
+	{
+		Expression<float> testExpression(&context, "tanh(3)");
+		doChecks<float>(tanh((float)3), false, true, false, testExpression, context);
+	}
+	SECTION("Tanh_Variable")
+	{
+		Expression<float> testExpression(&context, "tanh(aFloat)");
+		doChecks<float>(tanh(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Tanh_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "tanh(-aFloat)");
+		doChecks<float>(tanh(-reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Tanh_Int_Variable")
+	{
+		Expression<float> testExpression(&context, "tanh(theInt)");
+		doChecks<float>(tanh((float)reflectedObject.theInt), false, false, false, testExpression, context);
+	}
+	SECTION("Tanh_string")
+	{
+		Expression<float> testExpression(&context, "tanh(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Tanh_noarg")
+	{
+		Expression<float> testExpression(&context, "tanh()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Tanh_morearg")
+	{
+		Expression<float> testExpression(&context, "tanh(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Tanh_obj")
+	{
+		Expression<float> testExpression(&context, "tanh(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Asinh", "[builtins][asinh]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Asinh", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Asinh_Constant")
+	{
+		Expression<float> testExpression(&context, "asinh(0.5f)");
+		doChecks<float>(asinh(0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Asinh_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "asinh(-0.5f)");
+		doChecks<float>(asinh(-0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Asinh_Variable")
+	{
+		Expression<float> testExpression(&context, "asinh(smallFloat)");
+		doChecks<float>(asinh(reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Asinh_Variable_2")
+	{
+		Expression<float> testExpression(&context, "asinh(aFloat)");
+		doChecks<float>(asinh(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Asinh_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "asinh(-smallFloat)");
+		doChecks<float>(asinh(-reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Asinh_Negative_Variable_2")
+	{
+		Expression<float> testExpression(&context, "asinh(-aFloat)");
+		doChecks<float>(asinh(-reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Asinh_string")
+	{
+		Expression<float> testExpression(&context, "asinh(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Asinh_noarg")
+	{
+		Expression<float> testExpression(&context, "asinh()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Asinh_morearg")
+	{
+		Expression<float> testExpression(&context, "asinh(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Asinh_obj")
+	{
+		Expression<float> testExpression(&context, "asinh(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Acosh", "[builtins][acosh]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Acosh", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Acosh_Constant")
+	{
+		Expression<float> testExpression(&context, "acosh(42.0f)");
+		doChecks<float>(acosh(42.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Acosh_Variable")
+	{
+		Expression<float> testExpression(&context, "acosh(aFloat)");
+		doChecks<float>(acosh(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Acosh_string")
+	{
+		Expression<float> testExpression(&context, "acosh(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Acosh_noarg")
+	{
+		Expression<float> testExpression(&context, "acosh()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Acosh_morearg")
+	{
+		Expression<float> testExpression(&context, "acosh(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Acosh_obj")
+	{
+		Expression<float> testExpression(&context, "acosh(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Builtin functions test: Atanh", "[builtins][atanh]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_Atanh", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Atanh_Constant")
+	{
+		Expression<float> testExpression(&context, "atanh(0.5f)");
+		doChecks<float>(atanh(0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Atanh_Negative_Constant")
+	{
+		Expression<float> testExpression(&context, "atanh(-0.5f)");
+		doChecks<float>(atanh(-0.5f), false, true, false, testExpression, context);
+	}
+	SECTION("Atanh_Variable")
+	{
+		Expression<float> testExpression(&context, "atanh(smallFloat)");
+		doChecks<float>(atanh(reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atanh_Negative_Variable")
+	{
+		Expression<float> testExpression(&context, "atanh(-smallFloat)");
+		doChecks<float>(atanh(-reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atanh_string")
+	{
+		Expression<float> testExpression(&context, "atanh(numberString)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atanh_noarg")
+	{
+		Expression<float> testExpression(&context, "atanh()");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atanh_morearg")
+	{
+		Expression<float> testExpression(&context, "atanh(theInt, aFloat)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+	SECTION("Atanh_obj")
+	{
+		Expression<float> testExpression(&context, "atanh(nestedObject)");
+		doChecks(0.0f, true, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" ) 
 {
 	ReflectedObject reflectedObject;
