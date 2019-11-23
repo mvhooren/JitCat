@@ -53,10 +53,10 @@ if(LLVM_ENABLED)
 		LLVMX86AsmParser
 		LLVMX86Desc
 		LLVMX86Info
-		LLVMX86AsmPrinter
 		LLVMX86Utils
 		LLVMSelectionDAG
 		LLVMOrcJIT
+		LLVMOrcError
 		LLVMMCDisassembler
 		LLVMGlobalISel
 		LLVMExecutionEngine
@@ -67,6 +67,7 @@ if(LLVM_ENABLED)
 		LLVMInstCombine
 		LLVMBitWriter
 		LLVMAggressiveInstCombine
+		LLVMCFGuard
 		LLVMTransformUtils
 		LLVMTarget
 		LLVMAnalysis
@@ -78,11 +79,13 @@ if(LLVM_ENABLED)
 		LLVMDebugInfoDwarf
 		LLVMDebugInfoMSF
 		LLVMBitReader
+		LLVMBitstreamReader
 		LLVMCore
 		LLVMBinaryFormat
 		LLVMSupport
 		LLVMDemangle
 		LLVMRemarks
+		LLVMTextAPI
 	)
 	if (NOT MSVC)
 		link_libraries(
