@@ -92,6 +92,7 @@ namespace TestObjects
 		int theInt;
 		int largeInt;
 		float aFloat;
+		float smallFloat;
 		float zeroFloat;
 		bool aBoolean;
 		bool no;

@@ -12,6 +12,11 @@
 
 #include <memory>
 
+namespace jitcat
+{
+	class CatRuntimeContext;
+}
+
 namespace jitcat::AST 
 {
 	class CatTypedExpression;
@@ -24,7 +29,8 @@ namespace jitcat::AST
 	public:
 		static CatTypedExpression* tryCollapseInfixOperator(std::unique_ptr<CatTypedExpression>& lhs, 
 															std::unique_ptr<CatTypedExpression>& rhs, 
-															CatInfixOperatorType infixOperator);
+															CatInfixOperatorType infixOperator,
+															jitcat::CatRuntimeContext* compileTimeContext);
 		static Tokenizer::Lexeme combineLexemes(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
 
 	private:

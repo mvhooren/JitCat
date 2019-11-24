@@ -101,32 +101,43 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		}
 		case CatBuiltInFunctionType::ToFixedLengthString:	return LLVMCatIntrinsics::intToFixedLengthString(std::any_cast<int>(argumentValues[0]), std::any_cast<int>(argumentValues[1]));
 		case CatBuiltInFunctionType::Sin:
-			if (arguments->getArgumentType(0).isFloatType())
-			{
-				return (float)std::sin(std::any_cast<float>(argumentValues[0]));
-			}
-			else
-			{
-				return (float)std::sin((float)std::any_cast<int>(argumentValues[0]));
-			}
+			return (float)std::sin(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Cos:
-			if (arguments->getArgumentType(0).isFloatType())
-			{
-				return (float)std::cos(std::any_cast<float>(argumentValues[0]));
-			}
-			else
-			{
-				return (float)std::cos((float)std::any_cast<int>(argumentValues[0]));
-			}
+			return (float)std::cos(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Tan:
-			if (arguments->getArgumentType(0).isFloatType())
-			{
-				return (float)std::tan(std::any_cast<float>(argumentValues[0]));
-			}
-			else
-			{
-				return (float)std::tan((float)std::any_cast<int>(argumentValues[0]));
-			}
+			return (float)std::tan(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Asin:
+			return (float)std::asin(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Acos:
+			return (float)std::acos(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Atan:
+			return (float)std::atan(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+
+		case CatBuiltInFunctionType::Sinh:
+			return (float)std::sinh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Cosh:
+			return (float)std::cosh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Tanh:
+			return (float)std::tanh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Asinh:
+			return (float)std::asinh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Acosh:
+			return (float)std::acosh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Atanh:
+			return (float)std::atanh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Atan2:
+		{
+			float y = CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0));
+			float x = CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1));
+			return (float)std::atan2(y, x);
+		}
+		case CatBuiltInFunctionType::Hypot:
+		{
+			float x = CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0));
+			float y = CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1));
+			return (float)std::hypot(x, y);
+		}
+
 		case CatBuiltInFunctionType::Random:		return std::any(static_cast<float> (std::rand()) / static_cast <float> (RAND_MAX));
 		case CatBuiltInFunctionType::RandomRange:
 		{
@@ -264,6 +275,10 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			{
 				return std::any((float)std::log10((float)std::any_cast<int>(argumentValues[0])));
 			}
+		case CatBuiltInFunctionType::Ln:
+			return (float)std::log(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+		case CatBuiltInFunctionType::Exp:
+			return (float)std::exp(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Sqrt:
 			if (arguments->getArgumentType(0).isFloatType())
 			{
@@ -418,6 +433,15 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 			case CatBuiltInFunctionType::Sin:
 			case CatBuiltInFunctionType::Cos:
 			case CatBuiltInFunctionType::Tan:
+			case CatBuiltInFunctionType::Asin:
+			case CatBuiltInFunctionType::Acos:
+			case CatBuiltInFunctionType::Atan:
+			case CatBuiltInFunctionType::Sinh:
+			case CatBuiltInFunctionType::Cosh:
+			case CatBuiltInFunctionType::Tanh:
+			case CatBuiltInFunctionType::Asinh:
+			case CatBuiltInFunctionType::Acosh:
+			case CatBuiltInFunctionType::Atanh:
 				if (arguments->getArgumentType(0).isScalarType())
 				{
 					returnType = CatGenericType::floatType;
@@ -428,6 +452,26 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 					return false;
 				}
 				break;
+			case CatBuiltInFunctionType::Atan2:
+				if (arguments->getArgumentType(0).isScalarType() && arguments->getArgumentType(1).isScalarType())
+				{
+					returnType = CatGenericType::floatType;
+				}
+				else
+				{
+					errorManager->compiledWithError(Tools::append(name, ": expected two numbers as arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
+					return false;
+				} break;
+			case CatBuiltInFunctionType::Hypot:
+				if (arguments->getArgumentType(0).isScalarType() && arguments->getArgumentType(1).isScalarType())
+				{
+					returnType = CatGenericType::floatType;
+				}
+				else
+				{
+					errorManager->compiledWithError(Tools::append(name, ": expected two numbers as arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
+					return false;
+				} break;
 			case CatBuiltInFunctionType::Random:		returnType = CatGenericType::floatType; break;
 			case CatBuiltInFunctionType::RandomRange:
 			{
@@ -534,6 +578,8 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 				}
 				break;
 			case CatBuiltInFunctionType::Log:
+			case CatBuiltInFunctionType::Ln:
+			case CatBuiltInFunctionType::Exp:
 			case CatBuiltInFunctionType::Sqrt:
 			case CatBuiltInFunctionType::Ceil:
 			case CatBuiltInFunctionType::Floor:
@@ -743,11 +789,24 @@ bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::Sin:
 		case CatBuiltInFunctionType::Cos:
 		case CatBuiltInFunctionType::Tan:
+		case CatBuiltInFunctionType::Asin:
+		case CatBuiltInFunctionType::Acos:
+		case CatBuiltInFunctionType::Atan:
+		case CatBuiltInFunctionType::Sinh:
+		case CatBuiltInFunctionType::Cosh:
+		case CatBuiltInFunctionType::Tanh:
+		case CatBuiltInFunctionType::Asinh:
+		case CatBuiltInFunctionType::Acosh:
+		case CatBuiltInFunctionType::Atanh:
 		case CatBuiltInFunctionType::Log:
+		case CatBuiltInFunctionType::Ln:
+		case CatBuiltInFunctionType::Exp:
 		case CatBuiltInFunctionType::Sqrt:
 		case CatBuiltInFunctionType::Ceil:
 		case CatBuiltInFunctionType::Floor:
 			return count == 1;
+		case CatBuiltInFunctionType::Atan2:
+		case CatBuiltInFunctionType::Hypot:
 		case CatBuiltInFunctionType::Round:
 		case CatBuiltInFunctionType::RandomRange:
 		case CatBuiltInFunctionType::StringRound:
@@ -799,6 +858,17 @@ std::vector<std::string> CatBuiltInFunctionCall::functionTable =
 	 "sin",					//CatBuiltInFunctionType::Sin
 	 "cos",					//CatBuiltInFunctionType::Cos
 	 "tan",					//CatBuiltInFunctionType::Tan
+	 "asin",				//CatBuiltInFunctionType::Asin
+	 "acos",				//CatBuiltInFunctionType::Acos
+	 "atan",				//CatBuiltInFunctionType::Atan
+	 "sinh",				//CatBuiltInFunctionType::Sinh
+	 "cosh",				//CatBuiltInFunctionType::Cosh
+	 "tanh",				//CatBuiltInFunctionType::Tanh
+	 "asinh",				//CatBuiltInFunctionType::Asinh
+	 "acosh",				//CatBuiltInFunctionType::Acosh
+	 "atanh",				//CatBuiltInFunctionType::Atanh
+	 "atan2",				//CatBuiltInFunctionType::Atan2
+	 "hypot",				//CatBuiltInFunctionType::Hypot
 	 "rand",				//CatBuiltInFunctionType::Random
 	 "rand",				//CatBuiltInFunctionType::RandomRange
 	 "round",				//CatBuiltInFunctionType::Round
@@ -808,6 +878,8 @@ std::vector<std::string> CatBuiltInFunctionCall::functionTable =
 	 "min",					//CatBuiltInFunctionType::Min 
 	 "max",					//CatBuiltInFunctionType::Max
 	 "log",					//CatBuiltInFunctionType::Log
+	 "ln",					//CatBuiltInFunctionType::Ln
+	 "exp",					//CatBuiltInFunctionType::Exp
 	 "sqrt",				//CatBuiltInFunctionType::Sqrt
 	 "pow",					//CatBuiltInFunctionType::Pow
 	 "ceil",				//CatBuiltInFunctionType::Ceil

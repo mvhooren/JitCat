@@ -100,7 +100,7 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 	}
 	else
 	{
-		CatTypedExpression* collapsedExpression = InfixOperatorOptimizer::tryCollapseInfixOperator(lhs, rhs, oper);
+		CatTypedExpression* collapsedExpression = InfixOperatorOptimizer::tryCollapseInfixOperator(lhs, rhs, oper, compileTimeContext);
 		if (collapsedExpression != nullptr)
 		{
 			return collapsedExpression;

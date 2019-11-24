@@ -169,6 +169,12 @@ void ExpressionBase::constCollapse(CatRuntimeContext* context)
 	{
 		parseResult->astRootNode.reset(newExpression);
 	}
+	//Const collapse may have changed the expression from a non-constant to a constant.
+	//For example, in an expression like 0.0 * aVariable
+	if (parseResult->success)
+	{
+		isConstant = parseResult->getNode<CatTypedExpression>()->isConst();
+	}
 }
 
 
