@@ -357,6 +357,24 @@ TEST_CASE("Regression testing", "[regression]")
 		Expression<float> testExpression(&context, "1.-1");
 		doChecks(0.0f, false, true, false, testExpression, context);
 	}
+	SECTION("Constant folding integer 0 multiplied by float variable")
+	{
+		ExpressionAny testExpression(&context, "0 * aFloat");
+		doCommonChecks(&testExpression, false, true, false, context);
+		CHECK(testExpression.getType().isFloatType());
+	}
+	SECTION("Constant folding float zero multiplied by integer variable")
+	{
+		ExpressionAny testExpression(&context, "0.0f * theInt");
+		doCommonChecks(&testExpression, false, true, false, context);
+		CHECK(testExpression.getType().isFloatType());
+	}
+	SECTION("Constant folding float one multiplied by integer variable")
+	{
+		ExpressionAny testExpression(&context, "1.0f * theInt");
+		doCommonChecks(&testExpression, false, false, false, context);
+		CHECK(testExpression.getType().isFloatType());
+	}
 }
 
 

@@ -79,9 +79,11 @@ int MAIN(int argc, char* argv[])
 	//This time we do not provide the context in the constructor so we need to call compile before calling getValue.
 	//We use the built-in function abs. A list of all built-in functions can be found in the CatBuiltInFunctionType header.
 	//Here aFloat comes from our custom type and test.aFloat comes from the testObject member inside the exampleObject.
-	Expression<float> anotherFloatingPointExpression("abs(aFloat - test.aFloat)");
+	Expression<float> anotherFloatingPointExpression("2.0f + abs(aFloat - test.aFloat) + 2.0f");
+	Expression<float> anotherFloatingPointExpression2("2.0f + abs(aFloat - test.aFloat) + 2.0f");
 	anotherFloatingPointExpression.compile(&context);
-	std::cout << "anotherFloatingPointExpression: " << anotherFloatingPointExpression.getValue(&context) << "\n";
+	anotherFloatingPointExpression2.compile(&context);
+	std::cout << "anotherFloatingPointExpression: " << anotherFloatingPointExpression.getValue(&context) << " " << anotherFloatingPointExpression2.getValue(&context) << "\n";
 
 
 	//#####################

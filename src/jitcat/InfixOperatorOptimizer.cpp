@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/InfixOperatorOptimizer.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/CatLiteral.h"
@@ -14,18 +15,34 @@ using namespace jitcat::AST;
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique_ptr<CatTypedExpression>& lhs, 
 																	 std::unique_ptr<CatTypedExpression>& rhs, 
-																	 CatInfixOperatorType infixOperator)
+																	 CatInfixOperatorType infixOperator,
+																	 jitcat::CatRuntimeContext* compileTimeContext)
 {
+	CatGenericType resultType = lhs->getType().getInfixOperatorResultType(infixOperator, rhs->getType());
+	std::unique_ptr<CatTypedExpression> constCollapsed;
 	switch (infixOperator)
 	{
-		case CatInfixOperatorType::Multiply:	return tryCollapseMultiplication(lhs, rhs);		break;
-		case CatInfixOperatorType::Divide:		return tryCollapseDivision(lhs, rhs);			break;
-		case CatInfixOperatorType::Plus:		return tryCollapseAddition(lhs, rhs);			break;
-		case CatInfixOperatorType::Minus:		return tryCollapseSubtraction(lhs, rhs);		break;
-		case CatInfixOperatorType::LogicalAnd:	return tryCollapseLogicalAnd(lhs, rhs);			break;
-		case CatInfixOperatorType::LogicalOr:	return tryCollapseLogicalOr(lhs, rhs);			break;
+		case CatInfixOperatorType::Multiply:	constCollapsed.reset(tryCollapseMultiplication(lhs, rhs));	break;
+		case CatInfixOperatorType::Divide:		constCollapsed.reset(tryCollapseDivision(lhs, rhs));		break;
+		case CatInfixOperatorType::Plus:		constCollapsed.reset(tryCollapseAddition(lhs, rhs));		break;
+		case CatInfixOperatorType::Minus:		constCollapsed.reset(tryCollapseSubtraction(lhs, rhs));		break;
+		case CatInfixOperatorType::LogicalAnd:	constCollapsed.reset(tryCollapseLogicalAnd(lhs, rhs));		break;
+		case CatInfixOperatorType::LogicalOr:	constCollapsed.reset(tryCollapseLogicalOr(lhs, rhs));		break;
+		default: return nullptr;
 	}
-	return nullptr;
+	if (constCollapsed.get() != nullptr)
+	{
+		if (resultType != constCollapsed->getType())
+		{
+			ASTHelper::doTypeConversion(constCollapsed, resultType);
+			ASTHelper::updatePointerIfChanged(constCollapsed, constCollapsed->constCollapse(compileTimeContext));
+		}
+		return constCollapsed.release();
+	}	
+	else
+	{
+		return nullptr;
+	}
 }
 
 
