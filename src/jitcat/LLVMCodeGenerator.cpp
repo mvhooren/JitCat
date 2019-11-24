@@ -342,6 +342,41 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 		case CatBuiltInFunctionType::Ceil:		return helper->callIntrinsic(llvm::Intrinsic::ceil, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context);
 		case CatBuiltInFunctionType::Floor:		return helper->callIntrinsic(llvm::Intrinsic::floor, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context);
 		case CatBuiltInFunctionType::Tan:		return builder->CreateFDiv(helper->callIntrinsic(llvm::Intrinsic::sin, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context), helper->callIntrinsic(llvm::Intrinsic::cos, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context));
+
+		case CatBuiltInFunctionType::Asin:
+			return helper->createCall(context, &std::asinf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "asin");
+		case CatBuiltInFunctionType::Acos:
+			return helper->createCall(context, &std::acosf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "acos");
+		case CatBuiltInFunctionType::Atan:
+			return helper->createCall(context, &std::atanf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "atan");
+
+		case CatBuiltInFunctionType::Sinh:
+			return helper->createCall(context, &std::sinhf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "sinh");
+		case CatBuiltInFunctionType::Cosh:
+			return helper->createCall(context, &std::coshf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "cosh");
+		case CatBuiltInFunctionType::Tanh:
+			return helper->createCall(context, &std::tanhf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "tanh");
+
+		case CatBuiltInFunctionType::Asinh:
+			return helper->createCall(context, &std::asinhf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "asinh");
+		case CatBuiltInFunctionType::Acosh:
+			return helper->createCall(context, &std::acoshf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "acosh");
+		case CatBuiltInFunctionType::Atanh:
+			return helper->createCall(context, &std::atanhf, { helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context) }, "atanh");
+
+		case CatBuiltInFunctionType::Atan2:
+		{
+			llvm::Value* y = helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context);
+			llvm::Value* x = helper->convertType(generate(arguments->arguments[1].get(), context), LLVMTypes::floatType, context);
+			return helper->createCall(context, &std::atan2f, { y, x }, "atan2");
+		}
+		case CatBuiltInFunctionType::Hypot:
+		{
+			llvm::Value* x = helper->convertType(generate(arguments->arguments[0].get(), context), LLVMTypes::floatType, context);
+			llvm::Value* y = helper->convertType(generate(arguments->arguments[1].get(), context), LLVMTypes::floatType, context);
+			return helper->createCall(context, &std::hypotf, { x, y }, "hypot");
+		}
+
 		case CatBuiltInFunctionType::Cap:
 		{
 			llvm::Value* value = generate(arguments->arguments[0].get(), context);
