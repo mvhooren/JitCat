@@ -29,6 +29,31 @@ using namespace jitcat::Reflection;
 using namespace TestObjects;
 
 
+template<typename T>
+void checkValueIsEqual(const T& actualValue, const T& expectedValue, bool approximateFloatComparison = true)
+{
+	if constexpr (std::is_same<T, float>::value)
+	{
+		if (std::isnan(expectedValue))
+		{
+			CHECK(std::isnan(actualValue));
+		}
+		else if (approximateFloatComparison)
+		{
+			CHECK(actualValue == Approx(expectedValue).epsilon(0.001f));
+		}
+		else
+		{
+			CHECK(actualValue == expectedValue);
+		}
+	}
+	else
+	{
+		CHECK(actualValue == expectedValue);
+	}
+}
+
+
 bool doCommonChecks(ExpressionBase* expression, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, CatRuntimeContext& context)
 {
 	if (!shouldHaveError)
@@ -92,16 +117,8 @@ void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, 
 {
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
 	{
-		if constexpr (std::is_same<T, float>::value)
-		{
-			CHECK(expression.getValue(&context) == Approx(expectedValue).epsilon(0.001f));
-			CHECK(expression.getInterpretedValue(&context) == Approx(expectedValue).epsilon(0.001f));
-		}
-		else
-		{
-			CHECK(expression.getValue(&context) == expectedValue);
-			CHECK(expression.getInterpretedValue(&context) == expectedValue);
-		}
+		checkValueIsEqual(expression.getValue(&context), expectedValue); 
+		checkValueIsEqual(expression.getInterpretedValue(&context), expectedValue); 
 	}
 	else if (shouldHaveError)
 	{
@@ -120,16 +137,8 @@ void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, 
 {
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
 	{
-		if constexpr (std::is_same<T, float>::value)
-		{
-			CHECK(std::any_cast<float>(expression.getValue(&context)) == Approx(expectedValue).epsilon(0.001f));
-			CHECK(std::any_cast<float>(expression.getInterpretedValue(&context)) == Approx(expectedValue).epsilon(0.001f));
-		}
-		else
-		{
-			CHECK(std::any_cast<T>(expression.getValue(&context)) == expectedValue);
-			CHECK(std::any_cast<T>(expression.getInterpretedValue(&context)) == expectedValue);
-		}
+		checkValueIsEqual(std::any_cast<T>(expression.getValue(&context)), expectedValue);
+		checkValueIsEqual(std::any_cast<T>(expression.getInterpretedValue(&context)), expectedValue);
 	}
 	else if (shouldHaveError)
 	{
@@ -149,10 +158,10 @@ void checkAssignment(T& assignedValue, const T& expectedValue, bool shouldHaveEr
 	{
 		T originalValue = assignedValue;
 		expression.getValue(&context);
-		CHECK(assignedValue == expectedValue);
+		checkValueIsEqual(assignedValue, expectedValue, false);
 		assignedValue = originalValue;
 		expression.getInterpretedValue(&context);
-		CHECK(assignedValue == expectedValue);
+		checkValueIsEqual(assignedValue, expectedValue, false);
 		assignedValue = originalValue;
 	}
 	else if (shouldHaveError)
@@ -174,10 +183,10 @@ void checkAssignmentCustom(CustomTypeInstance* instance, const std::string& memb
 	{
 		T originalValue = *instance->getMemberValue<T>(memberName);
 		expression.getValue(&context);
-		CHECK(*instance->getMemberValue<T>(memberName) == expectedValue);
+		checkValueIsEqual(*instance->getMemberValue<T>(memberName), expectedValue, false);
 		instance->setMemberValue(memberName, originalValue);
 		expression.getInterpretedValue(&context);
-		CHECK(*instance->getMemberValue<T>(memberName) == expectedValue);
+		checkValueIsEqual(*instance->getMemberValue<T>(memberName), expectedValue, false);
 		instance->setMemberValue(memberName, originalValue);
 	}
 	else if (shouldHaveError)
@@ -199,10 +208,10 @@ void checkAssignExpression(T& assignedValue, const T& newValue, bool shouldHaveE
 	{
 		T originalValue = assignedValue;
 		expression.assignValue(&context, newValue);
-		CHECK(assignedValue == newValue);
+		checkValueIsEqual(assignedValue, newValue, false);
 		assignedValue = originalValue;
 		expression.assignInterpretedValue(&context, newValue);
-		CHECK(assignedValue == newValue);
+		checkValueIsEqual(assignedValue, newValue, false);
 		assignedValue = originalValue;
 	}
 	else if (shouldHaveError)
@@ -224,10 +233,10 @@ void checkAssignExpressionCustom(CustomTypeInstance* instance, const std::string
 	{
 		T originalValue = *instance->getMemberValue<T>(memberName);
 		expression.assignValue(&context, newValue);
-		CHECK(*instance->getMemberValue<T>(memberName) == newValue);
+		checkValueIsEqual(*instance->getMemberValue<T>(memberName), newValue, false);
 		instance->setMemberValue(memberName, originalValue);
 		expression.assignInterpretedValue(&context, newValue);
-		CHECK(*instance->getMemberValue<T>(memberName) == newValue);
+		checkValueIsEqual(*instance->getMemberValue<T>(memberName), newValue, false);
 		instance->setMemberValue(memberName, originalValue);
 	}
 	else if (shouldHaveError)
@@ -249,10 +258,10 @@ void checkAnyAssignExpression(T& assignedValue, const T& newValue, bool shouldHa
 	{
 		T originalValue = assignedValue;
 		expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
-		CHECK(assignedValue == newValue);
+		checkValueIsEqual(assignedValue, newValue, false);
 		assignedValue = originalValue;
 		expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
-		CHECK(assignedValue == newValue);
+		checkValueIsEqual(assignedValue, newValue, false);
 		assignedValue = originalValue;
 
 		if constexpr (std::is_pointer<T>::value)
@@ -286,10 +295,10 @@ void checkAnyAssignExpressionCustom(CustomTypeInstance* instance, const std::str
 	{
 		T originalValue = *instance->getMemberValue<T>(memberName);
 		expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
-		CHECK(*instance->getMemberValue<T>(memberName) == newValue);
+		checkValueIsEqual(*instance->getMemberValue<T>(memberName), newValue, false);
 		instance->setMemberValue(memberName, originalValue);
 		expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
-		CHECK(*instance->getMemberValue<T>(memberName) == newValue);
+		checkValueIsEqual(*instance->getMemberValue<T>(memberName), newValue, false);
 		instance->setMemberValue(memberName, originalValue);
 	}
 	else if (shouldHaveError)
@@ -1940,7 +1949,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "sqrt(-42.0f)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, true, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, true, false, testExpression, context);
 	}
 	SECTION("Sqrt_IntConstant")
 	{
@@ -1950,7 +1959,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_Negative IntConstant")
 	{
 		Expression<float> testExpression(&context, "sqrt(-3)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, true, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, true, false, testExpression, context);
 	}
 	SECTION("Sqrt_Zero Variable")
 	{
@@ -1965,7 +1974,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "sqrt(-aFloat)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, false, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
 	}
 	SECTION("Sqrt_IntVariable")
 	{
@@ -1975,7 +1984,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	SECTION("Sqrt_Negative IntVariable")
 	{
 		Expression<float> testExpression(&context, "sqrt(-theInt)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, false, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
 	}
 	SECTION("Sqrt_string")
 	{
@@ -2636,7 +2645,7 @@ TEST_CASE("Builtin functions test: Log", "[builtins][log]" )
 	SECTION("Log_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "log(-42.0f)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, true, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, true, false, testExpression, context);
 	}
 	SECTION("Log_IntConstant")
 	{
@@ -2646,7 +2655,7 @@ TEST_CASE("Builtin functions test: Log", "[builtins][log]" )
 	SECTION("Log_Negative IntConstant")
 	{
 		Expression<float> testExpression(&context, "log(-3)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, true, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, true, false, testExpression, context);
 	}
 	SECTION("Log_Zero Variable")
 	{
@@ -2661,7 +2670,7 @@ TEST_CASE("Builtin functions test: Log", "[builtins][log]" )
 	SECTION("Log_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "log(-aFloat)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, false, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
 	}
 	SECTION("Log_IntVariable")
 	{
@@ -2671,7 +2680,7 @@ TEST_CASE("Builtin functions test: Log", "[builtins][log]" )
 	SECTION("Log_Negative IntVariable")
 	{
 		Expression<float> testExpression(&context, "log(-theInt)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, false, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
 	}
 	SECTION("Log_string")
 	{
@@ -2736,7 +2745,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	SECTION("Pow_float3")
 	{
 		Expression<float> testExpression(&context, "pow(-aFloat, aFloat)");
-		doChecksFn<float>([](float value){return std::isnan(value);}, false, false, false, testExpression, context);
+		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
 	}
 	SECTION("Pow_int1")
 	{
