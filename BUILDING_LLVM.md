@@ -17,7 +17,7 @@ For building LLVM first of all refer to LLVM build documentation:
 [Getting Started with the LLVM System using Microsoft Visual Studio](https://llvm.org/docs/GettingStartedVS.html)  
 
 ## All Platforms
-Set CMAKE_CXX_STANDARD to 17.  
+Set CMAKE_CXX_STANDARD to 17. LLVM currently targets C++14 but will build under C++17 as well. Building LLVM with C++14 will possibly lead to incompatibilities. For example, see [this issue](https://github.com/mvhooren/JitCat/issues/13).
 
 ## Non-Windows/MSVC platforms
 Except for the CMAKE_CCXX_STANDARD, the default CMake configuration of LLVM will work fine. It is possible to greatly reduce build time and diskspace usage of the LLVM build by disabling certain features (see below).
