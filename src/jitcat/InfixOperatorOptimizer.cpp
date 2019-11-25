@@ -12,12 +12,15 @@
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/CatLiteral.h"
 
+using namespace jitcat;
 using namespace jitcat::AST;
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique_ptr<CatTypedExpression>& lhs, 
 																	 std::unique_ptr<CatTypedExpression>& rhs, 
 																	 CatInfixOperatorType infixOperator,
-																	 jitcat::CatRuntimeContext* compileTimeContext)
+																	 CatRuntimeContext* compileTimeContext, 
+																	 ExpressionErrorManager* errorManager, 
+																	 void* errorContext)
 {
 	CatGenericType resultType = lhs->getType();
 	if ((lhs->getType().isFloatType() && rhs->getType().isIntType())
@@ -41,7 +44,8 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique
 		if (resultType != constCollapsed->getType())
 		{
 			ASTHelper::doTypeConversion(constCollapsed, resultType);
-			ASTHelper::updatePointerIfChanged(constCollapsed, constCollapsed->constCollapse(compileTimeContext));
+			constCollapsed->typeCheck(compileTimeContext, errorManager, errorContext);
+			ASTHelper::updatePointerIfChanged(constCollapsed, constCollapsed->constCollapse(compileTimeContext, errorManager, errorContext));
 		}
 		return constCollapsed.release();
 	}	

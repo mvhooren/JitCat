@@ -56,7 +56,7 @@ bool CatErrorExpression::isConst() const
 }
 
 
-CatTypedExpression* CatErrorExpression::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatErrorExpression::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	return this;
 }

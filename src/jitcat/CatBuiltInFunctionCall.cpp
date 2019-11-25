@@ -704,9 +704,9 @@ bool CatBuiltInFunctionCall::isConst() const
 }
 
 
-CatTypedExpression* CatBuiltInFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatBuiltInFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	arguments->constCollapse(compileTimeContext);
+	arguments->constCollapse(compileTimeContext, errorManager, errorContext);
 	if (isDeterministic() && arguments->getAllArgumentsAreConst())
 	{
 		return new CatLiteral(execute(compileTimeContext), getType(), getLexeme());

@@ -35,7 +35,7 @@ namespace jitcat::AST
 		virtual const CatGenericType& getType() const override final;
 		virtual const CatGenericType& getAssignableType() const override final;
 		virtual bool isConst() const override final;
-		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) override final;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
 		void setTypeAndMemberInfo(Reflection::TypeMemberInfo* newMemberInfo, const CatGenericType& newMemberType);
 

@@ -125,7 +125,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		//Try to collapse the base into a literal. (in case of a static scope, for example)
-		ASTHelper::updatePointerIfChanged(base, base->constCollapse(compiletimeContext));
+		ASTHelper::updatePointerIfChanged(base, base->constCollapse(compiletimeContext, errorManager, errorContext));
 
 		CatGenericType baseType = base->getType();
 		if (baseType.isPointerToReflectableObjectType()
@@ -186,10 +186,10 @@ bool CatMemberFunctionCall::isConst() const
 }
 
 
-CatTypedExpression* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext));
-	arguments->constCollapse(compileTimeContext);
+	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext, errorManager, errorContext));
+	arguments->constCollapse(compileTimeContext, errorManager, errorContext);
 	return this;
 }
 

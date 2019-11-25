@@ -367,13 +367,13 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		case CatBuiltInFunctionType::Atan2:
 		{
 			llvm::Value* y = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context);
-			llvm::Value* x = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context);
+			llvm::Value* x = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::floatType, context);
 			return helper->createCall(context, &std::atan2f, { y, x }, "atan2");
 		}
 		case CatBuiltInFunctionType::Hypot:
 		{
 			llvm::Value* x = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context);
-			llvm::Value* y = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context);
+			llvm::Value* y = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::floatType, context);
 			return helper->createCall(context, &std::hypotf, { x, y }, "hypot");
 		}
 

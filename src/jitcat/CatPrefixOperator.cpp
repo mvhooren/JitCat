@@ -58,9 +58,9 @@ bool CatPrefixOperator::isConst() const
 }
 
 
-CatTypedExpression* CatPrefixOperator::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatPrefixOperator::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext, errorManager, errorContext));
 	if (rhs->isConst())
 	{
 		return new CatLiteral(calculateExpression(compileTimeContext), getType(), rhs->getLexeme());

@@ -120,11 +120,11 @@ bool CatReturnStatement::isConst() const
 }
 
 
-CatTypedExpression* CatReturnStatement::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatReturnStatement::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (returnExpression != nullptr)
 	{
-		ASTHelper::updatePointerIfChanged(returnExpression, returnExpression->constCollapse(compileTimeContext));
+		ASTHelper::updatePointerIfChanged(returnExpression, returnExpression->constCollapse(compileTimeContext, errorManager, errorContext));
 	}
 	return this;
 }

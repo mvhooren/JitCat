@@ -84,7 +84,7 @@ bool CatScopeRoot::isConst() const
 }
 
 
-CatTypedExpression* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (compileTimeContext->isStaticScope(scopeId))
 	{

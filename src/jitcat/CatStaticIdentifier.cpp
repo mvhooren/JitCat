@@ -83,7 +83,7 @@ bool CatStaticIdentifier::isConst() const
 }
 
 
-CatTypedExpression* CatStaticIdentifier::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatStaticIdentifier::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	return this;
 }

@@ -46,7 +46,7 @@ namespace jitcat::AST
 		bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 		bool hasAlwaysAtLeastOneIteration(CatRuntimeContext* compiletimeContext);
 		
-		CatASTNode* constCollapse(CatRuntimeContext* compiletimeContext);
+		CatASTNode* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
 	private:
 		bool isDefaultMin;

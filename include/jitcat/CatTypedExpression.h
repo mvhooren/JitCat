@@ -22,7 +22,7 @@ namespace jitcat::AST
 		virtual const CatGenericType& getType() const = 0;
 		virtual bool isConst() const = 0;
 		virtual bool isAssignable() const {return false;}
-		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext) = 0;
+		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) = 0;
 	};
 
 } //End namespace jitcat::AST

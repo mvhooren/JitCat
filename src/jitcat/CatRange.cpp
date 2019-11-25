@@ -200,10 +200,10 @@ bool jitcat::AST::CatRange::hasAlwaysAtLeastOneIteration(CatRuntimeContext* comp
 }
 
 
-CatASTNode* jitcat::AST::CatRange::constCollapse(CatRuntimeContext* compiletimeContext)
+CatASTNode* jitcat::AST::CatRange::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	ASTHelper::updatePointerIfChanged(rangeMin, rangeMin->constCollapse(compiletimeContext));
-	ASTHelper::updatePointerIfChanged(rangeMax, rangeMax->constCollapse(compiletimeContext));
-	ASTHelper::updatePointerIfChanged(rangeStep, rangeStep->constCollapse(compiletimeContext));
+	ASTHelper::updatePointerIfChanged(rangeMin, rangeMin->constCollapse(compiletimeContext, errorManager, errorContext));
+	ASTHelper::updatePointerIfChanged(rangeMax, rangeMax->constCollapse(compiletimeContext, errorManager, errorContext));
+	ASTHelper::updatePointerIfChanged(rangeStep, rangeStep->constCollapse(compiletimeContext, errorManager, errorContext));
 	return this;
 }

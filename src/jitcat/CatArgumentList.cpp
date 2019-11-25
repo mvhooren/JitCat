@@ -82,11 +82,11 @@ bool jitcat::AST::CatArgumentList::typeCheck(CatRuntimeContext* compiletimeConte
 }
 
 
-void jitcat::AST::CatArgumentList::constCollapse(CatRuntimeContext* compileTimeContext)
+void jitcat::AST::CatArgumentList::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	for (auto& iter : arguments)
 	{
-		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext));
+		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compileTimeContext, errorManager, errorContext));
 	}
 }
 

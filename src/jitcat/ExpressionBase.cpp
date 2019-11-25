@@ -144,7 +144,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 		typeCheck(expectedType, context, errorManager, errorContext);
 		if (parseResult->success)
 		{
-			constCollapse(context);
+			constCollapse(context, errorManager, errorContext);
 		}
 	}
 	handleParseErrors(context);
@@ -162,9 +162,9 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 }
 
 
-void ExpressionBase::constCollapse(CatRuntimeContext* context)
+void ExpressionBase::constCollapse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatTypedExpression* newExpression = parseResult->getNode<CatTypedExpression>()->constCollapse(context);
+	CatTypedExpression* newExpression = parseResult->getNode<CatTypedExpression>()->constCollapse(context, errorManager, errorContext);
 	if (newExpression != parseResult->astRootNode.get())
 	{
 		parseResult->astRootNode.reset(newExpression);

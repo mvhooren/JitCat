@@ -32,7 +32,7 @@ namespace jitcat::AST
 		virtual CatASTNodeType getNodeType() const override final;
 
 		bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
-		void constCollapse(CatRuntimeContext* compileTimeContext);
+		void constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 		bool getAllArgumentsAreConst() const;
 		bool getArgumentIsConst(std::size_t argumentIndex) const;
 		Tokenizer::Lexeme getArgumentLexeme(std::size_t argumentIndex) const;

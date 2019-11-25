@@ -65,7 +65,7 @@ namespace jitcat
 		virtual void handleCompiledFunction(uintptr_t functionAddress) = 0;
 
 	private:
-		void constCollapse(CatRuntimeContext* context);
+		void constCollapse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext);
 		void typeCheck(const CatGenericType& expectedType, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext);
 		void handleParseErrors(CatRuntimeContext* context);
 		void compileToNativeCode(CatRuntimeContext* context);

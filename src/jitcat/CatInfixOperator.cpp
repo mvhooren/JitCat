@@ -77,15 +77,15 @@ bool CatInfixOperator::isConst() const
 }
 
 
-CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (overloadedOperator != nullptr)
 	{
 		return overloadedOperator.release();
 	}
 
-	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext));
-	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext, errorManager, errorContext));
+	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext, errorManager, errorContext));
 
 	bool lhsIsConst = lhs->isConst();
 	bool rhsIsConst = rhs->isConst();
@@ -100,7 +100,7 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 	}
 	else
 	{
-		CatTypedExpression* collapsedExpression = InfixOperatorOptimizer::tryCollapseInfixOperator(lhs, rhs, oper, compileTimeContext);
+		CatTypedExpression* collapsedExpression = InfixOperatorOptimizer::tryCollapseInfixOperator(lhs, rhs, oper, compileTimeContext, errorManager, errorContext);
 		if (collapsedExpression != nullptr)
 		{
 			return collapsedExpression;

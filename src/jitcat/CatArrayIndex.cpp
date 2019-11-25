@@ -157,10 +157,10 @@ bool CatArrayIndex::isConst() const
 }
 
 
-CatTypedExpression* CatArrayIndex::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatArrayIndex::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	ASTHelper::updatePointerIfChanged(array, array->constCollapse(compileTimeContext));
-	ASTHelper::updatePointerIfChanged(index, index->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(array, array->constCollapse(compileTimeContext, errorManager, errorContext));
+	ASTHelper::updatePointerIfChanged(index, index->constCollapse(compileTimeContext, errorManager, errorContext));
 	return this;
 }
 

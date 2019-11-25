@@ -123,14 +123,14 @@ bool CatAssignmentOperator::isConst() const
 }
 
 
-CatTypedExpression* CatAssignmentOperator::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatAssignmentOperator::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (operatorFunction != nullptr)
 	{
 		return operatorFunction.release();
 	}
-	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext));
-	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext));
+	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext, errorManager, errorContext));
+	ASTHelper::updatePointerIfChanged(rhs, rhs->constCollapse(compileTimeContext, errorManager, errorContext));
 	return this;
 }
 

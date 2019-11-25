@@ -144,7 +144,7 @@ bool CatMemberAccess::isConst() const
 }
 
 
-CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTimeContext)
+CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (type.isValidType() && isConst())
 	{
