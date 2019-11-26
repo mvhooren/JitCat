@@ -16,6 +16,11 @@ For building LLVM first of all refer to LLVM build documentation:
 [Building LLVM with Cmake](https://llvm.org/docs/CMake.html)  
 [Getting Started with the LLVM System using Microsoft Visual Studio](https://llvm.org/docs/GettingStartedVS.html)  
 
+## Important
+Due to an issue issue with LLVM, before building, we need to apply a small workaround to the llvm code when building LLVM for Windows/MSVC:  
+Find MCAsmInfoCOFF.cpp and change HasCOFFComdatConstants to false.  
+See this issue on the LLVM bugzilla: https://bugs.llvm.org/show_bug.cgi?id=40074  
+
 ## All Platforms
 Set CMAKE_CXX_STANDARD to 17. LLVM currently targets C++14 but will build under C++17 as well. Building LLVM with C++14 will possibly lead to incompatibilities. For example, see [this issue](https://github.com/mvhooren/JitCat/issues/13).
 
