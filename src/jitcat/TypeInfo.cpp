@@ -39,8 +39,9 @@ TypeInfo::~TypeInfo()
 {
 	for (auto& iter : members)
 	{
-		if (iter.second->catType.isPointerToReflectableObjectType()
+		if ((iter.second->catType.isPointerToReflectableObjectType()
 			|| iter.second->catType.isReflectableHandleType())
+			&& (Tools::startsWith(iter.first, "$") || iter.second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Value))
 		{
 			TypeInfo* typeInfo = iter.second->catType.getPointeeType()->getObjectType();
 			typeInfo->removeDependentType(this);
