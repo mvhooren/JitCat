@@ -41,7 +41,7 @@ namespace jitcat::AST
 		Cap,
 		Min,
 		Max,
-		Log,
+		Log10,
 		Ln,
 		Exp,
 		Sqrt,

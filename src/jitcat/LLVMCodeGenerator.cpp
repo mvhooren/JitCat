@@ -329,7 +329,7 @@ llvm::Value* LLVMCodeGenerator::generate(CatFunctionCall* functionCall, LLVMComp
 			}
 			return nullptr;
 		}
-		case CatBuiltInFunctionType::Log:	return helper->callIntrinsic(llvm::Intrinsic::log10, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context);
+		case CatBuiltInFunctionType::Log10:	return helper->callIntrinsic(llvm::Intrinsic::log10, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context);
 		case CatBuiltInFunctionType::Sqrt:	return helper->callIntrinsic(llvm::Intrinsic::sqrt, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context);
 		case CatBuiltInFunctionType::Ln:	return helper->callIntrinsic(llvm::Intrinsic::log, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context);
 		case CatBuiltInFunctionType::Exp:	return helper->callIntrinsic(llvm::Intrinsic::exp, CatGenericType::floatType, generate(arguments->arguments[0].get(), context), context);

@@ -572,76 +572,76 @@ TEST_CASE("Builtin functions test: Max", "[builtins][max]" )
 }
 
 
-TEST_CASE("Builtin functions test: Log", "[builtins][log]" ) 
+TEST_CASE("Builtin functions test: Log10", "[builtins][log10]" ) 
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("builtinTests_Log", &errorManager);
+	CatRuntimeContext context("builtinTests_Log10", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
-	SECTION("Log_Constant")
+	SECTION("Log10_Constant")
 	{
-		Expression<float> testExpression(&context, "log(42.0f)");
+		Expression<float> testExpression(&context, "log10(42.0f)");
 		doChecks(log10f(42.0f), false, true, false, testExpression, context);
 	}
-	SECTION("Log_Negative Constant")
+	SECTION("Log10_Negative Constant")
 	{
-		Expression<float> testExpression(&context, "log(-42.0f)");
+		Expression<float> testExpression(&context, "log10(-42.0f)");
 		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, true, false, testExpression, context);
 	}
-	SECTION("Log_IntConstant")
+	SECTION("Log10_IntConstant")
 	{
-		Expression<float> testExpression(&context, "log(3)");
+		Expression<float> testExpression(&context, "log10(3)");
 		doChecks(log10f(3.0f), false, true, false, testExpression, context);
 	}
-	SECTION("Log_Negative IntConstant")
+	SECTION("Log10_Negative IntConstant")
 	{
-		Expression<float> testExpression(&context, "log(-3)");
+		Expression<float> testExpression(&context, "log10(-3)");
 		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, true, false, testExpression, context);
 	}
-	SECTION("Log_Zero Variable")
+	SECTION("Log10_Zero Variable")
 	{
-		Expression<float> testExpression(&context, "log(zeroFloat)");
+		Expression<float> testExpression(&context, "log10(zeroFloat)");
 		doChecks(-std::numeric_limits<float>::infinity(), false, false, false, testExpression, context);
 	}
-	SECTION("Log_Variable")
+	SECTION("Log10_Variable")
 	{
-		Expression<float> testExpression(&context, "log(aFloat)");
+		Expression<float> testExpression(&context, "log10(aFloat)");
 		doChecks(log10f(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
-	SECTION("Log_Negative Variable")
+	SECTION("Log10_Negative Variable")
 	{
-		Expression<float> testExpression(&context, "log(-aFloat)");
+		Expression<float> testExpression(&context, "log10(-aFloat)");
 		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
 	}
-	SECTION("Log_IntVariable")
+	SECTION("Log10_IntVariable")
 	{
-		Expression<float> testExpression(&context, "log(theInt)");
+		Expression<float> testExpression(&context, "log10(theInt)");
 		doChecks(log10f((float)reflectedObject.theInt), false, false, false, testExpression, context);
 	}
-	SECTION("Log_Negative IntVariable")
+	SECTION("Log10_Negative IntVariable")
 	{
-		Expression<float> testExpression(&context, "log(-theInt)");
+		Expression<float> testExpression(&context, "log10(-theInt)");
 		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
 	}
-	SECTION("Log_string")
+	SECTION("Log10_string")
 	{
-		Expression<float> testExpression(&context, "log(numberString)");
+		Expression<float> testExpression(&context, "log10(numberString)");
 		doChecks(0.0f, true, false, false, testExpression, context);
 	}
-	SECTION("Log_noarg")
+	SECTION("Log10_noarg")
 	{
-		Expression<float> testExpression(&context, "log()");
+		Expression<float> testExpression(&context, "log10()");
 		doChecks(0.0f, true, false, false, testExpression, context);
 	}
-	SECTION("Log_morearg")
+	SECTION("Log10_morearg")
 	{
-		Expression<float> testExpression(&context, "log(theInt, aFloat)");
+		Expression<float> testExpression(&context, "log10(theInt, aFloat)");
 		doChecks(0.0f, true, false, false, testExpression, context);
 	}
-	SECTION("Log_obj")
+	SECTION("Log10_obj")
 	{
-		Expression<float> testExpression(&context, "log(nestedObject)");
+		Expression<float> testExpression(&context, "log10(nestedObject)");
 		doChecks(0.0f, true, false, false, testExpression, context);
 	}
 }
