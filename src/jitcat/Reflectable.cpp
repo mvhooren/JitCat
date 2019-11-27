@@ -29,7 +29,7 @@ Reflectable::Reflectable(Reflectable&& other) noexcept
 {
 	while (true)
 	{
-		if (auto& iter = observers.find(&other); iter != observers.end())
+		if (auto& iter = observers->find(&other); iter != observers->end())
 		{
 			iter->second->operator=(this);
 		}
@@ -53,10 +53,10 @@ Reflectable::~Reflectable()
 {
 	while (true)
 	{
-		if (auto& iter = observers.find(this); iter != observers.end())
+		if (auto& iter = observers->find(this); iter != observers->end())
 		{
 			iter->second->notifyDeletion();
-			observers.erase(iter);
+			observers->erase(iter);
 		}
 		else
 		{
@@ -68,18 +68,18 @@ Reflectable::~Reflectable()
 
 void Reflectable::addObserver(ReflectableHandle* observer)
 {
-	observers.insert(std::pair<Reflectable*,ReflectableHandle*>(this, observer));
+	observers->insert(std::pair<Reflectable*,ReflectableHandle*>(this, observer));
 }
 
 
 void Reflectable::removeObserver(ReflectableHandle* observer)
 {
-	auto& range = observers.equal_range(this);
+	auto& range = observers->equal_range(this);
 	for (auto& iter = range.first; iter != range.second; ++iter)
 	{
 		if (iter->second == observer)
 		{
-			observers.erase(iter);
+			observers->erase(iter);
 			break;
 		}
 	}
@@ -102,7 +102,7 @@ void jitcat::Reflection::Reflectable::replaceReflectable(Reflectable* oldReflect
 {
 	while (true)
 	{
-		if (auto& iter = observers.find(oldReflectable); iter != observers.end())
+		if (auto& iter = observers->find(oldReflectable); iter != observers->end())
 		{
 			(*iter->second) = newReflectable;
 		}
@@ -114,4 +114,4 @@ void jitcat::Reflection::Reflectable::replaceReflectable(Reflectable* oldReflect
 }
 
 
-std::unordered_multimap<Reflectable*, ReflectableHandle*> Reflectable::observers = std::unordered_multimap<Reflectable*, ReflectableHandle*>();
+std::unordered_multimap<Reflectable*, ReflectableHandle*>* Reflectable::observers = new std::unordered_multimap<Reflectable*, ReflectableHandle*>();

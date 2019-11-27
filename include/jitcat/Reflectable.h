@@ -47,6 +47,9 @@ namespace jitcat::Reflection
 		static void replaceReflectable(Reflectable* oldReflectable, Reflectable* newReflectable);
 
 	private:
-		static std::unordered_multimap<Reflectable*, ReflectableHandle*> observers;
+		//This is a pointer because otherwise it would be subject to static member destruction order, causing
+		//static reflectable objects that are destructed to sometimes crash because observers was already destroyed.
+		//Because of this, observers is also intentionally leaked.
+		static std::unordered_multimap<Reflectable*, ReflectableHandle*>* observers;
 	};
 } //End namespace jitcat::Reflection
