@@ -250,36 +250,15 @@ std::any CatFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				return std::any(std::max(std::any_cast<int>(argumentValues[0]), CatGenericType::convertToInt(argumentValues[1], argumentTypes[1])));
 			}
 		case CatBuiltInFunctionType::Log10:
-			if (argumentTypes[0].isFloatType())
-			{
-				return std::any((float)std::log10(std::any_cast<float>(argumentValues[0])));
-			}
-			else 
-			{
-				return std::any((float)std::log10((float)std::any_cast<int>(argumentValues[0])));
-			}
+			return std::any(std::log10f(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0])));
 		case CatBuiltInFunctionType::Ln:
-			return (float)std::log(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+			return std::logf(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
 		case CatBuiltInFunctionType::Exp:
-			return (float)std::exp(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
+			return std::expf(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]));
 		case CatBuiltInFunctionType::Sqrt:
-			if (argumentTypes[0].isFloatType())
-			{
-				return std::any((float)std::sqrt(std::any_cast<float>(argumentValues[0])));
-			}
-			else 
-			{
-				return std::any((float)std::sqrt((float)std::any_cast<int>(argumentValues[0])));
-			}
+			return std::any(std::sqrtf(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0])));
 		case CatBuiltInFunctionType::Pow:		
-			if (argumentTypes[0].isFloatType())
-			{
-				return std::any((float)std::pow(std::any_cast<float>(argumentValues[0]), CatGenericType::convertToFloat(argumentValues[1], argumentTypes[1])));
-			}
-			else 
-			{
-				return std::any((float)std::pow((float)std::any_cast<int>(argumentValues[0]), CatGenericType::convertToFloat(argumentValues[1], argumentTypes[1])));
-			}
+			return std::any(std::powf(CatGenericType::convertToFloat(argumentValues[0], argumentTypes[0]), CatGenericType::convertToFloat(argumentValues[1], argumentTypes[1])));
 		case CatBuiltInFunctionType::Ceil:
 			if (argumentTypes[0].isFloatType())
 			{
