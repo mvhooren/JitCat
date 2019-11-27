@@ -8,7 +8,9 @@
 #pragma once
 
 #include "jitcat/Reflectable.h"
+#include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeTraits.h"
 
 #include <map>
 #include <memory>
@@ -18,6 +20,46 @@
 
 namespace TestObjects
 {
+	template<typename ItemType, typename AllocatorType = std::allocator<ItemType>>
+	class ReflectableVector: public std::vector<ItemType, AllocatorType>, public jitcat::Reflection::Reflectable
+	{
+	public:
+		ReflectableVector() : std::vector<ItemType, AllocatorType>() {};
+		inline operator std::vector<ItemType, AllocatorType>(){return *this;};
+
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+		static const char* getTypeName();
+
+		ItemType& operator[](int index);
+
+		int sizeAsInt() {return (int)size();}
+	};
+
+
+	template<typename ItemType, typename AllocatorType>
+	inline void ReflectableVector<ItemType, AllocatorType>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+	{
+		typeInfo
+			.addMember<ReflectableVector<ItemType, AllocatorType>, ItemType&, int>("[]", &ReflectableVector::operator[])
+			.addMember("size", &ReflectableVector::sizeAsInt);
+	}
+
+
+	template<typename ItemType, typename AllocatorType>
+	inline const char* ReflectableVector<ItemType, AllocatorType>::getTypeName()
+	{
+		static std::string vectorName = jitcat::Tools::append("Vector<", TypeTraits<ItemType>::getTypeName(), ">");
+		return vectorName.c_str();
+	}
+
+
+	template<typename ItemType, typename AllocatorType>
+	inline ItemType& ReflectableVector<ItemType, AllocatorType>::operator[](int index)
+	{
+		return std::vector<ItemType, AllocatorType>::operator[]((std::size_t)index);
+	}
+
+
 	class CaseInsensitiveCompare
 	{
 	public:
@@ -90,8 +132,10 @@ namespace TestObjects
 		std::string numberString;
 		std::string text;
 		int theInt;
+		int zeroInt;
 		int largeInt;
 		float aFloat;
+		float negativeFloat;
 		float smallFloat;
 		float zeroFloat;
 		bool aBoolean;
