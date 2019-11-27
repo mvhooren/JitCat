@@ -9,6 +9,7 @@
 
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/Configuration.h"
 
 
 #include <cassert>

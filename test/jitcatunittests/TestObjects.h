@@ -90,8 +90,10 @@ namespace TestObjects
 		std::string numberString;
 		std::string text;
 		int theInt;
+		int zeroInt;
 		int largeInt;
 		float aFloat;
+		float negativeFloat;
 		float smallFloat;
 		float zeroFloat;
 		bool aBoolean;

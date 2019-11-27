@@ -55,7 +55,6 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 															[]() {	return memoryManager->createExpressionAllocator();})),
 	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(LLVMJit::get().getTargetMachineBuilder())))
 {
-	
 	llvm::orc::SymbolMap intrinsicSymbols;
 	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary", false);
 
@@ -622,8 +621,28 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 			case CatInfixOperatorType::Plus:				return builder->CreateFAdd(left, right, "added");				
 			case CatInfixOperatorType::Minus:				return builder->CreateFSub(left, right, "subtracted");		
 			case CatInfixOperatorType::Multiply:			return builder->CreateFMul(left, right, "multiplied");		
-			case CatInfixOperatorType::Divide:				return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFDiv(left, right, "divided"));			
-			case CatInfixOperatorType::Modulo:				return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFRem(left, right, "divided"));
+			case CatInfixOperatorType::Divide:
+			{
+				if constexpr (Configuration::divisionByZeroYieldsZero)
+				{
+					return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFDiv(left, right, "divided"));			
+				}
+				else
+				{
+					return builder->CreateFDiv(left, right, "divided");
+				}
+			}
+			case CatInfixOperatorType::Modulo:
+			{
+				if constexpr (Configuration::divisionByZeroYieldsZero)
+				{
+					return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFRem(left, right, "divided"));
+				}
+				else
+				{
+					return builder->CreateFRem(left, right, "divided");
+				}
+			}
 			case CatInfixOperatorType::Greater:				return builder->CreateFCmpUGT(left, right, "greater");		
 			case CatInfixOperatorType::Smaller:				return builder->CreateFCmpULT(left, right, "smaller");		
 			case CatInfixOperatorType::GreaterOrEqual:		return builder->CreateFCmpUGE(left, right, "greaterOrEqual");	
@@ -639,8 +658,28 @@ llvm::Value* LLVMCodeGenerator::generate(CatInfixOperator* infixOperator, LLVMCo
 			case CatInfixOperatorType::Plus:				return builder->CreateAdd(left, right, "added");				
 			case CatInfixOperatorType::Minus:				return builder->CreateSub(left, right, "subtracted");			
 			case CatInfixOperatorType::Multiply:			return builder->CreateMul(left, right, "multiplied");			
-			case CatInfixOperatorType::Divide:				return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSDiv(left, right, "divided"));					 
-			case CatInfixOperatorType::Modulo:				return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSRem(left, right, "modulo"));			
+			case CatInfixOperatorType::Divide:				
+			{
+				if constexpr (Configuration::divisionByZeroYieldsZero)
+				{
+					return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSDiv(left, right, "divided"));					 
+				}
+				else
+				{
+					return builder->CreateSDiv(left, right, "divided");
+				}
+			}
+			case CatInfixOperatorType::Modulo:				
+			{
+				if constexpr (Configuration::divisionByZeroYieldsZero)
+				{
+					return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSRem(left, right, "modulo"));			
+				}
+				else
+				{
+					return builder->CreateSRem(left, right, "modulo");
+				}
+			}
 			case CatInfixOperatorType::Greater:				return builder->CreateICmpSGT(left, right, "greater");		
 			case CatInfixOperatorType::Smaller:				return builder->CreateICmpSLT(left, right, "smaller");		
 			case CatInfixOperatorType::GreaterOrEqual:		return builder->CreateICmpSGE(left, right, "greaterOrEqual");	

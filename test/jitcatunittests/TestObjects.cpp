@@ -53,8 +53,10 @@ ReflectedObject::ReflectedObject():
 	text("Hello!"),
 	numberString("123.4"),
 	theInt(42),
+	zeroInt(0),
 	largeInt(1234567),
 	aFloat(999.9f),
+	negativeFloat(-111.1f),
 	smallFloat(0.5f),
 	zeroFloat(0.0f),
 	aBoolean(true),
@@ -137,8 +139,10 @@ void ReflectedObject::reflect(TypeInfo& typeInfo)
 		.addMember("numberString", &ReflectedObject::numberString)
 		.addMember("text", &ReflectedObject::text, MF::isWritable)
 		.addMember("theInt", &ReflectedObject::theInt, MF::isWritable)
+		.addMember("zeroInt", &ReflectedObject::zeroInt)
 		.addMember("largeInt", &ReflectedObject::largeInt)
 		.addMember("aFloat", &ReflectedObject::aFloat, MF::isWritable)
+		.addMember("negativeFloat", &ReflectedObject::negativeFloat, MF::isWritable)
 		.addMember("smallFloat", &ReflectedObject::smallFloat, MF::isWritable)
 		.addMember("zeroFloat", &ReflectedObject::zeroFloat)
 		.addMember("aBoolean", &ReflectedObject::aBoolean, MF::isWritable)
