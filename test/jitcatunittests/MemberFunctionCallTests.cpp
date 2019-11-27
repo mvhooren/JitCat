@@ -22,7 +22,7 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	CatRuntimeContext context("memberFunctions", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Get float")

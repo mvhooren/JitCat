@@ -10,8 +10,27 @@
 
 class ReflectionTestObject2;
 #include "jitcat/Reflectable.h"
+#include <ostream>
 #include <map>
 #include <vector>
+
+
+struct TestVector: public jitcat::Reflection::Reflectable
+{
+	TestVector();
+	TestVector(float x, float y, float z, float w);
+
+	static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+	static const char* getTypeName();
+
+	float x;
+	float y;
+	float z;
+	float w;
+};
+
+TestVector operator*(const TestVector& v1, const TestVector& v2);
+std::ostream& operator<< (std::ostream& out, TestVector const& v) ;
 
 
 class ReflectionTestObject: public jitcat::Reflection::Reflectable
@@ -33,6 +52,10 @@ private:
 	std::string text;
 	int theInt;
 	float aFloat;
+
+	TestVector v1;
+	TestVector v2;
+
 	ReflectionTestObject2* test2;
 	std::vector<ReflectionTestObject2*> testObjects;
 	std::map<std::string, ReflectionTestObject2*> mapObjects;

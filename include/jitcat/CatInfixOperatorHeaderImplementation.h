@@ -93,35 +93,56 @@ inline std::any CatInfixOperator::calculateScalarExpression(const T& lValue, con
 		case CatInfixOperatorType::Equals:			return std::any(lValue == rValue);
 		case CatInfixOperatorType::NotEquals:		return std::any(lValue != rValue);
 		case CatInfixOperatorType::Divide:
-			if (rValue != 0)
+			if constexpr (jitcat::Configuration::divisionByZeroYieldsZero)
 			{
-				return std::any((V)lValue / (V)rValue);
-			}
-			else 
-			{
-				return std::any((V)0);
-			}
-		case CatInfixOperatorType::Modulo:
-			if constexpr (std::is_same<T, float>::value || std::is_same<U, float>::value)
-			{
-				if ((float)rValue != 0)
+				if (rValue != 0)
 				{
-					return std::any((float)fmodf((float)lValue, (float)rValue));
+					return std::any((V)lValue / (V)rValue);
 				}
-				else
+				else 
 				{
-					return std::any(0.0f);
+					return std::any((V)0);
 				}
 			}
 			else
 			{
-				if ((int)rValue != 0)
+				return std::any((V)lValue / (V)rValue);
+			}
+		case CatInfixOperatorType::Modulo:
+			if constexpr (std::is_same<T, float>::value || std::is_same<U, float>::value)
+			{
+				if constexpr (jitcat::Configuration::divisionByZeroYieldsZero)
 				{
-					return std::any((int)lValue % (int)rValue);
+					if ((float)rValue != 0)
+					{
+						return std::any((float)fmodf((float)lValue, (float)rValue));
+					}
+					else
+					{
+						return std::any(0.0f);
+					}
 				}
 				else
 				{
-					return std::any(0);
+					return std::any((float)fmodf((float)lValue, (float)rValue));
+				}
+			}
+			else
+			{
+				if constexpr (jitcat::Configuration::divisionByZeroYieldsZero)
+				{
+					if ((int)rValue != 0)
+					{
+						return std::any((int)lValue % (int)rValue);
+					}
+					else
+					{
+						return std::any(0);
+					}
+				}
+				else
+				{
+					return std::any((int)lValue % (int)rValue);
 				}
 			}
 	}

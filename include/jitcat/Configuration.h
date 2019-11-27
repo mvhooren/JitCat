@@ -10,9 +10,12 @@
 namespace jitcat
 {
 
-class Configuration
+namespace Configuration
 {
-public:
+	//Determines the ordering of the 'this' argument and the 'sret' argument in a member function.
+	//Sret is used when a function returns a structure by value. Om windows/msvc a class member funtion's
+	//first argument will be the 'this' pointer and the second argument will be the sret pointer if applicable.
+	//On linux/clang/gcc this is the other way around.
 	static constexpr bool sretBeforeThis = 
 #ifdef WIN32
 		false;
@@ -20,6 +23,7 @@ public:
 		true;
 #endif
 
+	//Sets the calling convention for member function calls. Similar to the sretBeforeThis option.
 	static constexpr bool useThisCall = 
 #ifdef WIN32
 		true;
@@ -27,8 +31,11 @@ public:
 		false;
 #endif
 
+	//The assumed size of a normal member function pointer.
+	//Member function pointers can differ in size in the case of (virtual)inheritance.
 	static constexpr int basicMemberFunctionPointerSize = sizeof(uintptr_t);
 
+	//Dump LLVM IR whenever a function's code is being generated.
 	static constexpr bool dumpFunctionIR = 
 #ifdef _DEBUG
 		false;
@@ -37,6 +44,7 @@ public:
 		false;
 #endif
 
+	//Enable some workarounds on Windows/MSVC required for finding function symbols after their code has been generated.
 	static constexpr bool enableSymbolSearchWorkaround =
 #ifdef WIN32
 		true;
@@ -44,6 +52,7 @@ public:
 		false;
 #endif
 
+	//Enable the LLVM code generator backend.
 	static constexpr bool enableLLVM =
 #ifdef ENABLE_LLVM
 		true;
@@ -64,6 +73,13 @@ public:
 #else
 		false;
 #endif
+
+	//Whenever a floating point number is divided by zero, normally a NaN or (+-)Infinity is returned.
+	//Dividing an integer by zero is undefined behaviour. The program will probably abort.
+	//By enabling this flag, dividing by zero within an expression will return 0, preventing the 
+	//spread of NaNs or program abort but breaking mathematical correctness.
+	static constexpr bool divisionByZeroYieldsZero = false;
+
 };
 
 } //namespace jitcat

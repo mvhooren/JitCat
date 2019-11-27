@@ -169,10 +169,41 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 		Expression<float> testExpression(&context, "aFloat / 182.0f");
 		doChecks(reflectedObject.aFloat / 182.0f, false, false, false, testExpression, context);
 	}
-	SECTION("Division By Zero")
+	SECTION("Positive Division By Zero")
 	{
 		Expression<float> testExpression(&context, "aFloat / 0.0f");
-		doChecks(0.0f, false, false, false, testExpression, context);
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : std::numeric_limits<float>::infinity();
+		doChecks(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Negative Division By Zero")
+	{
+		Expression<float> testExpression(&context, "negativeFloat / 0.0f");
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : -std::numeric_limits<float>::infinity();
+		doChecks(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Zero Division By Zero")
+	{
+		Expression<float> testExpression(&context, "zeroFloat / 0.0f");
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : std::numeric_limits<float>::quiet_NaN();
+		doChecks(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Zero Constant Division By Zero")
+	{
+		Expression<float> testExpression(&context, "0.0f / 0.0f");
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : std::numeric_limits<float>::quiet_NaN();
+		doChecks(expectedResult, false, true, false, testExpression, context);
+	}
+	SECTION("Postive Constant Division By Zero")
+	{
+		Expression<float> testExpression(&context, "1.0f / 0.0f");
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : std::numeric_limits<float>::infinity();
+		doChecks(expectedResult, false, true, false, testExpression, context);
+	}
+	SECTION("Negative Constant Division By Zero")
+	{
+		Expression<float> testExpression(&context, "-1.0f / 0.0f");
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : -std::numeric_limits<float>::infinity();
+		doChecks(expectedResult, false, true, false, testExpression, context);
 	}
 	SECTION("Modulo")
 	{
@@ -182,7 +213,14 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 	SECTION("Modulo_Invalid")
 	{
 		Expression<float> testExpression(&context, "aFloat % zeroFloat");
-		doChecks<float>(0.0f, false, false, false, testExpression, context);
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : fmodf(reflectedObject.aFloat, reflectedObject.zeroFloat);
+		doChecks<float>(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Constant Modulo_Invalid")
+	{
+		Expression<float> testExpression(&context, "0.0f % 0.0f");
+		float expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0f : fmodf(reflectedObject.zeroFloat, reflectedObject.zeroFloat);
+		doChecks<float>(expectedResult, false, true, false, testExpression, context);
 	}
 	SECTION("Smaller_1")
 	{
@@ -322,7 +360,15 @@ TEST_CASE("Integer Tests", "[int][operators]" )
 	SECTION("Division By Zero")
 	{
 		Expression<int> testExpression(&context, "theInt / 0");
-		doChecks(0, false, false, false, testExpression, context);
+		if (Configuration::divisionByZeroYieldsZero)
+		{
+			doChecks(0, false, false, false, testExpression, context);
+		}
+		else
+		{
+			//Division by zero cannot be tested because it will abort the program without generating an exception.
+			SUCCEED();
+		}
 	}
 	SECTION("Modulo")
 	{
@@ -332,7 +378,15 @@ TEST_CASE("Integer Tests", "[int][operators]" )
 	SECTION("Modulo_Invalid")
 	{
 		Expression<int> testExpression(&context, "theInt % 0");
-		doChecks(0, false, false, false, testExpression, context);
+		if (Configuration::divisionByZeroYieldsZero)
+		{
+			doChecks(0, false, false, false, testExpression, context);
+		}
+		else
+		{
+			//Modulo by zero cannot be tested because it will abort the program without generating an exception.
+			SUCCEED();
+		}
 	}
 	SECTION("Smaller_1")
 	{
@@ -431,7 +485,7 @@ TEST_CASE("Boolean Tests", "[bool][operators]" )
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("intTests", &errorManager);
+	CatRuntimeContext context("boolTests", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("True Constant")
@@ -672,11 +726,11 @@ TEST_CASE("Boolean Tests", "[bool][operators]" )
 }
 
 
-TEST_CASE("String Tests", "[float][operators]")
+TEST_CASE("String Tests", "[string][operators]")
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("floatTests", &errorManager);
+	CatRuntimeContext context("stringTests", &errorManager);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Constant")

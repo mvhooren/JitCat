@@ -266,37 +266,16 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			{
 				return std::any(std::max(std::any_cast<int>(argumentValues[0]), CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1))));
 			}
-		case CatBuiltInFunctionType::Log:
-			if (arguments->getArgumentType(0).isFloatType())
-			{
-				return std::any((float)std::log10(std::any_cast<float>(argumentValues[0])));
-			}
-			else 
-			{
-				return std::any((float)std::log10((float)std::any_cast<int>(argumentValues[0])));
-			}
+		case CatBuiltInFunctionType::Log10:
+			return std::any(std::log10f(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0))));
 		case CatBuiltInFunctionType::Ln:
 			return (float)std::log(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Exp:
 			return (float)std::exp(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Sqrt:
-			if (arguments->getArgumentType(0).isFloatType())
-			{
-				return std::any((float)std::sqrt(std::any_cast<float>(argumentValues[0])));
-			}
-			else 
-			{
-				return std::any((float)std::sqrt((float)std::any_cast<int>(argumentValues[0])));
-			}
+			return std::any(std::sqrtf(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0))));
 		case CatBuiltInFunctionType::Pow:		
-			if (arguments->getArgumentType(0).isFloatType())
-			{
-				return std::any((float)std::pow(std::any_cast<float>(argumentValues[0]), CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1))));
-			}
-			else 
-			{
-				return std::any((float)std::pow((float)std::any_cast<int>(argumentValues[0]), CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1))));
-			}
+			return std::any(std::powf(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)), CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1))));
 		case CatBuiltInFunctionType::Ceil:
 			if (arguments->getArgumentType(0).isFloatType())
 			{
@@ -577,7 +556,7 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 					return false;
 				}
 				break;
-			case CatBuiltInFunctionType::Log:
+			case CatBuiltInFunctionType::Log10:
 			case CatBuiltInFunctionType::Ln:
 			case CatBuiltInFunctionType::Exp:
 			case CatBuiltInFunctionType::Sqrt:
@@ -798,7 +777,7 @@ bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::Asinh:
 		case CatBuiltInFunctionType::Acosh:
 		case CatBuiltInFunctionType::Atanh:
-		case CatBuiltInFunctionType::Log:
+		case CatBuiltInFunctionType::Log10:
 		case CatBuiltInFunctionType::Ln:
 		case CatBuiltInFunctionType::Exp:
 		case CatBuiltInFunctionType::Sqrt:
@@ -877,7 +856,7 @@ std::vector<std::string> CatBuiltInFunctionCall::functionTable =
 	 "cap",					//CatBuiltInFunctionType::Cap
 	 "min",					//CatBuiltInFunctionType::Min 
 	 "max",					//CatBuiltInFunctionType::Max
-	 "log",					//CatBuiltInFunctionType::Log
+	 "log10",				//CatBuiltInFunctionType::Log10
 	 "ln",					//CatBuiltInFunctionType::Ln
 	 "exp",					//CatBuiltInFunctionType::Exp
 	 "sqrt",				//CatBuiltInFunctionType::Sqrt

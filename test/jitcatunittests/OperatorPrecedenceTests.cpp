@@ -22,7 +22,7 @@ TEST_CASE("Operator precedence", "[operators][precedence]" )
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
-	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	CatRuntimeContext context("operatorPrecedence", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Precedence test 1")

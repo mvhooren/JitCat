@@ -405,4 +405,3 @@ TEST_CASE("Builtin functions test: ToFixedLengthString", "[builtins][tofixedleng
 		doChecks(std::string(), true, false, false, testExpression, context);
 	}
 }
-

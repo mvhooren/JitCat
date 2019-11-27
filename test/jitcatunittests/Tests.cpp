@@ -26,7 +26,6 @@ TEST_CASE("DevelopmentTests", "[development]" )
 	CatRuntimeContext context("development_tests", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
-
 	SECTION("HelloWorld")
 	{
 		Expression<std::string> testExpression(&context, "\"Hello World!\"");

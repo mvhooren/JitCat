@@ -57,7 +57,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	//The case where the reflectable handle is set to null through deletion of the observed object.
 	objectUniquePtr.reset(nullptr);
 
-	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	CatRuntimeContext context("customTypes", &errorManager);
 	context.addScope(&reflectedObject, true);
 	context.addScope(customType2, nullptr, false);
 	context.addScope(customType, typeInstance.getReflectable(), false);

@@ -24,7 +24,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	ExpressionErrorManager errorManager;
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	CatGenericType genericType = CatGenericType(objectTypeInfo);
-	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	CatRuntimeContext context("expressionAny", &errorManager);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Literal Float")

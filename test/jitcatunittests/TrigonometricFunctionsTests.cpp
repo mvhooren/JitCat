@@ -191,7 +191,7 @@ TEST_CASE("Builtin functions test: Tan", "[builtins][tan]" )
 	}
 	SECTION("Tan_obj")
 	{
-		Expression<float> testExpression(&context, "abs(nestedObject)");
+		Expression<float> testExpression(&context, "tan(nestedObject)");
 		doChecks(0.0f, true, false, false, testExpression, context);
 	}
 }

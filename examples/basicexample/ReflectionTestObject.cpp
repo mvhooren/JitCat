@@ -19,7 +19,9 @@ using namespace jitcat::Reflection;
 ReflectionTestObject::ReflectionTestObject(std::string text):
 	text(text),
 	theInt(123),
-	aFloat(13.37f)
+	aFloat(13.37f),
+	v1(1.0f, 2.0f, 3.0f, 4.0f),
+	v2(4.0f, 3.0f, 2.0f, 1.0f)
 {
 	test2 = new ReflectionTestObject2();
 	testObjects.push_back(test2);
@@ -35,6 +37,8 @@ ReflectionTestObject::ReflectionTestObject(std::string text):
 void ReflectionTestObject::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo.addMember("text", &ReflectionTestObject::text);
+	typeInfo.addMember("v1", &ReflectionTestObject::v1);
+	typeInfo.addMember("v2", &ReflectionTestObject::v2);
 	typeInfo.addMember("getTest2", &ReflectionTestObject::getTest2);
 	typeInfo.addMember("getAFloat", &ReflectionTestObject::getAFloat);
 	typeInfo.addMember("addEleven", &ReflectionTestObject::addEleven);
@@ -81,4 +85,51 @@ ReflectionTestObject2* ReflectionTestObject::getTest2()
 std::string ReflectionTestObject::addToString(const std::string& text, float number)
 {
 	return Tools::append(text, number);
+}
+
+
+TestVector::TestVector():
+	x(0.0f), y(0.0f), z(0.0f), w(0.0f)
+{
+}
+
+
+TestVector::TestVector(float x, float y, float z, float w):
+	x(x),
+	y(y),
+	z(z),
+	w(w)
+{
+}
+
+
+void TestVector::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+{
+	typeInfo
+		.addMember("x", &TestVector::x, MemberFlags::isWritable)
+		.addMember("y", &TestVector::y, MemberFlags::isWritable)
+		.addMember("z", &TestVector::z, MemberFlags::isWritable)
+		.addMember("w", &TestVector::w, MemberFlags::isWritable)
+		.addMember<TestVector, const TestVector&, const TestVector&>("*", &operator*);
+}
+
+
+const char* TestVector::getTypeName()
+{
+	return "TestVector";
+}
+
+
+TestVector operator*(const TestVector& v1, const TestVector& v2)
+{
+	return TestVector(v1.x * v2.x, 
+					  v1.y * v2.y, 
+					  v1.z * v2.z, 
+					  v1.w * v2.w);
+}
+
+std::ostream& operator<<(std::ostream& out, TestVector const& v)
+{
+	out << "x: " << v.x << " y: " << v.y << " z: " << v.z << " w: " << v.w;
+    return out;
 }
