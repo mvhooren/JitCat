@@ -430,6 +430,19 @@ CatGenericType jitcat::CatGenericType::convertPointerToHandle() const
 }
 
 
+const CatGenericType& jitcat::CatGenericType::removeIndirection(int& levelsOfIndirectionRemoved) const
+{
+	levelsOfIndirectionRemoved = 0;
+	const CatGenericType* currentType = this;
+	while (currentType->isReflectablePointerOrHandle())
+	{
+		levelsOfIndirectionRemoved++;
+		currentType = currentType->getPointeeType();
+	}
+	return *currentType;
+}
+
+
 Reflection::ContainerManipulator* jitcat::CatGenericType::getContainerManipulator() const
 {
 	return containerManipulator;
@@ -640,7 +653,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 	{
 		case SpecificType::ReflectableHandle:
 		{
-			return pointeeType->getObjectType()->getTypeCaster()->cast(pointer);
+			return pointeeType->getObjectType()->getTypeCaster()->castFromRawPointer(pointer);
 		} break;
 		case SpecificType::Container:
 		{
@@ -662,7 +675,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 				} break;
 				case SpecificType::ReflectableObject:
 				{
-					return pointeeType->getObjectType()->getTypeCaster()->cast(pointer);
+					return pointeeType->getObjectType()->getTypeCaster()->castFromRawPointer(pointer);
 				} break;
 				case SpecificType::ReflectableHandle:
 				{
@@ -933,6 +946,13 @@ std::any CatGenericType::convertToType(std::any value, const CatGenericType& val
 				}
 			} break;
 		}
+	}
+	else if (int myIndirectionCount, valueIndirectionCount; 
+			 removeIndirection(myIndirectionCount) == valueType.removeIndirection(valueIndirectionCount) 
+		     && valueIndirectionCount >= myIndirectionCount)
+	{
+		//If the value is of the same type, but has more indirection we can remove the indirection
+
 	}
 	assert(false);
 	return createDefault();

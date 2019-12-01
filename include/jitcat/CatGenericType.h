@@ -109,6 +109,8 @@ namespace jitcat
 		CatGenericType toPointer(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 		CatGenericType convertPointerToHandle() const;
+		//Removes pointers and handles
+		const CatGenericType& removeIndirection(int& levelsOfIndirectionRemoved) const;
 
 		Reflection::ContainerManipulator* getContainerManipulator() const;
 		const CatGenericType& getContainerItemType() const;
