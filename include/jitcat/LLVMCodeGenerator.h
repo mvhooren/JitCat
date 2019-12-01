@@ -10,6 +10,10 @@
 namespace jitcat
 {
 	class CatRuntimeContext;
+	namespace Reflection
+	{
+		struct MemberFunctionInfo;
+	}
 }
 #include "jitcat/CatASTNodesDeclares.h"
 #include "jitcat/LLVMForwardDeclares.h"
@@ -69,6 +73,10 @@ namespace jitcat::LLVM
 		llvm::Value* generateAssign(const AST::CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
 
 		llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
+
+		llvm::Value* generateMemberFunctionCall(Reflection::MemberFunctionInfo* memberFunction, AST::CatTypedExpression* base, 
+											    const std::vector<const AST::CatTypedExpression*>& arguments, 
+												LLVMCompileTimeContext* context);
 
 		void initContext(LLVMCompileTimeContext* context);
 		void createNewModule(LLVMCompileTimeContext* context);

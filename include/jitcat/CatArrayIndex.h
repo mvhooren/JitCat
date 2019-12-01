@@ -12,6 +12,11 @@
 
 #include <memory>
 
+namespace jitcat::Reflection
+{
+	struct MemberFunctionInfo;
+}
+
 namespace jitcat::AST
 {
 
@@ -38,6 +43,12 @@ namespace jitcat::AST
 
 		CatTypedExpression* getBase() const;
 		CatTypedExpression* getIndex() const;
+		bool isReflectedArray() const;
+		jitcat::Reflection::MemberFunctionInfo* getArrayIndexOperatorFunction() const;
+
+	private:
+		bool typeCheckIntrinsicArray(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+		bool typeCheckOperatorArray(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
 	private:
 		CatGenericType arrayType;
@@ -46,6 +57,9 @@ namespace jitcat::AST
 		std::unique_ptr<CatTypedExpression> index;
 		CatGenericType containerItemType;
 		CatGenericType assignableItemType;
+
+		bool isReflectedArrayType;
+		jitcat::Reflection::MemberFunctionInfo* arrayIndexFunction;
 	};
 
 
