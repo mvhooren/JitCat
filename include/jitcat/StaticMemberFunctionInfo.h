@@ -89,13 +89,13 @@ namespace jitcat::Reflection
 	template<std::size_t... Is>
 	std::any callWithIndexed(const std::vector<std::any>& parameters, Indices<Is...>)
 	{
-		if (std::is_same<void, ReturnT>::value)
+		if constexpr (std::is_same<void, ReturnT>::value)
 		{
-			return (*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::decay<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			return (*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValue(parameters[Is]))...);
 		}
 		else
 		{
-			return TypeTraits<ReturnT>::getValue((*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::decay<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			return TypeTraits<ReturnT>::getValue((*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValue(parameters[Is]))...));
 		}
 	}
 

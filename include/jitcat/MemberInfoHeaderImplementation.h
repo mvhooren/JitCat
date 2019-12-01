@@ -201,11 +201,11 @@ inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getMemberReference(Reflec
 	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
-		ClassT* member = baseObject->*memberPointer;
-		return static_cast<Reflectable*>(member);
+		return baseObject->*memberPointer;
 	}
-	return static_cast<Reflectable*>(nullptr);
+	return static_cast<ClassT*>(nullptr);
 }
+
 
 template<typename BaseT, typename ClassT>
 inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getAssignableMemberReference(Reflectable* base)
@@ -213,10 +213,9 @@ inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getAssignableMemberRefere
 	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
-		ClassT** member = &(baseObject->*memberPointer);
-		return reinterpret_cast<Reflectable**>(member);
+		return &(baseObject->*memberPointer);
 	}
-	return static_cast<Reflectable**>(nullptr);
+	return static_cast<ClassT**>(nullptr);
 }
 
 
@@ -266,6 +265,7 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateAssignCode(ll
 #endif // ENABLE_LLVM
 }
 
+
 template<typename BaseT, typename ClassT>
 inline unsigned long long ClassPointerMemberInfo<BaseT, ClassT>::getOrdinal() const
 {
@@ -279,7 +279,8 @@ inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getMemberReference(Reflect
 	BaseT* baseObject = static_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
-		return static_cast<Reflectable*>(&(baseObject->*memberPointer));
+		ClassT* returnVal = &(baseObject->*memberPointer);
+		return static_cast<Reflectable*>(returnVal);
 	}
 	return static_cast<Reflectable*>(nullptr);
 }

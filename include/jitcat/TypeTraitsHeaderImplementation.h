@@ -13,49 +13,36 @@
 
 namespace jitcat
 {
-
-	template<typename T>
-	const CatGenericType& TypeTraits<T>::toGenericType()
+	template<typename ObjectT, typename EnabledT>
+	const CatGenericType& TypeTraits<ObjectT, EnabledT>::toGenericType()
 	{
-		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<T>();
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(CatGenericType(typeInfo), TypeOwnershipSemantics::Weak, false));
+		static_assert(std::is_compound_v<ObjectT>, "Type is not supported.");
+		static_assert(std::is_default_constructible_v<ObjectT>, "Type needs to be default constructible.");
+		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>();
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(typeInfo));
 		return *type.get();
 	}
 
 
-	template<typename T>
-	inline std::any TypeTraits<T>::getCatValue(T& value)
+	template<typename ObjectT, typename EnabledT>
+	inline std::any TypeTraits<ObjectT, EnabledT>::getCatValue(ObjectT& value)
 	{
-		return static_cast<Reflection::Reflectable*>(&value);
+		return value;
+	}
+
+	
+	template <typename PointerT>
+	std::any TypeTraits<PointerT*>::getCatValue(PointerT* value)
+	{
+		return value;
 	}
 
 
-	template <typename U>
-	std::any TypeTraits<U*>::getCatValue(U* value)
+	template <typename PointerT>
+	const CatGenericType& TypeTraits<PointerT*>::toGenericType()
 	{
-		return static_cast<Reflection::Reflectable*>(value);
-	}
-
-
-	template <typename U>
-	const CatGenericType& TypeTraits<U*>::toGenericType()
-	{
-		if constexpr (std::is_fundamental<U>::value || std::is_same<std::string, U>::value)
-		{
-			static std::unique_ptr<CatGenericType> type(new CatGenericType(TypeTraits<U>::toGenericType(), TypeOwnershipSemantics::Weak, false));
-			return *type.get();
-		}
-		else
-		{
-			return TypeTraits<U>::toGenericType();
-		}
-	}
-
-
-	template <typename U>
-	std::any TypeTraits<std::unique_ptr<U>>::getCatValue(std::unique_ptr<U>& value) 
-	{ 
-		return static_cast<Reflection::Reflectable*>(value.get()); 
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(TypeTraits<PointerT>::toGenericType(), TypeOwnershipSemantics::Weak, false));
+		return *type.get();
 	}
 
 
@@ -65,11 +52,25 @@ namespace jitcat
 		return TypeTraits<RefT*>::toGenericType();
 	}
 
-
-	template <typename U>
-	const CatGenericType& TypeTraits<std::unique_ptr<U>>::toGenericType() 
+	template<typename PointerRefT>
+	const CatGenericType& TypeTraits<PointerRefT*&>::toGenericType()
 	{
-		return TypeTraits<U*>::toGenericType();
+		static std::unique_ptr<CatGenericType> type(new CatGenericType(TypeTraits<PointerRefT*>::toGenericType(), TypeOwnershipSemantics::Weak, false));
+		return *type.get();
+	}
+
+	   	 
+	template <typename UniquePtrT>
+	std::any TypeTraits<std::unique_ptr<UniquePtrT>>::getCatValue(std::unique_ptr<UniquePtrT>& value) 
+	{ 
+		return static_cast<Reflection::Reflectable*>(value.get()); 
+	}
+
+
+	template <typename UniquePtrT>
+	const CatGenericType& TypeTraits<std::unique_ptr<UniquePtrT>>::toGenericType() 
+	{
+		return TypeTraits<UniquePtrT*>::toGenericType();
 	}
 
 

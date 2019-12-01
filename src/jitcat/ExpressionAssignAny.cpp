@@ -101,15 +101,15 @@ void ExpressionAssignAny::handleCompiledFunction(uintptr_t functionAddress)
 }
 
 
-bool jitcat::ExpressionAssignAny::assignUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType)
+bool jitcat::ExpressionAssignAny::assignUncastedPointer(CatRuntimeContext* runtimeContext, uintptr_t pointerValue, const CatGenericType& valueType)
 {
-	std::any reflectableAny = valueType.getPointeeType()->getObjectType()->getTypeCaster()->cast(pointerValue);
+	std::any reflectableAny = valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(pointerValue);
 	return assignValue(runtimeContext, reflectableAny, valueType);
 }
 
 
-bool jitcat::ExpressionAssignAny::assignInterpretedUncastedPointer(CatRuntimeContext* runtimeContext, std::any pointerValue, const CatGenericType& valueType)
+bool jitcat::ExpressionAssignAny::assignInterpretedUncastedPointer(CatRuntimeContext* runtimeContext, uintptr_t pointerValue, const CatGenericType& valueType)
 {
-	std::any reflectableValue = valueType.getPointeeType()->getObjectType()->getTypeCaster()->cast(pointerValue);
+	std::any reflectableValue = valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(pointerValue);
 	return assignInterpretedValue(runtimeContext, reflectableValue, valueType);
 }

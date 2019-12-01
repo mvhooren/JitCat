@@ -202,7 +202,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				if (!valueType.isPointerToReflectableObjectType() && !valueType.isReflectableHandleType())
 				{
 					parseResult->success = false;
-					errorManager->compiledWithError(Tools::append("Expected a ", typeName), errorContext, context->getContextName(), expressionLexeme);
+					errorManager->compiledWithError(Tools::append("Expected a ", expectedType.toString(), " got a ", valueType.toString()), errorContext, context->getContextName(), expressionLexeme);
 				}
 				else if (valueType.getPointeeType()->getObjectTypeName() != typeName)
 				{
