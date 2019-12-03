@@ -54,7 +54,7 @@ namespace jitcat::Reflection
 	template<typename MemberCVT>
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberCVT* member, MemberFlags flags)
 	{
-		typedef std::remove_cv<MemberCVT>::type MemberT;
+		typedef typename RemoveConst<MemberCVT>::type MemberT;
 		std::string identifier = Tools::toLowerCase(identifier_);
 		bool isConst = (flags & MF::isConst) != 0
 						|| (flags & MF::isStaticConst) != 0;
@@ -90,7 +90,7 @@ namespace jitcat::Reflection
 		}
 		else if constexpr (std::is_class<MemberT>::value)
 		{
-			memberInfo = new StaticClassObjectMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassObjectMemberInfo(identifier, reinterpret_cast<unsigned char*>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_enum<MemberT>::value)
 		{

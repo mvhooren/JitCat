@@ -11,7 +11,7 @@
 #include "jitcat/CatASTNodesDeclares.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScope.h"
-#include "jitcat/ReflectableInstance.h"
+#include "jitcat/ObjectInstance.h"
 
 #include <vector>
 
@@ -66,7 +66,7 @@ namespace jitcat::AST
 
 		CatScopeID staticScopeId;
 		Reflection::CustomTypeInfo* scopeType;
-		Reflection::ReflectableInstance scopeInstance;
+		Reflection::ObjectInstance scopeInstance;
 	};
 
 };

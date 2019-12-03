@@ -69,7 +69,7 @@ std::any CatMemberAccess::execute(CatRuntimeContext* runtimeContext)
 	std::any baseValue = base->execute(runtimeContext);
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		return memberInfo->getMemberReference(std::any_cast<Reflectable*>(baseValue));
+		return memberInfo->getMemberReference(reinterpret_cast<unsigned char*>(base->getType().getRawPointer(baseValue)));
 	}
 	assert(false);
 	return std::any();
@@ -81,7 +81,7 @@ std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext)
 	std::any baseValue = base->execute(runtimeContext);
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		return memberInfo->getAssignableMemberReference(std::any_cast<Reflectable*>(baseValue));
+		return memberInfo->getAssignableMemberReference(reinterpret_cast<unsigned char*>(base->getType().getRawPointer(baseValue)));
 	}
 	assert(false);
 	return std::any();

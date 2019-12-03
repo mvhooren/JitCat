@@ -83,7 +83,7 @@ namespace jitcat
 		template<typename ReflectableType>
 		CatScopeID addScope(ReflectableType* scopeObject, bool isStatic);
 		//Same as above addObject, but explicitly specify type and scopeObject instead of deriving typeInfo from the scopeObject;
-		CatScopeID addScope(Reflection::TypeInfo* typeInfo, Reflection::Reflectable* scopeObject, bool isStatic);
+		CatScopeID addScope(Reflection::TypeInfo* typeInfo, unsigned char* scopeObject, bool isStatic);
 
 		void pushStackFrame();
 		void popStackFrame();
@@ -93,11 +93,11 @@ namespace jitcat
 		//When a scope is removed, any expressions that were compiled using this context should be recompiled.
 		void removeScope(CatScopeID id);
 		//If the ScopeID refers to a static scope, any expressions that were compiled using this context should be recompiled.
-		void setScopeObject(CatScopeID id, Reflection::Reflectable* scopeObject);
+		void setScopeObject(CatScopeID id, unsigned char* scopeObject);
 		//Returns weither or not the provided ScopeID is a static scope.
 		bool isStaticScope(CatScopeID id) const;
 	
-		Reflection::Reflectable* getScopeObject(CatScopeID id) const;
+		unsigned char* getScopeObject(CatScopeID id) const;
 		Reflection::TypeInfo* getScopeType(CatScopeID id) const;
 
 		ExpressionErrorManager* getErrorManager() const;
@@ -129,13 +129,13 @@ namespace jitcat
 
 		void setCurrentScope(CatScope* scope);
 		CatScope* getCurrentScope() const;
-		Reflection::Reflectable* getCurrentScopeObject() const;
+		unsigned  char* getCurrentScopeObject() const;
 
 		bool getIsReturning() const;
 		void setReturning(bool isReturning);
 
 	private:
-		CatScopeID createScope(Reflection::Reflectable* scopeObject, Reflection::TypeInfo* type, bool isStatic);
+		CatScopeID createScope(unsigned char* scopeObject, Reflection::TypeInfo* type, bool isStatic);
 		Scope* getScope(CatScopeID scopeId) const;
 
 	public:
@@ -175,7 +175,7 @@ namespace jitcat
 		//scopeObject must not be nullptr if it is static
 		assert(!isStatic || scopeObject != nullptr);
 		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ReflectableType>();
-		return createScope(static_cast<Reflection::Reflectable*>(scopeObject), typeInfo, isStatic);
+		return createScope(reinterpret_cast<unsigned char*>(scopeObject), typeInfo, isStatic);
 	}
 
 } //End namespace jitcat

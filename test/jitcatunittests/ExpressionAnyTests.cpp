@@ -80,7 +80,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	SECTION("Object Variable")
 	{
 		ExpressionAny testExpression(&context, "nestedSelfObject");
-		doChecks((Reflection::Reflectable*)reflectedObject.nestedSelfObject, false, false, false, testExpression, context);
+		doChecks(reflectedObject.nestedSelfObject, false, false, false, testExpression, context);
 	}
 	SECTION("Vector Variable")
 	{

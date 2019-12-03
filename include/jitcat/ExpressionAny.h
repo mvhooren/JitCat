@@ -31,7 +31,6 @@ namespace jitcat
 
 		//Executes the expression and returns the value.
 		//To get the actual value contained in std::any, cast it using std::any_cast based on this expression's type (getType()) .
-		//If the type is a Reflectable object, first any_cast to Reflectable*, then static_cast to the final type.
 		//Objects and stl containers are always returned as pointers.
 		const std::any getValue(CatRuntimeContext* runtimeContext);
 

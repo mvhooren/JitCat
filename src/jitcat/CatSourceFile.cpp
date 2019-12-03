@@ -91,7 +91,7 @@ const std::vector<CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFuncti
 
 bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	staticScopeId = compiletimeContext->addScope(scopeType, scopeInstance.getReflectable(), true);
+	staticScopeId = compiletimeContext->addScope(scopeType, scopeInstance.getObject(), true);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;

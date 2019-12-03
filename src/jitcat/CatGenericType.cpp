@@ -152,18 +152,25 @@ CatGenericType& CatGenericType::operator=(const CatGenericType& other)
 
 bool CatGenericType::operator==(const CatGenericType& other) const
 {
-	return compare(other, true);
+	return compare(other, true, false);
 }
 
 
 bool CatGenericType::operator!=(const CatGenericType& other) const
 {
-	return !compare(other, true);
+	return !compare(other, true, false);
 }
 
 
-bool jitcat::CatGenericType::compare(const CatGenericType& other, bool includeOwnershipSemantics) const
+bool jitcat::CatGenericType::compare(const CatGenericType& other, bool includeOwnershipSemantics, bool includeIndirection) const
 {
+	if (!includeIndirection
+		&& (specificType == SpecificType::Pointer || specificType == SpecificType::ReflectableHandle
+		    || other.specificType == SpecificType::Pointer || other.specificType == SpecificType::ReflectableHandle)
+		&& (!includeOwnershipSemantics || ownershipSemantics == other.ownershipSemantics))
+	{
+		return removeIndirection().compare(other.removeIndirection(), includeOwnershipSemantics, false);
+	}
 	if ((specificType == other.specificType 
 		|| (specificType == SpecificType::ReflectableHandle && other.specificType == SpecificType::Pointer)
 		|| (specificType == SpecificType::Pointer && other.specificType == SpecificType::ReflectableHandle))
@@ -175,7 +182,7 @@ bool jitcat::CatGenericType::compare(const CatGenericType& other, bool includeOw
 			case SpecificType::None:				return true;
 			case SpecificType::Basic:				return basicType == other.basicType;
 			case SpecificType::ReflectableHandle:
-			case SpecificType::Pointer:				return pointeeType->compare(*other.getPointeeType(), includeOwnershipSemantics);
+			case SpecificType::Pointer:				return pointeeType->compare(*other.getPointeeType(), includeOwnershipSemantics, includeIndirection);
 			case SpecificType::ReflectableObject:	return nestedType == other.nestedType || isNullptrType() || other.isNullptrType();
 			case SpecificType::Container:			return containerType == other.containerType && containerManipulator == other.containerManipulator;
 		}
@@ -430,11 +437,22 @@ CatGenericType jitcat::CatGenericType::convertPointerToHandle() const
 }
 
 
+const CatGenericType& jitcat::CatGenericType::removeIndirection() const
+{
+	const CatGenericType* currentType = this;
+	while (currentType->isPointerType() || currentType->isReflectableHandleType())
+	{
+		currentType = currentType->getPointeeType();
+	}
+	return *currentType;
+}
+
+
 const CatGenericType& jitcat::CatGenericType::removeIndirection(int& levelsOfIndirectionRemoved) const
 {
 	levelsOfIndirectionRemoved = 0;
 	const CatGenericType* currentType = this;
-	while (currentType->isReflectablePointerOrHandle())
+	while (currentType->isPointerType() || currentType->isReflectableHandleType())
 	{
 		levelsOfIndirectionRemoved++;
 		currentType = currentType->getPointeeType();
@@ -691,7 +709,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 					{
 						case SpecificType::ReflectableObject:
 						{
-							return std::any(reinterpret_cast<Reflectable**>(pointer));
+							return pointeeType->createFromRawPointer(pointer);
 						}
 						default:
 						{
@@ -734,7 +752,7 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 		} break;
 		case SpecificType::ReflectableObject:
 		{
-			return reinterpret_cast<Reflectable*>(pointer);
+			return createFromRawPointer(pointer);
 		}
 		case SpecificType::Pointer:
 		{
@@ -752,11 +770,11 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 				} break;
 				case SpecificType::ReflectableObject:
 				{
-					return *reinterpret_cast<Reflectable**>(pointer);
+					return createFromRawPointer(pointer);
 				} break;
 				case SpecificType::ReflectableHandle:
 				{
-					return std::any((*reinterpret_cast<ReflectableHandle**>(pointer))->get());
+					return createFromRawPointer(reinterpret_cast<uintptr_t>((*reinterpret_cast<ReflectableHandle**>(pointer))->get()));
 				}
 			}
 		} break;
@@ -809,7 +827,7 @@ std::any CatGenericType::createDefault() const
 				}
 				case SpecificType::ReflectableObject:
 				{
-					return (Reflectable*)(nullptr);
+					return createNullPtr();
 				}
 				case SpecificType::Container:
 				{
@@ -819,7 +837,7 @@ std::any CatGenericType::createDefault() const
 				{
 					if (pointeeType->pointeeType->specificType == SpecificType::ReflectableObject)
 					{
-						return (Reflectable**)(nullptr);
+						return createNullPtr();
 					}
 					else
 					{
@@ -834,7 +852,7 @@ std::any CatGenericType::createDefault() const
 		}
 		case SpecificType::ReflectableHandle:
 		{
-			return std::any((Reflectable*)(nullptr));
+			return createNullPtr();
 		}
 	}
 	assert(false);
@@ -976,7 +994,7 @@ void CatGenericType::printValue(std::any& value)
 		case SpecificType::ReflectableObject:
 		case SpecificType::Pointer:
 		{
-			 CatLog::log(Tools::makeString(std::any_cast<Reflectable*>(value))); 		
+			 CatLog::log(Tools::makeString(getRawPointer(value))); 		
 		} break;
 		case SpecificType::Container:
 		{
@@ -1294,7 +1312,7 @@ std::any jitcat::CatGenericType::construct()
 		{
 			if (ownershipSemantics != TypeOwnershipSemantics::Value)
 			{
-				return static_cast<Reflectable*>(nullptr);
+				return createNullPtr();
 			}
 			else
 			{
@@ -1304,7 +1322,7 @@ std::any jitcat::CatGenericType::construct()
 					std::cout << "(CatGenericType::construct Value ownership pointer) Allocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
 				}
 				nestedType->placementConstruct(buffer, typeSize);
-				return reinterpret_cast<Reflectable*>(buffer);
+				return createFromRawPointer(reinterpret_cast<uintptr_t>(buffer));
 			}
 		}
 		case SpecificType::ReflectableObject:
@@ -1315,7 +1333,7 @@ std::any jitcat::CatGenericType::construct()
 				std::cout << "(CatGenericType::construct ReflectableObject) Allocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
 			}
 			nestedType->placementConstruct(buffer, typeSize);
-			return reinterpret_cast<Reflectable*>(buffer);
+			return createFromRawPointer(reinterpret_cast<uintptr_t>(buffer));
 		}
 	}
 	return std::any();
@@ -1419,8 +1437,8 @@ bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::siz
 					{
 						std::cout << "(CatGenericType::copyConstruct) Allocated buffer of size " << std::dec << objectSize << ": " << std::hex << reinterpret_cast<uintptr_t>(objectMemory) << "\n";
 					}
-					pointeeType->copyConstruct(objectMemory, objectSize, reinterpret_cast<const unsigned char*>(*reinterpret_cast<Reflectable* const *>(sourceBuffer)), objectSize);
-					*reinterpret_cast<Reflectable**>(targetBuffer) = reinterpret_cast<Reflectable*>(objectMemory);
+					pointeeType->copyConstruct(objectMemory, objectSize, sourceBuffer, objectSize);
+					*reinterpret_cast<unsigned char**>(targetBuffer) = reinterpret_cast<unsigned char*>(objectMemory);
 					break;
 				}
 				case TypeOwnershipSemantics::Value:
@@ -1520,8 +1538,8 @@ bool jitcat::CatGenericType::moveConstruct(unsigned char* targetBuffer, std::siz
 				case TypeOwnershipSemantics::Owned:
 				{
 					//Simply copy the pointer and then set the source pointer to nullptr. Ownership is now moved.
-					*reinterpret_cast<Reflectable**>(targetBuffer) = *reinterpret_cast<Reflectable**>(sourceBuffer);
-					*reinterpret_cast<Reflectable**>(sourceBuffer) = nullptr;
+					*reinterpret_cast<unsigned char**>(targetBuffer) = *reinterpret_cast<unsigned char**>(sourceBuffer);
+					*reinterpret_cast<unsigned char**>(sourceBuffer) = nullptr;
 					break;
 				}
 				case TypeOwnershipSemantics::Value:
@@ -1659,10 +1677,87 @@ void jitcat::CatGenericType::toBuffer(const std::any& value, const unsigned char
 			assert(false);
 		} break;
 		case SpecificType::Pointer:
-		case SpecificType::ReflectableHandle:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<Reflectable*>(&value)); break;
+		case SpecificType::ReflectableHandle:	//buffer = reinterpret_cast<const unsigned char*>(std::any_cast<Reflectable*>(&value)); break;
 		case SpecificType::ReflectableObject:	nestedType->toBuffer(value, buffer, bufferSize); break;
 		default: assert(false); break;
 	}
+}
+
+
+const TypeCaster* jitcat::CatGenericType::getTypeCaster() const
+{
+	switch (specificType)
+	{
+		case SpecificType::Basic:
+		{
+			switch (basicType)
+			{
+				case BasicType::Bool:	return boolTypeCaster;
+				case BasicType::Int:	return intTypeCaster;
+				case BasicType::Float:	return floatTypeCaster;
+				case BasicType::String: return stringTypeCaster;
+				default: assert(false);
+			}
+		}
+		case SpecificType::ReflectableObject:
+			return nestedType->getTypeCaster();
+		default: assert(false);
+	}
+	return nullptr;
+}
+
+
+uintptr_t jitcat::CatGenericType::getRawPointer(const std::any& value) const
+{
+	assert(isPointerType() || isReflectableHandleType());
+	int indirectionLevels = 0;
+	const CatGenericType& decayedType = removeIndirection(indirectionLevels);
+	assert(decayedType.isReflectableObjectType() || decayedType.isBasicType());
+	switch (indirectionLevels)
+	{
+		case 1:	return decayedType.getTypeCaster()->castToRawPointer(value);
+		case 2:	return decayedType.getTypeCaster()->castToRawPointerPointer(value);
+		default: assert(false);
+	}
+	return 0;
+}
+
+
+std::any jitcat::CatGenericType::getAddressOf(std::any& value) const
+{
+	assert(isPointerType() || isReflectableHandleType() || isBasicType());
+	int indirectionLevels = 0;
+	const CatGenericType& decayedType = removeIndirection(indirectionLevels);
+	assert(decayedType.isReflectableObjectType() || decayedType.isBasicType());
+	switch (indirectionLevels)
+	{
+		case 0:	return decayedType.getTypeCaster()->getAddressOfValue(value);
+		case 1: return decayedType.getTypeCaster()->getAddressOfPointer(value);
+		default: assert(false);
+	}
+	return value;
+}
+
+
+std::any jitcat::CatGenericType::createFromRawPointer(const uintptr_t pointer) const
+{
+	assert(isPointerType() || isReflectableHandleType());
+	int indirectionLevels = 0;
+	const CatGenericType& decayedType = removeIndirection(indirectionLevels);
+	assert(decayedType.isReflectableObjectType() || decayedType.isBasicType());
+	switch (indirectionLevels)
+	{
+		case 1:	return decayedType.getTypeCaster()->castFromRawPointer(pointer);
+		case 2:	return decayedType.getTypeCaster()->castFromRawPointerPointer(pointer);
+		default: assert(false);
+	}
+	return nullptr;
+}
+
+
+std::any jitcat::CatGenericType::createNullPtr() const
+{
+	return createFromRawPointer(0);
 }
 
 
@@ -1763,3 +1858,7 @@ const CatGenericType CatGenericType::stringType		= CatGenericType(BasicType::Str
 const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void);
 const CatGenericType CatGenericType::nullptrType	= CatGenericType(new TypeInfo("nullptr", 0, new NullptrTypeCaster()), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();
+const TypeCaster* const CatGenericType::intTypeCaster = new ObjectTypeCaster<int>();
+const TypeCaster* const CatGenericType::floatTypeCaster = new ObjectTypeCaster<float>();
+const TypeCaster* const CatGenericType::boolTypeCaster = new ObjectTypeCaster<bool>();
+const TypeCaster* const CatGenericType::stringTypeCaster = new ObjectTypeCaster<std::string>();

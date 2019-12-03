@@ -68,8 +68,8 @@ inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtime
 		{
 			switch (oper)
 			{
-				case CatInfixOperatorType::Equals:		return std::any_cast<Reflection::Reflectable*>(lValue) == std::any_cast<Reflection::Reflectable*>(rValue);
-				case CatInfixOperatorType::NotEquals:	return std::any_cast<Reflection::Reflectable*>(lValue) != std::any_cast<Reflection::Reflectable*>(rValue);
+				case CatInfixOperatorType::Equals:		return lType.getRawPointer(lValue) == rType.getRawPointer(rValue);
+				case CatInfixOperatorType::NotEquals:	return lType.getRawPointer(lValue) != rType.getRawPointer(rValue);
 			}
 		}
 		assert(false);

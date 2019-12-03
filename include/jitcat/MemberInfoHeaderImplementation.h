@@ -37,9 +37,9 @@ inline unsigned long long getOffset(MemberT BaseT::* memberPointer)
 
 
 template<typename BaseT, typename ContainerT>
-inline std::any ContainerMemberInfo<BaseT, ContainerT>::getMemberReference(Reflectable* base)
+inline std::any ContainerMemberInfo<BaseT, ContainerT>::getMemberReference(unsigned char* base)
 {
-	BaseT* baseObject = static_cast<BaseT*>(base);
+	BaseT* baseObject = reinterpret_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
 		ContainerT& container = baseObject->*memberPointer;
@@ -50,7 +50,7 @@ inline std::any ContainerMemberInfo<BaseT, ContainerT>::getMemberReference(Refle
 
 
 template<typename BaseT, typename ContainerT>
-inline std::any ContainerMemberInfo<BaseT, ContainerT>::getAssignableMemberReference(Reflectable* base)
+inline std::any ContainerMemberInfo<BaseT, ContainerT>::getAssignableMemberReference(unsigned char* base)
 {
 	return getMemberReference(base);
 }
@@ -77,14 +77,21 @@ inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateDereferenceC
 
 template<typename BaseT, typename ContainerT>
 template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<BaseT, ContainerT>::getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index)
+inline typename TypeTraits<ContainerItemType>::containerItemReturnType ContainerMemberInfo<BaseT, ContainerT>::getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index)
 {
 	int count = 0;
 	for (auto& iter : (*map))
 	{
 		if (count == index)
 		{
-			return TypeTraits<ContainerItemType>::stripValue(iter.second);
+			if constexpr (TypeTraits<ContainerItemType>::isUniquePtr())
+			{
+				return iter.second.get();
+			}
+			else
+			{
+				return iter.second;
+			}
 		}
 		count++;
 	}
@@ -94,7 +101,7 @@ inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMembe
 
 template<typename BaseT, typename ContainerT>
 template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<BaseT, ContainerT>::getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index)
+inline typename TypeTraits<ContainerItemType>::containerItemReturnType ContainerMemberInfo<BaseT, ContainerT>::getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index)
 {
 	if constexpr (std::is_same<ContainerKeyType, std::string>::value)
 	{
@@ -104,7 +111,14 @@ inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMembe
 			auto iter = map->find(lowerCaseIdx);
 			if (iter != map->end())
 			{
-				return TypeTraits<ContainerItemType>::stripValue(iter->second);
+				if constexpr (TypeTraits<ContainerItemType>::isUniquePtr())
+				{
+					return iter->second.get();
+				}
+				else
+				{
+					return iter->second;
+				}
 			}
 		}
 	}
@@ -113,7 +127,14 @@ inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMembe
 		auto iter = map->find(index);
 		if (iter != map->end())
 		{
-			return TypeTraits<ContainerItemType>::stripValue(iter->second);
+			if constexpr (TypeTraits<ContainerItemType>::isUniquePtr())
+			{
+				return iter->second.get();
+			}
+			else
+			{
+				return iter->second;
+			}
 		}
 	}
 	return TypeTraits<ContainerItemType>::getDefaultValue();
@@ -122,13 +143,32 @@ inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMembe
 
 template<typename BaseT, typename ContainerT>
 template<typename ContainerItemType, typename AllocatorT>
-inline typename TypeTraits<ContainerItemType>::functionReturnType ContainerMemberInfo<BaseT, ContainerT>::getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index)
+inline typename TypeTraits<ContainerItemType>::containerItemReturnType ContainerMemberInfo<BaseT, ContainerT>::getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index)
 {
 	if (index >= 0 && index < (int)vector->size())
 	{
-		return TypeTraits<ContainerItemType>::stripValue(vector->operator[](index));
+		if constexpr (TypeTraits<ContainerItemType>::isUniquePtr())
+		{
+			return vector->operator[](index).get();
+		}
+		else if constexpr (std::is_class_v<ContainerItemType>)
+		{
+			return &vector->operator[](index);
+		}
+		else
+		{
+			return vector->operator[](index);
+		}
+		
 	}
-	return TypeTraits<ContainerItemType>::getDefaultValue();
+	if constexpr (!TypeTraits<ContainerItemType>::isUniquePtr() && std::is_class_v<ContainerItemType>)
+	{
+		return (ContainerItemType*)nullptr;
+	}
+	else
+	{
+		return TypeTraits<ContainerItemType>::getDefaultValue();
+	}
 }
 
 
@@ -196,9 +236,9 @@ inline unsigned long long ContainerMemberInfo<BaseT, ContainerT>::getOrdinal() c
 
 
 template<typename BaseT, typename ClassT>
-inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
+inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getMemberReference(unsigned char* base)
 {
-	BaseT* baseObject = static_cast<BaseT*>(base);
+	BaseT* baseObject = reinterpret_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
 		return baseObject->*memberPointer;
@@ -208,9 +248,9 @@ inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getMemberReference(Reflec
 
 
 template<typename BaseT, typename ClassT>
-inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getAssignableMemberReference(Reflectable* base)
+inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getAssignableMemberReference(unsigned char* base)
 {
-	BaseT* baseObject = static_cast<BaseT*>(base);
+	BaseT* baseObject = reinterpret_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
 		return &(baseObject->*memberPointer);
@@ -274,20 +314,20 @@ inline unsigned long long ClassPointerMemberInfo<BaseT, ClassT>::getOrdinal() co
 
 
 template<typename BaseT, typename ClassT>
-inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
+inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getMemberReference(unsigned char* base)
 {
-	BaseT* baseObject = static_cast<BaseT*>(base);
+	BaseT* baseObject = reinterpret_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
 		ClassT* returnVal = &(baseObject->*memberPointer);
-		return static_cast<Reflectable*>(returnVal);
+		return returnVal;
 	}
-	return static_cast<Reflectable*>(nullptr);
+	return static_cast<ClassT*>(nullptr);
 }
 
 
 template<typename BaseT, typename ClassT>
-inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getAssignableMemberReference(Reflectable* base)
+inline std::any ClassObjectMemberInfo<BaseT, ClassT>::getAssignableMemberReference(unsigned char* base)
 {
 	//Not supported for now (would require implementing calling of operator= on target object)
 	return getMemberReference(base);
@@ -328,19 +368,19 @@ inline ClassT* ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer(BaseT* parent
 
 
 template<typename BaseT, typename ClassT>
-inline std::any ClassUniquePtrMemberInfo<BaseT, ClassT>::getMemberReference(Reflectable* base)
+inline std::any ClassUniquePtrMemberInfo<BaseT, ClassT>::getMemberReference(unsigned char* base)
 {
-	BaseT* baseObject = static_cast<BaseT*>(base);
+	BaseT* baseObject = reinterpret_cast<BaseT*>(base);
 	if (baseObject != nullptr)
 	{
-		return static_cast<Reflectable*>((baseObject->*memberPointer).get());
+		return (baseObject->*memberPointer).get();
 	}
-	return static_cast<Reflectable*>(nullptr);
+	return static_cast<ClassT*>(nullptr);
 }
 
 
 template<typename BaseT, typename ClassT>
-inline std::any ClassUniquePtrMemberInfo<BaseT, ClassT>::getAssignableMemberReference(Reflectable* base)
+inline std::any ClassUniquePtrMemberInfo<BaseT, ClassT>::getAssignableMemberReference(unsigned char* base)
 {
 	//Cannot assing unique_ptr, this would transfer ownership and potentially delete the pointer at some point. Bad idea.
 	//The pointer may for example have come from another unique_ptr.
@@ -377,9 +417,9 @@ inline unsigned long long ClassUniquePtrMemberInfo<BaseT, ClassT>::getOrdinal() 
 
 
 template<typename BaseT, typename BasicT>
-inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getMemberReference(Reflectable* base)
+inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getMemberReference(unsigned char* base)
 {
-	BaseT* objectPointer = static_cast<BaseT*>(base);
+	BaseT* objectPointer = reinterpret_cast<BaseT*>(base);
 	if (objectPointer != nullptr)
 	{
 		BasicT& value = objectPointer->*memberPointer;
@@ -390,9 +430,9 @@ inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getMemberReference(Reflectab
 
 
 template<typename BaseT, typename BasicT>
-inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getAssignableMemberReference(Reflectable* base)
+inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getAssignableMemberReference(unsigned char* base)
 {
-	BaseT* objectPointer = static_cast<BaseT*>(base);
+	BaseT* objectPointer = reinterpret_cast<BaseT*>(base);
 	if (objectPointer != nullptr)
 	{
 		BasicT& value = objectPointer->*memberPointer;

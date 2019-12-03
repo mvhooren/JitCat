@@ -677,7 +677,7 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 	}
 	else if (literalToken->getTokenID() == Cat::id && (Identifier)literalToken->getTokenSubType() == Identifier::Null)
 	{
-		return new CatLiteral((Reflectable*)nullptr, CatGenericType::nullptrType, nodeParser.getStackLexeme());
+		return new CatLiteral(nullptr, CatGenericType::nullptrType, nodeParser.getStackLexeme());
 	}
 	return nullptr;
 }

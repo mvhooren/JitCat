@@ -456,7 +456,7 @@ void jitcat::Reflection::TypeInfo::placementConstruct(unsigned char* buffer, std
 }
 
 
-Reflectable* jitcat::Reflection::TypeInfo::construct() const
+unsigned char* jitcat::Reflection::TypeInfo::construct() const
 {
 	std::size_t typeSize = getTypeSize();
 	unsigned char* buffer = new unsigned char[typeSize];
@@ -465,14 +465,14 @@ Reflectable* jitcat::Reflection::TypeInfo::construct() const
 		std::cout << "(TypeInfo::construct) Allocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
 	}
 	placementConstruct(buffer, typeSize);
-	return reinterpret_cast<Reflectable*>(buffer);
+	return buffer;
 }
 
 
-void jitcat::Reflection::TypeInfo::destruct(Reflectable* object)
+void jitcat::Reflection::TypeInfo::destruct(unsigned char* object)
 {
-	placementDestruct(reinterpret_cast<unsigned char*>(object), getTypeSize());
-	delete[] reinterpret_cast<unsigned char*>(object);
+	placementDestruct(object, getTypeSize());
+	delete[] object;
 	if constexpr (Configuration::logJitCatObjectConstructionEvents)
 	{
 		std::cout << "(TypeInfo::destruct) Deallocated buffer of size " << std::dec << typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(object) << "\n";

@@ -97,30 +97,30 @@ std::any jitcat::AST::ASTHelper::doGetArgument(CatTypedExpression* argument, con
 		const CatGenericType& sourceType = static_cast<CatAssignableExpression*>(argument)->getAssignableType();
 		if (sourceType.isPointerToPointerType() && sourceType.getPointeeType()->getPointeeType()->isReflectableObjectType())
 		{
-			Reflectable** reflectableSource = std::any_cast<Reflectable**>(sourceValue);
+			unsigned char** reflectableSource = reinterpret_cast<unsigned char**>(sourceType.getRawPointer(sourceValue));
 			if (reflectableSource != nullptr)
 			{
-				Reflectable* value = *reflectableSource;
+				unsigned char* value = *reflectableSource;
 				*reflectableSource = nullptr;
-				return value;
+				return sourceType.getPointeeType()->createFromRawPointer(reinterpret_cast<uintptr_t>(value));
 			}
-			return (Reflectable*)nullptr;
+			return sourceType.getPointeeType()->createNullPtr();
 		}
 		else if (sourceType.isPointerToHandleType())
 		{
 			ReflectableHandle* handleSource = std::any_cast<ReflectableHandle*>(sourceValue);
 			if (handleSource != nullptr)
 			{
-				Reflectable* value = handleSource->get();
+				unsigned char* value = reinterpret_cast<unsigned char*>(handleSource->get());
 				*handleSource = nullptr;
-				return value;
+				return sourceType.getPointeeType()->createFromRawPointer(reinterpret_cast<uintptr_t>(value));
 			}
-			return (Reflectable*)nullptr;
+			return sourceType.getPointeeType()->createNullPtr();
 		}
 		else
 		{
 			assert(false);
-			return (Reflectable*)nullptr;
+			return sourceType.getPointeeType()->createNullPtr();
 		}
 	}
 }
@@ -170,7 +170,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 	}
 	else if (targetType.isPointerToPointerType() && targetType.getPointeeType()->isPointerToReflectableObjectType())
 	{
-		Reflectable** reflectableTarget = std::any_cast<Reflectable **>(target);
+		unsigned char** reflectableTarget = reinterpret_cast<unsigned char**>(targetType.getRawPointer(target));
 		
 		if (reflectableTarget != nullptr)
 		{
@@ -181,7 +181,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			}
 			if (sourceType.isPointerToReflectableObjectType() || sourceType.isReflectableHandleType())
 			{
-				*reflectableTarget = std::any_cast<Reflectable*>(source);
+				*reflectableTarget = reinterpret_cast<unsigned char*>(sourceType.getRawPointer(source));
 			}
 			else if (sourceType.isPointerToHandleType())
 			{
@@ -189,7 +189,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 				ReflectableHandle* sourceHandle = std::any_cast<ReflectableHandle*>(source);
 				if (sourceHandle != nullptr)
 				{
-					*reflectableTarget = sourceHandle->get();
+					*reflectableTarget = reinterpret_cast<unsigned char*>(sourceHandle->get());
 					if ((targetOwnership == TypeOwnershipSemantics::Owned
 						|| targetOwnership == TypeOwnershipSemantics::Shared)
 						&& sourceOwnership == TypeOwnershipSemantics::Owned)
@@ -205,7 +205,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			else if (sourceType.isPointerToPointerType() && sourceType.getPointeeType()->isPointerToReflectableObjectType())
 			{
 				TypeOwnershipSemantics sourceOwnership = sourceType.getPointeeType()->getOwnershipSemantics();
-				Reflectable** sourcePointer = std::any_cast<Reflectable**>(source);
+				unsigned char** sourcePointer = reinterpret_cast<unsigned char**>(sourceType.getRawPointer(source));
 				if (sourcePointer != nullptr)
 				{
 					*reflectableTarget = *sourcePointer;
@@ -232,12 +232,12 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			TypeOwnershipSemantics targetOwnership = targetType.getPointeeType()->getOwnershipSemantics();
 			if (targetOwnership == TypeOwnershipSemantics::Owned && handleTarget->getIsValid())
 			{
-				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(handleTarget->get());
+				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(reinterpret_cast<unsigned char*>(handleTarget->get()));
 			}
 			if (sourceType.isPointerToReflectableObjectType()
 				|| sourceType.isReflectableHandleType())
 			{
-				*handleTarget = std::any_cast<Reflectable*>(source);
+				*handleTarget = reinterpret_cast<Reflectable*>(sourceType.getRawPointer(source));
 			}
 			else if (sourceType.isPointerToHandleType())
 			{
@@ -259,10 +259,10 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			}
 			else if (sourceType.isPointerToPointerType() && sourceType.getPointeeType()->isPointerToReflectableObjectType())
 			{
-				Reflectable** sourcePointer = std::any_cast<Reflectable**>(source);
+				unsigned char** sourcePointer = reinterpret_cast<unsigned char**>(sourceType.getRawPointer(source));
 				if (sourcePointer != nullptr)
 				{
-					*handleTarget = *sourcePointer;
+					*handleTarget = reinterpret_cast<Reflectable*>(*sourcePointer);
 					if ((targetOwnership == TypeOwnershipSemantics::Owned
 						|| targetOwnership == TypeOwnershipSemantics::Shared)
 						&& sourceType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
@@ -294,7 +294,7 @@ bool jitcat::AST::ASTHelper::checkAssignment(const CatTypedExpression* lhs, cons
 	}
 	else
 	{
-		if (leftType.compare(rightType, false))
+		if (leftType.compare(rightType, false, false))
 		{
 			if (!checkOwnershipSemantics(leftType, rightType, errorManager, context, errorSource, lexeme, "assign"))
 			{

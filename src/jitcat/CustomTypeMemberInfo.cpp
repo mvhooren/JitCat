@@ -7,24 +7,22 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
-std::any CustomTypeObjectMemberInfo::getMemberReference(Reflectable* base)
+std::any CustomTypeObjectMemberInfo::getMemberReference(unsigned char* base)
 {
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
-	if (baseData != nullptr)
+	if (base != nullptr)
 	{
-		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseData[memberOffset]);
-		return objectPointer->get();
+		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&base[memberOffset]);
+		return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(objectPointer->get()));
 	}
-	return (Reflectable*)nullptr;
+	return catType.createNullPtr();
 }
 
 
-std::any CustomTypeObjectMemberInfo::getAssignableMemberReference(Reflectable* base)
+std::any CustomTypeObjectMemberInfo::getAssignableMemberReference(unsigned char* base)
 {
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
-	if (baseData != nullptr)
+	if (base != nullptr)
 	{
-		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&baseData[memberOffset]);
+		ReflectableHandle* objectPointer = reinterpret_cast<ReflectableHandle*>(&base[memberOffset]);
 		return objectPointer;
 	}
 	return (ReflectableHandle*)nullptr;
@@ -84,24 +82,23 @@ void CustomTypeObjectMemberInfo::assign(std::any& base, std::any& valueToSet)
 	if (baseData != nullptr)
 	{
 		ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(baseData + memberOffset);
-		*handle = ReflectableHandle(std::any_cast<Reflectable*>(valueToSet));
+		*handle = ReflectableHandle(reinterpret_cast<Reflectable*>(catType.getRawPointer(valueToSet)));
 	}
 }
 
 
-std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getMemberReference(Reflectable* base)
+std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getMemberReference(unsigned char* base)
 {
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
-	if (baseData != nullptr)
+	if (base != nullptr)
 	{
-		Reflectable* objectPointer = reinterpret_cast<Reflectable*>(&baseData[memberOffset]);
-		return objectPointer;
+		uintptr_t objectPointer = reinterpret_cast<uintptr_t>(&base[memberOffset]);
+		return catType.createFromRawPointer(objectPointer);
 	}
-	return (Reflectable*)nullptr;
+	return catType.createNullPtr();
 }
 
 
-std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getAssignableMemberReference(Reflectable* base)
+std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getAssignableMemberReference(unsigned char* base)
 {
 	assert(false);
 	return std::any((ReflectableHandle*)nullptr);

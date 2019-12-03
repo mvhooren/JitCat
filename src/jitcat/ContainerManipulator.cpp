@@ -42,14 +42,14 @@ jitcat::Reflection::ArrayManipulator::~ArrayManipulator()
 
 std::size_t jitcat::Reflection::ArrayManipulator::getContainerSize(std::any container) const
 {
-	Array* array = static_cast<Array*>(std::any_cast<Reflectable*>(container));
+	Array* array = std::any_cast<Array*>(container);
 	return array->size;
 }
 
 
 std::any jitcat::Reflection::ArrayManipulator::getItemAt(std::any container, int index)
 {
-	Array* array = static_cast<Array*>(std::any_cast<Reflectable*>(container));
+	Array* array = std::any_cast<Array*>(container);
 	if (array != nullptr && index >= 0 && index < array->size)
 	{
 		unsigned char* itemPtr = &array->arrayData[index * valueType.getTypeSize()];
@@ -64,7 +64,7 @@ std::any jitcat::Reflection::ArrayManipulator::getItemAt(std::any container, int
 
 std::any jitcat::Reflection::ArrayManipulator::getAssignableItemAt(std::any container, int index)
 {
-	Array* array = static_cast<Array*>(std::any_cast<Reflectable*>(container));
+	Array* array = std::any_cast<Array*>(container);
 	if (array != nullptr && index >= 0 && index < array->size)
 	{
 		unsigned char* itemPtr = &array->arrayData[index * valueType.getTypeSize()];
@@ -91,7 +91,7 @@ int jitcat::Reflection::ArrayManipulator::getIndexOf(std::any container, std::an
 
 std::any jitcat::Reflection::ArrayManipulator::createAnyPointer(uintptr_t pointer)
 {
-	return std::any(reinterpret_cast<Reflectable*>(pointer));
+	return std::any(reinterpret_cast<Array*>(pointer));
 }
 
 
@@ -354,7 +354,7 @@ ArrayManipulator& jitcat::Reflection::ArrayManipulator::createArrayManipulatorOf
 {
 	for (auto& iter : manipulators)
 	{
-		if (iter->getValueType().compare(valueType, true))
+		if (iter->getValueType().compare(valueType, true, true))
 		{
 			return *iter;
 		}

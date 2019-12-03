@@ -88,7 +88,7 @@ CatTypedExpression* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeCo
 {
 	if (compileTimeContext->isStaticScope(scopeId))
 	{
-		return new CatLiteral(compileTimeContext->getScopeObject(scopeId), type, getLexeme());
+		return new CatLiteral(compileTimeContext->getScopeType(scopeId)->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t>(compileTimeContext->getScopeObject(scopeId))), type, getLexeme());
 	}
 	return this;
 }

@@ -70,7 +70,7 @@ std::string CatRuntimeContext::getContextName()
 }
 
 
-CatScopeID CatRuntimeContext::addScope(TypeInfo* typeInfo, Reflectable* scopeObject, bool isStatic)
+CatScopeID CatRuntimeContext::addScope(TypeInfo* typeInfo, unsigned char* scopeObject, bool isStatic)
 {
 	assert(typeInfo != nullptr);
 	//If this is a static scope, scopeObject must not be nullptr.
@@ -124,10 +124,10 @@ void CatRuntimeContext::removeScope(CatScopeID id)
 }
 
 
-void CatRuntimeContext::setScopeObject(CatScopeID id, Reflectable* scopeObject)
+void CatRuntimeContext::setScopeObject(CatScopeID id, unsigned char* scopeObject)
 {
 	Scope* scope = getScope(id);
-	scope->scopeObject = scopeObject;
+	scope->scopeObject = reinterpret_cast<Reflectable*>(scopeObject);
 }
 
 
@@ -138,10 +138,10 @@ bool CatRuntimeContext::isStaticScope(CatScopeID id) const
 }
 
 
-Reflectable* CatRuntimeContext::getScopeObject(CatScopeID id) const
+unsigned char* CatRuntimeContext::getScopeObject(CatScopeID id) const
 {
 	Scope* scope = getScope(id);
-	return scope->scopeObject.get();
+	return reinterpret_cast<unsigned char*>(scope->scopeObject.get());
 }
 
 
@@ -330,7 +330,7 @@ CatScope* jitcat::CatRuntimeContext::getCurrentScope() const
 }
 
 
-Reflection::Reflectable* jitcat::CatRuntimeContext::getCurrentScopeObject() const
+unsigned char* jitcat::CatRuntimeContext::getCurrentScopeObject() const
 {
 	if (currentScope != nullptr)
 	{
@@ -352,11 +352,11 @@ void jitcat::CatRuntimeContext::setReturning(bool isReturning)
 }
 
 
-CatScopeID CatRuntimeContext::createScope(Reflectable* scopeObject, TypeInfo* type, bool isStatic)
+CatScopeID CatRuntimeContext::createScope(unsigned char* scopeObject, TypeInfo* type, bool isStatic)
 {
 	Scope* scope = new Scope();
 	scope->isStatic = isStatic;
-	scope->scopeObject = scopeObject;
+	scope->scopeObject = reinterpret_cast<Reflectable*>(scopeObject);
 	scope->scopeType = type;
 	if (!isStatic)
 	{

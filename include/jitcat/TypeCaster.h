@@ -9,10 +9,13 @@
 #include "jitcat/Reflectable.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/Tools.h"
+
 #include <any>
+#include <cassert>
 #include <map>
 #include <string>
 #include <vector>
+
 
 namespace jitcat::Reflection
 {
@@ -22,8 +25,13 @@ class TypeCaster
 public:
 	TypeCaster() {};
 	virtual ~TypeCaster() {};
+	virtual std::any getAddressOfValue(std::any& value) const = 0;
+	virtual std::any getAddressOfPointer(std::any& value) const = 0;
 	virtual std::any castFromRawPointer(uintptr_t pointer) const = 0;
 	virtual uintptr_t castToRawPointer(const std::any& pointer) const = 0;
+	virtual std::any castFromRawPointerPointer(uintptr_t pointer) const = 0;
+	virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const = 0;
+
 	virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const = 0;
 	virtual std::any getNull() const = 0;
 };
@@ -36,6 +44,19 @@ public:
 	ObjectTypeCaster() {};
 	virtual ~ObjectTypeCaster() {};
 
+	virtual std::any getAddressOfValue(std::any& value) const override final
+	{
+		ObjectT* addressOf = std::any_cast<ObjectT>(&value);
+		return addressOf;
+	}
+
+
+	virtual std::any getAddressOfPointer(std::any& value) const override final
+	{
+		ObjectT** addressOf = std::any_cast<ObjectT*>(&value);
+		return addressOf;
+	}
+
 
 	virtual std::any castFromRawPointer(uintptr_t pointer) const override final
 	{
@@ -46,6 +67,18 @@ public:
 	virtual uintptr_t castToRawPointer(const std::any& pointer) const override final
 	{
 		return reinterpret_cast<uintptr_t>(std::any_cast<ObjectT*>(pointer));
+	}
+
+
+	virtual std::any castFromRawPointerPointer(uintptr_t pointer) const override final
+	{
+		return reinterpret_cast<ObjectT**>(pointer);
+	}
+
+
+	virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final
+	{
+		return reinterpret_cast<uintptr_t>(std::any_cast<ObjectT**>(pointer));
 	}
 
 
@@ -79,14 +112,43 @@ public:
 		bufferSize = customType->getTypeSize();
 	}
 
+
+	virtual std::any getAddressOfValue(std::any& value) const override final
+	{
+		//Custom objects can not be passed by value at this time
+		assert(false);
+		return getNull();
+	}
+
+
+	virtual std::any getAddressOfPointer(std::any& value) const override final
+	{
+		Reflectable** addressOf = std::any_cast<Reflectable*>(&value);
+		return addressOf;
+	}
+
+
 	virtual std::any castFromRawPointer(uintptr_t pointer) const override final
 	{
 		return reinterpret_cast<Reflectable*>(pointer);
 	}
 
+	
 	virtual uintptr_t castToRawPointer(const std::any& pointer) const override final
 	{
 		return reinterpret_cast<uintptr_t>(std::any_cast<Reflectable*>(pointer));
+	}
+
+
+	virtual std::any castFromRawPointerPointer(uintptr_t pointer) const override final
+	{
+		return reinterpret_cast<Reflectable**>(pointer);
+	}
+
+
+	virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final
+	{
+		return reinterpret_cast<uintptr_t>(std::any_cast<Reflectable**>(pointer));
 	}
 
 
@@ -105,6 +167,18 @@ class NullptrTypeCaster: public TypeCaster
 public:
 	NullptrTypeCaster() {};
 	virtual ~NullptrTypeCaster() {};
+	
+	
+	virtual std::any getAddressOfValue(std::any& value) const override final
+	{
+		return nullptr;
+	}
+
+
+	virtual std::any getAddressOfPointer(std::any& value) const override final
+	{
+		return nullptr;
+	}
 
 
 	virtual std::any castFromRawPointer(uintptr_t pointer) const override final
@@ -119,6 +193,18 @@ public:
 	}
 
 
+	virtual std::any castFromRawPointerPointer(uintptr_t pointer) const override final
+	{
+		return nullptr;
+	}
+
+
+	virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final
+	{
+		return reinterpret_cast<uintptr_t>(nullptr);
+	}
+
+
 	virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const override final
 	{
 		buffer = nullptr;
@@ -128,7 +214,7 @@ public:
 
 	virtual std::any getNull() const override final
 	{
-		return static_cast<Reflectable*>(nullptr);
+		return nullptr;
 	}
 
 };

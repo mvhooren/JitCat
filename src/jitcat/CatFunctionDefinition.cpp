@@ -21,7 +21,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
-#include "jitcat/ReflectableInstance.h"
+#include "jitcat/ObjectInstance.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
 
@@ -206,7 +206,7 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 		}
 		parameters->getCustomType()->placementConstruct(scopeMem, parameters->getCustomType()->getTypeSize());
 
-		scopeId = pushScope(runtimeContext, reinterpret_cast<Reflectable*>(scopeMem));
+		scopeId = pushScope(runtimeContext, scopeMem);
 		//The scopeId should match the scopeId that was obtained during type checking.
 		assert(scopeId == parametersScopeId);
 
@@ -325,13 +325,7 @@ Reflection::CustomTypeInfo* CatFunctionDefinition::getCustomType()
 }
 
 
-Reflection::Reflectable* jitcat::AST::CatFunctionDefinition::createCustomTypeInstance() const
-{
-	return parameters->getCustomType()->construct();
-}
-
-
-CatScopeID jitcat::AST::CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, Reflection::Reflectable* instance)
+CatScopeID jitcat::AST::CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance)
 {
 	return runtimeContext->addScope(parameters->getCustomType(), instance, false);
 }

@@ -45,7 +45,12 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
-		TypeMemberInfo* addObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
+		TypeMemberInfo* addObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
+		template <typename ObjectT>
+		inline TypeMemberInfo* addObjectMember(const std::string& memberName, ObjectT* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false)
+		{
+			return addObjectMember(memberName, reinterpret_cast<unsigned char*>(defaultValue), objectTypeInfo, ownershipSemantics, isWritable, isConst);
+		}
 		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
@@ -55,7 +60,12 @@ namespace jitcat::Reflection
 		StaticMemberInfo* addStaticIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 		StaticMemberInfo* addStaticBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
 		StaticMemberInfo* addStaticStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
-		StaticMemberInfo* addStaticObjectMember(const std::string& memberName, Reflectable* defaulValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
+		StaticMemberInfo* addStaticObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
+		template<typename ObjectT>
+		StaticMemberInfo* addStaticObjectMember(const std::string& memberName, ObjectT* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false)
+		{
+			return addStaticObjectMember(memberName, reinterpret_cast<unsigned char*>(defaultValue), objectTypeInfo, ownershipSemantics, isWritable, isConst);
+		}
 		StaticMemberInfo* addStaticDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
 
 		StaticMemberInfo* addStaticMember(const std::string& memberName, const CatGenericType& type);

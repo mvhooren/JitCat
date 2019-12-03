@@ -9,24 +9,29 @@
 
 #include "jitcat/ReflectableHandle.h"
 
+#include <any>
+
+
 namespace jitcat::Reflection
 {
 	class Reflectable;
 	class TypeInfo;
 
-	class ReflectableInstance
+	class ObjectInstance
 	{
 	public:
-		ReflectableInstance();
-		ReflectableInstance(Reflectable* reflectable, TypeInfo* reflectableType);
-		~ReflectableInstance();
-		ReflectableInstance& operator=(ReflectableInstance&& other) noexcept;
+		ObjectInstance();
+		ObjectInstance(unsigned char* object, TypeInfo* objectType);
+		~ObjectInstance();
+		ObjectInstance& operator=(ObjectInstance&& other) noexcept;
 
-		Reflectable* getReflectable() const;
+		unsigned char* getObject() const;
 		TypeInfo* getType() const;
+		std::any getObjectAsAny() const;
 
 	private:
-		ReflectableHandle reflectable;
-		TypeInfo* reflectableType;
+
+		ReflectableHandle object;
+		TypeInfo* objectType;
 	};
 }

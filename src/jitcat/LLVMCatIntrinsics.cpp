@@ -9,7 +9,7 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 
 
-Reflectable* LLVMCatIntrinsics::getScopePointerFromContext(CatRuntimeContext* context, int scopeId)
+unsigned char* LLVMCatIntrinsics::getScopePointerFromContext(CatRuntimeContext* context, int scopeId)
 {
 	return context->getScopeObject((CatScopeID)scopeId);
 }

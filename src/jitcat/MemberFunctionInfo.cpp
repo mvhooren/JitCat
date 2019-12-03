@@ -64,7 +64,7 @@ DeferredMemberFunctionInfo::~DeferredMemberFunctionInfo()
 
 inline std::any DeferredMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
 {
-	return deferredFunction->call(runtimeContext, baseMember->getMemberReference(std::any_cast<Reflectable*>(base)), parameters);
+	return deferredFunction->call(runtimeContext, baseMember->getMemberReference(reinterpret_cast<unsigned char*>(baseMember->catType.getRawPointer(base))), parameters);
 }
 
 

@@ -150,11 +150,19 @@ namespace jitcat::Reflection
 		const TypeCaster* getTypeCaster() const;
 
 		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const;
-		Reflectable* construct() const;
-		void destruct(Reflectable* object);
+
+		//Allocates memory and default-constructs an instance of this type and returns a pointer to the object.
+		unsigned char* construct() const;
+		//Runs the destructor of this type on the object at objectPointer and frees its memory.
+		void destruct(unsigned char* objectPointer);
+		//Runs the destructor of this type on the buffer, does not free any memory.
 		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize);
+		//If supported, runs the copy constructor of this type on the object contained in sourceBuffer and places the copy in targetBuffer.
 		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		//If supported, runs the move constructor of this type on the object contained in sourceBuffer and places the copy in targetBuffer.
+		//The object in sourceBuffer should be destructed afterwards.
 		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		//Given a pointer contained in value, cast it to a raw buffer.
 		void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const;
 
 		virtual bool getAllowInheritance() const;

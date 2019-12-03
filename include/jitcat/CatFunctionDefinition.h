@@ -15,7 +15,7 @@
 #include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberVisibility.h"
 #include "jitcat/ReflectableHandle.h"
-#include "jitcat/ReflectableInstance.h"
+#include "jitcat/ObjectInstance.h"
 #include "jitcat/TypeTraits.h"
 
 #include <any>
@@ -80,8 +80,7 @@ namespace jitcat::AST
 		virtual Reflection::CustomTypeInfo* getCustomType() override final;
 
 	private:
-		Reflection::Reflectable* createCustomTypeInstance() const;
-		CatScopeID pushScope(CatRuntimeContext* runtimeContext, Reflection::Reflectable* instance);
+		CatScopeID pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance);
 
 	private:
 		std::string name;

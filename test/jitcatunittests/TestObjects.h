@@ -21,18 +21,25 @@
 namespace TestObjects
 {
 	template<typename ItemType, typename AllocatorType = std::allocator<ItemType>>
-	class ReflectableVector: public std::vector<ItemType, AllocatorType>, public jitcat::Reflection::Reflectable
+	class ReflectableVector: public jitcat::Reflection::Reflectable
 	{
 	public:
-		ReflectableVector() : std::vector<ItemType, AllocatorType>() {};
-		inline operator std::vector<ItemType, AllocatorType>(){return *this;};
+		ReflectableVector() {};
+		/*inline operator std::vector<ItemType, AllocatorType>(){return *this;};*/
 
 		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 		static const char* getTypeName();
 
+		void push_back(ItemType&& item);
+		void push_back(const ItemType& item);
+		template <class... Args>
+		void emplace_back(Args&&... argValues) {data.emplace_back(std::forward(argValues)...);}
+
 		ItemType& operator[](int index);
 
-		int sizeAsInt() {return (int)size();}
+		int sizeAsInt() {return (int)data.size();}
+	private:
+		std::vector<ItemType, AllocatorType> data;
 	};
 
 
@@ -48,15 +55,38 @@ namespace TestObjects
 	template<typename ItemType, typename AllocatorType>
 	inline const char* ReflectableVector<ItemType, AllocatorType>::getTypeName()
 	{
-		static std::string vectorName = jitcat::Tools::append("Vector<", TypeTraits<ItemType>::getTypeName(), ">");
+		static std::string itemTypeName = jitcat::Tools::append(TypeTraits<ItemType>::getTypeName(), std::is_pointer<ItemType>::value ? "*" : "");
+		static std::string vectorName = jitcat::Tools::append("Vector<", itemTypeName, ">");
 		return vectorName.c_str();
+	}
+
+	
+	template<typename ItemType, typename AllocatorType>
+	inline void ReflectableVector<ItemType, AllocatorType>::push_back(ItemType&& item)
+	{
+		data.push_back(item);
+	}
+
+
+	template<typename ItemType, typename AllocatorType>
+	inline void ReflectableVector<ItemType, AllocatorType>::push_back(const ItemType& item)
+	{
+		data.push_back(item);
 	}
 
 
 	template<typename ItemType, typename AllocatorType>
 	inline ItemType& ReflectableVector<ItemType, AllocatorType>::operator[](int index)
 	{
-		return std::vector<ItemType, AllocatorType>::operator[]((std::size_t)index);
+		if (index >= 0 && index < sizeAsInt())
+		{
+			return data[index];
+		}
+		else
+		{
+			static ItemType default = ItemType();
+			return default;
+		}
 	}
 
 

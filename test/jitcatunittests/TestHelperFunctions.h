@@ -44,7 +44,7 @@ inline void checkValueIsEqual(const T& actualValue, const T& expectedValue, bool
 
 
 template<typename ResultT>
-inline ResultT getMemberValue(const std::string& memberName, jitcat::Reflection::Reflectable* instance, jitcat::Reflection::CustomTypeInfo* instanceType)
+inline ResultT getMemberValue(const std::string& memberName, unsigned char* instance, jitcat::Reflection::CustomTypeInfo* instanceType)
 {
 	TypeMemberInfo* memberInfo = instanceType->getMemberInfo(memberName);
 	return TypeTraits<ResultT>::getValue(memberInfo->getMemberReference(instance));
@@ -52,7 +52,7 @@ inline ResultT getMemberValue(const std::string& memberName, jitcat::Reflection:
 
 
 template<typename ResultT>
-inline void setMemberValue(const std::string& memberName, jitcat::Reflection::Reflectable* instance, jitcat::Reflection::CustomTypeInfo* instanceType, ResultT& value)
+inline void setMemberValue(const std::string& memberName, unsigned char* instance, jitcat::Reflection::CustomTypeInfo* instanceType, ResultT& value)
 {
 	TypeMemberInfo* memberInfo = instanceType->getMemberInfo(memberName);
 	std::any assignable = memberInfo->getAssignableMemberReference(instance);
@@ -185,7 +185,7 @@ inline void checkAssignment(T& assignedValue, const T& expectedValue, bool shoul
 
 
 template <typename T>
-inline void checkAssignmentCustom(jitcat::Reflection::Reflectable* instance, jitcat::Reflection::CustomTypeInfo* instanceType, const std::string& memberName, const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, jitcat::Expression<void>& expression, jitcat::CatRuntimeContext& context)
+inline void checkAssignmentCustom(unsigned char* instance, jitcat::Reflection::CustomTypeInfo* instanceType, const std::string& memberName, const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, jitcat::Expression<void>& expression, jitcat::CatRuntimeContext& context)
 {
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context) &&  instanceType->getMemberInfo(memberName) != nullptr)
 	{
@@ -236,7 +236,7 @@ inline void checkAssignExpression(T& assignedValue, const T& newValue, bool shou
 
 
 template <typename T>
-inline void checkAssignExpressionCustom(jitcat::Reflection::Reflectable* instance, jitcat::Reflection::CustomTypeInfo* instanceType, const std::string& memberName, const T& newValue, bool shouldHaveError, jitcat::ExpressionAssignment<T>& expression, jitcat::CatRuntimeContext& context)
+inline void checkAssignExpressionCustom(unsigned char* instance, jitcat::Reflection::CustomTypeInfo* instanceType, const std::string& memberName, const T& newValue, bool shouldHaveError, jitcat::ExpressionAssignment<T>& expression, jitcat::CatRuntimeContext& context)
 {
 	if (doCommonChecks(&expression, shouldHaveError, false, false, context))
 	{
@@ -276,11 +276,11 @@ inline void checkAnyAssignExpression(T& assignedValue, const T& newValue, bool s
 
 		if constexpr (std::is_pointer<T>::value)
 		{
-			expression.assignValue(&context, std::any(static_cast<Reflectable*>(newValue)), TypeTraits<T>::toGenericType());
+			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
 			CHECK(assignedValue == newValue);
 			assignedValue = originalValue;
 
-			expression.assignInterpretedValue(&context, std::any(static_cast<Reflectable*>(newValue)), TypeTraits<T>::toGenericType());
+			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
 			CHECK(assignedValue == newValue);
 			assignedValue = originalValue;
 		}
@@ -299,7 +299,7 @@ inline void checkAnyAssignExpression(T& assignedValue, const T& newValue, bool s
 
 
 template <typename T>
-inline void checkAnyAssignExpressionCustom(jitcat::Reflection::Reflectable* instance, jitcat::Reflection::CustomTypeInfo* instanceType, const std::string& memberName, const T& newValue, bool shouldHaveError, jitcat::ExpressionAssignAny& expression, jitcat::CatRuntimeContext& context)
+inline void checkAnyAssignExpressionCustom(unsigned char* instance, jitcat::Reflection::CustomTypeInfo* instanceType, const std::string& memberName, const T& newValue, bool shouldHaveError, jitcat::ExpressionAssignAny& expression, jitcat::CatRuntimeContext& context)
 {
 	if (doCommonChecks(&expression, shouldHaveError, false, false, context))
 	{

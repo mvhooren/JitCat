@@ -114,7 +114,7 @@ std::any CatForLoop::execute(jitcat::CatRuntimeContext* runtimeContext)
 		}
 	}
 	scopeType->placementConstruct(scopeMem, scopeType->getTypeSize());
-	loopIteratorScope = runtimeContext->addScope(scopeType, reinterpret_cast<Reflectable*>(scopeMem), false);
+	loopIteratorScope = runtimeContext->addScope(scopeType, scopeMem, false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 

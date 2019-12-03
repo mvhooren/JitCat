@@ -35,7 +35,7 @@ namespace jitcat::LLVM
 		~LLVMCatIntrinsics() = delete;
 
 	public:
-		static Reflection::Reflectable* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
+		static unsigned char* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
 		static bool stringEquals(const std::string& left, const std::string& right);
 		static bool stringNotEquals(const std::string& left, const std::string& right);
 		static void stringAssign(std::string* left, const std::string& right);

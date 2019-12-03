@@ -16,7 +16,7 @@ namespace jitcat
 	template<typename ObjectT, typename EnabledT>
 	const CatGenericType& TypeTraits<ObjectT, EnabledT>::toGenericType()
 	{
-		static_assert(std::is_compound_v<ObjectT>, "Type is not supported.");
+		static_assert(std::is_class_v<ObjectT>, "Type is not supported.");
 		static_assert(std::is_default_constructible_v<ObjectT>, "Type needs to be default constructible.");
 		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>();
 		static std::unique_ptr<CatGenericType> type(new CatGenericType(typeInfo));
@@ -63,7 +63,7 @@ namespace jitcat
 	template <typename UniquePtrT>
 	std::any TypeTraits<std::unique_ptr<UniquePtrT>>::getCatValue(std::unique_ptr<UniquePtrT>& value) 
 	{ 
-		return static_cast<Reflection::Reflectable*>(value.get()); 
+		return value.get(); 
 	}
 
 

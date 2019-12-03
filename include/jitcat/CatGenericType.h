@@ -23,6 +23,7 @@ namespace jitcat
 	namespace Reflection
 	{
 		class TypeInfo;
+		class TypeCaster;
 		class ContainerManipulator;
 	}
 
@@ -64,7 +65,7 @@ namespace jitcat
 		CatGenericType& operator=(const CatGenericType& other);
 		bool operator== (const CatGenericType& other) const;
 		bool operator!= (const CatGenericType& other) const;
-		bool compare(const CatGenericType& other, bool includeOwnershipSemantics) const;
+		bool compare(const CatGenericType& other, bool includeOwnershipSemantics, bool includeIndirection) const;
 
 		bool isUnknown() const;
 		bool isValidType() const;
@@ -110,6 +111,7 @@ namespace jitcat
 		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 		CatGenericType convertPointerToHandle() const;
 		//Removes pointers and handles
+		const CatGenericType& removeIndirection() const;
 		const CatGenericType& removeIndirection(int& levelsOfIndirectionRemoved) const;
 
 		Reflection::ContainerManipulator* getContainerManipulator() const;
@@ -166,6 +168,16 @@ namespace jitcat
 		//Casts the contents of value to a unsigned char* and gets the size of the value
 		void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const;
 
+		//If this is a non-pointer type, gets a typecaster for the type
+		const Reflection::TypeCaster* getTypeCaster() const;
+		//If this is a pointer type, gets the raw pointer value/address
+		uintptr_t getRawPointer(const std::any& value) const;
+		//Returns a std::any containing a pointer to the object stored in value.
+		std::any getAddressOf(std::any& value) const;
+		//If this is a pointer type, creates a pointer value of this type from the raw pointer.
+		std::any createFromRawPointer(const uintptr_t pointer) const;
+		std::any createNullPtr() const;
+
 		static CatGenericType createIntType(bool isWritable, bool isConst);
 		static CatGenericType createFloatType(bool isWritable, bool isConst);
 		static CatGenericType createBoolType(bool isWritable, bool isConst);
@@ -186,6 +198,11 @@ namespace jitcat
 		//static const CatGenericType errorType;
 		static const CatGenericType nullptrType;
 		static const CatGenericType unknownType;
+
+		static const Reflection::TypeCaster* const intTypeCaster;
+		static const Reflection::TypeCaster* const floatTypeCaster;
+		static const Reflection::TypeCaster* const boolTypeCaster; 
+		static const Reflection::TypeCaster* const stringTypeCaster;
 
 	private:
 		SpecificType specificType;

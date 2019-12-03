@@ -15,12 +15,11 @@ namespace jitcat::Reflection
 
 
 template<typename BasicT>
-inline std::any CustomBasicTypeMemberInfo<BasicT>::getMemberReference(Reflectable* base)
+inline std::any CustomBasicTypeMemberInfo<BasicT>::getMemberReference(unsigned char* base)
 {
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(base);
-	if (baseData != nullptr)
+	if (base != nullptr)
 	{
-		BasicT& value = *reinterpret_cast<BasicT*>(&baseData[memberOffset]);
+		BasicT& value = *reinterpret_cast<BasicT*>(&base[memberOffset]);
 		return value;
 	}
 	return BasicT();
@@ -28,12 +27,11 @@ inline std::any CustomBasicTypeMemberInfo<BasicT>::getMemberReference(Reflectabl
 
 
 template<typename BasicT>
-inline std::any CustomBasicTypeMemberInfo<BasicT>::getAssignableMemberReference(Reflectable* base)
+inline std::any CustomBasicTypeMemberInfo<BasicT>::getAssignableMemberReference(unsigned char* base)
 {
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(base);
-	if (baseData != nullptr)
+	if (base != nullptr)
 	{
-		BasicT* value = reinterpret_cast<BasicT*>(&baseData[memberOffset]);
+		BasicT* value = reinterpret_cast<BasicT*>(&base[memberOffset]);
 		return value;
 	}
 	return (BasicT*)nullptr;

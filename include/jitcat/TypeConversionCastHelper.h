@@ -19,7 +19,7 @@ namespace jitcat
 		static inline OutCVT convertCast(InT&& in)
 		{
 			constexpr bool outIsConst = std::is_const<OutCVT>::value;
-			typedef typename std::remove_cv<OutCVT>::type OutT;
+			typedef typename RemoveConst<OutCVT>::type OutT;
 			if constexpr (std::is_same<InT, OutT>::value)
 			{
 				return in;

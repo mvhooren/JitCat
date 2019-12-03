@@ -94,14 +94,14 @@ CatASTNodeType CatIdentifier::getNodeType() const
 
 std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
-	Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+	unsigned char* rootObject = runtimeContext->getScopeObject(scopeId);
 	return memberInfo->getMemberReference(rootObject);
 }
 
 
 std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext)
 {
-	Reflectable* rootObject = runtimeContext->getScopeObject(scopeId);
+	unsigned char* rootObject = runtimeContext->getScopeObject(scopeId);
 	return memberInfo->getAssignableMemberReference(rootObject);
 }
 

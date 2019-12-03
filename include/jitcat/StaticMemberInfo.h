@@ -25,7 +25,6 @@ namespace jitcat::LLVM
 
 namespace jitcat::Reflection
 {
-	class Reflectable;
 	class ReflectableHandle;
 
 	struct StaticMemberInfo
@@ -70,14 +69,14 @@ namespace jitcat::Reflection
 	//Implements a StaticMemberInfo for class/struct pointer types that are reflectable.
 	struct StaticClassPointerMemberInfo: public StaticMemberInfo
 	{
-		StaticClassPointerMemberInfo(const std::string& memberName, Reflectable** memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		StaticClassPointerMemberInfo(const std::string& memberName, unsigned char** memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
 		virtual std::any getMemberReference() override final;
 		virtual std::any getAssignableMemberReference() override final;
 		virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
 		virtual llvm::Value* generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
-		Reflectable** memberPointer;
+		unsigned char** memberPointer;
 	};
 
 
@@ -97,14 +96,14 @@ namespace jitcat::Reflection
 	//Implements a StaticMemberInfo for class/struct types that are reflectable.
 	struct StaticClassObjectMemberInfo: public StaticMemberInfo
 	{
-		StaticClassObjectMemberInfo(const std::string& memberName, Reflectable* memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		StaticClassObjectMemberInfo(const std::string& memberName, unsigned char* memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
 		virtual std::any getMemberReference() override final;
 		virtual std::any getAssignableMemberReference() override final;
 
 		virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
 
-		Reflectable* memberPointer;
+		unsigned char* memberPointer;
 	};
 
 

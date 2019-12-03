@@ -79,7 +79,6 @@ CatASTNodeType CatArrayIndex::getNodeType() const
 std::any CatArrayIndex::execute(CatRuntimeContext* runtimeContext)
 {
 	std::any arrayValue = array->execute(runtimeContext);
-	Reflectable* testReflectable = std::any_cast<Reflectable*>(arrayValue);
 	std::any indexValue = index->execute(runtimeContext);
 	if (!isReflectedArrayType)
 	{

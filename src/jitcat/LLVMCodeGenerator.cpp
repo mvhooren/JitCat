@@ -747,8 +747,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 	}
 	else if (literalType.isPointerToReflectableObjectType())
 	{
-		Reflectable* reflectable = std::any_cast<Reflectable*>(literal->getValue());
-		llvm::Value* reflectableAddress = helper->createIntPtrConstant(reinterpret_cast<std::uintptr_t>(reflectable), "literalObjectAddress");
+		uintptr_t pointerConstant = literalType.getRawPointer(literal->getValue());
+		llvm::Value* reflectableAddress = helper->createIntPtrConstant(pointerConstant, "literalObjectAddress");
 		return builder->CreateIntToPtr(reflectableAddress, LLVMTypes::pointerType);
 	}
 	else
@@ -893,7 +893,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 	llvm::Value* parentObjectAddress = nullptr;
 	if (context->catContext->isStaticScope(scopeId))
 	{
-		Reflectable* object = context->catContext->getScopeObject(scopeId);
+		unsigned char* object = context->catContext->getScopeObject(scopeId);
 		parentObjectAddress = llvm::ConstantInt::get(LLVMJit::get().getContext(), llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
 	}
 	else

@@ -40,14 +40,14 @@ namespace jitcat
 		static constexpr ObjectT getDefaultValue() { return ObjectT(); }
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<ObjectT>::getDefaultValue()); }
 		static ObjectT getValue(const std::any& value)  { return std::any_cast<ObjectT>(value);}
-		static ObjectT stripValue(ObjectT& value) { return value; }
-		static ObjectT stripValue(ObjectT* value) {return *value;}
+		static ObjectT& stripValue(ObjectT& value) { return value; }
+		static ObjectT& stripValue(ObjectT* value) {return *value;}
 		
 		typedef ObjectT getValueType;
 		typedef ObjectT type;
 		typedef ObjectT cachedType;
 		typedef ObjectT functionParameterType;
-		typedef ObjectT functionReturnType;
+		typedef ObjectT* containerItemReturnType;
 	};
 
 
@@ -71,7 +71,7 @@ namespace jitcat
 		typedef PointerT type;
 		typedef PointerT* cachedType;
 		typedef PointerT* functionParameterType;
-		typedef PointerT* functionReturnType;
+		typedef PointerT* containerItemReturnType;
 	};
 
 
@@ -97,7 +97,7 @@ namespace jitcat
 		typedef RefT type;
 		typedef RefT& cachedType;
 		typedef RefT& functionParameterType;
-		typedef RefT* functionReturnType;
+		typedef RefT* containerItemReturnType;
 	};
 
 
@@ -130,7 +130,7 @@ namespace jitcat
 		typedef PointerRefT type;
 		typedef PointerRefT* cachedType;
 		typedef PointerRefT*& functionParameterType;
-		typedef PointerRefT** functionReturnType;
+		typedef PointerRefT** containerItemReturnType;
 	};
 
 
@@ -154,7 +154,7 @@ namespace jitcat
 		typedef UniquePtrT type;
 		typedef UniquePtrT* cachedType;
 		typedef UniquePtrT* functionParameterType;
-		typedef UniquePtrT* functionReturnType;
+		typedef UniquePtrT* containerItemReturnType;
 	};
 
 
@@ -185,7 +185,7 @@ namespace jitcat
 		typedef void type;
 		typedef int cachedType;
 		typedef int functionParameterType;
-		typedef int functionReturnType;
+		typedef int containerItemReturnType;
 	};
 
 
@@ -222,7 +222,7 @@ namespace jitcat
 		typedef FundamentalT type;
 		typedef FundamentalT cachedType;
 		typedef FundamentalT functionParameterType;
-		typedef FundamentalT functionReturnType;
+		typedef FundamentalT containerItemReturnType;
 	};
 
 
@@ -249,7 +249,7 @@ namespace jitcat
 		typedef std::string type;
 		typedef std::string cachedType;
 		typedef const std::string& functionParameterType;
-		typedef std::string functionReturnType;
+		typedef std::string containerItemReturnType;
 	};
 
 
@@ -273,7 +273,7 @@ namespace jitcat
 		typedef ItemType type;
 		typedef std::vector<ItemType, AllocatorT> cachedType;
 		typedef std::vector<ItemType, AllocatorT>* functionParameterType;
-		typedef std::vector<ItemType, AllocatorT>* functionReturnType;
+		typedef std::vector<ItemType, AllocatorT>* containerItemReturnType;
 	};
 
 
@@ -297,7 +297,38 @@ namespace jitcat
 		typedef ItemType type;
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT> cachedType;
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* functionParameterType;
-		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* functionReturnType;
+		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* containerItemReturnType;
+	};
+
+	template <typename AnyType>
+	struct RemoveConst
+	{
+		typedef AnyType type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<ConstType&>
+	{
+		typedef typename RemoveConst<ConstType>::type& type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<ConstType*>
+	{
+		typedef typename RemoveConst<ConstType>::type* type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<ConstType* const>
+	{
+		typedef typename RemoveConst<ConstType>::type* type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<const ConstType>
+	{
+		typedef typename RemoveConst<ConstType>::type type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<volatile ConstType>
+	{
+		typedef typename RemoveConst<ConstType>::type type;
 	};
 
 } //End namespace jitcat

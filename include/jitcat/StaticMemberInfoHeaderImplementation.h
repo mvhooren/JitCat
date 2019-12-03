@@ -87,14 +87,14 @@ namespace jitcat::Reflection
 	template<typename ClassT>
 	inline std::any StaticClassUniquePtrMemberInfo<ClassT>::getMemberReference()
 	{
-		return std::any((Reflectable*)memberPointer->get());
+		return std::any(memberPointer->get());
 	}
 
 
 	template<typename ClassT>
 	inline std::any StaticClassUniquePtrMemberInfo<ClassT>::getAssignableMemberReference()
 	{
-		return std::any((Reflectable**)nullptr);
+		return std::any((ClassT**)nullptr);
 	}
 
 

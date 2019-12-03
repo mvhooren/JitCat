@@ -45,7 +45,7 @@ namespace jitcat::Reflection
 			{
 				Reflectable* baseReflectable = std::any_cast<Reflectable*>(base);
 				runtimeContext->pushStackFrame();
-				CatScopeID scope = runtimeContext->addScope(thisType.getObjectType(), baseReflectable, false);
+				CatScopeID scope = runtimeContext->addScope(thisType.getObjectType(), reinterpret_cast<unsigned char*>(baseReflectable), false);
 				std::any result = functionDefinition->executeFunctionWithArguments(runtimeContext, parameters);
 				runtimeContext->removeScope(scope);
 				runtimeContext->popStackFrame();

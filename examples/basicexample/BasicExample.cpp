@@ -10,7 +10,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/Expression.h"
 #include "jitcat/ExpressionAny.h"
-#include "jitcat/ReflectableInstance.h"
+#include "jitcat/ObjectInstance.h"
 #include "ReflectionTestRoot.h"
 
 #include <string>
@@ -81,7 +81,7 @@ int MAIN(int argc, char* argv[])
 	customType->addObjectMember("anObject", &exampleObject, exampleObjectType, TypeOwnershipSemantics::Weak, false);
 
 	//Create an instance of the runtime-defined type
-	ReflectableInstance customTypeInstance(customType->construct(), customType);
+	ObjectInstance customTypeInstance(customType->construct(), customType);
 
 	//Add the type to the context so we can access the variables in an expression
 	context.addScope(customType, customTypeInstance.getReflectable(), false);

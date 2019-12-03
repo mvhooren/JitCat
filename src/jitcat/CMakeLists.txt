@@ -226,8 +226,8 @@ set(Source_Parser
 set(Source_Reflection
 	Reflectable.cpp
 	${JitCatHeaderPath}/Reflectable.h
-	ReflectableInstance.cpp
-	${JitCatHeaderPath}/ReflectableInstance.h
+	ObjectInstance.cpp
+	${JitCatHeaderPath}/ObjectInstance.h
 	ReflectableHandle.cpp
 	${JitCatHeaderPath}/ReflectableHandle.h
 	TypeRegistry.cpp

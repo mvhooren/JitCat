@@ -11,13 +11,13 @@ using namespace jitcat::Reflection;
 
 
 
-inline std::any TypeMemberInfo::getMemberReference(Reflectable* base)
+inline std::any TypeMemberInfo::getMemberReference(unsigned char* base)
 {
 	return std::any();
 }
 
 
-inline std::any TypeMemberInfo::getAssignableMemberReference(Reflectable* base)
+inline std::any TypeMemberInfo::getAssignableMemberReference(unsigned char* base)
 {
 	return std::any();
 }
@@ -47,15 +47,15 @@ TypeMemberInfo* TypeMemberInfo::toDeferredTypeMemberInfo(TypeMemberInfo* baseMem
 }
 
 
-inline std::any DeferredMemberInfo::getMemberReference(Reflectable* base)
+inline std::any DeferredMemberInfo::getMemberReference(unsigned char* base)
 {
-	return deferredMember->getMemberReference(std::any_cast<Reflectable*>(baseMember->getMemberReference(base)));
+	return deferredMember->getMemberReference(reinterpret_cast<unsigned char*>(baseMember->catType.getRawPointer(baseMember->getMemberReference(base))));
 }
 
 
-inline std::any DeferredMemberInfo::getAssignableMemberReference(Reflectable* base)
+inline std::any DeferredMemberInfo::getAssignableMemberReference(unsigned char* base)
 {
-	return deferredMember->getAssignableMemberReference(std::any_cast<Reflectable*>(baseMember->getMemberReference(base)));
+	return deferredMember->getAssignableMemberReference(reinterpret_cast<unsigned char*>(baseMember->catType.getRawPointer(baseMember->getMemberReference(base))));
 }
 
 

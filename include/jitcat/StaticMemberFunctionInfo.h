@@ -43,7 +43,7 @@ namespace jitcat::Reflection
 		template<typename ArgumentT>
 		inline void addParameterTypeInfo()
 		{
-			argumentTypes.push_back(TypeTraits<typename std::remove_cv<ArgumentT>::type >::toGenericType());
+			argumentTypes.push_back(TypeTraits<typename RemoveConst<ArgumentT>::type >::toGenericType());
 		}
 
 		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
@@ -91,11 +91,11 @@ namespace jitcat::Reflection
 	{
 		if constexpr (std::is_same<void, ReturnT>::value)
 		{
-			return (*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			return (*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
 		}
 		else
 		{
-			return TypeTraits<ReturnT>::getValue((*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			return TypeTraits<ReturnT>::getValue((*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
 		}
 	}
 

@@ -38,7 +38,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject2", objectUniquePtr.get(), objectTypeInfo);
-	ReflectableInstance typeInstance(customType->construct(), customType);
+	ObjectInstance typeInstance(customType->construct(), customType);
 
 	const char* customTypeName3 = "MyType3";
 	TypeRegistry::get()->removeType(customTypeName3);
@@ -51,8 +51,8 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType2->addObjectMember("myNullObject3", &reflectedObject, objectTypeInfo);
 
 	//The case where the pointer is set to null manually
-	std::any instanceAny((Reflectable*)typeInstance.getReflectable());
-	std::any nullAny((Reflectable*)nullptr);
+	std::any instanceAny = typeInstance.getObjectAsAny();
+	std::any nullAny = customType->getMemberInfo("myNullObject")->catType.createNullPtr();
 	static_cast<CustomTypeObjectMemberInfo*>(customType->getMemberInfo("myNullObject"))->assign(instanceAny, nullAny);
 	//The case where the reflectable handle is set to null through deletion of the observed object.
 	objectUniquePtr.reset(nullptr);
@@ -60,7 +60,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	CatRuntimeContext context("customTypes", &errorManager);
 	context.addScope(&reflectedObject, true);
 	context.addScope(customType2, nullptr, false);
-	context.addScope(customType, typeInstance.getReflectable(), false);
+	context.addScope(customType, typeInstance.getObject(), false);
 
 	SECTION("Float Variable")
 	{

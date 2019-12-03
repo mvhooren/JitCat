@@ -136,11 +136,25 @@ namespace jitcat::Reflection
 			VectorT* vector = std::any_cast<VectorT*>(container);
 			if (vector != nullptr && index < (int)vector->size() && index >= 0)
 			{
-				return TypeTraits<typename VectorT::value_type>::getCatValue(vector->operator[](index));
+				if constexpr (std::is_class_v<typename VectorT::value_type> && !TypeTraits<typename VectorT::value_type>::isUniquePtr())
+				{
+					return &(vector->operator[](index));
+				}
+				else
+				{
+					return TypeTraits<typename VectorT::value_type>::getCatValue(vector->operator[](index));
+				}
 			}
 			else
 			{
-				return TypeTraits<typename VectorT::value_type>::getDefaultCatValue();
+				if constexpr (std::is_class_v<typename VectorT::value_type> && !TypeTraits<typename VectorT::value_type>::isUniquePtr())
+				{
+					return (typename VectorT::value_type*)nullptr;
+				}
+				else
+				{
+					return TypeTraits<typename VectorT::value_type>::getDefaultCatValue();
+				}
 			}
 		}
 

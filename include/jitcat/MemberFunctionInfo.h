@@ -62,7 +62,7 @@ namespace jitcat::Reflection
 		template<typename ParameterT>
 		inline void addParameterTypeInfo()
 		{
-			argumentTypes.push_back(TypeTraits<typename std::remove_cv<ParameterT>::type >::toGenericType());
+			argumentTypes.push_back(TypeTraits<typename RemoveConst<ParameterT>::type >::toGenericType());
 		}
 
 		CatGenericType getArgumentType(std::size_t argumentIndex) const;
@@ -133,7 +133,7 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 		{
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
-			return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
 		}
 		return TypeTraits<ReturnT>::toGenericType().createDefault();;
 	}
@@ -192,7 +192,7 @@ struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 		{
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
-			(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
 		}
 		return TypeTraits<void>::toGenericType().createDefault();
 	}
@@ -251,7 +251,7 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 		{
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
-			return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::remove_cv<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
 		}
 		return TypeTraits<ReturnT>::toGenericType().createDefault();
 	}

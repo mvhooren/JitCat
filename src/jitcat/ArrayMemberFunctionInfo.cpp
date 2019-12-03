@@ -58,7 +58,7 @@ std::any ArrayTypeMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, st
 { 
 	if (base.has_value())
 	{
-		ArrayManipulator::Array* baseArray = static_cast<ArrayManipulator::Array*>(std::any_cast<Reflectable*>(base));
+		ArrayManipulator::Array* baseArray = std::any_cast<ArrayManipulator::Array*>(base);
 		switch (operation)
 		{
 			default:				assert(false); return std::any();

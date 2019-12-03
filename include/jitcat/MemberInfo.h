@@ -44,8 +44,8 @@ namespace jitcat::Reflection
 		TypeMemberInfo(): visibility(MemberVisibility::Private) {}
 		TypeMemberInfo(const std::string& memberName, const CatGenericType& type): memberName(memberName), catType(type), visibility(MemberVisibility::Public) {}
 		virtual ~TypeMemberInfo() {};
-		inline virtual std::any getMemberReference(Reflectable* base);
-		inline virtual std::any getAssignableMemberReference(Reflectable* base);
+		inline virtual std::any getMemberReference(unsigned char* base);
+		inline virtual std::any getAssignableMemberReference(unsigned char* base);
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const;
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
@@ -69,8 +69,8 @@ namespace jitcat::Reflection
 			deferredMember(deferredMember)
 		{}
 
-		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
+		inline virtual std::any getMemberReference(unsigned char* base) override final;
+		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
@@ -88,18 +88,18 @@ namespace jitcat::Reflection
 	{
 		ContainerMemberInfo(const std::string& memberName, ContainerT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
-		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
+		inline virtual std::any getMemberReference(unsigned char* base) override final;
+		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 	
 		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-		static typename TypeTraits<ContainerItemType>::functionReturnType getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index);
+		static typename TypeTraits<ContainerItemType>::containerItemReturnType getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index);
 
 		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-		static typename TypeTraits<ContainerItemType>::functionReturnType  getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index);
+		static typename TypeTraits<ContainerItemType>::containerItemReturnType  getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index);
 
 		template<typename ContainerItemType, typename AllocatorT>
-		static typename TypeTraits<ContainerItemType>::functionReturnType getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index);
+		static typename TypeTraits<ContainerItemType>::containerItemReturnType getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index);
 
 		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
 		inline llvm::Value* generateIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
@@ -121,8 +121,8 @@ namespace jitcat::Reflection
 	{
 		ClassPointerMemberInfo(const std::string& memberName, ClassT* BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
-		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
+		inline virtual std::any getMemberReference(unsigned char* base) override final;
+		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
 		unsigned long long getMemberPointerOffset() const;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
@@ -138,8 +138,8 @@ namespace jitcat::Reflection
 	{
 		ClassObjectMemberInfo(const std::string& memberName, ClassT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 
-		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
+		inline virtual std::any getMemberReference(unsigned char* base) override final;
+		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
 
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 
@@ -155,8 +155,8 @@ namespace jitcat::Reflection
 	{
 		ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT> BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 		static ClassT* getPointer(BaseT* parentObject, ClassUniquePtrMemberInfo<BaseT, ClassT>* info);
-		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
+		inline virtual std::any getMemberReference(unsigned char* base) override final;
+		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 
 		inline virtual unsigned long long getOrdinal() const override final;
@@ -172,8 +172,8 @@ namespace jitcat::Reflection
 	{
 		BasicTypeMemberInfo(const std::string& memberName, BasicT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
 	
-		inline virtual std::any getMemberReference(Reflectable* base) override final;
-		inline virtual std::any getAssignableMemberReference(Reflectable* base) override final;
+		inline virtual std::any getMemberReference(unsigned char* base) override final;
+		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
 
 		unsigned long long getMemberPointerOffset() const;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;

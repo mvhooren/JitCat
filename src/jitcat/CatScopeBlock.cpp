@@ -13,7 +13,7 @@
 #include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
-#include "jitcat/ReflectableInstance.h"
+#include "jitcat/ObjectInstance.h"
 
 #include <iostream>
 
@@ -103,7 +103,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 		}
 	}
 	customType->placementConstruct(scopeMem, customType->getTypeSize());
-	scopeId = runtimeContext->addScope(customType, reinterpret_cast<Reflectable*>(scopeMem), false);
+	scopeId = runtimeContext->addScope(customType, scopeMem, false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 	std::any result = std::any();

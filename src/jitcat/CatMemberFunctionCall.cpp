@@ -34,7 +34,8 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 	arguments(arguments),
 	base(base),
 	memberFunctionInfo(nullptr),
-	returnType(CatGenericType::unknownType)
+	returnType(CatGenericType::unknownType),
+	argumentVectorSize(0)
 {
 }
 
@@ -47,7 +48,8 @@ CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctionCall& other)
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	base(other.base != nullptr ? static_cast<CatTypedExpression*>(other.base->copy()) : nullptr),
 	memberFunctionInfo(nullptr),
-	returnType(CatGenericType::unknownType)
+	returnType(CatGenericType::unknownType),
+	argumentVectorSize(0)
 {
 }
 
@@ -89,8 +91,21 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 	{
 		bool wasReturning = runtimeContext->getIsReturning();
 		runtimeContext->setReturning(false);
-		std::vector<std::any> argumentValues;
+		std::vector<std::any> argumentValues(argumentVectorSize);
+
 		arguments->executeAllArguments(argumentValues, memberFunctionInfo->argumentTypes, runtimeContext);
+		int numValues = (int)argumentValues.size();
+		for (int i = 0; i < numValues; i++)
+		{
+			switch (argumentIndirectionConversion[i])
+			{
+				case 1:
+				{
+					argumentValues.push_back(argumentValues[i]);
+					argumentValues[i] = arguments->getArgumentType(i).getAddressOf(argumentValues.back());
+				} break;
+			}
+		}
 		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
 		runtimeContext->setReturning(wasReturning);
 		return value;
@@ -151,7 +166,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 
 			for (unsigned int i = 0; i < numArgumentsSupplied; i++)
 			{
-				if (!memberFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false))
+				if (!memberFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false, false))
 				{
 					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 					return false;
@@ -160,6 +175,13 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 				{
 					return false;
 				}
+				int parameterIndirectionLevel = 0;
+				CatGenericType parameterType = memberFunctionInfo->getArgumentType(i).removeIndirection(parameterIndirectionLevel);
+				int argumentIndirectionLevel = 0;
+				CatGenericType argumentType = arguments->getArgumentType(i).removeIndirection(argumentIndirectionLevel);
+				int indirectionDifference = parameterIndirectionLevel - argumentIndirectionLevel;
+				argumentVectorSize += 1 + std::abs(indirectionDifference);
+				argumentIndirectionConversion.push_back(parameterIndirectionLevel - argumentIndirectionLevel);
 			}
 			returnType = memberFunctionInfo->returnType;
 			return true;

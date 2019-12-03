@@ -85,7 +85,7 @@ namespace jitcat::Reflection
 	template<typename ReflectableCVT>
 	inline jitcat::Reflection::TypeInfo* jitcat::Reflection::TypeRegistry::registerType()
 	{
-		typedef typename std::remove_cv<ReflectableCVT>::type ReflectableT;
+		typedef typename RemoveConst<ReflectableCVT>::type ReflectableT;
 
 		jitcat::Reflection::TypeInfo* typeInfo = nullptr;
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).

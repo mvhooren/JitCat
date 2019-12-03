@@ -44,13 +44,13 @@ llvm::Value* StaticMemberInfo::generateArrayIndexCode(llvm::Value* index, LLVM::
 
 std::any StaticClassPointerMemberInfo::getMemberReference()
 {
-	return std::any(*memberPointer);
+	return catType.getPointeeType()->createFromRawPointer(reinterpret_cast<uintptr_t>(*memberPointer));
 }
 
 
 std::any StaticClassPointerMemberInfo::getAssignableMemberReference()
 {
-	return std::any(memberPointer);
+	return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(memberPointer));
 }
 
 
@@ -68,13 +68,13 @@ llvm::Value* StaticClassPointerMemberInfo::generateAssignCode(llvm::Value* rValu
 
 std::any jitcat::Reflection::StaticClassHandleMemberInfo::getMemberReference()
 {
-	return std::any(memberPointer->get());
+	return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(memberPointer->get()));
 }
 
 
 std::any jitcat::Reflection::StaticClassHandleMemberInfo::getAssignableMemberReference()
 {
-	return std::any(memberPointer);
+	return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(memberPointer->get()));
 }
 
 
@@ -92,13 +92,13 @@ llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateAssignCode
 
 std::any StaticClassObjectMemberInfo::getMemberReference()
 {
-	return std::any(memberPointer);
+	return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(memberPointer));
 }
 
 
 std::any StaticClassObjectMemberInfo::getAssignableMemberReference()
 {
-	return std::any((Reflectable**)nullptr);
+	return catType.toPointer().createNullPtr();
 }
 
 

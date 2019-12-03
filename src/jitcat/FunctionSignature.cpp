@@ -37,7 +37,7 @@ bool FunctionSignature::compare(const FunctionSignature& other) const
 			{
 				CatGenericType type = getParameterType(i);
 				CatGenericType otherType = other.getParameterType(i);
-				if (!type.compare(otherType, false))
+				if (!type.compare(otherType, false, false))
 				{
 					return false;
 				}

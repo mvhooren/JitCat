@@ -104,7 +104,7 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		}
 		for (unsigned int i = 0; i < numArgumentsSupplied; i++)
 		{
-			if (!staticFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false))
+			if (!staticFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false, false))
 			{
 				errorManager->compiledWithError(Tools::append("Invalid argument for function: ", name, " argument nr: ", i, " expected: ", staticFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
 				return false;

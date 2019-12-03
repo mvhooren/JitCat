@@ -86,12 +86,14 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<void> testExpression(&context, "doSomethingConst()");
 		testExpression.getValue(&context);
+		testExpression.getInterpretedValue(&context);
 		doCommonChecks(&testExpression, false, false, false, context);
 	}
 	SECTION("Void function 2")
 	{
 		Expression<void> testExpression(&context, "checkTheseValues(aBoolean, theInt, text, nestedSelfObject)");
 		testExpression.getValue(&context);
+		testExpression.getInterpretedValue(&context);
 		doCommonChecks(&testExpression, false, false, false, context);
 	}
 	SECTION("string function 1")
