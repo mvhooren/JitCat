@@ -34,7 +34,7 @@ CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std:
 {
 	if (initialization != nullptr)
 	{
-		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), initialization, lexeme, initializationOperatorLexeme));
+		initializationExpression = std::make_unique<CatAssignmentOperator>(new CatIdentifier(name, nameLexeme), initialization, lexeme, initializationOperatorLexeme);
 	}
 }
 
@@ -107,7 +107,7 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 		}
 		CatGenericType initExpressionType = type->getType();
 		initExpressionType.setOwnershipSemantics(initExpressionOwnership);
-		initializationExpression.reset(new CatAssignmentOperator(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), initExpressionType, nameLexeme), nameLexeme, nameLexeme));
+		initializationExpression = std::make_unique<CatAssignmentOperator>(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), initExpressionType, nameLexeme), nameLexeme, nameLexeme);
 	}
 
 	CatScope* currentScope = compiletimeContext->getCurrentScope();

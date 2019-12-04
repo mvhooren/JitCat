@@ -279,7 +279,7 @@ std::shared_ptr<LLVMCodeGenerator> CatRuntimeContext::getCodeGenerator()
 #ifdef ENABLE_LLVM
 	if (codeGenerator == nullptr)
 	{
-		codeGenerator.reset(new LLVMCodeGenerator(contextName));
+		codeGenerator = std::make_unique<LLVMCodeGenerator>(contextName);
 	}
 	return codeGenerator;
 #else

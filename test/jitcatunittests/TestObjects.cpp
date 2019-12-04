@@ -84,7 +84,7 @@ void ReflectedObject::createNestedObjects()
 
 	nestedSelfObject = new ReflectedObject();
 	nestedObjectPointer = new NestedReflectedObject();
-	nestedObjectUniquePointer.reset(new NestedReflectedObject());
+	nestedObjectUniquePointer = std::make_unique<NestedReflectedObject>();
 
 	objectVector.emplace_back();
 

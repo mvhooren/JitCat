@@ -98,7 +98,7 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			&& lhs->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)
 		{
 			 std::vector<CatTypedExpression*> arguments = {rhs.release()};
-			 operatorFunction.reset(new CatMemberFunctionCall("=", operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme()));
+			 operatorFunction = std::make_unique<CatMemberFunctionCall>("=", operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme());
 			 return operatorFunction->typeCheck(compiletimeContext, errorManager, errorContext);
 		}
 		return true;

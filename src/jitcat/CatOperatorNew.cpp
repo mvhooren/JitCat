@@ -107,7 +107,7 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 			initName = "__init";
 		}
 		
-		functionCall.reset(new CatMemberFunctionCall(initName, type->getLexeme(), new CatLiteral(std::any(nullptr), newType, type->getLexeme()), static_cast<CatArgumentList*>(arguments->copy()), lexeme));
+		functionCall = std::make_unique<CatMemberFunctionCall>(initName, type->getLexeme(), new CatLiteral(std::any(nullptr), newType, type->getLexeme()), static_cast<CatArgumentList*>(arguments->copy()), lexeme);
 
 		if (!functionCall->typeCheck(compiletimeContext, errorManager, errorContext))
 		{

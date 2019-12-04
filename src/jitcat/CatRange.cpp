@@ -168,7 +168,7 @@ bool CatRange::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorM
 
 			if (isDefaultStep && min > max)
 			{
-				rangeStep.reset(new CatLiteral(-1, rangeMax->getLexeme()));
+				rangeStep = std::make_unique<CatLiteral>(-1, rangeMax->getLexeme());
 				rangeStep->typeCheck(compiletimeContext, errorManager, errorContext);
 				step = -1;
 			}

@@ -73,7 +73,7 @@ void jitcat::SourceFile::setSource(const std::string& source, CatRuntimeContext*
 		context->getErrorManager()->clear();
 	}
 	context->getErrorManager()->errorSourceDeleted(this);	
-	sourceText.reset(new Document(source.c_str(), source.size()));
+	sourceText = std::make_unique<Document>(source.c_str(), source.size());
 	compile(context);
 }
 

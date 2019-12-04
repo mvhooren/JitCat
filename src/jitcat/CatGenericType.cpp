@@ -40,7 +40,7 @@ CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, T
 {
 	if (pointee != nullptr)
 	{
-		pointeeType.reset(new CatGenericType(*pointee));
+		pointeeType = std::make_unique<CatGenericType>(*pointee);
 	}
 }
 
@@ -123,7 +123,7 @@ CatGenericType::CatGenericType(const CatGenericType& other):
 {
 	if (other.pointeeType != nullptr)
 	{
-		pointeeType.reset(new CatGenericType(*other.pointeeType.get()));
+		pointeeType = std::make_unique<CatGenericType>(*other.pointeeType.get());
 	}
 }
 
@@ -140,7 +140,7 @@ CatGenericType& CatGenericType::operator=(const CatGenericType& other)
 	constant = other.constant;
 	if (other.pointeeType != nullptr)
 	{
-		pointeeType.reset(new CatGenericType(*other.pointeeType.get()));
+		pointeeType = std::make_unique<CatGenericType>(*other.pointeeType.get());
 	}
 	else
 	{

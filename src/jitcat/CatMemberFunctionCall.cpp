@@ -91,7 +91,8 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 	{
 		bool wasReturning = runtimeContext->getIsReturning();
 		runtimeContext->setReturning(false);
-		std::vector<std::any> argumentValues(argumentVectorSize);
+		std::vector<std::any> argumentValues;
+		argumentValues.reserve(argumentVectorSize);
 
 		arguments->executeAllArguments(argumentValues, memberFunctionInfo->argumentTypes, runtimeContext);
 		int numValues = (int)argumentValues.size();
@@ -121,6 +122,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	{
 		return false;
 	}
+	argumentIndirectionConversion.clear();
 	returnType = CatGenericType::unknownType;
 	if (base == nullptr)
 	{
@@ -129,7 +131,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		MemberFunctionInfo* memberFunctionInfo = compiletimeContext->findMemberFunction(this, scopeId);
 		if (memberFunctionInfo != nullptr && scopeId != InvalidScopeID)
 		{
-			base.reset(new CatScopeRoot(scopeId, getLexeme()));
+			base = std::make_unique<CatScopeRoot>(scopeId, getLexeme());
 		}
 		else
 		{

@@ -221,7 +221,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 					//Insert an automatic type conversion to void.
 					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({parseResult->releaseNode<CatTypedExpression>()}));
 
-					parseResult->astRootNode.reset(new CatBuiltInFunctionCall("toVoid", expressionLexeme, arguments, expressionLexeme));
+					parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toVoid", expressionLexeme, arguments, expressionLexeme);
 					parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					
 					valueType = parseResult->getNode<CatTypedExpression>()->getType();
@@ -233,12 +233,12 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 
 					if (expectedType.isFloatType())
 					{
-						parseResult->astRootNode.reset(new CatBuiltInFunctionCall("toFloat", expressionLexeme, arguments, expressionLexeme));
+						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toFloat", expressionLexeme, arguments, expressionLexeme);
 						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else if (expectedType.isIntType())
 					{
-						parseResult->astRootNode.reset(new CatBuiltInFunctionCall("toInt", expressionLexeme, arguments, expressionLexeme));
+						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toInt", expressionLexeme, arguments, expressionLexeme);
 						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else

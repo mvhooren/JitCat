@@ -306,7 +306,7 @@ CatScopeBlock* jitcat::AST::CatFunctionDefinition::getOrCreateEpilogBlock(CatRun
 {
 	if (epilogBlock == nullptr)
 	{
-		epilogBlock.reset(new CatScopeBlock({}, nameLexeme));
+		epilogBlock = std::make_unique<CatScopeBlock>(std::vector<CatStatement*>(), nameLexeme);
 		epilogBlock->typeCheck(compileTimeContext, errorManager, errorContext);
 	}
 	return epilogBlock.get();

@@ -342,7 +342,7 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 		}
 	}
 	CatScopeBlock* scopeBlock = new CatScopeBlock(statements, nameLexeme);
-	generatedConstructor.reset(new CatFunctionDefinition(typeNode, "__init", nameLexeme, parameters, scopeBlock, nameLexeme));
+	generatedConstructor = std::make_unique<CatFunctionDefinition>(typeNode, "__init", nameLexeme, parameters, scopeBlock, nameLexeme);
 	generatedConstructor->setFunctionVisibility(MemberVisibility::Constructor);
 	return generatedConstructor->typeCheck(compileTimeContext);
 

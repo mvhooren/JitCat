@@ -143,13 +143,13 @@ bool CatInfixOperator::typeCheck(CatRuntimeContext* compiletimeContext, Expressi
 				if (!resultInfo.getIsStaticOverloaded())
 				{
 					std::vector<CatTypedExpression*> arguments = {rhs.release()};
-					overloadedOperator.reset(new CatMemberFunctionCall(::toString(oper), operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme()));
+					overloadedOperator = std::make_unique<CatMemberFunctionCall>(::toString(oper), operatorLexeme, lhs.release(), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme());
 					return overloadedOperator->typeCheck(compiletimeContext, errorManager, errorContext);
 				}
 				else
 				{
 					std::vector<CatTypedExpression*> arguments = {lhs.release(), rhs.release()};
-					overloadedOperator.reset(new CatStaticFunctionCall(new CatStaticScope(true, nullptr, resultInfo.getStaticOverloadedType()->getTypeName(), operatorLexeme, operatorLexeme), ::toString(oper), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme(),  operatorLexeme));
+					overloadedOperator = std::make_unique<CatStaticFunctionCall>(new CatStaticScope(true, nullptr, resultInfo.getStaticOverloadedType()->getTypeName(), operatorLexeme, operatorLexeme), ::toString(oper), new CatArgumentList(arguments[0]->getLexeme(), arguments), getLexeme(),  operatorLexeme);
 					return overloadedOperator->typeCheck(compiletimeContext, errorManager, errorContext);
 				}
 			}
