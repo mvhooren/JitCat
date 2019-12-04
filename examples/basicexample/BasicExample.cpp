@@ -38,11 +38,11 @@ int MAIN(int argc, char* argv[])
 	//###############################
 
 	//Create an expression that does some integer math.
-	/*Expression<int> myConstantExpression("41 + 1");
+	Expression<int> myConstantExpression("41 + 1");
 	//Compile it, providing nullptr for the context because we don't use any variables.
 	myConstantExpression.compile(nullptr);
 	//Print the result. (Again providing nullptr for the context).
-	std::cout << "myConstantExpression: " << myConstantExpression.getValue(nullptr) << "\n";*/
+	std::cout << "myConstantExpression: " << myConstantExpression.getValue(nullptr) << "\n";
 
 	//############################
 	//# Providing some variables #
@@ -55,13 +55,9 @@ int MAIN(int argc, char* argv[])
 	ReflectionTestRoot exampleObject;
 	context.addScope(&exampleObject, true);
 
-	Expression<TestVector*> vectorExpression("test.v1 * test.v2");
-	vectorExpression.compile(&context);
-	std::cout << "vector expression: " << *vectorExpression.getValue(&context) << "\n";
-
 	//Create a floating point expression and execute it.
 	//test.aFloat comes from the testObject member inside the exampleObject	and pi comes from the exampleObject itself
-	/*Expression<float> aFloatingPointExpression(&context, "test.aFloat * pi");
+	Expression<float> aFloatingPointExpression(&context, "test.aFloat * pi");
 	std::cout << "aFloatingPointExpression: " << aFloatingPointExpression.getValue(&context) << "\n";
 
 
@@ -84,7 +80,7 @@ int MAIN(int argc, char* argv[])
 	ObjectInstance customTypeInstance(customType->construct(), customType);
 
 	//Add the type to the context so we can access the variables in an expression
-	context.addScope(customType, customTypeInstance.getReflectable(), false);
+	context.addScope(customType, customTypeInstance.getObject(), false);
 
 	//This time we do not provide the context in the constructor so we need to call compile before calling getValue.
 	//We use the built-in function abs. A list of all built-in functions can be found in the CatBuiltInFunctionType header.
@@ -121,7 +117,7 @@ int MAIN(int argc, char* argv[])
 	{
 		//using std::any_cast, we can cast it to the string that it returned
 		std::cout << "anyExpression: " << std::any_cast<std::string>(result) << "\n";
-	}*/
+	}
 
 	return 0;
 }
