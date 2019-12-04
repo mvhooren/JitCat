@@ -4,12 +4,12 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
-jitcat::Reflection::ReflectedTypeInfo::ReflectedTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction, 
+jitcat::Reflection::ReflectedTypeInfo::ReflectedTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction, 
 														std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor, 
 														std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 														std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 														std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor):
-	TypeInfo(typeName, typeSize, typeCaster),
+	TypeInfo(typeName, typeSize, std::move(typeCaster)),
 	placementConstructor(placementConstructor),
 	copyConstructor(copyConstructor),
 	moveConstructor(moveConstructor),

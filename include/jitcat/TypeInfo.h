@@ -71,7 +71,7 @@ namespace jitcat::Reflection
 	{
 	public:
 		//The type name must be a static const char* because types are compared based on the pointer value of their type names.
-		TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster);
+		TypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> caster);
 	protected:
 		virtual ~TypeInfo();
 			//Destroy should be called instead of deleting a type. 

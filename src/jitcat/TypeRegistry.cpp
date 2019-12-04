@@ -60,7 +60,7 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 }
 
 
-TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, bool allowConstruction, 
+TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> caster, bool allowConstruction, 
 											bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 											std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
@@ -71,7 +71,7 @@ TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t ty
 	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
 	if (iter == types.end())
 	{
-		ReflectedTypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, caster, allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
+		ReflectedTypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, std::move(caster), allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
 		if (allowCopyConstruction)
 		{
 			typeInfo->enableCopyConstruction();
@@ -321,14 +321,14 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 }
 
 
-std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction, 
+std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction, 
 												bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
 {
-	std::unique_ptr<TypeInfo, TypeInfoDeleter> typeInfo = makeTypeInfo<ReflectedTypeInfo>(typeName, typeSize, typeCaster, allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
+	std::unique_ptr<TypeInfo, TypeInfoDeleter> typeInfo = makeTypeInfo<ReflectedTypeInfo>(typeName, typeSize, std::move(typeCaster), allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
 	if (allowCopyConstruction)
 	{
 		static_cast<ReflectedTypeInfo*>(typeInfo.get())->enableCopyConstruction();

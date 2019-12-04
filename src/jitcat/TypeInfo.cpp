@@ -26,9 +26,9 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
-TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster):
+TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> caster):
 	typeName(typeName),
-	caster(caster),
+	caster(std::move(caster)),
 	parentType(nullptr),
 	typeSize(typeSize)
 {

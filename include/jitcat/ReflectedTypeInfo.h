@@ -34,7 +34,7 @@ namespace jitcat::Reflection
 	class ReflectedTypeInfo: public TypeInfo
 	{
 	public:
-		ReflectedTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction,
+		ReflectedTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction,
 						  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 						  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 						  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,

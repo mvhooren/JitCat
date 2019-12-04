@@ -23,7 +23,7 @@ using namespace jitcat::Reflection;
 
 
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
-	TypeInfo(typeName, 0, new CustomObjectTypeCaster(this)),
+	TypeInfo(typeName, 0, std::make_unique<CustomObjectTypeCaster>(this)),
 	defaultData(nullptr),
 	triviallyCopyable(true),
 	isConstType(isConstType)

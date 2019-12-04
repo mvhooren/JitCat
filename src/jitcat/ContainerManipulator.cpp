@@ -19,7 +19,7 @@ using namespace jitcat::Reflection;
 
 
 jitcat::Reflection::ArrayManipulator::ArrayManipulator(CatGenericType valueType):
-	TypeInfo("array", sizeof(Array), new ObjectTypeCaster<Array>()),
+	TypeInfo("array", sizeof(Array), std::make_unique<ObjectTypeCaster<Array>>()),
 	valueType(valueType)
 {
 	memberFunctions.emplace("add", new ArrayTypeMemberFunctionInfo(ArrayTypeMemberFunctionInfo::Operation::Add, CatGenericType(this, false, false)));

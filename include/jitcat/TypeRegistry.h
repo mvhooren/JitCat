@@ -43,7 +43,7 @@ namespace jitcat::Reflection
 		//Returns nullptr if type wasn't found, type names are case sensitive
 		TypeInfo* getTypeInfo(const std::string& typeName);
 		//Never returns nullptr, creates a new empty TypeInfo if typeName does not exist.
-		TypeInfo* getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster, bool allowConstruction,
+		TypeInfo* getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> caster, bool allowConstruction,
 									  bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 									  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 									  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
@@ -68,7 +68,7 @@ namespace jitcat::Reflection
 
 	private:
 		//This function exists to prevent circular includes via TypeInfo.h
-		static std::unique_ptr<TypeInfo, TypeInfoDeleter> createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction,
+		static std::unique_ptr<TypeInfo, TypeInfoDeleter> createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction,
 												 bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
@@ -103,7 +103,6 @@ namespace jitcat::Reflection
 			std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)> moveConstructor;
 			std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementDestructor;
 			std::size_t typeSize = sizeof(ReflectableT);
-			jitcat::Reflection::ObjectTypeCaster<ReflectableT>* typeCaster = new jitcat::Reflection::ObjectTypeCaster<ReflectableT>();
 
 			constexpr bool isConstructible = std::is_default_constructible<ReflectableT>::value
 											 && std::is_destructible<ReflectableT>::value;
@@ -155,7 +154,8 @@ namespace jitcat::Reflection
 			//This is not always true for C++ types and so we also need to check for is_trivially_destructible.
 			constexpr bool triviallyCopyable = std::is_trivially_copyable<ReflectableT>::value && std::is_trivially_destructible<ReflectableT>::value;
 
-			std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, typeCaster, isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
+			std::unique_ptr<jitcat::Reflection::ObjectTypeCaster<ReflectableT>> typeCaster = std::make_unique<jitcat::Reflection::ObjectTypeCaster<ReflectableT>>();
+			std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, std::move(typeCaster), isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
 																				  placementConstructor, copyConstructor, moveConstructor, placementDestructor);
 			types[lowerTypeName] = typeInfo.get();
 			jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
