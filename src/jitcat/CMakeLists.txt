@@ -253,6 +253,8 @@ set(Source_Reflection_TypeInfo
 	${JitCatHeaderPath}/ReflectedTypeInfoHeaderImplementation.h
 	TypeInfo.cpp
 	${JitCatHeaderPath}/TypeInfo.h
+	TypeInfoDeleter.cpp
+	${JitCatHeaderPath}/TypeInfoDeleter.h
 )
 
 set(Source_Reflection_TypeInfo_Members

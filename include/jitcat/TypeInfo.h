@@ -74,10 +74,12 @@ namespace jitcat::Reflection
 		TypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* caster);
 	protected:
 		virtual ~TypeInfo();
-	public:
-		//Destroy should be called instead of deleting a type. 
+			//Destroy should be called instead of deleting a type. 
 		//It will ensure that the type is only deleted when there are no more dependencies.
 		static void destroy(TypeInfo* type);
+		friend struct TypeInfoDeleter;
+
+	public:
 		static void updateTypeDestruction();
 
 		//Add a nested type to this type. Return true if the type was added, false if a type with this name already exists.
@@ -216,5 +218,4 @@ namespace jitcat::Reflection
 		//Types are only deleted if there are no more dependencies on that type.
 		static std::vector<TypeInfo*> typeDeletionList;
 	};
-
 }

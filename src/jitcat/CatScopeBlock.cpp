@@ -24,7 +24,7 @@ using namespace jitcat::Reflection;
 
 CatScopeBlock::CatScopeBlock(const std::vector<CatStatement*>& statementList, const Tokenizer::Lexeme& lexeme):
 	CatStatement(lexeme),
-	customType(new CustomTypeInfo("__ScopeLocals")),
+	customType(makeTypeInfo<CustomTypeInfo>("__ScopeLocals")),
 	scopeId(InvalidScopeID)
 {
 	for (auto& iter : statementList)
@@ -36,7 +36,7 @@ CatScopeBlock::CatScopeBlock(const std::vector<CatStatement*>& statementList, co
 
 jitcat::AST::CatScopeBlock::CatScopeBlock(const CatScopeBlock& other):
 	CatStatement(other),
-	customType(new CustomTypeInfo("__ScopeLocals")),
+	customType(makeTypeInfo<CustomTypeInfo>("__ScopeLocals")),
 	scopeId(InvalidScopeID)
 {
 	for (auto& iter : other.statements)
@@ -48,7 +48,6 @@ jitcat::AST::CatScopeBlock::CatScopeBlock(const CatScopeBlock& other):
 
 CatScopeBlock::~CatScopeBlock()
 {
-	TypeInfo::destroy(customType);
 }
 
 
@@ -78,7 +77,7 @@ CatASTNodeType CatScopeBlock::getNodeType() const
 
 bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatScopeID myScopeId = compiletimeContext->addScope(customType, nullptr, false);
+	CatScopeID myScopeId = compiletimeContext->addScope(customType.get(), nullptr, false);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
@@ -103,7 +102,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 		}
 	}
 	customType->placementConstruct(scopeMem, customType->getTypeSize());
-	scopeId = runtimeContext->addScope(customType, scopeMem, false);
+	scopeId = runtimeContext->addScope(customType.get(), scopeMem, false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 	std::any result = std::any();
@@ -162,7 +161,7 @@ bool jitcat::AST::CatScopeBlock::containsReturnStatement() const
 
 Reflection::CustomTypeInfo* jitcat::AST::CatScopeBlock::getCustomType()
 {
-	return customType;
+	return customType.get();
 }
 
 

@@ -9,6 +9,7 @@
 
 #include "jitcat/CatScope.h"
 #include "jitcat/CatStatement.h"
+#include "jitcat/TypeInfoDeleter.h"
 
 #include <memory>
 
@@ -50,7 +51,7 @@ namespace jitcat::AST
 		std::string iteratorName;
 		CatScopeID loopIteratorScope;
 
-		Reflection::CustomTypeInfo* scopeType;
+		std::unique_ptr<Reflection::CustomTypeInfo, Reflection::TypeInfoDeleter> scopeType;
 		Reflection::TypeMemberInfo* iteratorMember;
 
 		std::unique_ptr<CatRange> range;

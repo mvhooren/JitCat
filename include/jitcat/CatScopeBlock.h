@@ -10,6 +10,7 @@
 #include "jitcat/CatStatement.h"
 #include "jitcat/CatScope.h"
 #include "jitcat/CatScopeID.h"
+#include "jitcat/TypeInfoDeleter.h"
 
 #include <any>
 #include <memory>
@@ -52,7 +53,7 @@ namespace jitcat::AST
 
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;
-		Reflection::CustomTypeInfo* customType;
+		std::unique_ptr<Reflection::CustomTypeInfo, Reflection::TypeInfoDeleter> customType;
 		CatScopeID scopeId;
 	};
 

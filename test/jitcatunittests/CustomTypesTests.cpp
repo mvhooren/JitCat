@@ -10,6 +10,7 @@
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/TypeInfo.h"
+#include "jitcat/TypeInfoDeleter.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -23,14 +24,14 @@ TEST_CASE("Custom Types", "[customtypes]")
 {
 	ReflectedObject reflectedObject;
 	reflectedObject.createNestedObjects();
-	std::unique_ptr<ReflectedObject> objectUniquePtr(new ReflectedObject());
+	std::unique_ptr<ReflectedObject> objectUniquePtr(std::make_unique<ReflectedObject>());
 	ExpressionErrorManager errorManager;
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 
 	const char* customTypeName2 = "MyType2";
 	TypeRegistry::get()->removeType(customTypeName2);
-	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName2);
-	TypeRegistry::get()->registerType(customTypeName2, customType);
+	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName2);
+	TypeRegistry::get()->registerType(customTypeName2, customType.get());
 	customType->addFloatMember("myFloat", 0.001f);
 	customType->addIntMember("myInt", 54321);
 	customType->addStringMember("myString", "foo");
@@ -38,12 +39,12 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject2", objectUniquePtr.get(), objectTypeInfo);
-	ObjectInstance typeInstance(customType->construct(), customType);
+	ObjectInstance typeInstance(customType->construct(), customType.get());
 
 	const char* customTypeName3 = "MyType3";
 	TypeRegistry::get()->removeType(customTypeName3);
-	CustomTypeInfo* customType2 = new CustomTypeInfo(customTypeName3);
-	TypeRegistry::get()->registerType(customTypeName3, customType2);
+	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType2 = makeTypeInfo<CustomTypeInfo>(customTypeName3);
+	TypeRegistry::get()->registerType(customTypeName3, customType2.get());
 	customType2->addFloatMember("myNullFloat", 0.001f);
 	customType2->addIntMember("myNullInt", 54321);
 	customType2->addStringMember("myNullString", "foo");
@@ -59,8 +60,8 @@ TEST_CASE("Custom Types", "[customtypes]")
 
 	CatRuntimeContext context("customTypes", &errorManager);
 	context.addScope(&reflectedObject, true);
-	context.addScope(customType2, nullptr, false);
-	context.addScope(customType, typeInstance.getObject(), false);
+	context.addScope(customType2.get(), nullptr, false);
+	context.addScope(customType.get(), typeInstance.getObject(), false);
 
 	SECTION("Float Variable")
 	{
@@ -154,7 +155,4 @@ TEST_CASE("Custom Types", "[customtypes]")
 		Expression<ReflectedObject*> testExpression(&context, "anotherObject");
 		doChecks(reflectedObject.nestedSelfObject, false, false, false, testExpression, context);
 	}
-
-	TypeInfo::destroy(customType);
-	TypeInfo::destroy(customType2);
 }

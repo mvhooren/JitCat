@@ -13,7 +13,7 @@ using namespace jitcat::AST;
 
 
 InfixOperatorResultInfo::InfixOperatorResultInfo():
-	resultType(new CatGenericType()),
+	resultType(std::make_unique<CatGenericType>()),
 	isOverloaded(false),
 	staticOverloadedType(nullptr)
 {

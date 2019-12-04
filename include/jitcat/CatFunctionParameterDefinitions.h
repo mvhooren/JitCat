@@ -15,6 +15,7 @@ namespace jitcat
 	}
 }
 #include "jitcat/CatASTNode.h"
+#include "jitcat/TypeInfoDeleter.h"
 
 #include <memory>
 #include <string>
@@ -45,7 +46,7 @@ namespace jitcat::AST
 
 	private:
 		std::vector<std::unique_ptr<CatVariableDeclaration>> parameters;
-		Reflection::CustomTypeInfo* customType;
+		std::unique_ptr<Reflection::CustomTypeInfo, Reflection::TypeInfoDeleter> customType;
 	};
 
 }

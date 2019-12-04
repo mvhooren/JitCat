@@ -17,9 +17,8 @@ namespace jitcat
 	const CatGenericType& TypeTraits<ObjectT, EnabledT>::toGenericType()
 	{
 		static_assert(std::is_class_v<ObjectT>, "Type is not supported.");
-		static_assert(std::is_default_constructible_v<ObjectT>, "Type needs to be default constructible.");
 		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>();
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(typeInfo));
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(typeInfo));
 		return *type.get();
 	}
 
@@ -41,7 +40,7 @@ namespace jitcat
 	template <typename PointerT>
 	const CatGenericType& TypeTraits<PointerT*>::toGenericType()
 	{
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(TypeTraits<PointerT>::toGenericType(), TypeOwnershipSemantics::Weak, false));
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(TypeTraits<PointerT>::toGenericType(), TypeOwnershipSemantics::Weak, false));
 		return *type.get();
 	}
 
@@ -55,7 +54,7 @@ namespace jitcat
 	template<typename PointerRefT>
 	const CatGenericType& TypeTraits<PointerRefT*&>::toGenericType()
 	{
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(TypeTraits<PointerRefT*>::toGenericType(), TypeOwnershipSemantics::Weak, false));
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(TypeTraits<PointerRefT*>::toGenericType(), TypeOwnershipSemantics::Weak, false));
 		return *type.get();
 	}
 
@@ -80,7 +79,7 @@ namespace jitcat
 		//Make sure that the item type is known to the type system.
 		TypeTraits<ItemType>::toGenericType();
 		static std::unique_ptr<Reflection::ContainerManipulator> vectorManipulator(new jitcat::Reflection::VectorManipulator<std::vector<ItemType, AllocatorT>>());
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Vector, vectorManipulator.get()));
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(Reflection::ContainerType::Vector, vectorManipulator.get()));
 		return *type.get();
 	}
 
@@ -92,7 +91,7 @@ namespace jitcat
 		TypeTraits<ItemType>::toGenericType();
 		TypeTraits<KeyType>::toGenericType();
 		static std::unique_ptr<Reflection::ContainerManipulator> mapManipulator(new jitcat::Reflection::MapManipulator<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>());
-		static std::unique_ptr<CatGenericType> type(new CatGenericType(Reflection::ContainerType::Map, mapManipulator.get()));
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(Reflection::ContainerType::Map, mapManipulator.get()));
 		return *type.get();
 	}
 

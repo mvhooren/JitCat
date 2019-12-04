@@ -25,10 +25,6 @@ TypeRegistry::TypeRegistry()
 
 TypeRegistry::~TypeRegistry()
 {
-	for (auto& iter: ownedTypes)
-	{
-		TypeInfo::destroy(iter);
-	}
 }
 
 
@@ -325,30 +321,30 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 }
 
 
-ReflectedTypeInfo* TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction, 
+std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction, 
 												bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
 {
-	ReflectedTypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, typeCaster, allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
+	std::unique_ptr<TypeInfo, TypeInfoDeleter> typeInfo = makeTypeInfo<ReflectedTypeInfo>(typeName, typeSize, typeCaster, allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
 	if (allowCopyConstruction)
 	{
-		typeInfo->enableCopyConstruction();
+		static_cast<ReflectedTypeInfo*>(typeInfo.get())->enableCopyConstruction();
 	}
 	if (allowMoveConstruction)
 	{
-		typeInfo->enableMoveConstruction();
+		static_cast<ReflectedTypeInfo*>(typeInfo.get())->enableMoveConstruction();
 	}
-	typeInfo->setTriviallyCopyable(triviallyCopyable);
+	static_cast<ReflectedTypeInfo*>(typeInfo.get())->setTriviallyCopyable(triviallyCopyable);
 	return typeInfo;
 }
 
 
-TypeInfo* jitcat::Reflection::TypeRegistry::castToTypeInfo(ReflectedTypeInfo* reflectedTypeInfo)
+ReflectedTypeInfo* jitcat::Reflection::TypeRegistry::castToReflectedTypeInfo(TypeInfo* typeInfo)
 {
-	return static_cast<TypeInfo*>(reflectedTypeInfo);
+	return static_cast<ReflectedTypeInfo*>(typeInfo);
 }
 
 

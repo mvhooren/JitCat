@@ -6,10 +6,10 @@
 */
 
 #pragma once
-
 #include "jitcat/CatInfixOperatorType.h"
 #include "jitcat/ContainerType.h"
 #include "jitcat/InfixOperatorResultInfo.h"
+#include "jitcat/TypeInfoDeleter.h"
 #include "jitcat/TypeOwnershipSemantics.h"
 
 #include <any>
@@ -195,14 +195,14 @@ namespace jitcat
 		static const CatGenericType boolType;
 		static const CatGenericType stringType;
 		static const CatGenericType voidType;
-		//static const CatGenericType errorType;
+		static const std::unique_ptr<Reflection::TypeInfo, Reflection::TypeInfoDeleter> nullptrTypeInfo;
 		static const CatGenericType nullptrType;
 		static const CatGenericType unknownType;
 
-		static const Reflection::TypeCaster* const intTypeCaster;
-		static const Reflection::TypeCaster* const floatTypeCaster;
-		static const Reflection::TypeCaster* const boolTypeCaster; 
-		static const Reflection::TypeCaster* const stringTypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> intTypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> floatTypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> boolTypeCaster; 
+		static const std::unique_ptr<Reflection::TypeCaster> stringTypeCaster;
 
 	private:
 		SpecificType specificType;

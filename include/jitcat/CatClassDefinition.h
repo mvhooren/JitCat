@@ -10,6 +10,7 @@
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScope.h"
+#include "jitcat/TypeInfoDeleter.h"
 
 #include <functional>
 #include <memory>
@@ -85,7 +86,7 @@ namespace jitcat::AST
 		std::unique_ptr<CatFunctionDefinition> generatedDestructor;
 
 		CatScopeID scopeId;
-		Reflection::CustomTypeInfo* customType;
+		std::unique_ptr<Reflection::CustomTypeInfo, Reflection::TypeInfoDeleter> customType;
 	};
 
 };

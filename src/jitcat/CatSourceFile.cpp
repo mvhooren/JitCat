@@ -19,6 +19,7 @@
 
 using namespace jitcat;
 using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
@@ -27,8 +28,8 @@ jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<s
 	name(name),
 	definitions(std::move(definitions)),
 	staticScopeId(InvalidScopeID),
-	scopeType(new Reflection::CustomTypeInfo(this->name.c_str())),
-	scopeInstance(scopeType->construct(), scopeType)
+	scopeType(makeTypeInfo<Reflection::CustomTypeInfo>(this->name.c_str())),
+	scopeInstance(scopeType->construct(), scopeType.get())
 {
 	extractDefinitionLists();
 }
@@ -38,8 +39,8 @@ jitcat::AST::CatSourceFile::CatSourceFile(const CatSourceFile& other):
 	CatASTNode(other),
 	name(other.name),
 	staticScopeId(InvalidScopeID),
-	scopeType(new Reflection::CustomTypeInfo(this->name.c_str())),
-	scopeInstance(scopeType->construct(), scopeType)
+	scopeType(makeTypeInfo<Reflection::CustomTypeInfo>(this->name.c_str())),
+	scopeInstance(scopeType->construct(), scopeType.get())
 {
 	for (auto& iter : other.definitions)
 	{
@@ -51,7 +52,6 @@ jitcat::AST::CatSourceFile::CatSourceFile(const CatSourceFile& other):
 
 jitcat::AST::CatSourceFile::~CatSourceFile()
 {
-	Reflection::TypeInfo::destroy(scopeType);
 }
 
 
@@ -91,7 +91,7 @@ const std::vector<CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFuncti
 
 bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	staticScopeId = compiletimeContext->addScope(scopeType, scopeInstance.getObject(), true);
+	staticScopeId = compiletimeContext->addScope(scopeType.get(), scopeInstance.getObject(), true);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
@@ -113,7 +113,7 @@ CatScopeID jitcat::AST::CatSourceFile::getScopeId() const
 
 Reflection::CustomTypeInfo* jitcat::AST::CatSourceFile::getCustomType()
 {
-	return scopeType;
+	return scopeType.get();
 }
 
 

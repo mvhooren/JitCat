@@ -40,7 +40,7 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std
 	nameLexeme(nameLexeme),
 	definitions(std::move(definitions)),
 	scopeId(InvalidScopeID),
-	customType(new CustomTypeInfo(this->name.c_str()))
+	customType(makeTypeInfo<CustomTypeInfo>(this->name.c_str()))
 {
 	extractDefinitionLists();
 }
@@ -51,7 +51,7 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const CatClassDefinition& ot
 	name(other.name),
 	nameLexeme(other.nameLexeme),
 	scopeId(InvalidScopeID),
-	customType(new CustomTypeInfo(this->name.c_str()))
+	customType(makeTypeInfo<CustomTypeInfo>(this->name.c_str()))
 {
 	for (auto& iter : other.definitions)
 	{
@@ -63,7 +63,6 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const CatClassDefinition& ot
 
 jitcat::AST::CatClassDefinition::~CatClassDefinition()
 {
-	TypeInfo::destroy(customType);
 }
 
 
@@ -103,7 +102,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
 	compileTimeContext->setCurrentClass(this);
 	bool noErrors = true;
-	scopeId = compileTimeContext->addScope(customType, nullptr, false);
+	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 	compileTimeContext->setCurrentScope(this);
 
@@ -112,7 +111,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 		noErrors &= iter->typeCheck(compileTimeContext);
 	}
 
-	if (!previousScope->getCustomType()->addType(customType))
+	if (!previousScope->getCustomType()->addType(customType.get()))
 	{
 		compileTimeContext->getErrorManager()->compiledWithError(Tools::append("A type with name ", name, " already exists."), this, compileTimeContext->getContextName(), nameLexeme);
 		noErrors = false;
@@ -176,7 +175,7 @@ bool jitcat::AST::CatClassDefinition::isTriviallyCopyable() const
 
 Reflection::CustomTypeInfo* jitcat::AST::CatClassDefinition::getCustomType()
 {
-	return customType;
+	return customType.get();
 }
 
 

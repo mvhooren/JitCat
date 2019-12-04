@@ -29,7 +29,7 @@ CatForLoop::CatForLoop(const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme&
 	range(range),
 	loopBody(loopBody),
 	loopIteratorScope(InvalidScopeID),
-	scopeType(new CustomTypeInfo("loopIterator", false)),
+	scopeType(makeTypeInfo<CustomTypeInfo>("loopIterator", false)),
 	iteratorMember(nullptr)
 {
 }
@@ -39,15 +39,17 @@ CatForLoop::CatForLoop(const CatForLoop& other):
 	CatStatement(other),
 	iteratorLexeme(other.iteratorLexeme),
 	iteratorName(other.iteratorName),
+	loopIteratorScope(InvalidScopeID),
 	range(static_cast<CatRange*>(other.range->copy())),
-	loopBody(static_cast<CatScopeBlock*>(other.loopBody->copy()))
+	loopBody(static_cast<CatScopeBlock*>(other.loopBody->copy())),
+	iteratorMember(nullptr),
+	scopeType(nullptr)
 {
 }
 
 
 CatForLoop::~CatForLoop()
 {
-	CustomTypeInfo::destroy(scopeType);
 }
 
 
@@ -86,7 +88,7 @@ bool CatForLoop::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErro
 	}
 	iteratorMember = scopeType->addIntMember(iteratorName, 0, true, false);
 
-	loopIteratorScope = compiletimeContext->addScope(scopeType, nullptr, false);
+	loopIteratorScope = compiletimeContext->addScope(scopeType.get(), nullptr, false);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 
@@ -114,7 +116,7 @@ std::any CatForLoop::execute(jitcat::CatRuntimeContext* runtimeContext)
 		}
 	}
 	scopeType->placementConstruct(scopeMem, scopeType->getTypeSize());
-	loopIteratorScope = runtimeContext->addScope(scopeType, scopeMem, false);
+	loopIteratorScope = runtimeContext->addScope(scopeType.get(), scopeMem, false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 
@@ -148,5 +150,5 @@ CatScopeID CatForLoop::getScopeId() const
 
 Reflection::CustomTypeInfo* CatForLoop::getCustomType()
 {
-	return scopeType;
+	return scopeType.get();
 }

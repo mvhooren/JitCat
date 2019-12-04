@@ -49,7 +49,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	currentModule(new llvm::Module("JitCat", LLVMJit::get().getContext())),
 	builder(new llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>(LLVMJit::get().getContext())),
 	executionSession(new llvm::orc::ExecutionSession()),
-	helper(new LLVMCodeGeneratorHelper(builder.get(), currentModule.get())),
+	helper(std::make_unique<LLVMCodeGeneratorHelper>(builder.get(), currentModule.get())),
 	mangler(new llvm::orc::MangleAndInterner(*executionSession, LLVMJit::get().getDataLayout())),
 	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession.get(),
 															[]() {	return memoryManager->createExpressionAllocator();})),

@@ -106,7 +106,7 @@ jitcat::CatGenericType::CatGenericType(const CatGenericType& pointee, Reflection
 	containerManipulator(nullptr),
 	writable(writable),
 	constant(constant),
-	pointeeType(new CatGenericType(pointee))
+	pointeeType(std::make_unique<CatGenericType>(pointee))
 {
 }
 
@@ -1116,7 +1116,7 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 					{
 						//QQQ ContainerManipulator must not be nullptr
 						//Use DummyManipulator for now with random types
-						static std::unique_ptr<DummyManipulator> qqqmanipulator(new DummyManipulator(CatGenericType::intType, CatGenericType::stringType));
+						static std::unique_ptr<DummyManipulator> qqqmanipulator(std::make_unique<DummyManipulator>(CatGenericType::intType, CatGenericType::stringType));
 						return CatGenericType(containerType, qqqmanipulator.get(), writable, constant);
 					}
 					else
@@ -1692,10 +1692,10 @@ const TypeCaster* jitcat::CatGenericType::getTypeCaster() const
 		{
 			switch (basicType)
 			{
-				case BasicType::Bool:	return boolTypeCaster;
-				case BasicType::Int:	return intTypeCaster;
-				case BasicType::Float:	return floatTypeCaster;
-				case BasicType::String: return stringTypeCaster;
+				case BasicType::Bool:	return boolTypeCaster.get();
+				case BasicType::Int:	return intTypeCaster.get();
+				case BasicType::Float:	return floatTypeCaster.get();
+				case BasicType::String: return stringTypeCaster.get();
 				default: assert(false);
 			}
 		}
@@ -1856,9 +1856,10 @@ const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Floa
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool, true);
 const CatGenericType CatGenericType::stringType		= CatGenericType(BasicType::String, true);
 const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void);
-const CatGenericType CatGenericType::nullptrType	= CatGenericType(new TypeInfo("nullptr", 0, new NullptrTypeCaster()), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
+const std::unique_ptr<TypeInfo, Reflection::TypeInfoDeleter> CatGenericType::nullptrTypeInfo = makeTypeInfo<TypeInfo>("nullptr", 0, new NullptrTypeCaster());
+const CatGenericType CatGenericType::nullptrType	= CatGenericType(nullptrTypeInfo.get(), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();
-const TypeCaster* const CatGenericType::intTypeCaster = new ObjectTypeCaster<int>();
-const TypeCaster* const CatGenericType::floatTypeCaster = new ObjectTypeCaster<float>();
-const TypeCaster* const CatGenericType::boolTypeCaster = new ObjectTypeCaster<bool>();
-const TypeCaster* const CatGenericType::stringTypeCaster = new ObjectTypeCaster<std::string>();
+const std::unique_ptr<TypeCaster> CatGenericType::intTypeCaster		= std::make_unique<ObjectTypeCaster<int>>();
+const std::unique_ptr<TypeCaster> CatGenericType::floatTypeCaster	= std::make_unique<ObjectTypeCaster<float>>();
+const std::unique_ptr<TypeCaster> CatGenericType::boolTypeCaster	= std::make_unique<ObjectTypeCaster<bool>>();
+const std::unique_ptr<TypeCaster> CatGenericType::stringTypeCaster  = std::make_unique<ObjectTypeCaster<std::string>>();

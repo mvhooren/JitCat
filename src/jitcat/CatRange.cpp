@@ -22,9 +22,9 @@ CatRange::CatRange(CatTypedExpression* rangeMax, const Tokenizer::Lexeme& lexeme
 	CatASTNode(lexeme),
 	rangeMax(rangeMax),
 	isDefaultMin(true),
-	rangeMin(new CatLiteral(0, rangeMax->getLexeme())),
+	rangeMin(std::make_unique<CatLiteral>(0, rangeMax->getLexeme())),
 	isDefaultStep(true),
-	rangeStep(new CatLiteral(1, rangeMax->getLexeme()))
+	rangeStep(std::make_unique<CatLiteral>(1, rangeMax->getLexeme()))
 {
 }
 
@@ -34,7 +34,7 @@ CatRange::CatRange(CatTypedExpression* rangeMin, CatTypedExpression* rangeMax, c
 	isDefaultMin(false),
 	rangeMin(rangeMin),
 	isDefaultStep(true),
-	rangeStep(new CatLiteral(1, rangeMax->getLexeme()))
+	rangeStep(std::make_unique<CatLiteral>(1, rangeMax->getLexeme()))
 {
 }
 

@@ -12,6 +12,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatScope.h"
 #include "jitcat/ObjectInstance.h"
+#include "jitcat/TypeInfoDeleter.h"
 
 #include <vector>
 
@@ -65,7 +66,7 @@ namespace jitcat::AST
 		std::vector<CatVariableDefinition*> variableDefinitions;
 
 		CatScopeID staticScopeId;
-		Reflection::CustomTypeInfo* scopeType;
+		std::unique_ptr<Reflection::CustomTypeInfo, Reflection::TypeInfoDeleter> scopeType;
 		Reflection::ObjectInstance scopeInstance;
 	};
 

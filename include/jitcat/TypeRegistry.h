@@ -13,6 +13,7 @@ namespace jitcat
 }
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
+#include "jitcat/TypeInfoDeleter.h"
 
 #include <cassert>
 #include <functional>
@@ -67,17 +68,16 @@ namespace jitcat::Reflection
 
 	private:
 		//This function exists to prevent circular includes via TypeInfo.h
-		static ReflectedTypeInfo* createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction,
+		static std::unique_ptr<TypeInfo, TypeInfoDeleter> createTypeInfo(const char* typeName, std::size_t typeSize, TypeCaster* typeCaster, bool allowConstruction,
 												 bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
-		static TypeInfo* castToTypeInfo(ReflectedTypeInfo* reflectedTypeInfo);
-
+		static ReflectedTypeInfo* castToReflectedTypeInfo(TypeInfo* typeInfo);
 	private:
 		std::map<std::string, TypeInfo*> types;
-		std::vector<TypeInfo*> ownedTypes;
+		std::vector<std::unique_ptr<TypeInfo, TypeInfoDeleter>> ownedTypes;
 		static TypeRegistry* instance;
 	};
 
@@ -87,7 +87,6 @@ namespace jitcat::Reflection
 	{
 		typedef typename RemoveConst<ReflectableCVT>::type ReflectableT;
 
-		jitcat::Reflection::TypeInfo* typeInfo = nullptr;
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).
 		const char* typeName = ReflectableT::getTypeName();
 		std::string lowerTypeName = Tools::toLowerCase(typeName);
@@ -156,13 +155,13 @@ namespace jitcat::Reflection
 			//This is not always true for C++ types and so we also need to check for is_trivially_destructible.
 			constexpr bool triviallyCopyable = std::is_trivially_copyable<ReflectableT>::value && std::is_trivially_destructible<ReflectableT>::value;
 
-			jitcat::Reflection::ReflectedTypeInfo* reflectedInfo = createTypeInfo(typeName, typeSize, typeCaster, isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
+			std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, typeCaster, isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
 																				  placementConstructor, copyConstructor, moveConstructor, placementDestructor);
-			typeInfo = castToTypeInfo(reflectedInfo);
-			types[lowerTypeName] = typeInfo;
-			ownedTypes.push_back(typeInfo);
-			ReflectableT::reflect(*reflectedInfo);
-			return typeInfo;
+			types[lowerTypeName] = typeInfo.get();
+			jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
+			ownedTypes.emplace_back(std::move(typeInfo));
+			ReflectableT::reflect(*castToReflectedTypeInfo(returnTypeInfo));
+			return returnTypeInfo;
 		}
 	}
 

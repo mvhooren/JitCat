@@ -77,7 +77,7 @@ const Tokenizer::TokenizerBase* jitcat::Grammar::GrammarBase::getTokenizer() con
 
 void GrammarBase::rule(int productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action)
 {
-	std::unique_ptr<ProductionRule> rule(new ProductionRule());
+	std::unique_ptr<ProductionRule> rule(std::make_unique<ProductionRule>());
 	for (auto iter : tokens)
 	{
 		rule->pushToken(iter);
