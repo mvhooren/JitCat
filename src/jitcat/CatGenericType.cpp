@@ -647,6 +647,12 @@ CatGenericType* jitcat::CatGenericType::getPointeeType() const
 }
 
 
+void jitcat::CatGenericType::setPointeeType(std::unique_ptr<CatGenericType> pointee)
+{
+	pointeeType = std::move(pointee);
+}
+
+
 TypeInfo* CatGenericType::getObjectType() const
 {
 	return nestedType;

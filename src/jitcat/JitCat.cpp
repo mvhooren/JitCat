@@ -35,10 +35,10 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
 JitCat::JitCat():
-	tokenizer(new CatTokenizer()),
-	expressionGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Expression)),
-	statementGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Statement)),
-	fullGrammar(new CatGrammar(tokenizer.get(), CatGrammarType::Full))
+	tokenizer(std::make_unique<CatTokenizer>()),
+	expressionGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Expression)),
+	statementGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Statement)),
+	fullGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Full))
 {
 	expressionParser = expressionGrammar->createSLRParser();
 	statementParser = statementGrammar->createSLRParser();

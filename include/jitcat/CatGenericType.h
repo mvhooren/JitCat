@@ -123,6 +123,7 @@ namespace jitcat
 		std::string toString() const;
 		
 		CatGenericType* getPointeeType() const;
+		void setPointeeType(std::unique_ptr<CatGenericType> pointee);
 
 		Reflection::TypeInfo* getObjectType() const;
 		Reflection::TypeOwnershipSemantics getOwnershipSemantics() const;

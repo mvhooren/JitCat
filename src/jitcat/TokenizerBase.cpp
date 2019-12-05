@@ -20,12 +20,6 @@ TokenizerBase::TokenizerBase()
 
 TokenizerBase::~TokenizerBase()
 {
-	std::size_t tokenCount = tokenFactories.size();
-	for (std::size_t i = 0; i < tokenCount; i++)
-	{
-		delete tokenFactories.back();
-		tokenFactories.pop_back();
-	}
 }
 
 
@@ -60,7 +54,7 @@ bool TokenizerBase::tokenize(Document* document, std::vector<std::unique_ptr<Par
 }
 
 
-void TokenizerBase::registerTokenFactory(ParseToken* factory)
+void TokenizerBase::registerTokenFactory(std::unique_ptr<ParseToken> factory)
 {
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{
@@ -69,7 +63,7 @@ void TokenizerBase::registerTokenFactory(ParseToken* factory)
 			return;
 		}
 	}
-	tokenFactories.push_back(factory);
+	tokenFactories.emplace_back(std::move(factory));
 }
 
 

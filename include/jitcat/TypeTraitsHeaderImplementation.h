@@ -40,7 +40,14 @@ namespace jitcat
 	template <typename PointerT>
 	const CatGenericType& TypeTraits<PointerT*>::toGenericType()
 	{
-		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(TypeTraits<PointerT>::toGenericType(), TypeOwnershipSemantics::Weak, false));
+		static std::unique_ptr<CatGenericType> type;
+		if (type.get() == nullptr)
+		{
+			//Instead directly constructing the static type object. First construct it with a nullptr for the object type.
+			//This is done to prevent recursion deadlock.
+			type = std::make_unique<CatGenericType>(nullptr, TypeOwnershipSemantics::Weak, false);
+			type->setPointeeType(std::make_unique<CatGenericType>(TypeTraits<PointerT>::toGenericType()));
+		}
 		return *type.get();
 	}
 
@@ -54,7 +61,14 @@ namespace jitcat
 	template<typename PointerRefT>
 	const CatGenericType& TypeTraits<PointerRefT*&>::toGenericType()
 	{
-		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(TypeTraits<PointerRefT*>::toGenericType(), TypeOwnershipSemantics::Weak, false));
+		static std::unique_ptr<CatGenericType> type;
+		if (type.get() == nullptr)
+		{
+			//Instead directly constructing the static type object. First construct it with a nullptr for the object type.
+			//This is done to prevent recursion deadlock.
+			type = std::make_unique<CatGenericType>(nullptr, TypeOwnershipSemantics::Weak, false);
+			type->setPointeeType(std::make_unique<CatGenericType>(TypeTraits<PointerRefT*>::toGenericType()));
+		}
 		return *type.get();
 	}
 

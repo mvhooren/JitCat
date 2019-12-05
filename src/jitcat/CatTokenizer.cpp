@@ -20,11 +20,11 @@ using namespace jitcat::Tokenizer;
 CatTokenizer::CatTokenizer()
 {
 	//The order of these matter because they determine which token gets matched first if there are multiple tokens that can create a match.
-	registerTokenFactory(new WhitespaceToken());
-	registerTokenFactory(new CommentToken());
-	registerTokenFactory(new ConstantToken());
-	registerTokenFactory(new IdentifierToken());
-	registerTokenFactory(new TwoCharToken());
-	registerTokenFactory(new OneCharToken());
-	registerTokenFactory(new ErrorToken()); //Should be last, matches all but whitespace
+	registerTokenFactory(std::make_unique<WhitespaceToken>());
+	registerTokenFactory(std::make_unique<CommentToken>());
+	registerTokenFactory(std::make_unique<ConstantToken>());
+	registerTokenFactory(std::make_unique<IdentifierToken>());
+	registerTokenFactory(std::make_unique<TwoCharToken>());
+	registerTokenFactory(std::make_unique<OneCharToken>());
+	registerTokenFactory(std::make_unique<ErrorToken>()); //Should be last, matches all but whitespace
 }

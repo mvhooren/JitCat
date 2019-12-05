@@ -63,7 +63,7 @@ ProductionToken* GrammarBase::epsilon()
 
 std::unique_ptr<Parser::SLRParser> GrammarBase::createSLRParser() const
 {
-	std::unique_ptr<SLRParser> parser(new SLRParser(this));
+	std::unique_ptr<SLRParser> parser(std::make_unique<SLRParser>(this));
 	parser->createNFA();
 	return parser;
 }

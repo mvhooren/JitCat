@@ -42,10 +42,7 @@ namespace jitcat::Parser
 
 	class SLRParser
 	{
-	protected:
-		friend class Grammar::GrammarBase;
-		friend class ASTNodeParser;
-
+	public:
 		SLRParser(const Grammar::GrammarBase* grammar): grammar(grammar) {}
 	
 		void createNFA();

@@ -22,7 +22,7 @@ namespace jitcat::Tokenizer
 		TokenizerBase();
 		virtual ~TokenizerBase();
 		bool tokenize(Document* document, std::vector<std::unique_ptr<ParseToken>>& tokens, ParseToken* eofToken);
-		void registerTokenFactory(ParseToken* factory);
+		void registerTokenFactory(std::unique_ptr<ParseToken> factory);
 		const char* getTokenName(int tokenId, int tokenSubType) const;
 		const char* getTokenSymbol(int tokenId, int tokenSubType) const;
 
@@ -30,7 +30,7 @@ namespace jitcat::Tokenizer
 		bool isSuggestedToken(int tokenId, int tokenSubType) const;
 
 	private:
-		std::vector<ParseToken*> tokenFactories;
+		std::vector<std::unique_ptr<ParseToken>> tokenFactories;
 	};
 
 } //End namespace jitcat::Tokenizer
