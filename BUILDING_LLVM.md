@@ -8,7 +8,7 @@ https://github.com/llvm/llvm-project/tree/master/llvm
 JitCat will track the trunk as much as possible, but it can happen that updates to LLVM will break a JitCat build.  
 The last time this document was updated, JitCat was built against LLVM commit 60aed6a4e5d936b87f5bed0c983be0bab55b1355.  
 Once a stable LLVM version is released that includes everything JitCat needs, JitCat will target that version.  
-This is likely to happen with LLVM 11.0.0.
+This is likely to happen with LLVM 10.0.0.
 
 ## Read the documentation
 For building LLVM first of all refer to LLVM build documentation:  
