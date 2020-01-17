@@ -56,7 +56,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(LLVMJit::get().getTargetMachineBuilder())))
 {
 	llvm::orc::SymbolMap intrinsicSymbols;
-	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary", false);
+	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary");
 
 	llvm::JITSymbolFlags functionFlags;
 	functionFlags |= llvm::JITSymbolFlags::Callable;
@@ -85,8 +85,8 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 
 	llvm::cantFail(runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
 
-	dylib = &executionSession->createJITDylib(Tools::append(name, "_", 0), false);
-	dylib->addToSearchOrder(*runtimeLibraryDyLib, false);
+	dylib = &executionSession->createJITDylib(Tools::append(name, "_", 0));
+	dylib->addToSearchOrder(*runtimeLibraryDyLib);
 
 	if constexpr (Configuration::enableSymbolSearchWorkaround)
 	{
