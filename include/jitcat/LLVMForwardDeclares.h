@@ -15,7 +15,7 @@ namespace llvm
 		class FunctionPassManager;
 	};
 	namespace Intrinsic {
-		enum ID : unsigned;
+		typedef unsigned ID;
 	};
 	class LLVMContext;
 	class FunctionType;
