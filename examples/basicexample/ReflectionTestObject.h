@@ -19,17 +19,21 @@ struct TestVector: public jitcat::Reflection::Reflectable
 {
 	TestVector();
 	TestVector(float x, float y, float z, float w);
-
+	TestVector(const TestVector& other);
+	~TestVector();
 	static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 	static const char* getTypeName();
+
+	TestVector operator+(const TestVector& other) const;
 
 	float x;
 	float y;
 	float z;
 	float w;
+	static int vectorInstances;
 };
 
-TestVector operator*(const TestVector& v1, const TestVector& v2);
+TestVector operator*(const TestVector& v1, TestVector v2);
 std::ostream& operator<< (std::ostream& out, TestVector const& v) ;
 
 
@@ -45,6 +49,8 @@ public:
 	float getAFloat();
 	float addEleven(float value);
 	ReflectionTestObject2* getTest2();
+	TestVector getTestVector() const;
+	TestVector multiply(const TestVector& lhs, const TestVector& rhs) const;
 
 	std::string addToString(const std::string& text, float number);
 

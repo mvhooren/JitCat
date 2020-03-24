@@ -51,7 +51,7 @@ inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateDereferenceCode(l
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = generatorHelper->convertToIntPtr(parentObjectPointer, "dataIntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Value* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		if constexpr (loadString)
@@ -82,7 +82,7 @@ inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = generatorHelper->convertToIntPtr(parentObjectPointer, "dataIntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Value* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressIntValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		if constexpr (isString)

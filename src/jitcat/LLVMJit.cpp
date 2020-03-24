@@ -27,8 +27,11 @@ LLVMJit::LLVMJit():
     //executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
 	LLVMTypes::floatType = llvm::Type::getFloatTy(*context->getContext());
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
+	LLVMTypes::charType = llvm::Type::getInt8Ty(*context->getContext());
+	LLVMTypes::ucharType = llvm::Type::getInt8Ty(*context->getContext());
 	LLVMTypes::boolType = llvm::Type::getInt1Ty(*context->getContext());
 	LLVMTypes::pointerType = llvm::Type::getInt8PtrTy(*context->getContext());
+	LLVMTypes::pointerTypeAsType = static_cast<llvm::Type*>(LLVMTypes::pointerType);
 	if constexpr (sizeof(uintptr_t) == 8)
 	{
 		LLVMTypes::uintPtrType = llvm::Type::getInt64Ty(*context->getContext());
@@ -42,7 +45,7 @@ LLVMJit::LLVMJit():
 	std::vector<llvm::Type*> structMembers = {llvm::ArrayType::get(llvm::Type::getInt8Ty(*context->getContext()), sizeof(std::string))};
 	LLVMTypes::stringType = llvm::StructType::create(structMembers, "std::string");
 	LLVMTypes::stringPtrType = llvm::PointerType::get(LLVMTypes::stringType, 0);
-
+	LLVMTypes::stringPtrTypeAsType = static_cast<llvm::Type*>(LLVMTypes::stringPtrType);
 	LLVMTypes::functionRetPtrArgPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType}, false);
 	LLVMTypes::functionRetPtrArgPtr_Ptr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::pointerType}, false);
 	LLVMTypes::functionRetPtrArgPtr_Int = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::intType}, false);

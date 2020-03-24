@@ -1731,7 +1731,7 @@ uintptr_t jitcat::CatGenericType::getRawPointer(const std::any& value) const
 
 std::any jitcat::CatGenericType::getAddressOf(std::any& value) const
 {
-	assert(isPointerType() || isReflectableHandleType() || isBasicType());
+	assert(isPointerType() || isReflectableHandleType() || isBasicType() || isReflectableObjectType());
 	int indirectionLevels = 0;
 	const CatGenericType& decayedType = removeIndirection(indirectionLevels);
 	assert(decayedType.isReflectableObjectType() || decayedType.isBasicType());
@@ -1742,6 +1742,22 @@ std::any jitcat::CatGenericType::getAddressOf(std::any& value) const
 		default: assert(false);
 	}
 	return value;
+}
+
+
+std::any jitcat::CatGenericType::getDereferencedOf(std::any& value) const
+{
+	assert(isPointerType() || isReflectableHandleType());
+	int indirectionLevels = 0;
+	const CatGenericType& decayedType = removeIndirection(indirectionLevels);
+	assert(decayedType.isReflectableObjectType() || decayedType.isBasicType());
+	switch (indirectionLevels)
+	{
+		case 1:	return decayedType.getTypeCaster()->getValueOfPointer(value);
+		case 2:	return decayedType.getTypeCaster()->getValueOfPointerToPointer(value);
+		default: assert(false);
+	}
+	return std::any();
 }
 
 

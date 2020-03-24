@@ -110,6 +110,7 @@ namespace jitcat::Reflection
 	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
+		static_assert(sizeof(function) == sizeof(uintptr_t), "Unsupported function pointer.");
 		return pointer;
 	}
 

@@ -45,6 +45,7 @@ namespace jitcat::AST
 
 		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
 		std::size_t getNumArguments() const;
+		const std::vector<CatGenericType>& getArgumentTypes() const;
 
 	private:
 		std::vector<std::unique_ptr<CatTypedExpression>> arguments;

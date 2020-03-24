@@ -11,8 +11,10 @@
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeInfo.h"
 
 #include <llvm/IR/Constant.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/PassManager.h>
@@ -58,17 +60,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 	{
 		auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
 		{
-			if (resultType == LLVMTypes::boolType)			return createConstant(false);
-			else if (resultType == LLVMTypes::floatType)	return createConstant(0.0f);
-			else if (resultType == LLVMTypes::intType)		return createConstant(0);
-			else if (resultType == LLVMTypes::stringPtrType)return createPtrConstant(0, "nullString", LLVMTypes::stringPtrType);
-			else if (resultType == LLVMTypes::pointerType)	return createPtrConstant(0, "nullptr");
-			else if (resultType == LLVMTypes::voidType)		return (llvm::Value*)nullptr;
-			else
-			{
-				assert(false);
-				return (llvm::Value*)nullptr;
-			}
+			return createZeroInitialisedConstant(resultType);
 		};
 		return createOptionalNullCheckSelect(valueToCheck, codeGenIfNotNull, codeGenIfNull, context);
 	}
@@ -76,6 +68,12 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 	{
 		return codeGenIfNotNull(context);
 	}
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value * (LLVMCompileTimeContext*)> codeGenIfNotNull, llvm::PointerType* resultType, LLVMCompileTimeContext* context)
+{
+	return createOptionalNullCheckSelect(valueToCheck, codeGenIfNotNull, static_cast<llvm::Type*>(resultType), context);
 }
 
 
@@ -186,10 +184,15 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isReflectableHandleType())			return LLVMTypes::pointerType;
 	else if (type.isPointerType())						return LLVMTypes::pointerType;
 	else if (type.isContainerType())					return LLVMTypes::pointerType;
+	else if (type.isReflectableObjectType())			
+	{
+		//This is a compound type. For now, just create a byte array type.
+		return llvm::ArrayType::get(LLVMTypes::ucharType, type.getTypeSize());
+	}
 	else												return LLVMTypes::voidType;
 }
 
-llvm::Type* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& type)
+llvm::PointerType* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& type)
 {
 	return llvm::PointerType::get(toLLVMType(type), 0);
 }
@@ -294,11 +297,17 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::Type* type)
+llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
 	llvm::Value* intToPtr = builder->CreateIntToPtr(addressValue, type);
 	intToPtr->setName(name);
 	return intToPtr;
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type)
+{
+	return convertToPointer(static_cast<llvm::Value*>(addressConstant), name, type);
 }
 
 
@@ -310,25 +319,49 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToIntPtr(llvm::Value* llvmPointer, 
 }
 
 
-bool LLVMCodeGeneratorHelper::isPointer(llvm::Value* value) const
+bool jitcat::LLVM::LLVMCodeGeneratorHelper::isPointer(llvm::Type* type)
+{
+	return type == LLVMTypes::pointerType;
+}
+
+
+bool jitcat::LLVM::LLVMCodeGeneratorHelper::isStringPointer(llvm::Type* type)
+{
+	return type == LLVMTypes::stringPtrType;
+}
+
+
+bool jitcat::LLVM::LLVMCodeGeneratorHelper::isIntPtr(llvm::Type* type)
+{
+	return type == LLVMTypes::uintPtrType;
+}
+
+
+bool jitcat::LLVM::LLVMCodeGeneratorHelper::isInt(llvm::Type* type)
+{
+	return type == LLVMTypes::intType;
+}
+
+
+bool LLVMCodeGeneratorHelper::isPointer(llvm::Value* value)
 {
 	return value->getType() == LLVMTypes::pointerType;
 }
 
 
-bool LLVMCodeGeneratorHelper::isStringPointer(llvm::Value* value) const
+bool LLVMCodeGeneratorHelper::isStringPointer(llvm::Value* value)
 {
 	return value->getType() == LLVMTypes::stringPtrType;
 }
 
 
-bool LLVMCodeGeneratorHelper::isIntPtr(llvm::Value* value) const
+bool LLVMCodeGeneratorHelper::isIntPtr(llvm::Value* value)
 {
 	return value->getType() == LLVMTypes::uintPtrType;
 }
 
 
-bool jitcat::LLVM::LLVMCodeGeneratorHelper::isInt(llvm::Value* value) const
+bool jitcat::LLVM::LLVMCodeGeneratorHelper::isInt(llvm::Value* value)
 {
 	return value->getType() == LLVMTypes::intType;
 }
@@ -344,7 +377,7 @@ llvm::Value* LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Valu
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::Type* type)
+llvm::Value* LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
 	llvm::Value* addressAsPointer = builder->CreateIntToPtr(addressValue, llvm::PointerType::getUnqual(type));
 	addressAsPointer->setName(name + "_Ptr");
@@ -360,7 +393,35 @@ llvm::Value* LLVMCodeGeneratorHelper::createAdd(llvm::Value* value1, llvm::Value
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createIntPtrConstant(unsigned long long constant, const std::string& name)
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createAdd(llvm::Value* value1, llvm::Constant* value2, const std::string& name)
+{
+	return builder->CreateAdd(value1, value2, name);
+}
+
+
+llvm::Constant* LLVMCodeGeneratorHelper::createZeroInitialisedConstant(llvm::Type* type)
+{
+	if		(type == LLVMTypes::boolType)		return createConstant(false);
+	else if (type == LLVMTypes::floatType)		return createConstant(0.0f);
+	else if (type == LLVMTypes::intType)		return createConstant(0);
+	else if (type == LLVMTypes::charType)		return createCharConstant(0);
+	//else if (type == LLVMTypes::stringPtrType)	return createNullPtrConstant(LLVMTypes::stringPtrType);
+	//else if (type == LLVMTypes::pointerType)	return createNullPtrConstant(LLVMTypes::pointerType);
+	else if (type == LLVMTypes::voidType)		return (llvm::Constant*)nullptr;
+	else if (type->isArrayTy())					return createZeroInitialisedArrayConstant(static_cast<llvm::ArrayType*>(type));
+	else if (type->isPointerTy())
+	{
+		return createNullPtrConstant(static_cast<llvm::PointerType*>(type));
+	}
+	else
+	{
+		assert(false);
+		return (llvm::Constant*)nullptr;
+	}
+}
+
+
+llvm::Constant* LLVMCodeGeneratorHelper::createIntPtrConstant(unsigned long long constant, const std::string& name)
 {
 	llvm::ConstantInt* intConstant = llvm::ConstantInt::get(llvmContext, llvm::APInt(sizeof(std::uintptr_t) * 8, constant, false));
 	intConstant->setName(name);
@@ -368,28 +429,58 @@ llvm::Value* LLVMCodeGeneratorHelper::createIntPtrConstant(unsigned long long co
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createConstant(int constant)
+llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createCharConstant(char constant)
+{
+	return llvm::ConstantInt::get(llvmContext, llvm::APInt(8, constant, true));
+}
+
+
+llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createUCharConstant(unsigned char constant)
+{
+	return llvm::ConstantInt::get(llvmContext, llvm::APInt(8, constant, false));
+}
+
+
+llvm::Constant* LLVMCodeGeneratorHelper::createConstant(int constant)
 {
 	return llvm::ConstantInt::get(llvmContext, llvm::APInt(32, constant, true));
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createConstant(float constant)
+llvm::Constant* LLVMCodeGeneratorHelper::createConstant(float constant)
 {
 	return llvm::ConstantFP::get(llvmContext, llvm::APFloat(constant));
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createConstant(bool constant)
+llvm::Constant* LLVMCodeGeneratorHelper::createConstant(bool constant)
 {
 	return constant ? llvm::ConstantInt::getTrue(llvmContext) : llvm::ConstantInt::getFalse(llvmContext);
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createPtrConstant(unsigned long long address, const std::string& name, llvm::Type* pointerType)
+llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createNullPtrConstant(llvm::PointerType* pointerType)
 {
-	llvm::Value* constant = createIntPtrConstant(address, Tools::append(name, "_IntPtr"));
+	return llvm::ConstantPointerNull::get(pointerType);
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType)
+{
+	llvm::Constant* constant = createIntPtrConstant(address, Tools::append(name, "_IntPtr"));
 	return convertToPointer(constant, Tools::append(name, "_Ptr"), pointerType); 
+}
+
+
+llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType)
+{
+	uint64_t numElements = arrayType->getArrayNumElements();
+	std::vector<llvm::Constant*> constants;
+	for (std::size_t i = 0; i < numElements; ++i)
+	{
+		constants.push_back(createZeroInitialisedConstant(arrayType->getArrayElementType()));
+	}
+	return llvm::ConstantArray::get(arrayType, constants);
 }
 
 
@@ -402,6 +493,45 @@ llvm::Value* LLVMCodeGeneratorHelper::createEmptyStringPtrConstant()
 void LLVMCodeGeneratorHelper::setCurrentModule(llvm::Module* module)
 {
 	currentModule = module;
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool defaultConstruct)
+{
+	llvm::Type* llvmObjectType = toLLVMType(objectType);
+	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
+	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
+	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
+	llvm::AllocaInst* objectAllocation = builder->CreateAlloca(llvmObjectType, 0, nullptr);
+	objectAllocation->setName(name);
+	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, LLVMTypes::pointerType);
+	Reflection::TypeInfo* typeInfo = objectType.getObjectType();
+	assert(typeInfo != nullptr);
+
+	llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(typeInfo), Tools::append(name, "_typeInfo"));
+	llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(name, "_typeInfoPtr"));
+	if (defaultConstruct)
+	{
+		assert(objectType.isConstructible());
+		createCall(context, &LLVMCatIntrinsics::placementConstructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, Tools::append(name, "_defaultConstructor"));
+	
+	}
+
+	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
+	
+	std::string destructorName = Tools::append(name, "_destructor");
+	assert(objectType.isDestructible());
+	context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);});
+	if (currentBlockIsEntryBlock)
+	{
+		builder->SetInsertPoint(updatedBlock);
+	}
+	else
+	{
+		builder->SetInsertPoint(previousInsertBlock);
+	}
+	return objectAllocation;
+
 }
 
 

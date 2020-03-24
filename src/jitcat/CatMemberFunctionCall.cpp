@@ -100,6 +100,10 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 		{
 			switch (argumentIndirectionConversion[i])
 			{
+				case -1:
+				{
+					argumentValues[i] = arguments->getArgumentType(i).getDereferencedOf(argumentValues[i]);
+				} break;
 				case 1:
 				{
 					argumentValues.push_back(argumentValues[i]);
@@ -182,7 +186,11 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 				int argumentIndirectionLevel = 0;
 				CatGenericType argumentType = arguments->getArgumentType(i).removeIndirection(argumentIndirectionLevel);
 				int indirectionDifference = parameterIndirectionLevel - argumentIndirectionLevel;
-				argumentVectorSize += 1 + std::abs(indirectionDifference);
+				argumentVectorSize++;
+				if (indirectionDifference > 0)
+				{
+					argumentVectorSize++;
+				}
 				argumentIndirectionConversion.push_back(parameterIndirectionLevel - argumentIndirectionLevel);
 			}
 			returnType = memberFunctionInfo->returnType;
@@ -229,10 +237,12 @@ CatTypedExpression* CatMemberFunctionCall::getBase() const
 	return base.get();
 }
 
-CatArgumentList* CatMemberFunctionCall::getArguments() const
+
+const CatArgumentList* CatMemberFunctionCall::getArguments() const
 {
 	return arguments.get();
 }
+
 
 const std::string& CatMemberFunctionCall::getFunctionName() const
 {

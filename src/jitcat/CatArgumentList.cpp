@@ -162,3 +162,9 @@ std::size_t jitcat::AST::CatArgumentList::getNumArguments() const
 {
 	return arguments.size();
 }
+
+
+const std::vector<CatGenericType>& jitcat::AST::CatArgumentList::getArgumentTypes() const
+{
+	return argumentTypes;
+}

@@ -272,3 +272,21 @@ std::string LLVMCatIntrinsics::roundFloatToString(float number, int decimals)
 	}
 	return result.substr(0, result.length() - discardedCharacters);
 }
+
+
+void jitcat::LLVM::LLVMCatIntrinsics::placementCopyConstructType(unsigned char* target, unsigned char* source, Reflection::TypeInfo* type)
+{
+	type->copyConstruct(target, type->getTypeSize(), source, type->getTypeSize());
+}
+
+
+void jitcat::LLVM::LLVMCatIntrinsics::placementConstructType(unsigned char* address, Reflection::TypeInfo* type)
+{
+	type->placementConstruct(address, type->getTypeSize());
+}
+
+
+void jitcat::LLVM::LLVMCatIntrinsics::placementDestructType(unsigned char* address, TypeInfo* type)
+{
+	type->placementDestruct(address, type->getTypeSize());
+}

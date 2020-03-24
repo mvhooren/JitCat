@@ -37,7 +37,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a ReflectableHandle
@@ -60,7 +60,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a ReflectableHandle
@@ -113,7 +113,7 @@ llvm::Value* jitcat::Reflection::CustomTypeObjectDataMemberInfo::generateDerefer
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Value* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a Reflectable

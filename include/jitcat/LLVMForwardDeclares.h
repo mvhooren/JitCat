@@ -9,25 +9,31 @@
 
 namespace llvm
 {
+	class ArrayType;
+	class CallInst;
+	class Constant;
+	class ConstantFolder;
 	class Function;
+	class FunctionType;
+	class IRBuilderDefaultInserter;
+	template<typename T, typename Inserter>
+	class IRBuilder;
+	class LLVMContext;
+	class Module;
+	class PointerType;
+	class Type;
+	class Value;
+
+	namespace Intrinsic 
+	{
+		typedef unsigned ID;
+	};
+
 	namespace legacy
 	{
 		class FunctionPassManager;
 	};
-	namespace Intrinsic {
-		typedef unsigned ID;
-	};
-	class LLVMContext;
-	class FunctionType;
-	class Module;
-	class Value;
-	class CallInst;
-	class ConstantFolder;
-	class IRBuilderDefaultInserter;
-	template<typename T, typename Inserter>
-	class IRBuilder;
-	class Type;
-	class CallInst;
+
 	namespace orc
 	{
 		class JITDylib;

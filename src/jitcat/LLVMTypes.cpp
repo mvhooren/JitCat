@@ -12,12 +12,16 @@ using namespace jitcat::LLVM;
 
 llvm::Type* LLVMTypes::floatType = nullptr;
 llvm::Type* LLVMTypes::intType = nullptr;
+llvm::Type* LLVMTypes::charType = nullptr;
+llvm::Type* LLVMTypes::ucharType = nullptr;
 llvm::Type* LLVMTypes::boolType = nullptr;
-llvm::Type* LLVMTypes::pointerType = nullptr;
+llvm::PointerType* LLVMTypes::pointerType = nullptr;
+llvm::Type* LLVMTypes::pointerTypeAsType = nullptr;
 llvm::Type* LLVMTypes::uintPtrType = nullptr;
 llvm::Type* LLVMTypes::voidType = nullptr;
 llvm::Type* LLVMTypes::stringType = nullptr;
-llvm::Type* LLVMTypes::stringPtrType = nullptr;
+llvm::PointerType* LLVMTypes::stringPtrType = nullptr;
+llvm::Type* LLVMTypes::stringPtrTypeAsType = nullptr;
 
 llvm::FunctionType* LLVMTypes::functionRetPtrArgPtr = nullptr;
 llvm::FunctionType* LLVMTypes::functionRetPtrArgPtr_Ptr = nullptr;

@@ -63,7 +63,7 @@ inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateDereferenceC
 	unsigned long long offset = getOffset(memberPointer);
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		return context->helper->convertToPointer(addressValue, memberName + "_Ptr");
@@ -273,7 +273,7 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateDereferenceCo
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		return context->helper->loadPointerAtAddress(addressValue, memberName);
@@ -292,7 +292,7 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateAssignCode(ll
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
@@ -341,7 +341,7 @@ inline llvm::Value* ClassObjectMemberInfo<BaseT, ClassT>::generateDereferenceCod
 	unsigned long long offset = getOffset(memberPointer);;
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_Ptr");
 		return context->helper->convertToPointer(addressValue, memberName);
@@ -392,7 +392,7 @@ template<typename BaseT, typename ClassT>
 inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	llvm::Value* thisPointerAsInt = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr");
+	llvm::Constant* thisPointerAsInt = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr");
 	if (!context->helper->isPointer(parentObjectPointer))
 	{
 		parentObjectPointer = context->helper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr");
@@ -456,7 +456,7 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateDereferenceCode(
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{	
-		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		if constexpr (std::is_same<BasicT, std::string>::value)
@@ -484,7 +484,7 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateAssignCode(llvm:
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{	
-		llvm::Value* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		if constexpr (std::is_same<BasicT, std::string>::value)

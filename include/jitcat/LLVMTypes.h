@@ -24,12 +24,16 @@ namespace jitcat::LLVM
 	public:
 		static llvm::Type* floatType;
 		static llvm::Type* intType;
+		static llvm::Type* charType;
+		static llvm::Type* ucharType;
 		static llvm::Type* boolType;
-		static llvm::Type* pointerType;
+		static llvm::PointerType* pointerType;
+		static llvm::Type* pointerTypeAsType;
 		static llvm::Type* uintPtrType;
 		static llvm::Type* voidType;
 		static llvm::Type* stringType;
-		static llvm::Type* stringPtrType;
+		static llvm::PointerType* stringPtrType;
+		static llvm::Type* stringPtrTypeAsType;
 
 		//A function that takes a pointer and returns a pointer
 		static llvm::FunctionType* functionRetPtrArgPtr;
@@ -62,13 +66,15 @@ namespace jitcat::LLVM
 	inline llvm::Type* LLVMTypes::getLLVMType()
 	{
 		if		constexpr (std::is_same<T, float>::value)									return LLVMTypes::floatType;
+		if		constexpr (std::is_same<T, char>::value)									return LLVMTypes::charType;
+		if		constexpr (std::is_same<T, unsigned char>::value)							return LLVMTypes::ucharType;
 		else if constexpr (std::is_same<T, int>::value)										return LLVMTypes::intType;
 		else if constexpr (std::is_same<T, bool>::value)									return LLVMTypes::boolType;
-		else if constexpr (std::is_same<typename remove_all<T>::type, std::string>::value)	return LLVMTypes::stringPtrType;
+		else if constexpr (std::is_same<typename remove_all<T>::type, std::string>::value)	return LLVMTypes::stringPtrTypeAsType;
 		else if constexpr (std::is_same<T, void>::value)									return LLVMTypes::voidType;
-		else if constexpr (std::is_pointer<T>::value)										return LLVMTypes::pointerType;
-		else if constexpr (std::is_reference<T>::value)										return LLVMTypes::pointerType;
-		else if constexpr (std::is_class<T>::value)											return LLVMTypes::pointerType;
+		else if constexpr (std::is_pointer<T>::value)										return LLVMTypes::pointerTypeAsType;
+		else if constexpr (std::is_reference<T>::value)										return LLVMTypes::pointerTypeAsType;
+		else if constexpr (std::is_class<T>::value)											return LLVMTypes::pointerTypeAsType;
 		else																				return LLVMTypes::voidType;
 	}
 

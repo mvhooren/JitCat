@@ -40,7 +40,7 @@ namespace jitcat::AST
 	
 		Reflection::MemberFunctionInfo* getMemberFunctionInfo() const;
 		CatTypedExpression* getBase() const;
-		CatArgumentList* getArguments() const;
+		const CatArgumentList* getArguments() const;
 
 		const std::string& getFunctionName() const;
 		void setFunctionName(const std::string& name);

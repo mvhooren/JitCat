@@ -14,6 +14,7 @@ namespace jitcat
 namespace jitcat::Reflection
 {
 	class Reflectable;
+	class TypeInfo;
 }
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/LLVMTypes.h"
@@ -60,6 +61,9 @@ namespace jitcat::LLVM
 		static float getRandomFloatRange(float min, float max);
 		static float roundFloat(float number, int decimals);
 		static std::string roundFloatToString(float number, int decimals);
+		static void placementCopyConstructType(unsigned char* target, unsigned char* source,  Reflection::TypeInfo* type);
+		static void placementConstructType(unsigned char* address, Reflection::TypeInfo* type);
+		static void placementDestructType(unsigned char* address, Reflection::TypeInfo* type);
 	};
 
 

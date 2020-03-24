@@ -175,6 +175,8 @@ namespace jitcat
 		uintptr_t getRawPointer(const std::any& value) const;
 		//Returns a std::any containing a pointer to the object stored in value.
 		std::any getAddressOf(std::any& value) const;
+		//If value contains a pointer, returns a std::any containing the dereferenced value of that pointer.
+		std::any getDereferencedOf(std::any& value) const;
 		//If this is a pointer type, creates a pointer value of this type from the raw pointer.
 		std::any createFromRawPointer(const uintptr_t pointer) const;
 		std::any createNullPtr() const;

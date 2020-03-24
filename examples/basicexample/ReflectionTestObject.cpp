@@ -41,6 +41,8 @@ void ReflectionTestObject::reflect(ReflectedTypeInfo& typeInfo)
 	typeInfo.addMember("v2", &ReflectionTestObject::v2);
 	typeInfo.addMember("getTest2", &ReflectionTestObject::getTest2);
 	typeInfo.addMember("getAFloat", &ReflectionTestObject::getAFloat);
+	typeInfo.addMember("getTestVector", &ReflectionTestObject::getTestVector);
+	typeInfo.addMember("multiply", &ReflectionTestObject::multiply);
 	typeInfo.addMember("addEleven", &ReflectionTestObject::addEleven);
 	typeInfo.addMember("theInt", &ReflectionTestObject::theInt, MF::isConst);
 	typeInfo.addMember("aFloat", &ReflectionTestObject::aFloat, MF::isConst);
@@ -82,6 +84,18 @@ ReflectionTestObject2* ReflectionTestObject::getTest2()
 }
 
 
+TestVector ReflectionTestObject::getTestVector() const
+{
+	return v1;
+}
+
+
+TestVector ReflectionTestObject::multiply(const TestVector& lhs, const TestVector& rhs) const
+{
+	return lhs * rhs;
+}
+
+
 std::string ReflectionTestObject::addToString(const std::string& text, float number)
 {
 	return Tools::append(text, number);
@@ -91,6 +105,7 @@ std::string ReflectionTestObject::addToString(const std::string& text, float num
 TestVector::TestVector():
 	x(0.0f), y(0.0f), z(0.0f), w(0.0f)
 {
+	vectorInstances++;
 }
 
 
@@ -100,8 +115,26 @@ TestVector::TestVector(float x, float y, float z, float w):
 	z(z),
 	w(w)
 {
+	vectorInstances++;
 }
 
+
+TestVector::TestVector(const TestVector& other):
+	x(other.x),
+	y(other.y),
+	z(other.z),
+	w(other.w)
+{
+	vectorInstances++;
+}
+
+
+TestVector::~TestVector()
+{
+	vectorInstances--;
+}
+
+int TestVector::vectorInstances = 0;
 
 void TestVector::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 {
@@ -110,7 +143,8 @@ void TestVector::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 		.addMember("y", &TestVector::y, MemberFlags::isWritable)
 		.addMember("z", &TestVector::z, MemberFlags::isWritable)
 		.addMember("w", &TestVector::w, MemberFlags::isWritable)
-		.addMember<TestVector, const TestVector&, const TestVector&>("*", &operator*);
+		.addMember("+", &TestVector::operator+)
+		.addMember<TestVector, const TestVector&, TestVector>("*", &operator*);
 }
 
 
@@ -120,7 +154,13 @@ const char* TestVector::getTypeName()
 }
 
 
-TestVector operator*(const TestVector& v1, const TestVector& v2)
+TestVector TestVector::operator+(const TestVector& other) const
+{
+	return TestVector(x + other.x, y + other.y, z + other.z, w + other.w);
+}
+
+
+TestVector operator*(const TestVector& v1, TestVector v2)
 {
 	return TestVector(v1.x * v2.x, 
 					  v1.y * v2.y, 

@@ -14,6 +14,7 @@
 #include <cassert>
 #include <map>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 
@@ -25,6 +26,8 @@ class TypeCaster
 public:
 	TypeCaster() {};
 	virtual ~TypeCaster() {};
+	virtual std::any getValueOfPointer(std::any& value) const = 0;
+	virtual std::any getValueOfPointerToPointer(std::any& value) const = 0;
 	virtual std::any getAddressOfValue(std::any& value) const = 0;
 	virtual std::any getAddressOfPointer(std::any& value) const = 0;
 	virtual std::any castFromRawPointer(uintptr_t pointer) const = 0;
@@ -43,6 +46,29 @@ class ObjectTypeCaster: public TypeCaster
 public:
 	ObjectTypeCaster() {};
 	virtual ~ObjectTypeCaster() {};
+
+	inline virtual std::any getValueOfPointer(std::any& value) const override final
+	{
+		if constexpr (std::is_copy_constructible<ObjectT>::value)
+		{
+			ObjectT* ptr = std::any_cast<ObjectT*>(value);
+			std::any result(std::in_place_type<ObjectT>, *ptr);
+			return result;
+		}
+		else
+		{
+			assert(false);
+			return nullptr;
+		}
+	}
+
+
+	virtual std::any getValueOfPointerToPointer(std::any& value) const override final
+	{
+		ObjectT** ptrptr = std::any_cast<ObjectT**>(value);
+		return *ptrptr;
+	}
+
 
 	virtual std::any getAddressOfValue(std::any& value) const override final
 	{
@@ -112,6 +138,18 @@ public:
 		bufferSize = customType->getTypeSize();
 	}
 
+	virtual std::any getValueOfPointer(std::any& value) const override final
+	{
+		//Custom objects can not be passed by value at this time
+		assert(false);
+		return getNull();
+	}
+
+	virtual std::any getValueOfPointerToPointer(std::any& value) const override final
+	{
+		Reflectable** ptrptr = std::any_cast<Reflectable**>(value);
+		return *ptrptr;
+	}
 
 	virtual std::any getAddressOfValue(std::any& value) const override final
 	{
@@ -168,7 +206,18 @@ public:
 	NullptrTypeCaster() {};
 	virtual ~NullptrTypeCaster() {};
 	
-	
+	virtual std::any getValueOfPointer(std::any& value) const override final
+	{
+		return nullptr;
+	}
+
+
+	virtual std::any getValueOfPointerToPointer(std::any& value) const override final
+	{
+		return nullptr;
+	}
+
+
 	virtual std::any getAddressOfValue(std::any& value) const override final
 	{
 		return nullptr;

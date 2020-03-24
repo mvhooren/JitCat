@@ -28,6 +28,10 @@ namespace jitcat::AST
 		CatStaticFunctionCall(CatStaticScope* parentScope, const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme);
 		CatStaticFunctionCall(const CatStaticFunctionCall& other);
 		
+		const CatArgumentList* getArguments() const;
+		uintptr_t getFunctionAddress() const;
+		const std::string& getFunctionName() const;
+
 		// Inherited via CatTypedExpression
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
@@ -46,7 +50,8 @@ namespace jitcat::AST
 		std::string lowerCaseName;
 
 		Tokenizer::Lexeme nameLexeme;
-
+		int argumentVectorSize;
+		std::vector<int> argumentIndirectionConversion;
 		std::unique_ptr<CatArgumentList> arguments;
 		CatGenericType returnType;
 
