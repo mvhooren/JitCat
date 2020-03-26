@@ -131,6 +131,20 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	staticFunctionInfo = parentObjectType->getStaticMemberFunctionInfo(this);
 	if (staticFunctionInfo != nullptr)
 	{
+		if (returnType.isReflectableObjectType())
+		{
+			if (!returnType.isConstructible())
+			{
+				errorManager->compiledWithError(Tools::append("Function return type is not default constructible: ", name, "."), errorContext, compiletimeContext->getContextName(), getLexeme());
+				return false;
+			}
+			if (!returnType.isCopyConstructible())
+			{
+				errorManager->compiledWithError(Tools::append("Function return type is not copy constructible: ", name, "."), errorContext, compiletimeContext->getContextName(), getLexeme());
+				return false;
+			}
+		}
+
 		std::size_t numArgumentsSupplied = arguments->getNumArguments();
 		if (numArgumentsSupplied != staticFunctionInfo->getNumberOfArguments())
 		{

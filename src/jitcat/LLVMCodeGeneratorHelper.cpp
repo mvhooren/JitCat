@@ -530,7 +530,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 	{
 		builder->SetInsertPoint(previousInsertBlock);
 	}
-	return objectAllocation;
+	return objectAllocationAsIntPtr;
 
 }
 

@@ -163,6 +163,20 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		
 		if (memberFunctionInfo != nullptr)
 		{
+			if (returnType.isReflectableObjectType())
+			{
+				if (!returnType.isConstructible())
+				{
+					errorManager->compiledWithError(Tools::append("Function return type is not default constructible: ", functionName, "."), errorContext, compiletimeContext->getContextName(), getLexeme());
+					return false;
+				}
+				if (!returnType.isCopyConstructible())
+				{
+					errorManager->compiledWithError(Tools::append("Function return type is not copy constructible: ", functionName, "."), errorContext, compiletimeContext->getContextName(), getLexeme());
+					return false;
+				}
+			}
+
 			std::size_t numArgumentsSupplied = arguments->getNumArguments();
 			if (numArgumentsSupplied != memberFunctionInfo->getNumberOfArguments())
 			{

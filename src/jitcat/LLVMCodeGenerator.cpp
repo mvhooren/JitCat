@@ -808,11 +808,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 	std::vector<llvm::Type*> argumentTypes;
 	const CatGenericType& returnType = staticFunctionCall->getType();
 	llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
-	llvm::Type* returnLLVMTypePtr = returnLLVMType;
-	if (!returnType.isStringType())
-	{
-		returnLLVMTypePtr = returnLLVMType->getPointerTo();
-	}
+
 	for (std::size_t i = 0; i < expressionArguments.size(); i++)
 	{
 		argumentList.push_back(generate(expressionArguments[i], context));
@@ -839,6 +835,11 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 		}
 
 		argumentList.insert(argumentList.begin(), objectAllocation);
+		llvm::Type* returnLLVMTypePtr = returnLLVMType;
+		if (!returnType.isStringType())
+		{
+			returnLLVMTypePtr = returnLLVMType->getPointerTo();
+		}
 		argumentTypes.insert(argumentTypes.begin(), returnLLVMTypePtr);
 
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
@@ -1007,6 +1008,20 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		DeferredMemberFunctionInfo* deferredFunctionInfo = static_cast<DeferredMemberFunctionInfo*>(memberFunction);
 		baseObject = deferredFunctionInfo->baseMember->generateDereferenceCode(baseObject, context);
 	}
+	//If the member function call returns an object by value, we must allocate the object on the stack.
+	llvm::Value* returnedObjectAllocation = nullptr;
+	if (returnType.isStringType() || returnType.isReflectableObjectType())
+	{
+		std::string objectName = Tools::append(memberFunction->memberFunctionName, "_Result");
+		if (returnType.isStringType())
+		{
+			returnedObjectAllocation = context->helper->createStringAllocA(context, objectName, false);
+		}
+		else
+		{
+			returnedObjectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, false);
+		}
+	}
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
 		std::vector<llvm::Value*> argumentList;
@@ -1032,11 +1047,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		uintptr_t functionAddress = callData.makeDirectCall ? callData.memberFunctionAddress : callData.staticFunctionAddress;
 
 		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
-		llvm::Type* returnLLVMTypePtr = returnLLVMType;
-		if (!returnType.isStringType())
-		{
-			returnLLVMTypePtr = returnLLVMType->getPointerTo();
-		}
+
 		if (!returnType.isStringType() && !returnType.isContainerType() && !returnType.isReflectableObjectType())
 		{
 			llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
@@ -1049,21 +1060,15 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		}
 		else if (returnType.isStringType() || returnType.isReflectableObjectType())
 		{
-			llvm::Value* objectAllocation = nullptr;
-			std::string objectName = Tools::append(memberFunction->memberFunctionName, "_Result");
-			if (returnType.isStringType())
-			{
-				objectAllocation = context->helper->createStringAllocA(context, objectName, false);
-			}
-			else
-			{
-				objectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, false);
-			}
-
 			auto sretTypeInsertPoint = argumentTypes.begin();
 			if (!Configuration::sretBeforeThis && callData.makeDirectCall)
 			{
 				sretTypeInsertPoint++;
+			}
+			llvm::Type* returnLLVMTypePtr = returnLLVMType;
+			if (!returnType.isStringType())
+			{
+				returnLLVMTypePtr = returnLLVMType->getPointerTo();
 			}
 			argumentTypes.insert(sretTypeInsertPoint, returnLLVMTypePtr);
 
@@ -1073,7 +1078,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 			{
 				sretInsertPoint++;
 			}
-			argumentList.insert(sretInsertPoint, objectAllocation);
+			argumentList.insert(sretInsertPoint, returnedObjectAllocation);
 			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));
 			if (Configuration::useThisCall && callData.makeDirectCall)
 			{
@@ -1081,7 +1086,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 			}
 			call->addParamAttr(Configuration::sretBeforeThis ? 0 : 1, llvm::Attribute::AttrKind::StructRet);
 			call->addDereferenceableAttr(Configuration::sretBeforeThis ? 1 : 2, returnType.getTypeSize());
-			return objectAllocation;
+			return returnedObjectAllocation;
 		}
 		else
 		{
@@ -1094,7 +1099,30 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 	{
 		resultType = resultType->getPointerTo();
 	}
-	return helper->createOptionalNullCheckSelect(baseObject, notNullCodeGen, resultType, context);
+	if (returnType.isStringType() || returnType.isReflectableObjectType())
+	{
+		auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
+		{
+			//Default construct the object.
+			if (returnType.isStringType())
+			{
+				helper->createCall(context, &LLVMCatIntrinsics::stringEmptyConstruct, {returnedObjectAllocation}, "stringDefaultConstruct");
+			}
+			else
+			{
+				assert(returnType.isConstructible());
+				llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(returnType.getObjectType()), Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfo"));
+				llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfoPtr"));
+				helper->createCall(context, &LLVMCatIntrinsics::placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, Tools::append(returnType.getObjectType()->getTypeName(), "_defaultConstructor"));
+			}
+			return returnedObjectAllocation;
+		};
+		return helper->createOptionalNullCheckSelect(baseObject, notNullCodeGen, codeGenIfNull, context);
+	}
+	else
+	{
+		return helper->createOptionalNullCheckSelect(baseObject, notNullCodeGen, resultType, context);
+	}
 }
 
 
