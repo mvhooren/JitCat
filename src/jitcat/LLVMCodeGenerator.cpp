@@ -811,7 +811,26 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 
 	for (std::size_t i = 0; i < expressionArguments.size(); i++)
 	{
-		argumentList.push_back(generate(expressionArguments[i], context));
+		llvm::Value* argumentValue = generate(expressionArguments[i], context);
+		const CatGenericType& functionParameterType = staticFunctionCall->getFunctionParameterType(i);
+		//If a parameter is passed by value, it should be copy constructed.
+		if (functionParameterType.isReflectableObjectType())
+		{
+			llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", i, "_copy"), functionParameterType, false);
+			const std::string& typeName = functionParameterType.getObjectType()->getTypeName();
+			llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(functionParameterType.getObjectType()), Tools::append(typeName, "_typeInfo"));
+			llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
+			assert(functionParameterType.isCopyConstructible());
+			helper->createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, argumentValue, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
+			argumentValue = copyAllocation;
+		}
+		else if (functionParameterType.isStringType())
+		{
+			llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", i, "_copy"), false);
+			helper->createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, argumentValue}, "stringCopyConstruct");
+			argumentValue = copyAllocation;
+		}
+		argumentList.push_back(argumentValue);
 		argumentTypes.push_back(argumentList.back()->getType());
 	}
 
@@ -827,18 +846,18 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 		std::string objectName = Tools::append(staticFunctionCall->getFunctionName(), "_Result");
 		if (returnType.isStringType())
 		{
-			objectAllocation = context->helper->createStringAllocA(context, objectName, false);
+			objectAllocation = context->helper->createStringAllocA(context, objectName, true);
 		}
 		else
 		{
-			objectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, false);
+			objectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, true);
 		}
 
 		argumentList.insert(argumentList.begin(), objectAllocation);
 		llvm::Type* returnLLVMTypePtr = returnLLVMType;
 		if (!returnType.isStringType())
 		{
-			returnLLVMTypePtr = returnLLVMType->getPointerTo();
+			returnLLVMTypePtr = LLVMTypes::pointerType;
 		}
 		argumentTypes.insert(argumentTypes.begin(), returnLLVMTypePtr);
 
@@ -1015,11 +1034,11 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		std::string objectName = Tools::append(memberFunction->memberFunctionName, "_Result");
 		if (returnType.isStringType())
 		{
-			returnedObjectAllocation = context->helper->createStringAllocA(context, objectName, false);
+			returnedObjectAllocation = context->helper->createStringAllocA(context, objectName, true);
 		}
 		else
 		{
-			returnedObjectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, false);
+			returnedObjectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, true);
 		}
 	}
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
@@ -1040,14 +1059,32 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 
 		for (std::size_t i = 0; i < arguments.size(); i++)
 		{
-			argumentList.push_back(generate(arguments[i], compileContext));
+			llvm::Value* argumentValue = generate(arguments[i], context);
+			const CatGenericType& functionParameterType = memberFunction->getArgumentType(i);
+			//If a parameter is passed by value, it should be copy constructed.
+			if (functionParameterType.isReflectableObjectType())
+			{
+				llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", i, "_copy"), functionParameterType, false);
+				const std::string& typeName = functionParameterType.getObjectType()->getTypeName();
+				llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(functionParameterType.getObjectType()), Tools::append(typeName, "_typeInfo"));
+				llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
+				assert(functionParameterType.isCopyConstructible());
+				helper->createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, argumentValue, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
+				argumentValue = copyAllocation;
+			}
+			else if (functionParameterType.isStringType())
+			{
+				llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", i, "_copy"), false);
+				helper->createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, argumentValue}, "stringCopyConstruct");
+				argumentValue = copyAllocation;
+			}
+			argumentList.push_back(argumentValue);
 			argumentTypes.push_back(argumentList.back()->getType());
 		}
 
 		uintptr_t functionAddress = callData.makeDirectCall ? callData.memberFunctionAddress : callData.staticFunctionAddress;
 
 		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
-
 		if (!returnType.isStringType() && !returnType.isContainerType() && !returnType.isReflectableObjectType())
 		{
 			llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
@@ -1068,7 +1105,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 			llvm::Type* returnLLVMTypePtr = returnLLVMType;
 			if (!returnType.isStringType())
 			{
-				returnLLVMTypePtr = returnLLVMType->getPointerTo();
+				returnLLVMTypePtr = LLVMTypes::pointerType;
 			}
 			argumentTypes.insert(sretTypeInsertPoint, returnLLVMTypePtr);
 

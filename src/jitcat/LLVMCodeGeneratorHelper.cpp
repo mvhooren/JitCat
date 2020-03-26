@@ -496,9 +496,9 @@ void LLVMCodeGeneratorHelper::setCurrentModule(llvm::Module* module)
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool defaultConstruct)
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool generateDestructorCall)
 {
-	llvm::Type* llvmObjectType = toLLVMType(objectType);
+	llvm::Type* llvmObjectType = llvm::ArrayType::get(LLVMTypes::ucharType, objectType.getTypeSize());;
 	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
 	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
 	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
@@ -510,18 +510,14 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 
 	llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(typeInfo), Tools::append(name, "_typeInfo"));
 	llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(name, "_typeInfoPtr"));
-	if (defaultConstruct)
-	{
-		assert(objectType.isConstructible());
-		createCall(context, &LLVMCatIntrinsics::placementConstructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, Tools::append(name, "_defaultConstructor"));
-	
-	}
-
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
-	
-	std::string destructorName = Tools::append(name, "_destructor");
-	assert(objectType.isDestructible());
-	context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);});
+
+	if (generateDestructorCall)
+	{
+		std::string destructorName = Tools::append(name, "_destructor");
+		assert(objectType.isDestructible());
+		context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);});
+	}
 	if (currentBlockIsEntryBlock)
 	{
 		builder->SetInsertPoint(updatedBlock);
@@ -535,20 +531,19 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool constructEmptyString)
+llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool generateDestructorCall)
 {
 	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
 	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
 	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
 	llvm::AllocaInst* stringObjectAllocation = builder->CreateAlloca(LLVMTypes::stringType, 0, nullptr);
-	if (constructEmptyString)
-	{
-		createCall(context, &LLVMCatIntrinsics::stringEmptyConstruct, {stringObjectAllocation}, "stringEmptyConstruct");
-	}
 	stringObjectAllocation->setName(name);
 
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
-	context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");});
+	if (generateDestructorCall)
+	{
+		context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");});
+	}
 	if (currentBlockIsEntryBlock)
 	{
 		builder->SetInsertPoint(updatedBlock);
@@ -590,6 +585,7 @@ llvm::FunctionType* LLVMCodeGeneratorHelper::createFunctionType(llvm::Type* retu
 
 llvm::Value* LLVMCodeGeneratorHelper::generateCall(LLVMCompileTimeContext* context, uintptr_t functionAddress, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isStructRet, const std::string& name)
 {
+	//QQQ
 	std::vector<llvm::Value*> finalArguments(arguments);
 	llvm::Value* structRetValue = nullptr;
 	if (isStructRet)

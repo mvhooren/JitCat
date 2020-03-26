@@ -42,6 +42,8 @@ namespace jitcat::AST
 		virtual bool isConst() const override final;
 		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 	
+		const CatGenericType& getFunctionParameterType(std::size_t index) const;
+
 	private:
 		Reflection::StaticFunctionInfo* staticFunctionInfo;
 		

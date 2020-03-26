@@ -81,8 +81,8 @@ namespace jitcat::LLVM
 
 		void setCurrentModule(llvm::Module* module);
 
-		llvm::Value* createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool defaultConstruct);
-		llvm::Value* createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool constructEmptyString);
+		llvm::Value* createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool generateDestructorCall);
+		llvm::Value* createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool generateDestructorCall);
 		void generateBlockDestructors(LLVMCompileTimeContext* context);
 
 		llvm::LLVMContext& getContext();

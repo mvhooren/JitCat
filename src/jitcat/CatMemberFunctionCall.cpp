@@ -111,7 +111,16 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 				} break;
 			}
 		}
-		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
+		std::any value;
+		if (baseIndirectionConversion == 1)
+		{
+			std::any addressOfbase = base->getType().getAddressOf(baseValue);
+			value = memberFunctionInfo->call(runtimeContext, addressOfbase, argumentValues);
+		}
+		else
+		{
+			value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
+		}
 		runtimeContext->setReturning(wasReturning);
 		return value;
 	}
@@ -127,6 +136,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		return false;
 	}
 	argumentIndirectionConversion.clear();
+	baseIndirectionConversion = 0;
 	returnType = CatGenericType::unknownType;
 	if (base == nullptr)
 	{
@@ -153,6 +163,11 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			|| baseType.isReflectableHandleType())
 		{
 			memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(this);
+		}
+		else if (baseType.isReflectableObjectType())
+		{
+			baseIndirectionConversion = 1;
+			memberFunctionInfo = baseType.getObjectType()->getMemberFunctionInfo(this);
 		}
 		else
 		{

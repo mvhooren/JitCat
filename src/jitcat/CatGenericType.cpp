@@ -575,6 +575,11 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 			SearchFunctionSignature signature(::toString(oper), {rightType});
 			memberFunctionInfo = pointeeType->nestedType->getMemberFunctionInfo(&signature);
 		}
+		else if (isReflectableObjectType())
+		{
+			SearchFunctionSignature signature(::toString(oper), {rightType});
+			memberFunctionInfo = nestedType->getMemberFunctionInfo(&signature);
+		}
 		resultInfo.setIsOverloaded(true);
 		if (memberFunctionInfo != nullptr)
 		{
@@ -594,12 +599,31 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 					resultInfo.setStaticOverloadType(pointeeType->nestedType);
 				}
 			}
-			if (staticMemberFunctionInfo == nullptr && rightType.isReflectablePointerOrHandle())
+			else if (isReflectableObjectType())
 			{
-				staticMemberFunctionInfo = rightType.getPointeeType()->nestedType->getStaticMemberFunctionInfo(&staticSignature);
+				staticMemberFunctionInfo = nestedType->getStaticMemberFunctionInfo(&staticSignature);
 				if (staticMemberFunctionInfo != nullptr)
 				{
-					resultInfo.setStaticOverloadType(rightType.getPointeeType()->nestedType);
+					resultInfo.setStaticOverloadType(nestedType);
+				}			
+			}
+			if (staticMemberFunctionInfo == nullptr)
+			{
+				if (rightType.isReflectablePointerOrHandle())
+				{
+					staticMemberFunctionInfo = rightType.getPointeeType()->nestedType->getStaticMemberFunctionInfo(&staticSignature);
+					if (staticMemberFunctionInfo != nullptr)
+					{
+						resultInfo.setStaticOverloadType(rightType.getPointeeType()->nestedType);
+					}
+				}
+				else if (rightType.isReflectableObjectType())
+				{
+					staticMemberFunctionInfo = rightType.nestedType->getStaticMemberFunctionInfo(&staticSignature);
+					if (staticMemberFunctionInfo != nullptr)
+					{
+						resultInfo.setStaticOverloadType(rightType.nestedType);
+					}
 				}
 			}
 

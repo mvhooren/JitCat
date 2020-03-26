@@ -216,6 +216,13 @@ CatTypedExpression* CatStaticFunctionCall::constCollapse(CatRuntimeContext* comp
 }
 
 
+const CatGenericType& jitcat::AST::CatStaticFunctionCall::getFunctionParameterType(std::size_t index) const
+{
+	assert(staticFunctionInfo != nullptr);
+	return staticFunctionInfo->getArgumentType(index);
+}
+
+
 const std::string& CatStaticFunctionCall::getLowerCaseFunctionName() const
 {
 	return lowerCaseName;

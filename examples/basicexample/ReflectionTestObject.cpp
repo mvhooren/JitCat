@@ -10,6 +10,7 @@
 #include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
 
+#include <iostream>
 #include <random>
 
 using namespace jitcat;
@@ -90,7 +91,7 @@ TestVector ReflectionTestObject::getTestVector() const
 }
 
 
-TestVector ReflectionTestObject::multiply(const TestVector& lhs, const TestVector& rhs) const
+TestVector ReflectionTestObject::multiply(TestVector lhs, TestVector rhs) const
 {
 	return lhs * rhs;
 }
@@ -105,7 +106,11 @@ std::string ReflectionTestObject::addToString(const std::string& text, float num
 TestVector::TestVector():
 	x(0.0f), y(0.0f), z(0.0f), w(0.0f)
 {
-	vectorInstances++;
+	if (enableTracking)
+	{
+		vectorInstances++;
+		std::cout << "Default Contructed: " << this << "\n";
+	}
 }
 
 
@@ -115,7 +120,11 @@ TestVector::TestVector(float x, float y, float z, float w):
 	z(z),
 	w(w)
 {
-	vectorInstances++;
+	if (enableTracking)
+	{
+		vectorInstances++;
+		std::cout << "Contructed: " << this << "\n";
+	}
 }
 
 
@@ -125,17 +134,49 @@ TestVector::TestVector(const TestVector& other):
 	z(other.z),
 	w(other.w)
 {
-	vectorInstances++;
+	if (enableTracking)
+	{
+		vectorInstances++;
+		std::cout << "Copy Contructed: " << this << "\n";
+	}
+}
+
+
+TestVector::TestVector(const TestVector&& other):
+	x(other.x),
+	y(other.y),
+	z(other.z),
+	w(other.w)
+{
+	if (enableTracking)
+	{
+		vectorInstances++;
+		std::cout << "Move Contructed: " << this << "\n";
+	}
+}
+
+
+TestVector& TestVector::operator=(const TestVector& other)
+{
+	x = other.x;
+	y = other.y;
+	z = other.z;
+	w = other.w;
+	return *this;
 }
 
 
 TestVector::~TestVector()
 {
-	vectorInstances--;
+	if (enableTracking)
+	{
+		vectorInstances--;
+		std::cout << "Deleted: " << this << "\n";
+	}
 }
 
 int TestVector::vectorInstances = 0;
-
+bool TestVector::enableTracking = false;;
 void TestVector::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 {
 	typeInfo
@@ -143,8 +184,9 @@ void TestVector::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 		.addMember("y", &TestVector::y, MemberFlags::isWritable)
 		.addMember("z", &TestVector::z, MemberFlags::isWritable)
 		.addMember("w", &TestVector::w, MemberFlags::isWritable)
-		.addMember("+", &TestVector::operator+)
-		.addMember<TestVector, const TestVector&, TestVector>("*", &operator*);
+		.addMember<TestVector, TestVector, const TestVector&>("+", &TestVector::operator+)
+		.addMember<TestVector, TestVector, int>("+", &TestVector::operator+)
+		.addMember<TestVector, const TestVector&, TestVector>("*", &::operator*);
 }
 
 
@@ -157,6 +199,12 @@ const char* TestVector::getTypeName()
 TestVector TestVector::operator+(const TestVector& other) const
 {
 	return TestVector(x + other.x, y + other.y, z + other.z, w + other.w);
+}
+
+
+TestVector TestVector::operator+(int value) const
+{
+	return TestVector(x + value, y + value, z + value, w + value);
 }
 
 

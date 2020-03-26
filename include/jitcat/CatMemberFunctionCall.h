@@ -54,6 +54,7 @@ namespace jitcat::AST
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypedExpression> base;
 		std::unique_ptr<CatArgumentList> arguments;
+		int baseIndirectionConversion;
 		std::vector<int> argumentIndirectionConversion;
 		int argumentVectorSize;
 		CatGenericType returnType;
