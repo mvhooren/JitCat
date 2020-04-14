@@ -26,6 +26,8 @@ class TypeCaster
 public:
 	TypeCaster() {};
 	virtual ~TypeCaster() {};
+	virtual bool isNullPtr(const std::any& value) const = 0;
+	virtual bool isNullPtrPtr(const std::any& value) const = 0;
 	virtual std::any getValueOfPointer(std::any& value) const = 0;
 	virtual std::any getValueOfPointerToPointer(std::any& value) const = 0;
 	virtual std::any getAddressOfValue(std::any& value) const = 0;
@@ -46,6 +48,20 @@ class ObjectTypeCaster: public TypeCaster
 public:
 	ObjectTypeCaster() {};
 	virtual ~ObjectTypeCaster() {};
+
+	virtual bool isNullPtr(const std::any& value) const override final
+	{
+		ObjectT* ptr = std::any_cast<ObjectT*>(value);
+		return ptr == nullptr;
+	}
+
+
+	virtual bool isNullPtrPtr(const std::any& value) const override final
+	{
+		ObjectT** ptr = std::any_cast<ObjectT**>(value);
+		return ptr == nullptr;
+	}
+
 
 	inline virtual std::any getValueOfPointer(std::any& value) const override final
 	{
@@ -131,6 +147,20 @@ public:
 	virtual ~CustomObjectTypeCaster() {};
 
 
+	virtual bool isNullPtr(const std::any& value) const override final
+	{
+		Reflectable* reflectable = std::any_cast<Reflectable*>(value);
+		return reflectable == nullptr;
+	}
+
+
+	virtual bool isNullPtrPtr(const std::any& value) const override final
+	{
+		Reflectable** reflectable = std::any_cast<Reflectable**>(value);
+		return reflectable == nullptr;
+	}
+
+
 	virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const override final
 	{
 		Reflectable* reflectable = std::any_cast<Reflectable*>(value);
@@ -206,6 +236,18 @@ public:
 	NullptrTypeCaster() {};
 	virtual ~NullptrTypeCaster() {};
 	
+	virtual bool isNullPtr(const std::any& value) const override final
+	{
+		return true;
+	}
+
+
+	virtual bool isNullPtrPtr(const std::any& value) const override final
+	{
+		return true;
+	}
+
+
 	virtual std::any getValueOfPointer(std::any& value) const override final
 	{
 		return nullptr;

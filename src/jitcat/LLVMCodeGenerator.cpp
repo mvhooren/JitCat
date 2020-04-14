@@ -127,6 +127,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 	{
 		case CatASTNodeType::Literal:				return generate(static_cast<const CatLiteral*>(expression), context);			
 		case CatASTNodeType::Identifier:			return generate(static_cast<const CatIdentifier*>(expression), context);		
+		case CatASTNodeType::IndirectionConversion:	return generate(static_cast<const CatIndirectionConversion*>(expression), context);
 		case CatASTNodeType::InfixOperator:			return generate(static_cast<const CatInfixOperator*>(expression), context);	
 		case CatASTNodeType::AssignmentOperator:	return generate(static_cast<const CatAssignmentOperator*>(expression), context);	
 		case CatASTNodeType::PrefixOperator:		return generate(static_cast<const CatPrefixOperator*>(expression), context);	
@@ -214,7 +215,16 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 		llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(name, "_typeInfoPtr"));
 		assert(expressionType.isCopyConstructible());
 		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, LLVMTypes::pointerType, Tools::append(name, "_ObjectPointerCast"));
-		helper->createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {function->arg_begin(), castPointer, typeInfoConstantAsIntPtr}, Tools::append(name, "_copyConstructor"));
+		helper->createOptionalNullCheckSelect(castPointer, 
+			[&](LLVMCompileTimeContext* context)
+			{
+				return helper->createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {function->arg_begin(), castPointer, typeInfoConstantAsIntPtr}, Tools::append(name, "_copyConstructor"));
+			},
+			[&](LLVMCompileTimeContext* context)
+			{
+				return helper->createCall(context, &LLVMCatIntrinsics::placementConstructType, {function->arg_begin(), typeInfoConstantAsIntPtr},  Tools::append(name, "_defaultConstructor"));
+			}, context);
+
 		helper->generateBlockDestructors(context);
 		builder->CreateRetVoid();
 	}
@@ -588,6 +598,36 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 
 			return builder->CreateCall(functionInModule, argumentValues, "calltmp");
 		}
+	}
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const CatIndirectionConversion* indirectionConversion, LLVMCompileTimeContext* context)
+{
+	const CatTypedExpression* expressionToConvert = indirectionConversion->getExpressionToConvert();
+	llvm::Value* generatedExpression = generate(expressionToConvert, context);
+	switch (indirectionConversion->getIndirectionConversionMode())
+	{
+		case IndirectionConversionMode::DereferencePointerToPointerTwice:
+		{
+			//Check that we are dealing with a pointer to a pointer
+			assert(generatedExpression->getType()->isPointerTy());
+			assert(generatedExpression->getType()->getPointerElementType()->isPointerTy());
+			llvm::Constant* zeroConstant = helper->createConstant(0);
+			//Dereference the pointer
+			return builder->CreateGEP(generatedExpression, zeroConstant, "Dereference");
+		}
+		case IndirectionConversionMode::AddressOfPointer:
+		{
+			//Check that we are dealing with a pointer
+			assert(generatedExpression->getType()->isPointerTy());
+			llvm::Constant* oneConstant = helper->createConstant(1);
+			llvm::Value* valuePtr = builder->CreateAlloca(generatedExpression->getType(), nullptr);
+			builder->CreateStore(generatedExpression, valuePtr);
+			return  valuePtr;
+		}
+		default: return generatedExpression;
+		
 	}
 }
 

@@ -59,6 +59,7 @@ namespace jitcat::LLVM
 	private:
 		llvm::Value* generate(const AST::CatIdentifier* identifier, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);
+		llvm::Value* generate(const AST::CatIndirectionConversion* indirectionConversion, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatInfixOperator* infixOperator, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatAssignmentOperator* assignmentOperator, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatLiteral* literal, LLVMCompileTimeContext* context);

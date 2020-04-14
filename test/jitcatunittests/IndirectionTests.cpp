@@ -50,6 +50,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		Expression<ReflectedObject*> testExpression(&context, "nestedSelfObject.nestedSelfObject");
 		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);
 	}
+	SECTION("NestedSelfObject Object by value")
+	{
+		Expression<TestVector4> testExpression(&context, "nestedSelfObject.v1");
+		doChecks<TestVector4>(reflectedObject.nestedSelfObject->v1, false, false, false, testExpression, context);
+	}
 	SECTION("NestedSelfObject Vector")
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "nestedSelfObject.reflectableObjectsVector[0]");
@@ -91,6 +96,14 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		Expression<NestedReflectedObject*> testExpression(&context, "nestedObject.nullObject");
 		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
 	}
+	SECTION("nestedObject Object by value")
+	{
+		//Change something to make sure nestedObject is not equal to its default constructed value.
+		reflectedObject.nestedObject.someV4.z = 42.0f;
+		Expression<NestedReflectedObject> testExpression(&context, "nestedObject");
+		doChecks<NestedReflectedObject>(reflectedObject.nestedObject, false, false, false, testExpression, context);
+		reflectedObject.nestedObject.someV4.z = 4.0f;
+	}
 	SECTION("nestedObject Error")
 	{
 		Expression<int> testExpression(&context, "nestedObject.notAnInt");
@@ -122,6 +135,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		Expression<NestedReflectedObject*> testExpression(&context, "nestedObjectPointer.nullObject");
 		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
 	}
+	SECTION("nestedObjectPointer Object by value")
+	{
+		Expression<TestVector4> testExpression(&context, "nestedObjectPointer.someV4");
+		doChecks<TestVector4>(reflectedObject.nestedObjectPointer->someV4, false, false, false, testExpression, context);
+	}
 	SECTION("nestedObjectPointer Error")
 	{
 		Expression<int> testExpression(&context, "nestedObjectPointer.notAnInt");
@@ -152,6 +170,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "nestedObjectUniquePointer.nullObject");
 		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("nestedObjectUniquePointer Object by value")
+	{
+		Expression<TestVector4> testExpression(&context, "nestedObjectUniquePointer.someV4");
+		doChecks<TestVector4>(reflectedObject.nestedObjectUniquePointer->someV4, false, false, false, testExpression, context);
 	}
 	SECTION("nestedObjectUniquePointer Error")
 	{
@@ -188,6 +211,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.nestedObject");
 		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("nested null Object, Object by value")
+	{
+		Expression<TestVector4> testExpression(&context, "nullObject.v1");
+		doChecks<TestVector4>(TestVector4(), false, false, false, testExpression, context);
 	}
 	SECTION("nested null object UniquePtr")
 	{

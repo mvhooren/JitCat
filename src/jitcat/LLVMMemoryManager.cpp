@@ -198,6 +198,7 @@ SectionMemoryAllocation* jitcat::LLVM::LLVMMemoryManager::alloccateFromSection(u
 				SectionMemoryAllocation* allocation = freeIter->second;
 				allocation->status = SectionMemoryAllocationStatus::Pending;
 				updateBlockPermissions(allocation->block);
+				memset(allocation->data, 0xCCCCCCCC, allocation->size);
 				iter.second.erase(freeIter);
 				assert(allocation->block->purpose == sectionPurpose);
 				return allocation;
@@ -236,6 +237,7 @@ SectionMemoryAllocation* jitcat::LLVM::LLVMMemoryManager::alloccateFromSection(u
 	std::error_code error;
 	std::size_t blockSize = Tools::roundUp(size + alignment, 1 << 16);
 	block->llvmMemoryBlock = llvm::sys::Memory::allocateMappedMemory(blockSize, allocator->getLastCodeBlock(), llvm::sys::Memory::MF_READ | llvm::sys::Memory::MF_WRITE, error);
+	memset(block->llvmMemoryBlock.base(), 0xCCCCCCCC, block->llvmMemoryBlock.allocatedSize());
 	//Waiting for a llvm patch to be accepted that will add allocatedSize: block->blockSize = block->llvmMemoryBlock.allocatedSize();
 	block->blockSize = block->llvmMemoryBlock.allocatedSize();
 	block->purpose = sectionPurpose;

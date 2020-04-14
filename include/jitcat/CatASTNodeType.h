@@ -22,6 +22,7 @@ namespace jitcat::AST
 		FunctionParameterDefinitions,
 		Identifier,
 		IfStatement,
+		IndirectionConversion,
 		InfixOperator,
 		InheritanceDefinition,
 		LinkedList,

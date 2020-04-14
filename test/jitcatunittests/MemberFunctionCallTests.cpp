@@ -50,6 +50,11 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		Expression<ReflectedObject*> testExpression(&context, "getObject()");
 		doChecks(reflectedObject.getObject(), false, false, false, testExpression, context);
 	}
+	SECTION("Get object by value")
+	{
+		Expression<TestVector4> testExpression(&context, "getTestVector()");
+		doChecks(reflectedObject.getTestVector(), false, false, false, testExpression, context);
+	}
 
 	SECTION("Const get float")
 	{
@@ -76,6 +81,12 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		Expression<ReflectedObject*> testExpression(&context, "getConstObject()");
 		doChecks(reflectedObject.getConstObject(), false, false, false, testExpression, context);
 	}
+	SECTION("Const get object by value")
+	{
+		Expression<TestVector4> testExpression(&context, "getConstTestVector()");
+		doChecks(reflectedObject.getConstTestVector(), false, false, false, testExpression, context);
+	}
+
 	SECTION("Void function")
 	{
 		Expression<void> testExpression(&context, "doSomething()");
@@ -143,6 +154,16 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		testExpression.getValue(&context);
 		doCommonChecks(&testExpression, false, false, false, context);
 	}
+	SECTION("object base object value parameters")
+	{
+		Expression<TestVector4> testExpression(&context, "nestedSelfObject.addVectors(getTestVector(), v2)");
+		doChecks<TestVector4>(reflectedObject.nestedSelfObject->addVectors(reflectedObject.nestedSelfObject->getTestVector(), reflectedObject.nestedSelfObject->v2), false, false, false, testExpression, context);
+	}
+	SECTION("object base object value parameters, automatic dereference")
+	{
+		Expression<TestVector4> testExpression(&context, "nestedSelfObject.addVectors(getTestVectorPtr(), v2)");
+		doChecks<TestVector4>(reflectedObject.nestedSelfObject->addVectors(*reflectedObject.nestedSelfObject->getTestVectorPtr(), reflectedObject.nestedSelfObject->v2), false, false, false, testExpression, context);
+	}
 
 	SECTION("null base float")
 	{
@@ -165,6 +186,11 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		doChecks(std::string(""), false, false, false, testExpression, context);
 	}
 	SECTION("null base object")
+	{
+		Expression<TestVector4> testExpression(&context, "nestedSelfObject.nestedSelfObject.getTestVector()");
+		doChecks<TestVector4>(TestVector4(), false, false, false, testExpression, context);
+	}
+	SECTION("null base object by value")
 	{
 		Expression<ReflectedObject*> testExpression(&context, "nestedSelfObject.nestedSelfObject.getObject()");
 		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);

@@ -24,6 +24,7 @@ namespace jitcat::AST
 	class CatFunctionParameterDefinitions;
 	class CatIdentifier;
 	class CatIfStatement;
+	class CatIndirectionConversion;
 	class CatInfixOperator;
 	class CatInheritanceDefinition;
 	class CatLinkNode;

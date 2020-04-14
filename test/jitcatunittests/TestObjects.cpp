@@ -22,7 +22,8 @@ NestedReflectedObject::NestedReflectedObject():
 	someFloat(1.1f),
 	someBoolean(true),
 	nullObject(nullptr),
-	nullCircularRefObject(nullptr)
+	nullCircularRefObject(nullptr),
+	someV4(1.0, 2.0f, 3.0f, 4.0f)
 {
 }
 
@@ -34,6 +35,7 @@ void NestedReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("someInt", &NestedReflectedObject::someInt)
 		.addMember("someFloat", &NestedReflectedObject::someFloat)
 		.addMember("someBoolean", &NestedReflectedObject::someBoolean)
+		.addMember("someV4", &NestedReflectedObject::someV4)
 		.addMember("nullObject", &NestedReflectedObject::nullObject)
 		.addMember("nullCircularRefObject", &NestedReflectedObject::nullCircularRefObject, MF::isWritable)
 		.addMember("emptyCircularRefList", &NestedReflectedObject::emptyCircularRefList);
@@ -43,6 +45,19 @@ void NestedReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 const char* NestedReflectedObject::getTypeName()
 {
 	return "NestedReflectedObject";
+}
+
+
+bool TestObjects::NestedReflectedObject::operator==(const NestedReflectedObject& other) const
+{
+	return someString == other.someString 
+			&& someInt == other.someInt 
+			&& someFloat == other.someFloat 
+			&& someBoolean == other.someBoolean 
+			&& nullObject == other.nullObject 
+			&& nullCircularRefObject == other.nullCircularRefObject
+			&& someV4 == other.someV4
+			&& emptyCircularRefList == other.emptyCircularRefList;
 }
 
 
@@ -61,7 +76,9 @@ ReflectedObject::ReflectedObject():
 	smallFloat(0.5f),
 	zeroFloat(0.0f),
 	aBoolean(true),
-	no(false)
+	no(false),
+	v1(1.0f, 2.0f, 3.0f, 4.0f),
+	v2(4.0f, 3.0f, 2.0f, 1.0f)
 
 {
 }
@@ -122,7 +139,13 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		//.addMember("getStringRef", &ReflectedObject::getStringRef) Not yet supported
 		.addMember("getObject", &ReflectedObject::getObject)
 		.addMember("getObject2", &ReflectedObject::getObject2)
-		
+		.addMember("getTestVector", &ReflectedObject::getTestVector)
+		.addMember("getTestVectorPtr", &ReflectedObject::getTestVectorPtr)
+		.addMember("getConstTestVector", &ReflectedObject::getConstTestVector)
+		.addMember("v1", &ReflectedObject::v1)
+		.addMember("v2", &ReflectedObject::v2)
+		.addMember("addVectors", &ReflectedObject::addVectors)
+
 		.addMember("doSomething", &ReflectedObject::doSomething)
 
 		.addMember("getConstantFloat", &ReflectedObject::getConstantFloat)
@@ -207,6 +230,30 @@ const std::string& TestObjects::ReflectedObject::getStringRef()
 }
 
 
+TestVector4 TestObjects::ReflectedObject::getTestVector()
+{
+	return v1;
+}
+
+
+const TestVector4 TestObjects::ReflectedObject::getConstTestVector() const
+{
+	return v1;
+}
+
+
+TestVector4* TestObjects::ReflectedObject::getTestVectorPtr()
+{
+	return &v2;
+}
+
+
+TestVector4 TestObjects::ReflectedObject::addVectors(TestVector4 lhs, TestVector4 rhs)
+{
+	return lhs + rhs;
+}
+
+
 ReflectedObject* ReflectedObject::getObject()
 {
 	return nestedSelfObject;
@@ -282,4 +329,143 @@ std::string ReflectedObject::addToString(const std::string& text, float number)
 ReflectedObject* ReflectedObject::getThisObject(ReflectedObject* someObject) const
 {
 	return someObject;
+}
+
+
+TestObjects::TestVector4::TestVector4():
+	x(0.0f),
+	y(0.0f),
+	z(0.0f),
+	w(0.0f)
+{
+	instanceCount++;
+}
+
+
+TestObjects::TestVector4::TestVector4(float x, float y, float z, float w):
+	x(x),
+	y(y),
+	z(z),
+	w(w)
+{
+	instanceCount++;
+}
+
+
+TestObjects::TestVector4::TestVector4(const TestVector4& other):
+	x(other.x),
+	y(other.y),
+	z(other.z),
+	w(other.w)
+{
+	instanceCount++;
+}
+
+
+TestObjects::TestVector4::TestVector4(const TestVector4&& other) noexcept:
+	x(other.x),
+	y(other.y),
+	z(other.z),
+	w(other.w)
+{
+	instanceCount++;
+}
+
+
+TestVector4& TestObjects::TestVector4::operator=(const TestVector4& other)
+{
+	x = other.x;
+	y = other.y;
+	z = other.z;
+	w = other.w;
+	return *this;
+}
+
+
+TestObjects::TestVector4::~TestVector4()
+{
+	instanceCount--;
+}
+
+
+void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+{
+	typeInfo
+		.addMember("x", &TestVector4::x)
+		.addMember("y", &TestVector4::y)
+		.addMember("z", &TestVector4::z)
+		.addMember("w", &TestVector4::w)
+		.addMember<TestVector4, TestVector4, const TestVector4&>("*", &TestVector4::operator*)
+		.addMember<TestVector4, TestVector4, int>("*", &TestVector4::operator*)
+		.addMember<TestVector4, TestVector4, float>("*", &TestVector4::operator*)
+		.addMember("+", &TestVector4::operator+)
+		.addMember("-", &TestVector4::operator-)
+		.addMember("[]", &TestVector4::operator[])
+		.addMember("==", &TestVector4::operator==)
+		.addMember<TestVector4, const TestVector4&, const TestVector4&>("/", &operator/);
+}
+
+
+const char* TestObjects::TestVector4::getTypeName()
+{
+	return "TestVector4";
+}
+
+
+bool TestObjects::TestVector4::operator==(const TestVector4& other) const
+{
+	return x == other.x && y == other.y && z == other.z && w == other.w;
+}
+
+
+TestVector4 TestObjects::TestVector4::operator*(const TestVector4& other)
+{
+	return TestVector4(x * other.x, y * other.y, z * other.z, w * other.w);
+}
+
+
+TestVector4 TestObjects::TestVector4::operator*(int value)
+{
+	return TestVector4(x * value, y * value, z * value, w * value);
+}
+
+
+TestVector4 TestObjects::TestVector4::operator*(float value)
+{
+	return TestVector4(x * value, y * value, z * value, w * value);
+}
+
+
+TestVector4 TestObjects::TestVector4::operator+(const TestVector4& other)
+{
+	return TestVector4(x + other.x, y + other.y, z + other.z, w + other.w);
+}
+
+
+TestVector4 TestObjects::TestVector4::operator-(const TestVector4& other)
+{
+	return TestVector4(x - other.x, y - other.y, z - other.z, w - other.w);
+}
+
+float TestObjects::TestVector4::operator[](int index)
+{
+	if (index >= 0 && index < 4)
+	{
+		return (&x)[index];
+	}
+	else
+	{
+		static float zero = 0.0f;
+		zero = 0.0f;
+		return zero;
+	}
+}
+
+
+int TestObjects::TestVector4::instanceCount = 0;
+
+
+TestVector4 TestObjects::operator/(const TestVector4& lhs, const TestVector4& rhs)
+{
+	return TestVector4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w);
 }

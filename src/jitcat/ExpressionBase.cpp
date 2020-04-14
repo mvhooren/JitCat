@@ -9,6 +9,7 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatBuiltInFunctionCall.h"
+#include "jitcat/CatIndirectionConversion.h"
 #include "jitcat/CatPrefixOperator.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
@@ -191,6 +192,37 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 		Lexeme expressionLexeme = parseResult->getNode<CatTypedExpression>()->getLexeme();
 		if (!expectedType.isUnknown())
 		{
+			int expectedTypeIndirection = 0;
+			int valueTypeIndirection = 0;
+			IndirectionConversionMode mode = expectedType.getIndirectionConversion(valueType);
+			if (isValidConversionMode(mode))
+			{
+				if (mode == IndirectionConversionMode::AddressOfPointer
+					|| mode == IndirectionConversionMode::AddressOfValue)
+				{
+					parseResult->success = false;
+					errorManager->compiledWithError(std::string(Tools::append("Expression results in a value with a level of indirection that cannot be automatically converted. Trying to convert from ", valueType.toString(), " to ", expectedType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
+					return;
+				}
+				else if (mode != IndirectionConversionMode::None)
+				{
+					//Create an AST node that handles the indirection conversion
+					std::unique_ptr<CatTypedExpression> previousNode(parseResult->releaseNode<CatTypedExpression>());
+					parseResult->astRootNode = std::make_unique<CatIndirectionConversion>(expressionLexeme, expectedType, mode, std::move(previousNode));
+					parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+					
+					valueType = parseResult->getNode<CatTypedExpression>()->getType();					
+				}
+			}
+			else if (mode != IndirectionConversionMode::ErrorTypeMismatch)
+			{
+				parseResult->success = false;
+				switch (mode)
+				{
+					case IndirectionConversionMode::ErrorNotCopyConstructible:	errorManager->compiledWithError(std::string(Tools::append("Expression result is not copy constructible.")), errorContext, context->getContextName(), expressionLexeme); return;
+					case IndirectionConversionMode::ErrorTooMuchIndirection:	errorManager->compiledWithError(std::string(Tools::append("Expression has too much indirection.")), errorContext, context->getContextName(), expressionLexeme); return;
+				}
+			}
 			if (expectAssignable && !parseResult->getNode<CatAssignableExpression>()->getAssignableType().isAssignableType())
 			{
 				parseResult->success = false;
@@ -251,7 +283,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				else
 				{
 					parseResult->success = false;
-					errorManager->compiledWithError(std::string(Tools::append("Expected a ", expectedType.toString())), errorContext, context->getContextName(), expressionLexeme);
+					errorManager->compiledWithError(std::string(Tools::append("Expected a ", expectedType.toString(), " got a ", valueType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
 				}
 			}
 		}

@@ -124,6 +124,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 		}
 		else
 		{
+			codeGenIfNull(context);
 			builder->CreateBr(continuationBlock);
 			// codegen of 'Else' can change the current block, update ElseBB for the PHI.
 			elseBlock = builder->GetInsertBlock();

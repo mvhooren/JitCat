@@ -9,6 +9,7 @@
 
 #include "jitcat/CatASTNodesDeclares.h"
 #include "jitcat/CatGenericType.h"
+#include "jitcat/IndirectionConversionMode.h"
 #include "jitcat/ReflectableHandle.h"
 
 #include <memory>
@@ -82,7 +83,6 @@ namespace jitcat
 		bool expressionIsLiteral;
 		bool isConstant;
 		bool expectAssignable;
-
 		Reflection::ReflectableHandle errorManagerHandle;
 	};
 

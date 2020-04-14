@@ -23,6 +23,7 @@
 #include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatIfStatement.h"
+#include "jitcat/CatIndirectionConversion.h"
 #include "jitcat/CatInfixOperator.h"
 #include "jitcat/CatInheritanceDefinition.h"
 #include "jitcat/CatLinkNode.h"

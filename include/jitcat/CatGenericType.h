@@ -8,6 +8,7 @@
 #pragma once
 #include "jitcat/CatInfixOperatorType.h"
 #include "jitcat/ContainerType.h"
+#include "jitcat/IndirectionConversionMode.h"
 #include "jitcat/InfixOperatorResultInfo.h"
 #include "jitcat/TypeInfoDeleter.h"
 #include "jitcat/TypeOwnershipSemantics.h"
@@ -113,6 +114,8 @@ namespace jitcat
 		//Removes pointers and handles
 		const CatGenericType& removeIndirection() const;
 		const CatGenericType& removeIndirection(int& levelsOfIndirectionRemoved) const;
+		IndirectionConversionMode getIndirectionConversion(const CatGenericType& other) const;
+		std::any doIndirectionConversion(std::any& value, IndirectionConversionMode mode) const;
 
 		Reflection::ContainerManipulator* getContainerManipulator() const;
 		const CatGenericType& getContainerItemType() const;
@@ -156,16 +159,16 @@ namespace jitcat
 		bool isDestructible() const;
 
 		//Construct and default-initialize this type.
-		std::any construct();
+		std::any construct() const;
 		//Construct and default-initialize this type into the supplied buffer. 
 		//Buffer size must be greater or equal to getTypeSize(). Returns true if succesful.
-		bool placementConstruct(unsigned char* buffer, std::size_t bufferSize);
+		bool placementConstruct(unsigned char* buffer, std::size_t bufferSize) const;
 		//Copy construct this type from the sourceBuffer to the target buffer. Returns true if succesful.
-		bool copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		bool copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) const;
 		//Move construct this type form the sourceBuffer to the target buffer. Returns true if succesful.
-		bool moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize);
+		bool moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) const;
 		//Destruct this type located in the supplied buffer. Returns true if succesful.
-		bool placementDestruct(unsigned char* buffer, std::size_t bufferSize);
+		bool placementDestruct(unsigned char* buffer, std::size_t bufferSize) const;
 		//Casts the contents of value to a unsigned char* and gets the size of the value
 		void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const;
 

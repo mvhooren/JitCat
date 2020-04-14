@@ -20,6 +20,39 @@
 
 namespace TestObjects
 {
+
+	class TestVector4: public jitcat::Reflection::Reflectable
+	{
+	public:
+		TestVector4();
+		TestVector4(float x, float y, float z, float w);
+		TestVector4(const TestVector4& other);
+		TestVector4(const TestVector4&& other) noexcept;
+		TestVector4& operator=(const TestVector4& other);
+		~TestVector4();
+
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+		static const char* getTypeName();
+
+		bool operator==(const TestVector4& other) const;
+		TestVector4 operator*(const TestVector4& other);
+		TestVector4 operator*(int value);
+		TestVector4 operator*(float value);
+		TestVector4 operator+(const TestVector4& other);
+		TestVector4 operator-(const TestVector4& other);
+
+		float operator[](int index);
+
+		float x;
+		float y;
+		float z;
+		float w;
+
+		static int instanceCount;
+	};
+
+	TestVector4 operator/(const TestVector4& lhs, const TestVector4& rhs);
+
 	template<typename ItemType, typename AllocatorType = std::allocator<ItemType>>
 	class ReflectableVector: public jitcat::Reflection::Reflectable
 	{
@@ -109,15 +142,18 @@ namespace TestObjects
 		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 		static const char* getTypeName();
 
-		public:
-			std::string someString;
-			int someInt;
-			float someFloat;
-			bool someBoolean;
-			NestedReflectedObject* nullObject;
-			//Test for circular reference
-			ReflectedObject* nullCircularRefObject;
-			std::vector<ReflectedObject*> emptyCircularRefList;
+		bool operator==(const NestedReflectedObject& other) const;
+
+	public:
+		std::string someString;
+		int someInt;
+		float someFloat;
+		bool someBoolean;
+		NestedReflectedObject* nullObject;
+		TestVector4 someV4;
+		//Test for circular reference
+		ReflectedObject* nullCircularRefObject;
+		std::vector<ReflectedObject*> emptyCircularRefList;
 	};
 
 
@@ -138,6 +174,11 @@ namespace TestObjects
 		bool getBoolean();
 		std::string getString();
 		const std::string& getStringRef();
+		TestVector4 getTestVector();
+		const TestVector4 getConstTestVector() const;
+		TestVector4* getTestVectorPtr();
+		TestVector4 addVectors(TestVector4 lhs, TestVector4 rhs);
+
 		ReflectedObject* getObject();
 		ReflectedObject* getObject2(const std::string& name, bool amITrue);
 
@@ -159,6 +200,8 @@ namespace TestObjects
 	
 
 	public:
+		TestVector4 v1;
+		TestVector4 v2;
 		std::string numberString;
 		std::string text;
 		int theInt;

@@ -66,6 +66,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatIdentifier.h
 	CatIfStatement.cpp
 	${JitCatHeaderPath}/CatIfStatement.h
+	CatIndirectionConversion.cpp
+	${JitCatHeaderPath}/CatIndirectionConversion.h
 	CatInfixOperator.cpp
 	${JitCatHeaderPath}/CatInfixOperator.h
 	${JitCatHeaderPath}/CatInfixOperatorHeaderImplementation.h
@@ -121,6 +123,7 @@ set(Source_Cat_ASTNodes_ASTHelper
 	${JitCatHeaderPath}/InfixOperatorOptimizer.h
 	ASTHelper.cpp
 	${JitCatHeaderPath}/ASTHelper.h
+	${JitCatHeaderPath}/IndirectionConversionMode.h
 	InfixOperatorResultInfo.cpp
 	${JitCatHeaderPath}/InfixOperatorResultInfo.h
 )
