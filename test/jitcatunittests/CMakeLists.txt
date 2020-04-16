@@ -22,6 +22,7 @@ set(Source_GeneralTests
 	MemberFunctionCallTests.cpp
 	OperatorPrecedenceTests.cpp
 	OperatorOverloadingTests.cpp
+	StaticFunctionCallTests.cpp
 )
 
 set(Source_BuiltInFunctionTests

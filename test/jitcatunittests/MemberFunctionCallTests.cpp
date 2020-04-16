@@ -55,6 +55,21 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		Expression<TestVector4> testExpression(&context, "getTestVector()");
 		doChecks(reflectedObject.getTestVector(), false, false, false, testExpression, context);
 	}
+	SECTION("Get object by value, reference parameter")
+	{
+		Expression<TestVector4> testExpression(&context, "getTestVector().doAdd(getTestVector())");
+		doChecks(reflectedObject.getTestVector().doAdd(reflectedObject.getTestVector()), false, false, false, testExpression, context);
+	}
+	SECTION("Get object by reference")
+	{
+		Expression<TestVector4> testExpression(&context, "getTestVectorRef()");
+		doChecks(reflectedObject.getTestVectorRef(), false, false, false, testExpression, context);
+	}
+	SECTION("Get object ptr by reference")
+	{
+		Expression<TestVector4*> testExpression(&context, "getTestVectorRef()");
+		doChecks(&reflectedObject.getTestVectorRef(), false, false, false, testExpression, context);
+	}
 
 	SECTION("Const get float")
 	{
@@ -85,6 +100,16 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<TestVector4> testExpression(&context, "getConstTestVector()");
 		doChecks(reflectedObject.getConstTestVector(), false, false, false, testExpression, context);
+	}
+	SECTION("Get object by const reference")
+	{
+		Expression<TestVector4> testExpression(&context, "getTestVectorConstRef()");
+		doChecks(reflectedObject.getTestVectorConstRef(), false, false, false, testExpression, context);
+	}
+	SECTION("Get object ptr by const reference")
+	{
+		Expression<TestVector4*> testExpression(&context, "getTestVectorConstRef()");
+		doChecks(&reflectedObject.getTestVectorRef(), false, false, false, testExpression, context);
 	}
 
 	SECTION("Void function")
@@ -163,6 +188,11 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<TestVector4> testExpression(&context, "nestedSelfObject.addVectors(getTestVectorPtr(), v2)");
 		doChecks<TestVector4>(reflectedObject.nestedSelfObject->addVectors(*reflectedObject.nestedSelfObject->getTestVectorPtr(), reflectedObject.nestedSelfObject->v2), false, false, false, testExpression, context);
+	}
+	SECTION("Static function call")
+	{
+		Expression<TestVector4> testExpression(&context, "TestVector4::staticAdd(getTestVectorPtr(), v2, v1)");
+		doChecks<TestVector4>(TestVector4::staticAdd(*reflectedObject.getTestVectorPtr(), &reflectedObject.v2, reflectedObject.v1), false, false, false, testExpression, context);
 	}
 
 	SECTION("null base float")

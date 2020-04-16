@@ -96,6 +96,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatScope.h
 	CatScopeBlock.cpp
 	${JitCatHeaderPath}/CatScopeBlock.h
+	CatScopeFunctionCall.cpp
+	${JitCatHeaderPath}/CatScopeFunctionCall.h
 	CatScopeRoot.cpp
 	${JitCatHeaderPath}/CatScopeRoot.h
 	CatStaticScope.cpp

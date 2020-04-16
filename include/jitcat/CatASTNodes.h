@@ -36,6 +36,7 @@
 #include "jitcat/CatRange.h"
 #include "jitcat/CatReturnStatement.h"
 #include "jitcat/CatScopeBlock.h"
+#include "jitcat/CatScopeFunctionCall.h"
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/CatSourceFile.h"
 #include "jitcat/CatStatement.h"

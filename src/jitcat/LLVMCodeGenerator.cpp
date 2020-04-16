@@ -125,18 +125,18 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 	initContext(context);
 	switch (expression->getNodeType())
 	{
-		case CatASTNodeType::Literal:				return generate(static_cast<const CatLiteral*>(expression), context);			
+		case CatASTNodeType::ArrayIndex:			return generate(static_cast<const CatArrayIndex*>(expression), context);		
+		case CatASTNodeType::AssignmentOperator:	return generate(static_cast<const CatAssignmentOperator*>(expression), context);	
+		case CatASTNodeType::BuiltInFunctionCall:	return generate(static_cast<const CatBuiltInFunctionCall*>(expression), context);		
 		case CatASTNodeType::Identifier:			return generate(static_cast<const CatIdentifier*>(expression), context);		
 		case CatASTNodeType::IndirectionConversion:	return generate(static_cast<const CatIndirectionConversion*>(expression), context);
 		case CatASTNodeType::InfixOperator:			return generate(static_cast<const CatInfixOperator*>(expression), context);	
-		case CatASTNodeType::AssignmentOperator:	return generate(static_cast<const CatAssignmentOperator*>(expression), context);	
-		case CatASTNodeType::PrefixOperator:		return generate(static_cast<const CatPrefixOperator*>(expression), context);	
-		case CatASTNodeType::FunctionCall:			return generate(static_cast<const CatBuiltInFunctionCall*>(expression), context);		
-		case CatASTNodeType::StaticFunctionCall:	return generate(static_cast<const CatStaticFunctionCall*>(expression), context);
+		case CatASTNodeType::Literal:				return generate(static_cast<const CatLiteral*>(expression), context);			
 		case CatASTNodeType::MemberAccess:			return generate(static_cast<const CatMemberAccess*>(expression), context);		
-		case CatASTNodeType::ArrayIndex:			return generate(static_cast<const CatArrayIndex*>(expression), context);		
 		case CatASTNodeType::MemberFunctionCall:	return generate(static_cast<const CatMemberFunctionCall*>(expression), context);
+		case CatASTNodeType::PrefixOperator:		return generate(static_cast<const CatPrefixOperator*>(expression), context);	
 		case CatASTNodeType::ScopeRoot:				return generate(static_cast<const CatScopeRoot*>(expression), context);		
+		case CatASTNodeType::StaticFunctionCall:	return generate(static_cast<const CatStaticFunctionCall*>(expression), context);
 	}
 	assert(false);
 	return nullptr;

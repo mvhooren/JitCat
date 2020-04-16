@@ -38,6 +38,13 @@ namespace jitcat
 
 
 	template <typename PointerT>
+	inline const CatGenericType& TypeTraits<const PointerT*>::toGenericType()
+	{
+		return TypeTraits<PointerT*>::toGenericType();
+	}
+
+
+	template <typename PointerT>
 	const CatGenericType& TypeTraits<PointerT*>::toGenericType()
 	{
 		static std::unique_ptr<CatGenericType> type;
@@ -53,10 +60,18 @@ namespace jitcat
 
 
 	template <typename RefT>
+	inline const CatGenericType& TypeTraits<const RefT&>::toGenericType()
+	{
+		return TypeTraits<RefT*>::toGenericType();
+	}
+	
+
+	template <typename RefT>
 	inline const CatGenericType& TypeTraits<RefT&>::toGenericType()
 	{
 		return TypeTraits<RefT*>::toGenericType();
 	}
+
 
 	template<typename PointerRefT>
 	const CatGenericType& TypeTraits<PointerRefT*&>::toGenericType()

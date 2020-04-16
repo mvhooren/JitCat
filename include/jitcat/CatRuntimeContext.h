@@ -114,7 +114,9 @@ namespace jitcat
 		//Tries to find a function by signature, starting from the most recently added scope and going backwards through
 		//the scopes until the function is found or there are no more scopes.
 		Reflection::MemberFunctionInfo* findMemberFunction(const Reflection::FunctionSignature* functionSignature, CatScopeID& scopeId);
-
+		//Tries to find a static function by signature, starting from the most recently added scope and going backwards through
+		//the scopes until the function is found or there are no more scopes.
+		Reflection::StaticFunctionInfo* findStaticFunction(const Reflection::FunctionSignature* functionSignature, CatScopeID& scopeId);
 
 		Reflection::TypeInfo* findType(const std::string& lowercaseName, CatScopeID& scopeId);
 

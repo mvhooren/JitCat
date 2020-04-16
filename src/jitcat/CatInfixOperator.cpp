@@ -81,6 +81,7 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 {
 	if (overloadedOperator != nullptr)
 	{
+		ASTHelper::updatePointerIfChanged(overloadedOperator, overloadedOperator->constCollapse(compileTimeContext, errorManager, errorContext));
 		return overloadedOperator.release();
 	}
 

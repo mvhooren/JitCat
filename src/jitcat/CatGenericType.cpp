@@ -1438,7 +1438,7 @@ std::any jitcat::CatGenericType::construct() const
 					assert(false);
 					return std::any();
 				case BasicType::Float:	return 0.0f;
-				case BasicType::Int:	0;
+				case BasicType::Int:	return 0;
 				case BasicType::Bool:	return false;
 				case BasicType::String: return std::string();
 			} 

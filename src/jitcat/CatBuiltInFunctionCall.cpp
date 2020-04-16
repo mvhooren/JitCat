@@ -63,7 +63,7 @@ void CatBuiltInFunctionCall::print() const
 
 CatASTNodeType CatBuiltInFunctionCall::getNodeType() const
 {
-	return CatASTNodeType::FunctionCall;
+	return CatASTNodeType::BuiltInFunctionCall;
 }
 
 

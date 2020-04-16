@@ -52,6 +52,30 @@ namespace jitcat
 
 
 	template <typename PointerT>
+	class TypeTraits<const PointerT*, void>
+	{
+	public:
+		static const CatGenericType& toGenericType();
+		static constexpr bool isSerialisableContainer() { return false; }
+		static constexpr bool isReflectableType() { return true; }
+		static constexpr bool isUniquePtr() { return false; }
+
+		static const char* getTypeName() { return PointerT::getTypeName(); }
+		static std::any getCatValue(const PointerT* value) { return const_cast<PointerT*>(value);};
+		static constexpr PointerT* getDefaultValue() { return nullptr; }
+		static std::any getDefaultCatValue() { return std::any(getDefaultValue()); }
+		static const PointerT* getValue(const std::any& value) {return std::any_cast<PointerT*>(value);}
+		static PointerT* stripValue(PointerT* value) {return value;}
+
+		typedef PointerT* getValueType;
+		typedef PointerT type;
+		typedef const PointerT* cachedType;
+		typedef PointerT* functionParameterType;
+		typedef PointerT* containerItemReturnType;
+	};
+
+
+	template <typename PointerT>
 	class TypeTraits<PointerT*, void>
 	{
 	public:
@@ -74,6 +98,31 @@ namespace jitcat
 		typedef PointerT* containerItemReturnType;
 	};
 
+
+	template <typename RefT>
+	class TypeTraits<const RefT&, void>
+	{
+	public:
+		static inline const CatGenericType& toGenericType();
+
+		static constexpr bool isSerialisableContainer() { return false; }
+		static constexpr bool isReflectableType() { return true; }
+		static constexpr bool isUniquePtr() { return false; }
+
+		static const char* getTypeName() { return RefT::getTypeName(); }
+		static std::any getCatValue(void) { return std::any((RefT*)nullptr);}
+		static std::any getCatValue(const RefT& value) { return std::any(const_cast<RefT*>(&value));};
+		static constexpr RefT* getDefaultValue() { return nullptr; }
+		static std::any getDefaultCatValue() { return std::any(getDefaultValue()); }
+		static RefT* getValue(const std::any& value)  { return std::any_cast<RefT*>(value);}
+		static RefT* stripValue(RefT& value) { return &value; }
+		
+		typedef RefT* getValueType;
+		typedef RefT type;
+		typedef RefT& cachedType;
+		typedef RefT& functionParameterType;
+		typedef RefT* containerItemReturnType;
+	};
 
 	template <typename RefT>
 	class TypeTraits<RefT&, void>

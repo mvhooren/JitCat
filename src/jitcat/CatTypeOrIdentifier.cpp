@@ -14,6 +14,7 @@
 #include "jitcat/CatLog.h"
 #include "jitcat/CatMemberFunctionCall.h"
 #include "jitcat/CatOperatorNew.h"
+#include "jitcat/CatScopeFunctionCall.h"
 #include "jitcat/CatStaticFunctionCall.h"
 #include "jitcat/CatStaticIdentifier.h"
 #include "jitcat/CatStaticScope.h"
@@ -188,7 +189,6 @@ CatFunctionOrConstructor* jitcat::AST::CatTypeOrIdentifier::toFunctionOrConstruc
 
 CatASTNode* jitcat::AST::CatTypeOrIdentifier::toFunctionCall(CatArgumentList* argumentList)
 {
-	//Function call should only later be disambiguated between a constructor call and an actual function call.
 	if (hasParentScope() && !isType())
 	{
 		return new CatStaticFunctionCall(parentScope.release(), identifier, argumentList, lexeme, identifierLexeme);
@@ -201,8 +201,7 @@ CatASTNode* jitcat::AST::CatTypeOrIdentifier::toFunctionCall(CatArgumentList* ar
 		}
 		else
 		{
-			std::string lowerName = Tools::toLowerCase(identifier);
-			return new CatMemberFunctionCall(lowerName, identifierLexeme, nullptr, argumentList, lexeme);
+			return new CatScopeFunctionCall(identifier,argumentList, lexeme, identifierLexeme);
 		}	
 	}
 	else

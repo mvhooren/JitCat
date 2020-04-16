@@ -14,9 +14,9 @@ namespace jitcat::AST
 	{
 		ArrayIndex,
 		AssignmentOperator,
+		BuiltInFunctionCall,
 		ClassDefinition,
 		ForLoop,
-		FunctionCall,
 		FunctionDefinition,
 		FunctionOrConstructorCall,
 		FunctionParameterDefinitions,
@@ -36,6 +36,7 @@ namespace jitcat::AST
 		Range,
 		ReturnStatement,
 		ScopeBlock,
+		ScopeFunctionCall,
 		ScopeRoot,
 		SourceFile,
 		StaticFunctionCall,

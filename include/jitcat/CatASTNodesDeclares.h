@@ -37,6 +37,7 @@ namespace jitcat::AST
 	class CatRange;
 	class CatReturnStatement;
 	class CatScopeBlock;
+	class CatScopeFunctionCall;
 	class CatScopeRoot;
 	class CatSourceFile;
 	class CatStatement;

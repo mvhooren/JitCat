@@ -11,10 +11,12 @@
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeRoot.h"
+#include "jitcat/CatStaticScope.h"
 #include "jitcat/ContainerManipulator.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
+#include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 
@@ -175,7 +177,6 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			return false;
 		}
 
-		
 		if (memberFunctionInfo != nullptr)
 		{
 			if (returnType.isReflectableObjectType())

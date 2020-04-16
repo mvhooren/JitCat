@@ -250,6 +250,30 @@ Reflection::MemberFunctionInfo* jitcat::CatRuntimeContext::findMemberFunction(co
 }
 
 
+Reflection::StaticFunctionInfo* jitcat::CatRuntimeContext::findStaticFunction(const Reflection::FunctionSignature* functionSignature, CatScopeID& scopeId)
+{
+	for (int i = (int)scopes.size() - 1; i >= 0; i--)
+	{
+		StaticFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getStaticMemberFunctionInfo(functionSignature);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = i;
+			return memberFunctionInfo;
+		}
+	}
+	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
+	{
+		StaticFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getStaticMemberFunctionInfo(functionSignature);
+		if (memberFunctionInfo != nullptr)
+		{
+			scopeId = InvalidScopeID - i - 1;
+			return memberFunctionInfo;
+		}
+	}
+	return nullptr;
+}
+
+
 Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& lowercaseName, CatScopeID& scopeId)
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)

@@ -140,6 +140,8 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("getObject", &ReflectedObject::getObject)
 		.addMember("getObject2", &ReflectedObject::getObject2)
 		.addMember("getTestVector", &ReflectedObject::getTestVector)
+		.addMember("getTestVectorRef", &ReflectedObject::getTestVectorRef)
+		.addMember("getTestVectorConstRef", &ReflectedObject::getTestVectorConstRef)
 		.addMember("getTestVectorPtr", &ReflectedObject::getTestVectorPtr)
 		.addMember("getConstTestVector", &ReflectedObject::getConstTestVector)
 		.addMember("v1", &ReflectedObject::v1)
@@ -159,6 +161,16 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("returnThisString", &ReflectedObject::returnThisString)
 		.addMember("addToString", &ReflectedObject::addToString)
 		.addMember("getThisObject", &ReflectedObject::getThisObject)
+
+		.addMember("getStaticFloat", &ReflectedObject::getStaticFloat)
+		.addMember("getStaticInt", &ReflectedObject::getStaticInt)
+		.addMember("getStaticBool", &ReflectedObject::getStaticBool)
+		.addMember("getStaticString", &ReflectedObject::getStaticString)
+		.addMember("getStaticObject", &ReflectedObject::getStaticObject)
+		.addMember("getStaticConstObject", &ReflectedObject::getStaticConstObject)
+		.addMember("getStaticObjectRef", &ReflectedObject::getStaticObjectRef)
+		.addMember("getStaticObjectConstRef", &ReflectedObject::getStaticObjectConstRef)
+		.addMember("getStaticObjectPtr", &ReflectedObject::getStaticObjectPtr)
 
 		.addMember("numberString", &ReflectedObject::numberString)
 		.addMember("text", &ReflectedObject::text, MF::isWritable)
@@ -242,6 +254,18 @@ const TestVector4 TestObjects::ReflectedObject::getConstTestVector() const
 }
 
 
+TestVector4& TestObjects::ReflectedObject::getTestVectorRef()
+{
+	return v1;
+}
+
+
+const TestVector4& TestObjects::ReflectedObject::getTestVectorConstRef() const
+{
+	return v1;
+}
+
+
 TestVector4* TestObjects::ReflectedObject::getTestVectorPtr()
 {
 	return &v2;
@@ -305,6 +329,60 @@ ReflectedObject* ReflectedObject::getConstObject() const
 void ReflectedObject::doSomethingConst() const
 {
 	std::cout << "TEST DoingSomethingConst\n";
+}
+
+
+float TestObjects::ReflectedObject::getStaticFloat()
+{
+	return 42.0f;
+}
+
+
+int TestObjects::ReflectedObject::getStaticInt()
+{
+	return 42;
+}
+
+bool TestObjects::ReflectedObject::getStaticBool()
+{
+	return true;
+}
+
+std::string TestObjects::ReflectedObject::getStaticString()
+{
+	return "Hi!";
+}
+
+TestVector4 TestObjects::ReflectedObject::getStaticObject()
+{
+	return TestVector4(1.0f, 2.0f, 3.0f, 4.0f);
+}
+
+
+const TestVector4 TestObjects::ReflectedObject::getStaticConstObject()
+{
+	return TestVector4(4.0f, 3.0f, 2.0f, 1.0f);
+}
+
+
+TestVector4& TestObjects::ReflectedObject::getStaticObjectRef()
+{
+	static TestVector4 test(9.0f, 8.0f, 7.0f, 6.0f);
+	return test;
+}
+
+
+const TestVector4& TestObjects::ReflectedObject::getStaticObjectConstRef()
+{
+	static TestVector4 test(42.0f, 43.0f, 44.0f, 45.0f);
+	return test;
+}
+
+
+TestVector4* TestObjects::ReflectedObject::getStaticObjectPtr()
+{
+	static TestVector4 test(11.0f, 12.0f, 13.0f, 14.0f);
+	return &test;
 }
 
 
@@ -395,6 +473,8 @@ void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& ty
 		.addMember("y", &TestVector4::y)
 		.addMember("z", &TestVector4::z)
 		.addMember("w", &TestVector4::w)
+		.addMember("doAdd", &TestVector4::doAdd)
+		.addMember("staticAdd", &TestVector4::staticAdd)
 		.addMember<TestVector4, TestVector4, const TestVector4&>("*", &TestVector4::operator*)
 		.addMember<TestVector4, TestVector4, int>("*", &TestVector4::operator*)
 		.addMember<TestVector4, TestVector4, float>("*", &TestVector4::operator*)
@@ -403,12 +483,25 @@ void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& ty
 		.addMember("[]", &TestVector4::operator[])
 		.addMember("==", &TestVector4::operator==)
 		.addMember<TestVector4, const TestVector4&, const TestVector4&>("/", &operator/);
+
 }
 
 
 const char* TestObjects::TestVector4::getTypeName()
 {
 	return "TestVector4";
+}
+
+
+TestVector4 TestObjects::TestVector4::doAdd(TestVector4& other)
+{
+	return *this + other;
+}
+
+
+TestVector4 TestObjects::TestVector4::staticAdd(TestVector4& a, TestVector4* b, TestVector4 c)
+{
+	return a + *b + c;
 }
 
 

@@ -34,6 +34,9 @@ namespace TestObjects
 		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 		static const char* getTypeName();
 
+		TestVector4 doAdd(TestVector4& other);
+		static TestVector4 staticAdd(TestVector4& a, TestVector4* b, TestVector4 c);
+
 		bool operator==(const TestVector4& other) const;
 		TestVector4 operator*(const TestVector4& other);
 		TestVector4 operator*(int value);
@@ -176,10 +179,13 @@ namespace TestObjects
 		const std::string& getStringRef();
 		TestVector4 getTestVector();
 		const TestVector4 getConstTestVector() const;
+		TestVector4& getTestVectorRef();
+		const TestVector4& getTestVectorConstRef() const;
 		TestVector4* getTestVectorPtr();
 		TestVector4 addVectors(TestVector4 lhs, TestVector4 rhs);
 
 		ReflectedObject* getObject();
+
 		ReflectedObject* getObject2(const std::string& name, bool amITrue);
 
 		void doSomething();
@@ -191,6 +197,16 @@ namespace TestObjects
 		std::string getConstString() const;
 		ReflectedObject* getConstObject() const;
 		void doSomethingConst() const;
+
+		static float getStaticFloat();
+		static int getStaticInt();
+		static bool getStaticBool();
+		static std::string getStaticString();
+		static TestVector4 getStaticObject();
+		static const TestVector4 getStaticConstObject();
+		static TestVector4& getStaticObjectRef();
+		static const TestVector4& getStaticObjectConstRef();
+		static TestVector4* getStaticObjectPtr();
 
 		//functions for testing parameter passing
 		void checkTheseValues(bool amITrue, int someAmount, const std::string& someText, ReflectedObject* someObject);

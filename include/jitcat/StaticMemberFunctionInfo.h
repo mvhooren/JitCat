@@ -95,7 +95,7 @@ namespace jitcat::Reflection
 		}
 		else
 		{
-			return TypeTraits<ReturnT>::getValue((*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			return TypeTraits<ReturnT>::getCatValue((*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
 		}
 	}
 
