@@ -2,24 +2,14 @@
 This document describes how to configure a LLVM http://llvm.org/ build for use with JitCat.
 
 ## Introduction
-JitCat uses some of the latest features of LLVM, some of which are not yet included in an official LLVM release.  
-Therefore, you will have to build LLVM from source. Check out the trunk from github:  
-https://github.com/llvm/llvm-project/tree/master/llvm  
-JitCat will track the trunk as much as possible, but it can happen that updates to LLVM will break a JitCat build.  
-The last time this document was updated, JitCat was built against LLVM commit 60aed6a4e5d936b87f5bed0c983be0bab55b1355.  
-Once a stable LLVM version is released that includes everything JitCat needs, JitCat will target that version.  
-This is likely to happen with LLVM 10.0.0.
+JitCat uses the [LLVM 10.0.0](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0) release that you will have to build from source. The binary release cannot be used because it is compiled with the C++14 standard and JitCat is targeting C++17.
+Download the source from github: https://github.com/llvm/llvm-project/archive/llvmorg-10.0.0.zip
 
 ## Read the documentation
 For building LLVM first of all refer to LLVM build documentation:  
 [Getting started](https://llvm.org/docs/GettingStarted.html)  
 [Building LLVM with Cmake](https://llvm.org/docs/CMake.html)  
 [Getting Started with the LLVM System using Microsoft Visual Studio](https://llvm.org/docs/GettingStartedVS.html)  
-
-## Important
-Due to an issue issue with LLVM, before building, we need to apply a small workaround to the llvm code when building LLVM for Windows/MSVC:  
-Find MCAsmInfoCOFF.cpp and change HasCOFFComdatConstants to false.  
-See this issue on the LLVM bugzilla: https://bugs.llvm.org/show_bug.cgi?id=40074  
 
 ## All Platforms
 Set CMAKE_CXX_STANDARD to 17. LLVM currently targets C++14 but will build under C++17 as well. Building LLVM with C++14 will possibly lead to incompatibilities. For example, see [this issue](https://github.com/mvhooren/JitCat/issues/13).
