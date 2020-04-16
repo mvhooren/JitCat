@@ -53,7 +53,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	mangler(new llvm::orc::MangleAndInterner(*executionSession, LLVMJit::get().getDataLayout())),
 	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession.get(),
 															[]() {	return memoryManager->createExpressionAllocator();})),
-	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), llvm::orc::ConcurrentIRCompiler(LLVMJit::get().getTargetMachineBuilder())))
+	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder())))
 {
 	llvm::orc::SymbolMap intrinsicSymbols;
 	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary");
