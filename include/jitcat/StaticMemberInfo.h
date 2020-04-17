@@ -10,6 +10,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberVisibility.h"
+#include "jitcat/TypeTraits.h"
 
 #include <any>
 #include <map>
@@ -36,7 +37,7 @@ namespace jitcat::Reflection
 		virtual std::any getAssignableMemberReference();
 		virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const;
 		virtual llvm::Value* generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const;
-		virtual llvm::Value* generateArrayIndexCode(llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
+		virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
 
 		CatGenericType catType;
 		MemberVisibility visibility;
@@ -53,6 +54,15 @@ namespace jitcat::Reflection
 		inline virtual std::any getMemberReference() override final;
 		inline virtual std::any getAssignableMemberReference() override final;
 		inline virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
+
+		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+		static typename TypeTraits<ContainerItemType>::containerItemReturnType getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index);
+
+		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
+		static typename TypeTraits<ContainerItemType>::containerItemReturnType  getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index);
+
+		template<typename ContainerItemType, typename AllocatorT>
+		static typename TypeTraits<ContainerItemType>::containerItemReturnType getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index);
 
 		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
 		inline llvm::Value* generateIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
@@ -112,7 +122,7 @@ namespace jitcat::Reflection
 	struct StaticClassUniquePtrMemberInfo: public StaticMemberInfo
 	{
 		StaticClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT>* memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
-		static ClassT* getPointer(StaticClassUniquePtrMemberInfo<ClassT>* info);
+		static ClassT* getPointer(std::unique_ptr<ClassT>* info);
 		inline virtual std::any getMemberReference() override final;
 		inline virtual std::any getAssignableMemberReference() override final;
 		inline virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;

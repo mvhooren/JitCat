@@ -50,7 +50,7 @@ namespace TestObjects
 		float y;
 		float z;
 		float w;
-
+		static TestVector4 zero;
 		static int instanceCount;
 	};
 
@@ -245,5 +245,19 @@ namespace TestObjects
 		std::map<std::string, NestedReflectedObject*> reflectableObjectsMap;
 		std::map<std::string, NestedReflectedObject*, CaseInsensitiveCompare> reflectableObjectsMapCustomCompare;
 		std::map<std::string, std::unique_ptr<NestedReflectedObject>> reflectableUniqueObjectsMap;
+
+		static float staticFloat;
+		static int staticInt;
+		static bool staticBool;
+		static std::string staticString;
+
+		static NestedReflectedObject staticObject;
+		static NestedReflectedObject* staticObjectPtr;
+		static NestedReflectedObject* staticObjectNullPtr;
+		static std::unique_ptr<NestedReflectedObject> staticObjectUniquePtr;
+
+		static std::vector<int> staticVector;
+		static std::map<float, std::string> staticMap;
+		static std::map<std::string, int> staticStringMap;
 	};
 }

@@ -257,7 +257,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticStringMember(cons
 	constexpr std::size_t dataSize = sizeof(std::string);
 	unsigned char* memberData = new unsigned char[dataSize];
 	staticData.emplace_back(memberData);
-	new (memberData) std::string(memberName);
+	new (memberData) std::string(defaultValue);
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	StaticMemberInfo* memberInfo = new StaticBasicTypeMemberInfo<std::string>(memberName, reinterpret_cast<std::string*>(memberData), CatGenericType::stringType);
 	staticMembers.emplace(lowerCaseMemberName, memberInfo);

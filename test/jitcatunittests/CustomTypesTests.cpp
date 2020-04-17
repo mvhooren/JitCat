@@ -27,6 +27,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	std::unique_ptr<ReflectedObject> objectUniquePtr(std::make_unique<ReflectedObject>());
 	ExpressionErrorManager errorManager;
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
+	TypeInfo* vectorTypeInfo = TypeRegistry::get()->registerType<TestVector4>();
 
 	const char* customTypeName2 = "MyType2";
 	TypeRegistry::get()->removeType(customTypeName2);
@@ -39,8 +40,11 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject2", objectUniquePtr.get(), objectTypeInfo);
+	customType->addDataObjectMember("myVector4DataObject", vectorTypeInfo);
 	ObjectInstance typeInstance(customType->construct(), customType.get());
-
+	std::any vector4 = customType->getMemberInfo("myVector4DataObject")->getMemberReference(typeInstance.getObject());
+	TestVector4* vector4Member = std::any_cast<TestVector4*>(vector4);
+	vector4Member->x = 42.0f;
 	const char* customTypeName3 = "MyType3";
 	TypeRegistry::get()->removeType(customTypeName3);
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType2 = makeTypeInfo<CustomTypeInfo>(customTypeName3);
@@ -83,10 +87,15 @@ TEST_CASE("Custom Types", "[customtypes]")
 		Expression<bool> testExpression(&context, "myBoolean");
 		doChecks(true, false, false, false, testExpression, context);
 	}
-	SECTION("Object Variable")
+	SECTION("Object Ptr Variable")
 	{
 		Expression<ReflectedObject*> testExpression(&context, "myObject");
 		doChecks(&reflectedObject, false, false, false, testExpression, context);
+	}
+	SECTION("Object Value Variable")
+	{
+		Expression<TestVector4> testExpression(&context, "myVector4DataObject");
+		doChecks(*vector4Member, false, false, false, testExpression, context);
 	}
 	SECTION("Null object Variable")
 	{

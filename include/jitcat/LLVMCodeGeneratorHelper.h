@@ -62,7 +62,9 @@ namespace jitcat::LLVM
 		static bool isInt(llvm::Value* value);
 
 		llvm::Value* loadBasicType(llvm::Type* type, llvm::Value* addressValue, const std::string& name);
+		llvm::Value* loadBasicType(llvm::Type* type, llvm::Constant* addressValue, const std::string& name);
 		llvm::Value* loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
+		llvm::Value* loadPointerAtAddress(llvm::Constant* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* createAdd(llvm::Value* value1, llvm::Value* value2, const std::string& name);
 		llvm::Value* createAdd(llvm::Value* value1, llvm::Constant* value2, const std::string& name);
 
@@ -77,6 +79,7 @@ namespace jitcat::LLVM
 		llvm::Value* createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType = LLVMTypes::pointerType);
 		llvm::Constant* createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType);
 		llvm::Value* createEmptyStringPtrConstant();
+		llvm::Value* constantToValue(llvm::Constant* constant) const;
 
 
 		void setCurrentModule(llvm::Module* module);

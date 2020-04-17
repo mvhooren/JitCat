@@ -78,7 +78,7 @@ namespace jitcat::Reflection
 		}
 		else if constexpr (TypeTraits<MemberT>::isUniquePtr())
 		{
-			memberInfo = new StaticClassUniquePtrMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassUniquePtrMemberInfo<typename TypeTraits<MemberT>::type>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_same<MemberT, ReflectableHandle>::value)
 		{
@@ -86,7 +86,7 @@ namespace jitcat::Reflection
 		}
 		else if constexpr (std::is_pointer<MemberT>::value)
 		{
-			memberInfo = new StaticClassPointerMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassPointerMemberInfo(identifier, reinterpret_cast<unsigned char**>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_class<MemberT>::value)
 		{

@@ -144,7 +144,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("getTestVectorConstRef", &ReflectedObject::getTestVectorConstRef)
 		.addMember("getTestVectorPtr", &ReflectedObject::getTestVectorPtr)
 		.addMember("getConstTestVector", &ReflectedObject::getConstTestVector)
-		.addMember("v1", &ReflectedObject::v1)
+		.addMember("v1", &ReflectedObject::v1, MF::isWritable)
 		.addMember("v2", &ReflectedObject::v2)
 		.addMember("addVectors", &ReflectedObject::addVectors)
 
@@ -171,7 +171,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("getStaticObjectRef", &ReflectedObject::getStaticObjectRef)
 		.addMember("getStaticObjectConstRef", &ReflectedObject::getStaticObjectConstRef)
 		.addMember("getStaticObjectPtr", &ReflectedObject::getStaticObjectPtr)
-
+		
 		.addMember("numberString", &ReflectedObject::numberString)
 		.addMember("text", &ReflectedObject::text, MF::isWritable)
 		.addMember("theInt", &ReflectedObject::theInt, MF::isWritable)
@@ -194,6 +194,20 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("objectVector", &ReflectedObject::objectVector)
 		.addMember("reflectableObjectsVector", &ReflectedObject::reflectableObjectsVector)
 		.addMember("reflectableUniqueObjectsVector", &ReflectedObject::reflectableUniqueObjectsVector)
+
+		.addMember("staticFloat", &ReflectedObject::staticFloat)
+		.addMember("staticInt", &ReflectedObject::staticInt)
+		.addMember("staticBool", &ReflectedObject::staticBool)
+		.addMember("staticString", &ReflectedObject::staticString)
+
+		.addMember("staticObject", &ReflectedObject::staticObject)
+		.addMember("staticObjectPtr", &ReflectedObject::staticObjectPtr)
+		.addMember("staticObjectNullPtr", &ReflectedObject::staticObjectNullPtr)
+		.addMember("staticObjectUniquePtr", &ReflectedObject::staticObjectUniquePtr)
+
+		.addMember("staticVector", &ReflectedObject::staticVector)
+		.addMember("staticMap", &ReflectedObject::staticMap)
+		.addMember("staticStringMap", &ReflectedObject::staticStringMap)
 
 		.addMember("floatVector", &ReflectedObject::floatVector)
 
@@ -410,6 +424,21 @@ ReflectedObject* ReflectedObject::getThisObject(ReflectedObject* someObject) con
 }
 
 
+float ReflectedObject::staticFloat = 1234.5f;
+int ReflectedObject::staticInt = 33;
+bool ReflectedObject::staticBool = true;
+std::string ReflectedObject::staticString = "SomeString";
+
+NestedReflectedObject ReflectedObject::staticObject = NestedReflectedObject();
+NestedReflectedObject* ReflectedObject::staticObjectPtr = new NestedReflectedObject();
+NestedReflectedObject* ReflectedObject::staticObjectNullPtr = nullptr;
+std::unique_ptr<NestedReflectedObject> ReflectedObject::staticObjectUniquePtr = std::make_unique<NestedReflectedObject>();
+
+std::vector<int> ReflectedObject::staticVector = {42, 11, 0};;
+std::map<float, std::string> ReflectedObject::staticMap = {{1.0f, "1.0f"}, {42.0f , "42.0f"}};
+std::map<std::string, int> ReflectedObject::staticStringMap = {{"one", 1},{"two", 2}};
+
+
 TestObjects::TestVector4::TestVector4():
 	x(0.0f),
 	y(0.0f),
@@ -482,6 +511,7 @@ void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& ty
 		.addMember("-", &TestVector4::operator-)
 		.addMember("[]", &TestVector4::operator[])
 		.addMember("==", &TestVector4::operator==)
+		.addMember("zero", &TestVector4::zero)
 		.addMember<TestVector4, const TestVector4&, const TestVector4&>("/", &operator/);
 
 }
@@ -554,8 +584,8 @@ float TestObjects::TestVector4::operator[](int index)
 	}
 }
 
-
-int TestObjects::TestVector4::instanceCount = 0;
+TestVector4 TestVector4::zero = TestVector4();
+int TestVector4::instanceCount = 0;
 
 
 TestVector4 TestObjects::operator/(const TestVector4& lhs, const TestVector4& rhs)

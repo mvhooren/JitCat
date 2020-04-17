@@ -8,6 +8,9 @@
 #include "jitcat/StaticMemberInfo.h"
 #include "jitcat/ReflectableHandle.h"
 
+#include <cassert>
+
+
 using namespace jitcat;
 using namespace jitcat::Reflection;
 
@@ -26,25 +29,28 @@ std::any StaticMemberInfo::getAssignableMemberReference()
 
 llvm::Value* StaticMemberInfo::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 {
+	assert(false);
 	return nullptr;
 }
 
 
 llvm::Value* StaticMemberInfo::generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
+	assert(false);
 	return nullptr;
 }
 
 
-llvm::Value* StaticMemberInfo::generateArrayIndexCode(llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
+llvm::Value* StaticMemberInfo::generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const
 {
+	assert(false);
 	return nullptr;
 }
 
 
 std::any StaticClassPointerMemberInfo::getMemberReference()
 {
-	return catType.getPointeeType()->createFromRawPointer(reinterpret_cast<uintptr_t>(*memberPointer));
+	return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(*memberPointer));
 }
 
 
@@ -56,13 +62,25 @@ std::any StaticClassPointerMemberInfo::getAssignableMemberReference()
 
 llvm::Value* StaticClassPointerMemberInfo::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
+	llvm::Constant* pointerAddress = context->helper->createIntPtrConstant(reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName);
+	return context->helper->loadPointerAtAddress(pointerAddress, memberName);
+#else 
 	return nullptr;
+#endif // ENABLE_LLVM
 }
 
 
 llvm::Value* StaticClassPointerMemberInfo::generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
+	llvm::Constant* pointerAddress = context->helper->createIntPtrConstant(reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName);
+	llvm::Value* addressValue = context->helper->convertToPointer(pointerAddress, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
+	context->helper->writeToPointer(addressValue, rValue);
+	return rValue;
+#else
 	return nullptr;
+#endif // ENABLE_LLVM
 }
 
 
@@ -80,13 +98,28 @@ std::any jitcat::Reflection::StaticClassHandleMemberInfo::getAssignableMemberRef
 
 llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
+	//Create a constant with the pointer to the reflectable handle.
+	llvm::Value* reflectableHandle = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
+	//Call function that gets the value
+	return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), {reflectableHandle}, "getReflectable");
+#else 
 	return nullptr;
+#endif //ENABLE_LLVM
 }
 
 
 llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
+	//Create a constant with the pointer to the reflectable handle.
+	llvm::Value* reflectableHandle = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
+	//Call function that gets the member
+	context->helper->createCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "assignReflectableHandle");
+	return rValue;
+#else
 	return nullptr;
+#endif // ENABLE_LLVM
 }
 
 
@@ -104,6 +137,11 @@ std::any StaticClassObjectMemberInfo::getAssignableMemberReference()
 
 llvm::Value* StaticClassObjectMemberInfo::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 {
+#ifdef ENABLE_LLVM
+		llvm::Constant* objectPointer = context->helper->createIntPtrConstant(reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName);
+		return context->helper->convertToPointer(objectPointer, memberName);
+#else 
 	return nullptr;
+#endif // ENABLE_LLVM
 }
 

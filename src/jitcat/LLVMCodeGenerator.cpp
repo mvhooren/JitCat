@@ -16,6 +16,7 @@
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/MemberInfo.h"
+#include "jitcat/StaticMemberInfo.h"
 
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
@@ -137,6 +138,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 		case CatASTNodeType::PrefixOperator:		return generate(static_cast<const CatPrefixOperator*>(expression), context);	
 		case CatASTNodeType::ScopeRoot:				return generate(static_cast<const CatScopeRoot*>(expression), context);		
 		case CatASTNodeType::StaticFunctionCall:	return generate(static_cast<const CatStaticFunctionCall*>(expression), context);
+		case CatASTNodeType::StaticIdentifier:		return generate(static_cast<const CatStaticIdentifier*>(expression), context);
 	}
 	assert(false);
 	return nullptr;
@@ -915,6 +917,23 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 }
 
 
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticIdentifier* staticIdentifier, LLVMCompileTimeContext* context)
+{
+	const StaticMemberInfo* staticMemberInfo = staticIdentifier->getStaticMemberInfo();
+
+	llvm::Value* result = staticMemberInfo->generateDereferenceCode(context);
+	if (result != nullptr)
+	{
+		return result;
+	}
+	else
+	{
+		assert(false);
+		return LLVMJit::logError("ERROR: Not yet supported.");
+	}
+}
+
+
 llvm::Value* LLVMCodeGenerator::generate(const CatPrefixOperator* prefixOperator, LLVMCompileTimeContext* context)
 {
 	llvm::Value* right = generate(prefixOperator->getRHS(), context);
@@ -951,25 +970,31 @@ llvm::Value* LLVMCodeGenerator::generate(const CatPrefixOperator* prefixOperator
 llvm::Value* LLVMCodeGenerator::generate(const CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context)
 {
 	CatTypedExpression* base = arrayIndex->getBase();
-	const TypeMemberInfo* memberInfo = nullptr;
-	if (base->getNodeType() == CatASTNodeType::Identifier)
-	{
-		memberInfo = static_cast<CatIdentifier*>(base)->getMemberInfo();
-	}
-	else if (base->getNodeType() == CatASTNodeType::MemberAccess)
-	{
-		memberInfo = static_cast<CatMemberAccess*>(base)->getMemberInfo();
-	}
-	assert(memberInfo != nullptr);
-
 	CatTypedExpression* index = arrayIndex->getIndex();
-
 	if (arrayIndex->isReflectedArray())
 	{
 		return generateMemberFunctionCall(arrayIndex->getArrayIndexOperatorFunction(), base, {index}, context);
 	}
+	else if (base->getNodeType() == CatASTNodeType::StaticIdentifier)
+	{
+		CatStaticIdentifier* staticIdentifier = static_cast<CatStaticIdentifier*>(base);
+		llvm::Value* containerAddress = generate(staticIdentifier, context);
+		llvm::Value* containerIndex = generate(index, context);
+		return staticIdentifier->getStaticMemberInfo()->generateArrayIndexCode(containerAddress, containerIndex, context);
+	}
 	else
 	{
+		const TypeMemberInfo* memberInfo = nullptr;
+		if (base->getNodeType() == CatASTNodeType::Identifier)
+		{
+			memberInfo = static_cast<CatIdentifier*>(base)->getMemberInfo();
+		}
+		else if (base->getNodeType() == CatASTNodeType::MemberAccess)
+		{
+			memberInfo = static_cast<CatMemberAccess*>(base)->getMemberInfo();
+		}
+		assert(memberInfo != nullptr);
+
 		llvm::Value* containerAddress = generate(base, context);
 		llvm::Value* containerIndex = generate(index, context);
 		return memberInfo->generateArrayIndexCode(containerAddress, containerIndex, context);
@@ -1021,6 +1046,23 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatMemberAccess* memberAcce
 {
 	llvm::Value* base = generate(memberAccess->getBase(), context);
 	return memberAccess->getMemberInfo()->generateAssignCode(base, rValue, context);
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateAssign(const AST::CatStaticIdentifier* staticIdentifier, llvm::Value* rValue, LLVMCompileTimeContext* context)
+{
+	const StaticMemberInfo* staticMemberInfo = staticIdentifier->getStaticMemberInfo();
+
+	llvm::Value* result = staticMemberInfo->generateAssignCode(rValue, context);
+	if (result != nullptr)
+	{
+		return result;
+	}
+	else
+	{
+		assert(false);
+		return LLVMJit::logError("ERROR: Not supported.");
+	}
 }
 
 

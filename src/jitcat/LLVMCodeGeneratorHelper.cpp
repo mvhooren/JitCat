@@ -377,6 +377,11 @@ llvm::Value* LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Valu
 	return load;
 }
 
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Constant* addressValue, const std::string& name)
+{
+	return loadBasicType(type, static_cast<llvm::Value*>(addressValue), name);
+}
+
 
 llvm::Value* LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
@@ -385,6 +390,12 @@ llvm::Value* LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Value* addressV
 	llvm::LoadInst* load = builder->CreateLoad(addressAsPointer);
 	load->setName(name);
 	return load;
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Constant* addressValue, const std::string& name, llvm::PointerType* type)
+{
+	return loadPointerAtAddress(static_cast<llvm::Value*>(addressValue), name, type);
 }
 
 
@@ -488,6 +499,12 @@ llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createZeroInitialisedArra
 llvm::Value* LLVMCodeGeneratorHelper::createEmptyStringPtrConstant()
 {
 	return createPtrConstant(reinterpret_cast<uintptr_t>(&emptyString), "EmptyString", LLVMTypes::stringPtrType);
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::constantToValue(llvm::Constant* constant) const
+{
+	return constant;
 }
 
 

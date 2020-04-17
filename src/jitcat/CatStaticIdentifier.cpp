@@ -139,3 +139,9 @@ bool CatStaticIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, Expre
 	}
 	return true;
 }
+
+
+Reflection::StaticMemberInfo* jitcat::AST::CatStaticIdentifier::getStaticMemberInfo() const
+{
+	return staticMemberInfo;
+}

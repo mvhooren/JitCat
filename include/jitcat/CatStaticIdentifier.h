@@ -40,6 +40,8 @@ namespace jitcat::AST
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
+		Reflection::StaticMemberInfo* getStaticMemberInfo() const;
+
 	private:
 		std::string identifier;
 		Tokenizer::Lexeme identifierLexeme;
