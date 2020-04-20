@@ -60,6 +60,9 @@ namespace jitcat::Reflection
 		template <typename ReturnT, typename ... Args>
 		inline ReflectedTypeInfo& addMember(const std::string& identifier, ReturnT (*function)(Args...));
 
+		template <typename ConstantT>
+		inline ReflectedTypeInfo& addConstant(const std::string& identifier, ConstantT value);
+
 		//Set weither or not construction is allowed.
 		ReflectedTypeInfo& enableConstruction();
 		ReflectedTypeInfo& disableConstruction();

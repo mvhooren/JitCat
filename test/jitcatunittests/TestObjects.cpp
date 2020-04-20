@@ -184,6 +184,12 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("aBoolean", &ReflectedObject::aBoolean, MF::isWritable)
 		.addMember("no", &ReflectedObject::no)
 
+		.addConstant("intConstant", 42)
+		.addConstant("floatConstant", 3.141592f)
+		.addConstant("boolConstant", true)
+		.addConstant("stringConstant", std::string("test"))
+		.addConstant("vectorConstant", TestVector4(2.0f, 4.0f, 6.0f, 8.0f))
+		.addConstant("vectorConstantPtr", testVectorConst.get())
 		
 		.addMember("nestedSelfObject", &ReflectedObject::nestedSelfObject, MF::isWritable)
 		.addMember("nullObject", &ReflectedObject::nullObject)
@@ -428,7 +434,7 @@ float ReflectedObject::staticFloat = 1234.5f;
 int ReflectedObject::staticInt = 33;
 bool ReflectedObject::staticBool = true;
 std::string ReflectedObject::staticString = "SomeString";
-
+const std::unique_ptr<TestVector4> ReflectedObject::testVectorConst = std::make_unique<TestVector4>(4.0f, 4.4f, 4.44f, 4.444f);
 NestedReflectedObject ReflectedObject::staticObject = NestedReflectedObject();
 NestedReflectedObject* ReflectedObject::staticObjectPtr = new NestedReflectedObject();
 NestedReflectedObject* ReflectedObject::staticObjectNullPtr = nullptr;

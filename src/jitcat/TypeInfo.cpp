@@ -12,6 +12,7 @@
 #include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
+#include "jitcat/StaticConstMemberInfo.h"
 #include "jitcat/StaticMemberInfo.h"
 #include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/Tools.h"
@@ -58,7 +59,7 @@ TypeInfo::~TypeInfo()
 }
 
 
-void jitcat::Reflection::TypeInfo::destroy(TypeInfo* type)
+void TypeInfo::destroy(TypeInfo* type)
 {
 	if (type->canBeDeleted())
 	{
@@ -72,7 +73,7 @@ void jitcat::Reflection::TypeInfo::destroy(TypeInfo* type)
 }
 
 
-void jitcat::Reflection::TypeInfo::updateTypeDestruction()
+void TypeInfo::updateTypeDestruction()
 {
 	bool foundDeletion = false;
 	do
@@ -95,7 +96,7 @@ void jitcat::Reflection::TypeInfo::updateTypeDestruction()
 }
 
 
-bool jitcat::Reflection::TypeInfo::addType(TypeInfo* type)
+bool TypeInfo::addType(TypeInfo* type)
 {
 	std::string lowercaseTypeName = Tools::toLowerCase(type->getTypeName());
 	if (types.find(lowercaseTypeName) == types.end())
@@ -108,13 +109,25 @@ bool jitcat::Reflection::TypeInfo::addType(TypeInfo* type)
 }
 
 
-void jitcat::Reflection::TypeInfo::setParentType(TypeInfo* type)
+StaticConstMemberInfo* TypeInfo::addConstant(const std::string& name, const CatGenericType& type, const std::any& value)
+{
+	std::string lowercaseTypeName = Tools::toLowerCase(name);
+	if (staticConstMembers.find(lowercaseTypeName) == staticConstMembers.end())
+	{
+		staticConstMembers.emplace(std::make_pair(lowercaseTypeName, std::make_unique<StaticConstMemberInfo>(name, type, value)));
+		return staticConstMembers[lowercaseTypeName].get();
+	}
+	return nullptr;
+}
+
+
+void TypeInfo::setParentType(TypeInfo* type)
 {
 	parentType = type;
 }
 
 
-bool jitcat::Reflection::TypeInfo::removeType(const std::string& typeName)
+bool TypeInfo::removeType(const std::string& typeName)
 {
 	auto& iter = types.find(Tools::toLowerCase(typeName));
 	if (iter != types.end())
@@ -141,7 +154,7 @@ void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 }
 
 
-std::size_t jitcat::Reflection::TypeInfo::getTypeSize() const
+std::size_t TypeInfo::getTypeSize() const
 {
 	return typeSize;
 }
@@ -218,10 +231,24 @@ TypeMemberInfo* TypeInfo::getMemberInfo(const std::string& identifier) const
 }
 
 
-StaticMemberInfo* jitcat::Reflection::TypeInfo::getStaticMemberInfo(const std::string& identifier) const
+StaticMemberInfo* TypeInfo::getStaticMemberInfo(const std::string& identifier) const
 {
 	auto iter = staticMembers.find(Tools::toLowerCase(identifier));
 	if (iter != staticMembers.end())
+	{
+		return iter->second.get();
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+
+StaticConstMemberInfo* TypeInfo::getStaticConstMemberInfo(const std::string& identifier) const
+{
+	auto iter = staticConstMembers.find(Tools::toLowerCase(identifier));
+	if (iter != staticConstMembers.end())
 	{
 		return iter->second.get();
 	}
@@ -246,13 +273,13 @@ MemberFunctionInfo* TypeInfo::getFirstMemberFunctionInfo(const std::string& iden
 }
 
 
-MemberFunctionInfo* jitcat::Reflection::TypeInfo::getMemberFunctionInfo(const FunctionSignature* functionSignature) const
+MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const FunctionSignature* functionSignature) const
 {
 	return getMemberFunctionInfo(*functionSignature);
 }
 
 
-MemberFunctionInfo* jitcat::Reflection::TypeInfo::getMemberFunctionInfo(const FunctionSignature& functionSignature) const
+MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const FunctionSignature& functionSignature) const
 {
 	std::string lowerCaseFunctionName = functionSignature.getLowerCaseFunctionName();
 	auto lowerBound = memberFunctions.lower_bound(lowerCaseFunctionName);
@@ -268,7 +295,7 @@ MemberFunctionInfo* jitcat::Reflection::TypeInfo::getMemberFunctionInfo(const Fu
 }
 
 
-StaticFunctionInfo* jitcat::Reflection::TypeInfo::getFirstStaticMemberFunctionInfo(const std::string& identifier) const
+StaticFunctionInfo* TypeInfo::getFirstStaticMemberFunctionInfo(const std::string& identifier) const
 {
 	auto iter = staticFunctions.find(Tools::toLowerCase(identifier));
 	if (iter != staticFunctions.end())
@@ -282,13 +309,13 @@ StaticFunctionInfo* jitcat::Reflection::TypeInfo::getFirstStaticMemberFunctionIn
 }
 
 
-StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(const FunctionSignature* functionSignature) const
+StaticFunctionInfo* TypeInfo::getStaticMemberFunctionInfo(const FunctionSignature* functionSignature) const
 {
 	return getStaticMemberFunctionInfo(*functionSignature);
 }
 
 
-StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(const FunctionSignature& functionSignature) const
+StaticFunctionInfo* TypeInfo::getStaticMemberFunctionInfo(const FunctionSignature& functionSignature) const
 {
 	std::string lowerCaseFunctionName = functionSignature.getLowerCaseFunctionName();
 	auto lowerBound = staticFunctions.lower_bound(lowerCaseFunctionName);
@@ -304,7 +331,7 @@ StaticFunctionInfo* jitcat::Reflection::TypeInfo::getStaticMemberFunctionInfo(co
 }
 
 
-TypeInfo* jitcat::Reflection::TypeInfo::getTypeInfo(const std::string& typeName) const
+TypeInfo* TypeInfo::getTypeInfo(const std::string& typeName) const
 {
 	auto iter = types.find(Tools::toLowerCase(typeName));
 	if (iter != types.end())
@@ -393,7 +420,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 }
 
 
-void jitcat::Reflection::TypeInfo::enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const
+void TypeInfo::enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const
 {
 	for (auto& iter : membersByOrdinal)
 	{
@@ -408,19 +435,19 @@ bool TypeInfo::isCustomType() const
 }
 
 
-bool jitcat::Reflection::TypeInfo::isReflectedType() const
+bool TypeInfo::isReflectedType() const
 {
 	return false;
 }
 
 
-bool jitcat::Reflection::TypeInfo::isArrayType() const
+bool TypeInfo::isArrayType() const
 {
 	return false;
 }
 
 
-bool jitcat::Reflection::TypeInfo::isTriviallyCopyable() const
+bool TypeInfo::isTriviallyCopyable() const
 {
 	return false;
 }
@@ -438,7 +465,7 @@ const std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>>& TypeInfo:
 }
 
 
-const std::map<std::string, TypeInfo*>& jitcat::Reflection::TypeInfo::getTypes() const
+const std::map<std::string, TypeInfo*>& TypeInfo::getTypes() const
 {
 	return types;
 }
@@ -450,13 +477,13 @@ const TypeCaster* TypeInfo::getTypeCaster() const
 }
 
 
-void jitcat::Reflection::TypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
+void TypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
 {
 	assert(false);
 }
 
 
-unsigned char* jitcat::Reflection::TypeInfo::construct() const
+unsigned char* TypeInfo::construct() const
 {
 	std::size_t typeSize = getTypeSize();
 	unsigned char* buffer = new unsigned char[typeSize];
@@ -469,7 +496,7 @@ unsigned char* jitcat::Reflection::TypeInfo::construct() const
 }
 
 
-void jitcat::Reflection::TypeInfo::destruct(unsigned char* object)
+void TypeInfo::destruct(unsigned char* object)
 {
 	placementDestruct(object, getTypeSize());
 	delete[] object;
@@ -480,25 +507,25 @@ void jitcat::Reflection::TypeInfo::destruct(unsigned char* object)
 }
 
 
-void jitcat::Reflection::TypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
+void TypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
 {
 	assert(false);
 }
 
 
-void jitcat::Reflection::TypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void TypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	assert(false);
 }
 
 
-void jitcat::Reflection::TypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void TypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	assert(false);
 }
 
 
-void jitcat::Reflection::TypeInfo::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
+void TypeInfo::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
 {
 	if (caster != nullptr)
 	{
@@ -511,43 +538,43 @@ void jitcat::Reflection::TypeInfo::toBuffer(const std::any& value, const unsigne
 }
 
 
-bool jitcat::Reflection::TypeInfo::getAllowInheritance() const
+bool TypeInfo::getAllowInheritance() const
 {
 	return true;
 }
 
 
-bool jitcat::Reflection::TypeInfo::inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext)
+bool TypeInfo::inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	return true;
 }
 
 
-bool jitcat::Reflection::TypeInfo::getAllowConstruction() const
+bool TypeInfo::getAllowConstruction() const
 {
 	return true;
 }
 
 
-bool jitcat::Reflection::TypeInfo::getAllowCopyConstruction() const
+bool TypeInfo::getAllowCopyConstruction() const
 {
 	return true;
 }
 
 
-bool jitcat::Reflection::TypeInfo::getAllowMoveConstruction() const
+bool TypeInfo::getAllowMoveConstruction() const
 {
 	return true;
 }
 
 
-bool jitcat::Reflection::TypeInfo::canBeDeleted() const
+bool TypeInfo::canBeDeleted() const
 {
 	return dependentTypes.size() == 0;
 }
 
 
-void jitcat::Reflection::TypeInfo::addDependentType(TypeInfo* otherType)
+void TypeInfo::addDependentType(TypeInfo* otherType)
 {
 	assert(otherType != this);
 	if (dependentTypes.find(otherType) == dependentTypes.end())
@@ -557,7 +584,7 @@ void jitcat::Reflection::TypeInfo::addDependentType(TypeInfo* otherType)
 }
 
 
-void jitcat::Reflection::TypeInfo::removeDependentType(TypeInfo* otherType)
+void TypeInfo::removeDependentType(TypeInfo* otherType)
 {
 	auto& iter = dependentTypes.find(otherType);
 	if (iter != dependentTypes.end())
@@ -567,7 +594,7 @@ void jitcat::Reflection::TypeInfo::removeDependentType(TypeInfo* otherType)
 }
 
 
-void jitcat::Reflection::TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
+void TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
 {
 	auto& deferredMembers = deferredMember->catType.getPointeeType()->getObjectType()->getMembers();
 	auto& deferredMemberFunctions = deferredMember->catType.getPointeeType()->getObjectType()->getMemberFunctions();
@@ -591,14 +618,14 @@ void jitcat::Reflection::TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMe
 }
 
 
-void jitcat::Reflection::TypeInfo::addMember(const std::string& memberName, TypeMemberInfo* memberInfo)
+void TypeInfo::addMember(const std::string& memberName, TypeMemberInfo* memberInfo)
 {
 	members.emplace(memberName, memberInfo);
 	membersByOrdinal[memberInfo->getOrdinal()] = memberInfo;
 }
 
 
-void jitcat::Reflection::TypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
+void TypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
 {
 	auto iter = members.find(Tools::toLowerCase(oldMemberName));
 	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end() && !iter->second->isDeferred())
@@ -612,7 +639,7 @@ void jitcat::Reflection::TypeInfo::renameMember(const std::string& oldMemberName
 }
 
 
-TypeMemberInfo* jitcat::Reflection::TypeInfo::releaseMember(const std::string& memberName)
+TypeMemberInfo* TypeInfo::releaseMember(const std::string& memberName)
 {
 	auto& iter = members.find(memberName);
 	if (iter != members.end())
@@ -633,4 +660,4 @@ TypeMemberInfo* jitcat::Reflection::TypeInfo::releaseMember(const std::string& m
 }
 
 
-std::vector<TypeInfo*> jitcat::Reflection::TypeInfo::typeDeletionList = std::vector<TypeInfo*>();
+std::vector<TypeInfo*> TypeInfo::typeDeletionList = std::vector<TypeInfo*>();

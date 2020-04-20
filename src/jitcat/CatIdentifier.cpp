@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatIdentifier.h"
+#include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatMemberAccess.h"
 #include "jitcat/CatRuntimeContext.h"
@@ -14,6 +15,7 @@
 #include "jitcat/CatStaticScope.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/StaticConstMemberInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/MemberInfo.h"
 
@@ -116,6 +118,11 @@ bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 	{
 		//Static variable
 		disambiguatedIdentifier = std::make_unique<CatStaticIdentifier>(new CatStaticScope(true, nullptr, compiletimeContext->getScopeType(scopeId)->getTypeName(), lexeme, lexeme), lexeme, lexeme);
+	}
+	else if (StaticConstMemberInfo* staticConst = compiletimeContext->findStaticConstant(lowerName, scopeId); staticConst != nullptr)
+	{
+		//Static constant
+		disambiguatedIdentifier = std::make_unique<CatLiteral>(staticConst->getValue(), staticConst->getType(), getLexeme());
 	}
 	if (disambiguatedIdentifier != nullptr)
 	{

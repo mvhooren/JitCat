@@ -144,6 +144,11 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 		Expression<float> testExpression(&context, "-42.0");
 		doChecks(-42.0f, false, true, true, testExpression, context);
 	}
+	SECTION("Static Constant")
+	{
+		Expression<float> testExpression(&context, "floatConstant");
+		doChecks(3.141592f, false, true, false, testExpression, context);
+	}
 	SECTION("Variable")
 	{
 		Expression<float> testExpression(&context, "aFloat");
@@ -331,6 +336,11 @@ TEST_CASE("Integer Tests", "[int][operators]" )
 	{
 		Expression<int> testExpression(&context, "-42");
 		doChecks(-42, false, true, true, testExpression, context);
+	}
+	SECTION("Static Constant")
+	{
+		Expression<int> testExpression(&context, "intConstant");
+		doChecks(42, false, true, false, testExpression, context);
 	}
 	SECTION("Variable")
 	{
@@ -521,6 +531,11 @@ TEST_CASE("Boolean Tests", "[bool][operators]" )
 	SECTION("Constant Operator Not Equals")
 	{
 		Expression<bool> testExpression(&context, "true != false");
+		doChecks(true, false, true, false, testExpression, context);
+	}
+	SECTION("Static Constant")
+	{
+		Expression<bool> testExpression(&context, "boolConstant");
 		doChecks(true, false, true, false, testExpression, context);
 	}
 	SECTION("Variable")
@@ -775,6 +790,11 @@ TEST_CASE("String Tests", "[string][operators]")
 		doChecks(std::string("1hello"), false, true, false, testExpression, context);
 	}
 
+	SECTION("Static Constant")
+	{
+		Expression<std::string> testExpression(&context, "stringConstant");
+		doChecks(std::string("test"), false, true, false, testExpression, context);
+	}
 	SECTION("Variable")
 	{
 		Expression<std::string> testExpression(&context, "text");

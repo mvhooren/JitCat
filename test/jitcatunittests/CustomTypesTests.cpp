@@ -54,6 +54,13 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType2->addStringMember("myNullString", "foo");
 	customType2->addBoolMember("myNullBoolean", true);
 	customType2->addObjectMember("myNullObject3", &reflectedObject, objectTypeInfo);
+	customType2->addConstant("myIntConstant", 3);
+	customType2->addConstant("myFloatConstant", 3.141592f);
+	customType2->addConstant("myBoolConstant", false);
+	customType2->addConstant("myStringConstant", std::string("custom"));
+	customType2->addConstant("myVectorConstant", TestVector4(1.0f, 1.1f, 1.11f, 1.111f));
+	static std::unique_ptr<TestVector4> v4 = std::make_unique<TestVector4>(2.0f, 2.2f, 2.22f, 2.222f);
+	customType2->addConstant("myVectorConstantPtr", v4.get());
 
 	//The case where the pointer is set to null manually
 	std::any instanceAny = typeInstance.getObjectAsAny();
@@ -107,6 +114,38 @@ TEST_CASE("Custom Types", "[customtypes]")
 		Expression<ReflectedObject*> testExpression(&context, "myNullObject2.nullObject");
 		doChecks<ReflectedObject*>(nullptr, false, false, false, testExpression, context);
 	}
+
+	SECTION("Float Static Constant")
+	{
+		Expression<float> testExpression(&context, "myFloatConstant");
+		doChecks(3.141592f, false, true, false, testExpression, context);
+	}
+	SECTION("Int Static Constant")
+	{
+		Expression<int> testExpression(&context, "myIntConstant");
+		doChecks(3, false, true, false, testExpression, context);
+	}
+	SECTION("String Static Constant")
+	{
+		Expression<std::string> testExpression(&context, "myStringConstant");
+		doChecks(std::string("custom"), false, true, false, testExpression, context);
+	}
+	SECTION("Boolean Static Constant")
+	{
+		Expression<bool> testExpression(&context, "myBoolConstant");
+		doChecks(false, false, true, false, testExpression, context);
+	}
+	SECTION("Object Ptr Static Constant")
+	{
+		Expression<TestVector4*> testExpression(&context, "myVectorConstantPtr");
+		doChecks(v4.get(), false, true, false, testExpression, context);
+	}
+	SECTION("Object Value Static Constant")
+	{
+		Expression<TestVector4> testExpression(&context, "myVectorConstant");
+		doChecks(TestVector4(1.0f, 1.1f, 1.11f, 1.111f), false, true, false, testExpression, context);
+	}
+
 
 	SECTION("Null base float Variable")
 	{

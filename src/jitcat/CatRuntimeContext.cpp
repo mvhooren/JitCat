@@ -226,6 +226,30 @@ Reflection::StaticMemberInfo* jitcat::CatRuntimeContext::findStaticVariable(cons
 }
 
 
+Reflection::StaticConstMemberInfo* jitcat::CatRuntimeContext::findStaticConstant(const std::string& lowercaseName, CatScopeID& scopeId)
+{
+	for (int i = (int)scopes.size() - 1; i >= 0; i--)
+	{
+		StaticConstMemberInfo* staticConstMemberInfo = scopes[i]->scopeType->getStaticConstMemberInfo(lowercaseName);
+		if (staticConstMemberInfo != nullptr)
+		{
+			scopeId = i;
+			return staticConstMemberInfo;
+		}
+	}
+	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
+	{
+		StaticConstMemberInfo* staticConstMemberInfo = staticScopes[i]->scopeType->getStaticConstMemberInfo(lowercaseName);
+		if (staticConstMemberInfo != nullptr)
+		{
+			scopeId = InvalidScopeID - i - 1;
+			return staticConstMemberInfo;
+		}
+	}
+	return nullptr;
+}
+
+
 MemberFunctionInfo* CatRuntimeContext::findFirstMemberFunction(const std::string& lowercaseName, CatScopeID& scopeId)
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)

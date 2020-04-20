@@ -251,6 +251,8 @@ namespace TestObjects
 		static bool staticBool;
 		static std::string staticString;
 
+		static const std::unique_ptr<TestVector4> testVectorConst;
+
 		static NestedReflectedObject staticObject;
 		static NestedReflectedObject* staticObjectPtr;
 		static NestedReflectedObject* staticObjectNullPtr;

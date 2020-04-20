@@ -60,6 +60,16 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 		Expression<NestedReflectedObject*> testExpression(&context, "ReflectedObject::staticObjectPtr");
 		doChecks(ReflectedObject::staticObjectPtr, false, false, false, testExpression, context);
 	}
+	SECTION("Static const object")
+	{
+		Expression<TestVector4> testExpression(&context, "vectorConstant");
+		doChecks(TestVector4(2.0f, 4.0f, 6.0f, 8.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Static const object ptr")
+	{
+		Expression<TestVector4*> testExpression(&context, "vectorConstantPtr");
+		doChecks(ReflectedObject::testVectorConst.get(), false, true, false, testExpression, context);
+	}
 	SECTION("Static object null ptr")
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "ReflectedObject::staticObjectNullPtr");

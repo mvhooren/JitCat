@@ -16,6 +16,7 @@ namespace jitcat::Reflection
 	class CustomTypeInfo;
 	class FunctionSignature;
 	struct MemberFunctionInfo;
+	class StaticConstMemberInfo;
 	class Reflectable;
 	class TypeInfo;
 	struct TypeMemberInfo;
@@ -110,6 +111,9 @@ namespace jitcat
 		//Tries to find a static variable by name, starting from the most recently added scope and going backwards through
 		//the scopes until the variable is found or there are no more scopes.
 		Reflection::StaticMemberInfo* findStaticVariable(const std::string& lowercaseName, CatScopeID& scopeId);
+		//Tries to find a static constant by name, starting from the most recently added scope and going backwards through
+		//the scopes until the variable is found or there are no more scopes.
+		Reflection::StaticConstMemberInfo* findStaticConstant(const std::string& lowercaseName, CatScopeID& scopeId);
 		//Tries to find a function by name, starting from the most recently added scope and going backwards through
 		//the scopes until the function is found or there are no more scopes.
 		Reflection::MemberFunctionInfo* findFirstMemberFunction(const std::string& lowercaseName, CatScopeID& scopeId);

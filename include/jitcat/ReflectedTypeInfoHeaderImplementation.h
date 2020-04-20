@@ -145,5 +145,15 @@ namespace jitcat::Reflection
 		return *this;
 	}
 
+
+	template<typename ConstantT>
+	inline ReflectedTypeInfo& ReflectedTypeInfo::addConstant(const std::string& identifier, ConstantT value)
+	{
+		CatGenericType type = TypeTraits<typename RemoveConst<ConstantT>::type>::toGenericType();
+		std::any anyValue = TypeTraits<ConstantT>::getCatValue(value);
+		TypeInfo::addConstant(identifier, type, anyValue);
+		return *this;
+	}
+
 }
 

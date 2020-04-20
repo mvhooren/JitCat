@@ -269,6 +269,8 @@ set(Source_Reflection_TypeInfo_Members
 	MemberInfo.cpp
 	${JitCatHeaderPath}/MemberInfo.h
 	${JitCatHeaderPath}/MemberInfoHeaderImplementation.h
+	StaticConstMemberInfo.cpp
+	${JitCatHeaderPath}/StaticConstMemberInfo.h
 	StaticMemberInfo.cpp
 	${JitCatHeaderPath}/StaticMemberInfo.h
 	${JitCatHeaderPath}/StaticMemberInfoHeaderImplementation.h

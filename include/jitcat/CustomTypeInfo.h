@@ -21,6 +21,7 @@ namespace jitcat::Reflection
 {
 	struct CustomTypeMemberFunctionInfo;
 	struct StaticMemberInfo;
+	class StaticConstMemberInfo;
 
 	//Represents a compound type that can be defined at runtime.
 
@@ -50,6 +51,13 @@ namespace jitcat::Reflection
 		inline TypeMemberInfo* addObjectMember(const std::string& memberName, ObjectT* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false)
 		{
 			return addObjectMember(memberName, reinterpret_cast<unsigned char*>(defaultValue), objectTypeInfo, ownershipSemantics, isWritable, isConst);
+		}
+		template <typename ConstantT>
+		inline StaticConstMemberInfo* addConstant(const std::string& identifier, ConstantT value)
+		{
+			CatGenericType type = TypeTraits<typename RemoveConst<ConstantT>::type>::toGenericType();
+			std::any anyValue = TypeTraits<ConstantT>::getCatValue(value);
+			return TypeInfo::addConstant(identifier, type, anyValue);
 		}
 		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
 

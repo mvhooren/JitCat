@@ -37,6 +37,7 @@ namespace jitcat::Reflection
 	class FunctionSignature;
 	struct MemberFunctionInfo;
 	class StaticFunctionInfo;
+	class StaticConstMemberInfo;
 	struct StaticMemberInfo;
 	class TypeCaster;
 	struct TypeMemberInfo;
@@ -44,22 +45,24 @@ namespace jitcat::Reflection
 
 
 	//TypeInfo stores a tree of type member information about a class or struct.
-	//This allows members to be accessed by string. (For example Root.Member[10].Member().Member)
-	
+		
 	//There are two main sources of type information, both are represented by a class that derives from TypeInfo.
 	//The first source is through reflection of c++ classes and structs. This is done through the ReflectedTypeInfo class. 
 	//(See ReflectedTypeInfo.h)
 	//The second source is through custom type creation. In this case a type is defined at runtime through the CustomTypeInfo class.
 	//(See CustomTypeInfo.h)
 	
-	//The TypeInfo system can store information about the following types:
+	//The TypeInfo system can store information about members of the following types:
 	//- Common basic types: int, bool, float and std::string
-	//- Common containers: std::vector<T>, std::map<U, T> where T and U are themselves a reflectable class/struct.
-	//- Structs and classes that have been made reflectable.
-	//- Member functions that use supported types as parameters and return value (including void).
+	//- Common stl containers: std::vector<T>, std::map<U, T> where T and U are themselves a reflectable class/struct.
+	//- Structs and classes that have been made reflectable. In value, pointer or unique_ptr forms.
+	//- Member functions, including static member functions, that use supported types as parameters and return value (including void).
+	//- Overloaded operators (both the static and the member variants.)
+	//- Named static constants of a supported data type.
 
-	//Members are described by classes that inherit from TypeMemberInfo. (See MemberInfo.h)
+	//Member variables are described by classes that inherit from TypeMemberInfo. (See MemberInfo.h)
 	//Member functions are described by classes that inherit from MemberFunctionInfo. (See MemberFunctionInfo.h)
+	//Static member functions are described by classes that inherit from StaticMemberfunctionInfo. (See StaticMemberFunctionInfo.h)
 	//Finally, static members are described by classes that inherit from StaticMemberInfo. (See StaticMemberInfo.h)
 
 	//These types should be enough to implement most common data structures. Adding more types is possible, but it would lead to a lot more template-nastyness in TypeInfo.h
@@ -84,6 +87,8 @@ namespace jitcat::Reflection
 
 		//Add a nested type to this type. Return true if the type was added, false if a type with this name already exists.
 		bool addType(TypeInfo* type);
+		//Add a named constant value to this type. Returns nullptr if a constant if this name already exists.
+		StaticConstMemberInfo* addConstant(const std::string& name, const CatGenericType& type, const std::any& value);
 		//Set the parent of this type if this type is nested in some other type.
 		void setParentType(TypeInfo* type);
 		//Returns true if the type was deleted, false if the type was not found.
@@ -106,6 +111,9 @@ namespace jitcat::Reflection
 
 		//Gets the type information of a static member variable given its name.
 		StaticMemberInfo* getStaticMemberInfo(const std::string& identifier) const;
+
+		//Gets the type and value information of a static const member given its name.
+		StaticConstMemberInfo* getStaticConstMemberInfo(const std::string& identifier) const;
 
 		//Gets the type information of a member function given its name.
 		MemberFunctionInfo* getFirstMemberFunctionInfo(const std::string& identifier) const;
@@ -200,6 +208,8 @@ namespace jitcat::Reflection
 		std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>> memberFunctions;
 		//Static member variables of this type
 		std::map<std::string, std::unique_ptr<StaticMemberInfo>> staticMembers;
+		//Static const members of this type
+		std::map<std::string, std::unique_ptr<StaticConstMemberInfo>> staticConstMembers;
 		//Static functions of this type, static function overloading is allowed
 		std::multimap<std::string, std::unique_ptr<StaticFunctionInfo>> staticFunctions;
 
