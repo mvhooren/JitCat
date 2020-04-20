@@ -7,7 +7,11 @@
 
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatMemberAccess.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatScopeRoot.h"
+#include "jitcat/CatStaticIdentifier.h"
+#include "jitcat/CatStaticScope.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/Tools.h"
@@ -23,22 +27,14 @@ using namespace jitcat::Tools;
 
 CatIdentifier::CatIdentifier(const std::string& name, const Tokenizer::Lexeme& lexeme):
 	CatAssignableExpression(lexeme),
-	name(name),
-	memberInfo(nullptr),
-	scopeId(InvalidScopeID),
-	type(CatGenericType::unknownType),
-	assignableType(CatGenericType::unknownType)
+	name(name)
 {
 }
 
 
 jitcat::AST::CatIdentifier::CatIdentifier(const CatIdentifier& other):
 	CatAssignableExpression(other),
-	name(other.name),
-	memberInfo(nullptr),
-	scopeId(InvalidScopeID),
-	type(CatGenericType::unknownType),
-	assignableType(CatGenericType::unknownType)
+	name(other.name)
 {
 }
 
@@ -51,13 +47,23 @@ CatASTNode* jitcat::AST::CatIdentifier::copy() const
 
 const CatGenericType& CatIdentifier::getType() const
 {
-	return type;
+	return disambiguatedIdentifier->getType();
+}
+
+
+bool jitcat::AST::CatIdentifier::isAssignable() const
+{
+	return disambiguatedIdentifier->isAssignable();
 }
 
 
 const CatGenericType& jitcat::AST::CatIdentifier::getAssignableType() const
 {
-	return assignableType;
+	if (isAssignable())
+	{
+		return static_cast<CatAssignableExpression*>(disambiguatedIdentifier.get())->getAssignableType();
+	}
+	return CatGenericType::unknownType;
 }
 
 
@@ -69,20 +75,13 @@ void CatIdentifier::print() const
 
 bool CatIdentifier::isConst() const
 {
-	if (memberInfo != nullptr)
-	{
-		return memberInfo->catType.isConst();
-	}
-	else
-	{
-		return true;
-	}
+	return disambiguatedIdentifier->isConst();
 }
 
 
 CatTypedExpression* CatIdentifier::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	return this;
+	return disambiguatedIdentifier.release();
 }
 
 
@@ -94,58 +93,37 @@ CatASTNodeType CatIdentifier::getNodeType() const
 
 std::any CatIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
-	unsigned char* rootObject = runtimeContext->getScopeObject(scopeId);
-	return memberInfo->getMemberReference(rootObject);
+	return disambiguatedIdentifier->execute(runtimeContext);
 }
 
 
 std::any CatIdentifier::executeAssignable(CatRuntimeContext* runtimeContext)
 {
-	unsigned char* rootObject = runtimeContext->getScopeObject(scopeId);
-	return memberInfo->getAssignableMemberReference(rootObject);
+	return static_cast<CatAssignableExpression*>(disambiguatedIdentifier.get())->executeAssignable(runtimeContext);
 }
 
 
 bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	std::string lowerName = Tools::toLowerCase(name);
-	memberInfo = nullptr;
-	type = CatGenericType::unknownType;
-	assignableType = CatGenericType::unknownType;
-	if (compiletimeContext != nullptr)
+	CatScopeID scopeId = InvalidScopeID;
+	if (compiletimeContext->findVariable(lowerName, scopeId) != nullptr)
 	{
-		memberInfo = compiletimeContext->findVariable(lowerName, scopeId);
+		//Member variable
+		disambiguatedIdentifier = std::make_unique<CatMemberAccess>(new CatScopeRoot(scopeId, lexeme), name, lexeme);
 	}
-	if (memberInfo != nullptr)
+	else if (compiletimeContext->findStaticVariable(lowerName, scopeId) != nullptr)
 	{
-		type = memberInfo->catType;
-		assignableType = type.toPointer(TypeOwnershipSemantics::Weak, type.isWritable(), false);
+		//Static variable
+		disambiguatedIdentifier = std::make_unique<CatStaticIdentifier>(new CatStaticScope(true, nullptr, compiletimeContext->getScopeType(scopeId)->getTypeName(), lexeme, lexeme), lexeme, lexeme);
 	}
-	if (type.isValidType() && assignableType.isValidType())
+	if (disambiguatedIdentifier != nullptr)
 	{
-		return true;
+		return disambiguatedIdentifier->typeCheck(compiletimeContext, errorManager, errorContext);
 	}
 	else
 	{
 		errorManager->compiledWithError(std::string("Variable not found: ") + name, errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
-}
-
-
-CatScopeID CatIdentifier::getScopeId() const
-{
-	return scopeId;
-}
-
-
-const TypeMemberInfo* CatIdentifier::getMemberInfo() const
-{
-	return memberInfo;
-}
-
-
-const std::string& jitcat::AST::CatIdentifier::getName() const
-{
-	return name;
 }

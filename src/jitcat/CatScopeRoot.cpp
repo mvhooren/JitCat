@@ -49,7 +49,7 @@ CatASTNodeType CatScopeRoot::getNodeType() const
 
 std::any CatScopeRoot::execute(CatRuntimeContext* runtimeContext)
 {
-	return runtimeContext->getScopeObject(scopeId);
+	return type.createFromRawPointer(reinterpret_cast<uintptr_t>(runtimeContext->getScopeObject(scopeId)));
 }
 
 

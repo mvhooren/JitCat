@@ -22,7 +22,7 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("staticmembervariables_tests", &errorManager);
-	context.addScope(&reflectedObject, true);	
+	context.addScope(&reflectedObject, true);
 
 	SECTION("Static invalid")
 	{
@@ -70,6 +70,11 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 		Expression<NestedReflectedObject*> testExpression(&context, "ReflectedObject::staticObjectUniquePtr");
 		doChecks(ReflectedObject::staticObjectUniquePtr.get(), false, false, false, testExpression, context);
 	}
+	SECTION("Static object unique ptr by value conversion")
+	{
+		Expression<NestedReflectedObject> testExpression(&context, "ReflectedObject::staticObjectUniquePtr");
+		doChecks(*ReflectedObject::staticObjectUniquePtr.get(), false, false, false, testExpression, context);
+	}
 
 	SECTION("Static vector")
 	{
@@ -95,6 +100,11 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 	{
 		Expression<TestVector4> testExpression(&context, "TestVector4::zero");
 		doChecks(TestVector4::zero, false, false, false, testExpression, context);
+	}
+	SECTION("Static vector4 invalid pointer conversion")
+	{
+		Expression<TestVector4*> testExpression(&context, "TestVector4::zero");
+		doChecks(&TestVector4::zero, true, false, false, testExpression, context);
 	}
 }
 
@@ -152,6 +162,139 @@ TEST_CASE("Custom type static member Variables", "[staticmembervariables][custom
 	SECTION("Static object ptr")
 	{
 		Expression<TestVector4*> testExpression(&context, "MyStaticType::myObjectPtr");
+		doChecks(&vector4Obj, false, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Static member variable in scope", "[staticmembervariables]" ) 
+{
+
+	ExpressionErrorManager errorManager;
+
+	const char* customTypeName2 = "MyStaticType";
+	TypeRegistry::get()->removeType(customTypeName2);
+	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName2);
+	TypeRegistry::get()->registerType(customTypeName2, customType.get());
+	
+	customType->addStaticFloatMember("myStaticFloat", 0.001f);
+	customType->addStaticIntMember("myStaticInt", 42);
+	customType->addStaticBoolMember("myStaticBool", true);
+	customType->addStaticStringMember("myStaticString", "Hello");
+	TestVector4 vector4Obj;
+	TypeInfo* typeInfo = TypeRegistry::get()->registerType<TestVector4>();
+	customType->addStaticObjectMember("myObjectPtr", &vector4Obj, typeInfo);
+	customType->addStaticDataObjectMember("myObjectValue", typeInfo);
+	ObjectInstance typeInstance(customType->construct(), customType.get());
+
+	ReflectedObject reflectedObject;
+
+	CatRuntimeContext context("customtypestaticmembervariables_tests", &errorManager);
+	context.addScope(customType.get(), typeInstance.getObject(), false);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Static invalid")
+	{
+		Expression<std::string> testExpression(&context, "staticDoesNotExist");
+		doChecks(ReflectedObject::staticString, true, false, false, testExpression, context);
+	}
+	SECTION("Static float")
+	{
+		Expression<float> testExpression(&context, "staticFloat");
+		doChecks(ReflectedObject::staticFloat, false, false, false, testExpression, context);
+	}
+	SECTION("Static int")
+	{
+		Expression<int> testExpression(&context, "staticInt");
+		doChecks(ReflectedObject::staticInt, false, false, false, testExpression, context);
+	}
+	SECTION("Static bool")
+	{
+		Expression<bool> testExpression(&context, "staticBool");
+		doChecks(ReflectedObject::staticBool, false, false, false, testExpression, context);
+	}
+	SECTION("Static string")
+	{
+		Expression<std::string> testExpression(&context, "staticString");
+		doChecks(ReflectedObject::staticString, false, false, false, testExpression, context);
+	}
+
+	SECTION("Static object")
+	{
+		Expression<NestedReflectedObject> testExpression(&context, "staticObject");
+		doChecks(ReflectedObject::staticObject, false, false, false, testExpression, context);
+	}
+	SECTION("Static object ptr")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "staticObjectPtr");
+		doChecks(ReflectedObject::staticObjectPtr, false, false, false, testExpression, context);
+	}
+	SECTION("Static object null ptr")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "staticObjectNullPtr");
+		doChecks(ReflectedObject::staticObjectNullPtr, false, false, false, testExpression, context);
+	}
+	SECTION("Static object unique ptr")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "staticObjectUniquePtr");
+		doChecks(ReflectedObject::staticObjectUniquePtr.get(), false, false, false, testExpression, context);
+	}
+	SECTION("Static object unique ptr by value conversion")
+	{
+		Expression<NestedReflectedObject> testExpression(&context, "staticObjectUniquePtr");
+		doChecks(*ReflectedObject::staticObjectUniquePtr.get(), false, false, false, testExpression, context);
+	}
+
+	SECTION("Static vector")
+	{
+		Expression<int> testExpression(&context, "staticVector[0]");
+		doChecks(ReflectedObject::staticVector[0], false, false, false, testExpression, context);
+	}
+	SECTION("Static vector out of range")
+	{
+		Expression<int> testExpression(&context, "staticVector[10]");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Static map")
+	{
+		Expression<std::string> testExpression(&context, "staticMap[1.0f]");
+		doChecks(ReflectedObject::staticMap[1.0f], false, false, false, testExpression, context);
+	}
+	SECTION("Static string")
+	{
+		Expression<int> testExpression(&context, "staticStringMap[\"one\"]");
+		doChecks(ReflectedObject::staticStringMap["one"], false, false, false, testExpression, context);
+	}
+
+	SECTION("Static float")
+	{
+		Expression<float> testExpression(&context, "myStaticFloat");
+		doChecks(0.001f, false, false, false, testExpression, context);
+	}
+	SECTION("Static int")
+	{
+		Expression<int> testExpression(&context, "myStaticInt");
+		doChecks(42, false, false, false, testExpression, context);
+	}
+	SECTION("Static bool")
+	{
+		Expression<bool> testExpression(&context, "myStaticBool");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Static string")
+	{
+		Expression<std::string> testExpression(&context, "myStaticString");
+		doChecks(std::string("Hello"), false, false, false, testExpression, context);
+	}
+
+	SECTION("Static object")
+	{
+		Expression<TestVector4> testExpression(&context, "myObjectValue");
+		doChecks(TestVector4(), false, false, false, testExpression, context);
+	}
+	SECTION("Static object ptr")
+	{
+		Expression<TestVector4*> testExpression(&context, "myObjectPtr");
 		doChecks(&vector4Obj, false, false, false, testExpression, context);
 	}
 }

@@ -12,7 +12,6 @@
 #include <optional>
 
 
-
 namespace jitcat::AST
 {
 	class CatDefinition: public CatASTNode

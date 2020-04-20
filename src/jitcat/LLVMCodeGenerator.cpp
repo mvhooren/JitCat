@@ -129,7 +129,6 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 		case CatASTNodeType::ArrayIndex:			return generate(static_cast<const CatArrayIndex*>(expression), context);		
 		case CatASTNodeType::AssignmentOperator:	return generate(static_cast<const CatAssignmentOperator*>(expression), context);	
 		case CatASTNodeType::BuiltInFunctionCall:	return generate(static_cast<const CatBuiltInFunctionCall*>(expression), context);		
-		case CatASTNodeType::Identifier:			return generate(static_cast<const CatIdentifier*>(expression), context);		
 		case CatASTNodeType::IndirectionConversion:	return generate(static_cast<const CatIndirectionConversion*>(expression), context);
 		case CatASTNodeType::InfixOperator:			return generate(static_cast<const CatInfixOperator*>(expression), context);	
 		case CatASTNodeType::Literal:				return generate(static_cast<const CatLiteral*>(expression), context);			
@@ -303,26 +302,6 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 	assert(function != nullptr);
 	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
 	return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
-}
-
-
-llvm::Value* LLVMCodeGenerator::generate(const CatIdentifier* identifier, LLVMCompileTimeContext* context)
-{
-	CatScopeID scopeId = identifier->getScopeId();
-	llvm::Value* parentObjectAddress = getBaseAddress(scopeId, context);
-
-	const TypeMemberInfo* memberInfo = identifier->getMemberInfo();
-
-	llvm::Value* result = memberInfo->generateDereferenceCode(parentObjectAddress, context);
-	if (result != nullptr)
-	{
-		return result;
-	}
-	else
-	{
-		assert(false);
-		return LLVMJit::logError("ERROR: Not yet supported.");
-	}
 }
 
 
@@ -982,22 +961,19 @@ llvm::Value* LLVMCodeGenerator::generate(const CatArrayIndex* arrayIndex, LLVMCo
 		llvm::Value* containerIndex = generate(index, context);
 		return staticIdentifier->getStaticMemberInfo()->generateArrayIndexCode(containerAddress, containerIndex, context);
 	}
-	else
+	else if (base->getNodeType() == CatASTNodeType::MemberAccess)
 	{
-		const TypeMemberInfo* memberInfo = nullptr;
-		if (base->getNodeType() == CatASTNodeType::Identifier)
-		{
-			memberInfo = static_cast<CatIdentifier*>(base)->getMemberInfo();
-		}
-		else if (base->getNodeType() == CatASTNodeType::MemberAccess)
-		{
-			memberInfo = static_cast<CatMemberAccess*>(base)->getMemberInfo();
-		}
+		const TypeMemberInfo* memberInfo = static_cast<CatMemberAccess*>(base)->getMemberInfo();
 		assert(memberInfo != nullptr);
 
 		llvm::Value* containerAddress = generate(base, context);
 		llvm::Value* containerIndex = generate(index, context);
 		return memberInfo->generateArrayIndexCode(containerAddress, containerIndex, context);
+	}
+	else
+	{
+		assert(false);
+		return nullptr;
 	}
 }
 
@@ -1014,31 +990,11 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatAssignableExpression* ex
 	context->currentDyLib = dylib;
 	switch (expression->getNodeType())
 	{
-		case CatASTNodeType::Identifier:	return generateAssign(static_cast<const CatIdentifier*>(expression), rValue, context);
+		case CatASTNodeType::StaticIdentifier:	return generateAssign(static_cast<const CatStaticIdentifier*>(expression), rValue, context);
 		case CatASTNodeType::MemberAccess:	return generateAssign(static_cast<const CatMemberAccess*>(expression), rValue, context);
 	}
 	assert(false);
 	return nullptr;
-}
-
-
-llvm::Value* LLVMCodeGenerator::generateAssign(const CatIdentifier* identifier, llvm::Value* rValue, LLVMCompileTimeContext* context)
-{
-	CatScopeID scopeId = identifier->getScopeId();
-	llvm::Value* parentObjectAddress = getBaseAddress(scopeId, context);
-
-	const TypeMemberInfo* memberInfo = identifier->getMemberInfo();
-
-	llvm::Value* result = memberInfo->generateAssignCode(parentObjectAddress, rValue, context);
-	if (result != nullptr)
-	{
-		return result;
-	}
-	else
-	{
-		assert(false);
-		return LLVMJit::logError("ERROR: Not supported.");
-	}
 }
 
 

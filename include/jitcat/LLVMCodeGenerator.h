@@ -57,7 +57,6 @@ namespace jitcat::LLVM
 		intptr_t generateAndGetAssignFunctionAddress(const jitcat::AST::CatAssignableExpression* expression, LLVMCompileTimeContext* context);
 
 	private:
-		llvm::Value* generate(const AST::CatIdentifier* identifier, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatIndirectionConversion* indirectionConversion, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatInfixOperator* infixOperator, LLVMCompileTimeContext* context);
@@ -72,7 +71,6 @@ namespace jitcat::LLVM
 		llvm::Value* generate(const AST::CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
 
 		llvm::Value* generateAssign(const AST::CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);
-		llvm::Value* generateAssign(const AST::CatIdentifier* identifier, llvm::Value* rValue, LLVMCompileTimeContext* context);
 		llvm::Value* generateAssign(const AST::CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
 		llvm::Value* generateAssign(const AST::CatStaticIdentifier* staticIdentifier, llvm::Value* rValue, LLVMCompileTimeContext* context);
 

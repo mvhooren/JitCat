@@ -17,7 +17,13 @@ namespace jitcat::Reflection
 namespace jitcat::AST
 {
 
-
+	//An identifier refers to any type of member of a scope object.
+	//What kind of member it is, is determined during type checking.
+	//During const-collapse, CatIdentifier is replaced with an AST node representing the specific type of Identifier.
+	//The different types are:
+	//- A member variable (Collapses to CatMemberAccess)
+	//- A static variable (Collapses to CatStaticIdentifier)
+	//- A constant variable (Collapses to CatLiteral)
 	class CatIdentifier: public CatAssignableExpression
 	{
 	public:
@@ -26,6 +32,7 @@ namespace jitcat::AST
 
 		virtual CatASTNode* copy() const override final;
 		virtual const CatGenericType& getType() const override final;
+		virtual bool isAssignable() const override final;
 		virtual const CatGenericType& getAssignableType() const override final;
 		
 		virtual void print() const override final;
@@ -35,17 +42,10 @@ namespace jitcat::AST
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
-		CatScopeID getScopeId() const;
-		const Reflection::TypeMemberInfo* getMemberInfo() const;
-
-		const std::string& getName() const;
 
 	public:
 		std::string name;
-		CatGenericType type;
-		CatGenericType assignableType;
-		Reflection::TypeMemberInfo* memberInfo;
-		CatScopeID scopeId;
+		std::unique_ptr<CatTypedExpression> disambiguatedIdentifier;
 	};
 
 
