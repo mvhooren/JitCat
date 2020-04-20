@@ -287,7 +287,9 @@ bool jitcat::AST::ASTHelper::checkAssignment(const CatTypedExpression* lhs, cons
 {
 	CatGenericType leftType = lhs->getType();
 	CatGenericType rightType = rhs->getType();
-	if (!leftType.isWritable() || leftType.isConst() || !lhs->isAssignable())
+	if ((!leftType.isWritable()) 
+		|| leftType.isConst() 
+		|| !lhs->isAssignable())
 	{
 		errorManager->compiledWithError("Assignment failed because target cannot be assigned.", errorSource, context->getContextName(), lexeme);
 		return false;

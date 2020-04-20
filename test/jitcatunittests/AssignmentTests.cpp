@@ -79,6 +79,12 @@ TEST_CASE("Assign tests", "[assign]" )
 		Expression<void> testExpression(&context, "nestedSelfObject.nestedObjectPointer = nestedObject");
 		checkAssignment(reflectedObject.nestedSelfObject->nestedObjectPointer, &reflectedObject.nestedObject, false, false, false, testExpression, context);
 	}
+	SECTION("Assign testvector by value")
+	{
+		Expression<void> testExpression(&context, "v1 = v2");
+		checkAssignment(reflectedObject.v1, reflectedObject.v2, false, false, false, testExpression, context);
+	}
+
 	SECTION("Assign custom object")
 	{
 		Expression<void> testExpression(&context, "myNullObject = nestedSelfObject");

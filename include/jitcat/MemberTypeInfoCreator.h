@@ -22,7 +22,7 @@ namespace jitcat::Reflection
 		{
 			static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
 			TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
-			return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, false, isConst));
+			return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Value, false, isConst));
 		}
 	};
 

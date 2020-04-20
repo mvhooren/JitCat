@@ -636,7 +636,7 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 			{
 				if (arguments->getArgumentType(0).isBoolType())
 				{
-					if (arguments->getArgumentType(1) == arguments->getArgumentType(2)
+					if (arguments->getArgumentType(1).compare(arguments->getArgumentType(2), false, false)
 						|| (arguments->getArgumentType(1).isScalarType() && arguments->getArgumentType(2).isScalarType()))
 					{
 						returnType = arguments->getArgumentType(1);

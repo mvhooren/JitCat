@@ -105,10 +105,6 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 		if (memberInfo != nullptr)
 		{
 			type = memberInfo->catType;
-			if (type.isPointerType() && type.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
-			{
-				type.setOwnershipSemantics(TypeOwnershipSemantics::Weak);
-			}
 			assignableType = type.toPointer();
 			return true;
 		}

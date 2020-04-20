@@ -511,6 +511,7 @@ void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& ty
 		.addMember("-", &TestVector4::operator-)
 		.addMember("[]", &TestVector4::operator[])
 		.addMember("==", &TestVector4::operator==)
+		.addMember("=", &TestVector4::operator=)
 		.addMember("zero", &TestVector4::zero)
 		.addMember<TestVector4, const TestVector4&, const TestVector4&>("/", &operator/);
 

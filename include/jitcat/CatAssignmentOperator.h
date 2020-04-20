@@ -36,7 +36,7 @@ namespace jitcat::AST
 		CatTypedExpression* getRhs() const;
 
 	private:
-		std::unique_ptr<CatMemberFunctionCall> operatorFunction;
+		std::unique_ptr<CatTypedExpression> operatorFunction;
 		std::unique_ptr<CatTypedExpression> lhs;
 		std::unique_ptr<CatTypedExpression> rhs;
 		Tokenizer::Lexeme operatorLexeme;

@@ -79,7 +79,11 @@ std::any CatAssignmentOperator::execute(CatRuntimeContext* runtimeContext)
 bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	type = CatGenericType::unknownType;
-	if (lhs->typeCheck(compiletimeContext, errorManager, errorContext) && rhs->typeCheck(compiletimeContext, errorManager, errorContext))
+	if (operatorFunction != nullptr)
+	{
+		return operatorFunction->typeCheck(compiletimeContext, errorManager, errorContext);
+	}
+	else if (lhs->typeCheck(compiletimeContext, errorManager, errorContext) && rhs->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		CatGenericType leftType = lhs->getType();
 		CatGenericType rightType = rhs->getType();
@@ -127,6 +131,7 @@ CatTypedExpression* CatAssignmentOperator::constCollapse(CatRuntimeContext* comp
 {
 	if (operatorFunction != nullptr)
 	{
+		ASTHelper::updatePointerIfChanged(operatorFunction, operatorFunction->constCollapse(compileTimeContext, errorManager, errorContext));
 		return operatorFunction.release();
 	}
 	ASTHelper::updatePointerIfChanged(lhs, lhs->constCollapse(compileTimeContext, errorManager, errorContext));
