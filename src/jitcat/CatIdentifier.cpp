@@ -5,13 +5,14 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatMemberAccess.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeRoot.h"
-#include "jitcat/CatStaticIdentifier.h"
+#include "jitcat/CatStaticMemberAccess.h"
 #include "jitcat/CatStaticScope.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -83,6 +84,7 @@ bool CatIdentifier::isConst() const
 
 CatTypedExpression* CatIdentifier::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	ASTHelper::updatePointerIfChanged(disambiguatedIdentifier, disambiguatedIdentifier->constCollapse(compileTimeContext, errorManager, errorContext));
 	return disambiguatedIdentifier.release();
 }
 
@@ -117,7 +119,7 @@ bool CatIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionE
 	else if (compiletimeContext->findStaticVariable(lowerName, scopeId) != nullptr)
 	{
 		//Static variable
-		disambiguatedIdentifier = std::make_unique<CatStaticIdentifier>(new CatStaticScope(true, nullptr, compiletimeContext->getScopeType(scopeId)->getTypeName(), lexeme, lexeme), lexeme, lexeme);
+		disambiguatedIdentifier = std::make_unique<CatStaticMemberAccess>(new CatStaticScope(true, nullptr, compiletimeContext->getScopeType(scopeId)->getTypeName(), lexeme, lexeme), lexeme, lexeme);
 	}
 	else if (StaticConstMemberInfo* staticConst = compiletimeContext->findStaticConstant(lowerName, scopeId); staticConst != nullptr)
 	{

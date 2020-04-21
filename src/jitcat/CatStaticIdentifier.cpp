@@ -5,14 +5,18 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#include "jitcat/CatStaticIdentifier.h"
-#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/ASTHelper.h"
+#include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatStaticIdentifier.h"
+#include "jitcat/CatStaticMemberAccess.h"
 #include "jitcat/CatStaticScope.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/ReflectedTypeInfo.h"
+#include "jitcat/StaticConstMemberInfo.h"
 #include "jitcat/TypeInfo.h"
 
 #include <cassert>
@@ -26,10 +30,7 @@ CatStaticIdentifier::CatStaticIdentifier(CatStaticScope* baseScope, const Tokeni
 	CatAssignableExpression(lexeme),
 	baseScope(baseScope),
 	identifier(identifierLexeme),
-	identifierLexeme(identifierLexeme),
-	type(CatGenericType::unknownType),
-	assignableType(CatGenericType::unknownType),
-	staticMemberInfo(nullptr)
+	identifierLexeme(identifierLexeme)
 {
 }
 
@@ -38,10 +39,7 @@ CatStaticIdentifier::CatStaticIdentifier(const CatStaticIdentifier& other):
 	CatAssignableExpression(other),
 	baseScope(other.baseScope != nullptr ? static_cast<CatStaticScope*>(other.baseScope->copy()) : nullptr),
 	identifier(other.identifier),
-	identifierLexeme(other.identifierLexeme),
-	type(other.type),
-	assignableType(other.assignableType),
-	staticMemberInfo(nullptr)
+	identifierLexeme(other.identifierLexeme)
 {
 }
 
@@ -54,19 +52,26 @@ CatASTNode* CatStaticIdentifier::copy() const
 
 const CatGenericType& CatStaticIdentifier::getType() const
 {
-	return type;
+	return disambiguatedIdentifier->getType();
 }
 
 
 const CatGenericType& CatStaticIdentifier::getAssignableType() const
 {
-	return assignableType;
+	if (disambiguatedIdentifier->isAssignable())
+	{
+		return static_cast<CatAssignableExpression*>(disambiguatedIdentifier.get())->getAssignableType();
+	}
+	else
+	{
+		return CatGenericType::unknownType;
+	}
 }
 
 
 bool jitcat::AST::CatStaticIdentifier::isAssignable() const
 {
-	return !type.isConst();
+	return disambiguatedIdentifier->isAssignable();
 }
 
 
@@ -79,13 +84,14 @@ void CatStaticIdentifier::print() const
 
 bool CatStaticIdentifier::isConst() const
 {
-	return type.isConst();
+	return disambiguatedIdentifier->isConst();
 }
 
 
 CatTypedExpression* CatStaticIdentifier::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	return this;
+	ASTHelper::updatePointerIfChanged(disambiguatedIdentifier, disambiguatedIdentifier->constCollapse(compileTimeContext, errorManager, errorContext));
+	return disambiguatedIdentifier.release();
 }
 
 
@@ -97,23 +103,23 @@ CatASTNodeType CatStaticIdentifier::getNodeType() const
 
 std::any CatStaticIdentifier::execute(CatRuntimeContext* runtimeContext)
 {
-	return staticMemberInfo->getMemberReference();
+	return disambiguatedIdentifier->execute(runtimeContext);
 }
 
 
 std::any CatStaticIdentifier::executeAssignable(CatRuntimeContext* runtimeContext)
 {
-	return staticMemberInfo->getAssignableMemberReference();
+	return static_cast<CatAssignableExpression*>(disambiguatedIdentifier.get())->executeAssignable(runtimeContext);
 }
 
 
 bool CatStaticIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	if (disambiguatedIdentifier != nullptr)
+	{
+		return disambiguatedIdentifier->typeCheck(compiletimeContext, errorManager, errorContext);
+	}
 	std::string lowerName = Tools::toLowerCase(identifier);
-	staticMemberInfo = nullptr;
-	
-	type = CatGenericType::unknownType;
-	assignableType = CatGenericType::unknownType;
 	assert(baseScope != nullptr);
 	if (!baseScope->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
@@ -121,27 +127,22 @@ bool CatStaticIdentifier::typeCheck(CatRuntimeContext* compiletimeContext, Expre
 	}
 	TypeInfo* typeInfo = baseScope->getScopeType();
 
-	staticMemberInfo = typeInfo->getStaticMemberInfo(lowerName);
-
-	if (staticMemberInfo != nullptr)
+	if (typeInfo->getStaticMemberInfo(lowerName) != nullptr)
 	{
-		type = staticMemberInfo->catType;
-		if (type.isPointerType() && type.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
-		{
-			type.setOwnershipSemantics(TypeOwnershipSemantics::Weak);
-		}
-		assignableType = type.toPointer(TypeOwnershipSemantics::Weak, type.isWritable(), false);
+		disambiguatedIdentifier = std::make_unique<CatStaticMemberAccess>(baseScope.release(), identifierLexeme, lexeme);
 	}
-	else
+	else if (StaticConstMemberInfo* constMemberInfo = typeInfo->getStaticConstMemberInfo(lowerName); constMemberInfo != nullptr)
+	{
+		disambiguatedIdentifier = std::make_unique<CatLiteral>(constMemberInfo->getValue(), constMemberInfo->getType(), lexeme);
+	}
+	if (disambiguatedIdentifier != nullptr)
+	{
+		return disambiguatedIdentifier->typeCheck(compiletimeContext, errorManager, errorContext);
+	}
+	else	
 	{
 		errorManager->compiledWithError(std::string("Static member not found: ") + identifier, errorContext, compiletimeContext->getContextName(), identifierLexeme);
 		return false;
 	}
 	return true;
-}
-
-
-Reflection::StaticMemberInfo* jitcat::AST::CatStaticIdentifier::getStaticMemberInfo() const
-{
-	return staticMemberInfo;
 }

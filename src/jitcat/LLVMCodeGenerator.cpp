@@ -137,7 +137,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 		case CatASTNodeType::PrefixOperator:		return generate(static_cast<const CatPrefixOperator*>(expression), context);	
 		case CatASTNodeType::ScopeRoot:				return generate(static_cast<const CatScopeRoot*>(expression), context);		
 		case CatASTNodeType::StaticFunctionCall:	return generate(static_cast<const CatStaticFunctionCall*>(expression), context);
-		case CatASTNodeType::StaticIdentifier:		return generate(static_cast<const CatStaticIdentifier*>(expression), context);
+		case CatASTNodeType::StaticMemberAccess:	return generate(static_cast<const CatStaticMemberAccess*>(expression), context);
 	}
 	assert(false);
 	return nullptr;
@@ -896,7 +896,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticIdentifier* staticIdentifier, LLVMCompileTimeContext* context)
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticMemberAccess* staticIdentifier, LLVMCompileTimeContext* context)
 {
 	const StaticMemberInfo* staticMemberInfo = staticIdentifier->getStaticMemberInfo();
 
@@ -954,12 +954,12 @@ llvm::Value* LLVMCodeGenerator::generate(const CatArrayIndex* arrayIndex, LLVMCo
 	{
 		return generateMemberFunctionCall(arrayIndex->getArrayIndexOperatorFunction(), base, {index}, context);
 	}
-	else if (base->getNodeType() == CatASTNodeType::StaticIdentifier)
+	else if (base->getNodeType() == CatASTNodeType::StaticMemberAccess)
 	{
-		CatStaticIdentifier* staticIdentifier = static_cast<CatStaticIdentifier*>(base);
-		llvm::Value* containerAddress = generate(staticIdentifier, context);
+		CatStaticMemberAccess* staticMemberAccess = static_cast<CatStaticMemberAccess*>(base);
+		llvm::Value* containerAddress = generate(staticMemberAccess, context);
 		llvm::Value* containerIndex = generate(index, context);
-		return staticIdentifier->getStaticMemberInfo()->generateArrayIndexCode(containerAddress, containerIndex, context);
+		return staticMemberAccess->getStaticMemberInfo()->generateArrayIndexCode(containerAddress, containerIndex, context);
 	}
 	else if (base->getNodeType() == CatASTNodeType::MemberAccess)
 	{
@@ -1005,9 +1005,9 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatMemberAccess* memberAcce
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateAssign(const AST::CatStaticIdentifier* staticIdentifier, llvm::Value* rValue, LLVMCompileTimeContext* context)
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateAssign(const AST::CatStaticMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context)
 {
-	const StaticMemberInfo* staticMemberInfo = staticIdentifier->getStaticMemberInfo();
+	const StaticMemberInfo* staticMemberInfo = memberAccess->getStaticMemberInfo();
 
 	llvm::Value* result = staticMemberInfo->generateAssignCode(rValue, context);
 	if (result != nullptr)

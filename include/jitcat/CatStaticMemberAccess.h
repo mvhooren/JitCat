@@ -1,7 +1,7 @@
 /*
   This file is part of the JitCat library.
 	
-  Copyright (C) Machiel van Hooren 2019
+  Copyright (C) Machiel van Hooren 2020
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
@@ -21,11 +21,11 @@ namespace jitcat::AST
 	class CatTypeNode;
 	class CatStaticScope;
 
-	class CatStaticIdentifier: public CatAssignableExpression
+	class CatStaticMemberAccess: public CatAssignableExpression
 	{
 	public:
-		CatStaticIdentifier(CatStaticScope* baseScope, const Tokenizer::Lexeme& identifierLexeme, const Tokenizer::Lexeme& lexeme);
-		CatStaticIdentifier(const CatStaticIdentifier& other);
+		CatStaticMemberAccess(CatStaticScope* baseScope, const Tokenizer::Lexeme& identifierLexeme, const Tokenizer::Lexeme& lexeme);
+		CatStaticMemberAccess(const CatStaticMemberAccess& other);
 
 		virtual CatASTNode* copy() const override final;
 		virtual const CatGenericType& getType() const override final;
@@ -40,12 +40,18 @@ namespace jitcat::AST
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
+		Reflection::StaticMemberInfo* getStaticMemberInfo() const;
+
 	private:
 		std::string identifier;
 		Tokenizer::Lexeme identifierLexeme;
 
-		std::unique_ptr<CatTypedExpression> disambiguatedIdentifier;
+		CatGenericType type;
+		CatGenericType assignableType;
+
 		std::unique_ptr<CatStaticScope> baseScope;
+
+		Reflection::StaticMemberInfo* staticMemberInfo;
 	};
 
 

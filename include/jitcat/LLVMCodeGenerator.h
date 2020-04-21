@@ -65,14 +65,14 @@ namespace jitcat::LLVM
 		llvm::Value* generate(const AST::CatMemberAccess* memberAccess, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatMemberFunctionCall* memberFunctionCall, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatStaticFunctionCall* staticFunctionCall, LLVMCompileTimeContext* context);
-		llvm::Value* generate(const AST::CatStaticIdentifier* staticIdentifier, LLVMCompileTimeContext* context);
+		llvm::Value* generate(const AST::CatStaticMemberAccess* staticIdentifier, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatPrefixOperator* prefixOperator, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
 
 		llvm::Value* generateAssign(const AST::CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);
 		llvm::Value* generateAssign(const AST::CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
-		llvm::Value* generateAssign(const AST::CatStaticIdentifier* staticIdentifier, llvm::Value* rValue, LLVMCompileTimeContext* context);
+		llvm::Value* generateAssign(const AST::CatStaticMemberAccess* staticMemberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
 
 		llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
 

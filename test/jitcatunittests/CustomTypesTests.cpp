@@ -146,6 +146,37 @@ TEST_CASE("Custom Types", "[customtypes]")
 		doChecks(TestVector4(1.0f, 1.1f, 1.11f, 1.111f), false, true, false, testExpression, context);
 	}
 
+	SECTION("Float Static Constant With Scope")
+	{
+		Expression<float> testExpression(&context, "MyType3::myFloatConstant");
+		doChecks(3.141592f, false, true, false, testExpression, context);
+	}
+	SECTION("Int Static Constant With Scope")
+	{
+		Expression<int> testExpression(&context, "MyType3::myIntConstant");
+		doChecks(3, false, true, false, testExpression, context);
+	}
+	SECTION("String Static Constant With Scope")
+	{
+		Expression<std::string> testExpression(&context, "MyType3::myStringConstant");
+		doChecks(std::string("custom"), false, true, false, testExpression, context);
+	}
+	SECTION("Boolean Static Constant With Scope")
+	{
+		Expression<bool> testExpression(&context, "MyType3::myBoolConstant");
+		doChecks(false, false, true, false, testExpression, context);
+	}
+	SECTION("Object Ptr Static Constant With Scope")
+	{
+		Expression<TestVector4*> testExpression(&context, "MyType3::myVectorConstantPtr");
+		doChecks(v4.get(), false, true, false, testExpression, context);
+	}
+	SECTION("Object Value Static Constant With Scope")
+	{
+		Expression<TestVector4> testExpression(&context, "MyType3::myVectorConstant");
+		doChecks(TestVector4(1.0f, 1.1f, 1.11f, 1.111f), false, true, false, testExpression, context);
+	}
+
 
 	SECTION("Null base float Variable")
 	{

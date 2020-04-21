@@ -49,7 +49,6 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 		Expression<std::string> testExpression(&context, "ReflectedObject::staticString");
 		doChecks(ReflectedObject::staticString, false, false, false, testExpression, context);
 	}
-
 	SECTION("Static object")
 	{
 		Expression<NestedReflectedObject> testExpression(&context, "ReflectedObject::staticObject");
@@ -59,16 +58,6 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "ReflectedObject::staticObjectPtr");
 		doChecks(ReflectedObject::staticObjectPtr, false, false, false, testExpression, context);
-	}
-	SECTION("Static const object")
-	{
-		Expression<TestVector4> testExpression(&context, "vectorConstant");
-		doChecks(TestVector4(2.0f, 4.0f, 6.0f, 8.0f), false, true, false, testExpression, context);
-	}
-	SECTION("Static const object ptr")
-	{
-		Expression<TestVector4*> testExpression(&context, "vectorConstantPtr");
-		doChecks(ReflectedObject::testVectorConst.get(), false, true, false, testExpression, context);
 	}
 	SECTION("Static object null ptr")
 	{
@@ -84,6 +73,37 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 	{
 		Expression<NestedReflectedObject> testExpression(&context, "ReflectedObject::staticObjectUniquePtr");
 		doChecks(*ReflectedObject::staticObjectUniquePtr.get(), false, false, false, testExpression, context);
+	}
+
+	SECTION("Static const float")
+	{
+		Expression<float> testExpression(&context, "ReflectedObject::floatConstant");
+		doChecks(3.141592f, false, true, false, testExpression, context);
+	}
+	SECTION("Static const int")
+	{
+		Expression<int> testExpression(&context, "ReflectedObject::intConstant");
+		doChecks(42, false, true, false, testExpression, context);
+	}
+	SECTION("Static const bool")
+	{
+		Expression<bool> testExpression(&context, "ReflectedObject::boolConstant");
+		doChecks(true, false, true, false, testExpression, context);
+	}
+	SECTION("Static const string")
+	{
+		Expression<std::string> testExpression(&context, "ReflectedObject::stringConstant");
+		doChecks(std::string("test"), false, true, false, testExpression, context);
+	}
+	SECTION("Static const object")
+	{
+		Expression<TestVector4> testExpression(&context, "ReflectedObject::vectorConstant");
+		doChecks(TestVector4(2.0f, 4.0f, 6.0f, 8.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Static const object ptr")
+	{
+		Expression<TestVector4*> testExpression(&context, "ReflectedObject::vectorConstantPtr");
+		doChecks(ReflectedObject::testVectorConst.get(), false, true, false, testExpression, context);
 	}
 
 	SECTION("Static vector")
@@ -253,6 +273,37 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 	{
 		Expression<NestedReflectedObject> testExpression(&context, "staticObjectUniquePtr");
 		doChecks(*ReflectedObject::staticObjectUniquePtr.get(), false, false, false, testExpression, context);
+	}
+
+	SECTION("Static const float")
+	{
+		Expression<float> testExpression(&context, "floatConstant");
+		doChecks(3.141592f, false, true, false, testExpression, context);
+	}
+	SECTION("Static const int")
+	{
+		Expression<int> testExpression(&context, "intConstant");
+		doChecks(42, false, true, false, testExpression, context);
+	}
+	SECTION("Static const bool")
+	{
+		Expression<bool> testExpression(&context, "boolConstant");
+		doChecks(true, false, true, false, testExpression, context);
+	}
+	SECTION("Static const string")
+	{
+		Expression<std::string> testExpression(&context, "stringConstant");
+		doChecks(std::string("test"), false, true, false, testExpression, context);
+	}
+	SECTION("Static const object")
+	{
+		Expression<TestVector4> testExpression(&context, "vectorConstant");
+		doChecks(TestVector4(2.0f, 4.0f, 6.0f, 8.0f), false, true, false, testExpression, context);
+	}
+	SECTION("Static const object ptr")
+	{
+		Expression<TestVector4*> testExpression(&context, "vectorConstantPtr");
+		doChecks(ReflectedObject::testVectorConst.get(), false, true, false, testExpression, context);
 	}
 
 	SECTION("Static vector")

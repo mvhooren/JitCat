@@ -42,6 +42,7 @@
 #include "jitcat/CatStatement.h"
 #include "jitcat/CatStaticFunctionCall.h"
 #include "jitcat/CatStaticIdentifier.h"
+#include "jitcat/CatStaticMemberAccess.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatTypeOrIdentifier.h"

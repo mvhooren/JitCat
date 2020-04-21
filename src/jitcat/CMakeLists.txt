@@ -100,6 +100,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatScopeFunctionCall.h
 	CatScopeRoot.cpp
 	${JitCatHeaderPath}/CatScopeRoot.h
+	CatStaticMemberAccess.cpp
+	${JitCatHeaderPath}/CatStaticMemberAccess.h
 	CatStaticScope.cpp
 	${JitCatHeaderPath}/CatStaticScope.h
 	CatTypeNode.cpp

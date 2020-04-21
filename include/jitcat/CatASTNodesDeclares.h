@@ -43,6 +43,7 @@ namespace jitcat::AST
 	class CatStatement;
 	class CatStaticFunctionCall;
 	class CatStaticIdentifier;
+	class CatStaticMemberAccess;
 	class CatStaticScope;
 	class CatTypedExpression;
 	class CatTypeNode;

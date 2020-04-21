@@ -41,6 +41,7 @@ namespace jitcat::AST
 		SourceFile,
 		StaticFunctionCall,
 		StaticIdentifier,
+		StaticMemberAccess,
 		StaticScope,
 		TypeName,
 		TypeOrIdentifier,
