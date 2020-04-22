@@ -71,6 +71,20 @@ CatGenericType::CatGenericType():
 }
 
 
+CatGenericType::CatGenericType(const CatGenericType& enumUnderlyingType, Reflection::TypeInfo* enumValuesType, bool writable, bool constant):
+	specificType(SpecificType::Enum),
+	nestedType(enumValuesType),
+	ownershipSemantics(TypeOwnershipSemantics::Value),
+	containerType(ContainerType::None),
+	containerManipulator(nullptr),
+	writable(writable),
+	constant(constant)
+{
+	assert(enumUnderlyingType.isBasicType());
+	basicType = enumUnderlyingType.basicType;
+}
+
+
 CatGenericType::CatGenericType(TypeInfo* reflectableType, bool writable, bool constant):
 	specificType(SpecificType::ReflectableObject),
 	basicType(BasicType::None),
@@ -181,6 +195,7 @@ bool jitcat::CatGenericType::compare(const CatGenericType& other, bool includeOw
 			default:								assert(false);
 			case SpecificType::None:				return true;
 			case SpecificType::Basic:				return basicType == other.basicType;
+			case SpecificType::Enum:				return basicType == other.basicType && nestedType == other.nestedType;
 			case SpecificType::ReflectableHandle:
 			case SpecificType::Pointer:				return pointeeType->compare(*other.getPointeeType(), includeOwnershipSemantics, includeIndirection);
 			case SpecificType::ReflectableObject:	return nestedType == other.nestedType || isNullptrType() || other.isNullptrType();
@@ -202,12 +217,18 @@ bool CatGenericType::isUnknown() const
 
 bool CatGenericType::isValidType() const
 {
-	return		specificType != SpecificType::None
-			&& (specificType != SpecificType::Basic || (basicType != BasicType::None))
-			&& (specificType != SpecificType::ReflectableObject || nestedType != nullptr)
-			&& (specificType != SpecificType::Container || containerManipulator != nullptr)
-			&& (specificType != SpecificType::Pointer || (pointeeType.get() != nullptr && pointeeType->isValidType()))
-			&& (specificType != SpecificType::ReflectableHandle || (pointeeType.get() != nullptr && pointeeType->isValidType()));
+	switch (specificType)
+	{
+		default:
+		case SpecificType::None:				return false;
+		case SpecificType::Basic:				return basicType != BasicType::None;
+		case SpecificType::Enum:				return basicType != BasicType::None && nestedType != nullptr;
+		case SpecificType::ReflectableObject:	return nestedType != nullptr;
+		case SpecificType::Container:			return containerManipulator != nullptr;
+		case SpecificType::Pointer:
+		case SpecificType::ReflectableHandle:	return pointeeType != nullptr && pointeeType->isValidType();
+			
+	}
 }
 
 
@@ -259,6 +280,12 @@ bool CatGenericType::isVoidType() const
 }
 
 
+bool jitcat::CatGenericType::isEnumType() const
+{
+	return specificType == SpecificType::Enum;
+}
+
+
 bool CatGenericType::isReflectableObjectType() const
 {
 	return specificType == SpecificType::ReflectableObject;
@@ -307,6 +334,7 @@ bool jitcat::CatGenericType::isAssignableType() const
 	return specificType == SpecificType::Pointer
 		   && pointeeType->isWritable()
 		   && (	  (pointeeType->isBasicType())
+			   || (pointeeType->isEnumType())
 			   || (pointeeType->isReflectableHandleType())
 			   || (pointeeType->isPointerType() && pointeeType->pointeeType->isReflectableObjectType()));
 		
@@ -352,7 +380,8 @@ bool jitcat::CatGenericType::isNullptrType() const
 bool jitcat::CatGenericType::isTriviallyCopyable() const
 {
 	return (isBasicType() && basicType != BasicType::String)
-		   || (isReflectableObjectType() && nestedType->isTriviallyCopyable());
+		   || (isReflectableObjectType() && nestedType->isTriviallyCopyable())
+		   || (isEnumType() && basicType != BasicType::String);
 }
 
 
@@ -376,6 +405,7 @@ void jitcat::CatGenericType::addDependentType(Reflection::TypeInfo* objectType)
 		case SpecificType::Container:			return;
 		case SpecificType::ReflectableHandle:
 		case SpecificType::Pointer:				pointeeType->addDependentType(objectType); return;
+		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:	nestedType->addDependentType(objectType); return;
 		default:								assert(false); return;
 	}
@@ -386,6 +416,7 @@ bool jitcat::CatGenericType::isDependentOn(Reflection::TypeInfo* objectType) con
 {
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:				return false;
 		case SpecificType::Container:			return containerManipulator->getValueType().isDependentOn(objectType) || containerManipulator->getKeyType().isDependentOn(objectType);
 		case SpecificType::ReflectableHandle:
@@ -393,6 +424,19 @@ bool jitcat::CatGenericType::isDependentOn(Reflection::TypeInfo* objectType) con
 		case SpecificType::ReflectableObject:	return nestedType == objectType;
 		default:								assert(false); return false;
 	}
+}
+
+
+const CatGenericType& jitcat::CatGenericType::getUnderlyingEnumType() const
+{
+	assert(isEnumType());
+	return getBasicType(basicType);
+}
+
+
+CatGenericType jitcat::CatGenericType::copyWithFlags(bool writable, bool constant) const
+{
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, containerType, containerManipulator, pointeeType.get(), writable, constant);
 }
 
 
@@ -592,7 +636,8 @@ const CatGenericType& CatGenericType::getContainerItemType() const
 
 const char* CatGenericType::getObjectTypeName() const
 {
-	if (specificType == SpecificType::ReflectableObject
+	if ((specificType == SpecificType::ReflectableObject
+		 || specificType == SpecificType::Enum)
 		&& nestedType != nullptr)
 	{
 		return nestedType->getTypeName();
@@ -755,6 +800,7 @@ std::string CatGenericType::toString() const
 	{
 		default:								return "Unknown";
 		case SpecificType::Basic:				return toString(basicType);
+		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:	return nestedType->getTypeName();
 		case SpecificType::Pointer:				return Tools::append("Pointer to ", pointeeType->toString());
 		case SpecificType::ReflectableHandle:	return Tools::append("Handle to ", pointeeType->toString());
@@ -831,6 +877,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 						case BasicType::String:	return std::any(reinterpret_cast<std::string*>(pointer));
 					}
 				} break;
+				case SpecificType::Enum:
 				case SpecificType::ReflectableObject:
 				{
 					return pointeeType->getObjectType()->getTypeCaster()->castFromRawPointer(pointer);
@@ -890,6 +937,7 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 				case BasicType::String:	return std::any(*reinterpret_cast<std::string*>(pointer));
 			}
 		} break;
+		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:
 		{
 			return createFromRawPointer(pointer);
@@ -942,6 +990,7 @@ std::any CatGenericType::createDefault() const
 				case BasicType::Void:	return std::any();
 			}
 		} break;
+		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:
 		{
 			return construct();
@@ -1005,6 +1054,7 @@ std::size_t jitcat::CatGenericType::getTypeSize() const
 	switch (specificType)
 	{
 		case SpecificType::Basic:
+		case SpecificType::Enum:
 			switch (basicType)
 			{
 				case BasicType::Bool:	return sizeof(bool);
@@ -1125,11 +1175,25 @@ void CatGenericType::printValue(std::any& value)
 		{
 			switch (basicType)
 			{
-				case BasicType::Int:		CatLog::log(std::any_cast<int>(value)); break;
+				case BasicType::Int:	CatLog::log(std::any_cast<int>(value)); break;
 				case BasicType::Float:	CatLog::log(std::any_cast<float>(value)); break;
 				case BasicType::Bool:	CatLog::log(std::any_cast<bool>(value) ? "true" : "false"); break;
 				case BasicType::String:	CatLog::log("\""); CatLog::log(std::any_cast<std::string>(value)); CatLog::log("\""); break;
 			}
+		} break;
+		case SpecificType::Enum:
+		{
+			const unsigned char* enumPtr = nullptr;
+			std::size_t bufferSize = 0;
+			nestedType->getTypeCaster()->toBuffer(value, enumPtr, bufferSize);
+			switch (basicType)
+			{
+				case BasicType::Int:	CatLog::log(*reinterpret_cast<const unsigned int*>(enumPtr)); break;
+				case BasicType::Float:	CatLog::log(*reinterpret_cast<const float*>(enumPtr)); break;
+				case BasicType::Bool:	CatLog::log(*reinterpret_cast<const bool*>(enumPtr)); break;
+				case BasicType::String:	CatLog::log(*reinterpret_cast<const std::string*>(enumPtr)); break;
+			}
+			
 		} break;
 		case SpecificType::ReflectableObject:
 		case SpecificType::Pointer:
@@ -1323,6 +1387,7 @@ bool jitcat::CatGenericType::isConstructible() const
 {
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:				return true;
 		case SpecificType::Container:			return false;
 		case SpecificType::ReflectableObject:	return nestedType->getAllowConstruction();
@@ -1349,6 +1414,7 @@ bool jitcat::CatGenericType::isCopyConstructible() const
 {
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:				return true;
 		case SpecificType::Container:			return false;
 		case SpecificType::ReflectableObject:	return nestedType->getAllowCopyConstruction();
@@ -1375,6 +1441,7 @@ bool jitcat::CatGenericType::isMoveConstructible() const
 {
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:				return true;
 		case SpecificType::Container:			return false;
 		case SpecificType::ReflectableObject:	return nestedType->getAllowMoveConstruction();
@@ -1401,6 +1468,7 @@ bool jitcat::CatGenericType::isDestructible() const
 {
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:				return true;
 		case SpecificType::Container:			return false;
 		case SpecificType::ReflectableObject:	return nestedType->getAllowConstruction(); //If an object is constructible it must also be destructible
@@ -1465,6 +1533,7 @@ std::any jitcat::CatGenericType::construct() const
 				return createFromRawPointer(reinterpret_cast<uintptr_t>(buffer));
 			}
 		}
+		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:
 		{
 			unsigned char* buffer = new unsigned char[typeSize];
@@ -1529,6 +1598,7 @@ bool jitcat::CatGenericType::placementConstruct(unsigned char* buffer, std::size
 			new(buffer) ReflectableHandle(nullptr);
 			return true;
 		}
+		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:
 		{
 			nestedType->placementConstruct(buffer, bufferSize);
@@ -1549,6 +1619,7 @@ bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::siz
 	}
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:
 		{
 			switch (basicType)
@@ -1657,6 +1728,7 @@ bool jitcat::CatGenericType::moveConstruct(unsigned char* targetBuffer, std::siz
 	}
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:
 		{
 			switch (basicType)
@@ -1735,6 +1807,7 @@ bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_
 {
 	switch (specificType)
 	{
+		case SpecificType::Enum:
 		case SpecificType::Basic:
 		{
 			if (basicType == BasicType::String)
@@ -1820,8 +1893,9 @@ void jitcat::CatGenericType::toBuffer(const std::any& value, const unsigned char
 		{
 			assert(false);
 		} break;
+		case SpecificType::Enum:
 		case SpecificType::Pointer:
-		case SpecificType::ReflectableHandle:	//buffer = reinterpret_cast<const unsigned char*>(std::any_cast<Reflectable*>(&value)); break;
+		case SpecificType::ReflectableHandle:	
 		case SpecificType::ReflectableObject:	nestedType->toBuffer(value, buffer, bufferSize); break;
 		default: assert(false); break;
 	}
@@ -1843,6 +1917,7 @@ const TypeCaster* jitcat::CatGenericType::getTypeCaster() const
 				default: assert(false);
 			}
 		}
+		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:
 			return nestedType->getTypeCaster();
 		default: assert(false);
@@ -1987,6 +2062,9 @@ const char* CatGenericType::toString(SpecificType type)
 		default:
 		case SpecificType::None:				return "none";
 		case SpecificType::Basic:				return "basic";
+		case SpecificType::Enum:				return "enum";
+		case SpecificType::Pointer:				return "pointer";
+		case SpecificType::ReflectableHandle:	return "handle";
 		case SpecificType::ReflectableObject:	return "object";
 		case SpecificType::Container:			return "container";
 	}
@@ -2009,6 +2087,21 @@ CatGenericType::SpecificType CatGenericType::toSpecificType(const char * value)
 		}
 	}
 	return SpecificType::None;
+}
+
+
+const CatGenericType& jitcat::CatGenericType::getBasicType(BasicType type)
+{
+	switch (type)
+	{
+		case BasicType::Bool:	return boolType;
+		case BasicType::Float:	return floatType;
+		case BasicType::Int:	return intType;
+		case BasicType::String: return stringType;
+		case BasicType::Void:	return voidType;
+	}
+	assert(false);
+	return CatGenericType::unknownType;
 }
 
 

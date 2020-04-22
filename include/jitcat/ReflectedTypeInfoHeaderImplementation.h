@@ -68,7 +68,8 @@ namespace jitcat::Reflection
 		if constexpr (std::is_same<MemberT, float>::value
 					  || std::is_same<MemberT, int>::value
 					  || std::is_same<MemberT, bool>::value
-					  || std::is_same<MemberT, std::string>::value)
+					  || std::is_same<MemberT, std::string>::value
+					  || std::is_enum<MemberT>::value)
 		{
 			memberInfo = new StaticBasicTypeMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
@@ -91,10 +92,6 @@ namespace jitcat::Reflection
 		else if constexpr (std::is_class<MemberT>::value)
 		{
 			memberInfo = new StaticClassObjectMemberInfo(identifier, reinterpret_cast<unsigned char*>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType());
-		}
-		else if constexpr (std::is_enum<MemberT>::value)
-		{
-			return addMember(identifier_, reinterpret_cast<typename std::underlying_type_t<MemberT>*>(const_cast<MemberT*>(member)), flags);
 		}
 		else
 		{

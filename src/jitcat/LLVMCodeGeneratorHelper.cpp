@@ -185,12 +185,19 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isReflectableHandleType())			return LLVMTypes::pointerType;
 	else if (type.isPointerType())						return LLVMTypes::pointerType;
 	else if (type.isContainerType())					return LLVMTypes::pointerType;
+	else if (type.isVoidType())							return LLVMTypes::voidType;
+	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
 	else if (type.isReflectableObjectType())			
 	{
 		//This is a compound type. For now, just create a byte array type.
 		return llvm::ArrayType::get(LLVMTypes::ucharType, type.getTypeSize());
 	}
-	else												return LLVMTypes::voidType;
+	else
+	{
+		//Unknown type. Add it to this function.
+		assert(false);
+		return LLVMTypes::voidType;
+	}
 }
 
 llvm::PointerType* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& type)

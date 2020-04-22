@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/TypeOwnershipSemantics.h"
 
@@ -52,6 +53,30 @@ namespace jitcat::Reflection
 		{
 			return addObjectMember(memberName, reinterpret_cast<unsigned char*>(defaultValue), objectTypeInfo, ownershipSemantics, isWritable, isConst);
 		}
+		template <typename EnumT>
+		inline TypeMemberInfo* addEnumMember(const std::string& memberName, EnumT defaultValue, bool isWritable = true, bool isConst = false)
+		{
+			unsigned char* data = increaseDataSize(sizeof(EnumT));
+			memcpy(data, &defaultValue, sizeof(EnumT));
+			unsigned int offset = (unsigned int)(data - defaultData);
+			if (defaultData == nullptr)
+			{
+				offset = 0;
+			}
+
+			std::set<Reflectable*>::iterator end = instances.end();
+			for (std::set<Reflectable*>::iterator iter = instances.begin(); iter != end; ++iter)
+			{
+				memcpy((unsigned char*)(*iter) + offset, &defaultValue, sizeof(EnumT));
+			}
+
+			CatGenericType enumType = TypeTraits<EnumT>::toGenericType().copyWithFlags(isWritable, isConst);
+			TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<EnumT>(memberName, offset, enumType);
+			std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+			TypeInfo::addMember(lowerCaseMemberName, memberInfo);
+			return memberInfo;			
+		}
+
 		template <typename ConstantT>
 		inline StaticConstMemberInfo* addConstant(const std::string& identifier, ConstantT value)
 		{

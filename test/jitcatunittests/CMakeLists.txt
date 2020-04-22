@@ -17,6 +17,7 @@ set(Source_GeneralTests
 	BasicTypesTests.cpp
 	ContainerTests.cpp
 	CustomTypesTests.cpp
+	EnumTests.cpp
 	ExpressionAnyTests.cpp
 	IndirectionTests.cpp
 	MemberFunctionCallTests.cpp

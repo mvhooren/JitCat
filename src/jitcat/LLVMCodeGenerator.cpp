@@ -789,6 +789,23 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 		llvm::Value* reflectableAddress = helper->createIntPtrConstant(pointerConstant, "literalObjectAddress");
 		return builder->CreateIntToPtr(reflectableAddress, LLVMTypes::pointerType);
 	}
+	else if (literalType.isEnumType())
+	{
+		//This value contains a C++ enum type.
+		std::any value = literal->getValue();
+		const unsigned char* bufferAddress = nullptr;
+		std::size_t bufferSize = 0;
+		//Get an unsigned char pointer to the enum value
+		literalType.toBuffer(literalType.getTypeCaster()->getAddressOfValue(value), bufferAddress, bufferSize);
+		//Get the underlying type of the enum
+		const CatGenericType& underlyingType = literalType.getUnderlyingEnumType();
+		//Cast the unsigned char pointer to a pointer to the underlying type
+		std::any enumTypePtr = underlyingType.getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t>(bufferAddress));
+		//Get the value pointed to by the enumTypePtr.
+		std::any underlyingValue = underlyingType.getTypeCaster()->getValueOfPointer(enumTypePtr);
+		CatLiteral underlyingLiteral(underlyingValue, underlyingType, literal->getLexeme());
+		return generate(&underlyingLiteral, context);
+	}
 	else
 	{
 		assert(false); return LLVMJit::logError("ERROR: Not a basic type."); 

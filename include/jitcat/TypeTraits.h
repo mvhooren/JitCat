@@ -302,6 +302,38 @@ namespace jitcat
 	};
 
 
+	template <typename EnumT>
+	class TypeTraits<EnumT, std::enable_if_t<std::is_enum_v<EnumT>>>
+	{
+	public:
+		static const CatGenericType& toGenericType()
+		{
+			TypeInfo* enumInfo = TypeRegistry::get()->registerType<EnumT>();
+			static std::unique_ptr<CatGenericType> enumType = std::make_unique<CatGenericType>(TypeTraits<typename std::underlying_type_t<EnumT>>::toGenericType(), enumInfo);
+			return *enumType.get();
+		}
+		static constexpr bool isSerialisableContainer() { return false; }
+		static constexpr bool isReflectableType() { return false; }
+		static constexpr bool isUniquePtr() { return false; }
+
+		static std::any getCatValue(EnumT value) { return std::any(value);}
+		static EnumT getDefaultValue() { return EnumT(); }
+		static std::any getDefaultCatValue() { return std::any(TypeTraits<EnumT>::getDefaultValue()); }
+		static EnumT getValue(const std::any& value) { return std::any_cast<EnumT>(value);}
+		static EnumT stripValue(EnumT value) { return value; }
+		static const char* getTypeName()
+		{
+			return "Enum";
+		}
+
+		typedef EnumT getValueType;
+		typedef EnumT type;
+		typedef EnumT cachedType;
+		typedef EnumT functionParameterType;
+		typedef EnumT containerItemReturnType;
+	};
+
+
 	template <typename ItemType, typename AllocatorT>
 	class TypeTraits<std::vector<ItemType, AllocatorT>, void >
 	{

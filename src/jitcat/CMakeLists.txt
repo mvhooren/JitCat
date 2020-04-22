@@ -276,6 +276,7 @@ set(Source_Reflection_TypeInfo_Members
 	StaticMemberInfo.cpp
 	${JitCatHeaderPath}/StaticMemberInfo.h
 	${JitCatHeaderPath}/StaticMemberInfoHeaderImplementation.h
+	${JitCatHeaderPath}/TypeMemberInfo.h
 )
 
 set(Source_Reflection_TypeInfo_MemberFunctions

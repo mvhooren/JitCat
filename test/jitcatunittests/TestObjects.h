@@ -16,11 +16,24 @@
 #include <memory>
 #include <string>
 #include <vector>
+namespace TestObjects
+{
+	enum class TestEnum
+	{
+		TestValue1,
+		TestValue2,
+		TestValue3
+	};
+}
 
+template <>
+void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::TypeInfo& enumTypeInfo);
+
+template <>
+const char* jitcat::Reflection::getEnumName<TestObjects::TestEnum>();
 
 namespace TestObjects
 {
-
 	class TestVector4: public jitcat::Reflection::Reflectable
 	{
 	public:
@@ -177,13 +190,13 @@ namespace TestObjects
 		bool getBoolean();
 		std::string getString();
 		const std::string& getStringRef();
+		TestEnum getEnum();
 		TestVector4 getTestVector();
 		const TestVector4 getConstTestVector() const;
 		TestVector4& getTestVectorRef();
 		const TestVector4& getTestVectorConstRef() const;
 		TestVector4* getTestVectorPtr();
 		TestVector4 addVectors(TestVector4 lhs, TestVector4 rhs);
-
 		ReflectedObject* getObject();
 
 		ReflectedObject* getObject2(const std::string& name, bool amITrue);
@@ -195,6 +208,7 @@ namespace TestObjects
 		int getConstInt() const;
 		bool getConstBool() const;
 		std::string getConstString() const;
+		TestEnum getConstEnum() const;
 		ReflectedObject* getConstObject() const;
 		void doSomethingConst() const;
 
@@ -207,6 +221,7 @@ namespace TestObjects
 		static TestVector4& getStaticObjectRef();
 		static const TestVector4& getStaticObjectConstRef();
 		static TestVector4* getStaticObjectPtr();
+		static TestEnum getStaticEnum();
 
 		//functions for testing parameter passing
 		void checkTheseValues(bool amITrue, int someAmount, const std::string& someText, ReflectedObject* someObject);
@@ -229,6 +244,7 @@ namespace TestObjects
 		float zeroFloat;
 		bool aBoolean;
 		bool no;
+		TestEnum someEnum;
 
 		ReflectedObject* nestedSelfObject;
 		ReflectedObject* nullObject;
@@ -250,6 +266,7 @@ namespace TestObjects
 		static int staticInt;
 		static bool staticBool;
 		static std::string staticString;
+		static TestEnum staticEnum;
 
 		static const std::unique_ptr<TestVector4> testVectorConst;
 

@@ -16,6 +16,23 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 using namespace TestObjects;
 
+template<>
+void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::TypeInfo& enumTypeInfo)
+{
+	const CatGenericType& enumType = TypeTraits<TestEnum>::toGenericType();
+	enumTypeInfo.addConstant("TestValue1", enumType, TestEnum::TestValue1);
+	enumTypeInfo.addConstant("TestValue2", enumType, TestEnum::TestValue2);
+	enumTypeInfo.addConstant("TestValue3", enumType, TestEnum::TestValue3);
+}
+
+
+template <>
+const char* jitcat::Reflection::getEnumName<TestObjects::TestEnum>()
+{
+	return "TestEnum";
+}
+
+
 NestedReflectedObject::NestedReflectedObject():
 	someString("test"),
 	someInt(21),
@@ -136,6 +153,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("getInt", &ReflectedObject::getInt)
 		.addMember("getBoolean", &ReflectedObject::getBoolean)
 		.addMember("getString", &ReflectedObject::getString)
+		.addMember("getEnum", &ReflectedObject::getEnum)
 		//.addMember("getStringRef", &ReflectedObject::getStringRef) Not yet supported
 		.addMember("getObject", &ReflectedObject::getObject)
 		.addMember("getObject2", &ReflectedObject::getObject2)
@@ -154,6 +172,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("getConstInt", &ReflectedObject::getConstInt)
 		.addMember("getConstBool", &ReflectedObject::getConstBool)
 		.addMember("getConstString", &ReflectedObject::getConstString)
+		.addMember("getConstEnum", &ReflectedObject::getConstEnum)
 		.addMember("getConstObject", &ReflectedObject::getConstObject)
 		.addMember("doSomethingConst", &ReflectedObject::doSomethingConst)
 
@@ -166,6 +185,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("getStaticInt", &ReflectedObject::getStaticInt)
 		.addMember("getStaticBool", &ReflectedObject::getStaticBool)
 		.addMember("getStaticString", &ReflectedObject::getStaticString)
+		.addMember("getStaticEnum", &ReflectedObject::getStaticEnum)
 		.addMember("getStaticObject", &ReflectedObject::getStaticObject)
 		.addMember("getStaticConstObject", &ReflectedObject::getStaticConstObject)
 		.addMember("getStaticObjectRef", &ReflectedObject::getStaticObjectRef)
@@ -183,11 +203,13 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("zeroFloat", &ReflectedObject::zeroFloat)
 		.addMember("aBoolean", &ReflectedObject::aBoolean, MF::isWritable)
 		.addMember("no", &ReflectedObject::no)
+		.addMember("someEnum", &ReflectedObject::someEnum)
 
 		.addConstant("intConstant", 42)
 		.addConstant("floatConstant", 3.141592f)
 		.addConstant("boolConstant", true)
 		.addConstant("stringConstant", std::string("test"))
+		.addConstant("enumConstant", TestEnum::TestValue1)
 		.addConstant("vectorConstant", TestVector4(2.0f, 4.0f, 6.0f, 8.0f))
 		.addConstant("vectorConstantPtr", testVectorConst.get())
 		
@@ -205,6 +227,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("staticInt", &ReflectedObject::staticInt)
 		.addMember("staticBool", &ReflectedObject::staticBool)
 		.addMember("staticString", &ReflectedObject::staticString)
+		.addMember("staticEnum", &ReflectedObject::staticEnum)
 
 		.addMember("staticObject", &ReflectedObject::staticObject)
 		.addMember("staticObjectPtr", &ReflectedObject::staticObjectPtr)
@@ -259,6 +282,12 @@ std::string ReflectedObject::getString()
 const std::string& TestObjects::ReflectedObject::getStringRef()
 {
 	return text;
+}
+
+
+TestEnum TestObjects::ReflectedObject::getEnum()
+{
+	return TestEnum::TestValue2;
 }
 
 
@@ -340,6 +369,12 @@ std::string ReflectedObject::getConstString() const
 }
 
 
+TestEnum TestObjects::ReflectedObject::getConstEnum() const
+{
+	return TestEnum::TestValue3;
+}
+
+
 ReflectedObject* ReflectedObject::getConstObject() const
 {
 	return nestedSelfObject;
@@ -406,6 +441,12 @@ TestVector4* TestObjects::ReflectedObject::getStaticObjectPtr()
 }
 
 
+TestEnum TestObjects::ReflectedObject::getStaticEnum()
+{
+	return TestEnum::TestValue1;
+}
+
+
 void ReflectedObject::checkTheseValues(bool amITrue, int someAmount, const std::string& someText, ReflectedObject* someObject)
 {
 	std::cout << "TEST CheckingValues " << amITrue << " " << someAmount << " " << someText  << " " << someObject << "\n";
@@ -434,6 +475,7 @@ float ReflectedObject::staticFloat = 1234.5f;
 int ReflectedObject::staticInt = 33;
 bool ReflectedObject::staticBool = true;
 std::string ReflectedObject::staticString = "SomeString";
+TestEnum ReflectedObject::staticEnum = TestEnum::TestValue3;
 const std::unique_ptr<TestVector4> ReflectedObject::testVectorConst = std::make_unique<TestVector4>(4.0f, 4.4f, 4.44f, 4.444f);
 NestedReflectedObject ReflectedObject::staticObject = NestedReflectedObject();
 NestedReflectedObject* ReflectedObject::staticObjectPtr = new NestedReflectedObject();

@@ -7,17 +7,9 @@
 
 #pragma once
 
-namespace jitcat::LLVM
-{
-	class LLVMCodeGeneratorHelper;
-	struct LLVMCompileTimeContext;
-}
-
-#include "jitcat/CatGenericType.h"
 #include "jitcat/ContainerType.h"
-#include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberFlags.h"
-#include "jitcat/MemberVisibility.h"
+#include "jitcat/TypeMemberInfo.h"
 #include "jitcat/TypeRegistry.h"
 #include "jitcat/TypeTraits.h"
 
@@ -39,27 +31,6 @@ namespace jitcat::Reflection
 	//- A nested reflectable type pointer
 
 	//See TypeInfo.h for more information
-	struct TypeMemberInfo
-	{
-		TypeMemberInfo(): visibility(MemberVisibility::Private) {}
-		TypeMemberInfo(const std::string& memberName, const CatGenericType& type): memberName(memberName), catType(type), visibility(MemberVisibility::Public) {}
-		virtual ~TypeMemberInfo() {};
-		inline virtual std::any getMemberReference(unsigned char* base);
-		inline virtual std::any getAssignableMemberReference(unsigned char* base);
-		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const;
-		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const;
-		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
-		inline virtual bool isDeferred() const { return false; }
-		inline virtual unsigned long long getOrdinal() const { return 0;}
-
-		TypeMemberInfo* toDeferredTypeMemberInfo(TypeMemberInfo* baseMember);
-
-		CatGenericType catType;
-		MemberVisibility visibility;
-
-		std::string memberName;
-	};
-
 
 	struct DeferredMemberInfo: public TypeMemberInfo
 	{

@@ -28,6 +28,18 @@ namespace jitcat::Reflection
 	class ReflectedTypeInfo;
 	class TypeInfo;
 
+	template <typename EnumT>
+	const char* getEnumName()
+	{
+		static_assert(false, "This function needs to be implemented for this enum.");
+		return nullptr;
+	}
+
+	template <typename EnumT>
+	void reflectEnum(TypeInfo& enumTypeInfo)
+	{
+		static_assert(false, "This function needs to be implemented for this enum.");
+	}
 
 	class TypeRegistry
 	{
@@ -88,7 +100,15 @@ namespace jitcat::Reflection
 		typedef typename RemoveConst<ReflectableCVT>::type ReflectableT;
 
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).
-		const char* typeName = ReflectableT::getTypeName();
+		const char* typeName = nullptr;
+		if constexpr (!std::is_enum_v<ReflectableT>)
+		{
+			typeName = ReflectableT::getTypeName();typeName = ReflectableT::getTypeName();
+		}
+		else
+		{
+			typeName = getEnumName<ReflectableT>();			
+		}
 		std::string lowerTypeName = Tools::toLowerCase(typeName);
 		std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerTypeName);
 		if (iter != types.end())
@@ -160,7 +180,14 @@ namespace jitcat::Reflection
 			types[lowerTypeName] = typeInfo.get();
 			jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
 			ownedTypes.emplace_back(std::move(typeInfo));
-			ReflectableT::reflect(*castToReflectedTypeInfo(returnTypeInfo));
+			if constexpr (!std::is_enum_v<ReflectableT>)
+			{
+				ReflectableT::reflect(*castToReflectedTypeInfo(returnTypeInfo));
+			}
+			else
+			{
+				reflectEnum<ReflectableT>(*returnTypeInfo);
+			}
 			return returnTypeInfo;
 		}
 	}

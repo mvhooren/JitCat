@@ -1,4 +1,5 @@
 #include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/LLVMCodeGeneratorHelper.h"
 
 #include <cassert>
 

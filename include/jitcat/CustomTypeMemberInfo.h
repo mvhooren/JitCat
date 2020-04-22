@@ -7,13 +7,9 @@
 
 #pragma once
 
-namespace jitcat::LLVM
-{
-	struct LLVMCompileTimeContext;
-}
 
-#include "jitcat/LLVMForwardDeclares.h"
-#include "jitcat/MemberInfo.h"
+#include "jitcat/TypeMemberInfo.h"
+
 
 namespace jitcat::Reflection
 {

@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include <type_traits>
+
+
 namespace jitcat::Reflection
 {
 

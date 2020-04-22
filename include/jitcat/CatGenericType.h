@@ -35,6 +35,7 @@ namespace jitcat
 		{
 			None,
 			Basic,
+			Enum,
 			Pointer,
 			ReflectableHandle,
 			ReflectableObject,
@@ -58,6 +59,7 @@ namespace jitcat
 
 	public:
 		CatGenericType();
+		CatGenericType(const CatGenericType& enumUnderlyingType, Reflection::TypeInfo* enumValuesType, bool writable = false, bool constant = false);
 		CatGenericType(Reflection::TypeInfo* reflectableType, bool writable = false, bool constant = false);
 		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable = false, bool constant = false);
 		CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable = false, bool constant = false);
@@ -77,6 +79,7 @@ namespace jitcat
 		bool isStringType() const;
 		bool isScalarType() const;
 		bool isVoidType() const;
+		bool isEnumType() const;
 		bool isReflectableObjectType() const;
 		bool isReflectableHandleType() const;
 		bool isPointerToReflectableObjectType() const;
@@ -99,6 +102,10 @@ namespace jitcat
 		void addDependentType(Reflection::TypeInfo* objectType);
 		bool isDependentOn(Reflection::TypeInfo* objectType) const;
 
+		//If this is an enum type. Gets the underlying type of the enum (for example, int).
+		const CatGenericType& getUnderlyingEnumType() const;
+
+		CatGenericType copyWithFlags(bool writable, bool constant) const;
 		//Copies the type but sets all modifiers (const, writable) to false.
 		CatGenericType toUnmodified() const;
 		//Copies the type but sets the writable flag to false.
@@ -194,6 +201,7 @@ namespace jitcat
 		static BasicType toBasicType(const char* value);
 		static const char* toString(SpecificType type);
 		static SpecificType toSpecificType(const char* value);
+		static const CatGenericType& getBasicType(BasicType type);
 
 	public:
 		static const CatGenericType intType;

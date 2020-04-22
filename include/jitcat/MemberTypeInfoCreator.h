@@ -13,16 +13,23 @@
 namespace jitcat::Reflection
 {
 
-	template <typename T>
+	template <typename ObjectT>
 	class MemberTypeInfoCreator
 	{
 	public:
 		template<typename ClassType>
-		static inline TypeMemberInfo* getMemberInfo(const std::string& memberName, T ClassType::* member, bool isConst, bool isWritable) 
+		static inline TypeMemberInfo* getMemberInfo(const std::string& memberName, ObjectT ClassType::* member, bool isConst, bool isWritable) 
 		{
-			static_assert(std::is_base_of<Reflectable, T>::value, "Unsupported reflectable type.");
-			TypeInfo* nestedType = TypeRegistry::get()->registerType<T>();
-			return new ClassObjectMemberInfo<ClassType, T>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Value, false, isConst));
+			if constexpr (std::is_enum_v<ObjectT>)
+			{
+				return new BasicTypeMemberInfo<ClassType, ObjectT>(memberName, member, TypeTraits<ObjectT>::toGenericType());
+			}
+			else
+			{
+				static_assert(std::is_base_of<Reflectable, ObjectT>::value, "Unsupported reflectable type.");
+				TypeInfo* nestedType = TypeRegistry::get()->registerType<ObjectT>();
+				return new ClassObjectMemberInfo<ClassType, ObjectT>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Value, false, isConst));
+			}
 		}
 	};
 
@@ -84,28 +91,28 @@ namespace jitcat::Reflection
 	};
 
 
-	template <typename U>
-	class MemberTypeInfoCreator<std::unique_ptr<U>>
+	template <typename PointerT>
+	class MemberTypeInfoCreator<std::unique_ptr<PointerT>>
 	{
 	public:
 		template<typename ClassType>
-		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<U> ClassType::* member, bool isConst, bool isWritable) 
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::unique_ptr<PointerT> ClassType::* member, bool isConst, bool isWritable) 
 		{
-			TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-			return new ClassUniquePtrMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, false, isConst));
+			TypeInfo* nestedType = TypeRegistry::get()->registerType<PointerT>();
+			return new ClassUniquePtrMemberInfo<ClassType, PointerT>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, false, isConst));
 		}
 	};
 
 
-	template <typename U>
-	class MemberTypeInfoCreator<U*>
+	template <typename PointerT>
+	class MemberTypeInfoCreator<PointerT*>
 	{
 	public:
 		template<typename ClassType>
-		static TypeMemberInfo* getMemberInfo(const std::string& memberName, U* ClassType::* member, bool isConst, bool isWritable) 
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, PointerT* ClassType::* member, bool isConst, bool isWritable) 
 		{
-			TypeInfo* nestedType = TypeRegistry::get()->registerType<U>();
-			return new ClassPointerMemberInfo<ClassType, U>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, isWritable, isConst));
+			TypeInfo* nestedType = TypeRegistry::get()->registerType<PointerT>();
+			return new ClassPointerMemberInfo<ClassType, PointerT>(memberName, member, CatGenericType(nestedType, isWritable, isConst).toPointer(TypeOwnershipSemantics::Weak, isWritable, isConst));
 		}
 	};
 
