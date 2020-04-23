@@ -106,7 +106,7 @@ namespace jitcat::Reflection
 		const char* typeName = nullptr;
 		if constexpr (!std::is_enum_v<ReflectableT>)
 		{
-			typeName = ReflectableT::getTypeName();typeName = ReflectableT::getTypeName();
+			typeName = ReflectableT::getTypeName();
 		}
 		else
 		{
