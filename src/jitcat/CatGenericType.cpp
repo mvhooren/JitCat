@@ -1167,6 +1167,23 @@ std::any CatGenericType::convertToType(std::any value, const CatGenericType& val
 }
 
 
+std::any jitcat::CatGenericType::toUnderlyingType(std::any enumValue) const
+{
+	assert(isEnumType());
+	const unsigned char* bufferAddress = nullptr;
+	std::size_t bufferSize = 0;
+	//Get an unsigned char pointer to the enum value
+	toBuffer(getTypeCaster()->getAddressOfValue(enumValue), bufferAddress, bufferSize);
+	//Get the underlying type of the enum
+	const CatGenericType& underlyingType = getUnderlyingEnumType();
+	//Cast the unsigned char pointer to a pointer to the underlying type
+	std::any enumTypePtr = underlyingType.getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t>(bufferAddress));
+	//Get the value pointed to by the enumTypePtr.
+	std::any underlyingValue = underlyingType.getTypeCaster()->getValueOfPointer(enumTypePtr);
+	return underlyingValue;
+}
+
+
 void CatGenericType::printValue(std::any& value)
 {
 	switch (specificType)

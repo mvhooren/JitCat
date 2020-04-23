@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/TypeRegistry.h"
+#include "jitcat/ReflectedEnumTypeInfo.h"
 #include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/XMLHelper.h"
@@ -342,9 +343,20 @@ std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const ch
 }
 
 
+std::unique_ptr<TypeInfo, TypeInfoDeleter> jitcat::Reflection::TypeRegistry::createEnumTypeInfo(const char* typeName, const CatGenericType& underlyingType, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster)
+{
+	return makeTypeInfo<ReflectedEnumTypeInfo>(typeName, underlyingType, typeSize, std::move(typeCaster));
+}
+
+
 ReflectedTypeInfo* jitcat::Reflection::TypeRegistry::castToReflectedTypeInfo(TypeInfo* typeInfo)
 {
 	return static_cast<ReflectedTypeInfo*>(typeInfo);
+}
+
+ReflectedEnumTypeInfo* jitcat::Reflection::TypeRegistry::castToReflectedEnumTypeInfo(TypeInfo* typeInfo)
+{
+	return static_cast<ReflectedEnumTypeInfo*>(typeInfo);
 }
 
 

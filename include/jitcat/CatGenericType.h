@@ -151,6 +151,9 @@ namespace jitcat
 		//Converts value of valueType to this type if possible, otherwise returns default value
 		std::any convertToType(std::any value, const CatGenericType& valueType) const;
 
+		//If this is an enum type. Converts the std::any containing an enum value to a std::any containing its underlying type.
+		std::any toUnderlyingType(std::any enumValue) const;
+
 		void printValue(std::any& value);
 
 		static float convertToFloat(std::any value, const CatGenericType& valueType);

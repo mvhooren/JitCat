@@ -6,6 +6,7 @@
 */
 
 #include "TestObjects.h"
+#include "jitcat/ReflectedEnumTypeInfo.h"
 #include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
@@ -17,12 +18,14 @@ using namespace jitcat::Reflection;
 using namespace TestObjects;
 
 template<>
-void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::TypeInfo& enumTypeInfo)
+void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::ReflectedEnumTypeInfo& enumTypeInfo)
 {
-	const CatGenericType& enumType = TypeTraits<TestEnum>::toGenericType();
-	enumTypeInfo.addConstant("TestValue1", enumType, TestEnum::TestValue1);
-	enumTypeInfo.addConstant("TestValue2", enumType, TestEnum::TestValue2);
-	enumTypeInfo.addConstant("TestValue3", enumType, TestEnum::TestValue3);
+	enumTypeInfo
+		.addValue("TestValue1", TestEnum::TestValue1)
+		.addValue("TestValue2", TestEnum::TestValue2)
+		.addValue("TestValue3", TestEnum::TestValue3)
+		.setDefaultValue(TestEnum::TestValue1);
+
 }
 
 

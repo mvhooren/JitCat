@@ -8,6 +8,7 @@
 #pragma once
 
 #include "jitcat/Reflectable.h"
+#include "jitcat/ReflectedEnumTypeInfo.h"
 #include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeTraits.h"
@@ -27,7 +28,7 @@ namespace TestObjects
 }
 
 template <>
-void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::TypeInfo& enumTypeInfo);
+void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::ReflectedEnumTypeInfo& enumTypeInfo);
 
 template <>
 const char* jitcat::Reflection::getEnumName<TestObjects::TestEnum>();

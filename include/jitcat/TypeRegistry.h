@@ -26,6 +26,7 @@ namespace jitcat
 namespace jitcat::Reflection
 {
 	class ReflectedTypeInfo;
+	class ReflectedEnumTypeInfo;
 	class TypeInfo;
 
 	template <typename EnumT>
@@ -36,7 +37,7 @@ namespace jitcat::Reflection
 	}
 
 	template <typename EnumT>
-	void reflectEnum(TypeInfo& enumTypeInfo)
+	void reflectEnum(ReflectedEnumTypeInfo& enumTypeInfo)
 	{
 		static_assert(false, "This function needs to be implemented for this enum.");
 	}
@@ -86,7 +87,9 @@ namespace jitcat::Reflection
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
 												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
+		static std::unique_ptr<TypeInfo, TypeInfoDeleter> createEnumTypeInfo(const char* typeName, const CatGenericType& underlyingType, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster);
 		static ReflectedTypeInfo* castToReflectedTypeInfo(TypeInfo* typeInfo);
+		static ReflectedEnumTypeInfo* castToReflectedEnumTypeInfo(TypeInfo* typeInfo);
 	private:
 		std::map<std::string, TypeInfo*> types;
 		std::vector<std::unique_ptr<TypeInfo, TypeInfoDeleter>> ownedTypes;
@@ -117,78 +120,84 @@ namespace jitcat::Reflection
 		}
 		else
 		{
-
-			std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementConstructor;
-			std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)> copyConstructor;
-			std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)> moveConstructor;
-			std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementDestructor;
 			std::size_t typeSize = sizeof(ReflectableT);
-
-			constexpr bool isConstructible = std::is_default_constructible<ReflectableT>::value
-											 && std::is_destructible<ReflectableT>::value;
-			if constexpr (isConstructible)
-			{
-				placementConstructor = [](unsigned char* buffer, std::size_t bufferSize) {assert(sizeof(ReflectableT) <= bufferSize); new(buffer) ReflectableT();};
-			}
-			else
-			{
-				placementConstructor = [](unsigned char* buffer, std::size_t bufferSize) {};
-			}
-
-			constexpr bool isCopyConstructible = std::is_copy_constructible<ReflectableT>::value;
-			if constexpr (isCopyConstructible)
-			{
-				copyConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
-								  {
-									new(targetBuffer) ReflectableT(*reinterpret_cast<const ReflectableT*>(sourceBuffer));
-								  };
-			}
-			else
-			{
-				copyConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) {};
-			}
-
-			constexpr bool isMoveConstructible = std::is_move_constructible<ReflectableT>::value;
-			if constexpr (isMoveConstructible)
-			{
-				moveConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
-								  {
-									new(targetBuffer) ReflectableT(std::move(*reinterpret_cast<ReflectableT*>(sourceBuffer)));
-								  };
-			}
-			else
-			{
-				moveConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) {};
-			}
-
-			if constexpr (std::is_destructible<ReflectableT>::value)
-			{
-				placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){reinterpret_cast<ReflectableT*>(buffer)->~ReflectableT();};
-			}
-			else
-			{
-				placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){};
-			}
-
-			//When a type within JitCat is triviallyCopyable it implies that it is also trivially destructible.
-			//This is not always true for C++ types and so we also need to check for is_trivially_destructible.
-			constexpr bool triviallyCopyable = std::is_trivially_copyable<ReflectableT>::value && std::is_trivially_destructible<ReflectableT>::value;
-
 			std::unique_ptr<jitcat::Reflection::ObjectTypeCaster<ReflectableT>> typeCaster = std::make_unique<jitcat::Reflection::ObjectTypeCaster<ReflectableT>>();
-			std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, std::move(typeCaster), isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
-																				  placementConstructor, copyConstructor, moveConstructor, placementDestructor);
-			types[lowerTypeName] = typeInfo.get();
-			jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
-			ownedTypes.emplace_back(std::move(typeInfo));
+
 			if constexpr (!std::is_enum_v<ReflectableT>)
 			{
+				std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementConstructor;
+				std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)> copyConstructor;
+				std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)> moveConstructor;
+				std::function<void(unsigned char* buffer, std::size_t bufferSize)> placementDestructor;
+
+				constexpr bool isConstructible = std::is_default_constructible<ReflectableT>::value
+												 && std::is_destructible<ReflectableT>::value;
+				if constexpr (isConstructible)
+				{
+					placementConstructor = [](unsigned char* buffer, std::size_t bufferSize) {assert(sizeof(ReflectableT) <= bufferSize); new(buffer) ReflectableT();};
+				}
+				else
+				{
+					placementConstructor = [](unsigned char* buffer, std::size_t bufferSize) {};
+				}
+
+				constexpr bool isCopyConstructible = std::is_copy_constructible<ReflectableT>::value;
+				if constexpr (isCopyConstructible)
+				{
+					copyConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+									  {
+										new(targetBuffer) ReflectableT(*reinterpret_cast<const ReflectableT*>(sourceBuffer));
+									  };
+				}
+				else
+				{
+					copyConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) {};
+				}
+
+				constexpr bool isMoveConstructible = std::is_move_constructible<ReflectableT>::value;
+				if constexpr (isMoveConstructible)
+				{
+					moveConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+									  {
+										new(targetBuffer) ReflectableT(std::move(*reinterpret_cast<ReflectableT*>(sourceBuffer)));
+									  };
+				}
+				else
+				{
+					moveConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) {};
+				}
+
+				if constexpr (std::is_destructible<ReflectableT>::value)
+				{
+					placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){reinterpret_cast<ReflectableT*>(buffer)->~ReflectableT();};
+				}
+				else
+				{
+					placementDestructor = [](unsigned char* buffer, std::size_t bufferSize){};
+				}
+
+				//When a type within JitCat is triviallyCopyable it implies that it is also trivially destructible.
+				//This is not always true for C++ types and so we also need to check for is_trivially_destructible.
+				constexpr bool triviallyCopyable = std::is_trivially_copyable<ReflectableT>::value && std::is_trivially_destructible<ReflectableT>::value;
+
+				
+				std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, std::move(typeCaster), isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
+																					  placementConstructor, copyConstructor, moveConstructor, placementDestructor);
+				types[lowerTypeName] = typeInfo.get();
+				jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
+				ownedTypes.emplace_back(std::move(typeInfo));
 				ReflectableT::reflect(*castToReflectedTypeInfo(returnTypeInfo));
+				return returnTypeInfo;
 			}
 			else
 			{
-				reflectEnum<ReflectableT>(*returnTypeInfo);
+				std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createEnumTypeInfo(typeName, TypeTraits<typename std::underlying_type_t<ReflectableT>>::toGenericType(), typeSize, std::move(typeCaster));
+				types[lowerTypeName] = typeInfo.get();
+				jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
+				ownedTypes.emplace_back(std::move(typeInfo));
+				reflectEnum<ReflectableT>(*castToReflectedEnumTypeInfo(returnTypeInfo));
+				return returnTypeInfo;
 			}
-			return returnTypeInfo;
 		}
 	}
 

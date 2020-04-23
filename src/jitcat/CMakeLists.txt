@@ -255,6 +255,8 @@ set(Source_Reflection_Serialisation
 set(Source_Reflection_TypeInfo
 	CustomTypeInfo.cpp
 	${JitCatHeaderPath}/CustomTypeInfo.h
+	ReflectedEnumTypeInfo.cpp
+	${JitCatHeaderPath}/ReflectedEnumTypeInfo.h
 	ReflectedTypeInfo.cpp
 	${JitCatHeaderPath}/ReflectedTypeInfo.h
 	${JitCatHeaderPath}/ReflectedTypeInfoHeaderImplementation.h
