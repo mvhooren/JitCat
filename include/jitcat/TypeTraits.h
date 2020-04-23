@@ -8,6 +8,8 @@
 #pragma once
 
 #include "jitcat/CatGenericType.h"
+#include "jitcat/ExternalReflector.h"
+#include "jitcat/FunctionPresenceTest.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
 
@@ -34,7 +36,26 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		static const char* getTypeName() { return ObjectT::getTypeName(); }
+		static const char* getTypeName() 
+		{ 
+			if constexpr (Reflection::GetTypeNameAndReflectExist<ObjectT>::value)
+			{
+				return ReflectableT::getTypeName();
+			}
+			else if constexpr (std::is_enum_v<ObjectT>)
+			{
+				return getEnumName<ObjectT>();			
+			}
+			else if constexpr (ExternalReflector<ObjectT>::exists)
+			{
+				return ExternalReflector<ObjectT>::getTypeName();
+			}
+			else
+			{
+				static_assert(false, "Need to implement reflection for ObjectT");
+				return "";
+			}
+		}
 		static std::any getCatValue(void) { return std::any(ObjectT());}
 		static std::any getCatValue(ObjectT& value);
 		static constexpr ObjectT getDefaultValue() { return ObjectT(); }
@@ -60,7 +81,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		static const char* getTypeName() { return PointerT::getTypeName(); }
+		static const char* getTypeName() { return TypeTraits<PointerT>::getTypeName(); }
 		static std::any getCatValue(const PointerT* value) { return const_cast<PointerT*>(value);};
 		static constexpr PointerT* getDefaultValue() { return nullptr; }
 		static std::any getDefaultCatValue() { return std::any(getDefaultValue()); }
@@ -84,7 +105,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		static const char* getTypeName() { return PointerT::getTypeName(); }
+		static const char* getTypeName() { return TypeTraits<PointerT>::getTypeName(); }
 		static std::any getCatValue(PointerT* value);
 		static constexpr PointerT* getDefaultValue() { return nullptr; }
 		static std::any getDefaultCatValue() { return std::any(getDefaultValue()); }
@@ -109,7 +130,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		static const char* getTypeName() { return RefT::getTypeName(); }
+		static const char* getTypeName() { return TypeTraits<RefT>::getTypeName(); }
 		static std::any getCatValue(void) { return std::any((RefT*)nullptr);}
 		static std::any getCatValue(const RefT& value) { return std::any(const_cast<RefT*>(&value));};
 		static constexpr RefT* getDefaultValue() { return nullptr; }
@@ -134,7 +155,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		static const char* getTypeName() { return RefT::getTypeName(); }
+		static const char* getTypeName() { return TypeTraits<RefT>::getTypeName(); }
 		static std::any getCatValue(void) { return std::any((RefT*)nullptr);}
 		static std::any getCatValue(RefT& value) { return std::any(&value);};
 		static constexpr RefT* getDefaultValue() { return nullptr; }
@@ -160,7 +181,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		static const char* getTypeName() { return PointerRefT::getTypeName(); }
+		static const char* getTypeName() { return TypeTraits<PointerRefT>::getTypeName(); }
 		static std::any getCatValue(void) 
 		{
 			return std::any(getDefaultValue());
@@ -192,7 +213,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return true; }
 
-		static const char* getTypeName() { return UniquePtrT::getTypeName(); }
+		static const char* getTypeName() { return TypeTraits<UniquePtrT>::getTypeName(); }
 		static std::any getCatValue(std::unique_ptr<UniquePtrT>& value);
 		static constexpr UniquePtrT* getDefaultValue() { return nullptr; }
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::unique_ptr<UniquePtrT>>::getDefaultValue()); }
@@ -323,7 +344,7 @@ namespace jitcat
 		static EnumT stripValue(EnumT value) { return value; }
 		static const char* getTypeName()
 		{
-			return "Enum";
+			return getEnumName<EnumT>();	
 		}
 
 		typedef EnumT getValueType;

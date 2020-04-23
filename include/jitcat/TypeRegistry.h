@@ -11,6 +11,8 @@ namespace jitcat
 {
 	class CatGenericType;
 }
+#include "jitcat/ExternalReflector.h"
+#include "jitcat/FunctionPresenceTest.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeInfoDeleter.h"
@@ -28,19 +30,6 @@ namespace jitcat::Reflection
 	class ReflectedTypeInfo;
 	class ReflectedEnumTypeInfo;
 	class TypeInfo;
-
-	template <typename EnumT>
-	const char* getEnumName()
-	{
-		static_assert(false, "This function needs to be implemented for this enum.");
-		return nullptr;
-	}
-
-	template <typename EnumT>
-	void reflectEnum(ReflectedEnumTypeInfo& enumTypeInfo)
-	{
-		static_assert(false, "This function needs to be implemented for this enum.");
-	}
 
 	class TypeRegistry
 	{
@@ -104,13 +93,21 @@ namespace jitcat::Reflection
 
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).
 		const char* typeName = nullptr;
-		if constexpr (!std::is_enum_v<ReflectableT>)
+		if constexpr (GetTypeNameAndReflectExist<ReflectableT>::value)
 		{
 			typeName = ReflectableT::getTypeName();
 		}
-		else
+		else if constexpr (std::is_enum_v<ReflectableT>)
 		{
 			typeName = getEnumName<ReflectableT>();			
+		}
+		else if constexpr (ExternalReflector<ReflectableT>::exists)
+		{
+			typeName = ExternalReflector<ReflectableT>::getTypeName();
+		}
+		else
+		{
+			static_assert(false, "Need to implement reflection for ReflectableT");
 		}
 		std::string lowerTypeName = Tools::toLowerCase(typeName);
 		std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerTypeName);
@@ -186,7 +183,19 @@ namespace jitcat::Reflection
 				types[lowerTypeName] = typeInfo.get();
 				jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
 				ownedTypes.emplace_back(std::move(typeInfo));
-				ReflectableT::reflect(*castToReflectedTypeInfo(returnTypeInfo));
+				if constexpr (GetTypeNameAndReflectExist<ReflectableT>::value)
+				{
+					ReflectableT::reflect(*castToReflectedTypeInfo(returnTypeInfo));
+				}
+				else if constexpr (ExternalReflector<ReflectableT>::exists)
+				{
+					ExternalReflector<ReflectableT>::reflect(*castToReflectedTypeInfo(returnTypeInfo));
+				}
+				else
+				{
+					static_assert(false, "Need to implement reflection for ReflectableT");
+				}
+				
 				return returnTypeInfo;
 			}
 			else

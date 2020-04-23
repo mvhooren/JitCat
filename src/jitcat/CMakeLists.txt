@@ -231,6 +231,7 @@ set(Source_Parser
 )
 
 set(Source_Reflection
+	${JitCatHeaderPath}/ExternalReflector.h
 	Reflectable.cpp
 	${JitCatHeaderPath}/Reflectable.h
 	ObjectInstance.cpp
@@ -298,6 +299,7 @@ set(Source_Reflection_TypeInfo_MemberFunctions
 set(Source_Reflection_TypeInfo_Helper
 	ContainerManipulator.cpp
 	${JitCatHeaderPath}/ContainerManipulator.h
+	${JitCatHeaderPath}/FunctionPresenceTest.h
 	${JitCatHeaderPath}/MemberTypeInfoCreator.h
 	${JitCatHeaderPath}/MemberVisibility.h
 	${JitCatHeaderPath}/TypeCaster.h
