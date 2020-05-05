@@ -44,6 +44,8 @@ namespace jitcat::AST
 	
 		const CatGenericType& getFunctionParameterType(std::size_t index) const;
 
+		const std::vector<CatGenericType>& getExpectedParameterTypes() const;
+
 	private:
 		Reflection::StaticFunctionInfo* staticFunctionInfo;
 		

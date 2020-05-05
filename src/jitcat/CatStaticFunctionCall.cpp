@@ -222,6 +222,11 @@ const CatGenericType& jitcat::AST::CatStaticFunctionCall::getFunctionParameterTy
 	return staticFunctionInfo->getArgumentType(index);
 }
 
+const std::vector<CatGenericType>& jitcat::AST::CatStaticFunctionCall::getExpectedParameterTypes() const
+{
+	return staticFunctionInfo->getArgumentTypes();
+}
+
 
 const std::string& CatStaticFunctionCall::getLowerCaseFunctionName() const
 {

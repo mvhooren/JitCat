@@ -554,30 +554,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		}
 		default:
 		{
-			// Look up the name in the global module table.
-			llvm::Function* functionInModule = currentModule->getFunction(functionCall->getFunctionName());
-			if (functionInModule == nullptr)
-			{
-				assert(false);
-				return LLVMJit::logError("Unknown function referenced: ", functionCall->getFunctionName());
-			}
-
-			// If argument mismatch error.
-			if (functionInModule->arg_size() != arguments->getNumArguments())
-			{
-				assert(false);
-				return LLVMJit::logError("Incorrect # arguments passed in function: ", functionCall->getFunctionName());
-			}
-
-			std::vector<llvm::Value*> argumentValues;
-			for (std::size_t i = 0, e = arguments->getNumArguments(); i != e; ++i)
-			{
-				llvm::Value* generatedValue = generate(arguments->getArgument(i), context);
-				assert(generatedValue != nullptr);
-				argumentValues.push_back(generatedValue);
-			}
-
-			return builder->CreateCall(functionInModule, argumentValues, "calltmp");
+			assert(false);
+			return nullptr;
 		}
 	}
 }
@@ -589,23 +567,62 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const CatIndirectionConve
 	llvm::Value* generatedExpression = generate(expressionToConvert, context);
 	switch (indirectionConversion->getIndirectionConversionMode())
 	{
+		case IndirectionConversionMode::DereferencePointer:
+		{
+			assert(generatedExpression->getType()->isPointerTy());
+			assert(expressionToConvert->getType().isPointerType());
+			//Value can only be dereferenced if the pointer points to a basic type
+			if (expressionToConvert->getType().getPointeeType()->isBasicType())
+			{
+				//Dereference the pointer
+				return builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
+			}
+			else
+			{
+				return generatedExpression;
+			}
+		}
+		case IndirectionConversionMode::DereferencePointerToPointer:
+		{
+			//Check that we are dealing with a pointer to a pointer
+			assert(generatedExpression->getType()->isPointerTy());
+			assert(generatedExpression->getType()->getPointerElementType()->isPointerTy());
+			//Dereference the pointer
+			return builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
+		}
 		case IndirectionConversionMode::DereferencePointerToPointerTwice:
 		{
 			//Check that we are dealing with a pointer to a pointer
 			assert(generatedExpression->getType()->isPointerTy());
 			assert(generatedExpression->getType()->getPointerElementType()->isPointerTy());
-			llvm::Constant* zeroConstant = helper->createConstant(0);
 			//Dereference the pointer
-			return builder->CreateGEP(generatedExpression, zeroConstant, "Dereference");
+			llvm::Value* value = builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
+			if (expressionToConvert->getType().getPointeeType()->getPointeeType()->isBasicType())
+			{
+				value = builder->CreateLoad(value, value->getType()->getPointerElementType(), "Dereference");				
+			}
+			return value;
 		}
 		case IndirectionConversionMode::AddressOfPointer:
 		{
 			//Check that we are dealing with a pointer
 			assert(generatedExpression->getType()->isPointerTy());
-			llvm::Constant* oneConstant = helper->createConstant(1);
-			llvm::Value* valuePtr = builder->CreateAlloca(generatedExpression->getType(), nullptr);
+			llvm::Value* valuePtr = builder->CreateAlloca(generatedExpression->getType(), nullptr, "ValueMemory");
 			builder->CreateStore(generatedExpression, valuePtr);
 			return  valuePtr;
+		}
+		case IndirectionConversionMode::AddressOfValue:
+		{
+			if (expressionToConvert->getType().isBasicType())
+			{
+				llvm::Value* valuePtr = builder->CreateAlloca(generatedExpression->getType(), nullptr, "ValueMemory");
+				builder->CreateStore(generatedExpression, valuePtr);
+				return valuePtr;
+			}
+			else
+			{
+				return generatedExpression;
+			}
 		}
 		default: return generatedExpression;
 		
@@ -838,63 +855,21 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 	const CatGenericType& returnType = staticFunctionCall->getType();
 	llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
 
-	for (std::size_t i = 0; i < expressionArguments.size(); i++)
+	llvm::Value* returnAllocation = helper->generateFunctionCallReturnValueAllocation(returnType, staticFunctionCall->getFunctionName(), context);
+	if (returnAllocation != nullptr)
 	{
-		llvm::Value* argumentValue = generate(expressionArguments[i], context);
-		const CatGenericType& functionParameterType = staticFunctionCall->getFunctionParameterType(i);
-		//If a parameter is passed by value, it should be copy constructed.
-		if (functionParameterType.isReflectableObjectType())
-		{
-			llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", i, "_copy"), functionParameterType, false);
-			const std::string& typeName = functionParameterType.getObjectType()->getTypeName();
-			llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(functionParameterType.getObjectType()), Tools::append(typeName, "_typeInfo"));
-			llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
-			assert(functionParameterType.isCopyConstructible());
-			helper->createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, argumentValue, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
-			argumentValue = copyAllocation;
-		}
-		else if (functionParameterType.isStringType())
-		{
-			llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", i, "_copy"), false);
-			helper->createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, argumentValue}, "stringCopyConstruct");
-			argumentValue = copyAllocation;
-		}
-		argumentList.push_back(argumentValue);
-		argumentTypes.push_back(argumentList.back()->getType());
+		argumentList.push_back(returnAllocation);
+		argumentTypes.push_back(returnAllocation->getType());
 	}
+	helper->generateFunctionCallArgumentEvalatuation(expressionArguments, staticFunctionCall->getExpectedParameterTypes(), argumentList, argumentTypes, this, context);
 
 	if (returnType.isStringType() || returnType.isReflectableObjectType())
 	{
-		//When calling a functions that returns an object by value, the object 
-		//must be allocated on the stack and a pointer to that allocation should 
-		//then be passed as the first argument to the function.
-		//That argument should be marked SRet (structure return argument).
-		//The function itself will return void.
-		//Objects allocated on the stack will be destroyed before the function that contains this call returns.
-		llvm::Value* objectAllocation = nullptr;
-		std::string objectName = Tools::append(staticFunctionCall->getFunctionName(), "_Result");
-		if (returnType.isStringType())
-		{
-			objectAllocation = context->helper->createStringAllocA(context, objectName, true);
-		}
-		else
-		{
-			objectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, true);
-		}
-
-		argumentList.insert(argumentList.begin(), objectAllocation);
-		llvm::Type* returnLLVMTypePtr = returnLLVMType;
-		if (!returnType.isStringType())
-		{
-			returnLLVMTypePtr = LLVMTypes::pointerType;
-		}
-		argumentTypes.insert(argumentTypes.begin(), returnLLVMTypePtr);
-
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
 		llvm::CallInst* call = static_cast<llvm::CallInst*>(context->helper->createCall(functionType, staticFunctionCall->getFunctionAddress(), argumentList, staticFunctionCall->getFunctionName()));
 		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
 		call->addDereferenceableAttr(1 , returnType.getTypeSize());
-		return objectAllocation;
+		return returnAllocation;
 	}
 	else
 	{
@@ -1065,7 +1040,6 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 																		 LLVMCompileTimeContext* context)
 {
 	CatGenericType& returnType = memberFunction->returnType;
-	MemberFunctionCallData callData = memberFunction->getFunctionAddress();
 	llvm::Value* baseObject = generate(base, context);
 	if (memberFunction->isDeferredFunctionCall())
 	{
@@ -1074,19 +1048,8 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		baseObject = deferredFunctionInfo->baseMember->generateDereferenceCode(baseObject, context);
 	}
 	//If the member function call returns an object by value, we must allocate the object on the stack.
-	llvm::Value* returnedObjectAllocation = nullptr;
-	if (returnType.isStringType() || returnType.isReflectableObjectType())
-	{
-		std::string objectName = Tools::append(memberFunction->memberFunctionName, "_Result");
-		if (returnType.isStringType())
-		{
-			returnedObjectAllocation = context->helper->createStringAllocA(context, objectName, true);
-		}
-		else
-		{
-			returnedObjectAllocation = context->helper->createObjectAllocA(context, objectName, returnType, true);
-		}
-	}
+	llvm::Value* returnedObjectAllocation = helper->generateFunctionCallReturnValueAllocation(returnType, memberFunction->memberFunctionName, context);
+	
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
 		std::vector<llvm::Value*> argumentList;
@@ -1094,6 +1057,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		argumentList.push_back(functionThis);
 		std::vector<llvm::Type*> argumentTypes;
 		argumentTypes.push_back(LLVMTypes::pointerType);
+		MemberFunctionCallData callData = memberFunction->getFunctionAddress();
 		if (!callData.makeDirectCall)
 		{
 			//Add an argument that contains a pointer to a MemberFunctionInfo object.
@@ -1102,31 +1066,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 			argumentList.push_back(memberFunctionPtrValue);
 			argumentTypes.push_back(LLVMTypes::pointerType);
 		}
-
-		for (std::size_t i = 0; i < arguments.size(); i++)
-		{
-			llvm::Value* argumentValue = generate(arguments[i], context);
-			const CatGenericType& functionParameterType = memberFunction->getArgumentType(i);
-			//If a parameter is passed by value, it should be copy constructed.
-			if (functionParameterType.isReflectableObjectType())
-			{
-				llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", i, "_copy"), functionParameterType, false);
-				const std::string& typeName = functionParameterType.getObjectType()->getTypeName();
-				llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(functionParameterType.getObjectType()), Tools::append(typeName, "_typeInfo"));
-				llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
-				assert(functionParameterType.isCopyConstructible());
-				helper->createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, argumentValue, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
-				argumentValue = copyAllocation;
-			}
-			else if (functionParameterType.isStringType())
-			{
-				llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", i, "_copy"), false);
-				helper->createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, argumentValue}, "stringCopyConstruct");
-				argumentValue = copyAllocation;
-			}
-			argumentList.push_back(argumentValue);
-			argumentTypes.push_back(argumentList.back()->getType());
-		}
+		helper->generateFunctionCallArgumentEvalatuation(arguments, memberFunction->argumentTypes, argumentList, argumentTypes, this, context);
 
 		uintptr_t functionAddress = callData.makeDirectCall ? callData.memberFunctionAddress : callData.staticFunctionAddress;
 

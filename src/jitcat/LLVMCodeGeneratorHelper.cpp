@@ -6,10 +6,12 @@
 */
 
 #include "jitcat/LLVMCodeGeneratorHelper.h"
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatTypedExpression.h"
+#include "jitcat/LLVMCodeGenerator.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMJit.h"
 #include "jitcat/LLVMTypes.h"
-#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 
@@ -183,7 +185,6 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isBoolType())							return LLVMTypes::boolType;
 	else if (type.isStringType())						return LLVMTypes::stringPtrType;
 	else if (type.isReflectableHandleType())			return LLVMTypes::pointerType;
-	else if (type.isPointerType())						return LLVMTypes::pointerType;
 	else if (type.isContainerType())					return LLVMTypes::pointerType;
 	else if (type.isVoidType())							return LLVMTypes::voidType;
 	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
@@ -191,6 +192,24 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	{
 		//This is a compound type. For now, just create a byte array type.
 		return llvm::ArrayType::get(LLVMTypes::ucharType, type.getTypeSize());
+	}
+	else if (type.isPointerType())
+	{
+		if (type.getPointeeType()->isStringType())
+		{
+			return LLVMTypes::stringPtrType;
+		}
+		else if (type.getPointeeType()->isBasicType()
+			|| type.getPointeeType()->isPointerType())
+		{
+			llvm::Type* pointee = toLLVMType(*type.getPointeeType());
+			return pointee->getPointerTo();
+		}
+		else
+		{
+			return LLVMTypes::pointerType;
+		}
+
 	}
 	else
 	{
@@ -599,6 +618,82 @@ llvm::LLVMContext& LLVMCodeGeneratorHelper::getContext()
 llvm::IRBuilder<>* LLVMCodeGeneratorHelper::getBuilder()
 {
 	return builder;
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateFunctionCallReturnValueAllocation(const CatGenericType& returnType, const std::string& functionName, LLVMCompileTimeContext* context)
+{
+	//When calling a functions that returns an object by value, the object 
+	//must be allocated on the stack and a pointer to that allocation should 
+	//then be passed as the first argument to the function.
+	//That argument should be marked SRet (structure return argument).
+	//The function itself will return void.
+	//Objects allocated on the stack will be destroyed before the function that contains this call returns.
+	if (returnType.isStringType() || returnType.isReflectableObjectType())
+	{
+		std::string objectName = Tools::append(functionName, "_Result");
+		if (returnType.isStringType())
+		{
+			return context->helper->createStringAllocA(context, objectName, true);
+		}
+		else
+		{
+			return context->helper->createObjectAllocA(context, objectName, returnType, true);
+		}
+	}
+	return nullptr;
+}
+
+
+void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std::vector<const jitcat::AST::CatTypedExpression*>& arguments,
+																	   const std::vector<CatGenericType>& expectedArgumentTypes, 
+																	   std::vector<llvm::Value*>& generatedArguments,
+																	   std::vector<llvm::Type*>& generatedArgumentTypes,
+																	   LLVMCodeGenerator* generator, LLVMCompileTimeContext* context)
+{
+	assert(arguments.size() == expectedArgumentTypes.size());
+	for (std::size_t i = 0; i < arguments.size(); i++)
+	{
+		llvm::Value* argumentValue = generator->generate(arguments[i], context);
+		const CatGenericType& functionParameterType = expectedArgumentTypes[i];
+		llvm::Type* expectedLLVMType = toLLVMType(functionParameterType);
+		
+		if (llvm::Type* argumentLLVMType = argumentValue->getType(); argumentLLVMType != expectedLLVMType)
+		{
+			//Check if the types can be converted.
+			if (expectedLLVMType->isPointerTy())
+			{
+				//A pointer is expected
+				if (argumentLLVMType == expectedLLVMType->getPointerElementType() && argumentLLVMType->isSingleValueType())
+				{
+					//The supplied argument is of the type pointed to by the expected type.
+					//If it is a simple type, we can store it to memory and pass the address.
+					llvm::AllocaInst* allocation = builder->CreateAlloca(argumentLLVMType);
+					builder->CreateStore(argumentValue, allocation);
+					argumentValue = allocation;
+				}
+			}
+		}
+		//If a parameter is passed by value, it should be copy constructed.
+		if (functionParameterType.isReflectableObjectType())
+		{
+			llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", i, "_copy"), functionParameterType, false);
+			const std::string& typeName = functionParameterType.getObjectType()->getTypeName();
+			llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(functionParameterType.getObjectType()), Tools::append(typeName, "_typeInfo"));
+			llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
+			assert(functionParameterType.isCopyConstructible());
+			createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, argumentValue, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
+			argumentValue = copyAllocation;
+		}
+		else if (functionParameterType.isStringType())
+		{
+			llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", i, "_copy"), false);
+			createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, argumentValue}, "stringCopyConstruct");
+			argumentValue = copyAllocation;
+		}
+		generatedArguments.push_back(argumentValue);
+		generatedArgumentTypes.push_back(generatedArguments.back()->getType());
+	}
 }
 
 

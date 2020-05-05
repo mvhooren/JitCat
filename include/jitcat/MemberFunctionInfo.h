@@ -135,7 +135,7 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 			//std::decay removes const and & from the type.
 			return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
 		}
-		return TypeTraits<ReturnT>::toGenericType().createDefault();;
+		return TypeTraits<ReturnT>::toGenericType().createDefault();
 	}
 
 
@@ -147,7 +147,7 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 
 	static ReturnT staticExecute(ClassT* base, MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
 	{
-		ReturnT (ClassT::*function)(TFunctionArguments...) = functionInfo->function;;
+		ReturnT (ClassT::*function)(TFunctionArguments...) = functionInfo->function;
 		return (base->*function)(args...);
 	}
 

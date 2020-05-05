@@ -10,6 +10,10 @@
 namespace jitcat
 {
 	class CatRuntimeContext;
+	namespace AST
+	{
+		class CatTypedExpression;
+	}
 }
 #include "jitcat/CatGenericType.h"
 #include "jitcat/LLVMCatIntrinsics.h"
@@ -24,7 +28,7 @@ namespace jitcat
 namespace jitcat::LLVM
 {
 	struct LLVMCompileTimeContext;
-
+	class LLVMCodeGenerator;
 
 	class LLVMCodeGeneratorHelper
 	{
@@ -90,6 +94,13 @@ namespace jitcat::LLVM
 
 		llvm::LLVMContext& getContext();
 		llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* getBuilder();
+
+		llvm::Value* generateFunctionCallReturnValueAllocation(const CatGenericType& returnType, const std::string& functionName, LLVMCompileTimeContext* context);
+		void generateFunctionCallArgumentEvalatuation(const std::vector<const jitcat::AST::CatTypedExpression*>& arguments, 
+													  const std::vector<CatGenericType>& expectedArgumentTypes, 
+													  std::vector<llvm::Value*>& generatedArguments,
+													  std::vector<llvm::Type*>& generatedArgumentTypes,
+													  LLVMCodeGenerator* generator, LLVMCompileTimeContext* context);
 
 		static llvm::FunctionType* createFunctionType(llvm::Type* returnType, const std::vector<llvm::Type*>& argumentTypes);
 
