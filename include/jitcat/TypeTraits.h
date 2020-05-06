@@ -14,6 +14,7 @@
 #include "jitcat/TypeRegistry.h"
 
 #include <any>
+#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
@@ -21,7 +22,34 @@
 
 namespace jitcat
 {
+	typedef unsigned int TypeID;
 
+	class TypeCounter
+	{
+	private:
+		TypeCounter() = delete;
+		~TypeCounter() = delete;
+		TypeCounter(const TypeCounter&) = delete;
+	public:
+		static const TypeID getNextTypeId();
+	private:
+		static std::atomic<TypeID> typeIdCounter;
+	};
+
+	template <typename CountedT>
+	class TypeIdentifier
+	{
+	private:
+		TypeIdentifier() = delete;
+		~TypeIdentifier() = delete;
+		TypeIdentifier(const TypeCounter&) = delete;
+	public:
+		static inline TypeID getIdentifier()
+		{
+			static TypeID myTypeId = TypeCounter::getNextTypeId();
+			return myTypeId;
+		}
+	};
 	//These classes use template specialization to get properties of types relevant for the reflection, serialisation and expression system.
 	//It allows to translate a type T to a CatGenericType and to check if a T is a reflectable/serialisable container.
 	//The top class is the default case where T is neither a basic type nor a container type.
@@ -31,7 +59,6 @@ namespace jitcat
 	{
 	public:
 		static inline const CatGenericType& toGenericType();
-
 		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
@@ -64,6 +91,8 @@ namespace jitcat
 		static ObjectT& stripValue(ObjectT& value) { return value; }
 		static ObjectT& stripValue(ObjectT* value) {return *value;}
 		
+		static const TypeID getTypeId() { TypeIdentifier<ObjectT>::getIdentifier();};
+
 		typedef ObjectT getValueType;
 		typedef ObjectT type;
 		typedef ObjectT cachedType;
@@ -87,6 +116,8 @@ namespace jitcat
 		static std::any getDefaultCatValue() { return std::any(getDefaultValue()); }
 		static const PointerT* getValue(const std::any& value) {return std::any_cast<PointerT*>(value);}
 		static PointerT* stripValue(PointerT* value) {return value;}
+
+		static const TypeID getTypeId() {return TypeTraits<PointerT>::getTypeId();}
 
 		typedef PointerT* getValueType;
 		typedef PointerT type;
@@ -112,6 +143,8 @@ namespace jitcat
 		static PointerT* getValue(const std::any& value) {return std::any_cast<PointerT*>(value);}
 		static PointerT* stripValue(PointerT* value) {return value;}
 
+		static const TypeID getTypeId() {return TypeTraits<PointerT>::getTypeId();}
+
 		typedef PointerT* getValueType;
 		typedef PointerT type;
 		typedef PointerT* cachedType;
@@ -119,7 +152,7 @@ namespace jitcat
 		typedef PointerT* containerItemReturnType;
 	};
 
-
+	
 	template <typename RefT>
 	class TypeTraits<const RefT&, void>
 	{
@@ -137,13 +170,16 @@ namespace jitcat
 		static std::any getDefaultCatValue() { return std::any(getDefaultValue()); }
 		static RefT* getValue(const std::any& value)  { return std::any_cast<RefT*>(value);}
 		static RefT* stripValue(RefT& value) { return &value; }
-		
+
+		static const TypeID getTypeId() {return TypeTraits<RefT>::getTypeId();}
+
 		typedef RefT* getValueType;
 		typedef RefT type;
 		typedef RefT& cachedType;
 		typedef RefT& functionParameterType;
 		typedef RefT* containerItemReturnType;
 	};
+
 
 	template <typename RefT>
 	class TypeTraits<RefT&, void>
@@ -163,6 +199,8 @@ namespace jitcat
 		static RefT* getValue(const std::any& value)  { return std::any_cast<RefT*>(value);}
 		static RefT* stripValue(RefT& value) { return &value; }
 		
+		static const TypeID getTypeId() {return TypeTraits<RefT>::getTypeId();}
+
 		typedef RefT* getValueType;
 		typedef RefT type;
 		typedef RefT& cachedType;
@@ -196,6 +234,8 @@ namespace jitcat
 		static PointerRefT** getValue(const std::any& value)  { return std::any_cast<PointerRefT**>(value);}
 		static PointerRefT** stripValue(PointerRefT*& value) { return &value; }
 		
+		static const TypeID getTypeId() {return TypeTraits<PointerRefT>::getTypeId();}
+
 		typedef PointerRefT** getValueType;
 		typedef PointerRefT type;
 		typedef PointerRefT* cachedType;
@@ -219,6 +259,8 @@ namespace jitcat
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::unique_ptr<UniquePtrT>>::getDefaultValue()); }
 		static UniquePtrT* getValue(const std::any& value) {return static_cast<UniquePtrT*>(std::any_cast<UniquePtrT*>(value));}
 		static UniquePtrT* stripValue(std::unique_ptr<UniquePtrT>& value) { return value.get(); }
+		
+		static const TypeID getTypeId() {return TypeTraits<UniquePtrT>::getTypeId();}
 
 		typedef UniquePtrT* getValueType;
 		typedef UniquePtrT type;
@@ -226,8 +268,8 @@ namespace jitcat
 		typedef UniquePtrT* functionParameterType;
 		typedef UniquePtrT* containerItemReturnType;
 	};
-
-
+	
+	
 	template <>
 	class TypeTraits<void, void>
 	{
@@ -250,6 +292,8 @@ namespace jitcat
 			return "void"; 
 		}
 
+		static const TypeID getTypeId() {return TypeIdentifier<void>::getIdentifier();}
+
 		typedef void getValueType;
 		typedef void type;
 		typedef int cachedType;
@@ -257,7 +301,7 @@ namespace jitcat
 		typedef int containerItemReturnType;
 	};
 
-
+	
 	template <typename FundamentalT>
 	class TypeTraits<FundamentalT, std::enable_if_t<std::is_fundamental_v<FundamentalT> && !std::is_void_v<FundamentalT> > >
 	{
@@ -287,6 +331,8 @@ namespace jitcat
 			else														static_assert(false, "Fundamental type not yet supported by JitCat.");	
 		}
 
+		static const TypeID getTypeId() {return TypeIdentifier<FundamentalT>::getIdentifier();}
+
 		typedef FundamentalT getValueType;
 		typedef FundamentalT type;
 		typedef FundamentalT cachedType;
@@ -313,6 +359,8 @@ namespace jitcat
 		{
 			return "string";
 		}
+
+		static const TypeID getTypeId() {return TypeIdentifier<StringT>::getIdentifier();}
 
 		typedef std::string getValueType;
 		typedef std::string type;
@@ -346,6 +394,8 @@ namespace jitcat
 			return getEnumName<EnumT>();	
 		}
 
+		static const TypeID getTypeId() {return TypeIdentifier<EnumT>::getIdentifier();}
+
 		typedef EnumT getValueType;
 		typedef EnumT type;
 		typedef EnumT cachedType;
@@ -370,13 +420,15 @@ namespace jitcat
 		static std::vector<ItemType, AllocatorT>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType, AllocatorT>*>(value); }
 		static std::vector<ItemType, AllocatorT>* stripValue(std::vector<ItemType, AllocatorT>* value) { return value; }
 
+		static const TypeID getTypeId() {return TypeIdentifier<std::vector<ItemType, AllocatorT>>::getIdentifier();}
+
 		typedef std::vector<ItemType, AllocatorT>& getValueType;
 		typedef ItemType type;
 		typedef std::vector<ItemType, AllocatorT> cachedType;
 		typedef std::vector<ItemType, AllocatorT>* functionParameterType;
 		typedef std::vector<ItemType, AllocatorT>* containerItemReturnType;
 	};
-
+	
 
 	template <typename KeyType, typename ItemType, typename ComparatorT, typename AllocatorT>
 	class TypeTraits<std::map<KeyType, ItemType, ComparatorT, AllocatorT>, void >
@@ -394,12 +446,15 @@ namespace jitcat
 		static std::map<KeyType, ItemType, ComparatorT, AllocatorT>& getValue(const std::any& value) { return *std::any_cast<std::map<KeyType, ItemType, ComparatorT, AllocatorT>*>(value);}
 		static std::map<KeyType, ItemType, ComparatorT, AllocatorT>* stripValue(std::map<KeyType, ItemType, ComparatorT, AllocatorT>* value) { return value; }
 
+		static const TypeID getTypeId() {return TypeIdentifier<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>::getIdentifier();}
+
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>& getValueType;
 		typedef ItemType type;
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT> cachedType;
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* functionParameterType;
 		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* containerItemReturnType;
 	};
+
 
 	template <typename AnyType>
 	struct RemoveConst
@@ -431,6 +486,7 @@ namespace jitcat
 	{
 		typedef typename RemoveConst<ConstType>::type type;
 	};
+
 
 } //End namespace jitcat
 
