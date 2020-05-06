@@ -51,6 +51,16 @@ CatRuntimeContext::~CatRuntimeContext()
 	}
 }
 
+const char* jitcat::CatRuntimeContext::getTypeName()
+{
+	return "CatRuntimeContext";
+}
+
+
+void CatRuntimeContext::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+{
+}
+
 
 std::string CatRuntimeContext::getContextName()
 {
@@ -426,10 +436,7 @@ void jitcat::CatRuntimeContext::setReturning(bool isReturning)
 
 CatScopeID CatRuntimeContext::createScope(unsigned char* scopeObject, TypeInfo* type, bool isStatic)
 {
-	Scope* scope = new Scope();
-	scope->isStatic = isStatic;
-	scope->scopeObject = reinterpret_cast<Reflectable*>(scopeObject);
-	scope->scopeType = type;
+	Scope* scope = new Scope(type, reinterpret_cast<Reflectable*>(scopeObject), isStatic);
 	if (!isStatic)
 	{
 		scopes.emplace_back(scope);

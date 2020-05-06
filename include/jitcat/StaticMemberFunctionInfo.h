@@ -54,6 +54,8 @@ namespace jitcat::Reflection
 		virtual int getNumParameters() const override;
 		virtual const CatGenericType& getParameterType(int index) const override;
 
+		const std::string& getNormalFunctionName() const;
+
 	private:
 		std::string memberFunctionName;
 		std::string lowerCaseFunctionName;
@@ -91,7 +93,8 @@ namespace jitcat::Reflection
 	{
 		if constexpr (std::is_same<void, ReturnT>::value)
 		{
-			return (*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			(*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			return std::any();
 		}
 		else
 		{

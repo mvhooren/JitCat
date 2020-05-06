@@ -89,7 +89,7 @@ inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::
 		{
 			//llvm::Value* lValue = generatorHelper->loadPointerAtAddress(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
 			llvm::Value* lValue = generatorHelper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
-			context->helper->createCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "stringAssign");
+			context->helper->createIntrinsicCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "stringAssign");
 		}
 		else
 		{

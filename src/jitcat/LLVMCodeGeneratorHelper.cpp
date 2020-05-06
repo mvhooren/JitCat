@@ -15,6 +15,8 @@
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 
+#include <cassert>
+
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Function.h>
@@ -256,7 +258,7 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		}
 		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
 		{
-			return createCall(context, &LLVMCatIntrinsics::stringToBoolean, {valueToConvert}, "stringToBoolean");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToBoolean, {valueToConvert}, "stringToBoolean");
 		}
 	}
 	else if (type == LLVMTypes::intType)
@@ -276,7 +278,7 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		}
 		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
 		{
-			return createCall(context, &LLVMCatIntrinsics::stringToInt, {valueToConvert}, "stringToInt");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToInt, {valueToConvert}, "stringToInt");
 		}
 	}
 	else if (type == LLVMTypes::floatType)
@@ -296,7 +298,7 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		}
 		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
 		{
-			return createCall(context, &LLVMCatIntrinsics::stringToFloat, {valueToConvert}, "stringToFloat");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToFloat, {valueToConvert}, "stringToFloat");
 		}
 	}
 	else if (type == LLVMTypes::stringPtrType)
@@ -311,11 +313,11 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		}
 		else if (valueToConvert->getType() == LLVMTypes::floatType)
 		{
-			return createCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString");
 		}
 		else if (valueToConvert->getType() == LLVMTypes::intType)
 		{
-			return createCall(context, &LLVMCatIntrinsics::intToString, {valueToConvert}, "intToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {valueToConvert}, "intToString");
 		}
 
 	}
@@ -560,7 +562,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 	{
 		std::string destructorName = Tools::append(name, "_destructor");
 		assert(objectType.isDestructible());
-		context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);});
+		context->blockDestructorGenerators.push_back([=](){return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);});
 	}
 	if (currentBlockIsEntryBlock)
 	{
@@ -586,7 +588,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext*
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
 	if (generateDestructorCall)
 	{
-		context->blockDestructorGenerators.push_back([=](){return createCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");});
+		context->blockDestructorGenerators.push_back([=](){return createIntrinsicCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");});
 	}
 	if (currentBlockIsEntryBlock)
 	{
@@ -658,85 +660,99 @@ void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std
 		const CatGenericType& functionParameterType = expectedArgumentTypes[i];
 		llvm::Type* expectedLLVMType = toLLVMType(functionParameterType);
 		
-		if (llvm::Type* argumentLLVMType = argumentValue->getType(); argumentLLVMType != expectedLLVMType)
-		{
-			//Check if the types can be converted.
-			if (expectedLLVMType->isPointerTy())
-			{
-				//A pointer is expected
-				if (argumentLLVMType == expectedLLVMType->getPointerElementType() && argumentLLVMType->isSingleValueType())
-				{
-					//The supplied argument is of the type pointed to by the expected type.
-					//If it is a simple type, we can store it to memory and pass the address.
-					llvm::AllocaInst* allocation = builder->CreateAlloca(argumentLLVMType);
-					builder->CreateStore(argumentValue, allocation);
-					argumentValue = allocation;
-				}
-			}
-		}
+		argumentValue = convertIndirection(argumentValue, expectedLLVMType);
+
 		//If a parameter is passed by value, it should be copy constructed.
-		if (functionParameterType.isReflectableObjectType())
-		{
-			llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", i, "_copy"), functionParameterType, false);
-			const std::string& typeName = functionParameterType.getObjectType()->getTypeName();
-			llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(functionParameterType.getObjectType()), Tools::append(typeName, "_typeInfo"));
-			llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
-			assert(functionParameterType.isCopyConstructible());
-			createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, argumentValue, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
-			argumentValue = copyAllocation;
-		}
-		else if (functionParameterType.isStringType())
-		{
-			llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", i, "_copy"), false);
-			createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, argumentValue}, "stringCopyConstruct");
-			argumentValue = copyAllocation;
-		}
+		argumentValue = copyConstructIfValueType(argumentValue, functionParameterType, context, Tools::makeString(i));
+
 		generatedArguments.push_back(argumentValue);
 		generatedArgumentTypes.push_back(generatedArguments.back()->getType());
 	}
 }
 
 
-llvm::FunctionType* LLVMCodeGeneratorHelper::createFunctionType(llvm::Type* returnType, const std::vector<llvm::Type*>& argumentTypes)
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::CatGenericType& returnType, const std::vector<llvm::Value*>& argumentList, const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, uintptr_t functionAddress, const std::string& functionName, llvm::Value* returnedObjectAllocation)
 {
-	return llvm::FunctionType::get(returnType, argumentTypes, false);
-}
-
-
-llvm::Value* LLVMCodeGeneratorHelper::generateCall(LLVMCompileTimeContext* context, uintptr_t functionAddress, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isStructRet, const std::string& name)
-{
-	//QQQ
-	std::vector<llvm::Value*> finalArguments(arguments);
-	llvm::Value* structRetValue = nullptr;
-	if (isStructRet)
+	if (returnType.isStringType() || returnType.isReflectableObjectType())
 	{
-		structRetValue = createStringAllocA(context, name + "_Result", false);
-		finalArguments.insert(finalArguments.begin(), structRetValue);
-	}
-	llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, functionAddress, finalArguments, name));
-
-	unsigned int derefAttributeIndex = 1;
-	auto iter = functionType->param_begin();
-	if (isStructRet) ++iter;
-	for (iter; iter != functionType->param_end(); ++iter)
-	{
-		if (*iter == LLVMTypes::stringPtrType)
-		{
-			call->addDereferenceableAttr(derefAttributeIndex, sizeof(std::string));
-		}
-		derefAttributeIndex++;
-	}
-
-	if (isStructRet)
-	{
+		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(context->helper->createCall(functionType, functionAddress, argumentList, functionName));
 		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
-		call->addParamAttr(0, llvm::Attribute::AttrKind::NoAlias);
-		return structRetValue;
+		call->addDereferenceableAttr(1 , returnType.getTypeSize());
+		return returnedObjectAllocation;
 	}
 	else
 	{
-		return call;
+		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
+		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
+		return createCall(functionType, functionAddress, argumentList, functionName);
 	}
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertIndirection(llvm::Value* value, llvm::Type* expectedType)
+{
+	if (llvm::Type* argumentLLVMType = value->getType(); argumentLLVMType != expectedType)
+	{
+		//Check if the types can be converted.
+		if (expectedType->isPointerTy())
+		{
+			//A pointer is expected
+			if (argumentLLVMType == expectedType->getPointerElementType() && argumentLLVMType->isSingleValueType())
+			{
+				//The supplied argument is of the type pointed to by the expected type.
+				//If it is a simple type, we can store it to memory and pass the address.
+				llvm::AllocaInst* allocation = builder->CreateAlloca(argumentLLVMType);
+				builder->CreateStore(value, allocation);
+				return allocation;
+			}
+		}
+	}
+	return value;
+}
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::copyConstructIfValueType(llvm::Value* value, const CatGenericType& type, LLVMCompileTimeContext* context, const std::string& valueName)
+{
+	//If a parameter is passed by value, it should be copy constructed.
+	if (type.isReflectableObjectType())
+	{
+		llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", valueName, "_copy"), type, false);
+		const std::string& typeName = type.getObjectType()->getTypeName();
+		llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(type.getObjectType()), Tools::append(typeName, "_typeInfo"));
+		llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
+		assert(type.isCopyConstructible());
+		createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, value, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
+		return copyAllocation;
+	}
+	else if (type.isStringType())
+	{
+		llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", valueName, "_copy"), false);
+		createIntrinsicCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, value}, "stringCopyConstruct");
+		return copyAllocation;
+	}
+	return value;
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context)
+{
+	const std::vector<CatGenericType>& argumentTypes = functionInfo->getArgumentTypes();
+	assert(arguments.size() == argumentTypes.size());
+	llvm::Value* returnValueAllocation = generateFunctionCallReturnValueAllocation(functionInfo->getReturnType(), functionInfo->getNormalFunctionName(), context);
+	std::vector<llvm::Type*> argumentLLVMTypes;
+	for (std::size_t i = 0; i < arguments.size(); ++i)
+	{
+		arguments[i] = convertIndirection(arguments[i], toLLVMType(argumentTypes[i]));
+		arguments[i] = copyConstructIfValueType(arguments[i], argumentTypes[i], context, Tools::makeString(i)); 
+		argumentLLVMTypes.push_back(arguments[i]->getType());
+	}
+	if (returnValueAllocation != nullptr)
+	{
+		arguments.insert(arguments.begin(), returnValueAllocation);
+		argumentLLVMTypes.insert(argumentLLVMTypes.begin(), returnValueAllocation->getType());
+	}
+
+	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getFunctionAddress(), functionInfo->getNormalFunctionName(), returnValueAllocation);
 }
 
 

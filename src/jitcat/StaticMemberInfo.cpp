@@ -115,7 +115,7 @@ llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateAssignCode
 	//Create a constant with the pointer to the reflectable handle.
 	llvm::Value* reflectableHandle = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
 	//Call function that gets the member
-	context->helper->createCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "assignReflectableHandle");
+	context->helper->createIntrinsicCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "assignReflectableHandle");
 	return rValue;
 #else
 	return nullptr;

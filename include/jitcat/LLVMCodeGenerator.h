@@ -9,6 +9,7 @@
 
 namespace jitcat
 {
+	class CatGenericType;
 	class CatRuntimeContext;
 	namespace Reflection
 	{
@@ -79,6 +80,7 @@ namespace jitcat::LLVM
 		llvm::Value* generateMemberFunctionCall(Reflection::MemberFunctionInfo* memberFunction, AST::CatTypedExpression* base, 
 											    const std::vector<const AST::CatTypedExpression*>& arguments, 
 												LLVMCompileTimeContext* context);
+
 
 		void initContext(LLVMCompileTimeContext* context);
 		void createNewModule(LLVMCompileTimeContext* context);

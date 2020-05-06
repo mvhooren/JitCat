@@ -36,7 +36,7 @@ namespace jitcat::LLVM
 		~LLVMCatIntrinsics() = delete;
 
 	public:
-		static unsigned char* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
+		static Reflection::Reflectable* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
 		static bool stringEquals(const std::string& left, const std::string& right);
 		static bool stringNotEquals(const std::string& left, const std::string& right);
 		static void stringAssign(std::string* left, const std::string& right);
@@ -61,9 +61,9 @@ namespace jitcat::LLVM
 		static float getRandomFloatRange(float min, float max);
 		static float roundFloat(float number, int decimals);
 		static std::string roundFloatToString(float number, int decimals);
-		static void placementCopyConstructType(unsigned char* target, unsigned char* source,  Reflection::TypeInfo* type);
-		static void placementConstructType(unsigned char* address, Reflection::TypeInfo* type);
-		static void placementDestructType(unsigned char* address, Reflection::TypeInfo* type);
+		static void placementCopyConstructType(Reflection::Reflectable* target, Reflection::Reflectable* source,  Reflection::TypeInfo* type);
+		static void placementConstructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);
+		static void placementDestructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);
 	};
 
 

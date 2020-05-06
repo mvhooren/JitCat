@@ -168,12 +168,12 @@ namespace jitcat::Reflection
 			if (!context->helper->isInt(index) || std::is_same<int, ContainerKeyType>::value)
 			{
 				static auto functionPointer = &StaticContainerMemberInfo<ContainerT>::getMapKeyIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
-				return context->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapKeyIndex");
+				return context->helper->createIntrinsicCall(context, functionPointer, {containerPtr, index}, "getMapKeyIndex");
 			}
 			else
 			{
 				static auto functionPointer = &StaticContainerMemberInfo<ContainerT>::getMapIntIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
-				return context->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapIntIndex");
+				return context->helper->createIntrinsicCall(context, functionPointer, {containerPtr, index}, "getMapIntIndex");
 			}
 		#else
 			return nullptr;
@@ -187,7 +187,7 @@ namespace jitcat::Reflection
 	{
 		#ifdef ENABLE_LLVM
 			static auto functionPointer = &StaticContainerMemberInfo<ContainerT>::getVectorIndex<ContainerItemType, AllocatorT>;
-			return context->helper->createCall(context, functionPointer, {containerPtr, index}, "getVectorIndex");
+			return context->helper->createIntrinsicCall(context, functionPointer, {containerPtr, index}, "getVectorIndex");
 		#else
 			return nullptr;
 		#endif //ENABLE_LLVM
@@ -270,7 +270,7 @@ namespace jitcat::Reflection
 		if constexpr (std::is_same<BasicT, std::string>::value)
 		{
 			llvm::Value* lValue = context->helper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
-			context->helper->createCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
+			context->helper->createIntrinsicCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
 		}
 		else
 		{

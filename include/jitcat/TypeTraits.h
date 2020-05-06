@@ -237,8 +237,7 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return false; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		template <typename U>
-		static std::any getCatValue(const U& param) { return std::any();}
+		static std::any getCatValue(void) { return std::any();}
 		static constexpr void getDefaultValue() { return; }
 		static std::any getDefaultCatValue() { return std::any(); }
 		static void stripValue(void) { }

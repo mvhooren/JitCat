@@ -67,7 +67,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 		//Pointer to a ReflectableHandle
 		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
 		//Call function that gets the member
-		context->helper->createCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "assignReflectableHandle");
+		context->helper->createIntrinsicCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "assignReflectableHandle");
 		return rValue;
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);

@@ -60,6 +60,9 @@ namespace jitcat::Reflection
 		template <typename ReturnT, typename ... Args>
 		inline ReflectedTypeInfo& addMember(const std::string& identifier, ReturnT (*function)(Args...));
 
+		template <typename ReflectedT, typename ReturnT, typename ... Args>
+		inline ReflectedTypeInfo& addPseudoMemberFunction(const std::string& identifier, ReturnT (*function)(ReflectedT*, Args...));
+
 		template <typename ConstantT>
 		inline ReflectedTypeInfo& addConstant(const std::string& identifier, ConstantT value);
 

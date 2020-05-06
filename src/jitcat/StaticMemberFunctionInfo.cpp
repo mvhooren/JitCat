@@ -48,3 +48,8 @@ const CatGenericType& StaticFunctionInfo::getParameterType(int index) const
 {
 	return argumentTypes[index];
 }
+
+const std::string& jitcat::Reflection::StaticFunctionInfo::getNormalFunctionName() const
+{
+	return memberFunctionName;
+}

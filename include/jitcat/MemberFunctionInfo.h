@@ -29,19 +29,25 @@ namespace jitcat::Reflection
 	struct TypeMemberInfo;
 	struct DeferredMemberFunctionInfo;
 
+	enum class MemberFunctionCallType
+	{
+		ThisCall,
+		ThisCallThroughStaticFunction,
+		PseudoMemberCall,
+		Unknown
+	};
+
 	struct MemberFunctionCallData
 	{
-		MemberFunctionCallData(): staticFunctionAddress(0), memberFunctionAddress(0), functionInfoStructAddress(0), makeDirectCall(false) {}
-		MemberFunctionCallData(uintptr_t staticFunctionAddress, uintptr_t memberFunctionAddress, uintptr_t functionInfoStructAddress, bool makeDirectCall): 
-			staticFunctionAddress(staticFunctionAddress), 
-			memberFunctionAddress(memberFunctionAddress), 
+		MemberFunctionCallData(): functionAddress(0), functionInfoStructAddress(0), callType(MemberFunctionCallType::Unknown) {}
+		MemberFunctionCallData(uintptr_t functionAddress, uintptr_t functionInfoStructAddress, MemberFunctionCallType callType): 
+			functionAddress(functionAddress), 
 			functionInfoStructAddress(functionInfoStructAddress), 
-			makeDirectCall(makeDirectCall) 
+			callType(callType)
 		{}
-		uintptr_t staticFunctionAddress;
-		uintptr_t memberFunctionAddress;
+		uintptr_t functionAddress;
 		uintptr_t functionInfoStructAddress;
-		bool makeDirectCall;
+		MemberFunctionCallType callType;
 	};
 
 
@@ -101,7 +107,7 @@ namespace jitcat::Reflection
 
 
 #ifdef _MSC_VER
-	#pragma warning (disable:4189)
+	//#pragma warning (disable:4189)
 #endif
 
 template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
@@ -133,7 +139,15 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 		{
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
-			return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			if constexpr (std::is_void_v<ReturnT>)
+			{
+				(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			}
+			else
+			{
+				return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			}
+			
 		}
 		return TypeTraits<ReturnT>::toGenericType().createDefault();
 	}
@@ -154,71 +168,22 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 
 	inline virtual MemberFunctionCallData getFunctionAddress() const override final
 	{
-		uintptr_t pointer = 0;
-		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
+		uintptr_t functionPtr = 0;
+		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
+		if constexpr (sizeof(function) == Configuration::basicMemberFunctionPointerSize)
+		{
+			memcpy(&functionPtr, &function, sizeof(uintptr_t));
+			callType = MemberFunctionCallType::ThisCall;
+		}
+		else
+		{
+			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
+			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
+		}
+		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType);
 	}
 
 	ReturnT (ClassT::*function)(TFunctionArguments...);
-};
-
-
-template <typename ClassT, class ... TFunctionArguments>
-struct MemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
-{
-	MemberVoidFunctionInfoWithArgs(const std::string& memberFunctionName, void (ClassT::*function)(TFunctionArguments...)):
-		MemberFunctionInfo(memberFunctionName, TypeTraits<void>::toGenericType()),
-		function(function)
-	{
-		//Trick to call a function per variadic template item
-		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
-		//This gets the type info per parameter type
-		int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
-	}
-
-
-	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
-	{ 
-		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
-		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
-	}
-
-
-	template<std::size_t... Is>
-	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
-	{
-		ClassT* baseObject = std::any_cast<ClassT*>(base);
-		if (baseObject != nullptr)
-		{
-			//This calls the member function, expanding the argument list from the catvalue array
-			//std::decay removes const and & from the type.
-			(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
-		}
-		return TypeTraits<void>::toGenericType().createDefault();
-	}
-
-
-	virtual std::size_t getNumberOfArguments() const override final
-	{ 
-		return sizeof...(TFunctionArguments);
-	}
-
-
-	static void staticExecute(ClassT* base, MemberVoidFunctionInfoWithArgs<ClassT, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
-	{
-		void (ClassT::*function)(TFunctionArguments...) = functionInfo->function;
-		(base->*function)(args...);
-	}
-
-
-	inline virtual MemberFunctionCallData getFunctionAddress() const  override final
-	{
-		uintptr_t pointer = 0;
-		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
-	}
-
-	void (ClassT::*function)(TFunctionArguments...);
 };
 
 
@@ -251,7 +216,14 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 		{
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
-			return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			if constexpr (std::is_void_v<ReturnT>)
+			{
+				(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			}
+			else
+			{
+				return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
+			}
 		}
 		return TypeTraits<ReturnT>::toGenericType().createDefault();
 	}
@@ -272,20 +244,30 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 
 	inline virtual MemberFunctionCallData getFunctionAddress() const override final
 	{
-		uintptr_t pointer = 0;
-		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
+		uintptr_t functionPtr = 0;
+		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
+		if constexpr (sizeof(function) == Configuration::basicMemberFunctionPointerSize)
+		{
+			memcpy(&functionPtr, &function, sizeof(uintptr_t));
+			callType = MemberFunctionCallType::ThisCall;
+		}
+		else
+		{
+			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
+			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
+		}
+		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType);
 	}
 
 	ReturnT (ClassT::*function)(TFunctionArguments...) const;
 };
 
 
-template <typename ClassT, class ... TFunctionArguments>
-struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
+template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
+struct PseudoMemberFunctionInfoWithArgs: public MemberFunctionInfo
 {
-	ConstMemberVoidFunctionInfoWithArgs(const std::string& memberFunctionName, void (ClassT::*function)(TFunctionArguments...) const):
-		MemberFunctionInfo(memberFunctionName, TypeTraits<void>::toGenericType()),
+	PseudoMemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT (*function)(ClassT*, TFunctionArguments...)):
+		MemberFunctionInfo(memberFunctionName, TypeTraits<ReturnT>::toGenericType()),
 		function(function)
 	{
 		//Trick to call a function per variadic template item
@@ -303,17 +285,24 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 
 
 	template<std::size_t... Is>
-	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const
+	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
 	{
 		ClassT* baseObject = std::any_cast<ClassT*>(base);
 		if (baseObject != nullptr)
 		{
-			
 			//This calls the member function, expanding the argument list from the catvalue array
 			//std::decay removes const and & from the type.
-			(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename std::decay<TFunctionArguments>::type>::getValueType >(TypeTraits<typename std::decay<TFunctionArguments>::type>::getValue(parameters[Is]))...);
+			if constexpr (std::is_void_v<ReturnT>)
+			{
+				(*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is - 1]))...);
+			}
+			else
+			{
+				return TypeTraits<ReturnT>::getCatValue((*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is - 1]))...));
+			}
+			
 		}
-		return TypeTraits<void>::toGenericType().createDefault();
+		return TypeTraits<ReturnT>::toGenericType().createDefault();
 	}
 
 
@@ -323,10 +312,10 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	}
 
 
-	static void staticExecute(ClassT* base, ConstMemberVoidFunctionInfoWithArgs<ClassT, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
+	static ReturnT staticExecute(ClassT* base, PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
 	{
-		void (ClassT::*function)(TFunctionArguments...) const = functionInfo->function;
-		(base->*function)(args...);
+		ReturnT (*function)(ClassT*, TFunctionArguments...) = functionInfo->function;
+		return (*function)(base, args...);
 	}
 
 
@@ -334,11 +323,10 @@ struct ConstMemberVoidFunctionInfoWithArgs: public MemberFunctionInfo
 	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return MemberFunctionCallData(reinterpret_cast<uintptr_t>(&staticExecute), pointer, reinterpret_cast<uintptr_t>(this), sizeof(function) == Configuration::basicMemberFunctionPointerSize);
+		return MemberFunctionCallData(pointer, reinterpret_cast<uintptr_t>(this), MemberFunctionCallType::PseudoMemberCall);
 	}
 
-	void (ClassT::*function)(TFunctionArguments...) const;
+	ReturnT (*function)(ClassT*, TFunctionArguments...);
 };
-
 
 } //End namespace jitcat::Reflection

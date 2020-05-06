@@ -182,7 +182,7 @@ inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateIndex(std::m
 		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
 			static auto functionPointer = &ContainerMemberInfo<BaseT, ContainerT>::getMapKeyIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
-			return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapKeyIndex");
+			return compileContext->helper->createIntrinsicCall(context, functionPointer, {containerPtr, index}, "getMapKeyIndex");
 		};
 		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 	}
@@ -191,7 +191,7 @@ inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateIndex(std::m
 		auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 		{
 			static auto functionPointer = &ContainerMemberInfo<BaseT, ContainerT>::getMapIntIndex<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>;
-			return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getMapIntIndex");
+			return compileContext->helper->createIntrinsicCall(context, functionPointer, {containerPtr, index}, "getMapIntIndex");
 		};
 		return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 	}
@@ -209,7 +209,7 @@ inline llvm::Value* ContainerMemberInfo<BaseT, ContainerT>::generateIndex(std::v
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		static auto functionPointer = &ContainerMemberInfo<BaseT, ContainerT>::getVectorIndex<ContainerItemType, AllocatorT>;
-		return compileContext->helper->createCall(context, functionPointer, {containerPtr, index}, "getVectorIndex");
+		return compileContext->helper->createIntrinsicCall(context, functionPointer, {containerPtr, index}, "getVectorIndex");
 	};
 	return context->helper->createOptionalNullCheckSelect(containerPtr, notNullCodeGen, LLVM::LLVMTypes::getLLVMType<ContainerItemType>(), context);
 #else
@@ -490,7 +490,7 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateAssignCode(llvm:
 		if constexpr (std::is_same<BasicT, std::string>::value)
 		{
 			llvm::Value* lValue = context->helper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
-			context->helper->createCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
+			context->helper->createIntrinsicCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
 		}
 		else
 		{

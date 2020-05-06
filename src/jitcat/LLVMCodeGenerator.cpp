@@ -206,7 +206,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 	//If it is some other type, just return the value.
 	if (expressionType.isStringType())
 	{
-		helper->createCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {function->arg_begin(), expressionValue}, "stringCopyConstruct");
+		helper->createIntrinsicCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {function->arg_begin(), expressionValue}, "stringCopyConstruct");
 		helper->generateBlockDestructors(context);
 		builder->CreateRetVoid();
 	}
@@ -219,11 +219,11 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 		helper->createOptionalNullCheckSelect(castPointer, 
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {function->arg_begin(), castPointer, typeInfoConstantAsIntPtr}, Tools::append(name, "_copyConstructor"));
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {function->arg_begin(), castPointer, typeInfoConstantAsIntPtr}, Tools::append(name, "_copyConstructor"));
 			},
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createCall(context, &LLVMCatIntrinsics::placementConstructType, {function->arg_begin(), typeInfoConstantAsIntPtr},  Tools::append(name, "_defaultConstructor"));
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {function->arg_begin(), typeInfoConstantAsIntPtr},  Tools::append(name, "_defaultConstructor"));
 			}, context);
 
 		helper->generateBlockDestructors(context);
@@ -351,37 +351,37 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		case CatBuiltInFunctionType::Tan:		return builder->CreateFDiv(helper->callIntrinsic(llvm::Intrinsic::sin, CatGenericType::floatType, generate(arguments->getArgument(0), context), context), helper->callIntrinsic(llvm::Intrinsic::cos, CatGenericType::floatType, generate(arguments->getArgument(0), context), context));
 
 		case CatBuiltInFunctionType::Asin:
-			return helper->createCall(context, &std::asinf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "asin");
+			return helper->createIntrinsicCall(context, &std::asinf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "asin");
 		case CatBuiltInFunctionType::Acos:
-			return helper->createCall(context, &std::acosf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "acos");
+			return helper->createIntrinsicCall(context, &std::acosf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "acos");
 		case CatBuiltInFunctionType::Atan:
-			return helper->createCall(context, &std::atanf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "atan");
+			return helper->createIntrinsicCall(context, &std::atanf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "atan");
 
 		case CatBuiltInFunctionType::Sinh:
-			return helper->createCall(context, &std::sinhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "sinh");
+			return helper->createIntrinsicCall(context, &std::sinhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "sinh");
 		case CatBuiltInFunctionType::Cosh:
-			return helper->createCall(context, &std::coshf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "cosh");
+			return helper->createIntrinsicCall(context, &std::coshf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "cosh");
 		case CatBuiltInFunctionType::Tanh:
-			return helper->createCall(context, &std::tanhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "tanh");
+			return helper->createIntrinsicCall(context, &std::tanhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "tanh");
 
 		case CatBuiltInFunctionType::Asinh:
-			return helper->createCall(context, &std::asinhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "asinh");
+			return helper->createIntrinsicCall(context, &std::asinhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "asinh");
 		case CatBuiltInFunctionType::Acosh:
-			return helper->createCall(context, &std::acoshf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "acosh");
+			return helper->createIntrinsicCall(context, &std::acoshf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "acosh");
 		case CatBuiltInFunctionType::Atanh:
-			return helper->createCall(context, &std::atanhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "atanh");
+			return helper->createIntrinsicCall(context, &std::atanhf, { helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context) }, "atanh");
 
 		case CatBuiltInFunctionType::Atan2:
 		{
 			llvm::Value* y = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context);
 			llvm::Value* x = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::floatType, context);
-			return helper->createCall(context, &std::atan2f, { y, x }, "atan2");
+			return helper->createIntrinsicCall(context, &std::atan2f, { y, x }, "atan2");
 		}
 		case CatBuiltInFunctionType::Hypot:
 		{
 			llvm::Value* x = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::floatType, context);
 			llvm::Value* y = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::floatType, context);
-			return helper->createCall(context, &std::hypotf, { x, y }, "hypot");
+			return helper->createIntrinsicCall(context, &std::hypotf, { x, y }, "hypot");
 		}
 
 		case CatBuiltInFunctionType::Cap:
@@ -469,26 +469,26 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			llvm::Value* text = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::stringPtrType, context);
 			llvm::Value* textToFind = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::stringPtrType, context);
-			return helper->createCall(context, &LLVMCatIntrinsics::findInString, {text, textToFind}, "findInString");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::findInString, {text, textToFind}, "findInString");
 		}
 		case CatBuiltInFunctionType::ReplaceInString:
 		{
 			llvm::Value* sourceString = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::stringPtrType, context);
 			llvm::Value* stringToFind = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::stringPtrType, context);
 			llvm::Value* replacementString = helper->convertType(generate(arguments->getArgument(2), context), LLVMTypes::stringPtrType, context);
-			return helper->createCall(context, &LLVMCatIntrinsics::replaceInString, {sourceString, stringToFind, replacementString}, "replaceInString");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::replaceInString, {sourceString, stringToFind, replacementString}, "replaceInString");
 		}
 		case CatBuiltInFunctionType::StringLength:
 		{
 			llvm::Value* string = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::stringPtrType, context);
-			return helper->createCall(context, &LLVMCatIntrinsics::stringLength, {string}, "stringLength");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::stringLength, {string}, "stringLength");
 		}
 		case CatBuiltInFunctionType::SubString:
 		{
 			llvm::Value* sourceString = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::stringPtrType, context);
 			llvm::Value* offset = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::intType, context);
 			llvm::Value* length = helper->convertType(generate(arguments->getArgument(2), context), LLVMTypes::intType, context);
-			return helper->createCall(context, &LLVMCatIntrinsics::subString, {sourceString, offset, length}, "subString");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::subString, {sourceString, offset, length}, "subString");
 		}
 		case CatBuiltInFunctionType::ToString:
 		{
@@ -498,7 +498,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			if (arguments->getArgumentType(0).isIntType())
 			{
-				return helper->createCall(context, &LLVMCatIntrinsics::intToPrettyString, {generate(arguments->getArgument(0), context)}, "intToPrettyString");
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::intToPrettyString, {generate(arguments->getArgument(0), context)}, "intToPrettyString");
 			}
 			else
 			{
@@ -509,11 +509,11 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			llvm::Value* number = helper->convertType(generate(arguments->getArgument(0), context), LLVMTypes::intType, context);
 			llvm::Value* length = helper->convertType(generate(arguments->getArgument(1), context), LLVMTypes::intType, context);
-			return helper->createCall(context, &LLVMCatIntrinsics::intToFixedLengthString, {number, length}, "intToFixedLengthString");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::intToFixedLengthString, {number, length}, "intToFixedLengthString");
 		}
 		case CatBuiltInFunctionType::Random:
 		{
-			return helper->createCall(context, &LLVMCatIntrinsics::getRandomFloat, {}, "getRandomFloat");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getRandomFloat, {}, "getRandomFloat");
 		}
 		case CatBuiltInFunctionType::RandomRange:
 		{
@@ -522,18 +522,18 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			if (arguments->getArgumentType(0).isBoolType()
 				&& arguments->getArgumentType(1).isBoolType())
 			{
-				return helper->createCall(context, &LLVMCatIntrinsics::getRandomBoolean, {left, right}, "getRandomBoolean");
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getRandomBoolean, {left, right}, "getRandomBoolean");
 			}
 			else if (arguments->getArgumentType(0).isIntType()
 					 && arguments->getArgumentType(1).isIntType())
 			{
-				return helper->createCall(context, &LLVMCatIntrinsics::getRandomInt, {left, right}, "getRandomInt");
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getRandomInt, {left, right}, "getRandomInt");
 			}
 			else				
 			{
 				llvm::Value* leftFloat = helper->convertType(left, LLVMTypes::floatType, context);
 				llvm::Value* rightFloat = helper->convertType(right, LLVMTypes::floatType, context);
-				return helper->createCall(context, &LLVMCatIntrinsics::getRandomFloatRange, {leftFloat, rightFloat}, "getRandomFloat");
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getRandomFloatRange, {leftFloat, rightFloat}, "getRandomFloat");
 			}
 		}
 		case CatBuiltInFunctionType::Round:
@@ -542,7 +542,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			llvm::Value* right = generate(arguments->getArgument(1), context);
 			llvm::Value* leftFloat = helper->convertType(left, LLVMTypes::floatType, context);
 			llvm::Value* rightInt = helper->convertType(right, LLVMTypes::intType, context);
-			return helper->createCall(context, &LLVMCatIntrinsics::roundFloat, {leftFloat, rightInt}, "roundFloat");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloat, {leftFloat, rightInt}, "roundFloat");
 		}
 		case CatBuiltInFunctionType::StringRound:
 		{
@@ -550,7 +550,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			llvm::Value* right = generate(arguments->getArgument(1), context);
 			llvm::Value* leftFloat = helper->convertType(left, LLVMTypes::floatType, context);
 			llvm::Value* rightInt = helper->convertType(right, LLVMTypes::intType, context);
-			return helper->createCall(context, &LLVMCatIntrinsics::roundFloatToString, {leftFloat, rightInt}, "roundFloatToString");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloatToString, {leftFloat, rightInt}, "roundFloatToString");
 		}
 		default:
 		{
@@ -764,15 +764,15 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 		{
 			case CatInfixOperatorType::Plus:
 			{
-				return helper->createOptionalNullCheckSelect(stringNullCheck, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createCall(compileContext, &LLVMCatIntrinsics::stringAppend, {left, right}, "stringAppend");}, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createEmptyStringPtrConstant();}, context);
+				return helper->createOptionalNullCheckSelect(stringNullCheck, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createIntrinsicCall(compileContext, &LLVMCatIntrinsics::stringAppend, {left, right}, "stringAppend");}, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createEmptyStringPtrConstant();}, context);
 			}
 			case CatInfixOperatorType::Equals:
 			{
-				return helper->createOptionalNullCheckSelect(stringNullCheck, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createCall(compileContext, &LLVMCatIntrinsics::stringEquals, {left, right}, "stringEquals");}, LLVMTypes::boolType, context);  
+				return helper->createOptionalNullCheckSelect(stringNullCheck, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createIntrinsicCall(compileContext, &LLVMCatIntrinsics::stringEquals, {left, right}, "stringEquals");}, LLVMTypes::boolType, context);  
 			}
 			case CatInfixOperatorType::NotEquals:		
 			{
-				return helper->createOptionalNullCheckSelect(stringNullCheck, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createCall(compileContext, &LLVMCatIntrinsics::stringNotEquals, {left, right}, "stringNotEquals");}, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createConstant(true);}, context);
+				return helper->createOptionalNullCheckSelect(stringNullCheck, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createIntrinsicCall(compileContext, &LLVMCatIntrinsics::stringNotEquals, {left, right}, "stringNotEquals");}, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createConstant(true);}, context);
 			}
 		}
 	}
@@ -853,7 +853,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 	std::vector<llvm::Value*> argumentList;
 	std::vector<llvm::Type*> argumentTypes;
 	const CatGenericType& returnType = staticFunctionCall->getType();
-	llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
+	
 
 	llvm::Value* returnAllocation = helper->generateFunctionCallReturnValueAllocation(returnType, staticFunctionCall->getFunctionName(), context);
 	if (returnAllocation != nullptr)
@@ -863,19 +863,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 	}
 	helper->generateFunctionCallArgumentEvalatuation(expressionArguments, staticFunctionCall->getExpectedParameterTypes(), argumentList, argumentTypes, this, context);
 
-	if (returnType.isStringType() || returnType.isReflectableObjectType())
-	{
-		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(context->helper->createCall(functionType, staticFunctionCall->getFunctionAddress(), argumentList, staticFunctionCall->getFunctionName()));
-		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
-		call->addDereferenceableAttr(1 , returnType.getTypeSize());
-		return returnAllocation;
-	}
-	else
-	{
-		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-		return helper->createCall(functionType, staticFunctionCall->getFunctionAddress(), argumentList, staticFunctionCall->getFunctionName());
-	}
+	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getFunctionAddress(), staticFunctionCall->getFunctionName(), returnAllocation);
 }
 
 
@@ -1026,7 +1014,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 		assert(argument->getName() == "RuntimeContext");
 		assert(argument->getType() == LLVMTypes::pointerType);
 		llvm::Value* scopeIdValue = context->helper->createConstant((int)scopeId);
-		llvm::Value* address = address = helper->createCall(context, &LLVMCatIntrinsics::getScopePointerFromContext, {argument, scopeIdValue}, "getScopePointerFromContext"); 
+		llvm::Value* address = address = helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getScopePointerFromContext, {argument, scopeIdValue}, "getScopePointerFromContext"); 
 		assert(address != nullptr);
 		parentObjectAddress = helper->convertToIntPtr(address, "CustomThis_IntPtr");
 	}
@@ -1052,13 +1040,14 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 	
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
+		MemberFunctionCallData callData = memberFunction->getFunctionAddress();
+
 		std::vector<llvm::Value*> argumentList;
 		llvm::Value* functionThis = compileContext->helper->convertToPointer(baseObject, memberFunction->memberFunctionName + "_This_Ptr");
 		argumentList.push_back(functionThis);
 		std::vector<llvm::Type*> argumentTypes;
 		argumentTypes.push_back(LLVMTypes::pointerType);
-		MemberFunctionCallData callData = memberFunction->getFunctionAddress();
-		if (!callData.makeDirectCall)
+		if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
 		{
 			//Add an argument that contains a pointer to a MemberFunctionInfo object.
 			llvm::Value* memberFunctionAddressValue = compileContext->helper->createIntPtrConstant(callData.functionInfoStructAddress, "MemberFunctionInfo_IntPtr");
@@ -1068,14 +1057,19 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		}
 		helper->generateFunctionCallArgumentEvalatuation(arguments, memberFunction->argumentTypes, argumentList, argumentTypes, this, context);
 
-		uintptr_t functionAddress = callData.makeDirectCall ? callData.memberFunctionAddress : callData.staticFunctionAddress;
+		uintptr_t functionAddress = callData.functionAddress;
+
+		if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
+		{
+			return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->memberFunctionName, returnedObjectAllocation);
+		}
 
 		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
 		if (!returnType.isStringType() && !returnType.isContainerType() && !returnType.isReflectableObjectType())
 		{
 			llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
 			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));
-			if (Configuration::useThisCall && callData.makeDirectCall)
+			if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 			{
 				call->setCallingConv(llvm::CallingConv::X86_ThisCall);
 			}
@@ -1084,7 +1078,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		else if (returnType.isStringType() || returnType.isReflectableObjectType())
 		{
 			auto sretTypeInsertPoint = argumentTypes.begin();
-			if (!Configuration::sretBeforeThis && callData.makeDirectCall)
+			if (!Configuration::sretBeforeThis && callData.callType == MemberFunctionCallType::ThisCall)
 			{
 				sretTypeInsertPoint++;
 			}
@@ -1097,13 +1091,13 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 
 			llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
 			auto sretInsertPoint = argumentList.begin();
-			if (!Configuration::sretBeforeThis && callData.makeDirectCall)
+			if (!Configuration::sretBeforeThis && callData.callType == MemberFunctionCallType::ThisCall)
 			{
 				sretInsertPoint++;
 			}
 			argumentList.insert(sretInsertPoint, returnedObjectAllocation);
 			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));
-			if (Configuration::useThisCall && callData.makeDirectCall)
+			if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 			{
 				call->setCallingConv(llvm::CallingConv::X86_ThisCall);
 			}
@@ -1129,14 +1123,14 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 			//Default construct the object.
 			if (returnType.isStringType())
 			{
-				helper->createCall(context, &LLVMCatIntrinsics::stringEmptyConstruct, {returnedObjectAllocation}, "stringDefaultConstruct");
+				helper->createIntrinsicCall(context, &LLVMCatIntrinsics::stringEmptyConstruct, {returnedObjectAllocation}, "stringDefaultConstruct");
 			}
 			else
 			{
 				assert(returnType.isConstructible());
 				llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(returnType.getObjectType()), Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfo"));
 				llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfoPtr"));
-				helper->createCall(context, &LLVMCatIntrinsics::placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, Tools::append(returnType.getObjectType()->getTypeName(), "_defaultConstructor"));
+				helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, Tools::append(returnType.getObjectType()->getTypeName(), "_defaultConstructor"));
 			}
 			return returnedObjectAllocation;
 		};

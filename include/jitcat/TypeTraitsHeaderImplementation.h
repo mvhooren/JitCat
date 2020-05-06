@@ -52,7 +52,7 @@ namespace jitcat
 		{
 			//Instead directly constructing the static type object. First construct it with a nullptr for the object type.
 			//This is done to prevent recursion deadlock.
-			type = std::make_unique<CatGenericType>(nullptr, TypeOwnershipSemantics::Weak, false);
+			type = std::make_unique<CatGenericType>(nullptr, Reflection::TypeOwnershipSemantics::Weak, false);
 			type->setPointeeType(std::make_unique<CatGenericType>(TypeTraits<PointerT>::toGenericType()));
 		}
 		return *type.get();
@@ -81,7 +81,7 @@ namespace jitcat
 		{
 			//Instead directly constructing the static type object. First construct it with a nullptr for the object type.
 			//This is done to prevent recursion deadlock.
-			type = std::make_unique<CatGenericType>(nullptr, TypeOwnershipSemantics::Weak, false);
+			type = std::make_unique<CatGenericType>(nullptr, Reflection::TypeOwnershipSemantics::Weak, false);
 			type->setPointeeType(std::make_unique<CatGenericType>(TypeTraits<PointerRefT*>::toGenericType()));
 		}
 		return *type.get();

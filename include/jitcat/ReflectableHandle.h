@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "jitcat/ExternalReflector.h"
+
 namespace jitcat::Reflection
 {
 	class Reflectable;
@@ -33,6 +35,15 @@ namespace jitcat::Reflection
 
 	private:
 		Reflectable* reflectable;
+	};
+
+	template<>
+	class ExternalReflector<ReflectableHandle>
+	{
+	public:
+		static const char* getTypeName() {return "ReflectableHandle";}
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo) {}	
+		static constexpr bool exists = true;
 	};
 
 } //End namespace jitcat::Reflection

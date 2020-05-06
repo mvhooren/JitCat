@@ -9,6 +9,7 @@
 
 #include "jitcat/CatGenericType.h"
 #include "jitcat/ContainerType.h"
+#include "jitcat/ExternalReflector.h"
 #include "jitcat/MemberFlags.h"
 #include "jitcat/Reflectable.h"
 #include "jitcat/ReflectableHandle.h"
@@ -36,6 +37,7 @@ namespace jitcat::Reflection
 {
 	class FunctionSignature;
 	struct MemberFunctionInfo;
+	class ReflectedTypeInfo;
 	class StaticFunctionInfo;
 	class StaticConstMemberInfo;
 	struct StaticMemberInfo;
@@ -83,8 +85,8 @@ namespace jitcat::Reflection
 		friend struct TypeInfoDeleter;
 
 	public:
-		static void updateTypeDestruction();
 
+		static void updateTypeDestruction();
 		//Add a nested type to this type. Return true if the type was added, false if a type with this name already exists.
 		bool addType(TypeInfo* type);
 		//Add a named constant value to this type. Returns nullptr if a constant if this name already exists.
@@ -227,5 +229,14 @@ namespace jitcat::Reflection
 		//Keep a list of types that are to be deleted.
 		//Types are only deleted if there are no more dependencies on that type.
 		static std::vector<TypeInfo*> typeDeletionList;
+	};
+
+	template<>
+	class ExternalReflector<TypeInfo>
+	{
+	public:
+		static const char* getTypeName() {return "TypeInfo";}
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo) {}
+		static constexpr bool exists = true;
 	};
 }

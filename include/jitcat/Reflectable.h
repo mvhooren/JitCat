@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "jitcat/ExternalReflector.h"
+
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -51,5 +53,14 @@ namespace jitcat::Reflection
 		//static reflectable objects that are destructed to sometimes crash because observers was already destroyed.
 		//Because of this, observers is also intentionally leaked.
 		static std::unordered_multimap<Reflectable*, ReflectableHandle*>* observers;
+	};
+
+	template<>
+	class ExternalReflector<Reflectable>
+	{
+	public:
+		static const char* getTypeName() {return "Reflectable";}
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo) {}	
+		static constexpr bool exists = true;
 	};
 } //End namespace jitcat::Reflection

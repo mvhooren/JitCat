@@ -106,14 +106,7 @@ namespace jitcat::Reflection
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, ReturnT (ReflectedT::*function)(Args...))
 	{
 		std::string identifier = Tools::toLowerCase(identifier_);
-		if constexpr (!std::is_void<ReturnT>::value)
-		{
-			memberFunctions.emplace(identifier, new MemberFunctionInfoWithArgs<ReflectedT, ReturnT, Args...>(identifier_, function));
-		}
-		else
-		{
-			memberFunctions.emplace(identifier, new MemberVoidFunctionInfoWithArgs<ReflectedT, Args...>(identifier_, function));
-		}
+		memberFunctions.emplace(identifier, new MemberFunctionInfoWithArgs<ReflectedT, ReturnT, Args...>(identifier_, function));
 		return *this;
 	}
 
@@ -122,14 +115,7 @@ namespace jitcat::Reflection
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, ReturnT (ReflectedT::*function)(Args...) const)
 	{
 		std::string identifier = Tools::toLowerCase(identifier_);
-		if constexpr (!std::is_void<ReturnT>::value)
-		{
-			memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<ReflectedT, ReturnT, Args...>(identifier_, function));
-		}
-		else
-		{
-			memberFunctions.emplace(identifier, new ConstMemberVoidFunctionInfoWithArgs<ReflectedT, Args...>(identifier_, function));
-		}
+		memberFunctions.emplace(identifier, new ConstMemberFunctionInfoWithArgs<ReflectedT, ReturnT, Args...>(identifier_, function));
 		return *this;
 	}
 	
@@ -139,6 +125,15 @@ namespace jitcat::Reflection
 	{
 		std::string identifier = Tools::toLowerCase(identifier_);
 		staticFunctions.emplace(identifier, new StaticFunctionInfoWithArgs<ReturnT, Args...>(identifier_, function));
+		return *this;
+	}
+
+
+	template<typename ReflectedT, typename ReturnT, typename ...Args>
+	inline ReflectedTypeInfo& ReflectedTypeInfo::addPseudoMemberFunction(const std::string& identifier_, ReturnT(*function)(ReflectedT*, Args...))
+	{
+		std::string identifier = Tools::toLowerCase(identifier_);
+		memberFunctions.emplace(identifier, new PseudoMemberFunctionInfoWithArgs<ReflectedT, ReturnT, Args...>(identifier_, function));
 		return *this;
 	}
 
