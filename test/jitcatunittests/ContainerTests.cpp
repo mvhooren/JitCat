@@ -535,3 +535,266 @@ TEST_CASE("Containers tests: Map of unique_ptr", "[containers][map]")
 		doChecks(0, true, false, false, testExpression, context);
 	}
 }
+
+
+TEST_CASE("Containers tests: Unordered_Map", "[containers][unordered_map]" ) 
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("unordered_map_container", &errorManager);
+	context.addScope(&reflectedObject, true);	
+
+	SECTION("Unordered_Map get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsUnorderedMap[42]");
+		doChecks(reflectedObject.reflectableObjectsUnorderedMap[42], false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get float")
+	{
+		Expression<float> testExpression(&context, "stringToFloatUnorderedMap[\"fortytwo\"]");
+		doChecks(reflectedObject.stringToFloatUnorderedMap["fortytwo"], false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get object, invalid index")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsUnorderedMap[\"invalid\"]");
+		doChecks((NestedReflectedObject*)nullptr, true, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get size")
+	{
+		Expression<int> testExpression(&context, "reflectableObjectsUnorderedMap.size()");
+		doChecks((int)reflectedObject.reflectableObjectsUnorderedMap.size(), false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get bool")
+	{
+		Expression<bool> testExpression(&context, "reflectableObjectsToBoolUnorderedMap[nestedObjectPointer]");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get object out of range")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsUnorderedMap.index(5000)");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get object, string index not found")
+	{
+		Expression<float> testExpression(&context, "stringToFloatUnorderedMap[\"OneHundred\"]");
+		doChecks(0.0f, false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get object out of range, negative")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "reflectableObjectsUnorderedMap.index(-1)");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get string object")
+	{
+		Expression<std::string> testExpression(&context, "reflectableObjectsUnorderedMap.index(0).someString");
+		doChecks(std::string("test"), false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get int object")
+	{
+		Expression<int> testExpression(&context, "reflectableObjectsUnorderedMap.index(0).someInt");
+		doChecks(21, false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map get boolean object")
+	{
+		Expression<bool> testExpression(&context, "reflectableObjectsUnorderedMap.index(0).someBoolean");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map out of range get string")
+	{
+		Expression<std::string> testExpression(&context, "reflectableObjectsUnorderedMap.index(10).someString");
+		doChecks(std::string(""), false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map out of range, variable index")
+	{
+		Expression<int> testExpression(&context, "reflectableObjectsUnorderedMap[theInt + 1].someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Unordered_Map out of range, negative variable index")
+	{
+		Expression<int> testExpression(&context, "reflectableObjectsUnorderedMap.index(-theInt).someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Null map get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.reflectableObjectsUnorderedMap.index(0)");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Null map get size")
+	{
+		Expression<int> testExpression(&context, "nullObject.reflectableObjectsUnorderedMap.size()");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Containers tests: Array", "[containers][array]")
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("arrayContainer", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Array get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectArray[0]");
+		doChecks(&reflectedObject.objectArray[0], false, false, false, testExpression, context);
+	}
+	SECTION("Array get size")
+	{
+		Expression<int> testExpression(&context, "objectArray.size()");
+		doChecks((int)reflectedObject.objectArray.size(), false, false, false, testExpression, context);
+	}
+	SECTION("Array get float")
+	{
+		Expression<float> testExpression(&context, "floatArray[1]");
+		doChecks(reflectedObject.floatArray[1], false, false, false, testExpression, context);
+	}
+	SECTION("Array get bool")
+	{
+		Expression<bool> testExpression(&context, "boolArray[1]");
+		doChecks(reflectedObject.boolArray[1], false, false, false, testExpression, context);
+	}
+	SECTION("Array get float out of range")
+	{
+		Expression<float> testExpression(&context, "floatArray[-1]");
+		doChecks(0.0f, false, false, false, testExpression, context);
+	}
+	SECTION("Array get object out of range")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectArray[5000]");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Array get object out of range, negative")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectArray[-1]");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Array get string object")
+	{
+		Expression<std::string> testExpression(&context, "objectArray[0].someString");
+		doChecks(std::string("test"), false, false, false, testExpression, context);
+	}
+	SECTION("Array get int object")
+	{
+		Expression<int> testExpression(&context, "objectArray[0].someInt");
+		doChecks(21, false, false, false, testExpression, context);
+	}
+	SECTION("Array get boolean object")
+	{
+		Expression<bool> testExpression(&context, "objectArray[0].someBoolean");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Array out of range get string")
+	{
+		Expression<std::string> testExpression(&context, "objectArray[10].someString");
+		doChecks(std::string(""), false, false, false, testExpression, context);
+	}
+	SECTION("Array out of range, variable index")
+	{
+		Expression<int> testExpression(&context, "objectArray[theInt].someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Array out of range, negative variable index")
+	{
+		Expression<int> testExpression(&context, "objectArray[-theInt].someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Null array get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.objectArray[0]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Null array get size")
+	{
+		Expression<int> testExpression(&context, "nullObject.objectArray.size()");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+}
+
+
+TEST_CASE("Containers tests: Deque", "[containers][deque]")
+{
+	ReflectedObject reflectedObject;
+	reflectedObject.createNestedObjects();
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("dequeContainer", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Deque get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectUniquePtrDeque[0]");
+		doChecks(reflectedObject.objectUniquePtrDeque[0].get(), false, false, false, testExpression, context);
+	}
+	SECTION("Deque get size")
+	{
+		Expression<int> testExpression(&context, "objectUniquePtrDeque.size()");
+		doChecks((int)reflectedObject.objectArray.size(), false, false, false, testExpression, context);
+	}
+	SECTION("Deque get int")
+	{
+		Expression<int> testExpression(&context, "intDeque[1]");
+		doChecks(reflectedObject.intDeque[1], false, false, false, testExpression, context);
+	}
+	SECTION("Deque get bool")
+	{
+		Expression<bool> testExpression(&context, "boolDeque[1]");
+		doChecks(reflectedObject.boolDeque[1], false, false, false, testExpression, context);
+	}
+	SECTION("Deque get int out of range")
+	{
+		Expression<int> testExpression(&context, "intDeque[-1]");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Deque get object out of range")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectUniquePtrDeque[5000]");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Deque get object out of range, negative")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "objectUniquePtrDeque[-1]");
+		doChecks<NestedReflectedObject*>(nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Deque get string object")
+	{
+		Expression<std::string> testExpression(&context, "objectUniquePtrDeque[0].someString");
+		doChecks(std::string("test"), false, false, false, testExpression, context);
+	}
+	SECTION("Deque get int object")
+	{
+		Expression<int> testExpression(&context, "objectUniquePtrDeque[0].someInt");
+		doChecks(21, false, false, false, testExpression, context);
+	}
+	SECTION("Deque get boolean object")
+	{
+		Expression<bool> testExpression(&context, "objectUniquePtrDeque[0].someBoolean");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Deque out of range get string")
+	{
+		Expression<std::string> testExpression(&context, "objectUniquePtrDeque[10].someString");
+		doChecks(std::string(""), false, false, false, testExpression, context);
+	}
+	SECTION("Deque out of range, variable index")
+	{
+		Expression<int> testExpression(&context, "objectUniquePtrDeque[theInt].someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Deque out of range, negative variable index")
+	{
+		Expression<int> testExpression(&context, "objectUniquePtrDeque[-theInt].someInt");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("Null deque get object")
+	{
+		Expression<NestedReflectedObject*> testExpression(&context, "nullObject.objectUniquePtrDeque[0]");
+		doChecks((NestedReflectedObject*)nullptr, false, false, false, testExpression, context);
+	}
+	SECTION("Null deque get size")
+	{
+		Expression<int> testExpression(&context, "nullObject.objectUniquePtrDeque.size()");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+}

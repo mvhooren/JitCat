@@ -7,139 +7,26 @@
 
 #pragma once
 
+#include "NestedReflectedObject.h"
+#include "TestEnum.h"
+#include "TestVector4.h"
 #include "jitcat/Reflectable.h"
-#include "jitcat/ReflectedEnumTypeInfo.h"
 #include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeTraits.h"
 
+#include <array>
+#include <deque>
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
-namespace TestObjects
-{
-	enum class TestEnum
-	{
-		TestValue1,
-		TestValue2,
-		TestValue3
-	};
-}
 
-template <>
-void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::ReflectedEnumTypeInfo& enumTypeInfo);
 
-template <>
-const char* jitcat::Reflection::getEnumName<TestObjects::TestEnum>();
 
 namespace TestObjects
 {
-	class TestVector4: public jitcat::Reflection::Reflectable
-	{
-	public:
-		TestVector4();
-		TestVector4(float x, float y, float z, float w);
-		TestVector4(const TestVector4& other);
-		TestVector4(const TestVector4&& other) noexcept;
-		TestVector4& operator=(const TestVector4& other);
-		~TestVector4();
-
-		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
-		static const char* getTypeName();
-
-		TestVector4 doAdd(TestVector4& other);
-		static TestVector4 staticAdd(TestVector4& a, TestVector4* b, TestVector4 c);
-
-		bool operator==(const TestVector4& other) const;
-		TestVector4 operator*(const TestVector4& other);
-		TestVector4 operator*(int value);
-		TestVector4 operator*(float value);
-		TestVector4 operator+(const TestVector4& other);
-		TestVector4 operator-(const TestVector4& other);
-
-		float operator[](int index);
-
-		float x;
-		float y;
-		float z;
-		float w;
-		static TestVector4 zero;
-		static int instanceCount;
-	};
-
-	TestVector4 operator/(const TestVector4& lhs, const TestVector4& rhs);
-
-	template<typename ItemType, typename AllocatorType = std::allocator<ItemType>>
-	class ReflectableVector: public jitcat::Reflection::Reflectable
-	{
-	public:
-		ReflectableVector() {};
-		/*inline operator std::vector<ItemType, AllocatorType>(){return *this;};*/
-
-		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
-		static const char* getTypeName();
-
-		void push_back(ItemType&& item);
-		void push_back(const ItemType& item);
-		template <class... Args>
-		void emplace_back(Args&&... argValues) {data.emplace_back(std::forward(argValues)...);}
-
-		ItemType& operator[](int index);
-
-		int sizeAsInt() {return (int)data.size();}
-	private:
-		std::vector<ItemType, AllocatorType> data;
-	};
-
-
-	template<typename ItemType, typename AllocatorType>
-	inline void ReflectableVector<ItemType, AllocatorType>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-	{
-		typeInfo
-			.addMember<ReflectableVector<ItemType, AllocatorType>, ItemType&, int>("[]", &ReflectableVector::operator[])
-			.addMember("size", &ReflectableVector::sizeAsInt);
-	}
-
-
-	template<typename ItemType, typename AllocatorType>
-	inline const char* ReflectableVector<ItemType, AllocatorType>::getTypeName()
-	{
-		static std::string itemTypeName = jitcat::Tools::append(TypeTraits<ItemType>::getTypeName(), std::is_pointer<ItemType>::value ? "*" : "");
-		static std::string vectorName = jitcat::Tools::append("Vector<", itemTypeName, ">");
-		return vectorName.c_str();
-	}
-
-	
-	template<typename ItemType, typename AllocatorType>
-	inline void ReflectableVector<ItemType, AllocatorType>::push_back(ItemType&& item)
-	{
-		data.push_back(item);
-	}
-
-
-	template<typename ItemType, typename AllocatorType>
-	inline void ReflectableVector<ItemType, AllocatorType>::push_back(const ItemType& item)
-	{
-		data.push_back(item);
-	}
-
-
-	template<typename ItemType, typename AllocatorType>
-	inline ItemType& ReflectableVector<ItemType, AllocatorType>::operator[](int index)
-	{
-		if (index >= 0 && index < sizeAsInt())
-		{
-			return data[index];
-		}
-		else
-		{
-			static ItemType default = ItemType();
-			return default;
-		}
-	}
-
-
 	class CaseInsensitiveCompare
 	{
 	public:
@@ -147,30 +34,6 @@ namespace TestObjects
 		{
 			return jitcat::Tools::lessWhileIgnoringCase(first, second);
 		}
-	};
-
-	class ReflectedObject;
-
-	class NestedReflectedObject: public jitcat::Reflection::Reflectable
-	{
-	public:
-		NestedReflectedObject();
-
-		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
-		static const char* getTypeName();
-
-		bool operator==(const NestedReflectedObject& other) const;
-
-	public:
-		std::string someString;
-		int someInt;
-		float someFloat;
-		bool someBoolean;
-		NestedReflectedObject* nullObject;
-		TestVector4 someV4;
-		//Test for circular reference
-		ReflectedObject* nullCircularRefObject;
-		std::vector<ReflectedObject*> emptyCircularRefList;
 	};
 
 
@@ -268,6 +131,18 @@ namespace TestObjects
 		std::map<std::string, NestedReflectedObject*> reflectableObjectsMap;
 		std::map<std::string, NestedReflectedObject*, CaseInsensitiveCompare> reflectableObjectsMapCustomCompare;
 		std::map<std::string, std::unique_ptr<NestedReflectedObject>> reflectableUniqueObjectsMap;
+
+		std::unordered_map<int, NestedReflectedObject*> reflectableObjectsUnorderedMap;
+		std::unordered_map<std::string, float> stringToFloatUnorderedMap;
+		std::unordered_map<NestedReflectedObject*, bool> reflectableObjectsToBoolUnorderedMap;
+
+		std::array<bool, 2> boolArray;
+		std::array<float, 2> floatArray;
+		std::array<NestedReflectedObject, 2> objectArray;
+
+		std::deque<bool> boolDeque;
+		std::deque<int> intDeque;
+		std::deque<std::unique_ptr<NestedReflectedObject>> objectUniquePtrDeque;
 
 		static float staticFloat;
 		static int staticInt;

@@ -12,6 +12,8 @@
 #include "jitcat/TypeTools.h"
 
 #include <cassert>
+#include <array>
+#include <deque>
 #include <map>
 #include <memory>
 #include <type_traits>
@@ -48,18 +50,6 @@ namespace jitcat::Reflection
 		};
 
 
-		template <>
-		class ValueReturnType<bool>
-		{
-		private:
-			ValueReturnType() = delete;
-			~ValueReturnType() = delete;
-			ValueReturnType(const ValueReturnType&) = delete;
-		public:
-			typedef bool containerItemReturnType;
-		};
-
-
 		template <typename ItemT>
 		inline typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType getValue(ItemT& itemValue)
 		{
@@ -77,7 +67,6 @@ namespace jitcat::Reflection
 		template <typename ReturnT>
 		inline typename ReturnT getDefault()
 		{
-			//using ItemT = std::remove_reference_t<typename STLHelper::ValueReturnType<ReturnT>::containerItemReturnType>;
 			if constexpr (std::is_pointer_v<ReturnT>)
 			{
 				static ReturnT value = nullptr;
@@ -124,16 +113,7 @@ namespace jitcat::Reflection
 			{
 				if (vector != nullptr && key >= 0 && key < (int)vector->size())
 				{
-					if constexpr (std::is_same_v<bool, ItemT>)
-					{
-						//A vector of booleans returns a weird reference type. (Because a vector of booleans is compressed to a bitfield).
-						//Therefore, we cannot return a pointer to it.
-						return vector->operator[](key);
-					}
-					else
-					{
-						return STLHelper::getValue(vector->operator[](key));
-					}
+					return STLHelper::getValue(vector->operator[](key));
 				}
 				return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
 			}
@@ -147,6 +127,145 @@ namespace jitcat::Reflection
 				}
 				return 0;
 			}
+			static constexpr bool exists = true;
+			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<ItemT>();
+	};
+
+
+	//Reflection for std::vector of bool
+	//A vector of booleans returns a weird reference type. (Because a vector of booleans is compressed to a bitfield).
+	//Therefore, we cannot return a pointer to the item from operator[]. Hence this specialization.
+	template <class AllocatorT>
+	class ExternalReflector<std::vector<bool, AllocatorT>>
+	{
+		using VectorT = std::vector<bool, AllocatorT>;
+		public:
+			static const char* getTypeName()
+			{
+				static const std::string vectorName = jitcat::Tools::append("vector<bool,", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+				return vectorName.c_str();
+			}
+
+
+			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+			{
+				typeInfo
+					.addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
+					.addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
+			}
+
+
+			static typename bool safeIndex(VectorT* vector, int key)
+			{
+				if (vector != nullptr && key >= 0 && key < (int)vector->size())
+				{
+					return vector->operator[](key);
+				}
+				return STLHelper::getDefault<bool>();
+			}
+
+
+			static int size(VectorT* vector)
+			{
+				if (vector != nullptr)
+				{
+					return (int)vector->size();
+				}
+				return 0;
+			}
+			static constexpr bool exists = true;
+			static constexpr bool enableCopyConstruction = true;
+	};
+
+
+	//Reflection for std::array
+	template <class ItemT, int ArraySize>
+	class ExternalReflector<std::array<ItemT, ArraySize>>
+	{
+		using ArrayT = std::array<ItemT, ArraySize>;
+		public:
+			static const char* getTypeName()
+			{
+				static const std::string arrayName = jitcat::Tools::append("array<", TypeNameGetter<ItemT>::get(), 
+																		   ",", ArraySize, ">");
+				return arrayName.c_str();
+			}
+
+
+			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+			{
+				typeInfo
+					.addPseudoMemberFunction<ArrayT>("[]", &ExternalReflector<ArrayT>::safeIndex)
+					.addPseudoMemberFunction<ArrayT>("size", &ExternalReflector<ArrayT>::size);
+			}
+
+
+			static typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(ArrayT* array, int key)
+			{
+				if (array != nullptr && key >= 0 && key < ArraySize)
+				{
+					return STLHelper::getValue(array->operator[](key));
+				}
+				return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
+			}
+
+
+			static int size(ArrayT* array)
+			{
+				if (array != nullptr)
+				{
+					return (int)array->size();
+				}
+				return 0;
+			}
+
+			static constexpr bool exists = true;
+			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<ItemT>();
+	};
+
+
+
+	//Reflection for std::array
+	template <class ItemT, class AllocatorT>
+	class ExternalReflector<std::deque<ItemT, AllocatorT>>
+	{
+		using DequeT = std::deque<ItemT, AllocatorT>;
+		public:
+			static const char* getTypeName()
+			{
+				static const std::string dequeName = jitcat::Tools::append("deque<", TypeNameGetter<ItemT>::get(), 
+																		   ",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+				return dequeName.c_str();
+			}
+
+
+			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+			{
+				typeInfo
+					.addPseudoMemberFunction<DequeT>("[]", &ExternalReflector<DequeT>::safeIndex)
+					.addPseudoMemberFunction<DequeT>("size", &ExternalReflector<DequeT>::size);
+			}
+
+
+			static typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(DequeT* deque, int key)
+			{
+				if (deque != nullptr && key >= 0 && key < (int)deque->size())
+				{
+					return STLHelper::getValue(deque->operator[](key));
+				}
+				return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
+			}
+
+
+			static int size(DequeT* deque)
+			{
+				if (deque != nullptr)
+				{
+					return (int)deque->size();
+				}
+				return 0;
+			}
+
 			static constexpr bool exists = true;
 			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<ItemT>();
 	};

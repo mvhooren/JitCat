@@ -9,6 +9,7 @@
 
 #include "jitcat/CatGenericType.h"
 #include "jitcat/TypeInfo.h"
+#include "jitcat/TypeTraits.h"
 
 #include <cassert>
 

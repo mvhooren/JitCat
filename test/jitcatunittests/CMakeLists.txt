@@ -37,9 +37,15 @@ set(Source_BuiltInFunctionTests
 )
 
 set(Source_Helper
+	NestedReflectedObject.cpp
+	NestedReflectedObject.h
+	TestEnum.cpp
+	TestEnum.h
+	TestHelperFunctions.h
 	TestObjects.cpp
 	TestObjects.h
-	TestHelperFunctions.h
+	TestVector4.cpp
+	TestVector4.h
 )
 
 set(Source_RegressionTests

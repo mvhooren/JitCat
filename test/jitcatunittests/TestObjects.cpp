@@ -17,69 +17,6 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 using namespace TestObjects;
 
-template<>
-void jitcat::Reflection::reflectEnum<TestObjects::TestEnum>(jitcat::Reflection::ReflectedEnumTypeInfo& enumTypeInfo)
-{
-	enumTypeInfo
-		.addValue("TestValue1", TestEnum::TestValue1)
-		.addValue("TestValue2", TestEnum::TestValue2)
-		.addValue("TestValue3", TestEnum::TestValue3)
-		.setDefaultValue(TestEnum::TestValue1);
-
-}
-
-
-template <>
-const char* jitcat::Reflection::getEnumName<TestObjects::TestEnum>()
-{
-	return "TestEnum";
-}
-
-
-NestedReflectedObject::NestedReflectedObject():
-	someString("test"),
-	someInt(21),
-	someFloat(1.1f),
-	someBoolean(true),
-	nullObject(nullptr),
-	nullCircularRefObject(nullptr),
-	someV4(1.0, 2.0f, 3.0f, 4.0f)
-{
-}
-
-
-void NestedReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
-{
-	typeInfo
-		.addMember("someString", &NestedReflectedObject::someString)
-		.addMember("someInt", &NestedReflectedObject::someInt)
-		.addMember("someFloat", &NestedReflectedObject::someFloat)
-		.addMember("someBoolean", &NestedReflectedObject::someBoolean)
-		.addMember("someV4", &NestedReflectedObject::someV4)
-		.addMember("nullObject", &NestedReflectedObject::nullObject)
-		.addMember("nullCircularRefObject", &NestedReflectedObject::nullCircularRefObject, MF::isWritable)
-		.addMember("emptyCircularRefList", &NestedReflectedObject::emptyCircularRefList);
-}
-
-
-const char* NestedReflectedObject::getTypeName()
-{
-	return "NestedReflectedObject";
-}
-
-
-bool TestObjects::NestedReflectedObject::operator==(const NestedReflectedObject& other) const
-{
-	return someString == other.someString 
-			&& someInt == other.someInt 
-			&& someFloat == other.someFloat 
-			&& someBoolean == other.someBoolean 
-			&& nullObject == other.nullObject 
-			&& nullCircularRefObject == other.nullCircularRefObject
-			&& someV4 == other.someV4
-			&& emptyCircularRefList == other.emptyCircularRefList;
-}
-
 
 ReflectedObject::ReflectedObject():
 	nestedSelfObject(nullptr),
@@ -136,6 +73,24 @@ void ReflectedObject::createNestedObjects()
 	reflectableObjectsVector.push_back(nestedObjectUniquePointer.get());
 	reflectableUniqueObjectsVector.emplace_back(new NestedReflectedObject());
 	reflectableUniqueObjectsVector.emplace_back(new NestedReflectedObject());
+
+	reflectableObjectsUnorderedMap[1] = nestedObjectPointer;
+	reflectableObjectsUnorderedMap[42] = nestedObjectUniquePointer.get();
+	stringToFloatUnorderedMap["two"] = 2.0f;
+	stringToFloatUnorderedMap["fortytwo"] = 42;
+	reflectableObjectsToBoolUnorderedMap[nestedObjectPointer] = true;
+	reflectableObjectsToBoolUnorderedMap[nestedObjectUniquePointer.get()] = false;
+	boolArray[0] = true;
+	boolArray[1] = false;
+	floatArray[0] = 11.1f;
+	floatArray[1] = 42.2f;
+	
+	boolDeque.push_back(false);
+	boolDeque.push_back(true);
+	intDeque.push_back(42);
+	intDeque.push_back(58);
+	objectUniquePtrDeque.push_back(std::make_unique<NestedReflectedObject>());
+	objectUniquePtrDeque.push_back(std::make_unique<NestedReflectedObject>());
 
 	reflectableObjectsMapCustomCompare["one"] = nestedObjectPointer;
 	reflectableObjectsMapCustomCompare["two"] = nestedObjectUniquePointer.get();
@@ -253,6 +208,18 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 
 		.addMember("intToStringMap", &ReflectedObject::intToStringMap)
 		.addMember("intToFloatMap", &ReflectedObject::intToFloatMap)
+
+		.addMember("reflectableObjectsUnorderedMap", &ReflectedObject::reflectableObjectsUnorderedMap)
+		.addMember("stringToFloatUnorderedMap", &ReflectedObject::stringToFloatUnorderedMap)
+		.addMember("reflectableObjectsToBoolUnorderedMap", &ReflectedObject::reflectableObjectsToBoolUnorderedMap)
+
+		.addMember("boolArray", &ReflectedObject::boolArray)
+		.addMember("floatArray", &ReflectedObject::floatArray)
+		.addMember("objectArray", &ReflectedObject::objectArray)
+
+		.addMember("boolDeque", &ReflectedObject::boolDeque)
+		.addMember("intDeque", &ReflectedObject::intDeque)
+		.addMember("objectUniquePtrDeque", &ReflectedObject::objectUniquePtrDeque)
 
 		.addMember("reflectableObjectsMap", &ReflectedObject::reflectableObjectsMap)
 		.addMember("reflectableObjectsMapCustomCompare", &ReflectedObject::reflectableObjectsMapCustomCompare)
@@ -499,157 +466,3 @@ std::map<float, std::string> ReflectedObject::staticMap = {{1.0f, "1.0f"}, {42.0
 std::map<std::string, int> ReflectedObject::staticStringMap = {{"one", 1},{"two", 2}};
 
 
-TestObjects::TestVector4::TestVector4():
-	x(0.0f),
-	y(0.0f),
-	z(0.0f),
-	w(0.0f)
-{
-	instanceCount++;
-}
-
-
-TestObjects::TestVector4::TestVector4(float x, float y, float z, float w):
-	x(x),
-	y(y),
-	z(z),
-	w(w)
-{
-	instanceCount++;
-}
-
-
-TestObjects::TestVector4::TestVector4(const TestVector4& other):
-	x(other.x),
-	y(other.y),
-	z(other.z),
-	w(other.w)
-{
-	instanceCount++;
-}
-
-
-TestObjects::TestVector4::TestVector4(const TestVector4&& other) noexcept:
-	x(other.x),
-	y(other.y),
-	z(other.z),
-	w(other.w)
-{
-	instanceCount++;
-}
-
-
-TestVector4& TestObjects::TestVector4::operator=(const TestVector4& other)
-{
-	x = other.x;
-	y = other.y;
-	z = other.z;
-	w = other.w;
-	return *this;
-}
-
-
-TestObjects::TestVector4::~TestVector4()
-{
-	instanceCount--;
-}
-
-
-void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-{
-	typeInfo
-		.addMember("x", &TestVector4::x)
-		.addMember("y", &TestVector4::y)
-		.addMember("z", &TestVector4::z)
-		.addMember("w", &TestVector4::w)
-		.addMember("doAdd", &TestVector4::doAdd)
-		.addMember("staticAdd", &TestVector4::staticAdd)
-		.addMember<TestVector4, TestVector4, const TestVector4&>("*", &TestVector4::operator*)
-		.addMember<TestVector4, TestVector4, int>("*", &TestVector4::operator*)
-		.addMember<TestVector4, TestVector4, float>("*", &TestVector4::operator*)
-		.addMember("+", &TestVector4::operator+)
-		.addMember("-", &TestVector4::operator-)
-		.addMember("[]", &TestVector4::operator[])
-		.addMember("==", &TestVector4::operator==)
-		.addMember("=", &TestVector4::operator=)
-		.addMember("zero", &TestVector4::zero)
-		.addMember<TestVector4, const TestVector4&, const TestVector4&>("/", &operator/);
-
-}
-
-
-const char* TestObjects::TestVector4::getTypeName()
-{
-	return "TestVector4";
-}
-
-
-TestVector4 TestObjects::TestVector4::doAdd(TestVector4& other)
-{
-	return *this + other;
-}
-
-
-TestVector4 TestObjects::TestVector4::staticAdd(TestVector4& a, TestVector4* b, TestVector4 c)
-{
-	return a + *b + c;
-}
-
-
-bool TestObjects::TestVector4::operator==(const TestVector4& other) const
-{
-	return x == other.x && y == other.y && z == other.z && w == other.w;
-}
-
-
-TestVector4 TestObjects::TestVector4::operator*(const TestVector4& other)
-{
-	return TestVector4(x * other.x, y * other.y, z * other.z, w * other.w);
-}
-
-
-TestVector4 TestObjects::TestVector4::operator*(int value)
-{
-	return TestVector4(x * value, y * value, z * value, w * value);
-}
-
-
-TestVector4 TestObjects::TestVector4::operator*(float value)
-{
-	return TestVector4(x * value, y * value, z * value, w * value);
-}
-
-
-TestVector4 TestObjects::TestVector4::operator+(const TestVector4& other)
-{
-	return TestVector4(x + other.x, y + other.y, z + other.z, w + other.w);
-}
-
-
-TestVector4 TestObjects::TestVector4::operator-(const TestVector4& other)
-{
-	return TestVector4(x - other.x, y - other.y, z - other.z, w - other.w);
-}
-
-float TestObjects::TestVector4::operator[](int index)
-{
-	if (index >= 0 && index < 4)
-	{
-		return (&x)[index];
-	}
-	else
-	{
-		static float zero = 0.0f;
-		zero = 0.0f;
-		return zero;
-	}
-}
-
-TestVector4 TestVector4::zero = TestVector4();
-int TestVector4::instanceCount = 0;
-
-
-TestVector4 TestObjects::operator/(const TestVector4& lhs, const TestVector4& rhs)
-{
-	return TestVector4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w);
-}
