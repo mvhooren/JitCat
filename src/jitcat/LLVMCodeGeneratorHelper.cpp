@@ -187,7 +187,6 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isBoolType())							return LLVMTypes::boolType;
 	else if (type.isStringType())						return LLVMTypes::stringPtrType;
 	else if (type.isReflectableHandleType())			return LLVMTypes::pointerType;
-	else if (type.isContainerType())					return LLVMTypes::pointerType;
 	else if (type.isVoidType())							return LLVMTypes::voidType;
 	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
 	else if (type.isReflectableObjectType())			

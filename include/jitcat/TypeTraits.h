@@ -10,8 +10,8 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/ExternalReflector.h"
 #include "jitcat/FunctionPresenceTest.h"
+#include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
-#include "jitcat/TypeRegistry.h"
 
 #include <any>
 #include <atomic>
@@ -59,7 +59,6 @@ namespace jitcat
 	{
 	public:
 		static inline const CatGenericType& toGenericType();
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -97,7 +96,6 @@ namespace jitcat
 		typedef ObjectT type;
 		typedef ObjectT cachedType;
 		typedef ObjectT functionParameterType;
-		typedef ObjectT* containerItemReturnType;
 	};
 
 
@@ -106,7 +104,6 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType();
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -123,7 +120,6 @@ namespace jitcat
 		typedef PointerT type;
 		typedef const PointerT* cachedType;
 		typedef PointerT* functionParameterType;
-		typedef PointerT* containerItemReturnType;
 	};
 
 
@@ -132,7 +128,6 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType();
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -149,7 +144,6 @@ namespace jitcat
 		typedef PointerT type;
 		typedef PointerT* cachedType;
 		typedef PointerT* functionParameterType;
-		typedef PointerT* containerItemReturnType;
 	};
 
 	
@@ -159,7 +153,6 @@ namespace jitcat
 	public:
 		static inline const CatGenericType& toGenericType();
 
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -177,7 +170,6 @@ namespace jitcat
 		typedef RefT type;
 		typedef RefT& cachedType;
 		typedef RefT& functionParameterType;
-		typedef RefT* containerItemReturnType;
 	};
 
 
@@ -187,7 +179,6 @@ namespace jitcat
 	public:
 		static inline const CatGenericType& toGenericType();
 
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -205,7 +196,6 @@ namespace jitcat
 		typedef RefT type;
 		typedef RefT& cachedType;
 		typedef RefT& functionParameterType;
-		typedef RefT* containerItemReturnType;
 	};
 
 
@@ -215,7 +205,6 @@ namespace jitcat
 	public:
 		static inline const CatGenericType& toGenericType();
 
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -240,7 +229,6 @@ namespace jitcat
 		typedef PointerRefT type;
 		typedef PointerRefT* cachedType;
 		typedef PointerRefT*& functionParameterType;
-		typedef PointerRefT** containerItemReturnType;
 	};
 
 
@@ -249,7 +237,6 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType();
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return true; }
 
@@ -266,7 +253,6 @@ namespace jitcat
 		typedef UniquePtrT type;
 		typedef UniquePtrT* cachedType;
 		typedef UniquePtrT* functionParameterType;
-		typedef UniquePtrT* containerItemReturnType;
 	};
 	
 	
@@ -275,7 +261,6 @@ namespace jitcat
 	{
 	public:
 		static inline const CatGenericType& toGenericType() { return CatGenericType::voidType; }
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -298,7 +283,6 @@ namespace jitcat
 		typedef void type;
 		typedef int cachedType;
 		typedef int functionParameterType;
-		typedef int containerItemReturnType;
 	};
 
 	
@@ -314,7 +298,6 @@ namespace jitcat
 			else														static_assert(false, "Fundamental type not yet supported by JitCat.");
 		}
 
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -337,7 +320,6 @@ namespace jitcat
 		typedef FundamentalT type;
 		typedef FundamentalT cachedType;
 		typedef FundamentalT functionParameterType;
-		typedef FundamentalT containerItemReturnType;
 	};
 
 
@@ -346,7 +328,6 @@ namespace jitcat
 	{
 	public:
 		static const CatGenericType& toGenericType() { return CatGenericType::stringType; }
-		static constexpr bool isSerialisableContainer() { return false; }
 		static constexpr bool isReflectableType() { return false; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -366,7 +347,6 @@ namespace jitcat
 		typedef std::string type;
 		typedef std::string cachedType;
 		typedef const std::string& functionParameterType;
-		typedef std::string containerItemReturnType;
 	};
 
 
@@ -374,13 +354,8 @@ namespace jitcat
 	class TypeTraits<EnumT, std::enable_if_t<std::is_enum_v<EnumT>>>
 	{
 	public:
-		static const CatGenericType& toGenericType()
-		{
-			TypeInfo* enumInfo = TypeRegistry::get()->registerType<EnumT>();
-			static std::unique_ptr<CatGenericType> enumType = std::make_unique<CatGenericType>(TypeTraits<typename std::underlying_type_t<EnumT>>::toGenericType(), enumInfo);
-			return *enumType.get();
-		}
-		static constexpr bool isSerialisableContainer() { return false; }
+		static const CatGenericType& toGenericType();
+
 		static constexpr bool isReflectableType() { return false; }
 		static constexpr bool isUniquePtr() { return false; }
 
@@ -400,59 +375,6 @@ namespace jitcat
 		typedef EnumT type;
 		typedef EnumT cachedType;
 		typedef EnumT functionParameterType;
-		typedef EnumT containerItemReturnType;
-	};
-
-
-	template <typename ItemType, typename AllocatorT>
-	class TypeTraits<std::vector<ItemType, AllocatorT>, void >
-	{
-	public:
-		static const CatGenericType& toGenericType();
-		static constexpr bool isSerialisableContainer() { return true; }
-		static constexpr bool isReflectableType() { return false; }
-		static constexpr bool isUniquePtr() { return false; }
-
-		static const char* getTypeName() { return ""; }
-		static std::any getCatValue(void) { return std::any((std::vector<ItemType, AllocatorT>*)nullptr);}
-		static constexpr std::vector<ItemType, AllocatorT>* getDefaultValue() { return nullptr; }
-		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::vector<ItemType, AllocatorT> >::getDefaultValue()); }
-		static std::vector<ItemType, AllocatorT>& getValue(const std::any& value) { *std::any_cast<std::vector<ItemType, AllocatorT>*>(value); }
-		static std::vector<ItemType, AllocatorT>* stripValue(std::vector<ItemType, AllocatorT>* value) { return value; }
-
-		static const TypeID getTypeId() {return TypeIdentifier<std::vector<ItemType, AllocatorT>>::getIdentifier();}
-
-		typedef std::vector<ItemType, AllocatorT>& getValueType;
-		typedef ItemType type;
-		typedef std::vector<ItemType, AllocatorT> cachedType;
-		typedef std::vector<ItemType, AllocatorT>* functionParameterType;
-		typedef std::vector<ItemType, AllocatorT>* containerItemReturnType;
-	};
-	
-
-	template <typename KeyType, typename ItemType, typename ComparatorT, typename AllocatorT>
-	class TypeTraits<std::map<KeyType, ItemType, ComparatorT, AllocatorT>, void >
-	{
-	public:
-		static const CatGenericType& toGenericType();
-		static constexpr bool isSerialisableContainer() { return true; }
-		static constexpr bool isReflectableType() { return false; }
-		static constexpr bool isUniquePtr() { return false; }
-
-		static const char* getTypeName() { return ""; }
-		static std::any getCatValue(void) { return std::any((std::map<KeyType, ItemType, ComparatorT, AllocatorT>*)nullptr);}
-		static constexpr std::map<KeyType, ItemType, ComparatorT, AllocatorT>* getDefaultValue() { return nullptr; }
-		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::map<KeyType, ItemType, ComparatorT, AllocatorT> >::getDefaultValue()); }
-		static std::map<KeyType, ItemType, ComparatorT, AllocatorT>& getValue(const std::any& value) { return *std::any_cast<std::map<KeyType, ItemType, ComparatorT, AllocatorT>*>(value);}
-		static std::map<KeyType, ItemType, ComparatorT, AllocatorT>* stripValue(std::map<KeyType, ItemType, ComparatorT, AllocatorT>* value) { return value; }
-
-		static const TypeID getTypeId() {return TypeIdentifier<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>::getIdentifier();}
-
-		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>& getValueType;
-		typedef ItemType type;
-		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT> cachedType;
-		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* functionParameterType;
-		typedef std::map<KeyType, ItemType, ComparatorT, AllocatorT>* containerItemReturnType;
 	};
 
 

@@ -54,8 +54,6 @@ namespace jitcat::AST
 		std::string lowerCaseName;
 
 		Tokenizer::Lexeme nameLexeme;
-		int argumentVectorSize;
-		std::vector<int> argumentIndirectionConversion;
 		std::unique_ptr<CatArgumentList> arguments;
 		CatGenericType returnType;
 

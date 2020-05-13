@@ -8,6 +8,7 @@
 #pragma once
 #include "jitcat/Reflectable.h"
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
 
 #include <any>
@@ -65,7 +66,7 @@ public:
 
 	inline virtual std::any getValueOfPointer(std::any& value) const override final
 	{
-		if constexpr (std::is_copy_constructible<ObjectT>::value)
+		if constexpr (TypeTools::getAllowCopyConstruction<ObjectT>())
 		{
 			ObjectT* ptr = std::any_cast<ObjectT*>(value);
 			std::any result(std::in_place_type<ObjectT>, *ptr);

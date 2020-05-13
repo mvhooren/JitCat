@@ -47,6 +47,8 @@ namespace jitcat::AST
 		std::size_t getNumArguments() const;
 		const std::vector<CatGenericType>& getArgumentTypes() const;
 
+		bool applyIndirectionConversions(const std::vector<CatGenericType>& expectedTypes, const std::string& functionName, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+
 	private:
 		std::vector<std::unique_ptr<CatTypedExpression>> arguments;
 		std::vector<CatGenericType> argumentTypes;

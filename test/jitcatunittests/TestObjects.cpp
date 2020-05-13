@@ -116,6 +116,13 @@ void ReflectedObject::createNestedObjects()
 	floatVector.push_back(33.3f);
 	floatVector.push_back(123.5f);
 
+	boolVector.push_back(true);
+	boolVector.push_back(false);
+
+	intToFloatMap[1] = 1.0f;
+	intToFloatMap[2] = 2.0f;
+	intToFloatMap[42] = 42.0f;
+
 	intToStringMap[1] = "four";
 	intToStringMap[2] = "six";
 
@@ -242,8 +249,10 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("staticStringMap", &ReflectedObject::staticStringMap)
 
 		.addMember("floatVector", &ReflectedObject::floatVector)
+		.addMember("boolVector", &ReflectedObject::boolVector)
 
 		.addMember("intToStringMap", &ReflectedObject::intToStringMap)
+		.addMember("intToFloatMap", &ReflectedObject::intToFloatMap)
 
 		.addMember("reflectableObjectsMap", &ReflectedObject::reflectableObjectsMap)
 		.addMember("reflectableObjectsMapCustomCompare", &ReflectedObject::reflectableObjectsMapCustomCompare)

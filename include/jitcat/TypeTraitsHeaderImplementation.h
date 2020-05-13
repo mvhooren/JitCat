@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "jitcat/ContainerManipulator.h"
 #include "jitcat/TypeOwnershipSemantics.h"
+#include "jitcat/TypeRegistry.h"
 
 
 namespace jitcat
@@ -22,6 +22,13 @@ namespace jitcat
 		return *type.get();
 	}
 
+	template<typename EnumT>
+	const CatGenericType& TypeTraits<EnumT, std::enable_if_t<std::is_enum_v<EnumT>>>::toGenericType()
+	{
+		TypeInfo* enumInfo = Reflection::TypeRegistry::get()->registerType<EnumT>();
+		static std::unique_ptr<CatGenericType> enumType = std::make_unique<CatGenericType>(TypeTraits<typename std::underlying_type_t<EnumT>>::toGenericType(), enumInfo);
+		return *enumType.get();
+	}
 
 	template<typename ObjectT, typename EnabledT>
 	inline std::any TypeTraits<ObjectT, EnabledT>::getCatValue(ObjectT& value)
@@ -99,29 +106,6 @@ namespace jitcat
 	const CatGenericType& TypeTraits<std::unique_ptr<UniquePtrT>>::toGenericType() 
 	{
 		return TypeTraits<UniquePtrT*>::toGenericType();
-	}
-
-
-	template <typename ItemType, typename AllocatorT>
-	const CatGenericType& TypeTraits<std::vector<ItemType, AllocatorT>>::toGenericType()
-	{
-		//Make sure that the item type is known to the type system.
-		TypeTraits<ItemType>::toGenericType();
-		static std::unique_ptr<Reflection::ContainerManipulator> vectorManipulator(new jitcat::Reflection::VectorManipulator<std::vector<ItemType, AllocatorT>>());
-		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(Reflection::ContainerType::Vector, vectorManipulator.get()));
-		return *type.get();
-	}
-
-
-	template <typename KeyType, typename ItemType, typename ComparatorT, typename AllocatorT>
-	const CatGenericType& TypeTraits<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>::toGenericType()
-	{
-		//Make sure that the key type and item type are known to the type system.
-		TypeTraits<ItemType>::toGenericType();
-		TypeTraits<KeyType>::toGenericType();
-		static std::unique_ptr<Reflection::ContainerManipulator> mapManipulator(new jitcat::Reflection::MapManipulator<std::map<KeyType, ItemType, ComparatorT, AllocatorT>>());
-		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(Reflection::ContainerType::Map, mapManipulator.get()));
-		return *type.get();
 	}
 
 }

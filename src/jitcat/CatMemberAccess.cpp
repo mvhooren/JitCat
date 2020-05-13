@@ -81,7 +81,9 @@ std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext)
 	std::any baseValue = base->execute(runtimeContext);
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
-		return memberInfo->getAssignableMemberReference(reinterpret_cast<unsigned char*>(base->getType().getRawPointer(baseValue)));
+		std::any value = memberInfo->getAssignableMemberReference(reinterpret_cast<unsigned char*>(base->getType().getRawPointer(baseValue)));
+		runtimeContext->clearTemporaries();
+		return value;
 	}
 	assert(false);
 	return std::any();
@@ -96,6 +98,11 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
 		CatGenericType baseType = base->getType();
+		CatGenericType expectedBaseType = baseType.removeIndirection().toPointer();
+		IndirectionConversionMode conversionMode = IndirectionConversionMode::None;
+		bool indirectionConversionSuccess = ASTHelper::doIndirectionConversion(base, expectedBaseType, true, conversionMode);
+		assert(indirectionConversionSuccess);
+		baseType = base->getType();
 		if (!(baseType.isPointerToReflectableObjectType() || baseType.isReflectableHandleType()))
 		{
 			errorManager->compiledWithError(Tools::append("Expression to the left of '.' is not an object."), errorContext, compiletimeContext->getContextName(), getLexeme());

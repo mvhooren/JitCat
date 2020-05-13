@@ -6,9 +6,7 @@
 */
 
 #include "jitcat/TypeInfo.h"
-#include "jitcat/ArrayMemberFunctionInfo.h"
 #include "jitcat/Configuration.h"
-#include "jitcat/ContainerManipulator.h"
 #include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
@@ -182,26 +180,6 @@ const CatGenericType& TypeInfo::getType(const std::vector<std::string>& indirect
 				if (offset == indirectionListSize - 1)
 				{
 					return memberInfo->catType;
-				}
-			}
-			else if (memberInfo->catType.isContainerType())
-			{
-				if (indirectionListSize > offset + 1)
-				{
-					offset++;
-					if ((memberInfo->catType.isVectorType()
-							&& Tools::isNumber(indirectionList[offset]))
-						|| memberInfo->catType.isMapType())
-					{
-						if (offset == indirectionListSize - 1)
-						{
-							return memberInfo->catType;
-						}
-						else if (indirectionListSize > offset + 1)
-						{
-							return memberInfo->catType.getContainerItemType().getPointeeType()->getObjectType()->getType(indirectionList, offset + 1);
-						}
-					}
 				}
 			}
 			else if (memberInfo->catType.isPointerToReflectableObjectType())
@@ -403,19 +381,6 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 					
 			}
 		}
-		else if (memberType.isContainerType())
-		{
-			std::string containerType = memberType.isMapType() ? "Map" : "List";
-			std::string itemType = memberType.getContainerItemType().toString();
-			enumerator->enterNameSpace(iter->second->memberName, Tools::append(containerType, ": ", itemType), memberType.isMapType() ? NamespaceType::Map : NamespaceType::Vector);
-			if (!Tools::isInList(enumerator->loopDetectionTypeStack, itemType))
-			{
-				enumerator->loopDetectionTypeStack.push_back(itemType);
-				memberType.getContainerItemType().getPointeeType()->getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
-				enumerator->loopDetectionTypeStack.pop_back();
-			}
-			enumerator->exitNameSpace();
-		}
 	}
 }
 
@@ -436,12 +401,6 @@ bool TypeInfo::isCustomType() const
 
 
 bool TypeInfo::isReflectedType() const
-{
-	return false;
-}
-
-
-bool TypeInfo::isArrayType() const
 {
 	return false;
 }

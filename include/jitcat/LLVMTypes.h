@@ -8,6 +8,8 @@
 #pragma once
 
 #include "jitcat/LLVMForwardDeclares.h"
+#include "jitcat/TypeTools.h"
+
 
 #include <string>
 #include <type_traits>
@@ -49,18 +51,6 @@ namespace jitcat::LLVM
 	};
 
 
-	template<class T, class U=
-	  typename std::remove_cv<
-	  typename std::remove_pointer<
-	  typename std::remove_reference<
-	  typename std::remove_extent<
-	  T
-	  >::type
-	  >::type
-	  >::type
-	  >::type
-	  > struct remove_all : remove_all<U> {};
-	template<class T> struct remove_all<T, T> { typedef T type; };
 
 	template<typename T>
 	inline llvm::Type* LLVMTypes::getLLVMType()

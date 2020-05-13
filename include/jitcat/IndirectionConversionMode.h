@@ -35,4 +35,29 @@ namespace jitcat
                 return false;
         }
     }
+
+    inline bool isDereferenceConversionMode(IndirectionConversionMode mode)
+    {
+        switch (mode)
+        {
+            case IndirectionConversionMode::DereferencePointer:
+            case IndirectionConversionMode::DereferencePointerToPointer:
+            case IndirectionConversionMode::DereferencePointerToPointerTwice:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    inline bool isReferenceConversionMode(IndirectionConversionMode mode)
+    {
+        switch (mode)
+        {
+            case IndirectionConversionMode::AddressOfValue:
+            case IndirectionConversionMode::AddressOfPointer:
+                return true;
+            default:
+                return false;
+        }
+    }
 }

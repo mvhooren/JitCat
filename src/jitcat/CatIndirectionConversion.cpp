@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/ASTHelper.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatIndirectionConversion.h"
 
 using namespace jitcat;
@@ -66,7 +67,15 @@ bool CatIndirectionConversion::typeCheck(CatRuntimeContext* compiletimeContext, 
 
 std::any CatIndirectionConversion::execute(jitcat::CatRuntimeContext* runtimeContext)
 {
-    return typeWithoutIndirection.doIndirectionConversion(expressionToConvert->execute(runtimeContext), conversionMode);
+    std::any value = expressionToConvert->execute(runtimeContext);
+    if (isReferenceConversionMode(conversionMode))
+    {
+        return typeWithoutIndirection.doIndirectionConversion(runtimeContext->addTemporary(value), conversionMode);
+    }
+    else
+    {
+        return typeWithoutIndirection.doIndirectionConversion(value, conversionMode);
+    }
 }
 
 

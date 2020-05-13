@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 namespace jitcat::Reflection
 {
 	class ReflectedEnumTypeInfo;
@@ -41,5 +43,45 @@ namespace jitcat::Reflection
 	void reflectEnum(ReflectedEnumTypeInfo& enumTypeInfo)
 	{
 		static_assert(false, "This function needs to be implemented for this enum.");
+	}
+
+    template<typename BaseT>
+    struct CopyConstructControlVariableExists
+    {
+        template<typename FunctionPtrT, FunctionPtrT> struct SameType;
+
+        template<typename TestBaseT>
+        static constexpr std::true_type testPresence(SameType<constexpr bool, TestBaseT::enableCopyConstruction>*);
+        template<typename TestBaseT>
+        static constexpr std::false_type testPresence(...);
+
+        static constexpr bool value = decltype(testPresence<BaseT>(0))::value;
+    };
+
+	namespace TypeTools
+	{
+	template<typename ReflectableT>
+	inline constexpr bool getAllowCopyConstruction()
+	{
+		if constexpr (CopyConstructControlVariableExists<ReflectableT>::value)
+		{
+			return ReflectableT::enableCopyConstruction;
+		}
+		else if constexpr (ExternalReflector<ReflectableT>::exists)
+		{
+			if constexpr (CopyConstructControlVariableExists<ExternalReflector<ReflectableT>>::value)
+			{
+				return ExternalReflector<ReflectableT>::enableCopyConstruction;
+			}
+			else 
+			{
+				return std::is_copy_constructible<ReflectableT>::value;
+			}
+		}
+		else
+		{
+			return std::is_copy_constructible<ReflectableT>::value;
+		}
+	}
 	}
 }

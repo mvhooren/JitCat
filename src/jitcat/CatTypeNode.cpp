@@ -3,7 +3,6 @@
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatStaticScope.h"
-#include "jitcat/ContainerManipulator.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/TypeRegistry.h"
 
@@ -41,20 +40,6 @@ jitcat::AST::CatTypeNode::CatTypeNode(CatStaticScope* parentScope, const std::st
 	knownType(false),
 	isArrayType(false)
 {
-}
-
-
-jitcat::AST::CatTypeNode::CatTypeNode(CatTypeNode* arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnership, const Tokenizer::Lexeme& lexeme):
-	CatASTNode(lexeme),
-	ownershipSemantics(arrayOwnership),
-	knownType(arrayItemType->isKnownType()),
-	isArrayType(true),
-	arrayItemType(arrayItemType)
-{
-	if (knownType)
-	{
-		setType(CatGenericType(&ArrayManipulator::createArrayManipulatorOf(arrayItemType->getType()), true, false).toPointer(ownershipSemantics, false, false));
-	}
 }
 
 
@@ -194,28 +179,8 @@ bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, 
 		}
 		else
 		{
-			if (!arrayItemType->typeCheck(compileTimeContext, errorManager, errorContext))
-			{
-				return false;
-			}
-			CatGenericType itemGenericType = arrayItemType->getType();
-			if (itemGenericType.isPointerToReflectableObjectType() && itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
-			{
-				itemGenericType = itemGenericType.toWritable();
-			}
-			if (!itemGenericType.isConstructible())
-			{
-				errorManager->compiledWithError(Tools::append("Invalid array because ", itemGenericType.toString(), " is not constructible."), this, compileTimeContext->getContextName(), getLexeme());
-				return false;
-			}
-			if (itemGenericType.isPointerToReflectableObjectType() 
-				&& itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Owned 
-				&& itemGenericType.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
-			{
-				itemGenericType = itemGenericType.convertPointerToHandle();
-			}
-
-			setType(CatGenericType(&ArrayManipulator::createArrayManipulatorOf(itemGenericType), true, false).toPointer(ownershipSemantics, true, false));
+			errorManager->compiledWithError(Tools::append("Arrays are not supported for now."), this, compileTimeContext->getContextName(), getLexeme());
+			return false;
 		}
 	}
 

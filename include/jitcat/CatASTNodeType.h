@@ -12,7 +12,6 @@ namespace jitcat::AST
 
 	enum class CatASTNodeType
 	{
-		ArrayIndex,
 		AssignmentOperator,
 		BuiltInFunctionCall,
 		ClassDefinition,

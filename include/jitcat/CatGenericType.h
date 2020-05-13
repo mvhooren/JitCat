@@ -7,7 +7,6 @@
 
 #pragma once
 #include "jitcat/CatInfixOperatorType.h"
-#include "jitcat/ContainerType.h"
 #include "jitcat/IndirectionConversionMode.h"
 #include "jitcat/InfixOperatorResultInfo.h"
 #include "jitcat/TypeInfoDeleter.h"
@@ -25,7 +24,6 @@ namespace jitcat
 	{
 		class TypeInfo;
 		class TypeCaster;
-		class ContainerManipulator;
 	}
 
 	class CatGenericType
@@ -39,7 +37,6 @@ namespace jitcat
 			Pointer,
 			ReflectableHandle,
 			ReflectableObject,
-			Container,
 			Count
 		};
 	
@@ -54,14 +51,13 @@ namespace jitcat
 			Count
 		};
 
-		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, CatGenericType* pointeeType, bool writable, bool constant);
+		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, CatGenericType* pointeeType, bool writable, bool constant);
 		CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 	public:
 		CatGenericType();
 		CatGenericType(const CatGenericType& enumUnderlyingType, Reflection::TypeInfo* enumValuesType, bool writable = false, bool constant = false);
 		CatGenericType(Reflection::TypeInfo* reflectableType, bool writable = false, bool constant = false);
-		CatGenericType(Reflection::ContainerType containerType, Reflection::ContainerManipulator* containerManipulator, bool writable = false, bool constant = false);
 		CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable = false, bool constant = false);
 		CatGenericType(const CatGenericType& other);
 
@@ -88,11 +84,6 @@ namespace jitcat
 		bool isPointerToPointerType() const;
 		bool isPointerToHandleType() const;
 		bool isAssignableType() const;
-		bool isContainerType() const;
-		bool isArrayType() const;
-		bool isPointerToArrayType() const;
-		bool isVectorType() const;
-		bool isMapType() const;
 		bool isNullptrType() const;
 		
 		bool isTriviallyCopyable() const;
@@ -124,8 +115,6 @@ namespace jitcat
 		IndirectionConversionMode getIndirectionConversion(const CatGenericType& other) const;
 		std::any doIndirectionConversion(std::any& value, IndirectionConversionMode mode) const;
 
-		Reflection::ContainerManipulator* getContainerManipulator() const;
-		const CatGenericType& getContainerItemType() const;
 		const char* getObjectTypeName() const;
 
 		AST::InfixOperatorResultInfo getInfixOperatorResultInfo(AST::CatInfixOperatorType oper, const CatGenericType& rightType);
@@ -227,11 +216,6 @@ namespace jitcat
 
 		//not owned
 		Reflection::TypeInfo* nestedType;
-
-		//When the member is a container, catType or nestedType will be set to the item type of the container
-		Reflection::ContainerType containerType;
-		//not owned, non null when the type is a container.
-		Reflection::ContainerManipulator* containerManipulator;
 
 		Reflection::TypeOwnershipSemantics ownershipSemantics;
 		std::unique_ptr<CatGenericType> pointeeType;

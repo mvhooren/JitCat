@@ -434,6 +434,19 @@ void jitcat::CatRuntimeContext::setReturning(bool isReturning)
 }
 
 
+std::any& jitcat::CatRuntimeContext::addTemporary(const std::any& value)
+{
+	temporaries.push_back(value);
+	return temporaries.back();
+}
+
+
+void jitcat::CatRuntimeContext::clearTemporaries()
+{
+	temporaries.clear();
+}
+
+
 CatScopeID CatRuntimeContext::createScope(unsigned char* scopeObject, TypeInfo* type, bool isStatic)
 {
 	Scope* scope = new Scope(type, reinterpret_cast<Reflectable*>(scopeObject), isStatic);

@@ -22,6 +22,8 @@ ReflectionTestRoot::ReflectionTestRoot():
 	testObject3(new ReflectionTestObject("test3 test3 test3"))
 {
 	testObject = new ReflectionTestObject("test test test");
+	testUnorderedMap[1] = 1.1f;
+	testUnorderedMap[2] = 2.2f;
 }
 
 
@@ -31,7 +33,18 @@ ReflectionTestRoot::~ReflectionTestRoot()
 }
 
 
-void ReflectionTestRoot::reflect(ReflectedTypeInfo& typeInfo)
+float ReflectionTestRoot::getPi() const
+{
+	return pi;
+}
+
+const char* ExternalReflector<ReflectionTestRoot>::getTypeName()
+{
+	return "Root";
+}
+
+
+void ExternalReflector<ReflectionTestRoot>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 {
 	typeInfo.addMember("test", &ReflectionTestRoot::testObject, MF::isConst);
 	typeInfo.addMember("test2", &ReflectionTestRoot::testObject2);
@@ -42,16 +55,5 @@ void ReflectionTestRoot::reflect(ReflectedTypeInfo& typeInfo)
 	typeInfo.addMember("hello", &ReflectionTestRoot::hello);
 	typeInfo.addMember("yes", &ReflectionTestRoot::yes);
 	typeInfo.addMember("no", &ReflectionTestRoot::no);
-}
-
-
-const char* ReflectionTestRoot::getTypeName()
-{
-	return "Root";
-}
-
-
-float ReflectionTestRoot::getPi() const
-{
-	return pi;
+	typeInfo.addMember("testMap", &ReflectionTestRoot::testUnorderedMap);
 }

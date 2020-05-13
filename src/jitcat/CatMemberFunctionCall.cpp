@@ -12,7 +12,6 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/CatStaticScope.h"
-#include "jitcat/ContainerManipulator.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
@@ -36,8 +35,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 	arguments(arguments),
 	base(base),
 	memberFunctionInfo(nullptr),
-	returnType(CatGenericType::unknownType),
-	argumentVectorSize(0)
+	returnType(CatGenericType::unknownType)
 {
 }
 
@@ -50,8 +48,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctionCall& other)
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	base(other.base != nullptr ? static_cast<CatTypedExpression*>(other.base->copy()) : nullptr),
 	memberFunctionInfo(nullptr),
-	returnType(CatGenericType::unknownType),
-	argumentVectorSize(0)
+	returnType(CatGenericType::unknownType)
 {
 }
 
@@ -94,36 +91,11 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 		bool wasReturning = runtimeContext->getIsReturning();
 		runtimeContext->setReturning(false);
 		std::vector<std::any> argumentValues;
-		argumentValues.reserve(argumentVectorSize);
-
+		argumentValues.reserve(arguments->getNumArguments());
 		arguments->executeAllArguments(argumentValues, memberFunctionInfo->argumentTypes, runtimeContext);
-		int numValues = (int)argumentValues.size();
-		for (int i = 0; i < numValues; i++)
-		{
-			switch (argumentIndirectionConversion[i])
-			{
-				case -1:
-				{
-					argumentValues[i] = arguments->getArgumentType(i).getDereferencedOf(argumentValues[i]);
-				} break;
-				case 1:
-				{
-					argumentValues.push_back(argumentValues[i]);
-					argumentValues[i] = arguments->getArgumentType(i).getAddressOf(argumentValues.back());
-				} break;
-			}
-		}
-		std::any value;
-		if (baseIndirectionConversion == 1)
-		{
-			std::any addressOfbase = base->getType().getAddressOf(baseValue);
-			value = memberFunctionInfo->call(runtimeContext, addressOfbase, argumentValues);
-		}
-		else
-		{
-			value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
-		}
+		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
 		runtimeContext->setReturning(wasReturning);
+		runtimeContext->clearTemporaries();
 		return value;
 	}
 	assert(false);
@@ -137,8 +109,7 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	{
 		return false;
 	}
-	argumentIndirectionConversion.clear();
-	baseIndirectionConversion = 0;
+	
 	returnType = CatGenericType::unknownType;
 	if (base == nullptr)
 	{
@@ -157,6 +128,11 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	}
 	if (base->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
+		CatGenericType expectedBaseType = base->getType().removeIndirection().toPointer();
+		IndirectionConversionMode conversionMode = IndirectionConversionMode::None;
+		bool indirectionConversionSuccess = ASTHelper::doIndirectionConversion(base, expectedBaseType, true, conversionMode);
+		assert(indirectionConversionSuccess);
+		
 		//Try to collapse the base into a literal. (in case of a static scope, for example)
 		ASTHelper::updatePointerIfChanged(base, base->constCollapse(compiletimeContext, errorManager, errorContext));
 
@@ -165,11 +141,6 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			|| baseType.isReflectableHandleType())
 		{
 			memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(this);
-		}
-		else if (baseType.isReflectableObjectType())
-		{
-			baseIndirectionConversion = 1;
-			memberFunctionInfo = baseType.getObjectType()->getMemberFunctionInfo(this);
 		}
 		else
 		{
@@ -211,18 +182,12 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 				{
 					return false;
 				}
-				int parameterIndirectionLevel = 0;
-				CatGenericType parameterType = memberFunctionInfo->getArgumentType(i).removeIndirection(parameterIndirectionLevel);
-				int argumentIndirectionLevel = 0;
-				CatGenericType argumentType = arguments->getArgumentType(i).removeIndirection(argumentIndirectionLevel);
-				int indirectionDifference = parameterIndirectionLevel - argumentIndirectionLevel;
-				argumentVectorSize++;
-				if (indirectionDifference > 0)
-				{
-					argumentVectorSize++;
-				}
-				argumentIndirectionConversion.push_back(parameterIndirectionLevel - argumentIndirectionLevel);
 			}
+			if (!arguments->applyIndirectionConversions(memberFunctionInfo->argumentTypes, functionName, compiletimeContext, errorManager, errorContext))
+			{
+				return false;
+			}
+
 			returnType = memberFunctionInfo->returnType;
 			return true;
 		}

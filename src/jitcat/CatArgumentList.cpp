@@ -8,14 +8,19 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/Tools.h"
+
+#include <cassert>
 
 using namespace jitcat;
 using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatArgumentList::CatArgumentList(const Tokenizer::Lexeme& lexeme, std::vector<CatTypedExpression*>& argumentList): 
+CatArgumentList::CatArgumentList(const Tokenizer::Lexeme& lexeme, std::vector<CatTypedExpression*>& argumentList): 
 	CatASTNode(lexeme)
 {
 	for (auto& iter : argumentList)
@@ -25,7 +30,7 @@ jitcat::AST::CatArgumentList::CatArgumentList(const Tokenizer::Lexeme& lexeme, s
 }
 
 
-jitcat::AST::CatArgumentList::CatArgumentList(const CatArgumentList& other):
+CatArgumentList::CatArgumentList(const CatArgumentList& other):
 	CatASTNode(other)
 {
 	for (auto& iter : other.arguments)
@@ -35,7 +40,7 @@ jitcat::AST::CatArgumentList::CatArgumentList(const CatArgumentList& other):
 }
 
 
-CatASTNode* jitcat::AST::CatArgumentList::copy() const
+CatASTNode* CatArgumentList::copy() const
 {
 	return new CatArgumentList(*this);
 }
@@ -62,7 +67,7 @@ CatASTNodeType CatArgumentList::getNodeType() const
 }
 
 
-bool jitcat::AST::CatArgumentList::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+bool CatArgumentList::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	argumentTypes.clear();
 	bool noErrors = true;
@@ -82,7 +87,7 @@ bool jitcat::AST::CatArgumentList::typeCheck(CatRuntimeContext* compiletimeConte
 }
 
 
-void jitcat::AST::CatArgumentList::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+void CatArgumentList::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	for (auto& iter : arguments)
 	{
@@ -91,7 +96,7 @@ void jitcat::AST::CatArgumentList::constCollapse(CatRuntimeContext* compileTimeC
 }
 
 
-bool jitcat::AST::CatArgumentList::getAllArgumentsAreConst() const
+bool CatArgumentList::getAllArgumentsAreConst() const
 {
 	for (auto& iter : arguments)
 	{
@@ -104,43 +109,43 @@ bool jitcat::AST::CatArgumentList::getAllArgumentsAreConst() const
 }
 
 
-bool jitcat::AST::CatArgumentList::getArgumentIsConst(std::size_t argumentIndex) const
+bool CatArgumentList::getArgumentIsConst(std::size_t argumentIndex) const
 {
 	return arguments[argumentIndex]->isConst();
 }
 
 
-Tokenizer::Lexeme jitcat::AST::CatArgumentList::getArgumentLexeme(std::size_t argumentIndex) const
+Tokenizer::Lexeme CatArgumentList::getArgumentLexeme(std::size_t argumentIndex) const
 {
 	return arguments[argumentIndex]->getLexeme();
 }
 
 
-CatTypedExpression* jitcat::AST::CatArgumentList::releaseArgument(std::size_t argumentIndex)
+CatTypedExpression* CatArgumentList::releaseArgument(std::size_t argumentIndex)
 {
 	return arguments[argumentIndex].release();
 }
 
 
-const CatTypedExpression* jitcat::AST::CatArgumentList::getArgument(std::size_t argumentIndex) const
+const CatTypedExpression* CatArgumentList::getArgument(std::size_t argumentIndex) const
 {
 	return arguments[argumentIndex].get();
 }
 
 
-void jitcat::AST::CatArgumentList::addArgument(std::unique_ptr<CatTypedExpression> argument)
+void CatArgumentList::addArgument(std::unique_ptr<CatTypedExpression> argument)
 {
 	arguments.emplace_back(std::move(argument));
 }
 
 
-std::any jitcat::AST::CatArgumentList::executeArgument(std::size_t argumentIndex, CatRuntimeContext* context)
+std::any CatArgumentList::executeArgument(std::size_t argumentIndex, CatRuntimeContext* context)
 {
 	return arguments[argumentIndex]->execute(context);
 }
 
 
-void jitcat::AST::CatArgumentList::executeAllArguments(std::vector<std::any>& values, const std::vector<CatGenericType>& expectedTypes, CatRuntimeContext* context)
+void CatArgumentList::executeAllArguments(std::vector<std::any>& values, const std::vector<CatGenericType>& expectedTypes, CatRuntimeContext* context)
 {
 	std::size_t index = 0;
 	for (auto& iter : arguments)
@@ -152,19 +157,50 @@ void jitcat::AST::CatArgumentList::executeAllArguments(std::vector<std::any>& va
 }
 
 
-const CatGenericType& jitcat::AST::CatArgumentList::getArgumentType(std::size_t argumentIndex) const
+const CatGenericType& CatArgumentList::getArgumentType(std::size_t argumentIndex) const
 {
 	return argumentTypes[argumentIndex];
 }
 
 
-std::size_t jitcat::AST::CatArgumentList::getNumArguments() const
+std::size_t CatArgumentList::getNumArguments() const
 {
 	return arguments.size();
 }
 
 
-const std::vector<CatGenericType>& jitcat::AST::CatArgumentList::getArgumentTypes() const
+const std::vector<CatGenericType>& CatArgumentList::getArgumentTypes() const
 {
 	return argumentTypes;
+}
+
+
+bool CatArgumentList::applyIndirectionConversions(const std::vector<CatGenericType>& expectedTypes, const std::string& functionName, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	assert(expectedTypes.size() == arguments.size());
+	for (std::size_t i = 0; i < arguments.size(); ++i)
+	{
+		IndirectionConversionMode mode = IndirectionConversionMode::None;
+		if (!ASTHelper::doIndirectionConversion(arguments[i], expectedTypes[i], true, mode))
+		{
+			switch (mode)
+			{
+				case IndirectionConversionMode::ErrorNotCopyConstructible:
+				{
+					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " is not copy constructible."), errorContext, compileTimeContext->getContextName(), getLexeme());
+				} break;
+				case IndirectionConversionMode::ErrorTooMuchIndirection:
+				{
+					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " has too much indirection."), errorContext, compileTimeContext->getContextName(), getLexeme());
+				} break;
+				case IndirectionConversionMode::ErrorTypeMismatch:
+				{
+					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " is of an unexpected type."), errorContext, compileTimeContext->getContextName(), getLexeme());
+				} break;
+			}
+			return false;
+		}
+		argumentTypes[i] = arguments[i]->getType();
+	}
+	return true;
 }

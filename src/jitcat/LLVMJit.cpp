@@ -42,8 +42,7 @@ LLVMJit::LLVMJit():
 	}
 	LLVMTypes::voidType = llvm::Type::getVoidTy(*context->getContext());
 
-	std::vector<llvm::Type*> structMembers = {llvm::ArrayType::get(llvm::Type::getInt8Ty(*context->getContext()), sizeof(std::string))};
-	LLVMTypes::stringType = llvm::StructType::create(structMembers, "std::string");
+	LLVMTypes::stringType = llvm::ArrayType::get(llvm::Type::getInt8Ty(*context->getContext()), sizeof(std::string));
 	LLVMTypes::stringPtrType = llvm::PointerType::get(LLVMTypes::stringType, 0);
 	LLVMTypes::stringPtrTypeAsType = static_cast<llvm::Type*>(LLVMTypes::stringPtrType);
 	LLVMTypes::functionRetPtrArgPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType}, false);

@@ -30,8 +30,7 @@ CatStaticFunctionCall::CatStaticFunctionCall(CatStaticScope* parentScope, const 
 	lowerCaseName(Tools::toLowerCase(name)),
 	nameLexeme(nameLexeme),
 	arguments(arguments),
-	returnType(CatGenericType::unknownType),
-	argumentVectorSize(0)
+	returnType(CatGenericType::unknownType)
 {
 }
 
@@ -44,8 +43,7 @@ CatStaticFunctionCall::CatStaticFunctionCall(const CatStaticFunctionCall& other)
 	nameLexeme(other.nameLexeme),
 	parentScope(static_cast<CatStaticScope*>(other.parentScope->copy())),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
-	returnType(CatGenericType::unknownType),
-	argumentVectorSize(0)
+	returnType(CatGenericType::unknownType)
 {
 }
 
@@ -93,27 +91,11 @@ std::any CatStaticFunctionCall::execute(CatRuntimeContext* runtimeContext)
 	bool wasReturning = runtimeContext->getIsReturning();
 	runtimeContext->setReturning(false);
 	std::vector<std::any> argumentValues;
-	argumentValues.reserve(argumentVectorSize);
+	argumentValues.reserve(arguments->getNumArguments());
 	arguments->executeAllArguments(argumentValues, staticFunctionInfo->getArgumentTypes(), runtimeContext);
-
-	int numValues = (int)argumentValues.size();
-	for (int i = 0; i < numValues; i++)
-	{
-		switch (argumentIndirectionConversion[i])
-		{
-			case -1:
-			{
-				argumentValues[i] = arguments->getArgumentType(i).getDereferencedOf(argumentValues[i]);
-			} break;
-			case 1:
-			{
-				argumentValues.push_back(argumentValues[i]);
-				argumentValues[i] = arguments->getArgumentType(i).getAddressOf(argumentValues.back());
-			} break;
-		}
-	}
 	std::any value = staticFunctionInfo->call(runtimeContext, argumentValues);
 	runtimeContext->setReturning(wasReturning);
+	runtimeContext->clearTemporaries();
 	return value;
 }
 
@@ -125,7 +107,6 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	{
 		return false;
 	}
-	argumentIndirectionConversion.clear();
 	TypeInfo* parentObjectType =  parentScope->getScopeType();
 
 	staticFunctionInfo = parentObjectType->getStaticMemberFunctionInfo(this);
@@ -166,25 +147,10 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			{
 				return false;
 			}
-			int parameterIndirectionLevel = 0;
-			CatGenericType parameterType = staticFunctionInfo->getArgumentType(i).removeIndirection(parameterIndirectionLevel);
-			int argumentIndirectionLevel = 0;
-			CatGenericType argumentType = arguments->getArgumentType(i).removeIndirection(argumentIndirectionLevel);
-			int indirectionDifference = parameterIndirectionLevel - argumentIndirectionLevel;
-			argumentVectorSize++;
-			if (indirectionDifference > 0)
-			{
-				argumentVectorSize++;
-			}
-			else if (indirectionDifference < 0)
-			{
-				if (!argumentType.isCopyConstructible())
-				{
-					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", name, " argument nr: ", i, " is not copy constructible."), errorContext, compiletimeContext->getContextName(), getLexeme());
-					return false;
-				}
-			}
-			argumentIndirectionConversion.push_back(parameterIndirectionLevel - argumentIndirectionLevel);
+		}
+		if (!arguments->applyIndirectionConversions(staticFunctionInfo->getArgumentTypes(), name, compiletimeContext, errorManager, errorContext))
+		{
+			return false;
 		}
 		returnType = staticFunctionInfo->getReturnType();
 		return true;

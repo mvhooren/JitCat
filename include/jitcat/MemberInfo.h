@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "jitcat/ContainerType.h"
 #include "jitcat/MemberFlags.h"
 #include "jitcat/TypeMemberInfo.h"
 #include "jitcat/TypeRegistry.h"
@@ -50,39 +49,6 @@ namespace jitcat::Reflection
 
 		TypeMemberInfo* baseMember;
 		TypeMemberInfo* deferredMember;
-	};
-
-
-	//Implements a TypeMemberInfo for container types.
-	template<typename BaseT, typename ContainerT>
-	struct ContainerMemberInfo: public TypeMemberInfo
-	{
-		ContainerMemberInfo(const std::string& memberName, ContainerT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
-
-		inline virtual std::any getMemberReference(unsigned char* base) override final;
-		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
-		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
-	
-		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-		static typename TypeTraits<ContainerItemType>::containerItemReturnType getMapIntIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, int index);
-
-		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-		static typename TypeTraits<ContainerItemType>::containerItemReturnType  getMapKeyIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, typename TypeTraits<ContainerKeyType>::functionParameterType index);
-
-		template<typename ContainerItemType, typename AllocatorT>
-		static typename TypeTraits<ContainerItemType>::containerItemReturnType getVectorIndex(std::vector<ContainerItemType, AllocatorT>* vector, int index);
-
-		template<typename ContainerKeyType, typename ContainerItemType, typename CompareT, typename AllocatorT>
-		inline llvm::Value* generateIndex(std::map<ContainerKeyType, ContainerItemType, CompareT, AllocatorT>* map, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
-
-		template<typename ContainerItemType, typename AllocatorT>
-		inline llvm::Value* generateIndex(std::vector<ContainerItemType, AllocatorT>* vector, llvm::Value* containerPtr, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const;
-
-		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
-
-		inline virtual unsigned long long getOrdinal() const override final;
-
-		ContainerT BaseT::* memberPointer;
 	};
 
 

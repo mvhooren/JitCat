@@ -68,7 +68,6 @@ namespace jitcat::LLVM
 		llvm::Value* generate(const AST::CatStaticFunctionCall* staticFunctionCall, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatStaticMemberAccess* staticIdentifier, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatPrefixOperator* prefixOperator, LLVMCompileTimeContext* context);
-		llvm::Value* generate(const AST::CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
 
 		llvm::Value* generateAssign(const AST::CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);

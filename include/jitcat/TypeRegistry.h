@@ -13,9 +13,11 @@ namespace jitcat
 }
 #include "jitcat/ExternalReflector.h"
 #include "jitcat/FunctionPresenceTest.h"
+#include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeInfoDeleter.h"
+#include "jitcat/TypeTools.h"
 
 #include <cassert>
 #include <functional>
@@ -86,29 +88,16 @@ namespace jitcat::Reflection
 	};
 
 
+
+
+
 	template<typename ReflectableCVT>
 	inline jitcat::Reflection::TypeInfo* jitcat::Reflection::TypeRegistry::registerType()
 	{
 		typedef typename RemoveConst<ReflectableCVT>::type ReflectableT;
 
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).
-		const char* typeName = nullptr;
-		if constexpr (GetTypeNameAndReflectExist<ReflectableT>::value)
-		{
-			typeName = ReflectableT::getTypeName();
-		}
-		else if constexpr (std::is_enum_v<ReflectableT>)
-		{
-			typeName = getEnumName<ReflectableT>();			
-		}
-		else if constexpr (ExternalReflector<ReflectableT>::exists)
-		{
-			typeName = ExternalReflector<ReflectableT>::getTypeName();
-		}
-		else
-		{
-			static_assert(false, "Need to implement reflection for ReflectableT");
-		}
+		const char* typeName = TypeNameGetter<ReflectableT>::get();
 		std::string lowerTypeName = Tools::toLowerCase(typeName);
 		std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerTypeName);
 		if (iter != types.end())
@@ -137,8 +126,7 @@ namespace jitcat::Reflection
 				{
 					placementConstructor = [](unsigned char* buffer, std::size_t bufferSize) {};
 				}
-
-				constexpr bool isCopyConstructible = std::is_copy_constructible<ReflectableT>::value;
+				constexpr bool isCopyConstructible = TypeTools::getAllowCopyConstruction<ReflectableT>();
 				if constexpr (isCopyConstructible)
 				{
 					copyConstructor = [](unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)

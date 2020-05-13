@@ -7,7 +7,6 @@
 
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/Configuration.h"
-#include "jitcat/ContainerManipulator.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ReflectableHandle.h"
@@ -33,7 +32,6 @@ CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 
 CustomTypeInfo::~CustomTypeInfo()
 {
-	ArrayManipulator::deleteArrayManipulatorsOfType(this);
 	if (defaultData != nullptr)
 	{
 		instanceDestructor(defaultData);

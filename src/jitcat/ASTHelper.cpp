@@ -9,6 +9,7 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatBuiltInFunctionCall.h"
+#include "jitcat/CatIndirectionConversion.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -52,6 +53,22 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 		CatBuiltInFunctionCall* functionCall = new CatBuiltInFunctionCall(functionName, sourceExpression->getLexeme(), arguments, sourceExpression->getLexeme());
 		uPtr.reset(functionCall);
 	}
+}
+
+
+bool ASTHelper::doIndirectionConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& expectedType, bool allowAddressOf, IndirectionConversionMode& conversionMode)
+{
+	conversionMode = expectedType.getIndirectionConversion(uPtr->getType());
+	if (conversionMode != IndirectionConversionMode::None && isValidConversionMode(conversionMode))
+	{
+		if (!isDereferenceConversionMode(conversionMode) && !allowAddressOf)
+		{
+			return false;
+		}
+		std::unique_ptr<CatTypedExpression> expression(uPtr.release());
+		uPtr = std::make_unique<CatIndirectionConversion>(expression->getLexeme(), expectedType, conversionMode, std::move(expression));
+	}
+	return isValidConversionMode(conversionMode);
 }
 
 

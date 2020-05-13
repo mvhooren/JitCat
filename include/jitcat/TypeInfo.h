@@ -8,7 +8,6 @@
 #pragma once
 
 #include "jitcat/CatGenericType.h"
-#include "jitcat/ContainerType.h"
 #include "jitcat/ExternalReflector.h"
 #include "jitcat/MemberFlags.h"
 #include "jitcat/Reflectable.h"
@@ -147,8 +146,6 @@ namespace jitcat::Reflection
 		virtual bool isCustomType() const;
 		//Returns true if this is a ReflectedTypeInfo.
 		virtual bool isReflectedType() const;
-		//Returns true if this is an ArrayManipulator.
-		virtual bool isArrayType() const;
 
 		//Returns true if the type can be copied using memcpy without adverse side effects.
 		virtual bool isTriviallyCopyable() const;

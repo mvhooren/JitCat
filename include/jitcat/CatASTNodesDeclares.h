@@ -10,7 +10,6 @@
 namespace jitcat::AST
 {
 	class CatArgumentList;
-	class CatArrayIndex;
 	class CatAssignableExpression;
 	class CatAssignmentOperator;
 	class CatASTNode;

@@ -20,7 +20,7 @@ public:
 	static const char* getTypeName();
 
 	std::string getWhat();
-
+	static constexpr bool enableCopyConstructor = true;
 public:
 	std::string what;
 	float aLot;

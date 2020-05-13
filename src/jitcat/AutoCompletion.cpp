@@ -318,11 +318,11 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 				std::string newExpression = originalExpression;
 				std::string replacement = iter.second->memberName;
 				int numberOfCharactersToAdd = (int)replacement.size();
-				if (expressionTailEnd.size() == 0 && iter.second->catType.isContainerType())
+				/*if (expressionTailEnd.size() == 0 && iter.second->catType.isContainerType())
 				{
 					numberOfCharactersToAdd++;
 					replacement += "[";
-				}
+				}*/
 				newExpression.replace(prefixOffset, lowercasePrefix.size(), replacement);
 				results.push_back(AutoCompletionEntry(newExpression, iter.second->memberName, findLocation == 0, prefixOffset + numberOfCharactersToAdd));
 			}

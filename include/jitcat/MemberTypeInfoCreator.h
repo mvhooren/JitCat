@@ -116,28 +116,4 @@ namespace jitcat::Reflection
 	};
 
 
-	template <typename ItemType, typename AllocatorT>
-	class MemberTypeInfoCreator<std::vector<ItemType, AllocatorT> >
-	{
-	public:
-		template<typename ClassType>
-		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::vector<ItemType, AllocatorT> ClassType::* member, bool isConst, bool isWritable)
-		{
-			return new ContainerMemberInfo<ClassType, std::vector<ItemType, AllocatorT> >(memberName, member, TypeTraits<std::vector<ItemType, AllocatorT>>::toGenericType());
-		}
-	};
-
-
-	template <typename KeyType, typename ItemType, typename CompareT, typename AllocatorT>
-	class MemberTypeInfoCreator<std::map<KeyType, ItemType, CompareT, AllocatorT> >
-	{
-	public:
-		template<typename ClassType>
-		static TypeMemberInfo* getMemberInfo(const std::string& memberName, std::map<KeyType, ItemType, CompareT, AllocatorT> ClassType::* member, bool isConst, bool isWritable)
-		{
-			return new ContainerMemberInfo<ClassType, std::map<KeyType, ItemType, CompareT, AllocatorT> >(memberName, member, TypeTraits<std::map<KeyType, ItemType, CompareT, AllocatorT>>::toGenericType());
-		}
-	};
-
-
 } //End namespace jitcat::Reflection

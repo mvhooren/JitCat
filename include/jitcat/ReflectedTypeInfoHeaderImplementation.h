@@ -73,25 +73,21 @@ namespace jitcat::Reflection
 		{
 			memberInfo = new StaticBasicTypeMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
-		else if constexpr (TypeTraits<MemberT>::isSerialisableContainer())
-		{
-			memberInfo = new StaticContainerMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
-		}
 		else if constexpr (TypeTraits<MemberT>::isUniquePtr())
 		{
 			memberInfo = new StaticClassUniquePtrMemberInfo<typename TypeTraits<MemberT>::type>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (std::is_same<MemberT, ReflectableHandle>::value)
 		{
-			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType().toHandle(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst));
 		}
 		else if constexpr (std::is_pointer<MemberT>::value)
 		{
-			memberInfo = new StaticClassPointerMemberInfo(identifier, reinterpret_cast<unsigned char**>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassPointerMemberInfo(identifier, reinterpret_cast<unsigned char**>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType().toPointer(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst));
 		}
 		else if constexpr (std::is_class<MemberT>::value)
 		{
-			memberInfo = new StaticClassObjectMemberInfo(identifier, reinterpret_cast<unsigned char*>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassObjectMemberInfo(identifier, reinterpret_cast<unsigned char*>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType().toPointer(Reflection::TypeOwnershipSemantics::Value, isWritable, isConst));
 		}
 		else
 		{

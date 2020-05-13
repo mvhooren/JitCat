@@ -9,7 +9,6 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/CatASTNodes.h"
 #include "jitcat/Configuration.h"
-#include "jitcat/ContainerManipulator.h"
 #include "jitcat/Document.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/SLRParseResult.h"
@@ -67,8 +66,6 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 			else if (valueType.isBoolType())	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
 			else if (valueType.isStringType())	return std::any(reinterpret_cast<std::string(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
 			else if (valueType.isPointerToReflectableObjectType())	return valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isVectorType())	return valueType.getContainerManipulator()->createAnyPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isMapType())		return valueType.getContainerManipulator()->createAnyPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
 			else 
 			{
 				return std::any();

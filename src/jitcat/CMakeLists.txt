@@ -36,8 +36,6 @@ set(Source_Cat
 set(Source_Cat_ASTNodes
 	CatArgumentList.cpp 
 	${JitCatHeaderPath}/CatArgumentList.h 
-	CatArrayIndex.cpp 
-	${JitCatHeaderPath}/CatArrayIndex.h 
 	${JitCatHeaderPath}/CatAssignableExpression.h
 	${JitCatHeaderPath}/CatASTNode.h 
 	${JitCatHeaderPath}/CatASTNodes.h 
@@ -238,13 +236,12 @@ set(Source_Reflection
 	${JitCatHeaderPath}/ObjectInstance.h
 	ReflectableHandle.cpp
 	${JitCatHeaderPath}/ReflectableHandle.h
+	${JitCatHeaderPath}/STLTypeReflectors.h
 	TypeRegistry.cpp
 	${JitCatHeaderPath}/TypeRegistry.h
 )
 
 set(Source_Reflection_Enums
-	ContainerType.cpp
-	${JitCatHeaderPath}/ContainerType.h
 	${JitCatHeaderPath}/MemberFlags.h
 )
 
@@ -283,8 +280,6 @@ set(Source_Reflection_TypeInfo_Members
 )
 
 set(Source_Reflection_TypeInfo_MemberFunctions
-	ArrayMemberFunctionInfo.cpp
-	${JitCatHeaderPath}/ArrayMemberFunctionInfo.h
 	${JitCatHeaderPath}/BuildIndicesHelper.h
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
 	FunctionSignature.cpp
@@ -297,12 +292,11 @@ set(Source_Reflection_TypeInfo_MemberFunctions
 )
 
 set(Source_Reflection_TypeInfo_Helper
-	ContainerManipulator.cpp
-	${JitCatHeaderPath}/ContainerManipulator.h
 	${JitCatHeaderPath}/FunctionPresenceTest.h
 	${JitCatHeaderPath}/MemberTypeInfoCreator.h
 	${JitCatHeaderPath}/MemberVisibility.h
 	${JitCatHeaderPath}/TypeCaster.h
+	${JitCatHeaderPath}/TypeTools.h
 	${JitCatHeaderPath}/TypeOwnershipSemantics.h
 	TypeTraits.cpp
 	${JitCatHeaderPath}/TypeTraits.h

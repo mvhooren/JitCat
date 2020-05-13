@@ -8,7 +8,6 @@
 #pragma once
 
 #include "jitcat/CatArgumentList.h"
-#include "jitcat/CatArrayIndex.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatAssignmentOperator.h"
 #include "jitcat/CatASTNode.h"

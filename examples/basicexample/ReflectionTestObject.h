@@ -36,6 +36,8 @@ struct TestVector: public jitcat::Reflection::Reflectable
 	float w;
 	static bool enableTracking;
 	static int vectorInstances;
+	
+	static constexpr bool enableCopyConstruction = true;
 };
 
 TestVector operator*(const TestVector& v1, TestVector v2);
@@ -58,6 +60,8 @@ public:
 	TestVector multiply(TestVector lhs, TestVector rhs) const;
 
 	std::string addToString(const std::string& text, float number);
+
+	static constexpr bool enableCopyConstruction = false;
 
 private:
 	std::string text;

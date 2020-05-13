@@ -126,7 +126,6 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 	initContext(context);
 	switch (expression->getNodeType())
 	{
-		case CatASTNodeType::ArrayIndex:			return generate(static_cast<const CatArrayIndex*>(expression), context);		
 		case CatASTNodeType::AssignmentOperator:	return generate(static_cast<const CatAssignmentOperator*>(expression), context);	
 		case CatASTNodeType::BuiltInFunctionCall:	return generate(static_cast<const CatBuiltInFunctionCall*>(expression), context);		
 		case CatASTNodeType::IndirectionConversion:	return generate(static_cast<const CatIndirectionConversion*>(expression), context);
@@ -572,10 +571,13 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const CatIndirectionConve
 			assert(generatedExpression->getType()->isPointerTy());
 			assert(expressionToConvert->getType().isPointerType());
 			//Value can only be dereferenced if the pointer points to a basic type
-			if (expressionToConvert->getType().getPointeeType()->isBasicType())
+			if (expressionToConvert->getType().getPointeeType()->isBasicType() && !expressionToConvert->getType().getPointeeType()->isStringType())
 			{
-				//Dereference the pointer
-				return builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
+				return helper->createOptionalNullCheckSelect(generatedExpression, [&](LLVMCompileTimeContext* context)
+				{
+					//Dereference the pointer
+					return builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
+				}, generatedExpression->getType()->getPointerElementType(), context);
 			}
 			else
 			{
@@ -588,20 +590,33 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const CatIndirectionConve
 			assert(generatedExpression->getType()->isPointerTy());
 			assert(generatedExpression->getType()->getPointerElementType()->isPointerTy());
 			//Dereference the pointer
-			return builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
+			return helper->createOptionalNullCheckSelect(generatedExpression, [&](LLVMCompileTimeContext* context)
+			{
+				//Dereference the pointer
+				return builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
+			}, generatedExpression->getType()->getPointerElementType(), context);
+			
 		}
 		case IndirectionConversionMode::DereferencePointerToPointerTwice:
 		{
 			//Check that we are dealing with a pointer to a pointer
 			assert(generatedExpression->getType()->isPointerTy());
 			assert(generatedExpression->getType()->getPointerElementType()->isPointerTy());
-			//Dereference the pointer
-			llvm::Value* value = builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");				
-			if (expressionToConvert->getType().getPointeeType()->getPointeeType()->isBasicType())
+
+			return helper->createOptionalNullCheckSelect(generatedExpression, [&](LLVMCompileTimeContext* context)
 			{
-				value = builder->CreateLoad(value, value->getType()->getPointerElementType(), "Dereference");				
-			}
-			return value;
+				//Dereference the pointer
+				llvm::Value* value = builder->CreateLoad(generatedExpression, generatedExpression->getType()->getPointerElementType(), "Dereference");			
+				return helper->createOptionalNullCheckSelect(value, [&](LLVMCompileTimeContext* context)
+					{
+						if (expressionToConvert->getType().getPointeeType()->getPointeeType()->isBasicType() && !expressionToConvert->getType().getPointeeType()->isStringType())
+						{
+							value = builder->CreateLoad(value, value->getType()->getPointerElementType(), "Dereference");				
+						}
+						return value;
+					}, value->getType()->getPointerElementType(), context);
+			}, generatedExpression->getType()->getPointerElementType(), context);
+
 		}
 		case IndirectionConversionMode::AddressOfPointer:
 		{
@@ -613,7 +628,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const CatIndirectionConve
 		}
 		case IndirectionConversionMode::AddressOfValue:
 		{
-			if (expressionToConvert->getType().isBasicType())
+			if (expressionToConvert->getType().isBasicType() && !expressionToConvert->getType().isStringType())
 			{
 				llvm::Value* valuePtr = builder->CreateAlloca(generatedExpression->getType(), nullptr, "ValueMemory");
 				builder->CreateStore(generatedExpression, valuePtr);
@@ -917,38 +932,6 @@ llvm::Value* LLVMCodeGenerator::generate(const CatPrefixOperator* prefixOperator
 }
 
 
-llvm::Value* LLVMCodeGenerator::generate(const CatArrayIndex* arrayIndex, LLVMCompileTimeContext* context)
-{
-	CatTypedExpression* base = arrayIndex->getBase();
-	CatTypedExpression* index = arrayIndex->getIndex();
-	if (arrayIndex->isReflectedArray())
-	{
-		return generateMemberFunctionCall(arrayIndex->getArrayIndexOperatorFunction(), base, {index}, context);
-	}
-	else if (base->getNodeType() == CatASTNodeType::StaticMemberAccess)
-	{
-		CatStaticMemberAccess* staticMemberAccess = static_cast<CatStaticMemberAccess*>(base);
-		llvm::Value* containerAddress = generate(staticMemberAccess, context);
-		llvm::Value* containerIndex = generate(index, context);
-		return staticMemberAccess->getStaticMemberInfo()->generateArrayIndexCode(containerAddress, containerIndex, context);
-	}
-	else if (base->getNodeType() == CatASTNodeType::MemberAccess)
-	{
-		const TypeMemberInfo* memberInfo = static_cast<CatMemberAccess*>(base)->getMemberInfo();
-		assert(memberInfo != nullptr);
-
-		llvm::Value* containerAddress = generate(base, context);
-		llvm::Value* containerIndex = generate(index, context);
-		return memberInfo->generateArrayIndexCode(containerAddress, containerIndex, context);
-	}
-	else
-	{
-		assert(false);
-		return nullptr;
-	}
-}
-
-
 llvm::Value* LLVMCodeGenerator::generate(const CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context)
 {
 	return getBaseAddress(scopeRoot->getScopeId(), context);
@@ -1065,7 +1048,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 		}
 
 		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
-		if (!returnType.isStringType() && !returnType.isContainerType() && !returnType.isReflectableObjectType())
+		if (!returnType.isStringType() && !returnType.isReflectableObjectType())
 		{
 			llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
 			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));

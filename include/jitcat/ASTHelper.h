@@ -8,6 +8,7 @@
 #pragma once
 
 #include "jitcat/CatGenericType.h"
+#include "jitcat/IndirectionConversionMode.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/TypeOwnershipSemantics.h"
 
@@ -33,6 +34,8 @@ namespace jitcat::AST
 	public:
 		static void updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatTypedExpression* expression);
 		static void doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType);
+		//This inserts a CatIndirectionConversion before the CatTypedExpression contained in uPtr.
+		static bool doIndirectionConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& expectedType, bool allowAddressOf, IndirectionConversionMode& conversionMode);
 
 		static std::any doAssignment(CatAssignableExpression* target, CatTypedExpression* source, CatRuntimeContext* context);
 		static std::any doGetArgument(CatTypedExpression* argument, const CatGenericType& parameterType, CatRuntimeContext* context);

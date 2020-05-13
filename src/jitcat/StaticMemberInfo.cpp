@@ -48,9 +48,14 @@ llvm::Value* StaticMemberInfo::generateArrayIndexCode(llvm::Value* container, ll
 }
 
 
+StaticClassPointerMemberInfo::StaticClassPointerMemberInfo(const std::string& memberName, unsigned char** memberPointer, const CatGenericType& type):
+	StaticMemberInfo(memberName, type), memberPointer(memberPointer)
+{
+}
+
 std::any StaticClassPointerMemberInfo::getMemberReference()
 {
-	return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(*memberPointer));
+	return catType.createFromRawPointer(reinterpret_cast<uintptr_t>(memberPointer));
 }
 
 
@@ -63,8 +68,7 @@ std::any StaticClassPointerMemberInfo::getAssignableMemberReference()
 llvm::Value* StaticClassPointerMemberInfo::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	llvm::Constant* pointerAddress = context->helper->createIntPtrConstant(reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName);
-	return context->helper->loadPointerAtAddress(pointerAddress, memberName);
+	return context->helper->createPtrConstant(reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName, context->helper->toLLVMPtrType(*catType.getPointeeType()));
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM

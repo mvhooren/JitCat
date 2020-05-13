@@ -294,11 +294,11 @@ struct PseudoMemberFunctionInfoWithArgs: public MemberFunctionInfo
 			//std::decay removes const and & from the type.
 			if constexpr (std::is_void_v<ReturnT>)
 			{
-				(*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is - 1]))...);
+				(*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
 			}
 			else
 			{
-				return TypeTraits<ReturnT>::getCatValue((*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is - 1]))...));
+				return TypeTraits<ReturnT>::getCatValue((*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
 			}
 			
 		}

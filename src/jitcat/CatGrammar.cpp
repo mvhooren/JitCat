@@ -416,14 +416,9 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::variableDefinition(const Parser::ASTN
 
 AST::ASTNode* jitcat::Grammar::CatGrammar::arrayTypeName(const Parser::ASTNodeParser& nodeParser)
 {
-	CatOwnershipSemanticsNode* ownershipSemantics = nodeParser.getASTNodeByIndex<CatOwnershipSemanticsNode>(0);
-	CatTypeOrIdentifier* arrayItemTypeId = nodeParser.getASTNodeByIndex<CatTypeOrIdentifier>(1);
-	CatTypeNode* arrayItemType = arrayItemTypeId->toType();
-	CatTypeNode* arrayType = new CatTypeNode(arrayItemType, ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
-	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(arrayType, ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
-	delete ownershipSemantics;
-	delete arrayItemTypeId;
-	return typeOrIdentifier;
+	//Arrays not supported anymore. Need to re-implement.
+	assert(false);
+	return nullptr;
 }
 
 
@@ -724,7 +719,8 @@ ASTNode* CatGrammar::arrayIndexToken(const ASTNodeParser& nodeParser)
 {
 	CatTypedExpression* base = nodeParser.getASTNodeByIndex<CatTypedExpression>(0);
 	CatTypedExpression* index = nodeParser.getASTNodeByIndex<CatTypedExpression>(1);
-	return new CatArrayIndex(base, index, nodeParser.getStackLexeme());
+	std::vector<CatTypedExpression*> arguments = {index};
+	return new CatMemberFunctionCall("[]", nodeParser.getTerminalByIndex(0)->getLexeme(), base, new CatArgumentList(nodeParser.getASTNodeByIndex(1)->getLexeme(), arguments), nodeParser.getStackLexeme());
 }
 
 

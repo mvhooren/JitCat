@@ -131,10 +131,10 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 		Expression<TestVector4> testExpression(&context, "TestVector4::zero");
 		doChecks(TestVector4::zero, false, false, false, testExpression, context);
 	}
-	SECTION("Static vector4 invalid pointer conversion")
+	SECTION("Static vector4 as pointer")
 	{
 		Expression<TestVector4*> testExpression(&context, "TestVector4::zero");
-		doChecks(&TestVector4::zero, true, false, false, testExpression, context);
+		doChecks(&TestVector4::zero, false, false, false, testExpression, context);
 	}
 }
 

@@ -179,6 +179,10 @@ namespace TestObjects
 	public:
 		ReflectedObject();
 		~ReflectedObject();
+		ReflectedObject(const ReflectedObject&&) = delete;
+		ReflectedObject(const ReflectedObject&) = delete;
+		ReflectedObject& operator=(const ReflectedObject&) = delete;
+
 		void createNestedObjects();
 		void createNullObjects();
 
@@ -258,6 +262,8 @@ namespace TestObjects
 		std::vector<NestedReflectedObject*> reflectableObjectsVector;
 		std::vector<std::unique_ptr<NestedReflectedObject>> reflectableUniqueObjectsVector;
 		std::vector<float> floatVector;
+		std::vector<bool> boolVector;
+		std::map<int, float> intToFloatMap;
 		std::map<int, std::string> intToStringMap;
 		std::map<std::string, NestedReflectedObject*> reflectableObjectsMap;
 		std::map<std::string, NestedReflectedObject*, CaseInsensitiveCompare> reflectableObjectsMapCustomCompare;

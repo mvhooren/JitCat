@@ -155,6 +155,9 @@ namespace jitcat
 		bool getIsReturning() const;
 		void setReturning(bool isReturning);
 
+		std::any& addTemporary(const std::any& value);
+		void clearTemporaries();
+
 	private:
 		CatScopeID createScope(unsigned char* scopeObject, Reflection::TypeInfo* type, bool isStatic);
 		CatRuntimeContext::Scope* getScope(CatScopeID scopeId) const;
@@ -178,6 +181,8 @@ namespace jitcat
 		std::vector<std::unique_ptr<CatRuntimeContext::Scope>> scopes;
 		//A separate list of static scopes because static scopes are available accross function calls.
 		std::vector<std::unique_ptr<CatRuntimeContext::Scope>> staticScopes;
+
+		std::vector<std::any> temporaries;
 
 		CatScopeID currentStackFrameOffset;
 		std::vector<CatScopeID> stackFrameOffsets;
