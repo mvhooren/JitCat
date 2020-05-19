@@ -45,6 +45,7 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 		const char* functionName = nullptr;
 
 		if		(targetType.isIntType())	functionName = "toInt";
+		else if (targetType.isDoubleType())	functionName = "toDouble";
 		else if (targetType.isFloatType())	functionName = "toFloat";
 		else if (targetType.isBoolType())	functionName = "toBool";
 		else if (targetType.isStringType()) functionName = "toString";
@@ -163,20 +164,20 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 				*floatTarget = std::any_cast<float>(source);
 			}
 		}
+		else if (targetType.getPointeeType()->isDoubleType())
+		{
+			double* doubleTarget = std::any_cast<double*>(target);
+			if (doubleTarget != nullptr)
+			{
+				*doubleTarget = std::any_cast<double>(source);
+			}
+		}
 		else if (targetType.getPointeeType()->isBoolType())
 		{
 			bool* boolTarget = std::any_cast<bool*>(target);
 			if (boolTarget != nullptr)
 			{
 				*boolTarget = std::any_cast<bool>(source);
-			}
-		}
-		else if (targetType.getPointeeType()->isStringType())
-		{
-			std::string* stringTarget = std::any_cast<std::string*>(target);
-			if (stringTarget != nullptr)
-			{
-				*stringTarget = std::any_cast<std::string>(source);
 			}
 		}
 		else if (targetType.isPointerToReflectableObjectType())

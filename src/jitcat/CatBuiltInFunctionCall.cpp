@@ -10,6 +10,7 @@
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/LLVMCatIntrinsics.h"
@@ -85,6 +86,7 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 	{
 		case CatBuiltInFunctionType::ToVoid:			return std::any();
 		case CatBuiltInFunctionType::ToInt:				return CatGenericType::convertToInt(argumentValues[0], arguments->getArgumentType(0));
+		case CatBuiltInFunctionType::ToDouble:			return CatGenericType::convertToDouble(argumentValues[0], arguments->getArgumentType(0));
 		case CatBuiltInFunctionType::ToFloat:			return CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0));
 		case CatBuiltInFunctionType::ToBool:			return CatGenericType::convertToBoolean(argumentValues[0], arguments->getArgumentType(0));
 		case CatBuiltInFunctionType::ToString:			return CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
@@ -186,12 +188,12 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		}
 		case CatBuiltInFunctionType::StringRound:
 		{
-				std::stringstream ss;
+				Configuration::CatStringStream ss;
 				ss.precision(CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1)));
 				ss.setf(std::ios_base::fixed);
 				ss.unsetf(std::ios_base::scientific);
 				ss << std::any_cast<float>(argumentValues[0]);
-				std::string result = ss.str();
+				Configuration::CatString result = ss.str();
 				int discardedCharacters = 0;
 				if (result.find('.') != result.npos)
 				{
@@ -296,8 +298,8 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			}
 		case CatBuiltInFunctionType::FindInString:
 		{
-			std::string stringValue = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
-			std::string stringToFindValue = CatGenericType::convertToString(argumentValues[1], arguments->getArgumentType(1));
+			Configuration::CatString stringValue = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
+			Configuration::CatString stringToFindValue = CatGenericType::convertToString(argumentValues[1], arguments->getArgumentType(1));
 			std::size_t pos = stringValue.find(stringToFindValue);
 			int result = 0;
 			if (pos == stringValue.npos)
@@ -312,13 +314,13 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		}
 		case CatBuiltInFunctionType::ReplaceInString:
 		{
-			std::string stringValue = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
-			std::string stringToFindValue = CatGenericType::convertToString(argumentValues[1], arguments->getArgumentType(1));
-			std::string replacementStringValue = CatGenericType::convertToString(argumentValues[2], arguments->getArgumentType(2));
-			if (stringToFindValue != "")
+			Configuration::CatString stringValue = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
+			Configuration::CatString stringToFindValue = CatGenericType::convertToString(argumentValues[1], arguments->getArgumentType(1));
+			Configuration::CatString replacementStringValue = CatGenericType::convertToString(argumentValues[2], arguments->getArgumentType(2));
+			if (stringToFindValue != Configuration::CatString())
 			{
 				size_t startPosition = 0;
-				while ((startPosition = stringValue.find(stringToFindValue, startPosition)) != std::string::npos)
+				while ((startPosition = stringValue.find(stringToFindValue, startPosition)) != Configuration::CatString::npos)
 				{
 					stringValue.replace(startPosition, stringToFindValue.length(), replacementStringValue);
 					startPosition += replacementStringValue.length(); 
@@ -329,11 +331,11 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		case CatBuiltInFunctionType::StringLength:	return std::any((int)CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0)).size());
 		case CatBuiltInFunctionType::SubString:
 		{
-			std::string value = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
+			Configuration::CatString value = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
 			int offsetValue = CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1));
 			if (value.size() == 0 && offsetValue == 0)
 			{
-				return std::any(std::string(""));
+				return std::any(Configuration::CatString());
 			}
 			else if ((int)value.size() > offsetValue && offsetValue >= 0)
 			{
@@ -341,7 +343,7 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			}
 			else
 			{
-				return std::any(std::string(""));
+				return std::any(Configuration::CatString());
 			}
 		}
 		case CatBuiltInFunctionType::Select:
@@ -393,11 +395,12 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 		switch (function)
 		{
 			case CatBuiltInFunctionType::ToVoid:			returnType = CatGenericType::voidType;	break;
-			case CatBuiltInFunctionType::ToInt:				if (arguments->getArgumentType(0).isBasicType()) { returnType = CatGenericType::intType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to integer: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
-			case CatBuiltInFunctionType::ToFloat:			if (arguments->getArgumentType(0).isBasicType()) { returnType = CatGenericType::floatType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to float: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
-			case CatBuiltInFunctionType::ToBool:			if (arguments->getArgumentType(0).isBasicType()) { returnType = CatGenericType::boolType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to boolean: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
-			case CatBuiltInFunctionType::ToString:			if (arguments->getArgumentType(0).isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
-			case CatBuiltInFunctionType::ToPrettyString:	if (arguments->getArgumentType(0).isBasicType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
+			case CatBuiltInFunctionType::ToInt:				if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::intType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to integer: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
+			case CatBuiltInFunctionType::ToDouble:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::doubleType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to double: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
+			case CatBuiltInFunctionType::ToFloat:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::floatType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to float: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
+			case CatBuiltInFunctionType::ToBool:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::boolType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to boolean: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
+			case CatBuiltInFunctionType::ToString:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
+			case CatBuiltInFunctionType::ToPrettyString:	if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::stringType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to string: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
 			case CatBuiltInFunctionType::ToFixedLengthString:
 				if (arguments->getArgumentType(0).isIntType() && arguments->getArgumentType(1).isIntType())
 				{
@@ -584,8 +587,8 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 				}
 				break;
 			case CatBuiltInFunctionType::FindInString:
-				if (arguments->getArgumentType(0).isBasicType()
-					&& arguments->getArgumentType(1).isBasicType())
+				if ((arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType())
+					&& (arguments->getArgumentType(1).isBasicType() || arguments->getArgumentType(1).isStringType()))
 				{
 					returnType = CatGenericType::intType;
 				}
@@ -596,9 +599,9 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 				}
 				break;
 			case CatBuiltInFunctionType::ReplaceInString:
-				if (arguments->getArgumentType(0).isBasicType()
-					&& arguments->getArgumentType(1).isBasicType()
-					&& arguments->getArgumentType(2).isBasicType())
+				if ((arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType())
+					&& (arguments->getArgumentType(1).isBasicType() || arguments->getArgumentType(1).isStringType())
+					&& (arguments->getArgumentType(2).isBasicType()) || arguments->getArgumentType(2).isStringType())
 				{
 					returnType = CatGenericType::stringType;
 				}
@@ -609,7 +612,7 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 				}
 				break;
 			case CatBuiltInFunctionType::StringLength:
-				if (arguments->getArgumentType(0).isBasicType())
+				if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType())
 				{
 					returnType = CatGenericType::intType;
 				}
@@ -620,7 +623,7 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 				}
 				break;
 			case CatBuiltInFunctionType::SubString:
-				if (arguments->getArgumentType(0).isBasicType()
+				if ((arguments->getArgumentType(0).isBasicType()  || arguments->getArgumentType(0).isStringType())
 					&& arguments->getArgumentType(1).isScalarType()
 					&& arguments->getArgumentType(2).isScalarType())
 				{
@@ -764,6 +767,7 @@ bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::StringLength:
 		case CatBuiltInFunctionType::ToBool:
 		case CatBuiltInFunctionType::Abs:
+		case CatBuiltInFunctionType::ToDouble:
 		case CatBuiltInFunctionType::ToFloat:
 		case CatBuiltInFunctionType::Sin:
 		case CatBuiltInFunctionType::Cos:
@@ -829,6 +833,7 @@ std::vector<std::string> CatBuiltInFunctionCall::functionTable =
 {
 	 "toVoid",				//CatBuiltInFunctionType::ToVoid
 	 "toInt",				//CatBuiltInFunctionType::ToInt
+	 "toDouble",			//CatBuiltInFunctionType::ToDouble
 	 "toFloat",				//CatBuiltInFunctionType::ToFloat
 	 "toBool",				//CatBuiltInFunctionType::ToBool
 	 "toString",			//CatBuiltInFunctionType::ToString

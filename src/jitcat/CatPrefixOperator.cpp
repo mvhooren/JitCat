@@ -92,6 +92,12 @@ bool CatPrefixOperator::typeCheck(CatRuntimeContext* compiletimeContext, Express
 			resultType =  CatGenericType::floatType;
 			return true;
 		}
+		else if (rightType.isDoubleType()
+					&& oper == Operator::Minus)
+		{
+			resultType = CatGenericType::doubleType;
+			return true;
+		}
 		else if (rightType.isIntType()
 					&& oper == Operator::Minus)
 		{
@@ -141,6 +147,11 @@ inline std::any CatPrefixOperator::calculateExpression(CatRuntimeContext* runtim
 				&& oper == Operator::Minus)
 	{
 		return std::any(-std::any_cast<float>(rValue));
+	}
+	else if (rhs->getType().isDoubleType()
+				&& oper == Operator::Minus)
+	{
+		return std::any(-std::any_cast<double>(rValue));
 	}
 	else if (rhs->getType().isIntType()
 				&& oper == Operator::Minus)

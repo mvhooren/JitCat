@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/TypeOwnershipSemantics.h"
@@ -43,10 +44,11 @@ namespace jitcat::Reflection
 	public:
 
 		//Instances that have been created before members are added will be updated.
+		TypeMemberInfo* addDoubleMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addFloatMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
-		TypeMemberInfo* addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
+		TypeMemberInfo* addStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
 		template <typename ObjectT>
 		inline TypeMemberInfo* addObjectMember(const std::string& memberName, ObjectT* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false)
@@ -89,10 +91,11 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
 
 		//Add a static member variable
+		StaticMemberInfo* addStaticDoubleMember(const std::string& memberName, double defaultValue, bool isWritable = true, bool isConst = false);
 		StaticMemberInfo* addStaticFloatMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
 		StaticMemberInfo* addStaticIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 		StaticMemberInfo* addStaticBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
-		StaticMemberInfo* addStaticStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable = true, bool isConst = false);
+		StaticMemberInfo* addStaticStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable = true, bool isConst = false);
 		StaticMemberInfo* addStaticObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
 		template<typename ObjectT>
 		StaticMemberInfo* addStaticObjectMember(const std::string& memberName, ObjectT* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false)

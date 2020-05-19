@@ -25,13 +25,13 @@ set(Source_GeneralTests
 	OperatorOverloadingTests.cpp
 	StaticFunctionCallTests.cpp
 	StaticMemberVariableTests.cpp
+	StringTests.cpp
 )
 
 set(Source_BuiltInFunctionTests
 	MathsFunctionsTests.cpp
 	RandomFunctionsTests.cpp
 	SelectFunctionTests.cpp
-	StringFunctionsTests.cpp
 	TrigonometricFunctionsTests.cpp
 	TypeConversionFunctionTests.cpp
 )

@@ -48,6 +48,7 @@ namespace jitcat::AST
 		VariableDefinition,
 		OwnershipSemantics,
 		ErrorExpression,
+		LLVMPreGeneratedExpression
 	};
 
 } //End namespace jitcat::AST

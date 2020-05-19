@@ -76,7 +76,7 @@ TEST_CASE("Builtin functions test: Select", "[builtins][select]" )
 	}
 	SECTION("Select_string1")
 	{
-		Expression<std::string> testExpression(&context, "select(stringLength(\"10\") > 0, text, numberString)");
+		Expression<std::string> testExpression(&context, "select(\"10\".length() > 0, text, numberString)");
 		doChecks(std::string("Hello!"), false, false, false, testExpression, context);
 	}
 	SECTION("Select_string2")

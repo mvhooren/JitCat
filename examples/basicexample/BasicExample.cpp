@@ -7,6 +7,7 @@
 
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/Expression.h"
 #include "jitcat/ExpressionAny.h"
@@ -113,12 +114,16 @@ int MAIN(int argc, char* argv[])
 	//Now getValue returns a std::any
 	std::any result = anyExpression.getValue(&context);
 	//Cast the result based on the type returned by the expression
-	if (anyExpression.getType().isStringType())
+	if (anyExpression.getType().isStringValueType())
 	{
 		//using std::any_cast, we can cast it to the string that it returned
-		std::cout << "anyExpression: " << std::any_cast<std::string>(result) << "\n";
+		std::cout << "anyExpression: " << std::any_cast<Configuration::CatString>(result) << "\n";
 	}
-
+	else if (anyExpression.getType().isStringPtrType())
+	{
+		//using std::any_cast, we can cast it to the string that it returned
+		std::cout << "anyExpression: " << *std::any_cast<Configuration::CatString*>(result) << "\n";
+	}
 	return 0;
 }
 

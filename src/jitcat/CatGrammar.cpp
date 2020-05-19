@@ -10,6 +10,7 @@
 #include "jitcat/CatASTNodes.h"
 #include "jitcat/CatScopeRoot.h"
 #include "jitcat/CatTokenIds.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/ConstantToken.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/OneCharToken.h"
@@ -64,7 +65,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 		rule(Prod::InheritanceDefinition, {term(id, Identifier::Inherits), prod(Prod::TypeOrIdentifier)}, inheritanceDefinition);
 
 		//Variable definition (definition)
-		rule(Prod::VariableDefinition,  {prod(Prod::TypeOrIdentifier), term(id, Identifier::Identifier)}, variableDefinition);
+		rule(Prod::VariableDefinition, {prod(Prod::TypeOrIdentifier), term(id, Identifier::Identifier)}, variableDefinition);
 		rule(Prod::VariableDefinition, {prod(Prod::TypeOrIdentifier), term(id, Identifier::Identifier), term(one, OneChar::Assignment), prod(Prod::Expression)}, variableDefinition);
 
 		//Function definition
@@ -454,7 +455,7 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::basicTypeName(const Parser::ASTNodePa
 		case Identifier::Bool:		 type = CatGenericType::boolType; break;
 		case Identifier::Int:		 type = CatGenericType::intType; break;
 		case Identifier::Float:		 type = CatGenericType::floatType; break;
-		case Identifier::String:	 type = CatGenericType::stringType; break;
+		case Identifier::String:	 type = CatGenericType::stringMemberValuePtrType; break;
 		case Identifier::Void:		 type = CatGenericType::voidType;	break;
 	}
 	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(type, nodeParser.getStackLexeme()), ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
@@ -652,7 +653,7 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 			}
 			case ConstantType::String:
 			{
-				CatLiteral* stringLiteral = new CatLiteral(std::string(literalToken->getLexeme().data() + 1, literalToken->getLexeme().length() - 2), nodeParser.getStackLexeme());
+				CatLiteral* stringLiteral = new CatLiteral(Configuration::CatString(literalToken->getLexeme().data() + 1, literalToken->getLexeme().length() - 2), nodeParser.getStackLexeme());
 				return stringLiteral;
 			}
 			case ConstantType::Bool:

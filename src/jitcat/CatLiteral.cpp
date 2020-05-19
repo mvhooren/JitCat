@@ -7,6 +7,8 @@
 
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatLog.h"
+#include "jitcat/StringConstantPool.h"
+#include "jitcat/TypeTraits.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -21,10 +23,10 @@ jitcat::AST::CatLiteral::CatLiteral(const std::any& value, CatGenericType type, 
 }
 
 
-jitcat::AST::CatLiteral::CatLiteral(const std::string& value, const Tokenizer::Lexeme& lexeme): 
+jitcat::AST::CatLiteral::CatLiteral(const Configuration::CatString& value, const Tokenizer::Lexeme& lexeme): 
 	CatTypedExpression(lexeme), 
-	value(value), 
-	type(CatGenericType::stringType)
+	value(TypeTraits<const Configuration::CatString*>::getCatValue(StringConstantPool::getString(value))), 
+	type(CatGenericType::stringConstantValuePtrType)
 {
 }
 
@@ -69,10 +71,7 @@ CatASTNode* jitcat::AST::CatLiteral::copy() const
 
 void CatLiteral::print() const
 {
-	if (type.isIntType())			CatLog::log(std::any_cast<int>(value));
-	else if (type.isFloatType())	CatLog::log(std::any_cast<float>(value));
-	else if (type.isBoolType())		CatLog::log(std::any_cast<bool>(value));
-	else if (type.isStringType())	CatLog::log(std::any_cast<std::string>(value));
+	CatLog::log(CatGenericType::convertToString(value, type));
 }
 
 

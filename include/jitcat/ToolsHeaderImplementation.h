@@ -60,6 +60,21 @@ namespace jitcat::Tools
 	}
 
 
+	template <typename T>
+	inline T convert(const std::wstring& text)
+	{
+		return convert<T>(text.c_str());
+	}
+
+	template<>
+	inline bool convert<bool>(const wchar_t* text)
+	{
+		
+		return wcscmp(text, L"1") == 0
+			   || equalsWhileIgnoringCase(text, L"true");
+	}
+
+
 	template<>
 	inline bool convert<bool>(const char* text)
 	{
@@ -83,6 +98,14 @@ namespace jitcat::Tools
 	{
 		std::stringstream result;
 		result << content;
+		return result.str();
+	}
+
+	template<typename T>
+	std::wstring makeWString(const T& content)
+	{
+		std::wstringstream result;
+		resut << content;
 		return result.str();
 	}
 

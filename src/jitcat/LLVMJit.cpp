@@ -25,6 +25,7 @@ LLVMJit::LLVMJit():
 	nextDyLibIndex(0)
 {
     //executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
+	LLVMTypes::doubleType = llvm::Type::getDoubleTy(*context->getContext());
 	LLVMTypes::floatType = llvm::Type::getFloatTy(*context->getContext());
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
 	LLVMTypes::charType = llvm::Type::getInt8Ty(*context->getContext());
@@ -42,13 +43,10 @@ LLVMJit::LLVMJit():
 	}
 	LLVMTypes::voidType = llvm::Type::getVoidTy(*context->getContext());
 
-	LLVMTypes::stringType = llvm::ArrayType::get(llvm::Type::getInt8Ty(*context->getContext()), sizeof(std::string));
-	LLVMTypes::stringPtrType = llvm::PointerType::get(LLVMTypes::stringType, 0);
-	LLVMTypes::stringPtrTypeAsType = static_cast<llvm::Type*>(LLVMTypes::stringPtrType);
 	LLVMTypes::functionRetPtrArgPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType}, false);
 	LLVMTypes::functionRetPtrArgPtr_Ptr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::pointerType}, false);
 	LLVMTypes::functionRetPtrArgPtr_Int = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::intType}, false);
-	LLVMTypes::functionRetPtrArgPtr_StringPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::stringPtrType}, false);
+	LLVMTypes::functionRetPtrArgPtr_StringPtr = llvm::FunctionType::get(LLVMTypes::pointerType, {LLVMTypes::pointerType, LLVMTypes::pointerType}, false);
 }
 
 

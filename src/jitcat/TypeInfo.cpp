@@ -533,6 +533,13 @@ bool TypeInfo::canBeDeleted() const
 }
 
 
+bool jitcat::Reflection::TypeInfo::canBeAssignedBy(const CatGenericType& type) const
+{
+	SearchFunctionSignature searchSignature("=", {type.removeIndirection().toPointer()});
+	return getMemberFunctionInfo(searchSignature) != nullptr;
+}
+
+
 void TypeInfo::addDependentType(TypeInfo* otherType)
 {
 	assert(otherType != this);

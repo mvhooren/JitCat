@@ -43,8 +43,6 @@ inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateDereferenceCode(l
 {
 #ifdef ENABLE_LLVM
 
-	static const bool loadString = std::is_same<BasicT, std::string>::value;
-
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		LLVM::LLVMCodeGeneratorHelper* generatorHelper = compileContext->helper;
@@ -54,14 +52,7 @@ inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateDereferenceCode(l
 		llvm::Constant* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
-		if constexpr (loadString)
-		{
-			return generatorHelper->convertToPointer(addressValue, memberName, LLVM::LLVMTypes::stringPtrType);
-		}
-		else
-		{
-			return generatorHelper->loadBasicType(generatorHelper->toLLVMType(catType), addressValue, memberName);
-		}
+		return generatorHelper->loadBasicType(generatorHelper->toLLVMType(catType), addressValue, memberName);
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);
 #else 
@@ -74,8 +65,6 @@ template<typename BasicT>
 inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	static const bool isString = std::is_same<BasicT, std::string>::value;
-
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		LLVM::LLVMCodeGeneratorHelper* generatorHelper = compileContext->helper;
@@ -85,17 +74,8 @@ inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::
 		llvm::Constant* memberOffsetValue = generatorHelper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
 		//Add the offset to the data pointer.
 		llvm::Value* addressIntValue = generatorHelper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
-		if constexpr (isString)
-		{
-			//llvm::Value* lValue = generatorHelper->loadPointerAtAddress(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
-			llvm::Value* lValue = generatorHelper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
-			context->helper->createIntrinsicCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "stringAssign");
-		}
-		else
-		{
-			llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
-			context->helper->writeToPointer(addressValue, rValue);
-		}
+		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
+		context->helper->writeToPointer(addressValue, rValue);
 		return rValue;
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);

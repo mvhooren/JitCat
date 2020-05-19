@@ -21,7 +21,7 @@
 template<typename T>
 inline void checkValueIsEqual(const T& actualValue, const T& expectedValue, bool approximateFloatComparison = true)
 {
-	if constexpr (std::is_same<T, float>::value)
+	if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>)
 	{
 		if (std::isnan(expectedValue))
 		{
@@ -29,7 +29,7 @@ inline void checkValueIsEqual(const T& actualValue, const T& expectedValue, bool
 		}
 		else if (approximateFloatComparison)
 		{
-			CHECK(actualValue == Approx(expectedValue).epsilon(0.001f));
+			CHECK(actualValue == Approx(expectedValue).epsilon((T)0.001));
 		}
 		else
 		{
@@ -56,7 +56,15 @@ inline void setMemberValue(const std::string& memberName, unsigned char* instanc
 {
 	TypeMemberInfo* memberInfo = instanceType->getMemberInfo(memberName);
 	std::any assignable = memberInfo->getAssignableMemberReference(instance);
-	jitcat::AST::ASTHelper::doAssignment(assignable, TypeTraits<ResultT>::getCatValue(value), memberInfo->catType.toPointer(TypeOwnershipSemantics::Weak, true, false), memberInfo->catType);
+	if constexpr (!std::is_class_v<ResultT> || std::is_enum_v<ResultT>)
+	{
+		jitcat::AST::ASTHelper::doAssignment(assignable, TypeTraits<ResultT>::getCatValue(value), memberInfo->catType.toPointer(TypeOwnershipSemantics::Weak, true, false), memberInfo->catType);
+	}
+	else
+	{
+		ResultT* assignValue = std::any_cast<ResultT*>(assignable);
+		*assignValue = value;
+	}
 }
 
 
@@ -111,7 +119,7 @@ inline void doChecksFn(std::function<bool(const T&)> valueCheck, bool shouldHave
 	{
 		if constexpr (!std::is_same<T, void>::value)
 		{
-			//When te expression has an error, the getValue functions should return the default value
+			//When the expression has an error, the getValue functions should return the default value
 			CHECK(expression.getValue(&context) == T());
 			CHECK(expression.getInterpretedValue(&context) == T());
 		}
@@ -131,7 +139,7 @@ inline void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBe
 	{
 		if constexpr (!std::is_same<T, void>::value)
 		{
-			//When te expression has an error, the getValue functions should return the default value
+			//When the expression has an error, the getValue functions should return the default value
 			CHECK(expression.getValue(&context) == T());
 			CHECK(expression.getInterpretedValue(&context) == T());
 		}
@@ -142,18 +150,19 @@ inline void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBe
 template <typename T>
 inline void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, jitcat::ExpressionAny& expression, jitcat::CatRuntimeContext& context)
 {
+	using ValueT = typename RemoveConst<T>::type;
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
 	{
-		checkValueIsEqual(std::any_cast<T>(expression.getValue(&context)), expectedValue);
-		checkValueIsEqual(std::any_cast<T>(expression.getInterpretedValue(&context)), expectedValue);
+		checkValueIsEqual<T>(std::any_cast<ValueT>(expression.getValue(&context)), expectedValue);
+		checkValueIsEqual<T>(std::any_cast<ValueT>(expression.getInterpretedValue(&context)), expectedValue);
 	}
 	else if (shouldHaveError)
 	{
-		if constexpr (!std::is_same<T, void>::value)
+		if constexpr (!std::is_same<ValueT, void>::value)
 		{
-			//When te expression has an error, the getValue functions should return the default value
-			CHECK(std::any_cast<T>(expression.getValue(&context)) == T());
-			CHECK(std::any_cast<T>(expression.getInterpretedValue(&context)) == T());
+			//When the expression has an error, the getValue functions should return the default value
+			CHECK(std::any_cast<ValueT>(expression.getValue(&context)) == ValueT());
+			CHECK(std::any_cast<ValueT>(expression.getInterpretedValue(&context)) == ValueT());
 		}
 	}
 }
@@ -189,20 +198,34 @@ inline void checkAssignmentCustom(unsigned char* instance, jitcat::Reflection::C
 {
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context) &&  instanceType->getMemberInfo(memberName) != nullptr)
 	{
-		T originalValue = getMemberValue<T>(memberName, instance, instanceType);
+		if constexpr (!std::is_class_v<T> || std::is_enum_v<T>)
+		{
+			T originalValue = getMemberValue<T>(memberName, instance, instanceType);
 
-		expression.getValue(&context);
-		checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), expectedValue, false);
-		setMemberValue<T>(memberName, instance, instanceType, originalValue);
-		expression.getInterpretedValue(&context);
-		checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), expectedValue, false);
-		setMemberValue<T>(memberName, instance, instanceType, originalValue);
+			expression.getValue(&context);
+			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), expectedValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, originalValue);
+			expression.getInterpretedValue(&context);
+			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), expectedValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, originalValue);
+		}
+		else
+		{
+			T* originalValue = getMemberValue<T*>(memberName, instance, instanceType);
+
+			expression.getValue(&context);
+			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), expectedValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
+			expression.getInterpretedValue(&context);
+			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), expectedValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
+		}
 	}
 	else if (shouldHaveError)
 	{
 		if constexpr (!std::is_same<T, void>::value)
 		{
-			//When te expression has an error, the getValue functions should not crash
+			//When the expression has an error, the getValue functions should not crash
 			expression.getValue(&context);
 			expression.getInterpretedValue(&context);
 		}
@@ -227,7 +250,7 @@ inline void checkAssignExpression(T& assignedValue, const T& newValue, bool shou
 	{
 		if constexpr (!std::is_same<T, void>::value)
 		{
-			//When te expression has an error, the getValue functions should not crash
+			//When the expression has an error, the getValue functions should not crash
 			expression.assignValue(&context, newValue);
 			expression.assignInterpretedValue(&context, newValue);
 		}
@@ -240,20 +263,34 @@ inline void checkAssignExpressionCustom(unsigned char* instance, jitcat::Reflect
 {
 	if (doCommonChecks(&expression, shouldHaveError, false, false, context))
 	{
-		T originalValue = getMemberValue<T>(memberName, instance, instanceType);
+		if constexpr (!std::is_class_v<T> || std::is_enum_v<T>)
+		{
+			T originalValue = getMemberValue<T>(memberName, instance, instanceType);
 
-		expression.assignValue(&context, newValue);
-		checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
-		setMemberValue<T>(memberName, instance, instanceType, originalValue);
-		expression.assignInterpretedValue(&context, newValue);
-		checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
-		setMemberValue<T>(memberName, instance, instanceType, originalValue);
+			expression.assignValue(&context, newValue);
+			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, originalValue);
+			expression.assignInterpretedValue(&context, newValue);
+			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, originalValue);
+		}
+		else
+		{
+			T* originalValue = getMemberValue<T*>(memberName, instance, instanceType);
+
+			expression.assignValue(&context, newValue);
+			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
+			expression.assignInterpretedValue(&context, newValue);
+			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
+		}
 	}
 	else if (shouldHaveError)
 	{
 		if constexpr (!std::is_same<T, void>::value)
 		{
-			//When te expression has an error, the getValue functions should not crash
+			//When the expression has an error, the getValue functions should not crash
 			expression.assignValue(&context, newValue);
 			expression.assignInterpretedValue(&context, newValue);
 		}
@@ -290,7 +327,7 @@ inline void checkAnyAssignExpression(T& assignedValue, const T& newValue, bool s
 	{
 		if constexpr (!std::is_same<T, void>::value)
 		{
-			//When te expression has an error, the getValue functions should not crash
+			//When the expression has an error, the getValue functions should not crash
 			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
 			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
 		}
@@ -303,20 +340,34 @@ inline void checkAnyAssignExpressionCustom(unsigned char* instance, jitcat::Refl
 {
 	if (doCommonChecks(&expression, shouldHaveError, false, false, context))
 	{
-		T originalValue = getMemberValue<T>(memberName, instance, instanceType);
+		if constexpr (!std::is_class_v<T> || std::is_enum_v<T>)
+		{
+			T originalValue = getMemberValue<T>(memberName, instance, instanceType);
 
-		expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
-		checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
-		setMemberValue<T>(memberName, instance, instanceType, originalValue);
-		expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
-		checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
-		setMemberValue<T>(memberName, instance, instanceType, originalValue);
+			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
+			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, originalValue);
+			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, originalValue);
+		}
+		else
+		{
+			T* originalValue = getMemberValue<T*>(memberName, instance, instanceType);
+
+			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
+			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
+			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), newValue, false);
+			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
+		}
 	}
 	else if (shouldHaveError)
 	{
 		if constexpr (!std::is_same<T, void>::value)
 		{
-			//When te expression has an error, the getValue functions should not crash
+			//When the expression has an error, the getValue functions should not crash
 			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
 			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
 		}

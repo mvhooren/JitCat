@@ -7,6 +7,7 @@
 
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/TypeInfo.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
@@ -15,6 +16,198 @@ using namespace jitcat;
 using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 using namespace TestObjects;
+
+
+TEST_CASE("String Tests", "[string][operators]")
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("stringTests", &errorManager);
+	context.addScope(&reflectedObject, true);
+
+	SECTION("Constant")
+	{
+		Expression<std::string> testExpression(&context, "\"hello\"");
+		doChecks(std::string("hello"), false, true, true, testExpression, context);
+	}
+	SECTION("Constant addition int")
+	{
+		Expression<std::string> testExpression(&context, "\"hello\" + 2");
+		doChecks(std::string("hello2"), false, false, false , testExpression, context);
+	}
+	SECTION("Constant addition float")
+	{
+		Expression<std::string> testExpression(&context, "\"hello\" + 2.1f");
+		doChecks(std::string("hello2.1"), false, false, false, testExpression, context);
+	}
+	SECTION("Constant addition bool")
+	{
+		Expression<std::string> testExpression(&context, "\"hello\" + false");
+		doChecks(std::string("hello0"), false, false, false, testExpression, context);
+	}
+	SECTION("Constant addition string")
+	{
+		Expression<std::string> testExpression(&context, "\"hello\" + \"test\"");
+		doChecks(std::string("hellotest"), false, false, false, testExpression, context);
+	}
+
+	SECTION("Constant reverse addition int")
+	{
+		Expression<std::string> testExpression(&context, "2 + \"hello\"");
+		doChecks(std::string("2hello"), false, false, false, testExpression, context);
+	}
+	SECTION("Constant reverse addition float")
+	{
+		Expression<std::string> testExpression(&context, "2.1f + \"hello\"");
+		doChecks(std::string("2.1hello"), false, false, false, testExpression, context);
+	}
+	SECTION("Constant reverse addition bool")
+	{
+		Expression<std::string> testExpression(&context, "true + \"hello\"");
+		doChecks(std::string("1hello"), false, false, false, testExpression, context);
+	}
+
+	SECTION("Static Constant")
+	{
+		Expression<std::string> testExpression(&context, "stringConstant");
+		doChecks(std::string("test"), false, true, false, testExpression, context);
+	}
+	SECTION("Variable")
+	{
+		Expression<std::string> testExpression(&context, "text");
+		doChecks(std::string("Hello!"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition int constant")
+	{
+		Expression<std::string> testExpression(&context, "text + 2");
+		doChecks(std::string("Hello!2"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition float constant")
+	{
+		Expression<std::string> testExpression(&context, "text + 2.1f");
+		doChecks(std::string("Hello!2.1"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition bool constant")
+	{
+		Expression<std::string> testExpression(&context, "text + false");
+		doChecks(std::string("Hello!0"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition string constant")
+	{
+		Expression<std::string> testExpression(&context, "text + \"test\"");
+		doChecks(std::string("Hello!test"), false, false, false, testExpression, context);
+	}
+
+	SECTION("Variable addition variable")
+	{
+		Expression<std::string> testExpression(&context, "text");
+		doChecks(std::string("Hello!"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition int variable")
+	{
+		Expression<std::string> testExpression(&context, "text + theInt");
+		doChecks(std::string("Hello!42"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition float variable")
+	{
+		Expression<std::string> testExpression(&context, "text + aFloat");
+		doChecks(std::string("Hello!999.9"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition bool variable")
+	{
+		Expression<std::string> testExpression(&context, "text + no");
+		doChecks(std::string("Hello!0"), false, false, false, testExpression, context);
+	}
+	SECTION("Variable addition string variable")
+	{
+		Expression<std::string> testExpression(&context, "text + numberstring");
+		doChecks(std::string("Hello!123.4"), false, false, false, testExpression, context);
+	}
+
+	SECTION("Constant comparison false")
+	{
+		Expression<bool> testExpression(&context, "\"hello\" == \"world\"");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Constant comparison true")
+	{
+		Expression<bool> testExpression(&context, "\"hello\" == \"hello\"");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Variable comparison true")
+	{
+		Expression<bool> testExpression(&context, "\"Hello!\" == text");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Variable comparison true 2")
+	{
+		Expression<bool> testExpression(&context, "text == \"Hello!\"");
+		doChecks(true, false, false, false, testExpression, context);
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Variable comparison false")
+	{
+		Expression<bool> testExpression(&context, "\"World!\" == text");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Variable comparison false 2")
+	{
+		Expression<bool> testExpression(&context, "text == \"World!\"");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Variable-variable comparison false")
+	{
+		Expression<bool> testExpression(&context, "numberString == text");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Variable-variable comparison true")
+	{
+		Expression<bool> testExpression(&context, "text == text");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+
+
+	SECTION("Constant not-comparison true")
+	{
+		Expression<bool> testExpression(&context, "\"hello\" != \"world\"");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Constant not-comparison false")
+	{
+		Expression<bool> testExpression(&context, "\"hello\" != \"hello\"");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Variable not-comparison false")
+	{
+		Expression<bool> testExpression(&context, "\"Hello!\" != text");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Variable not-comparison false 2")
+	{
+		Expression<bool> testExpression(&context, "text != \"Hello!\"");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Variable not-comparison true")
+	{
+		Expression<bool> testExpression(&context, "\"World!\" != text");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Variable not-comparison true 2")
+	{
+		Expression<bool> testExpression(&context, "text != \"World!\"");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Variable-variable not-comparison true")
+	{
+		Expression<bool> testExpression(&context, "numberString != text");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Variable-variable not-comparison false")
+	{
+		Expression<bool> testExpression(&context, "text != text");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+}
 
 
 TEST_CASE("Builtin functions test: StringRound", "[builtins][stringround]" ) 
@@ -107,7 +300,7 @@ TEST_CASE("Builtin functions test: StringRound", "[builtins][stringround]" )
 }
 
 
-TEST_CASE("Builtin functions test: FindInString", "[builtins][findInString]" ) 
+TEST_CASE("Builtin functions test: find", "[builtins][findInString]" ) 
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
@@ -116,92 +309,102 @@ TEST_CASE("Builtin functions test: FindInString", "[builtins][findInString]" )
 
 	SECTION("FindInString_cc1")
 	{
-		Expression<int> testExpression(&context, "findInString(11.1f, 1)");
-		doChecks(0, false, true, false, testExpression, context);
+		Expression<int> testExpression(&context, "ToString(11.1f).find(ToString(1))");
+		doChecks(0, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_cc2")
 	{
-		Expression<int> testExpression(&context, "findInString(0, 11.0f)");
-		doChecks(-1, false, true, false, testExpression, context);
+		Expression<int> testExpression(&context, "ToString(0).find(ToString(11.0f))");
+		doChecks(-1, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_cc3")
 	{
-		Expression<int> testExpression(&context, "findInString(9, -9)");
-		doChecks(-1, false, true, false, testExpression, context);
+		Expression<int> testExpression(&context, "ToString(9).find(ToString(-9))");
+		doChecks(-1, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_cc4")
 	{
-		Expression<int> testExpression(&context, "findInString(\"test\", \"t\")");
-		doChecks(0, false, true, false, testExpression, context);
+		Expression<int> testExpression(&context, "\"test\".find(\"t\")");
+		doChecks(0, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_cc5")
 	{
-		Expression<int> testExpression(&context, "findInString(\"test\", \"est\")");
-		doChecks(1, false, true, false, testExpression, context);
+		Expression<int> testExpression(&context, "\"test\".find(\"est\")");
+		doChecks(1, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_cc6")
 	{
-		Expression<int> testExpression(&context, "findInString(\"test\", \"xxx\")");
-		doChecks(-1, false, true, false, testExpression, context);
+		Expression<int> testExpression(&context, "\"test\".find(\"xxx\")");
+		doChecks(-1, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_float1")
 	{
-		Expression<int> testExpression(&context, "findInString(aFloat, 9)");
+		Expression<int> testExpression(&context, "ToString(aFloat).find(ToString(9))");
 		doChecks(0, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_float2")
 	{
-		Expression<int> testExpression(&context, "findInString(aFloat, 1000.0f)");
+		Expression<int> testExpression(&context, "ToString(aFloat).find(ToString(1000.0f))");
 		doChecks(-1, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_int1")
 	{
-		Expression<int> testExpression(&context, "findInString(largeInt, 7)");
+		Expression<int> testExpression(&context, "ToString(largeInt).find(ToString(7))");
 		doChecks(6, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_int2")
 	{
-		Expression<int> testExpression(&context, "findInString(largeInt, -largeInt)");
+		Expression<int> testExpression(&context, "ToString(largeInt).find(ToString(-largeInt))");
 		doChecks(-1, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_int3")
 	{
-		Expression<int> testExpression(&context, "findInString(largeInt, largeInt)");
+		Expression<int> testExpression(&context, "ToString(largeInt).find(ToString(largeInt))");
 		doChecks(0, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_bool")
 	{
-		Expression<int> testExpression(&context, "findInString(aBoolean, \"1\")");
+		Expression<int> testExpression(&context, "ToString(aBoolean).find(\"1\")");
 		doChecks(0, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_stringConst")
 	{
-		Expression<int> testExpression(&context, "findInString(\"10\", 10)");
-		doChecks(0, false, true, false, testExpression, context);
+		Expression<int> testExpression(&context, "\"10\".find(ToString(10))");
+		doChecks(0, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_string")
 	{
-		Expression<int> testExpression(&context, "findInString(numberString, \".4\")");
+		Expression<int> testExpression(&context, "numberString.find(\".4\")");
 		doChecks(3, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_string2")
 	{
-		Expression<int> testExpression(&context, "findInString(text, \"ll\")");
+		Expression<int> testExpression(&context, "text.find(\"ll\")");
 		doChecks(2, false, false, false, testExpression, context);
+	}
+	SECTION("FindInString_nullString")
+	{
+		Expression<int> testExpression(&context, "nullObject.text.find(\"ll\")");
+		doChecks(0, false, false, false, testExpression, context);
+	}
+	SECTION("FindInString_nullArg")
+	{
+		Expression<int> testExpression(&context, "text.find(nullObject.text)");
+		doChecks(-1, false, false, false, testExpression, context);
 	}
 	SECTION("FindInString_noarg")
 	{
-		Expression<int> testExpression(&context, "findInString()");
+		Expression<int> testExpression(&context, "text.find()");
 		doChecks(0, true, false, false, testExpression, context);
 	}
 	SECTION("FindInString_morearg")
 	{
-		Expression<int> testExpression(&context, "findInString(theInt, aFloat, 10)");
+		Expression<int> testExpression(&context, "text.find(theInt, aFloat, 10)");
 		doChecks(0, true, false, false, testExpression, context);
 	}
 	SECTION("FindInString_obj")
 	{
-		Expression<int> testExpression(&context, "findInString(nestedObject, 10)");
+		Expression<int> testExpression(&context, "text.find(nestedObject, 10)");
 		doChecks(0, true, false, false, testExpression, context);
 	}
 }

@@ -82,7 +82,6 @@ std::any CatMemberAccess::executeAssignable(CatRuntimeContext* runtimeContext)
 	if (memberInfo != nullptr && runtimeContext != nullptr)
 	{
 		std::any value = memberInfo->getAssignableMemberReference(reinterpret_cast<unsigned char*>(base->getType().getRawPointer(baseValue)));
-		runtimeContext->clearTemporaries();
 		return value;
 	}
 	assert(false);

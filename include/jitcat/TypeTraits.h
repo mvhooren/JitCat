@@ -12,12 +12,12 @@
 #include "jitcat/FunctionPresenceTest.h"
 #include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeTools.h"
 
 #include <any>
 #include <atomic>
 #include <map>
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace jitcat
@@ -64,23 +64,7 @@ namespace jitcat
 
 		static const char* getTypeName() 
 		{ 
-			if constexpr (Reflection::GetTypeNameAndReflectExist<ObjectT>::value)
-			{
-				return ReflectableT::getTypeName();
-			}
-			else if constexpr (std::is_enum_v<ObjectT>)
-			{
-				return getEnumName<ObjectT>();			
-			}
-			else if constexpr (ExternalReflector<ObjectT>::exists)
-			{
-				return ExternalReflector<ObjectT>::getTypeName();
-			}
-			else
-			{
-				static_assert(false, "Need to implement reflection for ObjectT");
-				return "";
-			}
+			return Reflection::TypeNameGetter<ObjectT>::get();
 		}
 		static std::any getCatValue(void) { return std::any(ObjectT());}
 		static std::any getCatValue(ObjectT& value);
@@ -293,6 +277,7 @@ namespace jitcat
 		static inline const CatGenericType& toGenericType() 
 		{ 
 			if constexpr		(std::is_same_v<float, FundamentalT>)	return CatGenericType::floatType; 
+			else if constexpr	(std::is_same_v<double, FundamentalT>)	return CatGenericType::doubleType; 
 			else if constexpr	(std::is_same_v<int,   FundamentalT>)	return CatGenericType::intType;
 			else if constexpr	(std::is_same_v<bool,  FundamentalT>)	return CatGenericType::boolType;
 			else														static_assert(false, "Fundamental type not yet supported by JitCat.");
@@ -308,10 +293,7 @@ namespace jitcat
 		static FundamentalT stripValue(FundamentalT value) { return value; }
 		static constexpr const char* getTypeName()
 		{
-			if constexpr		(std::is_same_v<float, FundamentalT>)	return "float"; 
-			else if constexpr	(std::is_same_v<int,   FundamentalT>)	return "int";
-			else if constexpr	(std::is_same_v<bool,  FundamentalT>)	return "bool";
-			else														static_assert(false, "Fundamental type not yet supported by JitCat.");	
+			return Reflection::TypeNameGetter<FundamentalT>::get();
 		}
 
 		static const TypeID getTypeId() {return TypeIdentifier<FundamentalT>::getIdentifier();}
@@ -320,33 +302,6 @@ namespace jitcat
 		typedef FundamentalT type;
 		typedef FundamentalT cachedType;
 		typedef FundamentalT functionParameterType;
-	};
-
-
-	template <typename StringT>
-	class TypeTraits<StringT, std::enable_if_t<std::is_same_v<std::remove_cv_t<StringT>, std::string>>>
-	{
-	public:
-		static const CatGenericType& toGenericType() { return CatGenericType::stringType; }
-		static constexpr bool isReflectableType() { return false; }
-		static constexpr bool isUniquePtr() { return false; }
-
-		static std::any getCatValue(const std::string& value) { return std::any(value);}
-		static std::string getDefaultValue() { return Tools::empty; }
-		static std::any getDefaultCatValue() { return std::any(TypeTraits<std::string>::getDefaultValue()); }
-		static std::string getValue(const std::any& value) { return std::any_cast<std::string>(value);}
-		static const std::string& stripValue(const std::string& value) { return value; }
-		static const char* getTypeName()
-		{
-			return "string";
-		}
-
-		static const TypeID getTypeId() {return TypeIdentifier<StringT>::getIdentifier();}
-
-		typedef std::string getValueType;
-		typedef std::string type;
-		typedef std::string cachedType;
-		typedef const std::string& functionParameterType;
 	};
 
 

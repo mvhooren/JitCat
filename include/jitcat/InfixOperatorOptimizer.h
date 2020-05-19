@@ -44,7 +44,7 @@ namespace jitcat::AST
 		static CatTypedExpression* tryCollapseLogicalAnd(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
 		static CatTypedExpression* tryCollapseLogicalOr(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs);
 
-		static bool typedExpressionEqualsConstant(CatTypedExpression* expression, float constant);
+		static bool typedExpressionEqualsConstant(CatTypedExpression* expression, double constant);
 		static bool typedExpressionEqualsConstant(CatTypedExpression* expression, bool constant);
 	};
 

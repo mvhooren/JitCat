@@ -8,14 +8,19 @@
 //This file contains external reflectors for various std library containers.
 #pragma once
 
+#include "jitcat/Configuration.h"
 #include "jitcat/ExternalReflector.h"
+#include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/TypeTools.h"
+#include "jitcat/Tools.h"
 
 #include <cassert>
 #include <array>
 #include <deque>
 #include <map>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -412,4 +417,143 @@ namespace jitcat::Reflection
 			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<KeyT>() && TypeTools::getAllowCopyConstruction<ValueT>();
 	}; 
 
+
+	//Reflection for std::string
+	template <class CharT, class TraitsT, class AllocatorT>
+	class ExternalReflector<std::basic_string<CharT, TraitsT, AllocatorT>>
+	{
+		using StringT = std::basic_string<CharT, TraitsT, AllocatorT>;
+		using StringStreamT = std::basic_stringstream<CharT, TraitsT, AllocatorT>;
+
+		public:
+			static const char* getTypeName()
+			{
+				if constexpr (std::is_same_v<StringT, Configuration::CatString>)
+				{
+					return "string";
+				}
+				else
+				{
+					static const std::string stringName = jitcat::Tools::append("string<", TypeNameGetter<CharT>::get() , 
+																					  ",", TypeIdentifier<TraitsT>::getIdentifier(), 
+																					  ",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+					return stringName.c_str();
+				}
+			}
+
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
+			{
+				typeInfo
+					.addMember("+", &ExternalReflector<StringT>::calculateSimpleStringAddition)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<int, const StringT*>)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, int>)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<float, const StringT*>)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, float>)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<bool, const StringT*>)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, bool>)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, double>)
+					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<double, const StringT*>)
+					.addMember("==", &ExternalReflector<StringT>::stringEquals)
+					.addMember("!=", &ExternalReflector<StringT>::stringNotEquals)
+					.addMember<StringT, StringT&, const StringT&>("=", &StringT::operator=)
+					.addPseudoMemberFunction<StringT>("length", &ExternalReflector<StringT>::length)
+					.addPseudoMemberFunction<StringT, int, const StringT*>("find", &ExternalReflector<StringT>::find)
+					.addPseudoMemberFunction<StringT, int, const StringT*, int>("find", &ExternalReflector<StringT>::find);
+			}
+
+			static constexpr bool exists = true;
+
+		private:
+
+			static int length(StringT* string)
+			{
+				if (string != nullptr)
+				{
+					return (int)string->length();
+				}
+				else
+				{
+					return 0;
+				}
+			}
+
+			static inline StringT calculateSimpleStringAddition(const StringT* lString, const StringT* rString)
+			{
+				if (lString != nullptr && rString != nullptr)	return *lString + *rString;
+				else if (lString != nullptr)					return *lString;
+				else if (rString != nullptr)					return *rString;
+				else											return StringT();
+			}
+
+
+			static bool stringEquals(const StringT* lString, const StringT* rString)
+			{
+				if (lString != nullptr && rString != nullptr)
+				{
+					return *lString == *rString;
+				}
+				return false;
+			}
+
+
+			static bool stringNotEquals(const StringT* lString, const StringT* rString)
+			{
+				if (lString != nullptr && rString != nullptr)
+				{
+					return *lString != *rString;
+				}
+				return false;
+			}
+
+
+			static int find(StringT* thisString, const StringT* stringToFind)
+			{
+				if (thisString != nullptr && stringToFind != nullptr)
+				{
+					return (int)thisString->find(*stringToFind);
+				}
+				else
+				{
+					return -1;
+				}
+			}
+
+
+			static int find(StringT* thisString, const StringT* stringToFind, int offset)
+			{
+				if (thisString != nullptr && stringToFind != nullptr && offset >= 0)
+				{
+					return (int)thisString->find(*stringToFind, (std::size_t)offset);
+				}
+				else
+				{
+					return -1;
+				}
+			}
+
+
+			template<typename LeftT, typename RightT>
+			static inline StringT calculateStringAddition(LeftT lValue, RightT rValue)
+			{
+				StringStreamT stream = StringStreamT();
+				if constexpr (std::is_same_v<LeftT, const StringT*>)
+				{
+					if (lValue != nullptr)	stream << *lValue;
+				}
+				else
+				{
+					stream << lValue;
+				}
+
+				if constexpr (std::is_same_v<RightT, const StringT*>)
+				{
+					if (rValue != nullptr)	stream << *rValue;
+				}
+				else
+				{
+					stream << rValue;
+				}
+				return stream.str();
+			}
+	};
 }

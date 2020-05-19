@@ -436,8 +436,8 @@ void jitcat::CatRuntimeContext::setReturning(bool isReturning)
 
 std::any& jitcat::CatRuntimeContext::addTemporary(const std::any& value)
 {
-	temporaries.push_back(value);
-	return temporaries.back();
+	temporaries.emplace_back(std::make_unique<std::any>(value));
+	return *temporaries.back().get();
 }
 
 

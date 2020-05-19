@@ -203,10 +203,8 @@ bool CatGenericType::isValidType() const
 bool CatGenericType::isBasicType() const
 {
 	return specificType == SpecificType::Basic 
-						   && (	  basicType == BasicType::Bool
-							   || basicType == BasicType::Int
-							   || basicType == BasicType::Float
-							   || basicType == BasicType::String);
+						   && basicType != BasicType::None
+						   && basicType != BasicType::Count;
 }
 
 
@@ -222,15 +220,39 @@ bool CatGenericType::isIntType() const
 }
 
 
+bool jitcat::CatGenericType::isIntegeralType() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::Int;
+}
+
+
 bool CatGenericType::isFloatType() const
 {
 	return specificType == SpecificType::Basic && basicType == BasicType::Float;
 }
 
 
+bool jitcat::CatGenericType::isDoubleType() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::Double;
+}
+
+
 bool CatGenericType::isStringType() const
 {
-	return specificType == SpecificType::Basic && basicType == BasicType::String;
+	return isStringPtrType() || isStringValueType();
+}
+
+
+bool jitcat::CatGenericType::isStringPtrType() const
+{
+	return isPointerType() && *getPointeeType() == CatGenericType::stringType;
+}
+
+
+bool jitcat::CatGenericType::isStringValueType() const
+{
+	return compare(CatGenericType::stringType, false, true);
 }
 
 
@@ -238,6 +260,7 @@ bool CatGenericType::isScalarType() const
 {
 	return specificType == SpecificType::Basic 
 						   && (	  basicType == BasicType::Float 
+							   || basicType == BasicType::Double 
 							   || basicType == BasicType::Int);
 }
 
@@ -302,6 +325,8 @@ bool jitcat::CatGenericType::isAssignableType() const
 	return specificType == SpecificType::Pointer
 		   && pointeeType->isWritable()
 		   && (	  (pointeeType->isBasicType())
+			   || (pointeeType->isReflectableObjectType() 
+				   && pointeeType->getObjectType()->canBeAssignedBy(*this))
 			   || (pointeeType->isEnumType())
 			   || (pointeeType->isReflectableHandleType())
 			   || (pointeeType->isPointerType() && pointeeType->pointeeType->isReflectableObjectType()));
@@ -311,15 +336,15 @@ bool jitcat::CatGenericType::isAssignableType() const
 
 bool jitcat::CatGenericType::isNullptrType() const
 {
-	return *this == nullptrType;
+	return isPointerType() && getPointeeType()->isReflectableObjectType() && getPointeeType()->getObjectType()->getTypeName() == "nullptr";
 }
 
 
 bool jitcat::CatGenericType::isTriviallyCopyable() const
 {
-	return (isBasicType() && basicType != BasicType::String)
+	return (isBasicType() 
 		   || (isReflectableObjectType() && nestedType->isTriviallyCopyable())
-		   || (isEnumType() && basicType != BasicType::String);
+		   || isEnumType());
 }
 
 
@@ -445,7 +470,7 @@ IndirectionConversionMode jitcat::CatGenericType::getIndirectionConversion(const
 {
 	int fromIndirection = 0;
 	int toIndirection = 0;
-	if (removeIndirection(toIndirection) == other.removeIndirection(fromIndirection))
+	if (removeIndirection(toIndirection).compare(other.removeIndirection(fromIndirection), false, false))
 	{
 		if (toIndirection == fromIndirection)
 		{
@@ -589,7 +614,7 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 			case CatInfixOperatorType::Plus:			
 				if (isStringType() || rightType.isStringType())
 				{
-					resultInfo.setResultType(CatGenericType::stringType);
+					resultInfo.setResultType(CatGenericType::stringWeakPtrType);
 					return resultInfo;
 				}
 				//Intentional lack of break
@@ -598,7 +623,7 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 			case CatInfixOperatorType::Divide:
 				if (isScalarType() && rightType.isScalarType())
 				{
-					resultInfo.setResultType(CatGenericType((isIntType() && rightType.isIntType()) ? BasicType::Int : BasicType::Float));
+					resultInfo.setResultType(CatGenericType(getWidestType(basicType, rightType.basicType)));
 					return resultInfo;
 				}
 				break;
@@ -773,8 +798,8 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 					{
 						case BasicType::Int:	return std::any(reinterpret_cast<int*>(pointer));
 						case BasicType::Float:	return std::any(reinterpret_cast<float*>(pointer));
+						case BasicType::Double:	return std::any(reinterpret_cast<double*>(pointer));
 						case BasicType::Bool:	return std::any(reinterpret_cast<bool*>(pointer));
-						case BasicType::String:	return std::any(reinterpret_cast<std::string*>(pointer));
 					}
 				} break;
 				case SpecificType::Enum:
@@ -825,8 +850,8 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 			{
 				case BasicType::Int:	return std::any(*reinterpret_cast<int*>(pointer));
 				case BasicType::Float:	return std::any(*reinterpret_cast<float*>(pointer));
+				case BasicType::Double:	return std::any(*reinterpret_cast<double*>(pointer));
 				case BasicType::Bool:	return std::any(*reinterpret_cast<bool*>(pointer));
-				case BasicType::String:	return std::any(*reinterpret_cast<std::string*>(pointer));
 			}
 		} break;
 		case SpecificType::Enum:
@@ -844,8 +869,8 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 					{
 						case BasicType::Int:	return std::any(*reinterpret_cast<int**>(pointer));
 						case BasicType::Float:	return std::any(*reinterpret_cast<float**>(pointer));
+						case BasicType::Double:	return std::any(*reinterpret_cast<double**>(pointer));
 						case BasicType::Bool:	return std::any(*reinterpret_cast<bool**>(pointer));
-						case BasicType::String:	return std::any(*reinterpret_cast<std::string**>(pointer));
 					}
 				} break;
 				case SpecificType::ReflectableObject:
@@ -877,8 +902,8 @@ std::any CatGenericType::createDefault() const
 			{
 				case BasicType::Int:	return 0;
 				case BasicType::Float:	return 0.0f;
+				case BasicType::Double:	return 0.0;
 				case BasicType::Bool:	return false;
-				case BasicType::String:	return std::string();
 				case BasicType::Void:	return std::any();
 			}
 		} break;
@@ -897,8 +922,8 @@ std::any CatGenericType::createDefault() const
 					{
 					case BasicType::Int:	return (int*)nullptr;
 					case BasicType::Float:	return (float*)nullptr;
+					case BasicType::Double:	return (double*)nullptr;
 					case BasicType::Bool:	return (bool*)nullptr;
-					case BasicType::String: return (std::string*)nullptr;
 					case BasicType::Void:	return (void*)nullptr;
 					}
 				}
@@ -943,8 +968,8 @@ std::size_t jitcat::CatGenericType::getTypeSize() const
 			{
 				case BasicType::Bool:	return sizeof(bool);
 				case BasicType::Float:	return sizeof(float);
+				case BasicType::Double:	return sizeof(double);
 				case BasicType::Int:	return sizeof(int);
-				case BasicType::String:	return sizeof(std::string);
 				case BasicType::Void:	return 0;
 			}
 			break;
@@ -967,7 +992,7 @@ std::size_t jitcat::CatGenericType::getTypeSize() const
 }
 
 
-std::any CatGenericType::convertToType(std::any value, const CatGenericType& valueType) const
+std::any CatGenericType::convertToType(std::any& value, const CatGenericType& valueType) const
 {
 	if (this->operator==(valueType))
 	{
@@ -982,54 +1007,93 @@ std::any CatGenericType::convertToType(std::any value, const CatGenericType& val
 				switch (valueType.basicType)
 				{
 					case BasicType::Float:	return (int)std::any_cast<float>(value);
+					case BasicType::Double:	return (int)std::any_cast<double>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1 : 0;
-					case BasicType::String:	return atoi(std::any_cast<std::string>(value).c_str());
 				}
 			} break;
 			case BasicType::Float:
 			{
 				switch (valueType.basicType)
 				{
-					case BasicType::Int:		return (float)std::any_cast<int>(value);
+					case BasicType::Double:	return (float)std::any_cast<double>(value);
+					case BasicType::Int:	return (float)std::any_cast<int>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1.0f : 0.0f;
-					case BasicType::String:	return (float)atof(std::any_cast<std::string>(value).c_str());
+				}
+			} break;
+			case BasicType::Double:
+			{
+				switch (valueType.basicType)
+				{
+					case BasicType::Float:	return (double)std::any_cast<float>(value);
+					case BasicType::Int:	return (double)std::any_cast<int>(value);
+					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1.0 : 0.0;
 				}
 			} break;
 			case BasicType::Bool:
 			{
 				switch (valueType.basicType)
 				{
+					case BasicType::Double:	return std::any_cast<double>(value) > 0.0;
 					case BasicType::Float:	return std::any_cast<float>(value) > 0.0f;
 					case BasicType::Int:		return std::any_cast<int>(value) > 0;
-					case BasicType::String:
-					{
-						std::string strValue = std::any_cast<std::string>(value);
-						return  strValue == "true" || atoi(strValue.c_str()) > 0;
-					}
 				}
 			} break;
-			case BasicType::String:
+		}
+	}
+	else if (isStringValueType() && valueType.isBasicType())
+	{
+		switch (valueType.basicType)
+		{
+			case BasicType::Double:
 			{
-				switch (valueType.basicType)
-				{
-					case BasicType::Float:
-					{
-						std::ostringstream ss;
-						ss << std::any_cast<float>(value);
-						return std::string(ss.str());
-					}
-					case BasicType::Int:
-					{
-						std::ostringstream ss;
-						ss << std::any_cast<int>(value);
-						return std::string(ss.str());
-					}
-					case BasicType::Bool:		
-					{
-						return std::any_cast<bool>(value) ? std::string("1") : std::string("0");
-					}
-				}
-			} break;
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<double>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::Float:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<float>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::Int:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<int>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::Bool:		
+			{
+				return std::any_cast<bool>(value) ? Tools::StringConstants<Configuration::CatString>::oneStr : Tools::StringConstants<Configuration::CatString>::zeroStr;
+			}
+		}
+	}
+	else if (isBasicType() && valueType.isStringValueType())
+	{
+		switch(basicType)
+		{
+			case BasicType::Int:	return Tools::StringConstants<Configuration::CatString>::stringToInt(std::any_cast<Configuration::CatString>(value));
+			case BasicType::Float:	return Tools::StringConstants<Configuration::CatString>::stringToFloat(std::any_cast<Configuration::CatString>(value));
+			case BasicType::Double:	return Tools::StringConstants<Configuration::CatString>::stringToDouble(std::any_cast<Configuration::CatString>(value));
+			case BasicType::Bool:
+			{
+				Configuration::CatString strValue = std::any_cast<Configuration::CatString>(value);
+				return  strValue == Tools::StringConstants<Configuration::CatString>::trueStr || Tools::StringConstants<Configuration::CatString>::stringToInt(strValue) > 0;
+			}
+		}
+	}
+	else if (isBasicType() && valueType.isStringPtrType())
+	{
+		switch(basicType)
+		{
+			case BasicType::Int:	return Tools::StringConstants<Configuration::CatString>::stringToInt(*std::any_cast<Configuration::CatString*>(value));
+			case BasicType::Float:	return Tools::StringConstants<Configuration::CatString>::stringToFloat(*std::any_cast<Configuration::CatString*>(value));
+			case BasicType::Double:	return Tools::StringConstants<Configuration::CatString>::stringToDouble(*std::any_cast<Configuration::CatString*>(value));
+			case BasicType::Bool:
+			{
+				Configuration::CatString* strValue = std::any_cast<Configuration::CatString*>(value);
+				return  *strValue == Tools::StringConstants<Configuration::CatString>::trueStr || Tools::StringConstants<Configuration::CatString>::stringToInt(*strValue) > 0;
+			}
 		}
 	}
 	else if (int myIndirectionCount, valueIndirectionCount; 
@@ -1071,8 +1135,8 @@ void CatGenericType::printValue(std::any& value)
 			{
 				case BasicType::Int:	CatLog::log(std::any_cast<int>(value)); break;
 				case BasicType::Float:	CatLog::log(std::any_cast<float>(value)); break;
-				case BasicType::Bool:	CatLog::log(std::any_cast<bool>(value) ? "true" : "false"); break;
-				case BasicType::String:	CatLog::log("\""); CatLog::log(std::any_cast<std::string>(value)); CatLog::log("\""); break;
+				case BasicType::Double:	CatLog::log(std::any_cast<double>(value)); break;
+				case BasicType::Bool:	CatLog::log(std::any_cast<bool>(value) ? Tools::StringConstants<Configuration::CatString>::trueStr : Tools::StringConstants<Configuration::CatString>::falseStr); break;
 			}
 		} break;
 		case SpecificType::Enum:
@@ -1083,16 +1147,27 @@ void CatGenericType::printValue(std::any& value)
 			switch (basicType)
 			{
 				case BasicType::Int:	CatLog::log(*reinterpret_cast<const unsigned int*>(enumPtr)); break;
+				case BasicType::Double:	CatLog::log(*reinterpret_cast<const double*>(enumPtr)); break;
 				case BasicType::Float:	CatLog::log(*reinterpret_cast<const float*>(enumPtr)); break;
 				case BasicType::Bool:	CatLog::log(*reinterpret_cast<const bool*>(enumPtr)); break;
-				case BasicType::String:	CatLog::log(*reinterpret_cast<const std::string*>(enumPtr)); break;
 			}
 			
 		} break;
 		case SpecificType::ReflectableObject:
 		case SpecificType::Pointer:
 		{
-			 CatLog::log(Tools::makeString(getRawPointer(value))); 		
+			if (isStringValueType())
+			{
+				CatLog::log("\""); CatLog::log(std::any_cast<Configuration::CatString>(value)); CatLog::log("\"");
+			}
+			else if (isStringPtrType())
+			{
+				CatLog::log("\""); CatLog::log(*std::any_cast<Configuration::CatString*>(value)); CatLog::log("\"");
+			}
+			else
+			{
+				CatLog::log(Tools::makeString(getRawPointer(value))); 		
+			}
 		} break;
 	}
 }
@@ -1101,6 +1176,12 @@ void CatGenericType::printValue(std::any& value)
 float CatGenericType::convertToFloat(std::any value, const CatGenericType& valueType)
 {
 	return std::any_cast<float>(floatType.convertToType(value, valueType));
+}
+
+
+double jitcat::CatGenericType::convertToDouble(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<double>(doubleType.convertToType(value, valueType));
 }
 
 
@@ -1116,9 +1197,20 @@ bool CatGenericType::convertToBoolean(std::any value, const CatGenericType& valu
 }
 
 
-std::string CatGenericType::convertToString(std::any value, const CatGenericType& valueType)
+Configuration::CatString CatGenericType::convertToString(std::any value, const CatGenericType& valueType)
 {
-	return std::any_cast<std::string>(stringType.convertToType(value, valueType));
+	if (valueType.isStringType())
+	{
+		return *std::any_cast<Configuration::CatString*>(value);
+	}
+	else if (valueType == CatGenericType::stringType)
+	{
+		return std::any_cast<Configuration::CatString>(value);
+	}
+	else
+	{
+		return std::any_cast<Configuration::CatString>(stringType.convertToType(value, valueType));
+	}
 }
 
 
@@ -1355,9 +1447,9 @@ std::any jitcat::CatGenericType::construct() const
 					assert(false);
 					return std::any();
 				case BasicType::Float:	return 0.0f;
+				case BasicType::Double:	return 0.0;
 				case BasicType::Int:	return 0;
 				case BasicType::Bool:	return false;
-				case BasicType::String: return std::string();
 			} 
 		} return true;
 		case SpecificType::Pointer:
@@ -1417,9 +1509,9 @@ bool jitcat::CatGenericType::placementConstruct(unsigned char* buffer, std::size
 				case BasicType::None:
 					return false;
 				case BasicType::Float:	*reinterpret_cast<float*>(buffer) = 0.0f;	break;
+				case BasicType::Double:	*reinterpret_cast<double*>(buffer) = 0.0f;	break;
 				case BasicType::Int:	*reinterpret_cast<int*>(buffer) = 0;		break;
 				case BasicType::Bool:	*reinterpret_cast<bool*>(buffer) = false;	break;
-				case BasicType::String: new(buffer) std::string();					break;
 			} 
 		} return true;
 		case SpecificType::Pointer:
@@ -1470,9 +1562,9 @@ bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::siz
 				case BasicType::None:
 					return false;
 				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<const float*>(sourceBuffer);	break;
+				case BasicType::Double:	*reinterpret_cast<double*>(targetBuffer) = *reinterpret_cast<const double*>(sourceBuffer);	break;
 				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<const int*>(sourceBuffer);		break;
-				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<const bool*>(sourceBuffer);	break;
-				case BasicType::String: new(targetBuffer) std::string(*reinterpret_cast<const std::string*>(sourceBuffer));		break;
+				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<const bool*>(sourceBuffer);		break;
 			} 
 		} return true;
 		case SpecificType::Pointer:
@@ -1575,9 +1667,9 @@ bool jitcat::CatGenericType::moveConstruct(unsigned char* targetBuffer, std::siz
 				case BasicType::None:
 					return false;
 				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<float*>(sourceBuffer);	break;
+				case BasicType::Double:	*reinterpret_cast<double*>(targetBuffer) = *reinterpret_cast<double*>(sourceBuffer);break;
 				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<int*>(sourceBuffer);		break;
 				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<bool*>(sourceBuffer);	break;
-				case BasicType::String:	new (targetBuffer) std::string(std::move(*reinterpret_cast<std::string*>(sourceBuffer))); break;
 			} 
 		} return true;
 		case SpecificType::Pointer:
@@ -1643,10 +1735,6 @@ bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_
 		case SpecificType::Enum:
 		case SpecificType::Basic:
 		{
-			if (basicType == BasicType::String)
-			{
-				reinterpret_cast<std::string*>(buffer)->~basic_string();
-			}
 			return true;
 		} break;
 		case SpecificType::Pointer:
@@ -1712,10 +1800,10 @@ void jitcat::CatGenericType::toBuffer(const std::any& value, const unsigned char
 				case BasicType::Void:
 				case BasicType::None:
 					assert(false); break;
-				case BasicType::Float:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const float>(&value)); break;
-				case BasicType::Int:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const int>(&value));			break;
+				case BasicType::Float:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const float>(&value));	break;
+				case BasicType::Double:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const double>(&value));	break;
+				case BasicType::Int:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const int>(&value));		break;
 				case BasicType::Bool:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const bool>(&value));		break;
-				case BasicType::String: buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const std::string>(&value));	break;
 			} 
 		} break;
 		case SpecificType::Enum:
@@ -1738,7 +1826,7 @@ const TypeCaster* jitcat::CatGenericType::getTypeCaster() const
 				case BasicType::Bool:	return boolTypeCaster.get();
 				case BasicType::Int:	return intTypeCaster.get();
 				case BasicType::Float:	return floatTypeCaster.get();
-				case BasicType::String: return stringTypeCaster.get();
+				case BasicType::Double:	return doubleTypeCaster.get();
 				default: assert(false);
 			}
 		}
@@ -1822,6 +1910,15 @@ std::any jitcat::CatGenericType::createNullPtr() const
 }
 
 
+const CatGenericType& jitcat::CatGenericType::getWidestBasicType(const CatGenericType& left, const CatGenericType& right)
+{
+	assert(left.isBasicType() && right.isBasicType());
+	BasicType basicType = getWidestType(left.basicType, right.basicType);
+	if (basicType == left.basicType)	return left;
+	else								return right;
+}
+
+
 CatGenericType CatGenericType::createIntType(bool isWritable, bool isConst)
 {
 	return CatGenericType(BasicType::Int, isWritable, isConst);
@@ -1834,6 +1931,12 @@ CatGenericType CatGenericType::createFloatType(bool isWritable, bool isConst)
 }
 
 
+CatGenericType jitcat::CatGenericType::createDoubleType(bool isWritable, bool isConst)
+{
+	return CatGenericType(BasicType::Double, isWritable, isConst);
+}
+
+
 CatGenericType CatGenericType::createBoolType(bool isWritable, bool isConst)
 {
 	return CatGenericType(BasicType::Bool, isWritable, isConst);
@@ -1842,7 +1945,7 @@ CatGenericType CatGenericType::createBoolType(bool isWritable, bool isConst)
 
 CatGenericType CatGenericType::createStringType(bool isWritable, bool isConst)
 {
-	return CatGenericType(BasicType::String, isWritable, isConst);
+	return stringMemberValuePtrType.copyWithFlags(isWritable, isConst);
 }
 
 
@@ -1852,7 +1955,7 @@ const char* CatGenericType::toString(BasicType type)
 	{
 		case BasicType::Int:		return "int";
 		case BasicType::Float:		return "float";
-		case BasicType::String:		return "string";
+		case BasicType::Double:		return "double";
 		case BasicType::Bool:		return "bool";
 		case BasicType::Void:		return "void";
 		default:
@@ -1877,6 +1980,40 @@ CatGenericType::BasicType CatGenericType::toBasicType(const char* value)
 		}
 	}
 	return BasicType::None;
+}
+
+
+CatGenericType::BasicType CatGenericType::getWidestType(BasicType lType, BasicType rType)
+{
+	if (lType == rType)
+	{
+		return lType;
+	}
+	switch (lType)
+	{
+		case BasicType::Count:
+		case BasicType::Void:
+		case BasicType::None:
+		case BasicType::Bool:	return rType;
+		case BasicType::Int:
+		{
+			switch (rType)
+			{
+				default: return lType;
+				case BasicType::Double:	
+				case BasicType::Float:	return rType;
+			}
+		}
+		case BasicType::Float:
+			switch (rType)
+			{
+				default: return lType;
+				case BasicType::Double:	return rType;
+			}
+		case BasicType::Double:	return BasicType::Double;
+	}
+	assert(false);
+	return lType;
 }
 
 
@@ -1920,8 +2057,8 @@ const CatGenericType& jitcat::CatGenericType::getBasicType(BasicType type)
 	{
 		case BasicType::Bool:	return boolType;
 		case BasicType::Float:	return floatType;
+		case BasicType::Double:	return doubleType;
 		case BasicType::Int:	return intType;
-		case BasicType::String: return stringType;
 		case BasicType::Void:	return voidType;
 	}
 	assert(false);
@@ -1931,13 +2068,18 @@ const CatGenericType& jitcat::CatGenericType::getBasicType(BasicType type)
 
 const CatGenericType CatGenericType::intType		= CatGenericType(BasicType::Int, true);
 const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Float, true);
+const CatGenericType CatGenericType::doubleType		= CatGenericType(BasicType::Double, true);
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool, true);
-const CatGenericType CatGenericType::stringType		= CatGenericType(BasicType::String, true);
+const CatGenericType CatGenericType::stringType		= TypeTraits<Configuration::CatString>::toGenericType();
+const CatGenericType CatGenericType::stringWeakPtrType = TypeTraits<Configuration::CatString>::toGenericType().toPointer(TypeOwnershipSemantics::Weak, false, false);
+const CatGenericType CatGenericType::stringConstantValuePtrType = TypeTraits<Configuration::CatString>::toGenericType().toPointer(TypeOwnershipSemantics::Value, false, true);
+const CatGenericType CatGenericType::stringMemberValuePtrType = TypeTraits<Configuration::CatString>::toGenericType().copyWithFlags(true, false).toPointer(TypeOwnershipSemantics::Value, true, false);
 const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void);
 const std::unique_ptr<TypeInfo, Reflection::TypeInfoDeleter> CatGenericType::nullptrTypeInfo = makeTypeInfo<TypeInfo>("nullptr", 0, std::make_unique<NullptrTypeCaster>());
 const CatGenericType CatGenericType::nullptrType	= CatGenericType(nullptrTypeInfo.get(), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();
 const std::unique_ptr<TypeCaster> CatGenericType::intTypeCaster		= std::make_unique<ObjectTypeCaster<int>>();
 const std::unique_ptr<TypeCaster> CatGenericType::floatTypeCaster	= std::make_unique<ObjectTypeCaster<float>>();
+const std::unique_ptr<TypeCaster> CatGenericType::doubleTypeCaster	= std::make_unique<ObjectTypeCaster<double>>();
 const std::unique_ptr<TypeCaster> CatGenericType::boolTypeCaster	= std::make_unique<ObjectTypeCaster<bool>>();
-const std::unique_ptr<TypeCaster> CatGenericType::stringTypeCaster  = std::make_unique<ObjectTypeCaster<std::string>>();
+const std::unique_ptr<TypeCaster> CatGenericType::stringTypeCaster  = std::make_unique<ObjectTypeCaster<Configuration::CatString>>();

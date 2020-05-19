@@ -8,6 +8,7 @@
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/LLVMCodeGenerator.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMJit.h"
@@ -144,37 +145,45 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, llvm::Value* argument, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, 
+													llvm::Value* argument, const CatGenericType& argumentType, 
+													LLVMCompileTimeContext* context)
 {
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(parameterType));
 	std::vector<llvm::Value*> arguments;
-	arguments.push_back(convertType(argument, toLLVMType(parameterType), context));
+	arguments.push_back(convertType(argument, argumentType, parameterType, context));
 	llvm::Function *fun = llvm::Intrinsic::getDeclaration(currentModule, intrinsic, paramaterTypes);
 	return builder->CreateCall(fun, arguments);
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext * context)
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, 
+													llvm::Value* argument1, const CatGenericType& argument1Type, 
+													llvm::Value* argument2, const CatGenericType& argument2Type, 
+													LLVMCompileTimeContext * context)
 {
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(overload1Type));
 	std::vector<llvm::Value*> arguments;
-	arguments.push_back(convertType(argument1, toLLVMType(overload1Type), context));
-	arguments.push_back(convertType(argument2, toLLVMType(overload1Type), context));
+	arguments.push_back(convertType(argument1, argument1Type, overload1Type, context));
+	arguments.push_back(convertType(argument2, argument2Type, overload1Type, context));
 	llvm::Function* fun = llvm::Intrinsic::getDeclaration(currentModule, intrinsic, paramaterTypes);
 	return builder->CreateCall(fun, arguments);
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameter1Type, const CatGenericType& parameter2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameter1Type, const CatGenericType& parameter2Type, 
+													llvm::Value* argument1, const CatGenericType& argument1Type, 
+													llvm::Value* argument2, const CatGenericType& argument2Type,
+													LLVMCompileTimeContext* context)
 {
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(parameter1Type));
 	paramaterTypes.push_back(toLLVMType(parameter2Type));
 	std::vector<llvm::Value*> arguments;
-	arguments.push_back(convertType(argument1, toLLVMType(parameter1Type), context));
-	arguments.push_back(convertType(argument2, toLLVMType(parameter2Type), context));
+	arguments.push_back(convertType(argument1, argument1Type, parameter1Type, context));
+	arguments.push_back(convertType(argument2, argument2Type, parameter2Type, context));
 	llvm::Function* fun = llvm::Intrinsic::getDeclaration(currentModule, intrinsic, paramaterTypes);
 	return builder->CreateCall(fun, arguments);
 }
@@ -183,9 +192,9 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 {
 	if		(type.isFloatType())						return LLVMTypes::floatType;
+	else if	(type.isDoubleType())						return LLVMTypes::doubleType;
 	else if (type.isIntType())							return LLVMTypes::intType;
 	else if (type.isBoolType())							return LLVMTypes::boolType;
-	else if (type.isStringType())						return LLVMTypes::stringPtrType;
 	else if (type.isReflectableHandleType())			return LLVMTypes::pointerType;
 	else if (type.isVoidType())							return LLVMTypes::voidType;
 	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
@@ -196,11 +205,7 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	}
 	else if (type.isPointerType())
 	{
-		if (type.getPointeeType()->isStringType())
-		{
-			return LLVMTypes::stringPtrType;
-		}
-		else if (type.getPointeeType()->isBasicType()
+		if (type.getPointeeType()->isBasicType()
 			|| type.getPointeeType()->isPointerType())
 		{
 			llvm::Type* pointee = toLLVMType(*type.getPointeeType());
@@ -232,6 +237,45 @@ void LLVMCodeGeneratorHelper::writeToPointer(llvm::Value* lValue, llvm::Value* r
 }
 
 
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, const CatGenericType& fromType, const CatGenericType& toType, LLVMCompileTimeContext* context)
+{
+	assert(toLLVMType(fromType) == valueToConvert->getType());
+	if (fromType.compare(toType, false, true))
+	{
+		return valueToConvert;
+	}
+	else if (fromType.isBasicType() && toType.isBasicType())
+	{
+		return convertType(valueToConvert, toLLVMType(toType), context);
+	}
+	else if (toType.isStringType())
+	{
+		return convertToString(valueToConvert, context);
+	}
+	else if (fromType.isStringType())
+	{
+		if (toType.isBoolType())
+		{
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToBoolean, {valueToConvert}, "stringToBoolean");
+		}
+		else if (toType.isIntType())
+		{
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToInt, {valueToConvert}, "stringToInt");
+		}
+		else if (toType.isFloatType())
+		{
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToFloat, {valueToConvert}, "stringToFloat");
+		}
+		else if (toType.isDoubleType())
+		{
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToDouble, {valueToConvert}, "stringToDouble");
+		}
+	}
+	assert(false);
+	return valueToConvert;
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, llvm::Type* type, LLVMCompileTimeContext* context)
 {
 	if (valueToConvert->getType() == type)
@@ -255,10 +299,6 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0f));
 			return builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
-		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToBoolean, {valueToConvert}, "stringToBoolean");
-		}
 	}
 	else if (type == LLVMTypes::intType)
 	{
@@ -274,10 +314,6 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		else if (valueToConvert->getType() == LLVMTypes::floatType)
 		{
 			return builder->CreateFPToSI(valueToConvert, LLVMTypes::intType, "FloatToInt");
-		}
-		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
-		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToInt, {valueToConvert}, "stringToInt");
 		}
 	}
 	else if (type == LLVMTypes::floatType)
@@ -295,33 +331,35 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		{
 			return builder->CreateSIToFP(valueToConvert, LLVMTypes::floatType, "IntToFloat");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
-		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToFloat, {valueToConvert}, "stringToFloat");
-		}
-	}
-	else if (type == LLVMTypes::stringPtrType)
-	{
-		if (valueToConvert->getType() == LLVMTypes::boolType)
-		{
-			return builder->CreateSelect(valueToConvert, createOneStringPtrConstant(), createZeroStringPtrConstant(), "boolToString");
-		}
-		else if (valueToConvert->getType() == LLVMTypes::stringPtrType)
-		{
-			return valueToConvert;
-		}
-		else if (valueToConvert->getType() == LLVMTypes::floatType)
-		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString");
-		}
-		else if (valueToConvert->getType() == LLVMTypes::intType)
-		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {valueToConvert}, "intToString");
-		}
-
 	}
 	LLVMJit::logError("ERROR: Invalid type conversion.");
+	assert(false);
 	return nullptr;
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertToString(llvm::Value* valueToConvert, LLVMCompileTimeContext* context)
+{
+	if (valueToConvert->getType() == LLVMTypes::boolType)
+	{
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::boolToString, {valueToConvert}, "boolToString");
+	}
+	else if (valueToConvert->getType() == LLVMTypes::doubleType)
+	{
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::doubleToString, {valueToConvert}, "floatToString");
+	}
+	else if (valueToConvert->getType() == LLVMTypes::floatType)
+	{
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString");
+	}
+	else if (valueToConvert->getType() == LLVMTypes::intType)
+	{
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {valueToConvert}, "intToString");
+	}
+	else
+	{
+		return valueToConvert;
+	}
 }
 
 
@@ -353,12 +391,6 @@ bool jitcat::LLVM::LLVMCodeGeneratorHelper::isPointer(llvm::Type* type)
 }
 
 
-bool jitcat::LLVM::LLVMCodeGeneratorHelper::isStringPointer(llvm::Type* type)
-{
-	return type == LLVMTypes::stringPtrType;
-}
-
-
 bool jitcat::LLVM::LLVMCodeGeneratorHelper::isIntPtr(llvm::Type* type)
 {
 	return type == LLVMTypes::uintPtrType;
@@ -374,12 +406,6 @@ bool jitcat::LLVM::LLVMCodeGeneratorHelper::isInt(llvm::Type* type)
 bool LLVMCodeGeneratorHelper::isPointer(llvm::Value* value)
 {
 	return value->getType() == LLVMTypes::pointerType;
-}
-
-
-bool LLVMCodeGeneratorHelper::isStringPointer(llvm::Value* value)
-{
-	return value->getType() == LLVMTypes::stringPtrType;
 }
 
 
@@ -486,6 +512,12 @@ llvm::Constant* LLVMCodeGeneratorHelper::createConstant(int constant)
 }
 
 
+llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createConstant(double constant)
+{
+	return llvm::ConstantFP::get(llvmContext, llvm::APFloat(constant));
+}
+
+
 llvm::Constant* LLVMCodeGeneratorHelper::createConstant(float constant)
 {
 	return llvm::ConstantFP::get(llvmContext, llvm::APFloat(constant));
@@ -520,12 +552,6 @@ llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createZeroInitialisedArra
 		constants.push_back(createZeroInitialisedConstant(arrayType->getArrayElementType()));
 	}
 	return llvm::ConstantArray::get(arrayType, constants);
-}
-
-
-llvm::Value* LLVMCodeGeneratorHelper::createEmptyStringPtrConstant()
-{
-	return createPtrConstant(reinterpret_cast<uintptr_t>(&emptyString), "EmptyString", LLVMTypes::stringPtrType);
 }
 
 
@@ -576,31 +602,6 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool generateDestructorCall)
-{
-	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
-	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
-	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
-	llvm::AllocaInst* stringObjectAllocation = builder->CreateAlloca(LLVMTypes::stringType, 0, nullptr);
-	stringObjectAllocation->setName(name);
-
-	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
-	if (generateDestructorCall)
-	{
-		context->blockDestructorGenerators.push_back([=](){return createIntrinsicCall(context, &LLVMCatIntrinsics::stringDestruct, {stringObjectAllocation}, "stringDestruct");});
-	}
-	if (currentBlockIsEntryBlock)
-	{
-		builder->SetInsertPoint(updatedBlock);
-	}
-	else
-	{
-		builder->SetInsertPoint(previousInsertBlock);
-	}
-	return stringObjectAllocation;
-}
-
-
 void LLVMCodeGeneratorHelper::generateBlockDestructors(LLVMCompileTimeContext* context)
 {
 	for (auto& iter : context->blockDestructorGenerators)
@@ -630,17 +631,10 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateFunctionCallReturnVa
 	//That argument should be marked SRet (structure return argument).
 	//The function itself will return void.
 	//Objects allocated on the stack will be destroyed before the function that contains this call returns.
-	if (returnType.isStringType() || returnType.isReflectableObjectType())
+	if (returnType.isReflectableObjectType())
 	{
 		std::string objectName = Tools::append(functionName, "_Result");
-		if (returnType.isStringType())
-		{
-			return context->helper->createStringAllocA(context, objectName, true);
-		}
-		else
-		{
-			return context->helper->createObjectAllocA(context, objectName, returnType, true);
-		}
+		return context->helper->createObjectAllocA(context, objectName, returnType, true);
 	}
 	return nullptr;
 }
@@ -672,7 +666,7 @@ void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std
 
 llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::CatGenericType& returnType, const std::vector<llvm::Value*>& argumentList, const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, uintptr_t functionAddress, const std::string& functionName, llvm::Value* returnedObjectAllocation)
 {
-	if (returnType.isStringType() || returnType.isReflectableObjectType())
+	if (returnType.isReflectableObjectType())
 	{
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
 		llvm::CallInst* call = static_cast<llvm::CallInst*>(context->helper->createCall(functionType, functionAddress, argumentList, functionName));
@@ -723,12 +717,6 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::copyConstructIfValueType(llv
 		createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, value, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
 		return copyAllocation;
 	}
-	else if (type.isStringType())
-	{
-		llvm::Value* copyAllocation = context->helper->createStringAllocA(context, Tools::append("Argument_", valueName, "_copy"), false);
-		createIntrinsicCall(context, &LLVMCatIntrinsics::stringCopyConstruct, {copyAllocation, value}, "stringCopyConstruct");
-		return copyAllocation;
-	}
 	return value;
 }
 
@@ -757,16 +745,16 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateCall(jitcat::Reflect
 
 llvm::Value* LLVMCodeGeneratorHelper::createZeroStringPtrConstant()
 {
-	return createPtrConstant(reinterpret_cast<uintptr_t>(&zeroString), "ZeroString", LLVMTypes::stringPtrType);
+	return createPtrConstant(reinterpret_cast<uintptr_t>(&zeroString), "ZeroString", LLVMTypes::pointerType);
 }
 
 
 llvm::Value* LLVMCodeGeneratorHelper::createOneStringPtrConstant()
 {
-	return createPtrConstant(reinterpret_cast<uintptr_t>(&oneString), "OneString", LLVMTypes::stringPtrType);
+	return createPtrConstant(reinterpret_cast<uintptr_t>(&oneString), "OneString", LLVMTypes::pointerType);
 }
 
 
-const std::string LLVMCodeGeneratorHelper::emptyString = "";
-const std::string LLVMCodeGeneratorHelper::zeroString = "0";
-const std::string LLVMCodeGeneratorHelper::oneString = "1";
+const Configuration::CatString LLVMCodeGeneratorHelper::emptyString = Configuration::CatString();
+const Configuration::CatString LLVMCodeGeneratorHelper::zeroString = "0";
+const Configuration::CatString LLVMCodeGeneratorHelper::oneString = "1";

@@ -260,16 +260,7 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateDereferenceCode(
 		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
-		if constexpr (std::is_same<BasicT, std::string>::value)
-		{
-			//std::string case (returns a pointer to the std::string)
-			return context->helper->convertToPointer(addressValue, memberName, LLVM::LLVMTypes::stringPtrType);
-		}
-		else
-		{
-			//int, bool, float case	(returns by value)
-			return context->helper->loadBasicType(context->helper->toLLVMType(catType), addressValue, memberName);
-		}
+		return context->helper->loadBasicType(context->helper->toLLVMType(catType), addressValue, memberName);
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);
 #else 
@@ -288,17 +279,8 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateAssignCode(llvm:
 		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
-		if constexpr (std::is_same<BasicT, std::string>::value)
-		{
-			llvm::Value* lValue = context->helper->convertToPointer(addressIntValue, memberName, LLVM::LLVMTypes::stringPtrType);
-			context->helper->createIntrinsicCall(context, &LLVM::LLVMCatIntrinsics::stringAssign, {lValue, rValue}, "assignString");
-		}
-		else
-		{
-			//int, bool, float case	(returns by value)
-			llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
-			context->helper->writeToPointer(addressValue, rValue);
-		}
+		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
+		context->helper->writeToPointer(addressValue, rValue);
 		return rValue;
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->helper->toLLVMType(catType), context);

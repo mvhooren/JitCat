@@ -90,7 +90,10 @@ CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTi
 
 	bool lhsIsConst = lhs->isConst();
 	bool rhsIsConst = rhs->isConst();
-	if (lhsIsConst && rhsIsConst)
+	if (   lhsIsConst 
+		&& rhsIsConst 
+		&& (lhs->getType().isBasicType() || lhs->getType().isStringValueType())
+		&& (rhs->getType().isBasicType() || rhs->getType().isStringValueType()))
 	{
 		Tokenizer::Lexeme collapsedLexeme = InfixOperatorOptimizer::combineLexemes(lhs, rhs);
 		const CatGenericType lhsType = lhs->getType();

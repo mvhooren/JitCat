@@ -18,6 +18,10 @@ namespace jitcat
 	class CatRuntimeContext;
 	struct SLRParseResult;
 
+	namespace Reflection
+	{
+		struct MemberFunctionInfo;
+	}
 
 	//An expression that can return any type (among supported types).
 	class ExpressionAssignAny : public ExpressionBase
@@ -68,6 +72,7 @@ namespace jitcat
 
 	private:
 		uintptr_t nativeFunctionAddress;
+		Reflection::MemberFunctionInfo* assignmentOperatorFunction;
 	};
 
 }

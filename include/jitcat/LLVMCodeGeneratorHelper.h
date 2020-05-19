@@ -40,30 +40,42 @@ namespace jitcat::LLVM
 		template<typename ReturnT, typename ... Args>
 		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
 		llvm::Value* createCall(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName);
-		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, llvm::Type* resultType, LLVMCompileTimeContext* context); 
-		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, llvm::PointerType* resultType, LLVMCompileTimeContext* context); 
-		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context); 
+		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
+												   llvm::Type* resultType, LLVMCompileTimeContext* context); 
+		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
+												   llvm::PointerType* resultType, LLVMCompileTimeContext* context); 
+		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
+												   std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context); 
 
-		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, llvm::Value* argument, LLVMCompileTimeContext* context);
-		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
-		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, const CatGenericType& overload2Type, llvm::Value* argument1, llvm::Value* argument2, LLVMCompileTimeContext* context);
+		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, 
+								   llvm::Value* argument, const CatGenericType& argumentType, 
+								   LLVMCompileTimeContext* context);
+		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, 
+								   llvm::Value* argument1, const CatGenericType& argument1Type, 
+								   llvm::Value* argument2, const CatGenericType& argument2Type, 
+								   LLVMCompileTimeContext* context);
+		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, const CatGenericType& overload2Type, 
+								   llvm::Value* argument1, const CatGenericType& argument1Type, 
+								    llvm::Value* argument2, const CatGenericType& argument2Type, LLVMCompileTimeContext* context);
 		llvm::Type* toLLVMType(const CatGenericType& type);
 		llvm::PointerType* toLLVMPtrType(const CatGenericType& type);
 
 		void writeToPointer(llvm::Value* lValue, llvm::Value* rValue);
 
+		llvm::Value* convertType(llvm::Value* valueToConvert, const CatGenericType& fromType, const CatGenericType& toType, LLVMCompileTimeContext* context);
+	private:
 		llvm::Value* convertType(llvm::Value* valueToConvert, llvm::Type* type, LLVMCompileTimeContext* context);
+		llvm::Value* convertToString(llvm::Value* valueToConvert, LLVMCompileTimeContext* context);
+	public:
 		llvm::Value* convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* convertToIntPtr(llvm::Value* llvmPointer, const std::string& name);
 
 		static bool isPointer(llvm::Type* type);
-		static bool isStringPointer(llvm::Type* type);
 		static bool isIntPtr(llvm::Type* type);
 		static bool isInt(llvm::Type* type);
 
 		static bool isPointer(llvm::Value* value);
-		static bool isStringPointer(llvm::Value* value);
 		static bool isIntPtr(llvm::Value* value);
 		static bool isInt(llvm::Value* value);
 
@@ -79,19 +91,18 @@ namespace jitcat::LLVM
 		llvm::Constant* createCharConstant(char constant);
 		llvm::Constant* createUCharConstant(unsigned char constant);
 		llvm::Constant* createConstant(int constant);
+		llvm::Constant* createConstant(double constant);
 		llvm::Constant* createConstant(float constant);
 		llvm::Constant* createConstant(bool constant);
 		llvm::Constant* createNullPtrConstant(llvm::PointerType* pointerType);
 		llvm::Value* createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType = LLVMTypes::pointerType);
 		llvm::Constant* createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType);
-		llvm::Value* createEmptyStringPtrConstant();
 		llvm::Value* constantToValue(llvm::Constant* constant) const;
 
 
 		void setCurrentModule(llvm::Module* module);
 
 		llvm::Value* createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool generateDestructorCall);
-		llvm::Value* createStringAllocA(LLVMCompileTimeContext* context, const std::string& name, bool generateDestructorCall);
 		void generateBlockDestructors(LLVMCompileTimeContext* context);
 
 		llvm::LLVMContext& getContext();

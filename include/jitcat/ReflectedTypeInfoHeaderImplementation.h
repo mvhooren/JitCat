@@ -65,10 +65,9 @@ namespace jitcat::Reflection
 			isConst = true;
 		}
 		StaticMemberInfo* memberInfo = nullptr;
-		if constexpr (std::is_same<MemberT, float>::value
-					  || std::is_same<MemberT, int>::value
+		if constexpr (std::is_floating_point_v<MemberT>
+					  || std::is_integral_v<MemberT>
 					  || std::is_same<MemberT, bool>::value
-					  || std::is_same<MemberT, std::string>::value
 					  || std::is_enum<MemberT>::value)
 		{
 			memberInfo = new StaticBasicTypeMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());

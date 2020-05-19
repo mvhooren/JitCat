@@ -1,5 +1,6 @@
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/Reflectable.h"
 #include "jitcat/Tools.h"
 
@@ -16,67 +17,93 @@ Reflectable* LLVMCatIntrinsics::getScopePointerFromContext(CatRuntimeContext* co
 }
 
 
-bool LLVMCatIntrinsics::stringEquals(const std::string& left, const std::string& right)
+bool LLVMCatIntrinsics::stringEquals(const Configuration::CatString& left, const Configuration::CatString& right)
 {
 	return left == right;
 }
 
 
-bool LLVMCatIntrinsics::stringNotEquals(const std::string& left, const std::string& right)
+bool LLVMCatIntrinsics::stringNotEquals(const Configuration::CatString& left, const Configuration::CatString& right)
 {
 	return left != right;
 }
 
 
-void LLVMCatIntrinsics::stringAssign(std::string* left, const std::string& right)
+void LLVMCatIntrinsics::stringAssign(Configuration::CatString* left, const Configuration::CatString& right)
 {
 	(*left) = right;
 }
 
 
-bool LLVMCatIntrinsics::stringToBoolean(const std::string& value)
+bool LLVMCatIntrinsics::stringToBoolean(const Configuration::CatString& value)
 {
-	return value == "true" || atoi(value.c_str()) > 0;
+	return value == Tools::StringConstants<Configuration::CatString>::trueStr || Tools::StringConstants<Configuration::CatString>::stringToInt(value) > 0;
 }
 
 
-std::string LLVMCatIntrinsics::stringAppend(const std::string& left, const std::string& right)
+Configuration::CatString LLVMCatIntrinsics::stringAppend(const Configuration::CatString& left, const Configuration::CatString& right)
 {
 	return left + right;
 }
 
 
-std::string LLVMCatIntrinsics::floatToString(float number)
+Configuration::CatString jitcat::LLVM::LLVMCatIntrinsics::boolToString(bool boolean)
 {
-	return Tools::makeString(number);
+	if (boolean)
+	{
+		return Tools::StringConstants<Configuration::CatString>::oneStr;
+	}
+	else
+	{
+		return Tools::StringConstants<Configuration::CatString>::zeroStr;
+	}
 }
 
 
-float LLVMCatIntrinsics::stringToFloat(const std::string& string)
+Configuration::CatString jitcat::LLVM::LLVMCatIntrinsics::doubleToString(double number)
+{
+	return Tools::StringConstants<Configuration::CatString>::makeString(number);
+}
+
+
+Configuration::CatString LLVMCatIntrinsics::floatToString(float number)
+{
+	return Tools::StringConstants<Configuration::CatString>::makeString(number);
+}
+
+double jitcat::LLVM::LLVMCatIntrinsics::stringToDouble(const Configuration::CatString& string)
+{
+	return Tools::convert<double>(string);
+}
+
+
+float LLVMCatIntrinsics::stringToFloat(const Configuration::CatString& string)
 {
 	return Tools::convert<float>(string);
 }
 
 
-std::string LLVMCatIntrinsics::intToString(int number)
+Configuration::CatString LLVMCatIntrinsics::intToString(int number)
 {
-	return Tools::makeString(number);
+	return Tools::StringConstants<Configuration::CatString>::makeString(number);
 }
 
 
-int LLVMCatIntrinsics::stringToInt(const std::string& string)
+int LLVMCatIntrinsics::stringToInt(const Configuration::CatString& string)
 {
 	return Tools::convert<int>(string);
 }
 
 
-std::string LLVMCatIntrinsics::intToPrettyString(int number)
+Configuration::CatString LLVMCatIntrinsics::intToPrettyString(int number)
 {
-	std::string numberString = Tools::makeString(number);
+	Configuration::CatStringStream conversion;
+	conversion << number;
+	Configuration::CatString numberString = conversion.str();
 	size_t numberLength = numberString.length();
 	int numParts = (((int)numberLength - 1) / 3) + 1;	// so that 1-3 results in 1, 4-6 in 2, etc
-	std::string result = "";
-	std::string separator = "";// to skip first space, cleaner result
+	Configuration::CatString result;
+	Configuration::CatString separator;// to skip first space, cleaner result
 
 	for (int i = 0; i < numParts; ++i)
 	{
@@ -90,52 +117,26 @@ std::string LLVMCatIntrinsics::intToPrettyString(int number)
 			substringFirstIndex = 0;
 		}
 		result = numberString.substr((unsigned int)substringFirstIndex, (unsigned int)substringLength) + separator + result;
-		separator = ",";
+		separator = Tools::StringConstants<Configuration::CatString>::comma;
 	}
 	return result;
 }
 
 
-std::string LLVMCatIntrinsics::intToFixedLengthString(int number, int stringLength)
+Configuration::CatString LLVMCatIntrinsics::intToFixedLengthString(int number, int stringLength)
 {
-	std::string numberString = Tools::makeString(number);
+	Configuration::CatStringStream conversion;
+	conversion << number;
+	Configuration::CatString numberString = conversion.str();
 	while ((int)numberString.length() < stringLength)
 	{
-		numberString = "0" + numberString;
+		numberString = Tools::StringConstants<Configuration::CatString>::zeroStr + numberString;
 	}
 	return numberString;
 }
 
 
-void LLVMCatIntrinsics::stringEmptyConstruct(std::string* destination)
-{
-	new (destination) std::string();
-}
-
-
-void LLVMCatIntrinsics::stringCopyConstruct(std::string* destination, const std::string* string)
-{
-	if (string != nullptr)
-	{
-		new (destination) std::string(*string);
-	}
-	else
-	{
-		new (destination) std::string("");
-	}
-}
-
-
-void LLVMCatIntrinsics::stringDestruct(std::string* target)
-{
-	if (target != nullptr)
-	{
-		target->~basic_string();
-	}
-}
-
-
-int LLVMCatIntrinsics::findInString(const std::string* text, const std::string* textToFind)
+int LLVMCatIntrinsics::findInString(const Configuration::CatString* text, const Configuration::CatString* textToFind)
 {
 	if (text == nullptr || textToFind == nullptr)
 	{
@@ -153,17 +154,17 @@ int LLVMCatIntrinsics::findInString(const std::string* text, const std::string* 
 }
 
 
-std::string LLVMCatIntrinsics::replaceInString(const std::string* text, const std::string* textToFind, const std::string* replacement)
+Configuration::CatString LLVMCatIntrinsics::replaceInString(const Configuration::CatString* text, const Configuration::CatString* textToFind, const Configuration::CatString* replacement)
 {
 	if (text == nullptr || textToFind == nullptr || replacement == nullptr)
 	{
-		return "";
+		return Configuration::CatString();
 	}
-	if (*text != "")
+	if (*text != Configuration::CatString())
 	{
-		std::string newString = *text;
+		Configuration::CatString newString = *text;
 		size_t startPosition = 0;
-		while ((startPosition = newString.find(*textToFind, startPosition)) != std::string::npos)
+		while ((startPosition = newString.find(*textToFind, startPosition)) != Configuration::CatString::npos)
 		{
 			newString.replace(startPosition, textToFind->length(), *replacement);
 			startPosition += replacement->length(); 
@@ -174,7 +175,7 @@ std::string LLVMCatIntrinsics::replaceInString(const std::string* text, const st
 }
 
 
-int LLVMCatIntrinsics::stringLength(const std::string* text)
+int LLVMCatIntrinsics::stringLength(const Configuration::CatString* text)
 {
 	if (text != nullptr)
 	{
@@ -187,11 +188,11 @@ int LLVMCatIntrinsics::stringLength(const std::string* text)
 }
 
 
-std::string LLVMCatIntrinsics::subString(const std::string* text, int start, int length)
+Configuration::CatString LLVMCatIntrinsics::subString(const Configuration::CatString* text, int start, int length)
 {
 	if (text == nullptr || text->size() == 0)
 	{
-		return "";
+		return Configuration::CatString();
 	}
 	else if ((int)text->size() > start && start >= 0)
 	{
@@ -199,7 +200,7 @@ std::string LLVMCatIntrinsics::subString(const std::string* text, int start, int
 	}
 	else
 	{
-		return "";
+		return Configuration::CatString();
 	}
 }
 
@@ -243,24 +244,24 @@ float LLVMCatIntrinsics::roundFloat(float number, int decimals)
 }
 
 
-std::string LLVMCatIntrinsics::roundFloatToString(float number, int decimals)
+Configuration::CatString LLVMCatIntrinsics::roundFloatToString(float number, int decimals)
 {
-	std::stringstream ss;
+	Configuration::CatStringStream ss;
 	ss.precision(decimals);
 	ss.setf(std::ios_base::fixed);
 	ss.unsetf(std::ios_base::scientific);
 	ss << number;
-	std::string result = ss.str();
+	Configuration::CatString result = ss.str();
 	int discardedCharacters = 0;
-	if (result.find('.') != result.npos)
+	if (result.find(Tools::StringConstants<Configuration::CatString>::dot) != result.npos)
 	{
 		for (int i = (int)result.length() - 1; i >= 0; i--)
 		{
-			if (result[(unsigned int)i] == '0')
+			if (result[(unsigned int)i] == Tools::StringConstants<Configuration::CatString>::zero)
 			{
 				discardedCharacters++;
 			}
-			else if (result[(unsigned int)i] == '.')
+			else if (result[(unsigned int)i] == Tools::StringConstants<Configuration::CatString>::dot)
 			{
 				discardedCharacters++;
 				break;

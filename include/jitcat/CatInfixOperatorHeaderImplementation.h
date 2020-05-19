@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "jitcat/Configuration.h"
+
 
 inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtimeContext)
 {
@@ -42,27 +44,37 @@ inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtime
 		CatGenericType rType = rhs->getType();
 		if (lType.isFloatType())
 		{
-			if		(rType.isIntType())		return calculateScalarExpression<float, int, float>(std::any_cast<float>(lValue), std::any_cast<int>(rValue));
-			else if (rType.isFloatType())	return calculateScalarExpression<float, float, float>(std::any_cast<float>(lValue), std::any_cast<float>(rValue));
-			else if (rType.isStringType())  return calculateStringExpression<float, std::string>(std::any_cast<float>(lValue), std::any_cast<std::string>(rValue));
+			if		(rType.isIntType())			return calculateScalarExpression<float, int, float>(std::any_cast<float>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())		return calculateScalarExpression<float, float, float>(std::any_cast<float>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isDoubleType())		return calculateScalarExpression<float, double, double>(std::any_cast<float>(lValue), std::any_cast<double>(rValue));
+			else if (rType.isStringValueType())	return calculateStringExpression<float, Configuration::CatString>(std::any_cast<float>(lValue), std::any_cast<Configuration::CatString>(rValue));
+		}
+		else if (lType.isDoubleType())
+		{
+			if		(rType.isIntType())			return calculateScalarExpression<double, int, double>(std::any_cast<double>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())		return calculateScalarExpression<double, float, double>(std::any_cast<double>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isDoubleType())		return calculateScalarExpression<double, double, double>(std::any_cast<double>(lValue), std::any_cast<double>(rValue));
+			else if (rType.isStringValueType())	return calculateStringExpression<double, Configuration::CatString>(std::any_cast<double>(lValue), std::any_cast<Configuration::CatString>(rValue));
 		}
 		else if (lType.isIntType())
 		{
-			if		(rType.isIntType())		return calculateScalarExpression<int, int, int>(std::any_cast<int>(lValue), std::any_cast<int>(rValue));
-			else if (rType.isFloatType())	return calculateScalarExpression<int, float, float>(std::any_cast<int>(lValue), std::any_cast<float>(rValue));
-			else if (rType.isStringType())  return calculateStringExpression<int, std::string>(std::any_cast<int>(lValue), std::any_cast<std::string>(rValue));
+			if		(rType.isIntType())			return calculateScalarExpression<int, int, int>(std::any_cast<int>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())		return calculateScalarExpression<int, float, float>(std::any_cast<int>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isDoubleType())		return calculateScalarExpression<int, double, double>(std::any_cast<int>(lValue), std::any_cast<double>(rValue));
+			else if (rType.isStringValueType())	return calculateStringExpression<int, Configuration::CatString>(std::any_cast<int>(lValue), std::any_cast<Configuration::CatString>(rValue));
 		}
-		else if (lType.isStringType())
+		else if (lType.isStringValueType())
 		{
-			if		(rType.isIntType())		return calculateStringExpression<std::string, int>(std::any_cast<std::string>(lValue), std::any_cast<int>(rValue));
-			else if (rType.isFloatType())	return calculateStringExpression<std::string, float>(std::any_cast<std::string>(lValue), std::any_cast<float>(rValue));
-			else if (rType.isStringType())  return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<std::string>(rValue));
-			else if (rType.isBoolType())	return calculateStringExpression(std::any_cast<std::string>(lValue), std::any_cast<bool>(rValue));
+			if		(rType.isIntType())			return calculateStringExpression<Configuration::CatString, int>(std::any_cast<Configuration::CatString>(lValue), std::any_cast<int>(rValue));
+			else if (rType.isFloatType())		return calculateStringExpression<Configuration::CatString, float>(std::any_cast<Configuration::CatString>(lValue), std::any_cast<float>(rValue));
+			else if (rType.isDoubleType())		return calculateStringExpression<Configuration::CatString, double>(std::any_cast<Configuration::CatString>(lValue), std::any_cast<double>(rValue));
+			else if (rType.isStringValueType())	return calculateStringExpression(std::any_cast<Configuration::CatString>(lValue), std::any_cast<Configuration::CatString>(rValue));
+			else if (rType.isBoolType())		return calculateStringExpression(std::any_cast<Configuration::CatString>(lValue), std::any_cast<bool>(rValue));
 		}
 		else if (lType.isBoolType())
 		{
-			if		(rType.isBoolType())	return calculateBooleanExpression(std::any_cast<bool>(lValue), std::any_cast<bool>(rValue));
-			else if (rType.isStringType())	return calculateStringExpression(std::any_cast<bool>(lValue), std::any_cast<std::string>(rValue));
+			if		(rType.isBoolType())		return calculateBooleanExpression(std::any_cast<bool>(lValue), std::any_cast<bool>(rValue));
+			else if (rType.isStringValueType())	return calculateStringExpression(std::any_cast<bool>(lValue), std::any_cast<Configuration::CatString>(rValue));
 		}
 		else if (lType.isPointerToReflectableObjectType() && rType.isPointerToReflectableObjectType())
 		{
@@ -109,22 +121,29 @@ inline std::any CatInfixOperator::calculateScalarExpression(const T& lValue, con
 				return std::any((V)lValue / (V)rValue);
 			}
 		case CatInfixOperatorType::Modulo:
-			if constexpr (std::is_same<T, float>::value || std::is_same<U, float>::value)
+			constexpr bool eitherIsFloat = std::is_same<T, float>::value 
+										   || std::is_same<U, float>::value;
+			constexpr bool eitherIsDouble = std::is_same<T, double>::value
+											|| std::is_same<U, double>::value;
+			if constexpr (eitherIsFloat || eitherIsDouble)
 			{
 				if constexpr (jitcat::Configuration::divisionByZeroYieldsZero)
 				{
-					if ((float)rValue != 0)
+					if (rValue != 0)
 					{
-						return std::any((float)fmodf((float)lValue, (float)rValue));
+						if constexpr (eitherIsDouble)	return std::any((double)fmod((double)lValue, (double)rValue));
+						else							return std::any((float)fmodf((float)lValue, (float)rValue));
 					}
 					else
 					{
-						return std::any(0.0f);
+						if constexpr (eitherIsDouble)	return std::any(0.0);
+						else							return std::any(0.0f);
 					}
 				}
 				else
 				{
-					return std::any((float)fmodf((float)lValue, (float)rValue));
+					if constexpr (eitherIsDouble)	return std::any((double)fmod((double)lValue, (double)rValue));
+					else							return std::any((float)fmodf((float)lValue, (float)rValue));
 				}
 			}
 			else
@@ -158,18 +177,18 @@ inline std::any CatInfixOperator::calculateStringExpression(const T& lValue, con
 	{
 		case CatInfixOperatorType::Plus:
 		{
-			std::stringstream stream;
+			Configuration::CatStringStream stream;
 			stream << lValue;
 			stream << rValue;
 			return std::any(stream.str());
 		}
 	}
 	assert(false);
-	return std::any(std::string());
+	return std::any(Configuration::CatString());
 }
 
 
-inline std::any CatInfixOperator::calculateStringExpression(const std::string& lValue, const std::string& rValue)
+inline std::any CatInfixOperator::calculateStringExpression(const Configuration::CatString& lValue, const Configuration::CatString& rValue)
 {
 	switch (oper)
 	{
@@ -178,7 +197,7 @@ inline std::any CatInfixOperator::calculateStringExpression(const std::string& l
 		case CatInfixOperatorType::NotEquals:	return std::any(lValue != rValue);
 	}
 	assert(false);
-	return std::any(std::string());
+	return std::any(Configuration::CatString());
 }
 
 

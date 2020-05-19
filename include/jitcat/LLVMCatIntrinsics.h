@@ -16,6 +16,7 @@ namespace jitcat::Reflection
 	class Reflectable;
 	class TypeInfo;
 }
+#include "jitcat/Configuration.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/LLVMTypes.h"
 #include <string>
@@ -37,30 +38,30 @@ namespace jitcat::LLVM
 
 	public:
 		static Reflection::Reflectable* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
-		static bool stringEquals(const std::string& left, const std::string& right);
-		static bool stringNotEquals(const std::string& left, const std::string& right);
-		static void stringAssign(std::string* left, const std::string& right);
-		static bool stringToBoolean(const std::string& value);
-		static std::string stringAppend(const std::string& left, const std::string& right);
-		static std::string floatToString(float number);
-		static float stringToFloat(const std::string& string);
-		static std::string intToString(int number);
-		static int stringToInt(const std::string& string);
-		static std::string intToPrettyString(int number);
-		static std::string intToFixedLengthString(int number, int stringLength);
-		static void stringEmptyConstruct(std::string* destination);
-		static void stringCopyConstruct(std::string* destination, const std::string* string);
-		static void stringDestruct(std::string* target);
-		static int findInString(const std::string* text, const std::string* textToFind);
-		static std::string replaceInString(const std::string* text, const std::string* textToFind, const std::string* replacement);
-		static int stringLength(const std::string* text);
-		static	std::string subString(const std::string* text, int start, int length);
+		static bool stringEquals(const Configuration::CatString& left, const Configuration::CatString& right);
+		static bool stringNotEquals(const Configuration::CatString& left, const Configuration::CatString& right);
+		static void stringAssign(Configuration::CatString* left, const Configuration::CatString& right);
+		static bool stringToBoolean(const Configuration::CatString& value);
+		static Configuration::CatString stringAppend(const Configuration::CatString& left, const Configuration::CatString& right);
+		static Configuration::CatString boolToString(bool boolean);
+		static Configuration::CatString doubleToString(double number);
+		static Configuration::CatString floatToString(float number);
+		static double stringToDouble(const Configuration::CatString& string);
+		static float stringToFloat(const Configuration::CatString& string);
+		static Configuration::CatString intToString(int number);
+		static int stringToInt(const Configuration::CatString& string);
+		static Configuration::CatString intToPrettyString(int number);
+		static Configuration::CatString intToFixedLengthString(int number, int stringLength);
+		static int findInString(const Configuration::CatString* text, const Configuration::CatString* textToFind);
+		static Configuration::CatString replaceInString(const Configuration::CatString* text, const Configuration::CatString* textToFind, const Configuration::CatString* replacement);
+		static int stringLength(const Configuration::CatString* text);
+		static	Configuration::CatString subString(const Configuration::CatString* text, int start, int length);
 		static float getRandomFloat();
 		static bool getRandomBoolean(bool first, bool second);
 		static int getRandomInt(int min, int max);
 		static float getRandomFloatRange(float min, float max);
 		static float roundFloat(float number, int decimals);
-		static std::string roundFloatToString(float number, int decimals);
+		static Configuration::CatString roundFloatToString(float number, int decimals);
 		static void placementCopyConstructType(Reflection::Reflectable* target, Reflection::Reflectable* source,  Reflection::TypeInfo* type);
 		static void placementConstructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);
 		static void placementDestructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);

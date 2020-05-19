@@ -182,7 +182,7 @@ namespace jitcat
 		//A separate list of static scopes because static scopes are available accross function calls.
 		std::vector<std::unique_ptr<CatRuntimeContext::Scope>> staticScopes;
 
-		std::vector<std::any> temporaries;
+		std::vector<std::unique_ptr<std::any>> temporaries;
 
 		CatScopeID currentStackFrameOffset;
 		std::vector<CatScopeID> stackFrameOffsets;

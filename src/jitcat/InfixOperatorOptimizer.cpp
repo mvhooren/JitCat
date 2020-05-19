@@ -22,12 +22,7 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique
 																	 ExpressionErrorManager* errorManager, 
 																	 void* errorContext)
 {
-	CatGenericType resultType = lhs->getType();
-	if ((lhs->getType().isFloatType() && rhs->getType().isIntType())
-		|| (rhs->getType().isFloatType() && lhs->getType().isIntType()))
-	{
-		resultType = CatGenericType::floatType;
-	}
+	CatGenericType resultType = CatGenericType::getWidestBasicType(lhs->getType(), rhs->getType());
 	std::unique_ptr<CatTypedExpression> constCollapsed;
 	switch (infixOperator)
 	{
@@ -66,10 +61,10 @@ jitcat::Tokenizer::Lexeme jitcat::AST::InfixOperatorOptimizer::combineLexemes(st
 
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseMultiplication(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs)
 {
-	if (typedExpressionEqualsConstant(lhs.get(), 1.0f))			return rhs.release();
-	else if (typedExpressionEqualsConstant(rhs.get(), 1.0f))	return lhs.release();
-	else if (typedExpressionEqualsConstant(lhs.get(), 0.0f))	return lhs.release();
-	else if (typedExpressionEqualsConstant(rhs.get(), 0.0f))	return rhs.release();
+	if (typedExpressionEqualsConstant(lhs.get(), 1.0))			return rhs.release();
+	else if (typedExpressionEqualsConstant(rhs.get(), 1.0))	return lhs.release();
+	else if (typedExpressionEqualsConstant(lhs.get(), 0.0))	return lhs.release();
+	else if (typedExpressionEqualsConstant(rhs.get(), 0.0))	return rhs.release();
 	else														return nullptr;
 }
 
@@ -77,9 +72,9 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseMultiplication(std::uniqu
 CatTypedExpression* InfixOperatorOptimizer::tryCollapseAddition(std::unique_ptr<CatTypedExpression>& lhs, std::unique_ptr<CatTypedExpression>& rhs)
 {
 	if (lhs->getType().isStringType() || rhs->getType().isStringType())	return nullptr;
-	else if (typedExpressionEqualsConstant(lhs.get(), 0.0f))						return rhs.release();
-	else if (typedExpressionEqualsConstant(rhs.get(), 0.0f))						return lhs.release();
-	else																			return nullptr;
+	else if (typedExpressionEqualsConstant(lhs.get(), 0.0))				return rhs.release();
+	else if (typedExpressionEqualsConstant(rhs.get(), 0.0))				return lhs.release();
+	else																return nullptr;
 }
 
 
@@ -112,14 +107,14 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseLogicalOr(std::unique_ptr
 }
 
 
-bool InfixOperatorOptimizer::typedExpressionEqualsConstant(CatTypedExpression* expression, float constant)
+bool InfixOperatorOptimizer::typedExpressionEqualsConstant(CatTypedExpression* expression, double constant)
 {
 	if (expression->getNodeType() == CatASTNodeType::Literal)
 	{
 		CatLiteral* literalExpression = static_cast<CatLiteral*>(expression);
 		if (literalExpression->getType().isScalarType())
 		{
-			return CatGenericType::convertToFloat(literalExpression->getValue(), literalExpression->getType()) == constant;
+			return CatGenericType::convertToDouble(literalExpression->getValue(), literalExpression->getType()) == constant;
 		}
 		else
 		{

@@ -76,7 +76,7 @@ namespace jitcat::LLVM
 
 		llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
 
-		llvm::Value* generateMemberFunctionCall(Reflection::MemberFunctionInfo* memberFunction, AST::CatTypedExpression* base, 
+		llvm::Value* generateMemberFunctionCall(Reflection::MemberFunctionInfo* memberFunction, const AST::CatTypedExpression* base, 
 											    const std::vector<const AST::CatTypedExpression*>& arguments, 
 												LLVMCompileTimeContext* context);
 

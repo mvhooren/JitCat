@@ -95,7 +95,6 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 		arguments->executeAllArguments(argumentValues, memberFunctionInfo->argumentTypes, runtimeContext);
 		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
 		runtimeContext->setReturning(wasReturning);
-		runtimeContext->clearTemporaries();
 		return value;
 	}
 	assert(false);

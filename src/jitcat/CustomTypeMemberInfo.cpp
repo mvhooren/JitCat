@@ -101,8 +101,13 @@ std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getMemberReference(
 
 std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getAssignableMemberReference(unsigned char* base)
 {
-	assert(false);
-	return std::any((ReflectableHandle*)nullptr);
+	if (base != nullptr)
+	{
+		assert(catType.isAssignableType());
+		uintptr_t objectPointer = reinterpret_cast<uintptr_t>(&base[memberOffset]);
+		return catType.createFromRawPointer(objectPointer);
+	}
+	return catType.createNullPtr();
 }
 
 

@@ -82,9 +82,18 @@ inline bool ExpressionAssignment<ExpressionT>::assignInterpretedValue(CatRuntime
 	{
 		jitcat::AST::CatAssignableExpression* assignable = parseResult->getNode<AST::CatAssignableExpression>();
 		std::any target = assignable->executeAssignable(runtimeContext);
-		std::any anyValue = TypeTraits<ExpressionT>::getCatValue(value);
 		CatGenericType expectedType = getExpectedCatType();
-		jitcat::AST::ASTHelper::doAssignment(target, anyValue, assignable->getAssignableType(), expectedType);
+		if constexpr (!std::is_class_v<ExpressionT>  || std::is_enum_v<ExpressionT>)
+		{
+			std::any anyValue = TypeTraits<ExpressionT>::getCatValue(value);
+			jitcat::AST::ASTHelper::doAssignment(target, anyValue, assignable->getAssignableType(), expectedType);
+		}
+		else
+		{
+			ExpressionT* targetValue = std::any_cast<ExpressionT*>(target);
+			*targetValue = value;
+		}
+		runtimeContext->clearTemporaries();
 		return true;
 	}
 	return false;
@@ -99,7 +108,12 @@ inline void ExpressionAssignment<ExpressionT>::compile(CatRuntimeContext* contex
 		context = &CatRuntimeContext::defaultContext;
 		context->getErrorManager()->clear();
 	}
-	if (!parse(context, context->getErrorManager(), this, TypeTraits<ExpressionT>::toGenericType()))
+	CatGenericType expectedType = TypeTraits<ExpressionT>::toGenericType();
+	if constexpr (std::is_class_v<ExpressionT> || std::is_enum_v<ExpressionT>)
+	{
+		expectedType = expectedType.toPointer(Reflection::TypeOwnershipSemantics::Value, true, false);
+	}
+	if (!parse(context, context->getErrorManager(), this, expectedType))
 	{
 		assignValueFunc = &defaultAssignFunction;
 	}

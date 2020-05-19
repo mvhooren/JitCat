@@ -95,7 +95,6 @@ std::any CatStaticFunctionCall::execute(CatRuntimeContext* runtimeContext)
 	arguments->executeAllArguments(argumentValues, staticFunctionInfo->getArgumentTypes(), runtimeContext);
 	std::any value = staticFunctionInfo->call(runtimeContext, argumentValues);
 	runtimeContext->setReturning(wasReturning);
-	runtimeContext->clearTemporaries();
 	return value;
 }
 

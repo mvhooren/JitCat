@@ -183,6 +183,8 @@ namespace jitcat::Reflection
 		//Returns true if the type has no dependencies and can be deleted.
 		virtual bool canBeDeleted() const;
 
+		bool canBeAssignedBy(const CatGenericType& type) const;
+
 		void addDependentType(TypeInfo* otherType);
 		void removeDependentType(TypeInfo* otherType);
 

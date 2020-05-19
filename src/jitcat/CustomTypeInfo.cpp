@@ -39,6 +39,29 @@ CustomTypeInfo::~CustomTypeInfo()
 }
 
 
+TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDoubleMember(const std::string& memberName, float defaultValue, bool isWritable, bool isConst)
+{
+	unsigned char* data = increaseDataSize(sizeof(double));
+	memcpy(data, &defaultValue, sizeof(double));
+	unsigned int offset = (unsigned int)(data - defaultData);
+	if (defaultData == nullptr)
+	{
+		offset = 0;
+	}
+
+	std::set<Reflectable*>::iterator end = instances.end();
+	for (std::set<Reflectable*>::iterator iter = instances.begin(); iter != end; ++iter)
+	{
+		memcpy((unsigned char*)(*iter) + offset, &defaultValue, sizeof(double));
+	}
+
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<double>(memberName, offset, CatGenericType::createDoubleType(isWritable, isConst));
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
 TypeMemberInfo* CustomTypeInfo::addFloatMember(const std::string& memberName, float defaultValue, bool isWritable, bool isConst)
 {
 	unsigned char* data = increaseDataSize(sizeof(float));
@@ -108,10 +131,10 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 }
 
 
-TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable, bool isConst)
+TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable, bool isConst)
 {
 	triviallyCopyable = false;
-	unsigned char* data = increaseDataSize(sizeof(std::string));
+	unsigned char* data = increaseDataSize(sizeof(Configuration::CatString));
 	unsigned int offset = (unsigned int)(data - defaultData);
 	if (defaultData == nullptr)
 	{
@@ -121,12 +144,12 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 	std::set<Reflectable*>::iterator end = instances.end();
 	for (std::set<Reflectable*>::iterator iter = instances.begin(); iter != end; ++iter)
 	{
-		new ((unsigned char*)(*iter) + offset) std::string(defaultValue);
+		new ((unsigned char*)(*iter) + offset) Configuration::CatString(defaultValue);
 	}
 
-	new (data) std::string(defaultValue);
+	new (data) Configuration::CatString(defaultValue);
 
-	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<std::string>(memberName, offset, CatGenericType::createStringType(isWritable, isConst));
+	TypeMemberInfo* memberInfo = new CustomTypeObjectDataMemberInfo(memberName, offset, CatGenericType::createStringType(isWritable, isConst));
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 	return memberInfo;
@@ -202,12 +225,26 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDataObjectMember(const st
 TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string& memberName, const CatGenericType& type)
 {
 	if		(type.isFloatType())						return addFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
+	else if	(type.isDoubleType())						return addDoubleMember(memberName, 0.0, type.isWritable(), type.isConst());
 	else if (type.isIntType())							return addIntMember(memberName, 0, type.isWritable(), type.isConst());
 	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
-	else if (type.isStringType())						return addStringMember(memberName, "", type.isWritable(), type.isConst());
+	else if (type.isStringValueType())					return addStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType());
 	else												return nullptr;
+}
+
+
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticDoubleMember(const std::string& memberName, double defaultValue, bool isWritable, bool isConst)
+{
+	constexpr std::size_t dataSize = sizeof(double);
+	unsigned char* memberData = new unsigned char[dataSize];
+	staticData.emplace_back(memberData);
+	memcpy(memberData, &defaultValue, dataSize);
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	StaticMemberInfo* memberInfo = new StaticBasicTypeMemberInfo<double>(memberName, reinterpret_cast<double*>(memberData), CatGenericType::doubleType);
+	staticMembers.emplace(lowerCaseMemberName, memberInfo);
+	return memberInfo;
 }
 
 
@@ -250,14 +287,14 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticBoolMember(const 
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticStringMember(const std::string& memberName, const std::string& defaultValue, bool isWritable, bool isConst)
+StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable, bool isConst)
 {
-	constexpr std::size_t dataSize = sizeof(std::string);
+	constexpr std::size_t dataSize = sizeof(Configuration::CatString);
 	unsigned char* memberData = new unsigned char[dataSize];
 	staticData.emplace_back(memberData);
-	new (memberData) std::string(defaultValue);
+	new (memberData) Configuration::CatString(defaultValue);
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
-	StaticMemberInfo* memberInfo = new StaticBasicTypeMemberInfo<std::string>(memberName, reinterpret_cast<std::string*>(memberData), CatGenericType::stringType);
+	StaticMemberInfo* memberInfo = new StaticClassObjectMemberInfo(memberName, memberData, CatGenericType::createStringType(isWritable, isConst));
 	staticMembers.emplace(lowerCaseMemberName, memberInfo);
 	return memberInfo;
 }
@@ -315,9 +352,10 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticDataObjectMember(
 StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticMember(const std::string& memberName, const CatGenericType& type)
 {
 	if		(type.isFloatType())						return addStaticFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
+	else if (type.isDoubleType())						return addStaticDoubleMember(memberName, 0.0, type.isWritable(), type.isConst());
 	else if (type.isIntType())							return addStaticIntMember(memberName, 0, type.isWritable(), type.isConst());
 	else if (type.isBoolType())							return addStaticBoolMember(memberName, false, type.isWritable(), type.isConst());
-	else if (type.isStringType())						return addStaticStringMember(memberName, "", type.isWritable(), type.isConst());
+	else if (type.isStringValueType())					return addStaticStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addStaticObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else if (type.isReflectableObjectType())			return addStaticDataObjectMember(memberName, type.getObjectType());
 	else												return nullptr;

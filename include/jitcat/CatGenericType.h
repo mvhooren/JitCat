@@ -6,7 +6,9 @@
 */
 
 #pragma once
+
 #include "jitcat/CatInfixOperatorType.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/IndirectionConversionMode.h"
 #include "jitcat/InfixOperatorResultInfo.h"
 #include "jitcat/TypeInfoDeleter.h"
@@ -45,7 +47,7 @@ namespace jitcat
 			None,
 			Int,
 			Float,
-			String,
+			Double,
 			Bool,
 			Void,
 			Count
@@ -71,8 +73,14 @@ namespace jitcat
 		bool isBasicType() const;
 		bool isBoolType() const;
 		bool isIntType() const;
+		bool isIntegeralType() const;
 		bool isFloatType() const;
+		bool isDoubleType() const;
+
 		bool isStringType() const;
+		bool isStringPtrType() const;
+		bool isStringValueType() const;
+
 		bool isScalarType() const;
 		bool isVoidType() const;
 		bool isEnumType() const;
@@ -138,7 +146,7 @@ namespace jitcat
 		std::size_t getTypeSize() const;
 
 		//Converts value of valueType to this type if possible, otherwise returns default value
-		std::any convertToType(std::any value, const CatGenericType& valueType) const;
+		std::any convertToType(std::any& value, const CatGenericType& valueType) const;
 
 		//If this is an enum type. Converts the std::any containing an enum value to a std::any containing its underlying type.
 		std::any toUnderlyingType(std::any enumValue) const;
@@ -146,9 +154,10 @@ namespace jitcat
 		void printValue(std::any& value);
 
 		static float convertToFloat(std::any value, const CatGenericType& valueType);
+		static double convertToDouble(std::any value, const CatGenericType& valueType);
 		static int convertToInt(std::any value, const CatGenericType& valueType);
 		static bool convertToBoolean(std::any value, const CatGenericType& valueType);
-		static std::string convertToString(std::any value, const CatGenericType& valueType);
+		static Configuration::CatString convertToString(std::any value, const CatGenericType& valueType);
 		static CatGenericType readFromXML(std::ifstream& xmlFile, const std::string& closingTag, std::map<std::string, Reflection::TypeInfo*>& typeInfos);
 		void writeToXML(std::ofstream& xmlFile, const char* linePrefixCharacters);
 
@@ -183,14 +192,17 @@ namespace jitcat
 		std::any createFromRawPointer(const uintptr_t pointer) const;
 		std::any createNullPtr() const;
 
+		static const CatGenericType& getWidestBasicType(const CatGenericType& left, const CatGenericType& right);
 		static CatGenericType createIntType(bool isWritable, bool isConst);
 		static CatGenericType createFloatType(bool isWritable, bool isConst);
+		static CatGenericType createDoubleType(bool isWritable, bool isConst);
 		static CatGenericType createBoolType(bool isWritable, bool isConst);
 		static CatGenericType createStringType(bool isWritable, bool isConst);
 
 	private:
 		static const char* toString(BasicType type);
 		static BasicType toBasicType(const char* value);
+		static BasicType getWidestType(BasicType lType, BasicType rType);
 		static const char* toString(SpecificType type);
 		static SpecificType toSpecificType(const char* value);
 		static const CatGenericType& getBasicType(BasicType type);
@@ -198,8 +210,13 @@ namespace jitcat
 	public:
 		static const CatGenericType intType;
 		static const CatGenericType floatType;
+		static const CatGenericType doubleType;
 		static const CatGenericType boolType;
 		static const CatGenericType stringType;
+	
+		static const CatGenericType stringWeakPtrType;
+		static const CatGenericType stringConstantValuePtrType;
+		static const CatGenericType stringMemberValuePtrType;
 		static const CatGenericType voidType;
 		static const std::unique_ptr<Reflection::TypeInfo, Reflection::TypeInfoDeleter> nullptrTypeInfo;
 		static const CatGenericType nullptrType;
@@ -207,6 +224,7 @@ namespace jitcat
 
 		static const std::unique_ptr<Reflection::TypeCaster> intTypeCaster;
 		static const std::unique_ptr<Reflection::TypeCaster> floatTypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> doubleTypeCaster;
 		static const std::unique_ptr<Reflection::TypeCaster> boolTypeCaster; 
 		static const std::unique_ptr<Reflection::TypeCaster> stringTypeCaster;
 

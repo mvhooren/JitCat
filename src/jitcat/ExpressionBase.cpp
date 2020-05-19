@@ -268,6 +268,11 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toFloat", expressionLexeme, arguments, expressionLexeme);
 						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
+					else if (expectedType.isDoubleType())
+					{
+						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toDouble", expressionLexeme, arguments, expressionLexeme);
+						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+					}
 					else if (expectedType.isIntType())
 					{
 						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toInt", expressionLexeme, arguments, expressionLexeme);

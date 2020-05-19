@@ -14,6 +14,7 @@ namespace jitcat::AST
 	{
 		ToVoid,
 		ToInt,
+		ToDouble,
 		ToFloat,
 		ToBool,
 		ToString,

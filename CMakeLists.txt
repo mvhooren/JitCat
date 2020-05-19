@@ -120,6 +120,7 @@ if(MSVC)
 	endforeach(flag_var)
 	#always enable multi processor compilation
 	add_compile_options("/MP")
+	add_compile_options("/bigobj")
 	#optionally enable the experimental msvc feature that gets rid of lots of warnings from llvm
 	if(MSVC_EXPERIMENTAL_DISABLE_EXTERNAL_WARNINGS)
 		add_compile_options(/experimental:external /external:anglebrackets /external:W0)

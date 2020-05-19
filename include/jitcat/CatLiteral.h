@@ -8,6 +8,8 @@
 #pragma once
 
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/Configuration.h"
+
 
 namespace jitcat::AST
 {
@@ -16,7 +18,7 @@ namespace jitcat::AST
 	{
 	public:
 		CatLiteral(const std::any& value, CatGenericType type, const Tokenizer::Lexeme& lexeme);
-		CatLiteral(const std::string& value, const Tokenizer::Lexeme& lexeme);
+		CatLiteral(const Configuration::CatString& value, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(int intValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(bool boolValue, const Tokenizer::Lexeme& lexeme);

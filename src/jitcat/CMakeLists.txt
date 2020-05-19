@@ -128,6 +128,8 @@ set(Source_Cat_ASTNodes_ASTHelper
 	${JitCatHeaderPath}/IndirectionConversionMode.h
 	InfixOperatorResultInfo.cpp
 	${JitCatHeaderPath}/InfixOperatorResultInfo.h
+	StringConstantPool.cpp
+	${JitCatHeaderPath}/StringConstantPool.h
 )
 
 set(Source_Cat_CodeGeneration_LLVM
@@ -141,6 +143,8 @@ set(Source_Cat_CodeGeneration_LLVM
 	${JitCatHeaderPath}/LLVMJit.h
 	${JitCatHeaderPath}/LLVMJitHeaderImplementation.h
 	${JitCatHeaderPath}/LLVMMemoryManager.h
+	LLVMPreGeneratedExpression.cpp
+	${JitCatHeaderPath}/LLVMPreGeneratedExpression.h
 	LLVMTypes.cpp
 	${JitCatHeaderPath}/LLVMTypes.h
 )

@@ -7,6 +7,7 @@
 
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/StringConstantPool.h"
 #include "jitcat/TypeInfo.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
@@ -50,7 +51,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	SECTION("Literal String")
 	{
 		ExpressionAny testExpression(&context, "\"test\"");
-		doChecks(std::string("test"), false, true, true, testExpression, context);
+		doChecks(AST::StringConstantPool::getString("test"), false, true, true, testExpression, context);
 	}
 	SECTION("Float Variable")
 	{
@@ -75,7 +76,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	SECTION("String Variable")
 	{
 		ExpressionAny testExpression(&context, "text");
-		doChecks(std::string("Hello!"), false, false, false, testExpression, context);
+		doChecks(&reflectedObject.text, false, false, false, testExpression, context);
 	}
 	SECTION("Object Variable")
 	{

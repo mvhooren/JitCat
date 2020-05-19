@@ -7,11 +7,22 @@
 
 #pragma once
 
+
+#include <sstream>
+#include <string>
+
+
 namespace jitcat
 {
 
 namespace Configuration
 {
+	//This determines the default underlying string type.
+	//Can be changed to, for example, use a different string allocator.
+	using CatString			= std::string;
+	using CatStringStream	= std::stringstream;
+	using CatStringOStream	= std::ostringstream;
+
 	//Determines the ordering of the 'this' argument and the 'sret' argument in a member function.
 	//Sret is used when a function returns a structure by value. Om windows/msvc a class member funtion's
 	//first argument will be the 'this' pointer and the second argument will be the sret pointer if applicable.
