@@ -136,74 +136,6 @@ Configuration::CatString LLVMCatIntrinsics::intToFixedLengthString(int number, i
 }
 
 
-int LLVMCatIntrinsics::findInString(const Configuration::CatString* text, const Configuration::CatString* textToFind)
-{
-	if (text == nullptr || textToFind == nullptr)
-	{
-		return -1;
-	}
-	std::size_t pos = text->find(*textToFind);
-	if (pos == text->npos)
-	{
-		return -1;
-	}
-	else
-	{
-		return (int)pos;
-	}
-}
-
-
-Configuration::CatString LLVMCatIntrinsics::replaceInString(const Configuration::CatString* text, const Configuration::CatString* textToFind, const Configuration::CatString* replacement)
-{
-	if (text == nullptr || textToFind == nullptr || replacement == nullptr)
-	{
-		return Configuration::CatString();
-	}
-	if (*text != Configuration::CatString())
-	{
-		Configuration::CatString newString = *text;
-		size_t startPosition = 0;
-		while ((startPosition = newString.find(*textToFind, startPosition)) != Configuration::CatString::npos)
-		{
-			newString.replace(startPosition, textToFind->length(), *replacement);
-			startPosition += replacement->length(); 
-		}
-		return newString;
-	}
-	return *text;
-}
-
-
-int LLVMCatIntrinsics::stringLength(const Configuration::CatString* text)
-{
-	if (text != nullptr)
-	{
-		return (int)text->size();
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-
-Configuration::CatString LLVMCatIntrinsics::subString(const Configuration::CatString* text, int start, int length)
-{
-	if (text == nullptr || text->size() == 0)
-	{
-		return Configuration::CatString();
-	}
-	else if ((int)text->size() > start && start >= 0)
-	{
-		return text->substr((unsigned int)start, (unsigned int)length);
-	}
-	else
-	{
-		return Configuration::CatString();
-	}
-}
-
 float LLVMCatIntrinsics::getRandomFloat()
 {
 	return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
@@ -278,7 +210,10 @@ Configuration::CatString LLVMCatIntrinsics::roundFloatToString(float number, int
 
 void jitcat::LLVM::LLVMCatIntrinsics::placementCopyConstructType(Reflectable* target, Reflectable* source, Reflection::TypeInfo* type)
 {
-	type->copyConstruct(reinterpret_cast<unsigned char*>(target), type->getTypeSize(), reinterpret_cast<unsigned char*>(source), type->getTypeSize());
+	if (target != source)
+	{
+		type->copyConstruct(reinterpret_cast<unsigned char*>(target), type->getTypeSize(), reinterpret_cast<unsigned char*>(source), type->getTypeSize());
+	}
 }
 
 

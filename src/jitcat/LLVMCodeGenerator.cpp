@@ -456,31 +456,6 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 				return nullptr;
 			}
 		}
-		case CatBuiltInFunctionType::FindInString:
-		{
-			llvm::Value* text = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::stringWeakPtrType, context);
-			llvm::Value* textToFind = helper->convertType(generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), CatGenericType::stringWeakPtrType, context);
-			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::findInString, {text, textToFind}, "findInString");
-		}
-		case CatBuiltInFunctionType::ReplaceInString:
-		{
-			llvm::Value* sourceString = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::stringWeakPtrType, context);
-			llvm::Value* stringToFind = helper->convertType(generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), CatGenericType::stringWeakPtrType, context);
-			llvm::Value* replacementString = helper->convertType(generate(arguments->getArgument(2), context), arguments->getArgument(2)->getType(), CatGenericType::stringWeakPtrType, context);
-			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::replaceInString, {sourceString, stringToFind, replacementString}, "replaceInString");
-		}
-		case CatBuiltInFunctionType::StringLength:
-		{
-			llvm::Value* string = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::stringWeakPtrType, context);
-			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::stringLength, {string}, "stringLength");
-		}
-		case CatBuiltInFunctionType::SubString:
-		{
-			llvm::Value* sourceString = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::stringWeakPtrType, context);
-			llvm::Value* offset = helper->convertType(generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-			llvm::Value* length = helper->convertType(generate(arguments->getArgument(2), context), arguments->getArgument(2)->getType(), CatGenericType::intType, context);
-			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::subString, {sourceString, offset, length}, "subString");
-		}
 		case CatBuiltInFunctionType::ToString:
 		{
 			return helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::stringWeakPtrType, context);
@@ -1067,21 +1042,29 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 
 		uintptr_t functionAddress = callData.functionAddress;
 
-		if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
-		{
-			return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->memberFunctionName, returnedObjectAllocation);
-		}
-
 		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
 		if (!returnType.isReflectableObjectType())
 		{
-			llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));
-			if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
+			if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
 			{
-				call->setCallingConv(llvm::CallingConv::X86_ThisCall);
+				return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->memberFunctionName, returnedObjectAllocation);
 			}
-			return static_cast<llvm::Value*>(call);
+			else
+			{
+				llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
+				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));
+				if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
+				{
+					call->setCallingConv(llvm::CallingConv::X86_ThisCall);
+				}
+				return static_cast<llvm::Value*>(call);
+			}
+		}
+		else if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
+		{
+			argumentTypes.insert(argumentTypes.begin(), LLVMTypes::pointerType);
+			argumentList.insert(argumentList.begin(), returnedObjectAllocation);
+			return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->memberFunctionName, returnedObjectAllocation);
 		}
 		else if (returnType.isReflectableObjectType())
 		{
@@ -1090,8 +1073,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 			{
 				sretTypeInsertPoint++;
 			}
-			llvm::Type* returnLLVMTypePtr = LLVMTypes::pointerType;
-			argumentTypes.insert(sretTypeInsertPoint, returnLLVMTypePtr);
+			argumentTypes.insert(sretTypeInsertPoint, LLVMTypes::pointerType);
 
 			llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
 			auto sretInsertPoint = argumentList.begin();

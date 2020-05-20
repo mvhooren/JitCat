@@ -52,10 +52,6 @@ namespace jitcat::LLVM
 		static int stringToInt(const Configuration::CatString& string);
 		static Configuration::CatString intToPrettyString(int number);
 		static Configuration::CatString intToFixedLengthString(int number, int stringLength);
-		static int findInString(const Configuration::CatString* text, const Configuration::CatString* textToFind);
-		static Configuration::CatString replaceInString(const Configuration::CatString* text, const Configuration::CatString* textToFind, const Configuration::CatString* replacement);
-		static int stringLength(const Configuration::CatString* text);
-		static	Configuration::CatString subString(const Configuration::CatString* text, int start, int length);
 		static float getRandomFloat();
 		static bool getRandomBoolean(bool first, bool second);
 		static int getRandomInt(int min, int max);

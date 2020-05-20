@@ -296,56 +296,6 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			{
 				return CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0));
 			}
-		case CatBuiltInFunctionType::FindInString:
-		{
-			Configuration::CatString stringValue = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
-			Configuration::CatString stringToFindValue = CatGenericType::convertToString(argumentValues[1], arguments->getArgumentType(1));
-			std::size_t pos = stringValue.find(stringToFindValue);
-			int result = 0;
-			if (pos == stringValue.npos)
-			{
-				result = -1;
-			}
-			else
-			{
-				result = (int)pos;
-			}
-			return std::any(result);
-		}
-		case CatBuiltInFunctionType::ReplaceInString:
-		{
-			Configuration::CatString stringValue = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
-			Configuration::CatString stringToFindValue = CatGenericType::convertToString(argumentValues[1], arguments->getArgumentType(1));
-			Configuration::CatString replacementStringValue = CatGenericType::convertToString(argumentValues[2], arguments->getArgumentType(2));
-			if (stringToFindValue != Configuration::CatString())
-			{
-				size_t startPosition = 0;
-				while ((startPosition = stringValue.find(stringToFindValue, startPosition)) != Configuration::CatString::npos)
-				{
-					stringValue.replace(startPosition, stringToFindValue.length(), replacementStringValue);
-					startPosition += replacementStringValue.length(); 
-				}
-			}
-			return std::any(stringValue);
-		}
-		case CatBuiltInFunctionType::StringLength:	return std::any((int)CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0)).size());
-		case CatBuiltInFunctionType::SubString:
-		{
-			Configuration::CatString value = CatGenericType::convertToString(argumentValues[0], arguments->getArgumentType(0));
-			int offsetValue = CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1));
-			if (value.size() == 0 && offsetValue == 0)
-			{
-				return std::any(Configuration::CatString());
-			}
-			else if ((int)value.size() > offsetValue && offsetValue >= 0)
-			{
-				return std::any(value.substr((unsigned int)offsetValue, CatGenericType::convertToInt(argumentValues[2], arguments->getArgumentType(2))));
-			}
-			else
-			{
-				return std::any(Configuration::CatString());
-			}
-		}
 		case CatBuiltInFunctionType::Select:
 		{
 				if (std::any_cast<bool>(argumentValues[0]))
@@ -586,55 +536,6 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 					return false;
 				}
 				break;
-			case CatBuiltInFunctionType::FindInString:
-				if ((arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType())
-					&& (arguments->getArgumentType(1).isBasicType() || arguments->getArgumentType(1).isStringType()))
-				{
-					returnType = CatGenericType::intType;
-				}
-				else
-				{
-					errorManager->compiledWithError("findInString: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
-					return false;
-				}
-				break;
-			case CatBuiltInFunctionType::ReplaceInString:
-				if ((arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType())
-					&& (arguments->getArgumentType(1).isBasicType() || arguments->getArgumentType(1).isStringType())
-					&& (arguments->getArgumentType(2).isBasicType()) || arguments->getArgumentType(2).isStringType())
-				{
-					returnType = CatGenericType::stringType;
-				}
-				else
-				{
-					errorManager->compiledWithError("replaceInString: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
-					return false;
-				}
-				break;
-			case CatBuiltInFunctionType::StringLength:
-				if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType())
-				{
-					returnType = CatGenericType::intType;
-				}
-				else
-				{
-					errorManager->compiledWithError("stringLength: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
-					return false;
-				}
-				break;
-			case CatBuiltInFunctionType::SubString:
-				if ((arguments->getArgumentType(0).isBasicType()  || arguments->getArgumentType(0).isStringType())
-					&& arguments->getArgumentType(1).isScalarType()
-					&& arguments->getArgumentType(2).isScalarType())
-				{
-					returnType = CatGenericType::stringType;
-				}
-				else
-				{
-					errorManager->compiledWithError("subString: invalid argument.", errorContext, compiletimeContext->getContextName(), getLexeme());
-					return false;
-				}
-				break;
 			case CatBuiltInFunctionType::Select:
 			{
 				if (arguments->getArgumentType(0).isBoolType())
@@ -764,7 +665,6 @@ bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::ToInt:
 		case CatBuiltInFunctionType::ToString:
 		case CatBuiltInFunctionType::ToPrettyString:
-		case CatBuiltInFunctionType::StringLength:
 		case CatBuiltInFunctionType::ToBool:
 		case CatBuiltInFunctionType::Abs:
 		case CatBuiltInFunctionType::ToDouble:
@@ -796,12 +696,9 @@ bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 		case CatBuiltInFunctionType::Min:
 		case CatBuiltInFunctionType::Max:
 		case CatBuiltInFunctionType::Pow:
-		case CatBuiltInFunctionType::FindInString:
 		case CatBuiltInFunctionType::ToFixedLengthString:
 			return count == 2;
 		case CatBuiltInFunctionType::Cap:
-		case CatBuiltInFunctionType::SubString:
-		case CatBuiltInFunctionType::ReplaceInString:
 		case CatBuiltInFunctionType::Select:
 			return count == 3;
 	}
@@ -868,9 +765,5 @@ std::vector<std::string> CatBuiltInFunctionCall::functionTable =
 	 "pow",					//CatBuiltInFunctionType::Pow
 	 "ceil",				//CatBuiltInFunctionType::Ceil
 	 "floor",				//CatBuiltInFunctionType::Floor
-	 "findInString",		//CatBuiltInFunctionType::FindInString,
-	 "replaceInString",		//CatBuiltInFunctionType::ReplaceInString,
-	 "stringLength",		//CatBuiltInFunctionType::StringLength
-	 "subString",			//CatBuiltInFunctionType::SubString
 	 "select"				//CatBuiltInFunctionType::Select
 };

@@ -49,10 +49,6 @@ namespace jitcat::AST
 		Pow,
 		Ceil,
 		Floor,
-		FindInString,
-		ReplaceInString,
-		StringLength,
-		SubString,
 		Select,
 		Count,
 		Invalid

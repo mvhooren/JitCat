@@ -458,7 +458,9 @@ namespace jitcat::Reflection
 					.addMember<StringT, StringT&, const StringT&>("=", &StringT::operator=)
 					.addPseudoMemberFunction<StringT>("length", &ExternalReflector<StringT>::length)
 					.addPseudoMemberFunction<StringT, int, const StringT*>("find", &ExternalReflector<StringT>::find)
-					.addPseudoMemberFunction<StringT, int, const StringT*, int>("find", &ExternalReflector<StringT>::find);
+					.addPseudoMemberFunction<StringT, int, const StringT*, int>("find", &ExternalReflector<StringT>::find)
+					.addPseudoMemberFunction<StringT>("replace", &ExternalReflector<StringT>::replace)
+					.addPseudoMemberFunction<StringT>("subString", &ExternalReflector<StringT>::subString);
 			}
 
 			static constexpr bool exists = true;
@@ -528,6 +530,44 @@ namespace jitcat::Reflection
 				else
 				{
 					return -1;
+				}
+			}
+
+
+			static StringT replace(StringT* thisString, const StringT* stringToFind, const StringT* replacementString)
+			{
+				if (thisString == nullptr || stringToFind == nullptr || replacementString == nullptr)
+				{
+					return StringT();
+				}
+				if (*thisString != StringT())
+				{
+					StringT newString = *thisString;
+					size_t startPosition = 0;
+					while ((startPosition = newString.find(*stringToFind, startPosition)) != StringT::npos)
+					{
+						newString.replace(startPosition, stringToFind->length(), *replacementString);
+						startPosition += replacementString->length(); 
+					}
+					return newString;
+				}
+				return *thisString;
+			}
+
+
+			static StringT subString(StringT* thisString, int start, int length)
+			{
+				if (thisString == nullptr || thisString->size() == 0)
+				{
+					return StringT();
+				}
+				else if ((int)thisString->size() > start && start >= 0)
+				{
+					return thisString->substr((unsigned int)start, (unsigned int)length);
+				}
+				else
+				{
+					return StringT();
 				}
 			}
 
