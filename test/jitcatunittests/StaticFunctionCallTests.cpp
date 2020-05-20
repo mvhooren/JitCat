@@ -30,6 +30,11 @@ TEST_CASE("Static Functions", "[staticfunctions]" )
 		Expression<float> testExpression(&context, "getStaticFloat()");
 		doChecks(ReflectedObject::getStaticFloat(), false, false, false, testExpression, context);
 	}
+	SECTION("Global scope get double")
+	{
+		Expression<double> testExpression(&context, "getStaticDouble()");
+		doChecks(ReflectedObject::getStaticDouble(), false, false, false, testExpression, context);
+	}
 	SECTION("Global scope get int")
 	{
 		Expression<int> testExpression(&context, "getStaticInt()");
@@ -90,6 +95,11 @@ TEST_CASE("Static Functions", "[staticfunctions]" )
 	{
 		Expression<float> testExpression(&context, "ReflectedObject::getStaticFloat()");
 		doChecks(ReflectedObject::getStaticFloat(), false, false, false, testExpression, context);
+	}
+	SECTION("Explicit static scope get double")
+	{
+		Expression<double> testExpression(&context, "ReflectedObject::getStaticDouble()");
+		doChecks(ReflectedObject::getStaticDouble(), false, false, false, testExpression, context);
 	}
 	SECTION("Explicit static scope get int")
 	{

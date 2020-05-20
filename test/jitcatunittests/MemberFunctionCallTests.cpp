@@ -30,6 +30,11 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		Expression<float> testExpression(&context, "getFloat()");
 		doChecks(reflectedObject.getFloat(), false, false, false, testExpression, context);
 	}
+	SECTION("Get double")
+	{
+		Expression<double> testExpression(&context, "getDouble()");
+		doChecks(reflectedObject.getDouble(), false, false, false, testExpression, context);
+	}
 	SECTION("Get int")
 	{
 		Expression<int> testExpression(&context, "getint()");
@@ -75,6 +80,11 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<float> testExpression(&context, "getConstantFloat()");
 		doChecks(reflectedObject.getConstantFloat(), false, false, false, testExpression, context);
+	}
+	SECTION("Const get double")
+	{
+		Expression<double> testExpression(&context, "getConstantDouble()");
+		doChecks(reflectedObject.getConstantDouble(), false, false, false, testExpression, context);
 	}
 	SECTION("Const get int")
 	{
@@ -199,6 +209,11 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	{
 		Expression<float> testExpression(&context, "nestedSelfObject.nestedSelfObject.getFloat()");
 		doChecks(0.0f, false, false, false, testExpression, context);
+	}
+	SECTION("null base double")
+	{
+		Expression<double> testExpression(&context, "nestedSelfObject.nestedSelfObject.getDouble()");
+		doChecks(0.0, false, false, false, testExpression, context);
 	}
 	SECTION("null base int")
 	{

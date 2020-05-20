@@ -270,6 +270,7 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName);
 	TypeRegistry::get()->registerType(customTypeName, customType.get());
 	customType->addFloatMember("myFloat", 0.001f);
+	customType->addDoubleMember("myDouble", 0.001f);
 	customType->addIntMember("myInt", 54321);
 	customType->addStringMember("myString", "foo");
 	customType->addBoolMember("myBoolean", true);
@@ -288,6 +289,11 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	{
 		ExpressionAssignAny testExpression(&context, "aFloat");
 		checkAnyAssignExpression(reflectedObject.aFloat, 11.0f, false, testExpression, context);
+	}
+	SECTION("Assign reflected double")
+	{
+		ExpressionAssignAny testExpression(&context, "aDouble");
+		checkAnyAssignExpression(reflectedObject.aDouble, 11.0, false, testExpression, context);
 	}
 	SECTION("Assign reflected bool")
 	{
@@ -315,6 +321,11 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 		ExpressionAssignAny testExpression(&context, "zeroFloat");
 		checkAnyAssignExpression(reflectedObject.zeroFloat, 11.0f, true, testExpression, context);
 	}
+	SECTION("Assign nonWritable reflected double")
+	{
+		ExpressionAssignAny testExpression(&context, "zeroDouble");
+		checkAnyAssignExpression(reflectedObject.zeroDouble, 11.0, true, testExpression, context);
+	}
 	SECTION("Assign nonWritable reflected bool")
 	{
 		ExpressionAssignAny testExpression(&context, "no");
@@ -340,6 +351,11 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	{
 		ExpressionAssignAny testExpression(&context, "myFloat");
 		checkAnyAssignExpressionCustom(typeInstance.getObject(), customType.get(), "myFloat", 11.0f, false, testExpression, context);
+	}
+	SECTION("Assign custom double")
+	{
+		ExpressionAssignAny testExpression(&context, "myDouble");
+		checkAnyAssignExpressionCustom(typeInstance.getObject(), customType.get(), "myDouble", 11.0, false, testExpression, context);
 	}
 	SECTION("Assign custom bool")
 	{

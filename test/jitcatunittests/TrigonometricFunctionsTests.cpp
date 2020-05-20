@@ -44,6 +44,11 @@ TEST_CASE("Builtin functions test: Sin", "[builtins][sin]" )
 		Expression<float> testExpression(&context, "sin(aFloat)");
 		doChecks<float>(sin(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Sin_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "sin(aDouble)");
+		doChecks<double>(sin(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Sin_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "sin(-aFloat)");
@@ -103,6 +108,11 @@ TEST_CASE("Builtin functions test: Cos", "[builtins][cos]" )
 	{
 		Expression<float> testExpression(&context, "cos(aFloat)");
 		doChecks<float>(cos(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Cos_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "cos(aDouble)");
+		doChecks<double>(cos(reflectedObject.aDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Cos_Negative Variable")
 	{
@@ -164,6 +174,11 @@ TEST_CASE("Builtin functions test: Tan", "[builtins][tan]" )
 		Expression<float> testExpression(&context, "tan(aFloat)");
 		doChecks<float>(tan(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Tan_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "tan(aDouble)");
+		doChecks<double>(tan(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Tan_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "tan(-aFloat)");
@@ -219,6 +234,11 @@ TEST_CASE("Builtin functions test: Asin", "[builtins][asin]")
 		Expression<float> testExpression(&context, "asin(smallFloat)");
 		doChecks<float>(asin(reflectedObject.smallFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Asin_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "asin(smallDouble)");
+		doChecks<double>(asin(reflectedObject.smallDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Asin_Negative_Variable")
 	{
 		Expression<float> testExpression(&context, "asin(-smallFloat)");
@@ -268,6 +288,11 @@ TEST_CASE("Builtin functions test: Acos", "[builtins][acos]")
 	{
 		Expression<float> testExpression(&context, "acos(smallFloat)");
 		doChecks<float>(acos(reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Acos_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "acos(smallDouble)");
+		doChecks<double>(acos(reflectedObject.smallDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Acos_Negative_Variable")
 	{
@@ -323,6 +348,11 @@ TEST_CASE("Builtin functions test: Atan", "[builtins][atan]")
 	{
 		Expression<float> testExpression(&context, "atan(aFloat)");
 		doChecks<float>(atan(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atan_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "atan(smallDouble)");
+		doChecks<double>(atan(reflectedObject.smallDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Atan_Negative_Variable")
 	{
@@ -384,6 +414,11 @@ TEST_CASE("Builtin functions test: Sinh", "[builtins][sinh]")
 		Expression<float> testExpression(&context, "sinh(aFloat)");
 		doChecks<float>(sinh(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Sinh_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "sinh(aDouble)");
+		doChecks<double>(sinh(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Sinh_Negative_Variable")
 	{
 		Expression<float> testExpression(&context, "sinh(-aFloat)");
@@ -443,6 +478,11 @@ TEST_CASE("Builtin functions test: Cosh", "[builtins][cosh]")
 	{
 		Expression<float> testExpression(&context, "cosh(aFloat)");
 		doChecks<float>(cosh(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Cosh_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "cosh(aDouble)");
+		doChecks<double>(cosh(reflectedObject.aDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Cosh_Negative_Variable")
 	{
@@ -504,6 +544,11 @@ TEST_CASE("Builtin functions test: Tanh", "[builtins][tanh]")
 		Expression<float> testExpression(&context, "tanh(aFloat)");
 		doChecks<float>(tanh(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Tanh_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "tanh(aDouble)");
+		doChecks<double>(tanh(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Tanh_Negative_Variable")
 	{
 		Expression<float> testExpression(&context, "tanh(-aFloat)");
@@ -558,6 +603,11 @@ TEST_CASE("Builtin functions test: Asinh", "[builtins][asinh]")
 	{
 		Expression<float> testExpression(&context, "asinh(smallFloat)");
 		doChecks<float>(asinh(reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Asinh_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "asinh(smallDouble)");
+		doChecks<double>(asinh(reflectedObject.smallDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Asinh_Variable_2")
 	{
@@ -614,6 +664,11 @@ TEST_CASE("Builtin functions test: Acosh", "[builtins][acosh]")
 		Expression<float> testExpression(&context, "acosh(aFloat)");
 		doChecks<float>(acosh(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Acosh_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "acosh(aDouble)");
+		doChecks<double>(acosh(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Acosh_string")
 	{
 		Expression<float> testExpression(&context, "acosh(numberString)");
@@ -658,6 +713,11 @@ TEST_CASE("Builtin functions test: Atanh", "[builtins][atanh]")
 	{
 		Expression<float> testExpression(&context, "atanh(smallFloat)");
 		doChecks<float>(atanh(reflectedObject.smallFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Acosh_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "atanh(smallDouble)");
+		doChecks<double>(atanh(reflectedObject.smallDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Atanh_Negative_Variable")
 	{
@@ -733,6 +793,21 @@ TEST_CASE("Builtin functions test: Atan2", "[builtins][atan2]")
 	{
 		Expression<float> testExpression(&context, "atan2(-aFloat, aFloat)");
 		doChecks<float>(atan2(-reflectedObject.aFloat, reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_double_double")
+	{
+		Expression<double> testExpression(&context, "atan2(-aDouble, aDouble)");
+		doChecks<double>(atan2(-reflectedObject.aDouble, reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_float_double")
+	{
+		Expression<double> testExpression(&context, "atan2(-aFloat, aDouble)");
+		doChecks<double>(atan2(-reflectedObject.aFloat, reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
+	SECTION("Atan2_double_float")
+	{
+		Expression<double> testExpression(&context, "atan2(-aDouble, aFloat)");
+		doChecks<double>(atan2(-reflectedObject.aDouble, reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Atan2_int_const")
 	{
@@ -833,6 +908,21 @@ TEST_CASE("Builtin functions test: Hypot", "[builtins][hypot]")
 	{
 		Expression<float> testExpression(&context, "hypot(-aFloat, aFloat)");
 		doChecks<float>(hypot(-reflectedObject.aFloat, reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_double_double")
+	{
+		Expression<double> testExpression(&context, "hypot(-aDouble, aDouble)");
+		doChecks<double>(hypot(-reflectedObject.aDouble, reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_float_double")
+	{
+		Expression<double> testExpression(&context, "hypot(-aFloat, aDouble)");
+		doChecks<double>(hypot(-reflectedObject.aFloat, reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
+	SECTION("Hypot_double_float")
+	{
+		Expression<double> testExpression(&context, "hypot(-aDouble, aFloat)");
+		doChecks<double>(hypot(-reflectedObject.aDouble, reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Hypot_int_const")
 	{

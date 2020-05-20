@@ -58,6 +58,11 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 		ExpressionAny testExpression(&context, "aFloat");
 		doChecks(999.9f, false, false, false, testExpression, context);
 	}
+	SECTION("Double Variable")
+	{
+		ExpressionAny testExpression(&context, "aDouble");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
 	SECTION("Int Variable")
 	{
 		ExpressionAny testExpression(&context, "theInt");

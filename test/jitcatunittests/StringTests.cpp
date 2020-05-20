@@ -40,6 +40,11 @@ TEST_CASE("String Tests", "[string][operators]")
 		Expression<std::string> testExpression(&context, "\"hello\" + 2.1f");
 		doChecks(std::string("hello2.1"), false, false, false, testExpression, context);
 	}
+	SECTION("Constant addition double")
+	{
+		Expression<std::string> testExpression(&context, "\"hello\" + ToDouble(2.1)");
+		doChecks(std::string("hello2.1"), false, false, false, testExpression, context);
+	}
 	SECTION("Constant addition bool")
 	{
 		Expression<std::string> testExpression(&context, "\"hello\" + false");
@@ -256,6 +261,21 @@ TEST_CASE("Builtin functions test: StringRound", "[builtins][stringround]" )
 	{
 		Expression<std::string> testExpression(&context, "stringRound(aFloat, 2)");
 		doChecks(LLVMCatIntrinsics::roundFloatToString(reflectedObject.aFloat, 1), false, false, false, testExpression, context);
+	}
+	SECTION("StringRound_double1")
+	{
+		Expression<std::string> testExpression(&context, "stringRound(aDouble, 0)");
+		doChecks(LLVMCatIntrinsics::roundDoubleToString(reflectedObject.aDouble, 0), false, false, false, testExpression, context);
+	}
+	SECTION("StringRound_double2")
+	{
+		Expression<std::string> testExpression(&context, "stringRound(aDouble, 1.0f)");
+		doChecks(LLVMCatIntrinsics::roundDoubleToString(reflectedObject.aDouble, 1), false, false, false, testExpression, context);
+	}
+	SECTION("StringRound_double3")
+	{
+		Expression<std::string> testExpression(&context, "stringRound(aDouble, 2)");
+		doChecks(LLVMCatIntrinsics::roundDoubleToString(reflectedObject.aDouble, 1), false, false, false, testExpression, context);
 	}
 	SECTION("StringRound_int")
 	{

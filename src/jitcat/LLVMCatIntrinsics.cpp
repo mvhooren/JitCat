@@ -169,10 +169,28 @@ float LLVMCatIntrinsics::getRandomFloatRange(float min, float max)
 }
 
 
+double jitcat::LLVM::LLVMCatIntrinsics::getRandomDoubleRange(double min, double max)
+{
+	if (min > max)
+	{
+		std::swap(min, max);
+	}
+	double random = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
+	return min + random * (max - min);
+}
+
+
 float LLVMCatIntrinsics::roundFloat(float number, int decimals)
 {
 	double multiplier = std::pow(10.0f, decimals);
 	return (float)(std::floor(number * multiplier + 0.5f) / multiplier);
+}
+
+
+double jitcat::LLVM::LLVMCatIntrinsics::roundDouble(double number, int decimals)
+{
+	double multiplier = std::pow(10.0, decimals);
+	return std::floor(number * multiplier + 0.5) / multiplier;
 }
 
 
@@ -184,27 +202,19 @@ Configuration::CatString LLVMCatIntrinsics::roundFloatToString(float number, int
 	ss.unsetf(std::ios_base::scientific);
 	ss << number;
 	Configuration::CatString result = ss.str();
-	int discardedCharacters = 0;
-	if (result.find(Tools::StringConstants<Configuration::CatString>::dot) != result.npos)
-	{
-		for (int i = (int)result.length() - 1; i >= 0; i--)
-		{
-			if (result[(unsigned int)i] == Tools::StringConstants<Configuration::CatString>::zero)
-			{
-				discardedCharacters++;
-			}
-			else if (result[(unsigned int)i] == Tools::StringConstants<Configuration::CatString>::dot)
-			{
-				discardedCharacters++;
-				break;
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-	return result.substr(0, result.length() - discardedCharacters);
+	return formatRoundString(result);
+}
+
+
+Configuration::CatString jitcat::LLVM::LLVMCatIntrinsics::roundDoubleToString(double number, int decimals)
+{
+	Configuration::CatStringStream ss;
+	ss.precision(decimals);
+	ss.setf(std::ios_base::fixed);
+	ss.unsetf(std::ios_base::scientific);
+	ss << number;
+	Configuration::CatString result = ss.str();
+	return formatRoundString(result);
 }
 
 
@@ -226,4 +236,30 @@ void jitcat::LLVM::LLVMCatIntrinsics::placementConstructType(Reflectable* addres
 void jitcat::LLVM::LLVMCatIntrinsics::placementDestructType(Reflectable* address, TypeInfo* type)
 {
 	type->placementDestruct(reinterpret_cast<unsigned char*>(address), type->getTypeSize());
+}
+
+
+Configuration::CatString jitcat::LLVM::LLVMCatIntrinsics::formatRoundString(const Configuration::CatString& result)
+{
+	int discardedCharacters = 0;
+	if (result.find(Tools::StringConstants<Configuration::CatString>::dot) != result.npos)
+	{
+		for (int i = (int)result.length() - 1; i >= 0; i--)
+		{
+			if (result[(unsigned int)i] == Tools::StringConstants<Configuration::CatString>::zero)
+			{
+				discardedCharacters++;
+			}
+			else if (result[(unsigned int)i] == Tools::StringConstants<Configuration::CatString>::dot)
+			{
+				discardedCharacters++;
+				break;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	return result.substr(0, result.length() - discardedCharacters);
 }

@@ -74,6 +74,12 @@ namespace jitcat::LLVM
 		llvm::Value* generateAssign(const AST::CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
 		llvm::Value* generateAssign(const AST::CatStaticMemberAccess* staticMemberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
 
+		llvm::Value* generateFPMath(const char* name, float(*floatVariant)(float), double(*doubleVariant)(double), 
+								    const AST::CatArgumentList* argumentList, LLVMCompileTimeContext* context);
+
+		llvm::Value* generateFPMath(const char* name, float(*floatVariant)(float, float), double(*doubleVariant)(double, double), 
+								    const AST::CatArgumentList* argumentList, LLVMCompileTimeContext* context);
+
 		llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
 
 		llvm::Value* generateMemberFunctionCall(Reflection::MemberFunctionInfo* memberFunction, const AST::CatTypedExpression* base, 

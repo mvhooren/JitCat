@@ -13,6 +13,7 @@ namespace jitcat::Tokenizer
 	enum class ConstantType
 	{
 		Integer,
+		DoubleFloatingPoint,
 		FloatingPoint,
 		String,
 		Char,

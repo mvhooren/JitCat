@@ -54,6 +54,7 @@ namespace TestObjects
 
 		//All supported return types
 		float getFloat();
+		double getDouble();
 		int getInt();
 		bool getBoolean();
 		std::string getString();
@@ -73,6 +74,7 @@ namespace TestObjects
 
 		//const versions of all supported return types
 		float getConstantFloat() const;
+		double getConstantDouble() const;
 		int getConstInt() const;
 		bool getConstBool() const;
 		std::string getConstString() const;
@@ -81,6 +83,7 @@ namespace TestObjects
 		void doSomethingConst() const;
 
 		static float getStaticFloat();
+		static double getStaticDouble();
 		static int getStaticInt();
 		static bool getStaticBool();
 		static std::string getStaticString();
@@ -110,6 +113,10 @@ namespace TestObjects
 		float negativeFloat;
 		float smallFloat;
 		float zeroFloat;
+		double aDouble;
+		double negativeDouble;
+		double smallDouble;
+		double zeroDouble;
 		bool aBoolean;
 		bool no;
 		TestEnum someEnum;
@@ -145,6 +152,7 @@ namespace TestObjects
 		std::deque<std::unique_ptr<NestedReflectedObject>> objectUniquePtrDeque;
 
 		static float staticFloat;
+		static double staticDouble;
 		static int staticInt;
 		static bool staticBool;
 		static std::string staticString;

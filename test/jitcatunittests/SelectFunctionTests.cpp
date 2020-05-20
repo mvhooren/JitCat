@@ -54,6 +54,16 @@ TEST_CASE("Builtin functions test: Select", "[builtins][select]" )
 		Expression<std::string> testExpression(&context, "select(aFloat != 0, \"test\", 1.0f)");
 		doChecks(std::string(""), true, false, false, testExpression, context);
 	}
+	SECTION("Select_double1")
+	{
+		Expression<int> testExpression(&context, "select(aDouble > 900, 4, 5)");
+		doChecks(4, false, false, false, testExpression, context);
+	}
+	SECTION("Select_double2")
+	{
+		Expression<std::string> testExpression(&context, "select(aDouble != 0, \"test\", 1.0f)");
+		doChecks(std::string(""), true, false, false, testExpression, context);
+	}
 	SECTION("Select_int1")
 	{
 		Expression<int> testExpression(&context, "select(largeInt == 1234567, -7, 789)");

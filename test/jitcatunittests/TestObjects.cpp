@@ -32,10 +32,15 @@ ReflectedObject::ReflectedObject():
 	negativeFloat(-111.1f),
 	smallFloat(0.5f),
 	zeroFloat(0.0f),
+	aDouble(999.9),
+	negativeDouble(-111.1f),
+	smallDouble(0.5f),
+	zeroDouble(0.0f),
 	aBoolean(true),
 	no(false),
 	v1(1.0f, 2.0f, 3.0f, 4.0f),
-	v2(4.0f, 3.0f, 2.0f, 1.0f)
+	v2(4.0f, 3.0f, 2.0f, 1.0f),
+	someEnum(TestEnum::TestValue2)
 
 {
 }
@@ -115,6 +120,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 {
 	typeInfo
 		.addMember("getFloat", &ReflectedObject::getFloat)
+		.addMember("getDouble", &ReflectedObject::getDouble)
 		.addMember("getInt", &ReflectedObject::getInt)
 		.addMember("getBoolean", &ReflectedObject::getBoolean)
 		.addMember("getString", &ReflectedObject::getString)
@@ -134,6 +140,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("doSomething", &ReflectedObject::doSomething)
 
 		.addMember("getConstantFloat", &ReflectedObject::getConstantFloat)
+		.addMember("getConstantDouble", &ReflectedObject::getConstantDouble)
 		.addMember("getConstInt", &ReflectedObject::getConstInt)
 		.addMember("getConstBool", &ReflectedObject::getConstBool)
 		.addMember("getConstString", &ReflectedObject::getConstString)
@@ -147,6 +154,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("getThisObject", &ReflectedObject::getThisObject)
 
 		.addMember("getStaticFloat", &ReflectedObject::getStaticFloat)
+		.addMember("getStaticDouble", &ReflectedObject::getStaticDouble)
 		.addMember("getStaticInt", &ReflectedObject::getStaticInt)
 		.addMember("getStaticBool", &ReflectedObject::getStaticBool)
 		.addMember("getStaticString", &ReflectedObject::getStaticString)
@@ -166,12 +174,17 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("negativeFloat", &ReflectedObject::negativeFloat, MF::isWritable)
 		.addMember("smallFloat", &ReflectedObject::smallFloat, MF::isWritable)
 		.addMember("zeroFloat", &ReflectedObject::zeroFloat)
+		.addMember("aDouble", &ReflectedObject::aDouble, MF::isWritable)
+		.addMember("negativeDouble", &ReflectedObject::negativeDouble, MF::isWritable)
+		.addMember("smallDouble", &ReflectedObject::smallDouble, MF::isWritable)
+		.addMember("zeroDouble", &ReflectedObject::zeroDouble)
 		.addMember("aBoolean", &ReflectedObject::aBoolean, MF::isWritable)
 		.addMember("no", &ReflectedObject::no)
 		.addMember("someEnum", &ReflectedObject::someEnum)
 
 		.addConstant("intConstant", 42)
 		.addConstant("floatConstant", 3.141592f)
+		.addConstant("doubleConstant", 3.141592)
 		.addConstant("boolConstant", true)
 		.addConstant("stringConstant", std::string("test"))
 		.addConstant("enumConstant", TestEnum::TestValue1)
@@ -189,6 +202,7 @@ void ReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("reflectableUniqueObjectsVector", &ReflectedObject::reflectableUniqueObjectsVector)
 
 		.addMember("staticFloat", &ReflectedObject::staticFloat)
+		.addMember("staticDouble", &ReflectedObject::staticDouble)
 		.addMember("staticInt", &ReflectedObject::staticInt)
 		.addMember("staticBool", &ReflectedObject::staticBool)
 		.addMember("staticString", &ReflectedObject::staticString)
@@ -237,6 +251,12 @@ const char* ReflectedObject::getTypeName()
 float ReflectedObject::getFloat()
 {
 	return aFloat;
+}
+
+
+double ReflectedObject::getDouble()
+{
+	return aDouble;
 }
 
 
@@ -330,6 +350,12 @@ float ReflectedObject::getConstantFloat() const
 }
 
 
+double ReflectedObject::getConstantDouble() const
+{
+	return aDouble;
+}
+
+
 int ReflectedObject::getConstInt() const
 {
 	return theInt;
@@ -371,6 +397,11 @@ float TestObjects::ReflectedObject::getStaticFloat()
 	return 42.0f;
 }
 
+
+double TestObjects::ReflectedObject::getStaticDouble()
+{
+	return 43.0;
+}
 
 int TestObjects::ReflectedObject::getStaticInt()
 {
@@ -451,6 +482,7 @@ ReflectedObject* ReflectedObject::getThisObject(ReflectedObject* someObject) con
 
 
 float ReflectedObject::staticFloat = 1234.5f;
+double ReflectedObject::staticDouble = 7890.1;
 int ReflectedObject::staticInt = 33;
 bool ReflectedObject::staticBool = true;
 std::string ReflectedObject::staticString = "SomeString";

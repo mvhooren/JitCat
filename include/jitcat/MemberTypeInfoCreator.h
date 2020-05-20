@@ -55,6 +55,18 @@ namespace jitcat::Reflection
 
 
 	template <>
+	class MemberTypeInfoCreator<double>
+	{
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, double ClassType::* member, bool isConst, bool isWritable) 
+		{
+			return new BasicTypeMemberInfo<ClassType, double>(memberName, member, CatGenericType::createDoubleType(isWritable, isConst));
+		}
+	};
+
+
+	template <>
 	class MemberTypeInfoCreator<int>
 	{
 	public:

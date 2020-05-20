@@ -58,11 +58,12 @@ const char* ConstantToken::getSubTypeName(int subType_) const
 	switch ((ConstantType) subType_)
 	{
 		default:
-		case ConstantType::Integer:			return "int";
-		case ConstantType::FloatingPoint:	return "float";
-		case ConstantType::String:			return "string";
-		case ConstantType::Char:			return "char";
-		case ConstantType::Bool:			return "bool";
+		case ConstantType::Integer:				return "int";
+		case ConstantType::DoubleFloatingPoint:	return "double";
+		case ConstantType::FloatingPoint:		return "float";
+		case ConstantType::String:				return "string";
+		case ConstantType::Char:				return "char";
+		case ConstantType::Bool:				return "bool";
 	}
 }
 
@@ -149,7 +150,7 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 	{
 		if ((pastDot || pastExponent) && offset > 1)
 		{
-			return ConstantType::FloatingPoint;
+			return ConstantType::DoubleFloatingPoint;
 		}
 		else
 		{
@@ -180,7 +181,7 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 	}
 	else if (pastDot && offset > 1)
 	{
-		return ConstantType::FloatingPoint;
+		return ConstantType::DoubleFloatingPoint;
 	}
 	else
 	{
@@ -201,7 +202,7 @@ ConstantType jitcat::Tokenizer::ConstantToken::parseFloatWithExponent(const char
 	{
 		if (pastDot && ParseHelper::isNumber(text[offset - 1]))
 		{
-			return ConstantType::FloatingPoint;
+			return ConstantType::DoubleFloatingPoint;
 		}
 		else
 		{

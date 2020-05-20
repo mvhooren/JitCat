@@ -320,6 +320,263 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 }
 
 
+TEST_CASE("Double Floating Point Tests", "[double][operators]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("doubleTests", &errorManager);
+	context.addScope(&reflectedObject, true);	
+	SECTION("Constant")
+	{
+		Expression<double> testExpression(&context, "42.0");
+		doChecks(42.0, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Decimal digits")
+	{
+		Expression<double> testExpression(&context, "42.");
+		doChecks(42.0, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Decimal digits 2")
+	{
+		Expression<double> testExpression(&context, "0.");
+		doChecks(0.0, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Integer digits")
+	{
+		Expression<double> testExpression(&context, ".05");
+		doChecks(.05, false, true, true, testExpression, context);
+	}
+	SECTION("Constant No Integer digits 2")
+	{
+		Expression<double> testExpression(&context, ".0");
+		doChecks(.0, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent")
+	{
+		Expression<double> testExpression(&context, "1.0e10");
+		doChecks(1e10, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with negative exponent")
+	{
+		Expression<double> testExpression(&context, "1.0e-10");
+		doChecks(1e-10, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent no decimal point")
+	{
+		Expression<double> testExpression(&context, "1e10");
+		doChecks(1e10, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with capital exponent no decimal point")
+	{
+		Expression<double> testExpression(&context, "1E10");
+		doChecks(1e10, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent no decimal digits")
+	{
+		Expression<double> testExpression(&context, "1.e10");
+		doChecks(1e10, false, true, true, testExpression, context);
+	}
+	SECTION("Constant with exponent and no floating point digits")
+	{
+		Expression<double> testExpression(&context, ".e10");
+		doChecks(0.0, true, false, false, testExpression, context);
+	}
+	SECTION("Constant with exponent and no exponent digits")
+	{
+		Expression<double> testExpression(&context, "1.0e");
+		doChecks(0.0, true, false, false, testExpression, context);
+	}
+	SECTION("Constant with negative exponent and no exponent digits")
+	{
+		Expression<double> testExpression(&context, "1.0e-");
+		doChecks(0.0, true, false, false, testExpression, context);
+	}
+	SECTION("Constant_2")
+	{
+		Expression<double> testExpression(&context, "42.0");
+		doChecks(42.0, false, true, true, testExpression, context);
+	}
+	SECTION("Negative Constant_2")
+	{
+		Expression<double> testExpression(&context, "-42.0");
+		doChecks(-42.0, false, true, true, testExpression, context);
+	}
+	SECTION("Static Constant")
+	{
+		Expression<double> testExpression(&context, "doubleConstant");
+		doChecks(3.141592, false, true, false, testExpression, context);
+	}
+	SECTION("Variable")
+	{
+		Expression<double> testExpression(&context, "aDouble");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
+	SECTION("Addition")
+	{
+		Expression<double> testExpression(&context, "aDouble + 33.3");
+		doChecks(reflectedObject.aDouble + 33.3, false, false, false, testExpression, context);
+	}
+	SECTION("Subtraction")
+	{
+		Expression<double> testExpression(&context, "aDouble - 15.4");
+		doChecks(reflectedObject.aDouble - 15.4, false, false, false, testExpression, context);
+	}
+	SECTION("Multiplication")
+	{
+		Expression<double> testExpression(&context, "aDouble * 22.8");
+		doChecks(reflectedObject.aDouble * 22.8, false, false, false, testExpression, context);
+	}
+	SECTION("Division")
+	{
+		Expression<double> testExpression(&context, "aDouble / 182.0");
+		doChecks(reflectedObject.aDouble / 182.0, false, false, false, testExpression, context);
+	}
+	SECTION("Positive Division By Zero")
+	{
+		Expression<double> testExpression(&context, "aDouble / 0.0");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : std::numeric_limits<double>::infinity();
+		doChecks(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Negative Division By Zero")
+	{
+		Expression<double> testExpression(&context, "negativeDouble / 0.0");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : -std::numeric_limits<double>::infinity();
+		doChecks(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Zero Division By Zero")
+	{
+		Expression<double> testExpression(&context, "zeroDouble / 0.0");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : std::numeric_limits<double>::quiet_NaN();
+		doChecks(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Zero Constant Division By Zero")
+	{
+		Expression<double> testExpression(&context, "0.0f / 0.0");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : std::numeric_limits<double>::quiet_NaN();
+		doChecks(expectedResult, false, true, false, testExpression, context);
+	}
+	SECTION("Postive Constant Division By Zero")
+	{
+		Expression<double> testExpression(&context, "1.0 / 0.0");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : std::numeric_limits<double>::infinity();
+		doChecks(expectedResult, false, true, false, testExpression, context);
+	}
+	SECTION("Negative Constant Division By Zero")
+	{
+		Expression<double> testExpression(&context, "-1.0 / 0.0");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : -std::numeric_limits<double>::infinity();
+		doChecks(expectedResult, false, true, false, testExpression, context);
+	}
+	SECTION("Modulo")
+	{
+		Expression<double> testExpression(&context, "aDouble % 11.5");
+		doChecks(fmod(reflectedObject.aDouble, 11.5), false, false, false, testExpression, context);
+	}
+	SECTION("Modulo_Invalid")
+	{
+		Expression<double> testExpression(&context, "aDouble % zeroDouble");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : fmod(reflectedObject.aDouble, reflectedObject.zeroDouble);
+		doChecks<double>(expectedResult, false, false, false, testExpression, context);
+	}
+	SECTION("Constant Modulo_Invalid")
+	{
+		Expression<double> testExpression(&context, "0.0f % 0.0f");
+		double expectedResult = Configuration::divisionByZeroYieldsZero ? 0.0 : fmod(reflectedObject.zeroDouble, reflectedObject.zeroDouble);
+		doChecks<double>(expectedResult, false, true, false, testExpression, context);
+	}
+	SECTION("Smaller_1")
+	{
+		Expression<bool> testExpression(&context, "aDouble < 1000.0");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Smaller_2")
+	{
+		Expression<bool> testExpression(&context, "aDouble < 900.0");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Smaller_3")
+	{
+		Expression<bool> testExpression(&context, "aDouble < aDouble");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Greater_1")
+	{
+		Expression<bool> testExpression(&context, "aDouble > 1000.0");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Greater_2")
+	{
+		Expression<bool> testExpression(&context, "aDouble > 900.0");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Greater_3")
+	{
+		Expression<bool> testExpression(&context, "aDouble > aDouble");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("GreaterOrEqual_1")
+	{
+		Expression<bool> testExpression(&context, "aDouble >= 1000.0");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("GreaterOrEqual_2")
+	{
+		Expression<bool> testExpression(&context, "aDouble >= 900.0");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("GreaterOrEqual_3")
+	{
+		Expression<bool> testExpression(&context, "aDouble >= aDouble");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("SmallerOrEqual_1")
+	{
+		Expression<bool> testExpression(&context, "aDouble <= 1000.0");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("SmallerOrEqual_2")
+	{
+		Expression<bool> testExpression(&context, "aDouble <= 900.0");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("SmallerOrEqual_3")
+	{
+		Expression<bool> testExpression(&context, "aDouble <= aDouble");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("Equals_1")
+	{
+		Expression<bool> testExpression(&context, "aDouble == 1000.0");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Equals_2")
+	{
+		Expression<bool> testExpression(&context, "aDouble == 900.0");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Equals_3")
+	{
+		Expression<bool> testExpression(&context, "aDouble == 999.9");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("NotEquals_1")
+	{
+		Expression<bool> testExpression(&context, "aDouble != 1000.0");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("NotEquals_2")
+	{
+		Expression<bool> testExpression(&context, "aDouble != 900.0");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("NotEquals_3")
+	{
+		Expression<bool> testExpression(&context, "aDouble != 999.9");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Integer Tests", "[int][operators]" ) 
 {
 	ReflectedObject reflectedObject;

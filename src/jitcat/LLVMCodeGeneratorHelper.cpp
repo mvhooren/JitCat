@@ -299,6 +299,11 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0f));
 			return builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero");
 		}
+		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		{
+			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0));
+			return builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero");
+		}
 	}
 	else if (type == LLVMTypes::intType)
 	{
@@ -315,6 +320,10 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		{
 			return builder->CreateFPToSI(valueToConvert, LLVMTypes::intType, "FloatToInt");
 		}
+		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		{
+			return builder->CreateFPToSI(valueToConvert, LLVMTypes::intType, "DoubleToInt");
+		}
 	}
 	else if (type == LLVMTypes::floatType)
 	{
@@ -323,6 +332,10 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		{
 			return valueToConvert;
 		}
+		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		{
+			return builder->CreateFPCast(valueToConvert, LLVMTypes::floatType, "DoubleToFloat");
+		}
 		else if (valueToConvert->getType() == LLVMTypes::boolType)
 		{
 			return builder->CreateUIToFP(valueToConvert, LLVMTypes::floatType, "BoolToFloat");
@@ -330,6 +343,26 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, l
 		else if (valueToConvert->getType() == LLVMTypes::intType)
 		{
 			return builder->CreateSIToFP(valueToConvert, LLVMTypes::floatType, "IntToFloat");
+		}
+	}
+	else if (type == LLVMTypes::doubleType)
+	{
+		//to float type
+		if (valueToConvert->getType() == LLVMTypes::doubleType)
+		{
+			return valueToConvert;
+		}
+		else if (valueToConvert->getType() == LLVMTypes::floatType)
+		{
+			return builder->CreateFPCast(valueToConvert, LLVMTypes::doubleType, "FloatToDouble");
+		}
+		else if (valueToConvert->getType() == LLVMTypes::boolType)
+		{
+			return builder->CreateUIToFP(valueToConvert, LLVMTypes::doubleType, "BoolToDouble");
+		}
+		else if (valueToConvert->getType() == LLVMTypes::intType)
+		{
+			return builder->CreateSIToFP(valueToConvert, LLVMTypes::doubleType, "IntToDouble");
 		}
 	}
 	LLVMJit::logError("ERROR: Invalid type conversion.");
@@ -346,7 +379,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertToString(llvm::Value*
 	}
 	else if (valueToConvert->getType() == LLVMTypes::doubleType)
 	{
-		return createIntrinsicCall(context, &LLVMCatIntrinsics::doubleToString, {valueToConvert}, "floatToString");
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::doubleToString, {valueToConvert}, "doubleToString");
 	}
 	else if (valueToConvert->getType() == LLVMTypes::floatType)
 	{
@@ -468,10 +501,9 @@ llvm::Constant* LLVMCodeGeneratorHelper::createZeroInitialisedConstant(llvm::Typ
 {
 	if		(type == LLVMTypes::boolType)		return createConstant(false);
 	else if (type == LLVMTypes::floatType)		return createConstant(0.0f);
+	else if (type == LLVMTypes::doubleType)		return createConstant(0.0);
 	else if (type == LLVMTypes::intType)		return createConstant(0);
 	else if (type == LLVMTypes::charType)		return createCharConstant(0);
-	//else if (type == LLVMTypes::stringPtrType)	return createNullPtrConstant(LLVMTypes::stringPtrType);
-	//else if (type == LLVMTypes::pointerType)	return createNullPtrConstant(LLVMTypes::pointerType);
 	else if (type == LLVMTypes::voidType)		return (llvm::Constant*)nullptr;
 	else if (type->isArrayTy())					return createZeroInitialisedArrayConstant(static_cast<llvm::ArrayType*>(type));
 	else if (type->isPointerTy())

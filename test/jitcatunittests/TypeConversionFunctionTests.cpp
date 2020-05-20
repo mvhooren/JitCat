@@ -34,6 +34,11 @@ TEST_CASE("Builtin functions test: ToInt", "[builtins][toint]" )
 		Expression<int> testExpression(&context, "toInt(aFloat)");
 		doChecks((int)reflectedObject.aFloat, false, false, false, testExpression, context);
 	}
+	SECTION("ToInt_double")
+	{
+		Expression<int> testExpression(&context, "toInt(aDouble)");
+		doChecks((int)reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
 	SECTION("ToInt_int")
 	{
 		Expression<int> testExpression(&context, "toInt(theInt)");
@@ -94,6 +99,11 @@ TEST_CASE("Builtin functions test: ToFloat", "[builtins][tofloat]" )
 		Expression<float> testExpression(&context, "toFloat(aFloat)");
 		doChecks(reflectedObject.aFloat, false, false, false, testExpression, context);
 	}
+	SECTION("ToFloat_double")
+	{
+		Expression<float> testExpression(&context, "toFloat(aDouble)");
+		doChecks((float)reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
 	SECTION("ToFloat_int")
 	{
 		Expression<float> testExpression(&context, "toFloat(theInt)");
@@ -137,6 +147,71 @@ TEST_CASE("Builtin functions test: ToFloat", "[builtins][tofloat]" )
 }
 
 
+TEST_CASE("Builtin functions test: ToDouble", "[builtins][todouble]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("builtinTests_ToDouble", &errorManager);
+	context.addScope(&reflectedObject, true);	
+
+	SECTION("ToDouble_cc")
+	{
+		Expression<double> testExpression(&context, "toDouble(11.1f)");
+		doChecks(11.1, false, true, false, testExpression, context);
+	}
+	SECTION("ToDouble_float")
+	{
+		Expression<double> testExpression(&context, "toDouble(aFloat)");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_double")
+	{
+		Expression<double> testExpression(&context, "toDouble(aDouble)");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_int")
+	{
+		Expression<double> testExpression(&context, "toDouble(theInt)");
+		doChecks((double)reflectedObject.theInt, false, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_bool")
+	{
+		Expression<double> testExpression(&context, "toDouble(aBoolean)");
+		doChecks(1.0, false, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_stringConst")
+	{
+		Expression<double> testExpression(&context, "toDouble(\"10\")");
+		doChecks(10.0, false, true, false, testExpression, context);
+	}
+	SECTION("ToDouble_string")
+	{
+		Expression<double> testExpression(&context, "toDouble(numberString)");
+		doChecks(123.4, false, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_string2")
+	{
+		Expression<double> testExpression(&context, "toDouble(text)");
+		doChecks(0.0, false, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_noarg")
+	{
+		Expression<double> testExpression(&context, "toDouble()");
+		doChecks(0.0, true, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_morearg")
+	{
+		Expression<double> testExpression(&context, "toDouble(theInt, aFloat)");
+		doChecks(0.0, true, false, false, testExpression, context);
+	}
+	SECTION("ToDouble_obj")
+	{
+		Expression<double> testExpression(&context, "toDouble(nestedObject)");
+		doChecks(0.0, true, false, false, testExpression, context);
+	}
+}
+
+
 TEST_CASE("Builtin functions test: ToBool", "[builtins][tobool]" ) 
 {
 	ReflectedObject reflectedObject;
@@ -162,6 +237,11 @@ TEST_CASE("Builtin functions test: ToBool", "[builtins][tobool]" )
 	SECTION("ToBool_float")
 	{
 		Expression<bool> testExpression(&context, "toBool(aFloat)");
+		doChecks(true, false, false, false, testExpression, context);
+	}
+	SECTION("ToBool_double")
+	{
+		Expression<bool> testExpression(&context, "toBool(aDouble)");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("ToBool_int")
@@ -244,6 +324,11 @@ TEST_CASE("Builtin functions test: ToString", "[builtins][tostring]" )
 		Expression<std::string> testExpression(&context, "toString(aFloat)");
 		doChecks(Tools::makeString(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("ToString_double")
+	{
+		Expression<std::string> testExpression(&context, "toString(aDouble)");
+		doChecks(Tools::makeString(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("ToString_int")
 	{
 		Expression<std::string> testExpression(&context, "toString(theInt)");
@@ -304,6 +389,11 @@ TEST_CASE("Builtin functions test: ToPrettyString", "[builtins][toprettystring]"
 		Expression<std::string> testExpression(&context, "toPrettyString(aFloat)");
 		doChecks(Tools::makeString(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("ToPrettyString_double")
+	{
+		Expression<std::string> testExpression(&context, "toPrettyString(aDouble)");
+		doChecks(Tools::makeString(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("ToPrettyString_int")
 	{
 		Expression<std::string> testExpression(&context, "toPrettyString(largeInt)");
@@ -363,6 +453,11 @@ TEST_CASE("Builtin functions test: ToFixedLengthString", "[builtins][tofixedleng
 	{
 		Expression<std::string> testExpression(&context, "toFixedLengthString(aFloat, 10)");
 		doChecks(Tools::makeString(reflectedObject.aFloat), true, false, false, testExpression, context);
+	}
+	SECTION("ToFixedLengthString_double")
+	{
+		Expression<std::string> testExpression(&context, "toFixedLengthString(aDouble, 10)");
+		doChecks(Tools::makeString(reflectedObject.aDouble), true, false, false, testExpression, context);
 	}
 	SECTION("ToFixedLengthString_int")
 	{

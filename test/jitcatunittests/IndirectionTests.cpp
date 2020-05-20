@@ -45,6 +45,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		Expression<float> testExpression(&context, "nestedSelfObject.aFloat");
 		doChecks(999.9f, false, false, false, testExpression, context);
 	}
+	SECTION("NestedSelfObject Double")
+	{
+		Expression<double> testExpression(&context, "nestedSelfObject.aDouble");
+		doChecks(reflectedObject.nestedSelfObject->aDouble, false, false, false, testExpression, context);
+	}
 	SECTION("NestedSelfObject Object")
 	{
 		Expression<ReflectedObject*> testExpression(&context, "nestedSelfObject.nestedSelfObject");
@@ -91,6 +96,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		Expression<float> testExpression(&context, "nestedObject.someFloat");
 		doChecks(1.1f, false, false, false, testExpression, context);
 	}
+	SECTION("nestedObject Double")
+	{
+		Expression<double> testExpression(&context, "nestedObject.someDouble");
+		doChecks(1.1, false, false, false, testExpression, context);
+	}
 	SECTION("nestedObject Object")
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "nestedObject.nullObject");
@@ -130,6 +140,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		Expression<float> testExpression(&context, "nestedObjectPointer.someFloat");
 		doChecks(1.1f, false, false, false, testExpression, context);
 	}
+	SECTION("nestedObjectPointer Float")
+	{
+		Expression<double> testExpression(&context, "nestedObjectPointer.someDouble");
+		doChecks(1.1, false, false, false, testExpression, context);
+	}
 	SECTION("nestedObjectPointer Object")
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "nestedObjectPointer.nullObject");
@@ -166,6 +181,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 		Expression<float> testExpression(&context, "nestedObjectUniquePointer.someFloat");
 		doChecks(1.1f, false, false, false, testExpression, context);
 	}
+	SECTION("nestedObjectUniquePointer Double")
+	{
+		Expression<double> testExpression(&context, "nestedObjectUniquePointer.someDouble");
+		doChecks(1.1, false, false, false, testExpression, context);
+	}
 	SECTION("nestedObjectUniquePointer Object")
 	{
 		Expression<NestedReflectedObject*> testExpression(&context, "nestedObjectUniquePointer.nullObject");
@@ -201,6 +221,11 @@ TEST_CASE("Indirection tests", "[indirection]" )
 	{
 		Expression<float> testExpression(&context, "nullObject.aFloat");
 		doChecks(0.0f, false, false, false, testExpression, context);
+	}
+	SECTION("nested null object Double")
+	{
+		Expression<double> testExpression(&context, "nullObject.aDouble");
+		doChecks(0.0, false, false, false, testExpression, context);
 	}
 	SECTION("nested null object ObjectPtr")
 	{

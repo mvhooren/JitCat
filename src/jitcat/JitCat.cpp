@@ -43,6 +43,7 @@ JitCat::JitCat():
 	expressionParser = expressionGrammar->createSLRParser();
 	statementParser = statementGrammar->createSLRParser();
 	fullParser = fullGrammar->createSLRParser();
+	std::srand((unsigned int)std::time(nullptr));
 }
 
 

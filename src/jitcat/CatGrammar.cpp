@@ -197,6 +197,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	//Literals
 	rule(Prod::Literal, {term(lit, ConstantType::Integer)}, literalToken);
 	rule(Prod::Literal, {term(lit, ConstantType::FloatingPoint)}, literalToken);
+	rule(Prod::Literal, {term(lit, ConstantType::DoubleFloatingPoint)}, literalToken);
 	rule(Prod::Literal, {term(lit, ConstantType::String)}, literalToken);
 	rule(Prod::Literal, {term(lit, ConstantType::Bool)}, literalToken);
 	rule(Prod::Literal, {term(id, Identifier::Null) }, literalToken);
@@ -645,6 +646,11 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 			{
 				CatLiteral* intLiteral = new CatLiteral(atoi(literalToken->getLexeme().data()), nodeParser.getStackLexeme());
 				return intLiteral;
+			}
+			case ConstantType::DoubleFloatingPoint:
+			{
+				CatLiteral* doubleLiteral = new CatLiteral(atof(literalToken->getLexeme().data()), nodeParser.getStackLexeme());
+				return doubleLiteral;
 			}
 			case ConstantType::FloatingPoint:
 			{

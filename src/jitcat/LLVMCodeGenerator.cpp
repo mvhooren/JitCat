@@ -66,24 +66,51 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	functionFlags |= llvm::JITSymbolFlags::Exported;
 	functionFlags |= llvm::JITSymbolFlags::Absolute;
 
+
 	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodl), functionFlags);
+	double(*fmodPtr)(double, double) = &std::fmod;
+	intrinsicSymbols[executionSession->intern("fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(fmodPtr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("sinf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinl), functionFlags);
+	double(*sinPtr)(double) = &std::sin;
+	intrinsicSymbols[executionSession->intern("sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(sinPtr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("cosf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosl), functionFlags);
+	double(*cosPtr)(double) = &std::cos;
+	intrinsicSymbols[executionSession->intern("cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(cosPtr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("log10f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10f), functionFlags);
 	intrinsicSymbols[executionSession->intern("_log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10l), functionFlags);
+	double(*log10Ptr)(double) = &std::log10;
+	intrinsicSymbols[executionSession->intern("log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(log10Ptr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("logf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logl), functionFlags);
+	double(*logPtr)(double) = &std::log;
+	intrinsicSymbols[executionSession->intern("log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(logPtr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("expf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expl), functionFlags);
+	double(*expPtr)(double) = &std::exp;
+	intrinsicSymbols[executionSession->intern("exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(expPtr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("powf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powl), functionFlags);
+	double(*powPtr)(double, double) = &std::pow;
+	intrinsicSymbols[executionSession->intern("pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(powPtr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("ceilf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceilf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceill), functionFlags);
+	double(*ceilPtr)(double) = &std::ceil;
+	intrinsicSymbols[executionSession->intern("ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(ceilPtr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("floorf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorl), functionFlags);
+	double(*floorPtr)(double) = &std::floor;
+	intrinsicSymbols[executionSession->intern("floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(floorPtr), functionFlags);
 	
 
 	llvm::cantFail(runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
@@ -295,6 +322,19 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 }
 
 
+const CatGenericType& getFPType(const CatGenericType& inType)
+{
+	if (inType.isDoubleType())
+	{
+		return inType;
+	}
+	else
+	{
+		return CatGenericType::floatType;
+	}
+}
+
+
 llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context)
 {
 	CatArgumentList* arguments = functionCall->getArgumentList();
@@ -314,9 +354,9 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		}
 		case CatBuiltInFunctionType::Abs:
 		{
-			if (arguments->getArgumentType(0).isFloatType())
+			if (arguments->getArgumentType(0).isDoubleType() || arguments->getArgumentType(0).isFloatType())
 			{
-				return helper->callIntrinsic(llvm::Intrinsic::fabs, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+				return helper->callIntrinsic(llvm::Intrinsic::fabs, arguments->getArgumentType(0), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
 			}
 			else if (arguments->getArgumentType(0) == CatGenericType::intType)
 			{
@@ -327,63 +367,40 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			}
 			return nullptr;
 		}
-		case CatBuiltInFunctionType::Log10:	return helper->callIntrinsic(llvm::Intrinsic::log10, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
-		case CatBuiltInFunctionType::Sqrt:	return helper->callIntrinsic(llvm::Intrinsic::sqrt, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
-		case CatBuiltInFunctionType::Ln:	return helper->callIntrinsic(llvm::Intrinsic::log, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
-		case CatBuiltInFunctionType::Exp:	return helper->callIntrinsic(llvm::Intrinsic::exp, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+		case CatBuiltInFunctionType::Log10:	return helper->callIntrinsic(llvm::Intrinsic::log10, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+		case CatBuiltInFunctionType::Sqrt:	return helper->callIntrinsic(llvm::Intrinsic::sqrt, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+		case CatBuiltInFunctionType::Ln:	return helper->callIntrinsic(llvm::Intrinsic::log, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+		case CatBuiltInFunctionType::Exp:	return helper->callIntrinsic(llvm::Intrinsic::exp, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
 		case CatBuiltInFunctionType::Pow:
 		{
-			return helper->callIntrinsic(llvm::Intrinsic::pow, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), context);
+			return helper->callIntrinsic(llvm::Intrinsic::pow, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), context);
 		}
-		case CatBuiltInFunctionType::Sin:		return helper->callIntrinsic(llvm::Intrinsic::sin, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
-		case CatBuiltInFunctionType::Cos:		return helper->callIntrinsic(llvm::Intrinsic::cos, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
-		case CatBuiltInFunctionType::Ceil:		return helper->callIntrinsic(llvm::Intrinsic::ceil, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
-		case CatBuiltInFunctionType::Floor:		return helper->callIntrinsic(llvm::Intrinsic::floor, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
-		case CatBuiltInFunctionType::Tan:		return builder->CreateFDiv(helper->callIntrinsic(llvm::Intrinsic::sin, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context), helper->callIntrinsic(llvm::Intrinsic::cos, CatGenericType::floatType, generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context));
+		case CatBuiltInFunctionType::Sin:		return helper->callIntrinsic(llvm::Intrinsic::sin, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+		case CatBuiltInFunctionType::Cos:		return helper->callIntrinsic(llvm::Intrinsic::cos, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+		case CatBuiltInFunctionType::Ceil:		return helper->callIntrinsic(llvm::Intrinsic::ceil, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
+		case CatBuiltInFunctionType::Floor:		return helper->callIntrinsic(llvm::Intrinsic::floor, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
 
-		case CatBuiltInFunctionType::Asin:
-			return helper->createIntrinsicCall(context, &std::asinf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "asin");
-		case CatBuiltInFunctionType::Acos:
-			return helper->createIntrinsicCall(context, &std::acosf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "acos");
-		case CatBuiltInFunctionType::Atan:
-			return helper->createIntrinsicCall(context, &std::atanf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "atan");
-
-		case CatBuiltInFunctionType::Sinh:
-			return helper->createIntrinsicCall(context, &std::sinhf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "sinh");
-		case CatBuiltInFunctionType::Cosh:
-			return helper->createIntrinsicCall(context, &std::coshf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "cosh");
-		case CatBuiltInFunctionType::Tanh:
-			return helper->createIntrinsicCall(context, &std::tanhf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "tanh");
-
-		case CatBuiltInFunctionType::Asinh:
-			return helper->createIntrinsicCall(context, &std::asinhf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "asinh");
-		case CatBuiltInFunctionType::Acosh:
-			return helper->createIntrinsicCall(context, &std::acoshf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "acosh");
-		case CatBuiltInFunctionType::Atanh:
-			return helper->createIntrinsicCall(context, &std::atanhf, { helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context) }, "atanh");
-
-		case CatBuiltInFunctionType::Atan2:
-		{
-			llvm::Value* y = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
-			llvm::Value* x = helper->convertType(generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), CatGenericType::floatType, context);
-			return helper->createIntrinsicCall(context, &std::atan2f, { y, x }, "atan2");
-		}
-		case CatBuiltInFunctionType::Hypot:
-		{
-			llvm::Value* x = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
-			llvm::Value* y = helper->convertType(generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), CatGenericType::floatType, context);
-			return helper->createIntrinsicCall(context, &std::hypotf, { x, y }, "hypot");
-		}
-
+		case CatBuiltInFunctionType::Tan:		return generateFPMath("tan", &std::tan, &std::tan, arguments, context);
+		case CatBuiltInFunctionType::Asin:		return generateFPMath("asin", &std::asin, &std::asin, arguments, context);
+		case CatBuiltInFunctionType::Acos:		return generateFPMath("acos", &std::acos, &std::acos, arguments, context);
+		case CatBuiltInFunctionType::Atan:		return generateFPMath("atan", &std::atan, &std::atan, arguments, context);
+		case CatBuiltInFunctionType::Sinh:		return generateFPMath("sinh", &std::sinh, &std::sinh, arguments, context);
+		case CatBuiltInFunctionType::Cosh:		return generateFPMath("cosh", &std::cosh, &std::cosh, arguments, context);
+		case CatBuiltInFunctionType::Tanh:		return generateFPMath("tanh", &std::tanh, &std::tanh, arguments, context);
+		case CatBuiltInFunctionType::Asinh:		return generateFPMath("asinh", &std::asinh, &std::asinh, arguments, context);
+		case CatBuiltInFunctionType::Acosh:		return generateFPMath("acosh", &std::acosh, &std::acosh, arguments, context);
+		case CatBuiltInFunctionType::Atanh:		return generateFPMath("atanh", &std::atanh, &std::atanh, arguments, context);
+		case CatBuiltInFunctionType::Atan2:		return generateFPMath("atan2", &std::atan2, &std::atan2, arguments, context);
+		case CatBuiltInFunctionType::Hypot:		return generateFPMath("hypot", &std::hypot, &std::hypot, arguments, context);
 		case CatBuiltInFunctionType::Cap:
 		{
 			llvm::Value* value = generate(arguments->getArgument(0), context);
 			llvm::Value* minValue = generate(arguments->getArgument(1), context);
 			llvm::Value* maxValue = generate(arguments->getArgument(2), context);
-			if (arguments->getArgumentType(0).isFloatType())
+			if (arguments->getArgumentType(0).isFloatType() || arguments->getArgumentType(0).isDoubleType())
 			{
-				llvm::Value* convertedMin = helper->convertType(minValue, arguments->getArgument(1)->getType(), CatGenericType::floatType, context);
-				llvm::Value* convertedMax = helper->convertType(maxValue, arguments->getArgument(2)->getType(), CatGenericType::floatType, context);
+				llvm::Value* convertedMin = helper->convertType(minValue, arguments->getArgument(1)->getType(), arguments->getArgumentType(0), context);
+				llvm::Value* convertedMax = helper->convertType(maxValue, arguments->getArgument(2)->getType(), arguments->getArgumentType(0), context);
 				llvm::Value* maxSmallerThanMin = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OLT, convertedMax, convertedMin);
 				llvm::Value* finalMin = builder->CreateSelect(maxSmallerThanMin, convertedMax, convertedMin);
 				llvm::Value* finalMax = builder->CreateSelect(maxSmallerThanMin, convertedMin, convertedMax);
@@ -416,9 +433,9 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			llvm::Value* value1 = generate(arguments->getArgument(0), context);
 			llvm::Value* value2 = generate(arguments->getArgument(1), context);
-			if (arguments->getArgumentType(0).isFloatType())
+			if (arguments->getArgumentType(0).isFloatType() || arguments->getArgumentType(0).isDoubleType())
 			{
-				llvm::Value* convertedValue2 = helper->convertType(value2, arguments->getArgument(1)->getType(), CatGenericType::floatType, context);
+				llvm::Value* convertedValue2 = helper->convertType(value2, arguments->getArgument(1)->getType(), arguments->getArgumentType(0), context);
 				llvm::Value* lessThan = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OLT, value1, convertedValue2);
 				return builder->CreateSelect(lessThan, value1, convertedValue2);
 			}
@@ -438,9 +455,9 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			llvm::Value* value1 = generate(arguments->getArgument(0), context);
 			llvm::Value* value2 = generate(arguments->getArgument(1), context);
-			if (arguments->getArgumentType(0).isFloatType())
+			if (arguments->getArgumentType(0).isFloatType() || arguments->getArgumentType(0).isDoubleType())
 			{
-				llvm::Value* convertedValue2 = helper->convertType(value2, arguments->getArgument(1)->getType(), CatGenericType::floatType, context);
+				llvm::Value* convertedValue2 = helper->convertType(value2, arguments->getArgument(1)->getType(), arguments->getArgumentType(0), context);
 				llvm::Value* greaterThan = builder->CreateFCmp(llvm::CmpInst::Predicate::FCMP_OGT, value1, convertedValue2);
 				return builder->CreateSelect(greaterThan, value1, convertedValue2);
 			}
@@ -495,7 +512,13 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			{
 				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getRandomInt, {left, right}, "getRandomInt");
 			}
-			else				
+			else if (arguments->getArgumentType(0).isDoubleType() || arguments->getArgumentType(1).isDoubleType())
+			{
+				llvm::Value* leftDouble = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::doubleType, context);
+				llvm::Value* rightDouble = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::doubleType, context);
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getRandomDoubleRange, {leftDouble, rightDouble}, "getRandomDouble");
+			}
+			else
 			{
 				llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
 				llvm::Value* rightFloat = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::floatType, context);
@@ -506,17 +529,35 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			llvm::Value* left = generate(arguments->getArgument(0), context);
 			llvm::Value* right = generate(arguments->getArgument(1), context);
-			llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
-			llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloat, {leftFloat, rightInt}, "roundFloat");
+			if (arguments->getArgumentType(0).isDoubleType())
+			{
+				llvm::Value* leftDouble = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::doubleType, context);
+				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundDouble, {leftDouble, rightInt}, "roundDouble");
+			}
+			else
+			{
+				llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
+				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloat, {leftFloat, rightInt}, "roundFloat");
+			}
 		}
 		case CatBuiltInFunctionType::StringRound:
 		{
 			llvm::Value* left = generate(arguments->getArgument(0), context);
 			llvm::Value* right = generate(arguments->getArgument(1), context);
-			llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
-			llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloatToString, {leftFloat, rightInt}, "roundFloatToString");
+			if (arguments->getArgumentType(0).isDoubleType())
+			{
+				llvm::Value* leftDouble = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::doubleType, context);
+				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundDoubleToString, {leftDouble, rightInt}, "roundDoubleToString");
+			}
+			else
+			{
+				llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
+				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloatToString, {leftFloat, rightInt}, "roundFloatToString");
+			}
 		}
 		default:
 		{
@@ -662,7 +703,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			right = helper->convertType(right, rightType, CatGenericType::intType, context);
 		}
 	}
-	if (leftType.isFloatType())
+	if (leftType.isFloatType() || leftType.isDoubleType())
 	{
 		switch (oper)
 		{
@@ -673,7 +714,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			{
 				if constexpr (Configuration::divisionByZeroYieldsZero)
 				{
-					return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFDiv(left, right, "divided"));			
+					llvm::Value* zeroConstant = helper->createZeroInitialisedConstant(helper->toLLVMType(leftType));
+					return builder->CreateSelect(builder->CreateFCmpUEQ(right, zeroConstant), zeroConstant, builder->CreateFDiv(left, right, "divided"));			
 				}
 				else
 				{
@@ -684,7 +726,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			{
 				if constexpr (Configuration::divisionByZeroYieldsZero)
 				{
-					return builder->CreateSelect(builder->CreateFCmpUEQ(right, helper->createConstant(0.0f)), helper->createConstant(0.0f), builder->CreateFRem(left, right, "divided"));
+					llvm::Value* zeroConstant = helper->createZeroInitialisedConstant(helper->toLLVMType(leftType));
+					return builder->CreateSelect(builder->CreateFCmpUEQ(right, zeroConstant), zeroConstant, builder->CreateFRem(left, right, "divided"));
 				}
 				else
 				{
@@ -710,7 +753,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			{
 				if constexpr (Configuration::divisionByZeroYieldsZero)
 				{
-					return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSDiv(left, right, "divided"));					 
+					llvm::Value* zeroConstant = helper->createZeroInitialisedConstant(helper->toLLVMType(leftType));
+					return builder->CreateSelect(builder->CreateICmpEQ(right, zeroConstant), zeroConstant, builder->CreateSDiv(left, right, "divided"));					 
 				}
 				else
 				{
@@ -721,7 +765,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			{
 				if constexpr (Configuration::divisionByZeroYieldsZero)
 				{
-					return builder->CreateSelect(builder->CreateICmpEQ(right, helper->createConstant(0)), helper->createConstant(0), builder->CreateSRem(left, right, "modulo"));			
+					llvm::Value* zeroConstant = helper->createZeroInitialisedConstant(helper->toLLVMType(leftType));
+					return builder->CreateSelect(builder->CreateICmpEQ(right, zeroConstant), zeroConstant, builder->CreateSRem(left, right, "modulo"));			
 				}
 				else
 				{
@@ -888,7 +933,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatPrefixOperator* prefixOperator
 	llvm::Value* right = generate(prefixOperator->getRHS(), context);
 	assert(right != nullptr);
 	const CatGenericType& rightType = prefixOperator->getRHS()->getType();
-	if (!(rightType.isIntType() || rightType.isBoolType() || rightType.isFloatType()))
+	if (!(rightType.isIntType() || rightType.isBoolType() || rightType.isFloatType() || rightType.isDoubleType()))
 	{
 		assert(false);
 		return LLVMJit::logError("ERROR: Type not yet supported for prefix operators.");
@@ -899,7 +944,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatPrefixOperator* prefixOperator
 	}
 	else if (prefixOperator->getOperator() == CatPrefixOperator::Operator::Minus)
 	{
-		if (rightType.isFloatType())
+		if (rightType.isFloatType() || rightType.isDoubleType())
 		{
 			return builder->CreateFNeg(right, "negative");
 		}
@@ -972,6 +1017,38 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateAssign(const AST::CatStati
 	{
 		assert(false);
 		return LLVMJit::logError("ERROR: Not supported.");
+	}
+}
+
+
+llvm::Value* LLVMCodeGenerator::generateFPMath(const char* name, float(*floatVariant)(float), double(*doubleVariant)(double), 
+											   const AST::CatArgumentList* argumentList, LLVMCompileTimeContext* context)
+{
+	if (argumentList->getArgumentType(0).isDoubleType())
+	{
+		return helper->createIntrinsicCall(context, doubleVariant, { generate(argumentList->getArgument(0), context)}, name);
+	}
+	else
+	{
+		return helper->createIntrinsicCall(context, floatVariant, { helper->convertType(generate(argumentList->getArgument(0), context), argumentList->getArgumentType(0), CatGenericType::floatType, context) }, name);
+	}
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateFPMath(const char* name, float(*floatVariant)(float, float), double(*doubleVariant)(double, double), 
+															 const AST::CatArgumentList* argumentList, LLVMCompileTimeContext* context)
+{
+	if (argumentList->getArgumentType(0).isDoubleType() || argumentList->getArgumentType(1).isDoubleType())
+	{
+		llvm::Value* x = helper->convertType(generate(argumentList->getArgument(0), context), argumentList->getArgument(0)->getType(), CatGenericType::doubleType, context);
+		llvm::Value* y = helper->convertType(generate(argumentList->getArgument(1), context), argumentList->getArgument(1)->getType(), CatGenericType::doubleType, context);
+		return helper->createIntrinsicCall(context, doubleVariant, { x, y }, name);
+	}
+	else
+	{
+		llvm::Value* x = helper->convertType(generate(argumentList->getArgument(0), context), argumentList->getArgument(0)->getType(), CatGenericType::floatType, context);
+		llvm::Value* y = helper->convertType(generate(argumentList->getArgument(1), context), argumentList->getArgument(1)->getType(), CatGenericType::floatType, context);
+		return helper->createIntrinsicCall(context, floatVariant, { x, y }, name);
 	}
 }
 

@@ -39,6 +39,14 @@ jitcat::AST::CatLiteral::CatLiteral(float floatValue, const Tokenizer::Lexeme& l
 }
 
 
+jitcat::AST::CatLiteral::CatLiteral(double doubleValue, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme), 
+	value(doubleValue), 
+	type(CatGenericType::doubleType)
+{
+}
+
+
 jitcat::AST::CatLiteral::CatLiteral(int intValue, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme), 
 	value(intValue), 

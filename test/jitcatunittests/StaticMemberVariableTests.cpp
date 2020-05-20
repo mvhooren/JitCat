@@ -34,6 +34,11 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 		Expression<float> testExpression(&context, "ReflectedObject::staticFloat");
 		doChecks(ReflectedObject::staticFloat, false, false, false, testExpression, context);
 	}
+	SECTION("Static double")
+	{
+		Expression<double> testExpression(&context, "ReflectedObject::staticDouble");
+		doChecks(ReflectedObject::staticDouble, false, false, false, testExpression, context);
+	}
 	SECTION("Static int")
 	{
 		Expression<int> testExpression(&context, "ReflectedObject::staticInt");
@@ -79,6 +84,11 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 	{
 		Expression<float> testExpression(&context, "ReflectedObject::floatConstant");
 		doChecks(3.141592f, false, true, false, testExpression, context);
+	}
+	SECTION("Static const double")
+	{
+		Expression<double> testExpression(&context, "ReflectedObject::doubleConstant");
+		doChecks(3.141592, false, true, false, testExpression, context);
 	}
 	SECTION("Static const int")
 	{
@@ -150,6 +160,7 @@ TEST_CASE("Custom type static member Variables", "[staticmembervariables][custom
 	TypeRegistry::get()->registerType(customTypeName2, customType.get());
 	
 	customType->addStaticFloatMember("myStaticFloat", 0.001f);
+	customType->addStaticDoubleMember("myStaticDouble", 0.002);
 	customType->addStaticIntMember("myStaticInt", 42);
 	customType->addStaticBoolMember("myStaticBool", true);
 	customType->addStaticStringMember("myStaticString", "Hello");
@@ -167,6 +178,11 @@ TEST_CASE("Custom type static member Variables", "[staticmembervariables][custom
 	{
 		Expression<float> testExpression(&context, "MyStaticType::myStaticFloat");
 		doChecks(0.001f, false, false, false, testExpression, context);
+	}
+	SECTION("Static double")
+	{
+		Expression<double> testExpression(&context, "MyStaticType::myStaticDouble");
+		doChecks(0.002, false, false, false, testExpression, context);
 	}
 	SECTION("Static int")
 	{
@@ -208,6 +224,7 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 	TypeRegistry::get()->registerType(customTypeName2, customType.get());
 	
 	customType->addStaticFloatMember("myStaticFloat", 0.001f);
+	customType->addStaticDoubleMember("myStaticDouble", 0.002);
 	customType->addStaticIntMember("myStaticInt", 42);
 	customType->addStaticBoolMember("myStaticBool", true);
 	customType->addStaticStringMember("myStaticString", "Hello");
@@ -232,6 +249,11 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 	{
 		Expression<float> testExpression(&context, "staticFloat");
 		doChecks(ReflectedObject::staticFloat, false, false, false, testExpression, context);
+	}
+	SECTION("Static double")
+	{
+		Expression<double> testExpression(&context, "staticDouble");
+		doChecks(ReflectedObject::staticDouble, false, false, false, testExpression, context);
 	}
 	SECTION("Static int")
 	{
@@ -279,6 +301,11 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 	{
 		Expression<float> testExpression(&context, "floatConstant");
 		doChecks(3.141592f, false, true, false, testExpression, context);
+	}
+	SECTION("Static const double")
+	{
+		Expression<double> testExpression(&context, "doubleConstant");
+		doChecks(3.141592, false, true, false, testExpression, context);
 	}
 	SECTION("Static const int")
 	{
@@ -331,6 +358,11 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 	{
 		Expression<float> testExpression(&context, "myStaticFloat");
 		doChecks(0.001f, false, false, false, testExpression, context);
+	}
+	SECTION("Static double")
+	{
+		Expression<double> testExpression(&context, "myStaticDouble");
+		doChecks(0.002, false, false, false, testExpression, context);
 	}
 	SECTION("Static int")
 	{

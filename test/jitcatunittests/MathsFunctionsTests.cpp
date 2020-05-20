@@ -49,6 +49,16 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 		Expression<int> testExpression(&context, "abs(-33)");
 		doChecks(abs(-33), false, true, false, testExpression, context);
 	}
+	SECTION("Abs_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "abs(aDouble)");
+		doChecks(abs(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
+	SECTION("Abs_Negative_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "abs(-aDouble)");
+		doChecks(abs(-reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Abs_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "abs(-aFloat)");
@@ -128,6 +138,11 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	{
 		Expression<float> testExpression(&context, "sqrt(aFloat)");
 		doChecks<float>(sqrt(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Sqrt_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "sqrt(aDouble)");
+		doChecks(sqrt(reflectedObject.aDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Sqrt_Negative Variable")
 	{
@@ -212,7 +227,22 @@ TEST_CASE("Builtin functions test: Round", "[builtins][round]" )
 	SECTION("Round_float3")
 	{
 		Expression<float> testExpression(&context, "round(aFloat, 2)");
-		doChecks(LLVMCatIntrinsics::roundFloat(reflectedObject.aFloat, 1), false, false, false, testExpression, context);
+		doChecks(LLVMCatIntrinsics::roundFloat(reflectedObject.aFloat, 2), false, false, false, testExpression, context);
+	}
+	SECTION("Round_double1")
+	{
+		Expression<double> testExpression(&context, "round(aDouble, 0)");
+		doChecks(LLVMCatIntrinsics::roundDouble(reflectedObject.aDouble, 0), false, false, false, testExpression, context);
+	}
+	SECTION("Round_double2")
+	{
+		Expression<double> testExpression(&context, "round(aDouble, 1.0f)");
+		doChecks(LLVMCatIntrinsics::roundDouble(reflectedObject.aDouble, 1), false, false, false, testExpression, context);
+	}
+	SECTION("Round_double3")
+	{
+		Expression<double> testExpression(&context, "round(aDouble, 2)");
+		doChecks(LLVMCatIntrinsics::roundDouble(reflectedObject.aDouble, 2), false, false, false, testExpression, context);
 	}
 	SECTION("Round_int")
 	{
@@ -303,6 +333,21 @@ TEST_CASE("Builtin functions test: Cap", "[builtins][cap]" )
 	{
 		Expression<float> testExpression(&context, "cap(-aFloat, 0.0f, -999.0f)");
 		doChecks(-999.0f, false, false, false, testExpression, context);
+	}
+	SECTION("Cap_double1")
+	{
+		Expression<double> testExpression(&context, "cap(aDouble, 0, 1000)");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
+	SECTION("Cap_double2")
+	{
+		Expression<double> testExpression(&context, "cap(aDouble, 1.0, 10)");
+		doChecks(10.0, false, false, false, testExpression, context);
+	}
+	SECTION("Cap_double3")
+	{
+		Expression<double> testExpression(&context, "cap(-aDouble, 0.0f, -999.0)");
+		doChecks(-999.0, false, false, false, testExpression, context);
 	}
 	SECTION("Cap_int1")
 	{
@@ -414,6 +459,21 @@ TEST_CASE("Builtin functions test: Min", "[builtins][min]" )
 		Expression<float> testExpression(&context, "min(-aFloat, aFloat)");
 		doChecks(-reflectedObject.aFloat, false, false, false, testExpression, context);
 	}
+	SECTION("Min_double1")
+	{
+		Expression<double> testExpression(&context, "min(aDouble, 0)");
+		doChecks(0.0, false, false, false, testExpression, context);
+	}
+	SECTION("Min_double2")
+	{
+		Expression<double> testExpression(&context, "min(aDouble, 1000.0f)");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
+	SECTION("Min_double3")
+	{
+		Expression<double> testExpression(&context, "min(-aDouble, aFloat)");
+		doChecks(-reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
 	SECTION("Min_int1")
 	{
 		Expression<int> testExpression(&context, "min(largeInt, 10)");
@@ -514,6 +574,21 @@ TEST_CASE("Builtin functions test: Max", "[builtins][max]" )
 		Expression<float> testExpression(&context, "max(-aFloat, aFloat)");
 		doChecks(reflectedObject.aFloat, false, false, false, testExpression, context);
 	}
+	SECTION("Max_double1")
+	{
+		Expression<double> testExpression(&context, "max(aDouble, 0)");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
+	SECTION("Max_double2")
+	{
+		Expression<double> testExpression(&context, "max(aDouble, 1000.0f)");
+		doChecks(1000.0, false, false, false, testExpression, context);
+	}
+	SECTION("Max_double3")
+	{
+		Expression<double> testExpression(&context, "max(-aDouble, aFloat)");
+		doChecks(reflectedObject.aDouble, false, false, false, testExpression, context);
+	}
 	SECTION("Max_int1")
 	{
 		Expression<int> testExpression(&context, "max(largeInt, 10)");
@@ -609,6 +684,11 @@ TEST_CASE("Builtin functions test: Log10", "[builtins][log10]" )
 		Expression<float> testExpression(&context, "log10(aFloat)");
 		doChecks(log10f(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Log10_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "log10(aDouble)");
+		doChecks(log10(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Log10_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "log10(-aFloat)");
@@ -684,6 +764,11 @@ TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
 		Expression<float> testExpression(&context, "ln(aFloat)");
 		doChecks(log(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Ln_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "ln(aDouble)");
+		doChecks(log(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Ln_Negative_Variable")
 	{
 		Expression<float> testExpression(&context, "ln(-aFloat)");
@@ -748,6 +833,11 @@ TEST_CASE("Builtin functions test: Exp", "[builtins][exp]")
 	{
 		Expression<float> testExpression(&context, "exp(aFloat)");
 		doChecks<float>(exp(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Exp_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "exp(aDouble)");
+		doChecks(exp(reflectedObject.aDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Exp_Negative_Variable")
 	{
@@ -823,6 +913,21 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	{
 		Expression<float> testExpression(&context, "pow(-aFloat, aFloat)");
 		doChecks<float>(std::numeric_limits<float>::quiet_NaN(), false, false, false, testExpression, context);
+	}
+	SECTION("Pow_double1")
+	{
+		Expression<double> testExpression(&context, "pow(aDouble, 0)");
+		doChecks(1.0, false, false, false, testExpression, context);
+	}
+	SECTION("Pow_double2")
+	{
+		Expression<double> testExpression(&context, "pow(aDouble, 1000.0f)");
+		doChecks(pow(reflectedObject.aDouble, 1000.0f), false, false, false, testExpression, context);
+	}
+	SECTION("Pow_double3")
+	{
+		Expression<double> testExpression(&context, "pow(-aDouble, aFloat)");
+		doChecks(std::numeric_limits<double>::quiet_NaN(), false, false, false, testExpression, context);
 	}
 	SECTION("Pow_int1")
 	{
@@ -914,6 +1019,11 @@ TEST_CASE("Builtin functions test: Ceil", "[builtins][ceil]" )
 		Expression<float> testExpression(&context, "ceil(aFloat)");
 		doChecks<float>(ceil(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
+	SECTION("Ceil_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "ceil(aDouble)");
+		doChecks(ceil(reflectedObject.aDouble), false, false, false, testExpression, context);
+	}
 	SECTION("Ceil_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "ceil(-aFloat)");
@@ -988,6 +1098,11 @@ TEST_CASE("Builtin functions test: Floor", "[builtins][floor]" )
 	{
 		Expression<float> testExpression(&context, "floor(aFloat)");
 		doChecks<float>(floor(reflectedObject.aFloat), false, false, false, testExpression, context);
+	}
+	SECTION("Floor_Double_Variable")
+	{
+		Expression<double> testExpression(&context, "floor(aDouble)");
+		doChecks(floor(reflectedObject.aDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Floor_Negative Variable")
 	{

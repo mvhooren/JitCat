@@ -64,6 +64,11 @@ TEST_CASE("Builtin functions test: RandomRange", "[builtins][rand]" )
 		Expression<float> testExpression(&context, "rand(-aFloat, aFloat)");
 		doChecksFn<float>([&](float value){return value >= -reflectedObject.aFloat && value <= reflectedObject.aFloat;}, false, false, false, testExpression, context);
 	}
+	SECTION("RandomRange_double")
+	{
+		Expression<double> testExpression(&context, "rand(-aDouble, aDouble)");
+		doChecksFn<double>([&](double value){return value >= -reflectedObject.aDouble && value <= reflectedObject.aDouble;}, false, false, false, testExpression, context);
+	}
 	SECTION("RandomRange_float_same")
 	{
 		Expression<float> testExpression(&context, "rand(aFloat, aFloat)");

@@ -19,6 +19,7 @@ NestedReflectedObject::NestedReflectedObject():
 	someString("test"),
 	someInt(21),
 	someFloat(1.1f),
+	someDouble(1.1),
 	someBoolean(true),
 	nullObject(nullptr),
 	nullCircularRefObject(nullptr),
@@ -33,6 +34,7 @@ void NestedReflectedObject::reflect(ReflectedTypeInfo& typeInfo)
 		.addMember("someString", &NestedReflectedObject::someString)
 		.addMember("someInt", &NestedReflectedObject::someInt)
 		.addMember("someFloat", &NestedReflectedObject::someFloat)
+		.addMember("someDouble", &NestedReflectedObject::someDouble)
 		.addMember("someBoolean", &NestedReflectedObject::someBoolean)
 		.addMember("someV4", &NestedReflectedObject::someV4)
 		.addMember("nullObject", &NestedReflectedObject::nullObject)

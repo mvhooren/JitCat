@@ -28,6 +28,7 @@ namespace TestObjects
 		std::string someString;
 		int someInt;
 		float someFloat;
+		double someDouble;
 		bool someBoolean;
 		NestedReflectedObject* nullObject;
 		TestVector4 someV4;
