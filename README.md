@@ -4,24 +4,28 @@ A C++17 library for parsing and executing expressions. Allows easy exposure of v
 [Get it on github](https://github.com/mvhooren/JitCat).
 
 ## Features
-* Supports floating point, integer, boolean, string and object pointer typed expressions as well as void typed and any typed expressions. More types to come.
+* Supports floating point, integer, boolean, string and object (pointer or by value) typed expressions as well as void typed and any typed expressions. More types to come.
 * Optional native code compilation of expressions using the [LLVM](http://www.llvm.org) core libraries.
 * Expose variables for use in expressions through reflection of C++ classes.
 * Create and expose custom data structures to expressions at runtime.
 * Reflection supports easy reflection of C++ classes and structs including reflection of functions. Limited to the following member types (with more types to come):
-	* float, bool, int, std::string
+	* float, double, bool, int, std::string
 	* Reflected objects
+	* Reflected enums
 	* Pointers to reflected objects
 	* std::unique_ptr to reflected objects
-	* std::vector and std::map with key/value of supported type.
+	* std::library container types that have implemented operator[]
 	* member functions that return one of the supported types or void and that have parameters that are among the supported types (or no parameters).  
+	* static members and static functions
+	* constants
+* Reflection can be done either internally to a class, using static member functions, or externally using an ExternalReflector<T>.
 * Built-in functions for use in expressions for common operations  
 * Basic optimizations of expressions such as const collapse.  
 * Graceful error handling with human-readable error messages, though this area can use improvement.  
-* Builds and is tested to work on Linux with clang (6.0) and gcc (8.0) and on Microsoft Windows with VS2017 and VS2019.  
+* Builds and is tested to work on Linux with clang (6.0) and gcc (8.0) and on Microsoft Windows with VS2019.  
 * Built-in functionality for code completion of expressions.  
-* Can export reflected types to a XML file for use with the JitCatValidator shared library to validate and code-complete expressions outside of the main C++ application.  
 * Unit tests testing all aspects of the expression language and reflection.  
+* (Currently broken) Can export reflected types to a XML file for use with the JitCatValidator shared library to validate and code-complete expressions outside of the main C++ application.  
 
 ## Usage example
 ```c++
