@@ -11,13 +11,7 @@ namespace jitcat
 {
 	class CatGenericType;
 }
-#include "jitcat/ExternalReflector.h"
-#include "jitcat/FunctionPresenceTest.h"
-#include "jitcat/STLTypeReflectors.h"
-#include "jitcat/Tools.h"
-#include "jitcat/TypeCaster.h"
 #include "jitcat/TypeInfoDeleter.h"
-#include "jitcat/TypeTools.h"
 
 #include <cassert>
 #include <functional>
@@ -31,6 +25,7 @@ namespace jitcat::Reflection
 {
 	class ReflectedTypeInfo;
 	class ReflectedEnumTypeInfo;
+	class TypeCaster;
 	class TypeInfo;
 
 	class TypeRegistry
@@ -88,13 +83,20 @@ namespace jitcat::Reflection
 	};
 
 
+}
 
+#include "jitcat/STLTypeReflectors.h"
+#include "jitcat/Tools.h"
+#include "jitcat/TypeCaster.h"
+#include "jitcat/TypeTools.h"
 
+namespace jitcat::Reflection
+{
 
 	template<typename ReflectableCVT>
 	inline jitcat::Reflection::TypeInfo* jitcat::Reflection::TypeRegistry::registerType()
 	{
-		typedef typename RemoveConst<ReflectableCVT>::type ReflectableT;
+		using ReflectableT = typename RemoveConst<ReflectableCVT>::type;
 
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).
 		const char* typeName = TypeNameGetter<ReflectableT>::get();

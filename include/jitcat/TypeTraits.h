@@ -200,7 +200,7 @@ namespace jitcat
 		static std::any getCatValue(PointerRefT*& value) { return std::any(&value);};
 		static constexpr PointerRefT** getDefaultValue() 
 		{
-			static PointerRefT* nullReflectable = nullptr;
+			static constexpr PointerRefT* nullReflectable = nullptr;
 			return &nullReflectable;
 		}
 		static std::any getDefaultCatValue() { return getValue(); }
