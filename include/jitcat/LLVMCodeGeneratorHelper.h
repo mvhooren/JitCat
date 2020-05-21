@@ -19,7 +19,6 @@ namespace jitcat
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/LLVMTypes.h"
-#include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/TypeTraits.h"
 
 #include <functional>
@@ -138,6 +137,14 @@ namespace jitcat::LLVM
 		static const std::string oneString;
 		static const std::string zeroString;
 	};
+
+}
+
+#include "jitcat/StaticMemberFunctionInfo.h"
+
+
+namespace jitcat::LLVM
+{
 
 	template<typename ReturnT, typename ...Args>
 	inline llvm::Value* LLVMCodeGeneratorHelper::createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args...), const std::vector<llvm::Value*>& arguments, const std::string& name)

@@ -12,9 +12,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberVisibility.h"
-#include "jitcat/Tools.h"
-#include "jitcat/TypeConversionCastHelper.h"
-#include "jitcat/TypeTraits.h"
+
 
 #include <string>
 #include <vector>
@@ -41,10 +39,7 @@ namespace jitcat::Reflection
 		const CatGenericType& getReturnType() const {return returnType;}
 
 		template<typename ArgumentT>
-		inline void addParameterTypeInfo()
-		{
-			argumentTypes.push_back(TypeTraits<typename RemoveConst<ArgumentT>::type >::toGenericType());
-		}
+		inline void addParameterTypeInfo();
 
 		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
 
@@ -71,54 +66,22 @@ namespace jitcat::Reflection
 	class StaticFunctionInfoWithArgs: public StaticFunctionInfo
 	{
 	public:
-		StaticFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT (*function)(TFunctionArguments...)):
-			StaticFunctionInfo(memberFunctionName, TypeTraits<std::remove_cv_t<ReturnT>>::toGenericType()),
-			function(function)
-		{
-			//Trick to call a function per variadic template item
-			//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
-			//This gets the type info per parameter type
-			int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
-		}
+		inline StaticFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(*function)(TFunctionArguments...));
 
-	inline virtual std::any call(CatRuntimeContext* runtimeContext, const std::vector<std::any>& parameters) override final
-	{ 
-		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
-		return callWithIndexed(parameters, BuildIndices<sizeof...(TFunctionArguments)>{});
-	}
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, const std::vector<std::any>& parameters) override final;
 
+		template<std::size_t... Is>
+		std::any callWithIndexed(const std::vector<std::any>& parameters, Indices<Is...>);
 
-	template<std::size_t... Is>
-	std::any callWithIndexed(const std::vector<std::any>& parameters, Indices<Is...>)
-	{
-		if constexpr (std::is_same<void, ReturnT>::value)
-		{
-			(*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
-			return std::any();
-		}
-		else
-		{
-			return TypeTraits<ReturnT>::getCatValue((*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
-		}
-	}
-
-
-	virtual std::size_t getNumberOfArguments() const override final
-	{ 
-		return sizeof...(TFunctionArguments);
-	}
-
-
-	inline virtual uintptr_t getFunctionAddress() const override final
-	{
-		uintptr_t pointer = 0;
-		memcpy(&pointer, &function, sizeof(uintptr_t));
-		static_assert(sizeof(function) == sizeof(uintptr_t), "Unsupported function pointer.");
-		return pointer;
-	}
-
+		virtual std::size_t getNumberOfArguments() const override final;
+		inline virtual uintptr_t getFunctionAddress() const override final;
 
 	private:
 		ReturnT (*function)(TFunctionArguments...);
 	};
+
+
 }
+
+
+#include "jitcat/StaticMemberFunctionInfoHeaderImplementation.h"

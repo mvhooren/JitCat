@@ -241,6 +241,7 @@ set(Source_Reflection
 	ReflectableHandle.cpp
 	${JitCatHeaderPath}/ReflectableHandle.h
 	${JitCatHeaderPath}/STLTypeReflectors.h
+	${JitCatHeaderPath}/STLTypeReflectorsHeaderImplementation.h
 	TypeRegistry.cpp
 	${JitCatHeaderPath}/TypeRegistry.h
 )
@@ -292,6 +293,7 @@ set(Source_Reflection_TypeInfo_MemberFunctions
 	${JitCatHeaderPath}/MemberFunctionInfo.h
 	StaticMemberFunctionInfo.cpp
 	${JitCatHeaderPath}/StaticMemberFunctionInfo.h
+	${JitCatHeaderPath}/StaticMemberFunctionInfoHeaderImplementation.h
 	${JitCatHeaderPath}/TypeConversionCastHelper.h
 )
 

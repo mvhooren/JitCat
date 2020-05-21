@@ -10,7 +10,6 @@
 
 #include "jitcat/Configuration.h"
 #include "jitcat/ExternalReflector.h"
-#include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/TypeTools.h"
 #include "jitcat/Tools.h"
 
@@ -70,7 +69,7 @@ namespace jitcat::Reflection
 
 
 		template <typename ReturnT>
-		inline typename ReturnT getDefault()
+		inline ReturnT getDefault()
 		{
 			if constexpr (std::is_pointer_v<ReturnT>)
 			{
@@ -98,40 +97,11 @@ namespace jitcat::Reflection
 	{
 		using VectorT = std::vector<ItemT, AllocatorT>;
 		public:
-			static const char* getTypeName()
-			{
-				static const std::string vectorName = jitcat::Tools::append("vector<", TypeNameGetter<ItemT>::get() , 
-																			",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
-				return vectorName.c_str();
-			}
+			static inline const char* getTypeName();
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+			static inline typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(VectorT* vector, int key);
+			static inline int size(VectorT* vector);
 
-
-			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-			{
-				typeInfo
-					.addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
-					.addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
-			}
-
-
-			static typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(VectorT* vector, int key)
-			{
-				if (vector != nullptr && key >= 0 && key < (int)vector->size())
-				{
-					return STLHelper::getValue(vector->operator[](key));
-				}
-				return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
-			}
-
-
-			static int size(VectorT* vector)
-			{
-				if (vector != nullptr)
-				{
-					return (int)vector->size();
-				}
-				return 0;
-			}
 			static constexpr bool exists = true;
 			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<ItemT>();
 	};
@@ -145,39 +115,10 @@ namespace jitcat::Reflection
 	{
 		using VectorT = std::vector<bool, AllocatorT>;
 		public:
-			static const char* getTypeName()
-			{
-				static const std::string vectorName = jitcat::Tools::append("vector<bool,", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
-				return vectorName.c_str();
-			}
-
-
-			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-			{
-				typeInfo
-					.addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
-					.addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
-			}
-
-
-			static typename bool safeIndex(VectorT* vector, int key)
-			{
-				if (vector != nullptr && key >= 0 && key < (int)vector->size())
-				{
-					return vector->operator[](key);
-				}
-				return STLHelper::getDefault<bool>();
-			}
-
-
-			static int size(VectorT* vector)
-			{
-				if (vector != nullptr)
-				{
-					return (int)vector->size();
-				}
-				return 0;
-			}
+			static inline const char* getTypeName();
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+			static inline bool safeIndex(VectorT* vector, int key);
+			static inline int size(VectorT* vector);
 			static constexpr bool exists = true;
 			static constexpr bool enableCopyConstruction = true;
 	};
@@ -189,40 +130,10 @@ namespace jitcat::Reflection
 	{
 		using ArrayT = std::array<ItemT, ArraySize>;
 		public:
-			static const char* getTypeName()
-			{
-				static const std::string arrayName = jitcat::Tools::append("array<", TypeNameGetter<ItemT>::get(), 
-																		   ",", ArraySize, ">");
-				return arrayName.c_str();
-			}
-
-
-			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-			{
-				typeInfo
-					.addPseudoMemberFunction<ArrayT>("[]", &ExternalReflector<ArrayT>::safeIndex)
-					.addPseudoMemberFunction<ArrayT>("size", &ExternalReflector<ArrayT>::size);
-			}
-
-
-			static typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(ArrayT* array, int key)
-			{
-				if (array != nullptr && key >= 0 && key < ArraySize)
-				{
-					return STLHelper::getValue(array->operator[](key));
-				}
-				return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
-			}
-
-
-			static int size(ArrayT* array)
-			{
-				if (array != nullptr)
-				{
-					return (int)array->size();
-				}
-				return 0;
-			}
+			static inline const char* getTypeName();
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+			static inline typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(ArrayT* array, int key);
+			static inline int size(ArrayT* array);
 
 			static constexpr bool exists = true;
 			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<ItemT>();
@@ -236,40 +147,10 @@ namespace jitcat::Reflection
 	{
 		using DequeT = std::deque<ItemT, AllocatorT>;
 		public:
-			static const char* getTypeName()
-			{
-				static const std::string dequeName = jitcat::Tools::append("deque<", TypeNameGetter<ItemT>::get(), 
-																		   ",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
-				return dequeName.c_str();
-			}
-
-
-			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-			{
-				typeInfo
-					.addPseudoMemberFunction<DequeT>("[]", &ExternalReflector<DequeT>::safeIndex)
-					.addPseudoMemberFunction<DequeT>("size", &ExternalReflector<DequeT>::size);
-			}
-
-
-			static typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(DequeT* deque, int key)
-			{
-				if (deque != nullptr && key >= 0 && key < (int)deque->size())
-				{
-					return STLHelper::getValue(deque->operator[](key));
-				}
-				return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
-			}
-
-
-			static int size(DequeT* deque)
-			{
-				if (deque != nullptr)
-				{
-					return (int)deque->size();
-				}
-				return 0;
-			}
+			static inline const char* getTypeName();
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+			static inline typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType safeIndex(DequeT* deque, int key);
+			static inline int size(DequeT* deque);
 
 			static constexpr bool exists = true;
 			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<ItemT>();
@@ -282,65 +163,12 @@ namespace jitcat::Reflection
 	{
 		using MapT = std::map<KeyT, ValueT, PredicateT, AllocatorT>;
 		public:
-			static const char* getTypeName()
-			{
-				static const std::string unorderedMapName = jitcat::Tools::append("map<", TypeNameGetter<KeyT>::get() , 
-																				  ",", TypeNameGetter<ValueT>::get(), 
-																				  ",", TypeIdentifier<PredicateT>::getIdentifier(), 
-																				  ",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
-				return unorderedMapName.c_str();
-			}
+			static inline const char* getTypeName();
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+			static inline typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType safeIndex(MapT* map, const KeyT& key);
+			static inline typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType ordinalIndex(MapT* map, int ordinal);
+			static inline int size(MapT* map);
 
-
-			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-			{
-				typeInfo
-					.addPseudoMemberFunction<MapT>("[]", &ExternalReflector<MapT>::safeIndex)
-					.addPseudoMemberFunction<MapT>("size", &ExternalReflector<MapT>::size)
-					.addPseudoMemberFunction<MapT>("index", &ExternalReflector<MapT>::ordinalIndex);
-			}
-
-
-			static typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType safeIndex(MapT* map, const KeyT& key)
-			{
-				if (map != nullptr)
-				{
-					auto& iter = map->find(key);
-					if (iter != map->end())
-					{
-						return STLHelper::getValue(iter->second);
-					}
-				}
-				return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
-			}
-
-
-			static typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType ordinalIndex(MapT* map, int ordinal)
-			{
-				if (map != nullptr)
-				{
-					int counter = 0;
-					for (auto& iter = map->begin(); iter != map->end(); ++iter)
-					{
-						if (counter == ordinal)
-						{
-							return STLHelper::getValue(iter->second);
-						}
-						counter++;
-					}
-				}
-				return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
-			}
-
-
-			static int size(MapT* map)
-			{
-				if (map != nullptr)
-				{
-					return (int)map->size();
-				}
-				return 0;
-			}
 			static constexpr bool exists = true;
 			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<KeyT>() && TypeTools::getAllowCopyConstruction<ValueT>();
 	}; 
@@ -352,66 +180,11 @@ namespace jitcat::Reflection
 	{
 		using MapT = std::unordered_map<KeyT, ValueT, HashT, PredicateT, AllocatorT>;
 		public:
-			static const char* getTypeName()
-			{
-				static const std::string unorderedMapName = jitcat::Tools::append("unordered_map<", TypeNameGetter<KeyT>::get() , 
-																				  ",", TypeNameGetter<ValueT>::get(), 
-																				  ",", TypeIdentifier<HashT>::getIdentifier(), 
-																				  ",", TypeIdentifier<PredicateT>::getIdentifier(), 
-																				  ",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
-				return unorderedMapName.c_str();
-			}
-
-
-			static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-			{
-				typeInfo
-					.addPseudoMemberFunction<MapT>("[]", &ExternalReflector<MapT>::safeIndex)
-					.addPseudoMemberFunction<MapT>("size", &ExternalReflector<MapT>::size)
-					.addPseudoMemberFunction<MapT>("index", &ExternalReflector<MapT>::ordinalIndex);
-			}
-
-
-			static typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType safeIndex(MapT* map, const KeyT& key)
-			{
-				if (map != nullptr)
-				{
-					auto& iter = map->find(key);
-					if (iter != map->end())
-					{
-						return STLHelper::getValue(iter->second);
-					}
-				}
-				return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
-			}
-
-
-			static typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType ordinalIndex(MapT* map, int ordinal)
-			{
-				if (map != nullptr)
-				{
-					int counter = 0;
-					for (auto& iter = map->begin(); iter != map->end(); ++iter)
-					{
-						if (counter == ordinal)
-						{
-							return STLHelper::getValue(iter->second);
-						}
-						counter++;
-					}
-				}
-				return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
-			}
-
-
-			static int size(MapT* map)
-			{
-				if (map != nullptr)
-				{
-					return (int)map->size();
-				}
-				return 0;
-			}
+			static inline const char* getTypeName();
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+			static inline typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType safeIndex(MapT* map, const KeyT& key);
+			static inline typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType ordinalIndex(MapT* map, int ordinal);
+			static inline int size(MapT* map);
 
 			static constexpr bool exists = true;
 			static constexpr bool enableCopyConstruction = TypeTools::getAllowCopyConstruction<KeyT>() && TypeTools::getAllowCopyConstruction<ValueT>();
@@ -426,174 +199,26 @@ namespace jitcat::Reflection
 		using StringStreamT = std::basic_stringstream<CharT, TraitsT, AllocatorT>;
 
 		public:
-			static const char* getTypeName()
-			{
-				if constexpr (std::is_same_v<StringT, Configuration::CatString>)
-				{
-					return "string";
-				}
-				else
-				{
-					static const std::string stringName = jitcat::Tools::append("string<", TypeNameGetter<CharT>::get() , 
-																					  ",", TypeIdentifier<TraitsT>::getIdentifier(), 
-																					  ",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
-					return stringName.c_str();
-				}
-			}
-
-			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
-			{
-				typeInfo
-					.addMember("+", &ExternalReflector<StringT>::calculateSimpleStringAddition)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<int, const StringT*>)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, int>)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<float, const StringT*>)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, float>)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<bool, const StringT*>)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, bool>)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<const StringT*, double>)
-					.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<double, const StringT*>)
-					.addMember("==", &ExternalReflector<StringT>::stringEquals)
-					.addMember("!=", &ExternalReflector<StringT>::stringNotEquals)
-					.addMember<StringT, StringT&, const StringT&>("=", &StringT::operator=)
-					.addPseudoMemberFunction<StringT>("length", &ExternalReflector<StringT>::length)
-					.addPseudoMemberFunction<StringT, int, const StringT*>("find", &ExternalReflector<StringT>::find)
-					.addPseudoMemberFunction<StringT, int, const StringT*, int>("find", &ExternalReflector<StringT>::find)
-					.addPseudoMemberFunction<StringT>("replace", &ExternalReflector<StringT>::replace)
-					.addPseudoMemberFunction<StringT>("subString", &ExternalReflector<StringT>::subString);
-			}
+			static inline const char* getTypeName();
+			static inline void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 
 			static constexpr bool exists = true;
 
 		private:
 
-			static int length(StringT* string)
-			{
-				if (string != nullptr)
-				{
-					return (int)string->length();
-				}
-				else
-				{
-					return 0;
-				}
-			}
-
-			static inline StringT calculateSimpleStringAddition(const StringT* lString, const StringT* rString)
-			{
-				if (lString != nullptr && rString != nullptr)	return *lString + *rString;
-				else if (lString != nullptr)					return *lString;
-				else if (rString != nullptr)					return *rString;
-				else											return StringT();
-			}
-
-
-			static bool stringEquals(const StringT* lString, const StringT* rString)
-			{
-				if (lString != nullptr && rString != nullptr)
-				{
-					return *lString == *rString;
-				}
-				return false;
-			}
-
-
-			static bool stringNotEquals(const StringT* lString, const StringT* rString)
-			{
-				if (lString != nullptr && rString != nullptr)
-				{
-					return *lString != *rString;
-				}
-				return false;
-			}
-
-
-			static int find(StringT* thisString, const StringT* stringToFind)
-			{
-				if (thisString != nullptr && stringToFind != nullptr)
-				{
-					return (int)thisString->find(*stringToFind);
-				}
-				else
-				{
-					return -1;
-				}
-			}
-
-
-			static int find(StringT* thisString, const StringT* stringToFind, int offset)
-			{
-				if (thisString != nullptr && stringToFind != nullptr && offset >= 0)
-				{
-					return (int)thisString->find(*stringToFind, (std::size_t)offset);
-				}
-				else
-				{
-					return -1;
-				}
-			}
-
-
-			static StringT replace(StringT* thisString, const StringT* stringToFind, const StringT* replacementString)
-			{
-				if (thisString == nullptr || stringToFind == nullptr || replacementString == nullptr)
-				{
-					return StringT();
-				}
-				if (*thisString != StringT())
-				{
-					StringT newString = *thisString;
-					size_t startPosition = 0;
-					while ((startPosition = newString.find(*stringToFind, startPosition)) != StringT::npos)
-					{
-						newString.replace(startPosition, stringToFind->length(), *replacementString);
-						startPosition += replacementString->length(); 
-					}
-					return newString;
-				}
-				return *thisString;
-			}
-
-
-			static StringT subString(StringT* thisString, int start, int length)
-			{
-				if (thisString == nullptr || thisString->size() == 0)
-				{
-					return StringT();
-				}
-				else if ((int)thisString->size() > start && start >= 0)
-				{
-					return thisString->substr((unsigned int)start, (unsigned int)length);
-				}
-				else
-				{
-					return StringT();
-				}
-			}
-
-
+			static inline int length(StringT* string);
+			static inline StringT calculateSimpleStringAddition(const StringT* lString, const StringT* rString);
+			static inline bool stringEquals(const StringT* lString, const StringT* rString);
+			static inline bool stringNotEquals(const StringT* lString, const StringT* rString);
+			static inline int find(StringT* thisString, const StringT* stringToFind);
+			static inline int find(StringT* thisString, const StringT* stringToFind, int offset);
+			static inline StringT replace(StringT* thisString, const StringT* stringToFind, const StringT* replacementString);
+			static inline StringT subString(StringT* thisString, int start, int length);
 			template<typename LeftT, typename RightT>
-			static inline StringT calculateStringAddition(LeftT lValue, RightT rValue)
-			{
-				StringStreamT stream = StringStreamT();
-				if constexpr (std::is_same_v<LeftT, const StringT*>)
-				{
-					if (lValue != nullptr)	stream << *lValue;
-				}
-				else
-				{
-					stream << lValue;
-				}
-
-				if constexpr (std::is_same_v<RightT, const StringT*>)
-				{
-					if (rValue != nullptr)	stream << *rValue;
-				}
-				else
-				{
-					stream << rValue;
-				}
-				return stream.str();
-			}
+			static inline StringT calculateStringAddition(LeftT lValue, RightT rValue);
 	};
+
 }
+
+
+#include "jitcat/STLTypeReflectorsHeaderImplementation.h"
