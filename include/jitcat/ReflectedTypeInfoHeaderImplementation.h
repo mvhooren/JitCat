@@ -54,7 +54,7 @@ namespace jitcat::Reflection
 	template<typename MemberCVT>
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberCVT* member, MemberFlags flags)
 	{
-		typedef typename RemoveConst<MemberCVT>::type MemberT;
+		using MemberT = typename RemoveConst<MemberCVT>::type;
 		std::string identifier = Tools::toLowerCase(identifier_);
 		bool isConst = (flags & MF::isConst) != 0
 						|| (flags & MF::isStaticConst) != 0;
@@ -70,7 +70,7 @@ namespace jitcat::Reflection
 					  || std::is_same<MemberT, bool>::value
 					  || std::is_enum<MemberT>::value)
 		{
-			memberInfo = new StaticBasicTypeMemberInfo(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticBasicTypeMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
 		}
 		else if constexpr (TypeTraits<MemberT>::isUniquePtr())
 		{
@@ -79,7 +79,7 @@ namespace jitcat::Reflection
 		else if constexpr (std::is_same<MemberT, ReflectableHandle>::value)
 		{
 			CatGenericType handleType = TypeTraits<MemberT>::toGenericType().toHandle(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst);
-			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), handleType);
+			memberInfo = new StaticClassHandleMemberInfo(identifier, const_cast<MemberT*>(member), handleType);
 		}
 		else if constexpr (std::is_pointer<MemberT>::value)
 		{

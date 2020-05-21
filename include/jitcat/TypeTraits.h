@@ -68,7 +68,7 @@ namespace jitcat
 		static ObjectT& stripValue(ObjectT& value) { return value; }
 		static ObjectT& stripValue(ObjectT* value) {return *value;}
 		
-		static const TypeID getTypeId() { TypeIdentifier<ObjectT>::getIdentifier();};
+		static const TypeID getTypeId() { return TypeIdentifier<ObjectT>::getIdentifier();};
 
 		typedef ObjectT getValueType;
 		typedef ObjectT type;
