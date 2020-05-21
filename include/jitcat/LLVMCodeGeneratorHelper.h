@@ -9,17 +9,21 @@
 
 namespace jitcat
 {
+	class CatGenericType;
 	class CatRuntimeContext;
 	namespace AST
 	{
 		class CatTypedExpression;
 	}
+	namespace Reflection
+	{
+		class StaticFunctionInfo;
+	}
 }
-#include "jitcat/CatGenericType.h"
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/LLVMTypes.h"
-#include "jitcat/TypeTraits.h"
+
 
 #include <functional>
 #include <memory>

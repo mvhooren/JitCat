@@ -79,16 +79,16 @@ void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& ty
 		.addMember("w", &TestVector4::w)
 		.addMember("doAdd", &TestVector4::doAdd)
 		.addMember("staticAdd", &TestVector4::staticAdd)
-		.addMember<TestVector4, TestVector4, const TestVector4&>("*", &TestVector4::operator*)
-		.addMember<TestVector4, TestVector4, int>("*", &TestVector4::operator*)
-		.addMember<TestVector4, TestVector4, float>("*", &TestVector4::operator*)
+		.template addMember<TestVector4, TestVector4, const TestVector4&>("*", &TestVector4::operator*)
+		.template addMember<TestVector4, TestVector4, int>("*", &TestVector4::operator*)
+		.template addMember<TestVector4, TestVector4, float>("*", &TestVector4::operator*)
 		.addMember("+", &TestVector4::operator+)
 		.addMember("-", &TestVector4::operator-)
 		.addMember("[]", &TestVector4::operator[])
 		.addMember("==", &TestVector4::operator==)
 		.addMember("=", &TestVector4::operator=)
 		.addMember("zero", &TestVector4::zero)
-		.addMember<TestVector4, const TestVector4&, const TestVector4&>("/", &operator/);
+		.template addMember<TestVector4, const TestVector4&, const TestVector4&>("/", &operator/);
 
 }
 

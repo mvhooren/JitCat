@@ -184,9 +184,9 @@ void TestVector::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 		.addMember("y", &TestVector::y, MemberFlags::isWritable)
 		.addMember("z", &TestVector::z, MemberFlags::isWritable)
 		.addMember("w", &TestVector::w, MemberFlags::isWritable)
-		.addMember<TestVector, TestVector, const TestVector&>("+", &TestVector::operator+)
-		.addMember<TestVector, TestVector, int>("+", &TestVector::operator+)
-		.addMember<TestVector, const TestVector&, TestVector>("*", &::operator*);
+		.template addMember<TestVector, TestVector, const TestVector&>("+", &TestVector::operator+)
+		.template addMember<TestVector, TestVector, int>("+", &TestVector::operator+)
+		.template addMember<TestVector, const TestVector&, TestVector>("*", &::operator*);
 }
 
 

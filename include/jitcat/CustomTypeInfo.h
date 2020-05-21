@@ -117,14 +117,14 @@ namespace jitcat::Reflection
 		//For creating a "static" data type, this instance points directly to the default data.
 		Reflectable* getDefaultInstance();
 
-		virtual bool isCustomType() const;
+		virtual bool isCustomType() const override final;
 
 		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const override final;
 		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize) override final;
 		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 
-		virtual bool isTriviallyCopyable() const;
+		virtual bool isTriviallyCopyable() const override final;
 
 		virtual bool canBeDeleted() const override final;
 

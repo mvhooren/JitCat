@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/LLVMCodeGeneratorHelper.h"
+#include "jitcat/CatGenericType.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/Configuration.h"

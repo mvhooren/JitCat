@@ -354,7 +354,7 @@ namespace jitcat::Reflection
 			.addMember("+", &ExternalReflector<StringT>::calculateStringAddition<double, const StringT*>)
 			.addMember("==", &ExternalReflector<StringT>::stringEquals)
 			.addMember("!=", &ExternalReflector<StringT>::stringNotEquals)
-			.addMember<StringT, StringT&, const StringT&>("=", &StringT::operator=)
+			.template addMember<StringT, StringT&, const StringT&>("=", &StringT::operator=)
 			.template addPseudoMemberFunction<StringT>("length", &ExternalReflector<StringT>::length)
 			.template addPseudoMemberFunction<StringT, int, const StringT*>("find", &ExternalReflector<StringT>::find)
 			.template addPseudoMemberFunction<StringT, int, const StringT*, int>("find", &ExternalReflector<StringT>::find)

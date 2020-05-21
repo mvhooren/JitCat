@@ -68,7 +68,7 @@ namespace jitcat::AST
 		Reflection::MemberVisibility getFunctionVisibility() const;
 		void setFunctionVisibility(Reflection::MemberVisibility functionVisibility);
 
-		virtual const std::string& getLowerCaseFunctionName() const;
+		virtual const std::string& getLowerCaseFunctionName() const override final;
 		const std::string& getFunctionName() const;
 
 		CatScopeBlock* getScopeBlock() const;
