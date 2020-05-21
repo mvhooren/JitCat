@@ -8,11 +8,7 @@
 #pragma once
 
 #include "jitcat/CatGenericType.h"
-#include "jitcat/ExternalReflector.h"
-#include "jitcat/FunctionPresenceTest.h"
-#include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
-#include "jitcat/TypeTools.h"
 
 #include <any>
 #include <atomic>
@@ -62,10 +58,8 @@ namespace jitcat
 		static constexpr bool isReflectableType() { return true; }
 		static constexpr bool isUniquePtr() { return false; }
 
-		static const char* getTypeName() 
-		{ 
-			return Reflection::TypeNameGetter<ObjectT>::get();
-		}
+		static inline const char* getTypeName();
+
 		static std::any getCatValue(void) { return std::any(ObjectT());}
 		static std::any getCatValue(ObjectT& value);
 		static constexpr ObjectT getDefaultValue() { return ObjectT(); }
@@ -200,7 +194,7 @@ namespace jitcat
 		static std::any getCatValue(PointerRefT*& value) { return std::any(&value);};
 		static constexpr PointerRefT** getDefaultValue() 
 		{
-			static constexpr PointerRefT* nullReflectable = nullptr;
+			static PointerRefT* nullReflectable = nullptr;
 			return &nullReflectable;
 		}
 		static std::any getDefaultCatValue() { return getValue(); }
@@ -291,10 +285,8 @@ namespace jitcat
 		static std::any getDefaultCatValue() { return std::any(FundamentalT()); }
 		static FundamentalT getValue(const std::any& value) { return std::any_cast<FundamentalT>(value);}
 		static FundamentalT stripValue(FundamentalT value) { return value; }
-		static constexpr const char* getTypeName()
-		{
-			return Reflection::TypeNameGetter<FundamentalT>::get();
-		}
+		static inline const char* getTypeName();
+
 
 		static const TypeID getTypeId() {return TypeIdentifier<FundamentalT>::getIdentifier();}
 
@@ -319,10 +311,8 @@ namespace jitcat
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<EnumT>::getDefaultValue()); }
 		static EnumT getValue(const std::any& value) { return std::any_cast<EnumT>(value);}
 		static EnumT stripValue(EnumT value) { return value; }
-		static const char* getTypeName()
-		{
-			return getEnumName<EnumT>();	
-		}
+		static inline const char* getTypeName();
+
 
 		static const TypeID getTypeId() {return TypeIdentifier<EnumT>::getIdentifier();}
 
@@ -331,39 +321,6 @@ namespace jitcat
 		typedef EnumT cachedType;
 		typedef EnumT functionParameterType;
 	};
-
-
-	template <typename AnyType>
-	struct RemoveConst
-	{
-		typedef AnyType type;
-	};
-	template<typename ConstType>
-	struct RemoveConst<ConstType&>
-	{
-		typedef typename RemoveConst<ConstType>::type& type;
-	};
-	template<typename ConstType>
-	struct RemoveConst<ConstType*>
-	{
-		typedef typename RemoveConst<ConstType>::type* type;
-	};
-	template<typename ConstType>
-	struct RemoveConst<ConstType* const>
-	{
-		typedef typename RemoveConst<ConstType>::type* type;
-	};
-	template<typename ConstType>
-	struct RemoveConst<const ConstType>
-	{
-		typedef typename RemoveConst<ConstType>::type type;
-	};
-	template<typename ConstType>
-	struct RemoveConst<volatile ConstType>
-	{
-		typedef typename RemoveConst<ConstType>::type type;
-	};
-
 
 } //End namespace jitcat
 

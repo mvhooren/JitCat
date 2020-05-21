@@ -8,8 +8,8 @@
 #pragma once
 
 #include "jitcat/TypeOwnershipSemantics.h"
-#include "jitcat/TypeRegistry.h"
-
+#include "jitcat/STLTypeReflectors.h"
+#include "jitcat/TypeTools.h"
 
 namespace jitcat
 {
@@ -20,6 +20,13 @@ namespace jitcat
 		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>();
 		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(typeInfo));
 		return *type.get();
+	}
+
+
+	template<typename ObjectT, typename EnabledT>
+	const char* TypeTraits<ObjectT, EnabledT>::getTypeName()
+	{ 
+		return Reflection::TypeNameGetter<ObjectT>::get();
 	}
 
 	template<typename EnumT>
@@ -108,4 +115,17 @@ namespace jitcat
 		return TypeTraits<UniquePtrT*>::toGenericType();
 	}
 
+
+	template <typename FundamentalT>
+	const char* TypeTraits<FundamentalT, std::enable_if_t<std::is_fundamental_v<FundamentalT> && !std::is_void_v<FundamentalT> > >::getTypeName()
+	{
+		return Reflection::TypeNameGetter<FundamentalT>::get();
+	}
+
+
+	template <typename EnumT>
+	const char* TypeTraits<EnumT, std::enable_if_t<std::is_enum_v<EnumT>>>::getTypeName()
+	{
+		return getEnumName<EnumT>();	
+	}
 }

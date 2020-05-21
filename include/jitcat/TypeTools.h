@@ -27,6 +27,39 @@ template<class T, class U=
 	  > struct remove_all : remove_all<U> {};
 	template<class T> struct remove_all<T, T> { typedef T type; };
 
+namespace jitcat
+{
+	template <typename AnyType>
+	struct RemoveConst
+	{
+		typedef AnyType type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<ConstType&>
+	{
+		typedef typename RemoveConst<ConstType>::type& type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<ConstType*>
+	{
+		typedef typename RemoveConst<ConstType>::type* type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<ConstType* const>
+	{
+		typedef typename RemoveConst<ConstType>::type* type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<const ConstType>
+	{
+		typedef typename RemoveConst<ConstType>::type type;
+	};
+	template<typename ConstType>
+	struct RemoveConst<volatile ConstType>
+	{
+		typedef typename RemoveConst<ConstType>::type type;
+	};
+}
 
 namespace jitcat::Reflection
 {
