@@ -54,20 +54,6 @@ namespace jitcat::Reflection
 		};
 
 
-		template <typename ItemT>
-		inline typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType getValue(ItemT& itemValue)
-		{
-			if constexpr (TypeTraits<ItemT>::isUniquePtr())
-			{
-				return itemValue.get();
-			}
-			else
-			{
-				return &itemValue;
-			}
-		}
-
-
 		template <typename ReturnT>
 		inline ReturnT getDefault()
 		{

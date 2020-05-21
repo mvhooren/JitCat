@@ -13,6 +13,23 @@
 
 namespace jitcat::Reflection
 {
+	namespace STLHelper
+	{
+		template <typename ItemT>
+		inline typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType getValue(ItemT& itemValue)
+		{
+			if constexpr (TypeTraits<ItemT>::isUniquePtr())
+			{
+				return itemValue.get();
+			}
+			else
+			{
+				return &itemValue;
+			}
+		}
+	}
+
+
 	template <class ItemT, class AllocatorT>
 	inline const char* ExternalReflector<std::vector<ItemT, AllocatorT>>::getTypeName()
 	{
@@ -26,8 +43,8 @@ namespace jitcat::Reflection
 	inline void ExternalReflector<std::vector<ItemT, AllocatorT>>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 	{
 		typeInfo
-			.addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
-			.addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
+			.template addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
+			.template addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
 	}
 
 
@@ -65,8 +82,8 @@ namespace jitcat::Reflection
 	inline void ExternalReflector<std::vector<bool, AllocatorT>>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 	{
 		typeInfo
-			.addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
-			.addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
+			.template addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
+			.template addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
 	}
 
 
@@ -105,8 +122,8 @@ namespace jitcat::Reflection
 	inline void ExternalReflector<std::array<ItemT, ArraySize>>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 	{
 		typeInfo
-			.addPseudoMemberFunction<ArrayT>("[]", &ExternalReflector<ArrayT>::safeIndex)
-			.addPseudoMemberFunction<ArrayT>("size", &ExternalReflector<ArrayT>::size);
+			.template addPseudoMemberFunction<ArrayT>("[]", &ExternalReflector<ArrayT>::safeIndex)
+			.template addPseudoMemberFunction<ArrayT>("size", &ExternalReflector<ArrayT>::size);
 	}
 
 
@@ -145,8 +162,8 @@ namespace jitcat::Reflection
 	inline void ExternalReflector<std::deque<ItemT, AllocatorT>>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 	{
 		typeInfo
-			.addPseudoMemberFunction<DequeT>("[]", &ExternalReflector<DequeT>::safeIndex)
-			.addPseudoMemberFunction<DequeT>("size", &ExternalReflector<DequeT>::size);
+			.template addPseudoMemberFunction<DequeT>("[]", &ExternalReflector<DequeT>::safeIndex)
+			.template addPseudoMemberFunction<DequeT>("size", &ExternalReflector<DequeT>::size);
 	}
 
 
@@ -187,9 +204,9 @@ namespace jitcat::Reflection
 	inline void ExternalReflector<std::map<KeyT, ValueT, PredicateT, AllocatorT>>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 	{
 		typeInfo
-			.addPseudoMemberFunction<MapT>("[]", &ExternalReflector<MapT>::safeIndex)
-			.addPseudoMemberFunction<MapT>("size", &ExternalReflector<MapT>::size)
-			.addPseudoMemberFunction<MapT>("index", &ExternalReflector<MapT>::ordinalIndex);
+			.template addPseudoMemberFunction<MapT>("[]", &ExternalReflector<MapT>::safeIndex)
+			.template addPseudoMemberFunction<MapT>("size", &ExternalReflector<MapT>::size)
+			.template addPseudoMemberFunction<MapT>("index", &ExternalReflector<MapT>::ordinalIndex);
 	}
 
 
@@ -254,9 +271,9 @@ namespace jitcat::Reflection
 	inline void ExternalReflector<std::unordered_map<KeyT, ValueT, HashT, PredicateT, AllocatorT>>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 	{
 		typeInfo
-			.addPseudoMemberFunction<MapT>("[]", &ExternalReflector<MapT>::safeIndex)
-			.addPseudoMemberFunction<MapT>("size", &ExternalReflector<MapT>::size)
-			.addPseudoMemberFunction<MapT>("index", &ExternalReflector<MapT>::ordinalIndex);
+			.template addPseudoMemberFunction<MapT>("[]", &ExternalReflector<MapT>::safeIndex)
+			.template addPseudoMemberFunction<MapT>("size", &ExternalReflector<MapT>::size)
+			.template addPseudoMemberFunction<MapT>("index", &ExternalReflector<MapT>::ordinalIndex);
 	}
 
 
@@ -338,11 +355,11 @@ namespace jitcat::Reflection
 			.addMember("==", &ExternalReflector<StringT>::stringEquals)
 			.addMember("!=", &ExternalReflector<StringT>::stringNotEquals)
 			.addMember<StringT, StringT&, const StringT&>("=", &StringT::operator=)
-			.addPseudoMemberFunction<StringT>("length", &ExternalReflector<StringT>::length)
-			.addPseudoMemberFunction<StringT, int, const StringT*>("find", &ExternalReflector<StringT>::find)
-			.addPseudoMemberFunction<StringT, int, const StringT*, int>("find", &ExternalReflector<StringT>::find)
-			.addPseudoMemberFunction<StringT>("replace", &ExternalReflector<StringT>::replace)
-			.addPseudoMemberFunction<StringT>("subString", &ExternalReflector<StringT>::subString);
+			.template addPseudoMemberFunction<StringT>("length", &ExternalReflector<StringT>::length)
+			.template addPseudoMemberFunction<StringT, int, const StringT*>("find", &ExternalReflector<StringT>::find)
+			.template addPseudoMemberFunction<StringT, int, const StringT*, int>("find", &ExternalReflector<StringT>::find)
+			.template addPseudoMemberFunction<StringT>("replace", &ExternalReflector<StringT>::replace)
+			.template addPseudoMemberFunction<StringT>("subString", &ExternalReflector<StringT>::subString);
 	}
 
 
