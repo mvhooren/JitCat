@@ -94,9 +94,9 @@ namespace jitcat::Reflection
 		DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, MemberFunctionInfo* deferredFunction);
 
 		virtual ~DeferredMemberFunctionInfo();
-		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters);
-		virtual std::size_t getNumberOfArguments() const;
-		inline virtual MemberFunctionCallData getFunctionAddress() const;
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+		virtual std::size_t getNumberOfArguments() const override final;
+		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
 		inline virtual bool isDeferredFunctionCall() override final;
 
 		TypeMemberInfo* baseMember;

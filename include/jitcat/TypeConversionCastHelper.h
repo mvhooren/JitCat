@@ -48,7 +48,7 @@ namespace jitcat
 			{
 				//Out*
 				if constexpr (std::is_reference<InT>::value
-							  && std::is_pointer<typename std::remove_reference<Int>::type>::value)
+							  && std::is_pointer<typename std::remove_reference<InT>::type>::value)
 				{
 					//InT*&
 					return in;
@@ -64,7 +64,7 @@ namespace jitcat
 			{
 				//Out
 				if constexpr (std::is_reference<InT>::value
-							  && std::is_pointer<typename std::remove_reference<Int>::type>::value)
+							  && std::is_pointer<typename std::remove_reference<InT>::type>::value)
 				{
 					//InT*&
 					return **(&in);

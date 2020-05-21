@@ -78,7 +78,8 @@ namespace jitcat::Reflection
 		}
 		else if constexpr (std::is_same<MemberT, ReflectableHandle>::value)
 		{
-			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType().toHandle(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst));
+			CatGenericType handleType = TypeTraits<MemberT>::toGenericType().toHandle(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst);
+			memberInfo = new StaticClassHandleMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), handleType);
 		}
 		else if constexpr (std::is_pointer<MemberT>::value)
 		{
