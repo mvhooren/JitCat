@@ -43,4 +43,4 @@ namespace jitcat::AST
 		std::unique_ptr<CatStaticScope> parentScope;
 	};
 
-};
+}

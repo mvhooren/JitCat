@@ -10,25 +10,25 @@
 namespace jitcat::AST
 {
 
-enum class CatInfixOperatorType
-{
-	Plus,
-	Minus,
-	Multiply,
-	Divide,
-	Modulo,
-	Greater,
-	Smaller,
-	GreaterOrEqual,
-	SmallerOrEqual,
-	Equals,
-	NotEquals,
-	LogicalAnd,
-	LogicalOr,
-	Count
-};
+	enum class CatInfixOperatorType
+	{
+		Plus,
+		Minus,
+		Multiply,
+		Divide,
+		Modulo,
+		Greater,
+		Smaller,
+		GreaterOrEqual,
+		SmallerOrEqual,
+		Equals,
+		NotEquals,
+		LogicalAnd,
+		LogicalOr,
+		Count
+	};
 
 
-const char* toString(CatInfixOperatorType infixOperator);
+	const char* toString(CatInfixOperatorType infixOperator);
 
 } //End namespace jitcat::AST

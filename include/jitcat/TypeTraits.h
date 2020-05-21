@@ -280,7 +280,7 @@ namespace jitcat
 			else if constexpr	(std::is_same_v<double, FundamentalT>)	return CatGenericType::doubleType; 
 			else if constexpr	(std::is_same_v<int,   FundamentalT>)	return CatGenericType::intType;
 			else if constexpr	(std::is_same_v<bool,  FundamentalT>)	return CatGenericType::boolType;
-			else														static_assert(false, "Fundamental type not yet supported by JitCat.");
+			else														static_assert(!std::is_same_v<bool,  FundamentalT>, "Fundamental type not yet supported by JitCat.");
 		}
 
 		static constexpr bool isReflectableType() { return false; }

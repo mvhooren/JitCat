@@ -299,6 +299,7 @@ set(Source_Reflection_TypeInfo_Helper
 	${JitCatHeaderPath}/FunctionPresenceTest.h
 	${JitCatHeaderPath}/MemberTypeInfoCreator.h
 	${JitCatHeaderPath}/MemberVisibility.h
+	TypeCaster.cpp
 	${JitCatHeaderPath}/TypeCaster.h
 	${JitCatHeaderPath}/TypeTools.h
 	${JitCatHeaderPath}/TypeOwnershipSemantics.h

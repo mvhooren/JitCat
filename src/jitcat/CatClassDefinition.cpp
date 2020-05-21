@@ -309,7 +309,7 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 			{
 				constructorName = "init";
 			}
-			CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme()), nameLexeme);
+			CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme(), std::vector<CatTypedExpression*>()), nameLexeme);
 			statements.push_back(functionCall);
 		}
 	}
@@ -335,7 +335,7 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 				{
 					constructorName = "init";
 				}
-				CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme()), nameLexeme);
+				CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme(), std::vector<CatTypedExpression*>()), nameLexeme);
 				statements.push_back(functionCall);
 			}
 		}

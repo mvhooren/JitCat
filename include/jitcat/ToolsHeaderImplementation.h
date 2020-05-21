@@ -105,7 +105,7 @@ namespace jitcat::Tools
 	std::wstring makeWString(const T& content)
 	{
 		std::wstringstream result;
-		resut << content;
+		result << content;
 		return result.str();
 	}
 

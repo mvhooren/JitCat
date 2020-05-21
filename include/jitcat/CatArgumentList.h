@@ -24,7 +24,7 @@ namespace jitcat::AST
 	class CatArgumentList: public CatASTNode
 	{
 	public:
-		CatArgumentList(const Tokenizer::Lexeme& lexeme, std::vector<CatTypedExpression*>& argumentList = std::vector<CatTypedExpression*>());
+		CatArgumentList(const Tokenizer::Lexeme& lexeme, std::vector<CatTypedExpression*>& argumentList);
 		CatArgumentList(const CatArgumentList& other);
 
 		virtual CatASTNode* copy() const override final;

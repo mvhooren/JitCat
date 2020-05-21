@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/CustomTypeInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"

@@ -6,7 +6,11 @@
 */
 
 #pragma once
+
+
 #include "jitcat/CatASTNode.h"
+
+#include <memory>
 
 
 namespace jitcat::AST

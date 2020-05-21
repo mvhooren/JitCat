@@ -24,4 +24,4 @@ namespace jitcat::AST
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) = 0;
 	};
 
-};
+}

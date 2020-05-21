@@ -35,28 +35,21 @@ namespace jitcat::Reflection
 	template <typename EnumT>
 	const char* getEnumName()
 	{
-		static_assert(false, "This function needs to be implemented for this enum.");
+		static_assert(std::is_enum_v<EnumT>, "This function needs to be implemented for this enum.");
 		return nullptr;
 	}
 
 	template <typename EnumT>
 	void reflectEnum(ReflectedEnumTypeInfo& enumTypeInfo)
 	{
-		static_assert(false, "This function needs to be implemented for this enum.");
+		static_assert(std::is_enum_v<EnumT>, "This function needs to be implemented for this enum.");
 	}
 
-    template<typename BaseT>
-    struct CopyConstructControlVariableExists
-    {
-        template<typename FunctionPtrT, FunctionPtrT> struct SameType;
+	template <typename T, typename = int>
+	struct CopyConstructControlVariableExists : std::false_type { };
 
-        template<typename TestBaseT>
-        static constexpr std::true_type testPresence(SameType<constexpr bool, TestBaseT::enableCopyConstruction>*);
-        template<typename TestBaseT>
-        static constexpr std::false_type testPresence(...);
-
-        static constexpr bool value = decltype(testPresence<BaseT>(0))::value;
-    };
+	template <typename T>
+	struct CopyConstructControlVariableExists <T, decltype((void) T::enableCopyConstruction, 0)> : std::true_type { };
 
 	namespace TypeTools
 	{

@@ -8,6 +8,7 @@
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/LLVMCompileTimeContext.h"
+#include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/ReflectableHandle.h"
 
 namespace jitcat::Reflection
