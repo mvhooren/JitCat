@@ -27,42 +27,42 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 	SECTION("Abs_Constant")
 	{
 		Expression<float> testExpression(&context, "abs(42.0f)");
-		doChecks<float>(abs(42.0f), false, true, false, testExpression, context);
+		doChecks<float>(std::abs(42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Abs_Negative Constant")
 	{
 		Expression<float> testExpression(&context, "abs(-42.0f)");
-		doChecks<float>(abs(-42.0f), false, true, false, testExpression, context);
+		doChecks<float>(std::abs(-42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Abs_IntConstant")
 	{
 		Expression<int> testExpression(&context, "abs(3)");
-		doChecks(abs(3), false, true, false, testExpression, context);
+		doChecks(std::abs(3), false, true, false, testExpression, context);
 	}
 	SECTION("Abs_Negative IntConstant")
 	{
 		Expression<int> testExpression(&context, "abs(-3)");
-		doChecks(abs(-3), false, true, false, testExpression, context);
+		doChecks(std::abs(-3), false, true, false, testExpression, context);
 	}
 	SECTION("Abs_Variable")
 	{
 		Expression<int> testExpression(&context, "abs(-33)");
-		doChecks(abs(-33), false, true, false, testExpression, context);
+		doChecks(std::abs(-33), false, true, false, testExpression, context);
 	}
 	SECTION("Abs_Double_Variable")
 	{
 		Expression<double> testExpression(&context, "abs(aDouble)");
-		doChecks(abs(reflectedObject.aDouble), false, false, false, testExpression, context);
+		doChecks(std::abs(reflectedObject.aDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Abs_Negative_Double_Variable")
 	{
 		Expression<double> testExpression(&context, "abs(-aDouble)");
-		doChecks(abs(-reflectedObject.aDouble), false, false, false, testExpression, context);
+		doChecks(std::abs(-reflectedObject.aDouble), false, false, false, testExpression, context);
 	}
 	SECTION("Abs_Negative Variable")
 	{
 		Expression<float> testExpression(&context, "abs(-aFloat)");
-		doChecks<float>(abs(-reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks<float>(std::abs(-reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Abs_Zero Variable")
 	{
@@ -72,12 +72,12 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 	SECTION("Abs_IntVariable")
 	{
 		Expression<int> testExpression(&context, "abs(theInt)");
-		doChecks(abs(reflectedObject.theInt), false, false, false, testExpression, context);
+		doChecks(std::abs(reflectedObject.theInt), false, false, false, testExpression, context);
 	}
 	SECTION("Abs_Negative IntVariable")
 	{
 		Expression<int> testExpression(&context, "abs(-theInt)");
-		doChecks(abs(-reflectedObject.theInt), false, false, false, testExpression, context);
+		doChecks(std::abs(-reflectedObject.theInt), false, false, false, testExpression, context);
 	}
 	SECTION("Abs_string")
 	{
@@ -737,7 +737,7 @@ TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
 	SECTION("Ln_Constant")
 	{
 		Expression<float> testExpression(&context, "ln(42.0f)");
-		doChecks(log(42.0f), false, true, false, testExpression, context);
+		doChecks(logf(42.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Ln_Negative_Constant")
 	{
@@ -747,7 +747,7 @@ TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
 	SECTION("Ln_Int_Constant")
 	{
 		Expression<float> testExpression(&context, "ln(3)");
-		doChecks(log(3.0f), false, true, false, testExpression, context);
+		doChecks(logf(3.0f), false, true, false, testExpression, context);
 	}
 	SECTION("Ln_Negative_Int_Constant")
 	{
@@ -762,7 +762,7 @@ TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
 	SECTION("Ln_Variable")
 	{
 		Expression<float> testExpression(&context, "ln(aFloat)");
-		doChecks(log(reflectedObject.aFloat), false, false, false, testExpression, context);
+		doChecks(logf(reflectedObject.aFloat), false, false, false, testExpression, context);
 	}
 	SECTION("Ln_Double_Variable")
 	{
@@ -777,7 +777,7 @@ TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
 	SECTION("Ln_Int_Variable")
 	{
 		Expression<float> testExpression(&context, "ln(theInt)");
-		doChecks(log((float)reflectedObject.theInt), false, false, false, testExpression, context);
+		doChecks(logf((float)reflectedObject.theInt), false, false, false, testExpression, context);
 	}
 	SECTION("Ln_Negative_Int_Variable")
 	{

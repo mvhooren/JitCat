@@ -94,7 +94,7 @@ namespace jitcat::Reflection
 			else if constexpr (std::is_same_v<float, DecayedT>)					return "float";
 			else if constexpr (std::is_same_v<double, DecayedT>)				return "double";
 			else if constexpr (std::is_same_v<long double, DecayedT>)			return "longdouble";
-			else																static_assert(!std::is_same_v<void, DecayedT>, "Need to implement reflection for ReflectableT");
+			else																static_assert(std::is_same_v<void, DecayedT>, "Need to implement reflection for ReflectableT");
         }
     };
 

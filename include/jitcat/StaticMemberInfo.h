@@ -10,7 +10,6 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberVisibility.h"
-#include "jitcat/TypeTraits.h"
 
 #include <any>
 #include <map>

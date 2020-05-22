@@ -184,7 +184,7 @@ namespace jitcat::Reflection
 				}
 				else
 				{
-					static_assert(!ExternalReflector<ReflectableT>::exists, "Need to implement reflection for ReflectableT");
+					static_assert(ExternalReflector<ReflectableT>::exists, "Need to implement reflection for ReflectableT");
 				}
 				
 				return returnTypeInfo;

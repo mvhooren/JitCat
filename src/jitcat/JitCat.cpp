@@ -24,6 +24,7 @@
 #include "jitcat/LLVMJit.h"
 #endif
 #include <string>
+#include <time.h>
 #include <vector>
 #include <iostream>
 
@@ -43,7 +44,7 @@ JitCat::JitCat():
 	expressionParser = expressionGrammar->createSLRParser();
 	statementParser = statementGrammar->createSLRParser();
 	fullParser = fullGrammar->createSLRParser();
-	std::srand((unsigned int)std::time(nullptr));
+	std::srand((unsigned int)time(nullptr));
 }
 
 

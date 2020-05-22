@@ -7,11 +7,14 @@
 #pragma once
 
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CustomTypeInfo.h"
 #include "jitcat/Expression.h"
 #include "jitcat/ExpressionAny.h"
 #include "jitcat/ExpressionAssignAny.h"
 #include "jitcat/ExpressionAssignment.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/TypeMemberInfo.h"
+#include "jitcat/TypeTraits.h"
 
 #include <catch2/catch.hpp>
 #include <functional>
@@ -46,19 +49,19 @@ inline void checkValueIsEqual(const T& actualValue, const T& expectedValue, bool
 template<typename ResultT>
 inline ResultT getMemberValue(const std::string& memberName, unsigned char* instance, jitcat::Reflection::CustomTypeInfo* instanceType)
 {
-	TypeMemberInfo* memberInfo = instanceType->getMemberInfo(memberName);
-	return TypeTraits<ResultT>::getValue(memberInfo->getMemberReference(instance));
+	jitcat::Reflection::TypeMemberInfo* memberInfo = instanceType->getMemberInfo(memberName);
+	return jitcat::TypeTraits<ResultT>::getValue(memberInfo->getMemberReference(instance));
 }
 
 
 template<typename ResultT>
 inline void setMemberValue(const std::string& memberName, unsigned char* instance, jitcat::Reflection::CustomTypeInfo* instanceType, ResultT& value)
 {
-	TypeMemberInfo* memberInfo = instanceType->getMemberInfo(memberName);
+	jitcat::Reflection::TypeMemberInfo* memberInfo = instanceType->getMemberInfo(memberName);
 	std::any assignable = memberInfo->getAssignableMemberReference(instance);
 	if constexpr (!std::is_class_v<ResultT> || std::is_enum_v<ResultT>)
 	{
-		jitcat::AST::ASTHelper::doAssignment(assignable, TypeTraits<ResultT>::getCatValue(value), memberInfo->catType.toPointer(TypeOwnershipSemantics::Weak, true, false), memberInfo->catType);
+		jitcat::AST::ASTHelper::doAssignment(assignable, jitcat::TypeTraits<ResultT>::getCatValue(value), memberInfo->catType.toPointer(jitcat::Reflection::TypeOwnershipSemantics::Weak, true, false), memberInfo->catType);
 	}
 	else
 	{
@@ -150,7 +153,7 @@ inline void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBe
 template <typename T>
 inline void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBeConst, bool shouldBeLiteral, jitcat::ExpressionAny& expression, jitcat::CatRuntimeContext& context)
 {
-	using ValueT = typename RemoveConst<T>::type;
+	using ValueT = typename jitcat::RemoveConst<T>::type;
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
 	{
 		checkValueIsEqual<T>(std::any_cast<ValueT>(expression.getValue(&context)), expectedValue);
@@ -304,20 +307,20 @@ inline void checkAnyAssignExpression(T& assignedValue, const T& newValue, bool s
 	if (doCommonChecks(&expression, shouldHaveError, false, false, context))
 	{
 		T originalValue = assignedValue;
-		expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
+		expression.assignValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 		checkValueIsEqual(assignedValue, newValue, false);
 		assignedValue = originalValue;
-		expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+		expression.assignInterpretedValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 		checkValueIsEqual(assignedValue, newValue, false);
 		assignedValue = originalValue;
 
 		if constexpr (std::is_pointer<T>::value)
 		{
-			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 			CHECK(assignedValue == newValue);
 			assignedValue = originalValue;
 
-			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignInterpretedValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 			CHECK(assignedValue == newValue);
 			assignedValue = originalValue;
 		}
@@ -328,8 +331,8 @@ inline void checkAnyAssignExpression(T& assignedValue, const T& newValue, bool s
 		if constexpr (!std::is_same<T, void>::value)
 		{
 			//When the expression has an error, the getValue functions should not crash
-			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
-			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
+			expression.assignInterpretedValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 		}
 	}
 }
@@ -344,10 +347,10 @@ inline void checkAnyAssignExpressionCustom(unsigned char* instance, jitcat::Refl
 		{
 			T originalValue = getMemberValue<T>(memberName, instance, instanceType);
 
-			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
 			setMemberValue<T>(memberName, instance, instanceType, originalValue);
-			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignInterpretedValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 			checkValueIsEqual(getMemberValue<T>(memberName, instance, instanceType), newValue, false);
 			setMemberValue<T>(memberName, instance, instanceType, originalValue);
 		}
@@ -355,10 +358,10 @@ inline void checkAnyAssignExpressionCustom(unsigned char* instance, jitcat::Refl
 		{
 			T* originalValue = getMemberValue<T*>(memberName, instance, instanceType);
 
-			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), newValue, false);
 			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
-			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignInterpretedValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 			checkValueIsEqual(*getMemberValue<T*>(memberName, instance, instanceType), newValue, false);
 			setMemberValue<T>(memberName, instance, instanceType, *originalValue);
 		}
@@ -368,8 +371,8 @@ inline void checkAnyAssignExpressionCustom(unsigned char* instance, jitcat::Refl
 		if constexpr (!std::is_same<T, void>::value)
 		{
 			//When the expression has an error, the getValue functions should not crash
-			expression.assignValue(&context, newValue, TypeTraits<T>::toGenericType());
-			expression.assignInterpretedValue(&context, newValue, TypeTraits<T>::toGenericType());
+			expression.assignValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
+			expression.assignInterpretedValue(&context, newValue, jitcat::TypeTraits<T>::toGenericType());
 		}
 	}
 }
