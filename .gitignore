@@ -1,10 +1,6 @@
 /bin
 /lib
-/build/vs2017/Intermediate_JitCat
-/build/vs2017/Intermediate_JitCatTest
-/build/vs2017/Intermediate_JitCatUnitTests
-/build/vs2017/Intermediate_JitCatValidator
-/build/vs2017/Intermediate_JitCatValidatorTool
-/build/vs2017/.vs
-/build/vs2017/*.user
-/build/vs2017_remote_linux
+/build
+.vs
+/out
+CMakeSettings.json

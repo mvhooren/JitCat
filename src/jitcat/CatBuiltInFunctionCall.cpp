@@ -29,22 +29,22 @@ using namespace jitcat::Tools;
 
 CatBuiltInFunctionCall::CatBuiltInFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
+	arguments(arguments),
 	name(name),
 	nameLexeme(nameLexeme),
-	arguments(arguments),
-	returnType(CatGenericType::unknownType),
-	function(toFunction(name.c_str(), (int)(arguments->getNumArguments())))
+	function(toFunction(name.c_str(), (int)(arguments->getNumArguments()))),
+	returnType(CatGenericType::unknownType)
 {
 }
 
 
 jitcat::AST::CatBuiltInFunctionCall::CatBuiltInFunctionCall(const CatBuiltInFunctionCall& other):
 	CatTypedExpression(other),
+	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	name(other.name),
 	nameLexeme(other.nameLexeme),
-	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
-	returnType(CatGenericType::unknownType),
-	function(toFunction(name.c_str(), (int)(arguments->getNumArguments())))
+	function(toFunction(name.c_str(), (int)(arguments->getNumArguments()))),
+	returnType(CatGenericType::unknownType)
 {
 }
 
@@ -405,7 +405,8 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				}
 				else if (arguments->getArgumentType(2).isScalarType())
 				{
-					return arguments->getArgumentType(1).convertToType(arguments->executeArgument(2, runtimeContext), arguments->getArgumentType(2));
+					std::any argumentValue = arguments->executeArgument(2, runtimeContext);
+					return arguments->getArgumentType(1).convertToType(argumentValue, arguments->getArgumentType(2));
 				}
 				else
 				{

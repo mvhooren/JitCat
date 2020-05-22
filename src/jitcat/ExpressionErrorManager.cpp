@@ -16,9 +16,9 @@ using namespace jitcat::Tokenizer;
 
 
 ExpressionErrorManager::ExpressionErrorManager(std::function<void(const std::string&, int, int, int)> errorHandler):
-	errorsRevision(0),
+	currentDocument(nullptr),
 	errorHandler(errorHandler),
-	currentDocument(nullptr)
+	errorsRevision(0)
 {
 }
 

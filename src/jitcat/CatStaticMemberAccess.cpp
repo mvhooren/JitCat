@@ -24,11 +24,11 @@ using namespace jitcat::Reflection;
 
 CatStaticMemberAccess::CatStaticMemberAccess(CatStaticScope* baseScope, const Tokenizer::Lexeme& identifierLexeme, const Tokenizer::Lexeme& lexeme):
 	CatAssignableExpression(lexeme),
-	baseScope(baseScope),
 	identifier(identifierLexeme),
 	identifierLexeme(identifierLexeme),
 	type(CatGenericType::unknownType),
 	assignableType(CatGenericType::unknownType),
+	baseScope(baseScope),
 	staticMemberInfo(nullptr)
 {
 }
@@ -36,11 +36,11 @@ CatStaticMemberAccess::CatStaticMemberAccess(CatStaticScope* baseScope, const To
 
 CatStaticMemberAccess::CatStaticMemberAccess(const CatStaticMemberAccess& other):
 	CatAssignableExpression(other),
-	baseScope(other.baseScope != nullptr ? static_cast<CatStaticScope*>(other.baseScope->copy()) : nullptr),
 	identifier(other.identifier),
 	identifierLexeme(other.identifierLexeme),
 	type(other.type),
 	assignableType(other.assignableType),
+	baseScope(other.baseScope != nullptr ? static_cast<CatStaticScope*>(other.baseScope->copy()) : nullptr),
 	staticMemberInfo(nullptr)
 {
 }

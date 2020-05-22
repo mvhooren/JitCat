@@ -24,8 +24,8 @@ namespace jitcat::Reflection
 	{
 		CustomTypeMemberFunctionInfo(AST::CatFunctionDefinition* functionDefinition, const CatGenericType& thisType) :
 			MemberFunctionInfo(functionDefinition->getFunctionName(), functionDefinition->getReturnTypeNode()->getType()),
-			functionDefinition(functionDefinition),
-			thisType(thisType)
+			thisType(thisType),
+			functionDefinition(functionDefinition)
 		{
 			int numParameters = functionDefinition->getNumParameters(); 
 			for (int i = 0; i < numParameters; i++)

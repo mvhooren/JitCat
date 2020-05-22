@@ -14,7 +14,7 @@ using namespace jitcat::LLVM;
 LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):
 	catContext(catContext),
 	currentFunction(nullptr),
-	helper(nullptr),
-	currentDyLib(nullptr)
+	currentDyLib(nullptr),
+	helper(nullptr)
 {
 }

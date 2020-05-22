@@ -20,6 +20,8 @@
 #include "jitcat/CatStaticScope.h"
 #include "jitcat/CatTypeNode.h"
 
+#include <cassert>
+
 using namespace jitcat;
 using namespace jitcat::AST;
 using namespace jitcat::Reflection;
@@ -29,8 +31,8 @@ using namespace jitcat::Tools;
 CatTypeOrIdentifier::CatTypeOrIdentifier(CatTypeNode* type, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	typeOrIdentifier(TypeOrIdentifier::Type),
-	typeNode(type),
 	parentScope(nullptr),
+	typeNode(type),
 	identifier(""),
 	identifierLexeme(identifier),
 	ownershipSemantics(ownershipSemantics)
@@ -43,8 +45,8 @@ CatTypeOrIdentifier::CatTypeOrIdentifier(const std::string& identifier, const To
 										 const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	typeOrIdentifier(ownershipSemantics == TypeOwnershipSemantics::None ? TypeOrIdentifier::Ambiguous : TypeOrIdentifier::Type),
-	typeNode(nullptr),
 	parentScope(nullptr),
+	typeNode(nullptr),
 	identifier(identifier),
 	identifierLexeme(identifierLexeme),
 	ownershipSemantics(ownershipSemantics)
@@ -55,8 +57,8 @@ CatTypeOrIdentifier::CatTypeOrIdentifier(const std::string& identifier, const To
 CatTypeOrIdentifier::CatTypeOrIdentifier(CatStaticScope* parentScope, const std::string& identifier, const Tokenizer::Lexeme& identifierLexeme, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	typeOrIdentifier(ownershipSemantics == TypeOwnershipSemantics::None ? TypeOrIdentifier::Ambiguous : TypeOrIdentifier::Type),
-	typeNode(nullptr),
 	parentScope(parentScope),
+	typeNode(nullptr),
 	identifier(identifier),
 	identifierLexeme(identifierLexeme),
 	ownershipSemantics(ownershipSemantics)
@@ -67,8 +69,8 @@ CatTypeOrIdentifier::CatTypeOrIdentifier(CatStaticScope* parentScope, const std:
 CatTypeOrIdentifier::CatTypeOrIdentifier(const CatTypeOrIdentifier& other):
 	CatASTNode(other),
 	typeOrIdentifier(other.typeOrIdentifier),
-	typeNode(other.typeNode == nullptr ? nullptr : new CatTypeNode(*other.typeNode.get())),
 	parentScope(other.parentScope == nullptr ? nullptr : new CatStaticScope(*other.parentScope.get())),
+	typeNode(other.typeNode == nullptr ? nullptr : new CatTypeNode(*other.typeNode.get())),
 	identifier(other.identifier),
 	identifierLexeme(other.identifierLexeme),
 	ownershipSemantics(other.ownershipSemantics)
@@ -97,8 +99,10 @@ void CatTypeOrIdentifier::print() const
 
 	switch (ownershipSemantics)
 	{
-		case TypeOwnershipSemantics::Weak:		CatLog::log("&"); break;
-		case TypeOwnershipSemantics::Owned:		CatLog::log("@"); break;
+		case TypeOwnershipSemantics::Weak:		CatLog::log("&");	break;
+		case TypeOwnershipSemantics::Owned:		CatLog::log("@");	break;
+		case TypeOwnershipSemantics::Value:		break;
+		default:								assert(false);		break;
 	}
 	
 	if (parentScope != nullptr)

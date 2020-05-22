@@ -14,9 +14,9 @@ using namespace jitcat::Grammar;
 
 
 Production::Production(GrammarBase* grammar, int productionId):
-	grammar(grammar),
 	productionId(productionId),
 	containsEpsilon(TokenFlag::Unknown),
+	grammar(grammar),
 	firstSet(false),
 	followSet(true)
 {

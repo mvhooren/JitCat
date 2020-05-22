@@ -17,56 +17,56 @@ using namespace jitcat::Tools;
 
 jitcat::AST::CatLiteral::CatLiteral(const std::any& value, CatGenericType type, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
-	value(value), 
-	type(type)
+	type(type),
+	value(value)
 {
 }
 
 
 jitcat::AST::CatLiteral::CatLiteral(const Configuration::CatString& value, const Tokenizer::Lexeme& lexeme): 
 	CatTypedExpression(lexeme), 
-	value(TypeTraits<const Configuration::CatString*>::getCatValue(StringConstantPool::getString(value))), 
-	type(CatGenericType::stringConstantValuePtrType)
+	type(CatGenericType::stringConstantValuePtrType),
+	value(TypeTraits<const Configuration::CatString*>::getCatValue(StringConstantPool::getString(value)))
 {
 }
 
 
 jitcat::AST::CatLiteral::CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme), 
-	value(floatValue), 
-	type(CatGenericType::floatType)
+	type(CatGenericType::floatType),
+	value(floatValue)
 {
 }
 
 
 jitcat::AST::CatLiteral::CatLiteral(double doubleValue, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme), 
-	value(doubleValue), 
-	type(CatGenericType::doubleType)
+	type(CatGenericType::doubleType),
+	value(doubleValue)
 {
 }
 
 
 jitcat::AST::CatLiteral::CatLiteral(int intValue, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme), 
-	value(intValue), 
-	type(CatGenericType::intType)
+	type(CatGenericType::intType),
+	value(intValue)
 {
 }
 
 
 jitcat::AST::CatLiteral::CatLiteral(bool boolValue, const Tokenizer::Lexeme& lexeme): 
 	CatTypedExpression(lexeme), 
-	value(boolValue), 
-	type(CatGenericType::boolType)
+	type(CatGenericType::boolType),
+	value(boolValue)
 {
 }
 
 
 jitcat::AST::CatLiteral::CatLiteral(const CatLiteral& other):
 	CatTypedExpression(other),
-	value(other.value),
-	type(other.type)
+	type(other.type),
+	value(other.value)
 {
 }
 

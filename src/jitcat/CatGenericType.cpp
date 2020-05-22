@@ -92,9 +92,9 @@ jitcat::CatGenericType::CatGenericType(const CatGenericType& pointee, Reflection
 	basicType(BasicType::None),
 	nestedType(nullptr),
 	ownershipSemantics(ownershipSemantics),
+	pointeeType(std::make_unique<CatGenericType>(pointee)),
 	writable(writable),
-	constant(constant),
-	pointeeType(std::make_unique<CatGenericType>(pointee))
+	constant(constant)
 {
 }
 
@@ -336,7 +336,7 @@ bool jitcat::CatGenericType::isAssignableType() const
 
 bool jitcat::CatGenericType::isNullptrType() const
 {
-	return isPointerType() && getPointeeType()->isReflectableObjectType() && getPointeeType()->getObjectType()->getTypeName() == "nullptr";
+	return isPointerType() && getPointeeType()->isReflectableObjectType() && getPointeeType()->getObjectType()->getTypeName() == std::string("nullptr");
 }
 
 
@@ -800,6 +800,8 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 						case BasicType::Float:	return std::any(reinterpret_cast<float*>(pointer));
 						case BasicType::Double:	return std::any(reinterpret_cast<double*>(pointer));
 						case BasicType::Bool:	return std::any(reinterpret_cast<bool*>(pointer));
+						case BasicType::Void:	return std::any();
+						default:				assert(!isValidBasicType(pointeeType->basicType));
 					}
 				} break;
 				case SpecificType::Enum:
@@ -825,6 +827,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 						}
 					}
 				}
+				default:	assert(false);
 			}
 		} break;
 		default:
@@ -852,6 +855,7 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 				case BasicType::Float:	return std::any(*reinterpret_cast<float*>(pointer));
 				case BasicType::Double:	return std::any(*reinterpret_cast<double*>(pointer));
 				case BasicType::Bool:	return std::any(*reinterpret_cast<bool*>(pointer));
+				default: assert(false);
 			}
 		} break;
 		case SpecificType::Enum:
@@ -871,6 +875,7 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 						case BasicType::Float:	return std::any(*reinterpret_cast<float**>(pointer));
 						case BasicType::Double:	return std::any(*reinterpret_cast<double**>(pointer));
 						case BasicType::Bool:	return std::any(*reinterpret_cast<bool**>(pointer));
+						default: assert(false);
 					}
 				} break;
 				case SpecificType::ReflectableObject:
@@ -881,6 +886,7 @@ std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 				{
 					return createFromRawPointer(reinterpret_cast<uintptr_t>((*reinterpret_cast<ReflectableHandle**>(pointer))->get()));
 				}
+				default: assert(false);
 			}
 		} break;
 		default:
@@ -905,6 +911,7 @@ std::any CatGenericType::createDefault() const
 				case BasicType::Double:	return 0.0;
 				case BasicType::Bool:	return false;
 				case BasicType::Void:	return std::any();
+				default:				assert(false);
 			}
 		} break;
 		case SpecificType::Enum:
@@ -920,11 +927,12 @@ std::any CatGenericType::createDefault() const
 				{
 					switch (pointeeType->basicType)
 					{
-					case BasicType::Int:	return (int*)nullptr;
-					case BasicType::Float:	return (float*)nullptr;
-					case BasicType::Double:	return (double*)nullptr;
-					case BasicType::Bool:	return (bool*)nullptr;
-					case BasicType::Void:	return (void*)nullptr;
+						case BasicType::Int:	return (int*)nullptr;
+						case BasicType::Float:	return (float*)nullptr;
+						case BasicType::Double:	return (double*)nullptr;
+						case BasicType::Bool:	return (bool*)nullptr;
+						case BasicType::Void:	return (void*)nullptr;
+						default:				assert(false);
 					}
 				}
 				case SpecificType::ReflectableObject:
@@ -946,12 +954,14 @@ std::any CatGenericType::createDefault() const
 				{
 					return (ReflectableHandle*)(nullptr);
 				}
+				default: assert(false);
 			}
 		}
 		case SpecificType::ReflectableHandle:
 		{
 			return createNullPtr();
 		}
+		default: assert(false);
 	}
 	assert(false);
 	return std::any();
@@ -971,6 +981,7 @@ std::size_t jitcat::CatGenericType::getTypeSize() const
 				case BasicType::Double:	return sizeof(double);
 				case BasicType::Int:	return sizeof(int);
 				case BasicType::Void:	return 0;
+				default:	assert(false);
 			}
 			break;
 		case SpecificType::Pointer:				
@@ -986,6 +997,7 @@ std::size_t jitcat::CatGenericType::getTypeSize() const
 		}
 		case SpecificType::ReflectableHandle:	return sizeof(ReflectableHandle);
 		case SpecificType::ReflectableObject:	return nestedType->getTypeSize();
+		default: assert(false);
 	}
 	assert(false);
 	return 0;
@@ -1009,6 +1021,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 					case BasicType::Float:	return (int)std::any_cast<float>(value);
 					case BasicType::Double:	return (int)std::any_cast<double>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1 : 0;
+					default: assert(false);
 				}
 			} break;
 			case BasicType::Float:
@@ -1018,6 +1031,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 					case BasicType::Double:	return (float)std::any_cast<double>(value);
 					case BasicType::Int:	return (float)std::any_cast<int>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1.0f : 0.0f;
+					default: assert(false);
 				}
 			} break;
 			case BasicType::Double:
@@ -1027,6 +1041,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 					case BasicType::Float:	return (double)std::any_cast<float>(value);
 					case BasicType::Int:	return (double)std::any_cast<int>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1.0 : 0.0;
+					default: assert(false);
 				}
 			} break;
 			case BasicType::Bool:
@@ -1036,8 +1051,10 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 					case BasicType::Double:	return std::any_cast<double>(value) > 0.0;
 					case BasicType::Float:	return std::any_cast<float>(value) > 0.0f;
 					case BasicType::Int:		return std::any_cast<int>(value) > 0;
+					default: assert(false);
 				}
 			} break;
+			default: assert(false);
 		}
 	}
 	else if (isStringValueType() && valueType.isBasicType())
@@ -1066,6 +1083,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 			{
 				return std::any_cast<bool>(value) ? Tools::StringConstants<Configuration::CatString>::oneStr : Tools::StringConstants<Configuration::CatString>::zeroStr;
 			}
+			default: assert(false);
 		}
 	}
 	else if (isBasicType() && valueType.isStringValueType())
@@ -1080,6 +1098,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 				Configuration::CatString strValue = std::any_cast<Configuration::CatString>(value);
 				return  strValue == Tools::StringConstants<Configuration::CatString>::trueStr || Tools::StringConstants<Configuration::CatString>::stringToInt(strValue) > 0;
 			}
+			default: assert(false);
 		}
 	}
 	else if (isBasicType() && valueType.isStringPtrType())
@@ -1094,14 +1113,8 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 				Configuration::CatString* strValue = std::any_cast<Configuration::CatString*>(value);
 				return  *strValue == Tools::StringConstants<Configuration::CatString>::trueStr || Tools::StringConstants<Configuration::CatString>::stringToInt(*strValue) > 0;
 			}
+			default: assert(false);
 		}
-	}
-	else if (int myIndirectionCount, valueIndirectionCount; 
-			 removeIndirection(myIndirectionCount) == valueType.removeIndirection(valueIndirectionCount) 
-		     && valueIndirectionCount >= myIndirectionCount)
-	{
-		//If the value is of the same type, but has more indirection we can remove the indirection
-
 	}
 	assert(false);
 	return createDefault();
@@ -1137,6 +1150,7 @@ void CatGenericType::printValue(std::any& value)
 				case BasicType::Float:	CatLog::log(std::any_cast<float>(value)); break;
 				case BasicType::Double:	CatLog::log(std::any_cast<double>(value)); break;
 				case BasicType::Bool:	CatLog::log(std::any_cast<bool>(value) ? Tools::StringConstants<Configuration::CatString>::trueStr : Tools::StringConstants<Configuration::CatString>::falseStr); break;
+				default: assert(false);
 			}
 		} break;
 		case SpecificType::Enum:
@@ -1150,6 +1164,7 @@ void CatGenericType::printValue(std::any& value)
 				case BasicType::Double:	CatLog::log(*reinterpret_cast<const double*>(enumPtr)); break;
 				case BasicType::Float:	CatLog::log(*reinterpret_cast<const float*>(enumPtr)); break;
 				case BasicType::Bool:	CatLog::log(*reinterpret_cast<const bool*>(enumPtr)); break;
+				default: assert(false);
 			}
 			
 		} break;
@@ -1169,6 +1184,7 @@ void CatGenericType::printValue(std::any& value)
 				CatLog::log(Tools::makeString(getRawPointer(value))); 		
 			}
 		} break;
+		default: assert(false);
 	}
 }
 
@@ -1485,6 +1501,7 @@ std::any jitcat::CatGenericType::construct() const
 			delete[] buffer;
 			return value;
 		}
+		default: assert(false);
 	}
 	return std::any();
 }
@@ -1537,6 +1554,7 @@ bool jitcat::CatGenericType::placementConstruct(unsigned char* buffer, std::size
 			nestedType->placementConstruct(buffer, bufferSize);
 			return true;
 		}
+		default: assert(false);
 	}
 	return false;
 }
@@ -1755,6 +1773,7 @@ bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_
 						std::cout << "(CatGenericType::placementDestruc) deallocated buffer of size " << std::dec << pointeeType->getTypeSize() << ": " << std::hex << reinterpret_cast<uintptr_t>(buffer) << "\n";
 					}
 				} break;
+				default:
 				case TypeOwnershipSemantics::Weak: //Weak and shared pointers should only exist as ReflectableHandles
 				case TypeOwnershipSemantics::Shared:
 					assert(false); return false;;
@@ -1782,6 +1801,7 @@ bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_
 			nestedType->placementDestruct(buffer, bufferSize);
 			return true;
 		}
+		default: assert(false);
 	}
 	return true;
 }
@@ -1895,7 +1915,11 @@ std::any jitcat::CatGenericType::createFromRawPointer(const uintptr_t pointer) c
 	assert(decayedType.isReflectableObjectType() || decayedType.isBasicType());
 	switch (indirectionLevels)
 	{
-		case 0: return decayedType.getTypeCaster()->getValueOfPointer(decayedType.getTypeCaster()->castFromRawPointer(pointer));
+		case 0:  
+		{
+			std::any ptrValue = decayedType.getTypeCaster()->castFromRawPointer(pointer);
+			return decayedType.getTypeCaster()->getValueOfPointer(ptrValue);
+		}
 		case 1:	return decayedType.getTypeCaster()->castFromRawPointer(pointer);
 		case 2:	return decayedType.getTypeCaster()->castFromRawPointerPointer(pointer);
 		default: assert(false);
@@ -1946,6 +1970,18 @@ CatGenericType CatGenericType::createBoolType(bool isWritable, bool isConst)
 CatGenericType CatGenericType::createStringType(bool isWritable, bool isConst)
 {
 	return stringMemberValuePtrType.copyWithFlags(isWritable, isConst);
+}
+
+
+bool CatGenericType::isValidSpecificType(SpecificType type)
+{
+	return type != SpecificType::None && type != SpecificType::Count;
+}
+
+
+bool CatGenericType::isValidBasicType(BasicType type)
+{
+	return type != BasicType::Count && type != BasicType::None;
 }
 
 
@@ -2060,9 +2096,9 @@ const CatGenericType& jitcat::CatGenericType::getBasicType(BasicType type)
 		case BasicType::Double:	return doubleType;
 		case BasicType::Int:	return intType;
 		case BasicType::Void:	return voidType;
+		default: assert(false);	return CatGenericType::unknownType;
 	}
-	assert(false);
-	return CatGenericType::unknownType;
+	
 }
 
 

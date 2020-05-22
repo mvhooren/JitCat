@@ -33,7 +33,7 @@ TEST_CASE("Operator precedence", "[operators][precedence]" )
 	SECTION("Precedence test 2")
 	{
 		Expression<bool> testExpression(&context, "false && false || true");
-		doChecks(false && false || true, false, true, false, testExpression, context);
+		doChecks((false && false) || true, false, true, false, testExpression, context);
 	}
 	SECTION("Precedence test 3")
 	{
@@ -43,7 +43,7 @@ TEST_CASE("Operator precedence", "[operators][precedence]" )
 	SECTION("Precedence test 4")
 	{
 		Expression<bool> testExpression(&context, "no && no || aBoolean");
-		doChecks(false && false || true, false, false, false, testExpression, context);
+		doChecks((false && false) || true, false, false, false, testExpression, context);
 	}
 	SECTION("Precedence test 5")
 	{

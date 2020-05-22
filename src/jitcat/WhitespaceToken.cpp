@@ -17,7 +17,6 @@ ParseToken* WhitespaceToken::createIfMatch(Document* document, const char* curre
 	std::size_t offset = 0;
 	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
 	std::size_t documentLength = document->getDocumentSize() - docOffset;
-	int numLineEndings = 0;
 	bool seenCarriageReturn = false;
 	while (offset < documentLength
 		   && (   currentPosition[offset] == ' '

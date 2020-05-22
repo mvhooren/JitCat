@@ -20,9 +20,8 @@ using namespace jitcat::LLVM;
 LLVMJit::LLVMJit():
 	context(new llvm::orc::ThreadSafeContext(std::make_unique<llvm::LLVMContext>())),
 	targetMachineBuilder(llvm::cantFail(llvm::orc::JITTargetMachineBuilder::detectHost())),
-	targetMachine(std::move(llvm::cantFail(targetMachineBuilder.createTargetMachine()))),
-	dataLayout(new llvm::DataLayout(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),
-	nextDyLibIndex(0)
+	targetMachine(llvm::cantFail(targetMachineBuilder.createTargetMachine())),
+	dataLayout(new llvm::DataLayout(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget())))
 {
     //executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
 	LLVMTypes::doubleType = llvm::Type::getDoubleTy(*context->getContext());

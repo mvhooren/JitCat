@@ -39,13 +39,13 @@ namespace jitcat::Reflection
 			deferredMember(deferredMember)
 		{}
 
-		inline virtual std::any getMemberReference(unsigned char* base) override final;
-		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
-		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
-		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
-		inline virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
-		inline virtual bool isDeferred() const override final { return true; }
-		inline virtual unsigned long long getOrdinal() const override final;
+		virtual std::any getMemberReference(unsigned char* base) override final;
+		virtual std::any getAssignableMemberReference(unsigned char* base) override final;
+		virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
+		virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
+		virtual llvm::Value* generateArrayIndexCode(llvm::Value* container, llvm::Value* index, LLVM::LLVMCompileTimeContext* context) const override final;
+		virtual bool isDeferred() const override final { return true; }
+		virtual unsigned long long getOrdinal() const override final;
 
 		TypeMemberInfo* baseMember;
 		TypeMemberInfo* deferredMember;

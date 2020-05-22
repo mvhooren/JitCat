@@ -20,7 +20,6 @@ namespace jitcat::Reflection
 		argumentTypes.push_back(TypeTraits<typename RemoveConst<ArgumentT>::type >::toGenericType());
 	}
 
-
 	template<typename ReturnT, class ...TFunctionArguments>
 	inline StaticFunctionInfoWithArgs<ReturnT, TFunctionArguments...>::StaticFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(*function)(TFunctionArguments...)) :
 		StaticFunctionInfo(memberFunctionName, TypeTraits<std::remove_cv_t<ReturnT>>::toGenericType()),
@@ -30,6 +29,8 @@ namespace jitcat::Reflection
 		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
 		//This gets the type info per parameter type
 		int dummy[] = { 0, ((void)addParameterTypeInfo<TFunctionArguments>(), 0) ... };
+		//To silence unused variable warnings.
+		(void)dummy;
 	}
 
 

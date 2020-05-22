@@ -19,12 +19,10 @@ using namespace TestObjects;
 
 
 ReflectedObject::ReflectedObject():
-	nestedSelfObject(nullptr),
-	nestedObjectPointer(nullptr),
-	nestedObjectUniquePointer(nullptr),
-	nullObject(nullptr),
-	text("Hello!"),
+	v1(1.0f, 2.0f, 3.0f, 4.0f),
+	v2(4.0f, 3.0f, 2.0f, 1.0f),
 	numberString("123.4"),
+	text("Hello!"),
 	theInt(42),
 	zeroInt(0),
 	largeInt(1234567),
@@ -38,9 +36,11 @@ ReflectedObject::ReflectedObject():
 	zeroDouble(0.0f),
 	aBoolean(true),
 	no(false),
-	v1(1.0f, 2.0f, 3.0f, 4.0f),
-	v2(4.0f, 3.0f, 2.0f, 1.0f),
-	someEnum(TestEnum::TestValue2)
+	someEnum(TestEnum::TestValue2),
+	nestedSelfObject(nullptr),
+	nullObject(nullptr),
+	nestedObjectPointer(nullptr),
+	nestedObjectUniquePointer(nullptr)
 
 {
 }

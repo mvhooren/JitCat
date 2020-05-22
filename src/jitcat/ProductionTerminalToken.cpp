@@ -16,9 +16,9 @@ using namespace jitcat::Tokenizer;
 
 
 ProductionTerminalToken::ProductionTerminalToken(TokenizerBase* tokenizer, int tokenId, int tokenSubType):
-	tokenizer(tokenizer),
 	tokenId(tokenId),
 	tokenSubType(tokenSubType),
+	tokenizer(tokenizer),
 	firstSet(false),
 	followSet(true)
 {

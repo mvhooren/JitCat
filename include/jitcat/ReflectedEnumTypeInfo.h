@@ -41,7 +41,7 @@ namespace jitcat::Reflection
 		{
 			assert(getEnumName<EnumT>() == getTypeName());
 			const CatGenericType& enumType = TypeTraits<EnumT>::toGenericType();
-			StaticConstMemberInfo* memberInfo = addConstant(valueName, enumType, value);
+			addConstant(valueName, enumType, value);
 			if (!defaultUnderlyingValue.has_value())
 			{
 				setDefaultValue(value);

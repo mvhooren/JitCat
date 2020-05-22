@@ -107,7 +107,7 @@ void jitcat::LLVM::LLVMMemoryManager::finalizeSection(SectionMemoryAllocation* a
 void LLVMMemoryManager::freeCodeSection(SectionMemoryAllocation* allocation)
 {
 	allocation->status = SectionMemoryAllocationStatus::Freed;
-	auto& iter = freedCodeSectionAllocations.find(allocation->alignment);
+	auto iter = freedCodeSectionAllocations.find(allocation->alignment);
 	if (iter != freedCodeSectionAllocations.end())
 	{
 		iter->second.insert({ allocation->size, allocation });
@@ -123,7 +123,7 @@ void LLVMMemoryManager::freeCodeSection(SectionMemoryAllocation* allocation)
 void jitcat::LLVM::LLVMMemoryManager::freeDataSection(SectionMemoryAllocation* allocation)
 {
 	allocation->status = SectionMemoryAllocationStatus::Freed;
-	auto& iter = freedDataSectionAllocations.find(allocation->alignment);
+	auto iter = freedDataSectionAllocations.find(allocation->alignment);
 	if (iter != freedDataSectionAllocations.end())
 	{
 		iter->second.insert({ allocation->size, allocation });

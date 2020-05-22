@@ -18,11 +18,10 @@ namespace jitcat
 		template<typename OutCVT, typename InT>
 		static inline OutCVT convertCast(InT&& in)
 		{
-			constexpr bool outIsConst = std::is_const<OutCVT>::value;
 			using OutT = typename RemoveConst<OutCVT>::type;
 			if constexpr (std::is_same<InT, OutT>::value)
 			{
-				return in;
+				return std::move(in);
 			}
 			else if constexpr (std::is_reference<OutT>::value)
 			{

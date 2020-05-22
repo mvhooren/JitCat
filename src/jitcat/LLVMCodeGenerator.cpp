@@ -49,14 +49,14 @@ using namespace jitcat::Reflection;
 
 
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
+	executionSession(new llvm::orc::ExecutionSession()),
 	currentModule(new llvm::Module("JitCat", LLVMJit::get().getContext())),
 	builder(new llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>(LLVMJit::get().getContext())),
-	executionSession(new llvm::orc::ExecutionSession()),
-	helper(std::make_unique<LLVMCodeGeneratorHelper>(builder.get(), currentModule.get())),
-	mangler(new llvm::orc::MangleAndInterner(*executionSession, LLVMJit::get().getDataLayout())),
 	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession.get(),
 															[]() {	return memoryManager->createExpressionAllocator();})),
-	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder())))
+	mangler(new llvm::orc::MangleAndInterner(*executionSession, LLVMJit::get().getDataLayout())),
+	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder()))),
+	helper(std::make_unique<LLVMCodeGeneratorHelper>(builder.get(), currentModule.get()))
 {
 	llvm::orc::SymbolMap intrinsicSymbols;
 	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary");
@@ -167,6 +167,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 		case CatASTNodeType::ScopeRoot:						return generate(static_cast<const CatScopeRoot*>(expression), context);		
 		case CatASTNodeType::StaticFunctionCall:			return generate(static_cast<const CatStaticFunctionCall*>(expression), context);
 		case CatASTNodeType::StaticMemberAccess:			return generate(static_cast<const CatStaticMemberAccess*>(expression), context);
+		default:											assert(false);
 	}
 	assert(false);
 	return nullptr;
@@ -219,7 +220,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 	context->currentFunction = function;
 	
 	//Function entry block
-	llvm::BasicBlock* block = llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
+	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
 	builder->SetInsertPoint(&function->getEntryBlock());
 
 	//Generate code for the expression.
@@ -281,7 +282,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(const CatAss
 	context->currentFunction = function;
 
 	//Function entry block
-	llvm::BasicBlock* block = llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
+	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
 	builder->SetInsertPoint(&function->getEntryBlock());
 
 	//Generate the assignment expression, passing in the second function parameter.
@@ -304,6 +305,8 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpressi
 	createNewModule(context);
 	std::string functionName = getNextFunctionName(context);
 	llvm::Function* function = generateExpressionFunction(expression, context, functionName);
+	//To silence unused variable warning in release builds.
+	(void)function;
 	assert(function != nullptr);
 	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
 	return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
@@ -316,6 +319,8 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 	createNewModule(context);
 	std::string functionName = getNextFunctionName(context);
 	llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
+	//To silence unused variable warning in release builds.
+	(void)function;
 	assert(function != nullptr);
 	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
 	return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
@@ -739,7 +744,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			case CatInfixOperatorType::GreaterOrEqual:		return builder->CreateFCmpUGE(left, right, "greaterOrEqual");	
 			case CatInfixOperatorType::SmallerOrEqual:		return builder->CreateFCmpULE(left, right, "lessOrEqual");	
 			case CatInfixOperatorType::Equals:				return builder->CreateFCmpUEQ(left, right, "equal");			
-			case CatInfixOperatorType::NotEquals:			return builder->CreateFCmpUNE(left, right, "notEqual");		
+			case CatInfixOperatorType::NotEquals:			return builder->CreateFCmpUNE(left, right, "notEqual");
+			default:										assert(false);
 		}
 	}
 	else if (leftType.isIntType())
@@ -779,6 +785,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			case CatInfixOperatorType::SmallerOrEqual:		return builder->CreateICmpSLE(left, right, "smallerOrEqual");	
 			case CatInfixOperatorType::Equals:				return builder->CreateICmpEQ(left, right, "equal");
 			case CatInfixOperatorType::NotEquals:			return builder->CreateICmpNE(left, right, "notEqual");		
+			default:										assert(false);
 		}
 	}
 	else if (leftType.isBoolType())
@@ -787,6 +794,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 		{
 			case CatInfixOperatorType::Equals:				return builder->CreateICmpEQ(left, right, "equal");
 			case CatInfixOperatorType::NotEquals:			return builder->CreateICmpNE(left, right, "notEqual");		
+			default:										assert(false);
 		}
 	}
 	else if (leftType.isStringType())
@@ -812,6 +820,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 			{
 				return helper->createOptionalNullCheckSelect(stringNullCheck, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createIntrinsicCall(compileContext, &LLVMCatIntrinsics::stringNotEquals, {left, right}, "stringNotEquals");}, [&](LLVMCompileTimeContext* compileContext){return compileContext->helper->createConstant(true);}, context);
 			}
+			default:	assert(false);
 		}
 	}
 	assert(false);
@@ -989,7 +998,8 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatAssignableExpression* ex
 		switch (expression->getNodeType())
 		{
 			case CatASTNodeType::StaticIdentifier:	return generateAssign(static_cast<const CatStaticIdentifier*>(expression), rValue, context);
-			case CatASTNodeType::MemberAccess:	return generateAssign(static_cast<const CatMemberAccess*>(expression), rValue, context);
+			case CatASTNodeType::MemberAccess:		return generateAssign(static_cast<const CatMemberAccess*>(expression), rValue, context);
+			default:									assert(false);
 		}
 	}
 	assert(false);

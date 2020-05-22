@@ -38,10 +38,10 @@ CatStaticFunctionCall::CatStaticFunctionCall(CatStaticScope* parentScope, const 
 CatStaticFunctionCall::CatStaticFunctionCall(const CatStaticFunctionCall& other):
 	CatTypedExpression(other),
 	staticFunctionInfo(nullptr),
+	parentScope(static_cast<CatStaticScope*>(other.parentScope->copy())),
 	name(other.name),
 	lowerCaseName(other.lowerCaseName),
 	nameLexeme(other.nameLexeme),
-	parentScope(static_cast<CatStaticScope*>(other.parentScope->copy())),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	returnType(CatGenericType::unknownType)
 {

@@ -86,8 +86,6 @@ namespace jitcat::LLVM
 		std::unique_ptr<llvm::TargetMachine> targetMachine;
 		//Specifies the layout of structs and the type of name mangling used based on the target machine as well as endianness.
 		std::unique_ptr<const llvm::DataLayout> dataLayout;
-
-		int nextDyLibIndex;
 	};
 
 

@@ -14,15 +14,15 @@ using namespace jitcat::Tools;
 
 CatTypeNode::CatTypeNode(const CatGenericType& type, const Tokenizer::Lexeme& lexeme) :
 	CatASTNode(lexeme),
-	type(type),
 	ownershipSemantics(type.getOwnershipSemantics()),
+	type(type),
 	knownType(true),
 	isArrayType(false)
 {
 }
 
 
-jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme):
+CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	ownershipSemantics(ownershipSemantics),
 	name(name),
@@ -32,21 +32,21 @@ jitcat::AST::CatTypeNode::CatTypeNode(const std::string& name, Reflection::TypeO
 }
 
 
-jitcat::AST::CatTypeNode::CatTypeNode(CatStaticScope* parentScope, const std::string& name, const Tokenizer::Lexeme& lexeme):
+CatTypeNode::CatTypeNode(CatStaticScope* parentScope, const std::string& name, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	ownershipSemantics(TypeOwnershipSemantics::Value),
 	name(name),
-	parentScope(parentScope),
 	knownType(false),
-	isArrayType(false)
+	isArrayType(false),
+	parentScope(parentScope)
 {
 }
 
 
-jitcat::AST::CatTypeNode::CatTypeNode(const CatTypeNode& other):
+CatTypeNode::CatTypeNode(const CatTypeNode& other):
 	CatASTNode(other),
-	name(other.name),
 	ownershipSemantics(other.ownershipSemantics),
+	name(other.name),
 	knownType(false),
 	isArrayType(other.isArrayType)
 {
@@ -74,13 +74,13 @@ CatTypeNode::~CatTypeNode()
 }
 
 
-bool jitcat::AST::CatTypeNode::isKnownType() const
+bool CatTypeNode::isKnownType() const
 {
 	return knownType;
 }
 
 
-std::string jitcat::AST::CatTypeNode::getTypeName() const
+std::string CatTypeNode::getTypeName() const
 {
 	if (knownType)
 	{
@@ -99,7 +99,7 @@ const CatGenericType& CatTypeNode::getType() const
 }
 
 
-CatASTNode* jitcat::AST::CatTypeNode::copy() const
+CatASTNode* CatTypeNode::copy() const
 {
 	return new CatTypeNode(*this);
 }
@@ -122,14 +122,14 @@ CatASTNodeType CatTypeNode::getNodeType() const
 }
 
 
-void jitcat::AST::CatTypeNode::setType(const CatGenericType& newType)
+void CatTypeNode::setType(const CatGenericType& newType)
 {
 	type = newType;
 	knownType = true;
 }
 
 
-bool jitcat::AST::CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+bool CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	//Check the return type
 	if (!isKnownType())

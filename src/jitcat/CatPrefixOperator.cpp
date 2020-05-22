@@ -24,18 +24,18 @@ const char* CatPrefixOperator::conversionTable[] = {"!", "-"};
 
 jitcat::AST::CatPrefixOperator::CatPrefixOperator(const Tokenizer::Lexeme& lexeme, Operator oper, CatTypedExpression* rhs):
 	CatTypedExpression(lexeme), 
+	resultType(CatGenericType::unknownType),
 	oper(oper),
-	rhs(rhs),
-	resultType(CatGenericType::unknownType)
+	rhs(rhs)
 {
 }
 
 
 jitcat::AST::CatPrefixOperator::CatPrefixOperator(const CatPrefixOperator& other):
 	CatTypedExpression(other),
+	resultType(CatGenericType::unknownType),
 	oper(other.oper),
-	rhs(static_cast<CatTypedExpression*>(other.rhs->copy())),
-	resultType(CatGenericType::unknownType)
+	rhs(static_cast<CatTypedExpression*>(other.rhs->copy()))
 {
 }
 

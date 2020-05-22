@@ -42,6 +42,7 @@ void CatOwnershipSemanticsNode::print() const
 {
 	switch (ownershipSemantics)
 	{
+		default:
 		case TypeOwnershipSemantics::Owned:		break;
 		case TypeOwnershipSemantics::Shared:	break;
 		case TypeOwnershipSemantics::Weak:		CatLog::log("&"); break;

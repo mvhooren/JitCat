@@ -29,6 +29,7 @@ namespace jitcat
 		return Reflection::TypeNameGetter<ObjectT>::get();
 	}
 
+
 	template<typename EnumT>
 	const CatGenericType& TypeTraits<EnumT, std::enable_if_t<std::is_enum_v<EnumT>>>::toGenericType()
 	{
@@ -36,6 +37,14 @@ namespace jitcat
 		static std::unique_ptr<CatGenericType> enumType = std::make_unique<CatGenericType>(TypeTraits<typename std::underlying_type_t<EnumT>>::toGenericType(), enumInfo);
 		return *enumType.get();
 	}
+
+
+	template<typename ObjectT, typename EnabledT>
+	std::any TypeTraits<ObjectT, EnabledT>::getCatValue(ObjectT&& value)
+	{
+		return std::move(value);
+	}
+
 
 	template<typename ObjectT, typename EnabledT>
 	inline std::any TypeTraits<ObjectT, EnabledT>::getCatValue(ObjectT& value)

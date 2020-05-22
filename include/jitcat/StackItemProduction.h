@@ -29,6 +29,7 @@ namespace jitcat::Parser
 			rule(rule) {}
 		virtual ~StackItemProduction();
 		virtual const Grammar::Production* getProductionIfProduction() const {return production;}
+		const Grammar::ProductionRule* getProductionRule() const {return rule;}
 		void addChildItem(StackItem* stackItem)
 		{
 			children.push_back(stackItem);

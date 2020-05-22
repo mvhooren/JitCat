@@ -127,7 +127,7 @@ void TypeInfo::setParentType(TypeInfo* type)
 
 bool TypeInfo::removeType(const std::string& typeName)
 {
-	auto& iter = types.find(Tools::toLowerCase(typeName));
+	auto iter = types.find(Tools::toLowerCase(typeName));
 	if (iter != types.end())
 	{
 		iter->second->setParentType(nullptr);
@@ -552,7 +552,7 @@ void TypeInfo::addDependentType(TypeInfo* otherType)
 
 void TypeInfo::removeDependentType(TypeInfo* otherType)
 {
-	auto& iter = dependentTypes.find(otherType);
+	auto iter = dependentTypes.find(otherType);
 	if (iter != dependentTypes.end())
 	{
 		dependentTypes.erase(iter);
@@ -607,14 +607,14 @@ void TypeInfo::renameMember(const std::string& oldMemberName, const std::string&
 
 TypeMemberInfo* TypeInfo::releaseMember(const std::string& memberName)
 {
-	auto& iter = members.find(memberName);
+	auto iter = members.find(memberName);
 	if (iter != members.end())
 	{
 		TypeMemberInfo* memberInfo = iter->second.release();
 
 		members.erase(iter);
 
-		auto& oridinalIter = membersByOrdinal.find(memberInfo->getOrdinal());
+		auto oridinalIter = membersByOrdinal.find(memberInfo->getOrdinal());
 		if (oridinalIter != membersByOrdinal.end())
 		{
 			membersByOrdinal.erase(oridinalIter);

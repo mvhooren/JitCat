@@ -26,15 +26,15 @@ namespace TestObjects
 		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 		static const char* getTypeName();
 
-		TestVector4 doAdd(TestVector4& other);
-		static TestVector4 staticAdd(TestVector4& a, TestVector4* b, TestVector4 c);
+		TestVector4 doAdd(const TestVector4& other);
+		static TestVector4 staticAdd(const TestVector4& a, TestVector4* b, TestVector4 c);
 
 		bool operator==(const TestVector4& other) const;
-		TestVector4 operator*(const TestVector4& other);
-		TestVector4 operator*(int value);
-		TestVector4 operator*(float value);
-		TestVector4 operator+(const TestVector4& other);
-		TestVector4 operator-(const TestVector4& other);
+		TestVector4 operator*(const TestVector4& other) const;
+		TestVector4 operator*(int value) const;
+		TestVector4 operator*(float value) const;
+		TestVector4 operator+(const TestVector4& other) const;
+		TestVector4 operator-(const TestVector4& other) const;
 
 		float operator[](int index);
 

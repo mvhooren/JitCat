@@ -73,7 +73,6 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 		}
 		else
 		{
-			bool isMinusPrefixWithLiteral = false;
 			//If the expression is a minus prefix operator combined with a literal, then we need to count the whole expression as a literal.
 			if (typedExpression->getNodeType() == CatASTNodeType::PrefixOperator)
 			{

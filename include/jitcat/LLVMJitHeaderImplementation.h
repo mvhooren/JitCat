@@ -11,6 +11,8 @@ template<typename ...Arguments>
 inline llvm::Value* LLVMJit::logError(Arguments ...arguments)
 {
 	int dummy[] = { 0, ( std::cout << arguments, 0) ... };
+	//To silence unused variable warnings.
+	(void)dummy;
 	std::cout << "\n";
 	return nullptr;
 }

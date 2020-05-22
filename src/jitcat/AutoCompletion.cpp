@@ -133,7 +133,6 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isPointerToReflectableObjectType())
 			{
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
-				bool isInheritedHostClass = false;
 				std::string inheritedHostClassName;
 				currentFunctionInfo = currentFunctionInfo->returnType.getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
 				if (currentFunctionInfo == nullptr)
@@ -166,6 +165,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 		}
 		addOptionsFromBuiltIn(results, "", expression, cursorPosition);
 	}
+
 	std::sort(std::begin(results), std::end(results), [](const AutoCompletion::AutoCompletionEntry& a, const AutoCompletion::AutoCompletionEntry& b) 
 		{
 			if (a.isPrefixSuggestion == b.isPrefixSuggestion)
@@ -177,6 +177,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				return a.isPrefixSuggestion && !b.isPrefixSuggestion; 
 			}
 		});
+
 	return results;
 }
 
@@ -198,7 +199,6 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 	{
 		int currentUnmatchedCloseBrackets = 0;
 		int currentUnmatchedCloseParenthesis = 0;
-		bool skipping = false;
 
 		bool backtrackingDone = false;
 		for (int i = startingTokenIndex; i >= 0 && !backtrackingDone; i--)

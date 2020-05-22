@@ -19,6 +19,12 @@ StaticFunctionInfo::StaticFunctionInfo(const std::string& memberFunctionName, co
 {}
 
 
+MemberVisibility StaticFunctionInfo::getVisibility() const
+{
+	return visibility;
+}
+
+
 const CatGenericType& jitcat::Reflection::StaticFunctionInfo::getArgumentType(std::size_t argumentIndex) const
 {
 	if (argumentIndex < argumentTypes.size())

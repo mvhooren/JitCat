@@ -22,8 +22,8 @@ NestedReflectedObject::NestedReflectedObject():
 	someDouble(1.1),
 	someBoolean(true),
 	nullObject(nullptr),
-	nullCircularRefObject(nullptr),
-	someV4(1.0, 2.0f, 3.0f, 4.0f)
+	someV4(1.0, 2.0f, 3.0f, 4.0f),
+	nullCircularRefObject(nullptr)
 {
 }
 

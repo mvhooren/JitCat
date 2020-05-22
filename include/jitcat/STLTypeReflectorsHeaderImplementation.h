@@ -55,7 +55,7 @@ namespace jitcat::Reflection
 		{
 			return STLHelper::getValue(vector->operator[](key));
 		}
-		return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
+		return STLHelper::getDefault<typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
 	}
 
 
@@ -134,7 +134,7 @@ namespace jitcat::Reflection
 		{
 			return STLHelper::getValue(array->operator[](key));
 		}
-		return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
+		return STLHelper::getDefault<typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
 	}
 
 
@@ -174,7 +174,7 @@ namespace jitcat::Reflection
 		{
 			return STLHelper::getValue(deque->operator[](key));
 		}
-		return STLHelper::getDefault<STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
+		return STLHelper::getDefault<typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType>();
 	}
 
 
@@ -215,13 +215,13 @@ namespace jitcat::Reflection
 	{
 		if (map != nullptr)
 		{
-			auto& iter = map->find(key);
+			auto iter = map->find(key);
 			if (iter != map->end())
 			{
 				return STLHelper::getValue(iter->second);
 			}
 		}
-		return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
+		return STLHelper::getDefault<typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
 	}
 
 
@@ -231,7 +231,7 @@ namespace jitcat::Reflection
 		if (map != nullptr)
 		{
 			int counter = 0;
-			for (auto& iter = map->begin(); iter != map->end(); ++iter)
+			for (auto iter = map->begin(); iter != map->end(); ++iter)
 			{
 				if (counter == ordinal)
 				{
@@ -240,7 +240,7 @@ namespace jitcat::Reflection
 				counter++;
 			}
 		}
-		return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
+		return STLHelper::getDefault<typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
 	}
 
 
@@ -282,13 +282,13 @@ namespace jitcat::Reflection
 	{
 		if (map != nullptr)
 		{
-			auto& iter = map->find(key);
+			auto iter = map->find(key);
 			if (iter != map->end())
 			{
 				return STLHelper::getValue(iter->second);
 			}
 		}
-		return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
+		return STLHelper::getDefault<typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
 	}
 
 
@@ -298,7 +298,7 @@ namespace jitcat::Reflection
 		if (map != nullptr)
 		{
 			int counter = 0;
-			for (auto& iter = map->begin(); iter != map->end(); ++iter)
+			for (auto iter = map->begin(); iter != map->end(); ++iter)
 			{
 				if (counter == ordinal)
 				{
@@ -307,7 +307,7 @@ namespace jitcat::Reflection
 				counter++;
 			}
 		}
-		return STLHelper::getDefault<STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
+		return STLHelper::getDefault<typename STLHelper::ValueReturnType<ValueT>::containerItemReturnType>();
 	}
 
 

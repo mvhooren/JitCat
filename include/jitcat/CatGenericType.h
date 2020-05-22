@@ -200,6 +200,8 @@ namespace jitcat
 		static CatGenericType createStringType(bool isWritable, bool isConst);
 
 	private:
+		static bool isValidSpecificType(SpecificType type);
+		static bool isValidBasicType(BasicType type);
 		static const char* toString(BasicType type);
 		static BasicType toBasicType(const char* value);
 		static BasicType getWidestType(BasicType lType, BasicType rType);

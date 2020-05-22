@@ -29,7 +29,7 @@ Reflectable::Reflectable(Reflectable&& other) noexcept
 {
 	while (true)
 	{
-		if (auto& iter = observers->find(&other); iter != observers->end())
+		if (auto iter = observers->find(&other); iter != observers->end())
 		{
 			iter->second->operator=(this);
 		}
@@ -53,7 +53,7 @@ Reflectable::~Reflectable()
 {
 	while (true)
 	{
-		if (auto& iter = observers->find(this); iter != observers->end())
+		if (auto iter = observers->find(this); iter != observers->end())
 		{
 			iter->second->notifyDeletion();
 			observers->erase(iter);
@@ -74,7 +74,7 @@ void Reflectable::addObserver(ReflectableHandle* observer)
 
 void Reflectable::removeObserver(ReflectableHandle* observer)
 {
-	auto& range = observers->equal_range(this);
+	auto range = observers->equal_range(this);
 	for (auto& iter = range.first; iter != range.second; ++iter)
 	{
 		if (iter->second == observer)
@@ -102,7 +102,7 @@ void jitcat::Reflection::Reflectable::replaceReflectable(Reflectable* oldReflect
 {
 	while (true)
 	{
-		if (auto& iter = observers->find(oldReflectable); iter != observers->end())
+		if (auto iter = observers->find(oldReflectable); iter != observers->end())
 		{
 			(*iter->second) = newReflectable;
 		}

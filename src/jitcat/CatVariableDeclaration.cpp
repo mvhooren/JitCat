@@ -44,8 +44,8 @@ jitcat::AST::CatVariableDeclaration::CatVariableDeclaration(const CatVariableDec
 	type(static_cast<CatTypeNode*>(other.type->copy())),
 	name(other.name),
 	nameLexeme(other.nameLexeme),
-	memberInfo(nullptr),
-	initializationExpression(other.initializationExpression != nullptr ? static_cast<CatAssignmentOperator*>(other.initializationExpression->copy()) : nullptr)
+	initializationExpression(other.initializationExpression != nullptr ? static_cast<CatAssignmentOperator*>(other.initializationExpression->copy()) : nullptr),
+	memberInfo(nullptr)
 {
 }
 

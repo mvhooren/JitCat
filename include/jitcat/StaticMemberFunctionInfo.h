@@ -37,6 +37,8 @@ namespace jitcat::Reflection
 
 		const std::vector<CatGenericType>& getArgumentTypes() const {return argumentTypes;}
 		const CatGenericType& getReturnType() const {return returnType;}
+		
+		MemberVisibility getVisibility() const;
 
 		template<typename ArgumentT>
 		inline void addParameterTypeInfo();
@@ -79,6 +81,7 @@ namespace jitcat::Reflection
 	private:
 		ReturnT (*function)(TFunctionArguments...);
 	};
+
 
 
 }

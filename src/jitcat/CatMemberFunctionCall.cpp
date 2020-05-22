@@ -29,12 +29,12 @@ using namespace jitcat::Tools;
 
 CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
+	memberFunctionInfo(nullptr),
 	functionName(name),
 	lowerCaseFunctionName(Tools::toLowerCase(name)),
 	nameLexeme(nameLexeme),
-	arguments(arguments),
 	base(base),
-	memberFunctionInfo(nullptr),
+	arguments(arguments),
 	returnType(CatGenericType::unknownType)
 {
 }
@@ -42,12 +42,12 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 
 CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctionCall& other):
 	CatTypedExpression(other),
+	memberFunctionInfo(nullptr),
 	functionName(other.functionName),
 	lowerCaseFunctionName(other.lowerCaseFunctionName),
 	nameLexeme(other.nameLexeme),
-	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	base(other.base != nullptr ? static_cast<CatTypedExpression*>(other.base->copy()) : nullptr),
-	memberFunctionInfo(nullptr),
+	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	returnType(CatGenericType::unknownType)
 {
 }
@@ -130,6 +130,8 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		CatGenericType expectedBaseType = base->getType().removeIndirection().toPointer();
 		IndirectionConversionMode conversionMode = IndirectionConversionMode::None;
 		bool indirectionConversionSuccess = ASTHelper::doIndirectionConversion(base, expectedBaseType, true, conversionMode);
+		//To silence unused variable warning in release builds.
+		(void)indirectionConversionSuccess;
 		assert(indirectionConversionSuccess);
 		
 		//Try to collapse the base into a literal. (in case of a static scope, for example)

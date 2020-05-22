@@ -323,7 +323,6 @@ ASTNode* CatGrammar::link(const ASTNodeParser& nodeParser)
 
 ASTNode* jitcat::Grammar::CatGrammar::sourceFile(const Parser::ASTNodeParser& nodeParser)
 {
-	CatASTNode* astNode = nodeParser.getASTNodeByIndex<CatASTNode>(0);
 	std::vector<std::unique_ptr<CatDefinition>> definitions;
 	Lexeme lexeme = nodeParser.getStackLexeme();
 	unLink(nodeParser.getASTNodeByIndex<ASTNode>(0), definitions);
@@ -335,7 +334,6 @@ ASTNode* jitcat::Grammar::CatGrammar::classDefinition(const Parser::ASTNodeParse
 {
 	Lexeme classNameLexeme = nodeParser.getTerminalByIndex(1)->getLexeme();
 	std::string className(classNameLexeme);
-	CatASTNode* astNode = nodeParser.getASTNodeByIndex<CatASTNode>(0);
 	std::vector<std::unique_ptr<CatDefinition>> definitions;
 	Lexeme lexeme = nodeParser.getStackLexeme();
 	unLink(nodeParser.getASTNodeByIndex<ASTNode>(0), definitions);
@@ -453,11 +451,12 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::basicTypeName(const Parser::ASTNodePa
 	CatGenericType type;
 	switch (identifierType)
 	{
-		case Identifier::Bool:		 type = CatGenericType::boolType; break;
-		case Identifier::Int:		 type = CatGenericType::intType; break;
-		case Identifier::Float:		 type = CatGenericType::floatType; break;
-		case Identifier::String:	 type = CatGenericType::stringMemberValuePtrType; break;
-		case Identifier::Void:		 type = CatGenericType::voidType;	break;
+		case Identifier::Bool:		type = CatGenericType::boolType;					break;
+		case Identifier::Int:		type = CatGenericType::intType;						break;
+		case Identifier::Float:		type = CatGenericType::floatType;					break;
+		case Identifier::String:	type = CatGenericType::stringMemberValuePtrType;	break;
+		case Identifier::Void:		type = CatGenericType::voidType;					break;
+		default:					assert(false);										break;
 	}
 	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(type, nodeParser.getStackLexeme()), ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
 	delete ownershipSemantics;
@@ -578,9 +577,9 @@ ASTNode* CatGrammar::infixOperator(const ASTNodeParser& nodeParser)
 		switch ((OneChar)infix->getTokenSubType())
 		{
 			default:
-			case OneChar::Plus:			operatorType = CatInfixOperatorType::Plus;		break;
-			case OneChar::Minus:		operatorType = CatInfixOperatorType::Minus;		break;			
-			case OneChar::Times:		operatorType = CatInfixOperatorType::Multiply;	break;			
+			case OneChar::Plus:			operatorType = CatInfixOperatorType::Plus;			break;
+			case OneChar::Minus:		operatorType = CatInfixOperatorType::Minus;			break;			
+			case OneChar::Times:		operatorType = CatInfixOperatorType::Multiply;		break;			
 			case OneChar::Divide:		operatorType = CatInfixOperatorType::Divide;		break;			
 			case OneChar::Modulo:		operatorType = CatInfixOperatorType::Modulo;		break;
 			case OneChar::Greater:		operatorType = CatInfixOperatorType::Greater;		break;
@@ -594,9 +593,10 @@ ASTNode* CatGrammar::infixOperator(const ASTNodeParser& nodeParser)
 			case TwoChar::GreaterOrEqual:	operatorType = CatInfixOperatorType::GreaterOrEqual;	break;
 			case TwoChar::SmallerOrEqual:	operatorType = CatInfixOperatorType::SmallerOrEqual;	break;
 			case TwoChar::Equals:			operatorType = CatInfixOperatorType::Equals;			break;
-			case TwoChar::NotEquals:		operatorType = CatInfixOperatorType::NotEquals;		break;
+			case TwoChar::NotEquals:		operatorType = CatInfixOperatorType::NotEquals;			break;
 			case TwoChar::LogicalAnd:		operatorType = CatInfixOperatorType::LogicalAnd;		break;
-			case TwoChar::LogicalOr:		operatorType = CatInfixOperatorType::LogicalOr;		break;
+			case TwoChar::LogicalOr:		operatorType = CatInfixOperatorType::LogicalOr;			break;
+			default:						assert(false);											break;
 		}
 	}
 

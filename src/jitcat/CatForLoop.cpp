@@ -26,11 +26,11 @@ CatForLoop::CatForLoop(const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme&
 	CatStatement(lexeme),
 	iteratorLexeme(iteratorLexeme),
 	iteratorName(iteratorLexeme),
-	range(range),
-	loopBody(loopBody),
 	loopIteratorScope(InvalidScopeID),
 	scopeType(makeTypeInfo<CustomTypeInfo>("loopIterator", false)),
-	iteratorMember(nullptr)
+	iteratorMember(nullptr),
+	range(range),
+	loopBody(loopBody)
 {
 }
 
@@ -40,10 +40,10 @@ CatForLoop::CatForLoop(const CatForLoop& other):
 	iteratorLexeme(other.iteratorLexeme),
 	iteratorName(other.iteratorName),
 	loopIteratorScope(InvalidScopeID),
-	range(static_cast<CatRange*>(other.range->copy())),
-	loopBody(static_cast<CatScopeBlock*>(other.loopBody->copy())),
+	scopeType(nullptr),
 	iteratorMember(nullptr),
-	scopeType(nullptr)
+	range(static_cast<CatRange*>(other.range->copy())),
+	loopBody(static_cast<CatScopeBlock*>(other.loopBody->copy()))
 {
 }
 

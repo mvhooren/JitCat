@@ -23,9 +23,9 @@ using namespace jitcat::Reflection;
 
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 	TypeInfo(typeName, 0, std::make_unique<CustomObjectTypeCaster>(this)),
+	isConstType(isConstType),
 	defaultData(nullptr),
-	triviallyCopyable(true),
-	isConstType(isConstType)
+	triviallyCopyable(true)
 {
 }
 
@@ -394,7 +394,7 @@ bool CustomTypeInfo::isCustomType() const
 
 void jitcat::Reflection::CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
 {
-	auto& iter = instances.find(reinterpret_cast<Reflectable*>(buffer));
+	auto iter = instances.find(reinterpret_cast<Reflectable*>(buffer));
 	if (iter == instances.end())
 	{
 		instances.insert(reinterpret_cast<Reflectable*>(buffer));
@@ -613,7 +613,7 @@ void CustomTypeInfo::createDataCopy(const unsigned char* sourceData, std::size_t
 
 void jitcat::Reflection::CustomTypeInfo::removeInstance(Reflectable* instance)
 {
-	auto& iter = instances.find(instance);
+	auto iter = instances.find(instance);
 	if (iter != instances.end())
 	{
 		instances.erase(iter);

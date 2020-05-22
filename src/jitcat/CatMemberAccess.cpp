@@ -25,10 +25,10 @@ using namespace jitcat::Tools;
 CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& memberName, const Tokenizer::Lexeme& lexeme):
 	CatAssignableExpression(lexeme),
 	base(base),
-	memberName(memberName),
 	memberInfo(nullptr),
 	type(CatGenericType::unknownType),
-	assignableType(CatGenericType::unknownType)
+	assignableType(CatGenericType::unknownType),
+	memberName(memberName)
 {
 }
 
@@ -36,10 +36,10 @@ CatMemberAccess::CatMemberAccess(CatTypedExpression* base, const std::string& me
 jitcat::AST::CatMemberAccess::CatMemberAccess(const CatMemberAccess& other):
 	CatAssignableExpression(other),
 	base(static_cast<CatTypedExpression*>(other.base->copy())),
-	memberName(other.memberName),
 	memberInfo(nullptr),
 	type(CatGenericType::unknownType),
-	assignableType(CatGenericType::unknownType)
+	assignableType(CatGenericType::unknownType),
+	memberName(other.memberName)
 {
 }
 
@@ -100,6 +100,8 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 		CatGenericType expectedBaseType = baseType.removeIndirection().toPointer();
 		IndirectionConversionMode conversionMode = IndirectionConversionMode::None;
 		bool indirectionConversionSuccess = ASTHelper::doIndirectionConversion(base, expectedBaseType, true, conversionMode);
+		//To silence unused variable warning in release builds.
+		(void)indirectionConversionSuccess;
 		assert(indirectionConversionSuccess);
 		baseType = base->getType();
 		if (!(baseType.isPointerToReflectableObjectType() || baseType.isReflectableHandleType()))

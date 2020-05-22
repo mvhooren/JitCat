@@ -25,8 +25,8 @@ CatVariableDefinition::CatVariableDefinition(CatTypeNode* typeNode, const std::s
 	name(name),
 	visibility(Reflection::MemberVisibility::Public),
 	initializationExpression(initialization),
-	memberInfo(nullptr),
-	initOperatorLexeme(initializationOperatorLexeme)
+	initOperatorLexeme(initializationOperatorLexeme),
+	memberInfo(nullptr)
 {
 }
 

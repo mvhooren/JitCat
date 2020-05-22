@@ -17,8 +17,8 @@ using namespace jitcat::AST;
 
 LLVMPreGeneratedExpression::LLVMPreGeneratedExpression(llvm::Value* value, CatGenericType type):
     CatTypedExpression(Tokenizer::Lexeme()),
-    value(value),
-    type(type)
+    type(type),
+    value(value)
 {
 }
 

@@ -25,22 +25,22 @@ using namespace jitcat::Tools;
 
 CatInfixOperator::CatInfixOperator(CatTypedExpression* lhs, CatTypedExpression* rhs, CatInfixOperatorType operatorType, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& operatorLexeme):
 	CatTypedExpression(lexeme),
-	resultType(CatGenericType::unknownType),
-	rhs(rhs),
+	operatorLexeme(operatorLexeme),
 	lhs(lhs),
 	oper(operatorType),
-	operatorLexeme(operatorLexeme)
+	rhs(rhs),
+	resultType(CatGenericType::unknownType)
 {
 }
 
 
 jitcat::AST::CatInfixOperator::CatInfixOperator(const CatInfixOperator& other):
 	CatTypedExpression(other),
-	resultType(CatGenericType::unknownType),
-	rhs(static_cast<CatTypedExpression*>(other.rhs->copy())),
+	operatorLexeme(other.operatorLexeme),
 	lhs(static_cast<CatTypedExpression*>(other.lhs->copy())),
 	oper(other.oper),
-	operatorLexeme(other.operatorLexeme)
+	rhs(static_cast<CatTypedExpression*>(other.rhs->copy())),
+	resultType(CatGenericType::unknownType)
 {
 }
 

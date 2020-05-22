@@ -20,9 +20,9 @@ using namespace jitcat::Tools;
 
 CatRange::CatRange(CatTypedExpression* rangeMax, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
-	rangeMax(rangeMax),
 	isDefaultMin(true),
 	rangeMin(std::make_unique<CatLiteral>(0, rangeMax->getLexeme())),
+	rangeMax(rangeMax),
 	isDefaultStep(true),
 	rangeStep(std::make_unique<CatLiteral>(1, rangeMax->getLexeme()))
 {
@@ -30,9 +30,9 @@ CatRange::CatRange(CatTypedExpression* rangeMax, const Tokenizer::Lexeme& lexeme
 
 CatRange::CatRange(CatTypedExpression* rangeMin, CatTypedExpression* rangeMax, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
-	rangeMax(rangeMax),
 	isDefaultMin(false),
 	rangeMin(rangeMin),
+	rangeMax(rangeMax),
 	isDefaultStep(true),
 	rangeStep(std::make_unique<CatLiteral>(1, rangeMax->getLexeme()))
 {
@@ -41,9 +41,9 @@ CatRange::CatRange(CatTypedExpression* rangeMin, CatTypedExpression* rangeMax, c
 
 CatRange::CatRange(CatTypedExpression* rangeMin, CatTypedExpression* rangeMax, CatTypedExpression* rangeStep, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
-	rangeMax(rangeMax),
 	isDefaultMin(false),
 	rangeMin(rangeMin),
+	rangeMax(rangeMax),
 	isDefaultStep(false),
 	rangeStep(rangeStep)
 {
@@ -51,9 +51,9 @@ CatRange::CatRange(CatTypedExpression* rangeMin, CatTypedExpression* rangeMax, C
 
 CatRange::CatRange(const CatRange& other):
 	CatASTNode(other),
-	rangeMax(static_cast<CatTypedExpression*>(other.rangeMax->copy())),
 	isDefaultMin(other.isDefaultMin),
 	rangeMin(static_cast<CatTypedExpression*>(other.rangeMin->copy())),
+	rangeMax(static_cast<CatTypedExpression*>(other.rangeMax->copy())),
 	isDefaultStep(other.isDefaultStep),
 	rangeStep(static_cast<CatTypedExpression*>(other.rangeStep->copy()))
 {

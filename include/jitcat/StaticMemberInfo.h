@@ -31,7 +31,7 @@ namespace jitcat::Reflection
 	struct StaticMemberInfo
 	{
 		StaticMemberInfo(): visibility(MemberVisibility::Private) {}
-		StaticMemberInfo(const std::string& memberName, const CatGenericType& type): memberName(memberName), catType(type), visibility(MemberVisibility::Public) {}
+		StaticMemberInfo(const std::string& memberName, const CatGenericType& type): catType(type), visibility(MemberVisibility::Public), memberName(memberName)  {}
 		virtual ~StaticMemberInfo() {};
 		virtual std::any getMemberReference();
 		virtual std::any getAssignableMemberReference();

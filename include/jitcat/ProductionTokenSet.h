@@ -42,7 +42,7 @@ namespace jitcat::Grammar
 
 
 	protected:
-		virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set);
+		virtual void addAllTerminals(std::vector<ProductionTokenSet*> recursionBlock, ProductionTokenSet* set) override final;
 		int findMemberIndex(ProductionTokenSetMember* member);
 		std::vector<ProductionTokenSetMember*> members;
 		bool disallowEpsilons;

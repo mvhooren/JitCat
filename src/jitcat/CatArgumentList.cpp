@@ -20,7 +20,7 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-CatArgumentList::CatArgumentList(const Tokenizer::Lexeme& lexeme, std::vector<CatTypedExpression*>& argumentList): 
+CatArgumentList::CatArgumentList(const Tokenizer::Lexeme& lexeme, const std::vector<CatTypedExpression*>& argumentList): 
 	CatASTNode(lexeme)
 {
 	for (auto& iter : argumentList)
@@ -197,6 +197,10 @@ bool CatArgumentList::applyIndirectionConversions(const std::vector<CatGenericTy
 				{
 					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " is of an unexpected type."), errorContext, compileTimeContext->getContextName(), getLexeme());
 				} break;
+				default:
+				{
+					assert(!isValidConversionMode(mode));
+				}
 			}
 			return false;
 		}

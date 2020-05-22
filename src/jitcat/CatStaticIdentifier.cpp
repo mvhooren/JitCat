@@ -28,18 +28,18 @@ using namespace jitcat::Reflection;
 
 CatStaticIdentifier::CatStaticIdentifier(CatStaticScope* baseScope, const Tokenizer::Lexeme& identifierLexeme, const Tokenizer::Lexeme& lexeme):
 	CatAssignableExpression(lexeme),
-	baseScope(baseScope),
 	identifier(identifierLexeme),
-	identifierLexeme(identifierLexeme)
+	identifierLexeme(identifierLexeme),
+	baseScope(baseScope)
 {
 }
 
 
 CatStaticIdentifier::CatStaticIdentifier(const CatStaticIdentifier& other):
 	CatAssignableExpression(other),
-	baseScope(other.baseScope != nullptr ? static_cast<CatStaticScope*>(other.baseScope->copy()) : nullptr),
 	identifier(other.identifier),
-	identifierLexeme(other.identifierLexeme)
+	identifierLexeme(other.identifierLexeme),
+	baseScope(other.baseScope != nullptr ? static_cast<CatStaticScope*>(other.baseScope->copy()) : nullptr)
 {
 }
 

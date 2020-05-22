@@ -22,18 +22,18 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 
 CatRuntimeContext::CatRuntimeContext(const std::string& contextName, ExpressionErrorManager* errorManager):
-	contextName(contextName),
-	errorManager(errorManager),
-	ownsErrorManager(false),
-#ifdef ENABLE_LLVM
-	codeGenerator(nullptr),
-#endif
-	currentStackFrameOffset(0),
 	nextFunctionIndex(0),
 	currentFunctionDefinition(nullptr),
 	currentClassDefinition(nullptr),
 	currentScope(nullptr),
-	returning(false)
+	returning(false),
+	ownsErrorManager(false),
+	errorManager(errorManager),
+	contextName(contextName),
+	currentStackFrameOffset(0)
+#ifdef ENABLE_LLVM
+	,codeGenerator(nullptr)
+#endif
 {
 	if (errorManager == nullptr)
 	{

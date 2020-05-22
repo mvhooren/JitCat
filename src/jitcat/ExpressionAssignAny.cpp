@@ -90,7 +90,8 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 		{
 			if (valueType.compare(rValueType, false, true))
 			{
-				assignmentOperatorFunction->call(runtimeContext, assignable->execute(runtimeContext), {value});
+				std::any assignableValue = assignable->execute(runtimeContext);
+				assignmentOperatorFunction->call(runtimeContext, assignableValue, {value});
 				runtimeContext->clearTemporaries();
 				return true;
 			}
@@ -100,7 +101,8 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 				if (isValidConversionMode(conversionMode))
 				{
 					std::any convertedValue = valueType.doIndirectionConversion(value, conversionMode);
-					assignmentOperatorFunction->call(runtimeContext, assignable->execute(runtimeContext), {convertedValue});
+					std::any assignableValue = assignable->execute(runtimeContext);
+					assignmentOperatorFunction->call(runtimeContext, assignableValue, {convertedValue});
 					runtimeContext->clearTemporaries();
 					return true;
 				}

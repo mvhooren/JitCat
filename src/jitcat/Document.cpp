@@ -87,7 +87,7 @@ std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(const L
 
 std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(int offset) const
 {
-	auto& iter = lineNumberLookup.upper_bound(offset);
+	auto iter = lineNumberLookup.upper_bound(offset);
 	if (iter != lineNumberLookup.end())
 	{
 		int lineNumber = iter->second;
@@ -102,7 +102,7 @@ std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(int off
 	}
 	else
 	{
-		auto& iter = lineNumberLookup.rbegin();
+		auto iter = lineNumberLookup.rbegin();
 		if (iter != lineNumberLookup.rend())
 		{
 			int lineNumber = iter->second;
@@ -125,7 +125,7 @@ std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(int off
 
 int jitcat::Tokenizer::Document::offsetToLineNumber(int offset) const
 {
-	auto& iter = lineNumberLookup.upper_bound(offset);
+	auto iter = lineNumberLookup.upper_bound(offset);
 	if (iter != lineNumberLookup.end())
 	{
 		return iter->second;

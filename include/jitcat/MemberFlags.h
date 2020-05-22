@@ -25,20 +25,20 @@ namespace jitcat::Reflection
 
 	inline MemberFlags operator | (MemberFlags lhs, MemberFlags rhs)
 	{
-		using T = std::underlying_type_t <MemberFlags>;
-		return static_cast<MemberFlags>(static_cast<T>(lhs) | static_cast<T>(rhs));
+		using UnderlyingT = std::underlying_type_t <MemberFlags>;
+		return static_cast<MemberFlags>(static_cast<UnderlyingT>(lhs) | static_cast<UnderlyingT>(rhs));
 	}
 
 	inline std::underlying_type_t<MemberFlags> operator& (std::underlying_type_t<MemberFlags> lhs, MemberFlags rhs)
 	{
-		using T = std::underlying_type_t<MemberFlags>;
-		return lhs & static_cast<std::underlying_type_t<MemberFlags>>(rhs);
+		using UnderlyingT = std::underlying_type_t <MemberFlags>;
+		return lhs & static_cast<UnderlyingT>(rhs);
 	}
 
 	inline std::underlying_type_t<MemberFlags> operator& (MemberFlags lhs, MemberFlags rhs)
 	{
-		using T = std::underlying_type_t<MemberFlags>;
-		return static_cast<std::underlying_type_t<MemberFlags>>(lhs) & static_cast<std::underlying_type_t<MemberFlags>>(rhs);
+		using UnderlyingT = std::underlying_type_t <MemberFlags>;
+		return static_cast<UnderlyingT>(lhs) & static_cast<UnderlyingT>(rhs);
 	}
 
 

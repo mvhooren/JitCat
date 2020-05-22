@@ -61,6 +61,7 @@ namespace jitcat
 		static inline const char* getTypeName();
 
 		static std::any getCatValue(void) { return std::any(ObjectT());}
+		static std::any getCatValue(ObjectT&& value);
 		static std::any getCatValue(ObjectT& value);
 		static constexpr ObjectT getDefaultValue() { return ObjectT(); }
 		static std::any getDefaultCatValue() { return std::any(TypeTraits<ObjectT>::getDefaultValue()); }

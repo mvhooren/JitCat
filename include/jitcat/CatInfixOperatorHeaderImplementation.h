@@ -82,6 +82,7 @@ inline std::any CatInfixOperator::calculateExpression(CatRuntimeContext* runtime
 			{
 				case CatInfixOperatorType::Equals:		return lType.getRawPointer(lValue) == rType.getRawPointer(rValue);
 				case CatInfixOperatorType::NotEquals:	return lType.getRawPointer(lValue) != rType.getRawPointer(rValue);
+				default:								assert(false);
 			}
 		}
 		assert(false);
@@ -121,6 +122,7 @@ inline std::any CatInfixOperator::calculateScalarExpression(const T& lValue, con
 				return std::any((V)lValue / (V)rValue);
 			}
 		case CatInfixOperatorType::Modulo:
+		{
 			constexpr bool eitherIsFloat = std::is_same<T, float>::value 
 										   || std::is_same<U, float>::value;
 			constexpr bool eitherIsDouble = std::is_same<T, double>::value
@@ -164,6 +166,8 @@ inline std::any CatInfixOperator::calculateScalarExpression(const T& lValue, con
 					return std::any((int)lValue % (int)rValue);
 				}
 			}
+		}
+		default:	assert(false);
 	}
 	assert(false);
 	return std::any(V());
@@ -182,6 +186,7 @@ inline std::any CatInfixOperator::calculateStringExpression(const T& lValue, con
 			stream << rValue;
 			return std::any(stream.str());
 		}
+		default: assert(false);
 	}
 	assert(false);
 	return std::any(Configuration::CatString());
@@ -195,6 +200,7 @@ inline std::any CatInfixOperator::calculateStringExpression(const Configuration:
 		case CatInfixOperatorType::Plus:		return std::any(lValue + rValue);
 		case CatInfixOperatorType::Equals:		return std::any(lValue == rValue);
 		case CatInfixOperatorType::NotEquals:	return std::any(lValue != rValue);
+		default:								assert(false);
 	}
 	assert(false);
 	return std::any(Configuration::CatString());
@@ -209,6 +215,7 @@ inline std::any CatInfixOperator::calculateBooleanExpression(bool lValue, bool r
 		case CatInfixOperatorType::NotEquals:	return std::any(lValue != rValue);
 		case CatInfixOperatorType::LogicalAnd:	return std::any(lValue && rValue);
 		case CatInfixOperatorType::LogicalOr:	return std::any(lValue || rValue);
+		default:								assert(false);
 	}
 	assert(false);
 	return std::any(false);

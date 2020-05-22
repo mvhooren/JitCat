@@ -35,8 +35,8 @@ using namespace jitcat::Tokenizer;
 ExpressionBase::ExpressionBase(bool expectAssignable):
 	expressionIsLiteral(false),
 	isConstant(false),
-	errorManagerHandle(nullptr),
-	expectAssignable(expectAssignable)
+	expectAssignable(expectAssignable),
+	errorManagerHandle(nullptr)
 {
 }
 
@@ -45,8 +45,8 @@ ExpressionBase::ExpressionBase(const char* expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
 	isConstant(false),
-	errorManagerHandle(nullptr),
-	expectAssignable(expectAssignable)
+	expectAssignable(expectAssignable),
+	errorManagerHandle(nullptr)
 {
 }
 
@@ -55,8 +55,8 @@ ExpressionBase::ExpressionBase(const std::string& expression, bool expectAssigna
 	expression(expression),
 	expressionIsLiteral(false),
 	isConstant(false),
-	errorManagerHandle(nullptr),
-	expectAssignable(expectAssignable)
+	expectAssignable(expectAssignable),
+	errorManagerHandle(nullptr)
 {
 }
 
@@ -65,8 +65,8 @@ ExpressionBase::ExpressionBase(CatRuntimeContext* compileContext, const std::str
 	expression(expression),
 	expressionIsLiteral(false),
 	isConstant(false),
-	errorManagerHandle(nullptr),
-	expectAssignable(expectAssignable)
+	expectAssignable(expectAssignable),
+	errorManagerHandle(nullptr)
 {
 }
 
@@ -192,8 +192,6 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 		Lexeme expressionLexeme = parseResult->getNode<CatTypedExpression>()->getLexeme();
 		if (!expectedType.isUnknown())
 		{
-			int expectedTypeIndirection = 0;
-			int valueTypeIndirection = 0;
 			IndirectionConversionMode mode = expectedType.getIndirectionConversion(valueType);
 			if (isValidConversionMode(mode))
 			{
@@ -221,6 +219,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				{
 					case IndirectionConversionMode::ErrorNotCopyConstructible:	errorManager->compiledWithError(std::string(Tools::append("Expression result is not copy constructible.")), errorContext, context->getContextName(), expressionLexeme); return;
 					case IndirectionConversionMode::ErrorTooMuchIndirection:	errorManager->compiledWithError(std::string(Tools::append("Expression has too much indirection.")), errorContext, context->getContextName(), expressionLexeme); return;
+					default: assert(isValidConversionMode(mode)); break;
 				}
 			}
 			if (expectAssignable && !parseResult->getNode<CatAssignableExpression>()->getAssignableType().isAssignableType())

@@ -14,12 +14,12 @@ jitcat::Reflection::ReflectedTypeInfo::ReflectedTypeInfo(const char* typeName, s
 	copyConstructor(copyConstructor),
 	moveConstructor(moveConstructor),
 	placementDestructor(placementDestructor),
+	inheritanceCheckFunction([](CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*){return true;}),
 	allowConstruction(allowConstruction),
-	allowInheritance(allowConstruction),
 	allowCopyConstruction(false),
 	allowMoveConstruction(false),
-	triviallyCopyable(false),
-	inheritanceCheckFunction([](CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*){return true;})
+	allowInheritance(allowConstruction),
+	triviallyCopyable(false)
 {
 }
 

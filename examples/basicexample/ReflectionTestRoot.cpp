@@ -13,13 +13,13 @@ using namespace jitcat::Reflection;
 
 
 ReflectionTestRoot::ReflectionTestRoot():
+	testObject2("test2 test2 test2"),
+	testObject3(new ReflectionTestObject("test3 test3 test3")),
 	pi(3.1415926f),
 	two(2),
 	hello("world"),
 	yes(true),
-	no(false),
-	testObject2("test2 test2 test2"),
-	testObject3(new ReflectionTestObject("test3 test3 test3"))
+	no(false)
 {
 	testObject = new ReflectionTestObject("test test test");
 	testUnorderedMap[1] = 1.1f;

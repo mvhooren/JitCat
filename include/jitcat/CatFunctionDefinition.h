@@ -119,6 +119,8 @@ namespace jitcat::AST
 			assert(sizeof...(ArgumentsT) == numParameters);
 			int i = 0;
 			int dummy[] = { 0, ( anyArguments[i++] = jitcat::TypeTraits<ArgumentsT>::getCatValue(std::forward<ArgumentsT>(arguments)), 0) ... };
+			//To silence unused variable warnings.
+			(void)dummy;
 			return executeFunctionWithArguments(runtimeContext, anyArguments);
 		}
 	}

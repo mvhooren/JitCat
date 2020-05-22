@@ -65,11 +65,13 @@ namespace jitcat::Reflection
 		inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
 		inline virtual bool isDeferredFunctionCall() {return false;}
 
-		template<typename ParameterT>
+		template<typename ArgumentT>
 		inline void addParameterTypeInfo()
 		{
-			argumentTypes.push_back(TypeTraits<typename RemoveConst<ParameterT>::type >::toGenericType());
+			argumentTypes.push_back(TypeTraits<typename RemoveConst<ArgumentT>::type >::toGenericType());
 		}
+
+
 
 		CatGenericType getArgumentType(std::size_t argumentIndex) const;
 
@@ -121,6 +123,8 @@ struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
 		//This gets the type info per parameter type
 		int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
+		//To silence unused variable warnings.
+		(void)dummy;
 	}
 
 
@@ -198,6 +202,8 @@ struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
 		//This gets the type info per parameter type
 		int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
+		//To silence unused variable warnings.
+		(void)dummy;
 	}
 
 
@@ -274,6 +280,8 @@ struct PseudoMemberFunctionInfoWithArgs: public MemberFunctionInfo
 		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
 		//This gets the type info per parameter type
 		int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
+		//To silence unused variable warnings.
+		(void)dummy;
 	}
 
 

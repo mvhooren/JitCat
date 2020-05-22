@@ -29,9 +29,9 @@ using namespace jitcat::Tools;
 CatScopeFunctionCall::CatScopeFunctionCall(const std::string& name, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme):
     CatTypedExpression(lexeme),
     name(name),
-    arguments(arguments),
+    nameLexeme(nameLexeme),
     lexeme(lexeme),
-    nameLexeme(nameLexeme)
+    arguments(arguments)
 {
     nameLowerCase = Tools::toLowerCase(name);
 }
@@ -40,9 +40,9 @@ CatScopeFunctionCall::CatScopeFunctionCall(const std::string& name, CatArgumentL
 CatScopeFunctionCall::CatScopeFunctionCall(const CatScopeFunctionCall& other):
     CatTypedExpression(other),
     name(other.name),
-    arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
+    nameLexeme(other.nameLexeme),
     lexeme(other.lexeme),
-    nameLexeme(other.nameLexeme)
+    arguments(static_cast<CatArgumentList*>(other.arguments->copy()))
 {
     nameLowerCase = Tools::toLowerCase(name);
 }

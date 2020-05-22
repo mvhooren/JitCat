@@ -99,13 +99,13 @@ const char* TestObjects::TestVector4::getTypeName()
 }
 
 
-TestVector4 TestObjects::TestVector4::doAdd(TestVector4& other)
+TestVector4 TestObjects::TestVector4::doAdd(const TestVector4& other)
 {
 	return *this + other;
 }
 
 
-TestVector4 TestObjects::TestVector4::staticAdd(TestVector4& a, TestVector4* b, TestVector4 c)
+TestVector4 TestObjects::TestVector4::staticAdd(const TestVector4& a, TestVector4* b, TestVector4 c)
 {
 	return a + *b + c;
 }
@@ -117,31 +117,31 @@ bool TestObjects::TestVector4::operator==(const TestVector4& other) const
 }
 
 
-TestVector4 TestObjects::TestVector4::operator*(const TestVector4& other)
+TestVector4 TestObjects::TestVector4::operator*(const TestVector4& other) const
 {
 	return TestVector4(x * other.x, y * other.y, z * other.z, w * other.w);
 }
 
 
-TestVector4 TestObjects::TestVector4::operator*(int value)
+TestVector4 TestObjects::TestVector4::operator*(int value) const
 {
 	return TestVector4(x * value, y * value, z * value, w * value);
 }
 
 
-TestVector4 TestObjects::TestVector4::operator*(float value)
+TestVector4 TestObjects::TestVector4::operator*(float value) const
 {
 	return TestVector4(x * value, y * value, z * value, w * value);
 }
 
 
-TestVector4 TestObjects::TestVector4::operator+(const TestVector4& other)
+TestVector4 TestObjects::TestVector4::operator+(const TestVector4& other) const
 {
 	return TestVector4(x + other.x, y + other.y, z + other.z, w + other.w);
 }
 
 
-TestVector4 TestObjects::TestVector4::operator-(const TestVector4& other)
+TestVector4 TestObjects::TestVector4::operator-(const TestVector4& other) const
 {
 	return TestVector4(x - other.x, y - other.y, z - other.z, w - other.w);
 }

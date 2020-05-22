@@ -36,14 +36,14 @@ using namespace jitcat::Tools;
 
 jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme):
 	CatDefinition(lexeme),
-	type(type),
 	name(name),
 	lowerCaseName(Tools::toLowerCase(name)),
-	visibility(MemberVisibility::Public),
 	nameLexeme(nameLexeme),
+	type(type),
 	parameters(parameters),
-	scopeBlock(scopeBlock),
+	visibility(MemberVisibility::Public),
 	parametersScopeId(InvalidScopeID),
+	scopeBlock(scopeBlock),
 	memberFunctionInfo(nullptr)
 {
 }
@@ -51,14 +51,14 @@ jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, con
 
 jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(const CatFunctionDefinition& other):
 	CatDefinition(other),
-	type(static_cast<CatTypeNode*>(other.type->copy())),
 	name(other.name),
 	lowerCaseName(other.lowerCaseName),
-	visibility(other.visibility),
 	nameLexeme(other.nameLexeme),
+	type(static_cast<CatTypeNode*>(other.type->copy())),
 	parameters(static_cast<CatFunctionParameterDefinitions*>(other.parameters->copy())),
-	scopeBlock(static_cast<CatScopeBlock*>(other.scopeBlock->copy())),
+	visibility(other.visibility),
 	parametersScopeId(InvalidScopeID),
+	scopeBlock(static_cast<CatScopeBlock*>(other.scopeBlock->copy())),
 	memberFunctionInfo(nullptr)
 {
 }
