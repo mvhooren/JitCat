@@ -56,8 +56,17 @@ namespace jitcat::Reflection
 	template<typename ObjectT>
 	inline std::any ObjectTypeCaster<ObjectT>::getAddressOfValue(std::any& value) const
 	{
-		ObjectT* addressOf = std::any_cast<ObjectT>(&value);
-		return addressOf;
+		if constexpr (TypeTools::getAllowCopyConstruction<ObjectT>())
+		{
+			//We should always get here because a std::any can only contain copy-constructible values.
+			ObjectT* addressOf = std::any_cast<ObjectT>(&value);
+			return addressOf;
+		}
+		else
+		{
+			assert(false);
+			return nullptr;
+		}
 	}
 
 
