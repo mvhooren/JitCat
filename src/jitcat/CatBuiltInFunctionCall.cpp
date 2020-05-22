@@ -103,55 +103,55 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		}
 		case CatBuiltInFunctionType::ToFixedLengthString:	return LLVMCatIntrinsics::intToFixedLengthString(std::any_cast<int>(argumentValues[0]), std::any_cast<int>(argumentValues[1]));
 		case CatBuiltInFunctionType::Sin:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::sin(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::sin(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return sin(std::any_cast<double>(argumentValues[0]));
+			else return (float)sin(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Cos:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::cos(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::cos(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return cos(std::any_cast<double>(argumentValues[0]));
+			else return (float)cos(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Tan:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::tan(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::tan(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return tan(std::any_cast<double>(argumentValues[0]));
+			else return (float)tan(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Asin:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::asin(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::asin(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return asin(std::any_cast<double>(argumentValues[0]));
+			else return (float)asin(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Acos:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::acos(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::acos(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return acos(std::any_cast<double>(argumentValues[0]));
+			else return (float)acos(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Atan:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::atan(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::atan(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return atan(std::any_cast<double>(argumentValues[0]));
+			else return (float)atan(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 
 		case CatBuiltInFunctionType::Sinh:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::sinh(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::sinh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return sinh(std::any_cast<double>(argumentValues[0]));
+			else return (float)sinh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Cosh:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::cosh(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::cosh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return cosh(std::any_cast<double>(argumentValues[0]));
+			else return (float)cosh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Tanh:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::tanh(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::tanh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return tanh(std::any_cast<double>(argumentValues[0]));
+			else return (float)tanh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Asinh:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::asinh(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::asinh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return asinh(std::any_cast<double>(argumentValues[0]));
+			else return (float)asinh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Acosh:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::acosh(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::acosh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return acosh(std::any_cast<double>(argumentValues[0]));
+			else return (float)acosh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Atanh:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::atanh(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::atanh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return atanh(std::any_cast<double>(argumentValues[0]));
+			else return (float)atanh(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Atan2:
 		{
 			if (arguments->getArgumentType(0).isDoubleType() || arguments->getArgumentType(1).isDoubleType())
 			{
 				double y = CatGenericType::convertToDouble(argumentValues[0], arguments->getArgumentType(0));
 				double x = CatGenericType::convertToDouble(argumentValues[1], arguments->getArgumentType(1));
-				return std::atan2(y, x);
+				return atan2(y, x);
 			}
 			else
 			{
 				float y = CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0));
 				float x = CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1));
-				return (float)std::atan2(y, x);
+				return (float)atan2(y, x);
 			}
 		}
 		case CatBuiltInFunctionType::Hypot:
@@ -160,24 +160,24 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 			{
 				double y = CatGenericType::convertToDouble(argumentValues[0], arguments->getArgumentType(0));
 				double x = CatGenericType::convertToDouble(argumentValues[1], arguments->getArgumentType(1));
-				return std::hypot(y, x);
+				return hypot(y, x);
 			}
 			else
 			{
 				float x = CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0));
 				float y = CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1));
-				return (float)std::hypot(x, y);
+				return (float)hypot(x, y);
 			}
 		}
 
-		case CatBuiltInFunctionType::Random:		return std::any(static_cast<float> (std::rand()) / static_cast <float> (RAND_MAX));
+		case CatBuiltInFunctionType::Random:		return std::any(static_cast<float> (rand()) / static_cast <float> (RAND_MAX));
 		case CatBuiltInFunctionType::RandomRange:
 		{
 			if (arguments->getArgumentType(0).isBoolType() && arguments->getArgumentType(1).isBoolType())
 			{
 				if (std::any_cast<bool>(argumentValues[0]) != std::any_cast<bool>(argumentValues[1]))
 				{
-					return (std::rand() % 2) == 1 ? true : false;
+					return (rand() % 2) == 1 ? true : false;
 				}
 				else
 				{
@@ -192,7 +192,7 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					std::swap(min, max);
 				}
-				return std::any(min + (std::rand() % (max - min + 1)));
+				return std::any(min + (rand() % (max - min + 1)));
 			}
 			else if (arguments->getArgumentType(0).isDoubleType() || arguments->getArgumentType(1).isDoubleType())
 			{
@@ -203,7 +203,7 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 					std::swap(min, max);
 				}
 				
-				double random = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
+				double random = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
 				return std::any(min + random * (max - min));
 			}
 			else if (arguments->getArgumentType(0).isScalarType() && arguments->getArgumentType(1).isScalarType())
@@ -214,7 +214,7 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					std::swap(min, max);
 				}
-				float random = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
+				float random = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 				return std::any(min + random * (max - min));
 			}
 			else
@@ -227,13 +227,13 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		{
 			if (arguments->getArgumentType(0).isDoubleType())
 			{
-				double multiplier = std::pow(10.0f, CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1)));
-				return std::any(std::floor(std::any_cast<double>(argumentValues[0]) * multiplier + 0.5) / multiplier);
+				double multiplier = pow(10.0f, CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1)));
+				return std::any(floor(std::any_cast<double>(argumentValues[0]) * multiplier + 0.5) / multiplier);
 			}
 			else
 			{
-				double multiplier = std::pow(10.0f, CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1)));
-				return std::any((float)(std::floor(std::any_cast<float>(argumentValues[0]) * multiplier + 0.5f) / multiplier));
+				double multiplier = pow(10.0f, CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1)));
+				return std::any((float)(floor(std::any_cast<float>(argumentValues[0]) * multiplier + 0.5f) / multiplier));
 			}
 		}
 		case CatBuiltInFunctionType::StringRound:
@@ -276,15 +276,15 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		case CatBuiltInFunctionType::Abs:
 			if (arguments->getArgumentType(0).isFloatType())
 			{
-				return std::any(std::abs(std::any_cast<float>(argumentValues[0])));
+				return std::any(abs(std::any_cast<float>(argumentValues[0])));
 			}
 			else if (arguments->getArgumentType(0).isDoubleType())
 			{
-				return std::any(std::abs(std::any_cast<double>(argumentValues[0])));
+				return std::any(abs(std::any_cast<double>(argumentValues[0])));
 			}
 			else 
 			{
-				return std::any(std::abs(std::any_cast<int>(argumentValues[0])));
+				return std::any(abs(std::any_cast<int>(argumentValues[0])));
 			}
 		case CatBuiltInFunctionType::Cap:
 				if (arguments->getArgumentType(0).isDoubleType())
@@ -351,34 +351,34 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				return std::any(std::max(std::any_cast<int>(argumentValues[0]), CatGenericType::convertToInt(argumentValues[1], arguments->getArgumentType(1))));
 			}
 		case CatBuiltInFunctionType::Log10:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::log10(std::any_cast<double>(argumentValues[0]));
-			else return std::log10f(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return log10(std::any_cast<double>(argumentValues[0]));
+			else return log10f(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Ln:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::log(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::log(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return log(std::any_cast<double>(argumentValues[0]));
+			else return (float)log(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Exp:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::exp(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::exp(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return exp(std::any_cast<double>(argumentValues[0]));
+			else return (float)exp(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Sqrt:
-			if (arguments->getArgumentType(0).isDoubleType()) return std::sqrt(std::any_cast<double>(argumentValues[0]));
-			else return (float)std::sqrt(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
+			if (arguments->getArgumentType(0).isDoubleType()) return sqrt(std::any_cast<double>(argumentValues[0]));
+			else return (float)sqrt(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)));
 		case CatBuiltInFunctionType::Pow:		
 			if (arguments->getArgumentType(0).isDoubleType() || arguments->getArgumentType(1).isDoubleType())
 			{
-				return std::any(std::pow(CatGenericType::convertToDouble(argumentValues[0], arguments->getArgumentType(0)), CatGenericType::convertToDouble(argumentValues[1], arguments->getArgumentType(1))));
+				return std::any(pow(CatGenericType::convertToDouble(argumentValues[0], arguments->getArgumentType(0)), CatGenericType::convertToDouble(argumentValues[1], arguments->getArgumentType(1))));
 			}
 			else
 			{
-				return std::any(std::powf(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)), CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1))));
+				return std::any(powf(CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0)), CatGenericType::convertToFloat(argumentValues[1], arguments->getArgumentType(1))));
 			}
 		case CatBuiltInFunctionType::Ceil:
 			if (arguments->getArgumentType(0).isDoubleType())
 			{
-				return std::any((double)std::ceil(std::any_cast<double>(argumentValues[0])));
+				return std::any((double)ceil(std::any_cast<double>(argumentValues[0])));
 			}
 			else if (arguments->getArgumentType(0).isFloatType())
 			{
-				return std::any((float)std::ceil(std::any_cast<float>(argumentValues[0])));
+				return std::any((float)ceil(std::any_cast<float>(argumentValues[0])));
 			}
 			else 
 			{
@@ -387,11 +387,11 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		case CatBuiltInFunctionType::Floor:
 			if (arguments->getArgumentType(0).isDoubleType())
 			{
-				return std::any((double)std::floor(std::any_cast<double>(argumentValues[0])));
+				return std::any((double)floor(std::any_cast<double>(argumentValues[0])));
 			}
 			else if (arguments->getArgumentType(0).isFloatType())
 			{
-				return std::any((float)std::floor(std::any_cast<float>(argumentValues[0])));
+				return std::any((float)floor(std::any_cast<float>(argumentValues[0])));
 			}
 			else 
 			{

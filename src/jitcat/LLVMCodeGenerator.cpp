@@ -69,47 +69,47 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 
 	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodl), functionFlags);
-	double(*fmodPtr)(double, double) = &std::fmod;
+	double(*fmodPtr)(double, double) = &fmod;
 	intrinsicSymbols[executionSession->intern("fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(fmodPtr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("sinf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinl), functionFlags);
-	double(*sinPtr)(double) = &std::sin;
+	double(*sinPtr)(double) = &sin;
 	intrinsicSymbols[executionSession->intern("sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(sinPtr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("cosf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosl), functionFlags);
-	double(*cosPtr)(double) = &std::cos;
+	double(*cosPtr)(double) = &cos;
 	intrinsicSymbols[executionSession->intern("cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(cosPtr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("log10f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10f), functionFlags);
 	intrinsicSymbols[executionSession->intern("_log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10l), functionFlags);
-	double(*log10Ptr)(double) = &std::log10;
+	double(*log10Ptr)(double) = &log10;
 	intrinsicSymbols[executionSession->intern("log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(log10Ptr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("logf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logl), functionFlags);
-	double(*logPtr)(double) = &std::log;
+	double(*logPtr)(double) = &log;
 	intrinsicSymbols[executionSession->intern("log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(logPtr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("expf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expl), functionFlags);
-	double(*expPtr)(double) = &std::exp;
+	double(*expPtr)(double) = &exp;
 	intrinsicSymbols[executionSession->intern("exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(expPtr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("powf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powl), functionFlags);
-	double(*powPtr)(double, double) = &std::pow;
+	double(*powPtr)(double, double) = &pow;
 	intrinsicSymbols[executionSession->intern("pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(powPtr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("ceilf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceilf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceill), functionFlags);
-	double(*ceilPtr)(double) = &std::ceil;
+	double(*ceilPtr)(double) = &ceil;
 	intrinsicSymbols[executionSession->intern("ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(ceilPtr), functionFlags);
 
 	intrinsicSymbols[executionSession->intern("floorf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorl), functionFlags);
-	double(*floorPtr)(double) = &std::floor;
+	double(*floorPtr)(double) = &floor;
 	intrinsicSymbols[executionSession->intern("floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(floorPtr), functionFlags);
 	
 
@@ -385,18 +385,18 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		case CatBuiltInFunctionType::Ceil:		return helper->callIntrinsic(llvm::Intrinsic::ceil, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
 		case CatBuiltInFunctionType::Floor:		return helper->callIntrinsic(llvm::Intrinsic::floor, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
 
-		case CatBuiltInFunctionType::Tan:		return generateFPMath("tan", &std::tan, &std::tan, arguments, context);
-		case CatBuiltInFunctionType::Asin:		return generateFPMath("asin", &std::asin, &std::asin, arguments, context);
-		case CatBuiltInFunctionType::Acos:		return generateFPMath("acos", &std::acos, &std::acos, arguments, context);
-		case CatBuiltInFunctionType::Atan:		return generateFPMath("atan", &std::atan, &std::atan, arguments, context);
-		case CatBuiltInFunctionType::Sinh:		return generateFPMath("sinh", &std::sinh, &std::sinh, arguments, context);
-		case CatBuiltInFunctionType::Cosh:		return generateFPMath("cosh", &std::cosh, &std::cosh, arguments, context);
-		case CatBuiltInFunctionType::Tanh:		return generateFPMath("tanh", &std::tanh, &std::tanh, arguments, context);
-		case CatBuiltInFunctionType::Asinh:		return generateFPMath("asinh", &std::asinh, &std::asinh, arguments, context);
-		case CatBuiltInFunctionType::Acosh:		return generateFPMath("acosh", &std::acosh, &std::acosh, arguments, context);
-		case CatBuiltInFunctionType::Atanh:		return generateFPMath("atanh", &std::atanh, &std::atanh, arguments, context);
-		case CatBuiltInFunctionType::Atan2:		return generateFPMath("atan2", &std::atan2, &std::atan2, arguments, context);
-		case CatBuiltInFunctionType::Hypot:		return generateFPMath("hypot", &std::hypot, &std::hypot, arguments, context);
+		case CatBuiltInFunctionType::Tan:		return generateFPMath("tan", &tan, &tan, arguments, context);
+		case CatBuiltInFunctionType::Asin:		return generateFPMath("asin", &asin, &asin, arguments, context);
+		case CatBuiltInFunctionType::Acos:		return generateFPMath("acos", &acos, &acos, arguments, context);
+		case CatBuiltInFunctionType::Atan:		return generateFPMath("atan", &atan, &atan, arguments, context);
+		case CatBuiltInFunctionType::Sinh:		return generateFPMath("sinh", &sinh, &sinh, arguments, context);
+		case CatBuiltInFunctionType::Cosh:		return generateFPMath("cosh", &cosh, &cosh, arguments, context);
+		case CatBuiltInFunctionType::Tanh:		return generateFPMath("tanh", &tanh, &tanh, arguments, context);
+		case CatBuiltInFunctionType::Asinh:		return generateFPMath("asinh", &asinh, &asinh, arguments, context);
+		case CatBuiltInFunctionType::Acosh:		return generateFPMath("acosh", &acosh, &acosh, arguments, context);
+		case CatBuiltInFunctionType::Atanh:		return generateFPMath("atanh", &atanh, &atanh, arguments, context);
+		case CatBuiltInFunctionType::Atan2:		return generateFPMath("atan2", &atan2, &atan2, arguments, context);
+		case CatBuiltInFunctionType::Hypot:		return generateFPMath("hypot", &hypot, &hypot, arguments, context);
 		case CatBuiltInFunctionType::Cap:
 		{
 			llvm::Value* value = generate(arguments->getArgument(0), context);
