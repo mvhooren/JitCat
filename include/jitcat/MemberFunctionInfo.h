@@ -13,6 +13,7 @@
 #include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberVisibility.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeConversionCastHelper.h"
 #include "jitcat/TypeTraits.h"
 
 #include <string>

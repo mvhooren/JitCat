@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "jitcat/TypeTools.h"
+
 #include <cassert>
 
 
