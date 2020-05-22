@@ -305,6 +305,7 @@ set(Source_Reflection_TypeInfo_Helper
 	${JitCatHeaderPath}/MemberVisibility.h
 	TypeCaster.cpp
 	${JitCatHeaderPath}/TypeCaster.h
+	${JitCatHeaderPath}/TypeCasterHeaderImplementation.h
 	${JitCatHeaderPath}/TypeTools.h
 	${JitCatHeaderPath}/TypeOwnershipSemantics.h
 	TypeTraits.cpp

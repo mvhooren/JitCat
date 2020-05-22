@@ -6,9 +6,8 @@
 */
 
 #pragma once
+
 #include "jitcat/Reflectable.h"
-#include "jitcat/STLTypeReflectors.h"
-#include "jitcat/TypeTools.h"
 
 #include <any>
 #include <cassert>
@@ -50,94 +49,18 @@ namespace jitcat::Reflection
 		ObjectTypeCaster() {};
 		virtual ~ObjectTypeCaster() {};
 
-		virtual bool isNullPtr(const std::any& value) const override final
-		{
-			ObjectT* ptr = std::any_cast<ObjectT*>(value);
-			return ptr == nullptr;
-		}
-
-
-		virtual bool isNullPtrPtr(const std::any& value) const override final
-		{
-			ObjectT** ptr = std::any_cast<ObjectT**>(value);
-			return ptr == nullptr;
-		}
-
-
-		inline virtual std::any getValueOfPointer(std::any& value) const override final
-		{
-			if constexpr (TypeTools::getAllowCopyConstruction<ObjectT>())
-			{
-				ObjectT* ptr = std::any_cast<ObjectT*>(value);
-				std::any result(std::in_place_type<ObjectT>, *ptr);
-				return result;
-			}
-			else
-			{
-				assert(false);
-				return nullptr;
-			}
-		}
-
-
-		virtual std::any getValueOfPointerToPointer(std::any& value) const override final
-		{
-			ObjectT** ptrptr = std::any_cast<ObjectT**>(value);
-			return *ptrptr;
-		}
-
-
-		virtual std::any getAddressOfValue(std::any& value) const override final
-		{
-			ObjectT* addressOf = std::any_cast<ObjectT>(&value);
-			return addressOf;
-		}
-
-
-		virtual std::any getAddressOfPointer(std::any& value) const override final
-		{
-			ObjectT** addressOf = std::any_cast<ObjectT*>(&value);
-			return addressOf;
-		}
-
-
-		virtual std::any castFromRawPointer(uintptr_t pointer) const override final
-		{
-			return reinterpret_cast<ObjectT*>(pointer);
-		}
-
-
-		virtual uintptr_t castToRawPointer(const std::any& pointer) const override final
-		{
-			return reinterpret_cast<uintptr_t>(std::any_cast<ObjectT*>(pointer));
-		}
-
-
-		virtual std::any castFromRawPointerPointer(uintptr_t pointer) const override final
-		{
-			return reinterpret_cast<ObjectT**>(pointer);
-		}
-
-
-		virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final
-		{
-			return reinterpret_cast<uintptr_t>(std::any_cast<ObjectT**>(pointer));
-		}
-
-
-		virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const override final
-		{
-			ObjectT* object = std::any_cast<ObjectT*>(value);
-			buffer = reinterpret_cast<const unsigned char*>(object);
-			bufferSize = sizeof(ObjectT);
-		}
-
-
-		virtual std::any getNull() const override final 
-		{
-			return (ObjectT*)nullptr;
-		}
-
+		inline virtual bool isNullPtr(const std::any& value) const override final;
+		inline virtual bool isNullPtrPtr(const std::any& value) const override final;
+		inline virtual std::any getValueOfPointer(std::any& value) const override final;
+		inline virtual std::any getValueOfPointerToPointer(std::any& value) const override final;
+		inline virtual std::any getAddressOfValue(std::any& value) const override final;
+		inline virtual std::any getAddressOfPointer(std::any& value) const override final;
+		inline virtual std::any castFromRawPointer(uintptr_t pointer) const override final;
+		inline virtual uintptr_t castToRawPointer(const std::any& pointer) const override final;
+		inline virtual std::any castFromRawPointerPointer(uintptr_t pointer) const override final;
+		inline virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final;
+		inline virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const override final;
+		inline virtual std::any getNull() const override final;
 	};
 
 
@@ -185,5 +108,8 @@ public:
 	virtual std::any getNull() const override final;
 };
 
+}
 
-} //End namespace jitcat::Reflection
+#include "jitcat/TypeCasterHeaderImplementation.h"
+
+
