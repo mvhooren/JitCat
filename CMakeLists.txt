@@ -80,12 +80,12 @@ if(LLVM_ENABLED)
 		LLVMTarget
 		LLVMAnalysis
 		LLVMProfileData
-		LLVMObject
 		LLVMMCParser
 		LLVMMC
 		LLVMDebugInfoCodeView
-		LLVMDebugInfoDwarf
+		LLVMDebugInfoDWARF
 		LLVMDebugInfoMSF
+		LLVMObject
 		LLVMBitReader
 		LLVMBitstreamReader
 		LLVMCore
