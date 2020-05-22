@@ -10,6 +10,9 @@
 #include "jitcat/CatASTNode.h"
 #include "jitcat/TypeOwnershipSemantics.h"
 
+#include <memory>
+
+
 namespace jitcat::AST
 {
 	class CatArgumentList;
