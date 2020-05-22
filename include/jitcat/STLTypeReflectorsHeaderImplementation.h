@@ -110,7 +110,7 @@ namespace jitcat::Reflection
 	}
 
 
-	template<class ItemT, int ArraySize>
+	template<class ItemT, std::size_t ArraySize>
 	inline const char* ExternalReflector<std::array<ItemT, ArraySize>>::getTypeName()
 	{
 		static const std::string arrayName = jitcat::Tools::append("array<", TypeNameGetter<ItemT>::get(),
@@ -119,7 +119,7 @@ namespace jitcat::Reflection
 	}
 
 
-	template<class ItemT, int ArraySize>
+	template<class ItemT, std::size_t ArraySize>
 	inline void ExternalReflector<std::array<ItemT, ArraySize>>::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 	{
 		typeInfo
@@ -128,7 +128,7 @@ namespace jitcat::Reflection
 	}
 
 
-	template<class ItemT, int ArraySize>
+	template<class ItemT, std::size_t ArraySize>
 	inline typename STLHelper::ValueReturnType<ItemT>::containerItemReturnType ExternalReflector<std::array<ItemT, ArraySize>>::safeIndex(ArrayT* array, int key)
 	{
 		if (array != nullptr && key >= 0 && key < ArraySize)
@@ -139,7 +139,7 @@ namespace jitcat::Reflection
 	}
 
 
-	template<class ItemT, int ArraySize>
+	template<class ItemT, std::size_t ArraySize>
 	inline int ExternalReflector<std::array<ItemT, ArraySize>>::size(ArrayT* array)
 	{
 		if (array != nullptr)

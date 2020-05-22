@@ -111,7 +111,7 @@ namespace jitcat::Reflection
 
 
 	//Reflection for std::array
-	template <class ItemT, int ArraySize>
+	template <class ItemT, std::size_t ArraySize>
 	class ExternalReflector<std::array<ItemT, ArraySize>>
 	{
 		using ArrayT = std::array<ItemT, ArraySize>;
