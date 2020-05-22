@@ -292,6 +292,7 @@ set(Source_Reflection_TypeInfo_MemberFunctions
 	${JitCatHeaderPath}/FunctionSignature.h
 	MemberFunctionInfo.cpp
 	${JitCatHeaderPath}/MemberFunctionInfo.h
+	${JitCatHeaderPath}/MemberFunctionInfoHeaderImplementation.h
 	StaticMemberFunctionInfo.cpp
 	${JitCatHeaderPath}/StaticMemberFunctionInfo.h
 	${JitCatHeaderPath}/StaticMemberFunctionInfoHeaderImplementation.h

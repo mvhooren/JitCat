@@ -13,6 +13,14 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
+jitcat::Reflection::MemberFunctionInfo::MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType) :
+	memberFunctionName(memberFunctionName),
+	lowerCaseMemberFunctionName(Tools::toLowerCase(memberFunctionName)),
+	returnType(returnType),
+	visibility(MemberVisibility::Public)
+{}
+
+
 CatGenericType MemberFunctionInfo::getArgumentType(std::size_t argumentIndex) const
 {
 	if (argumentIndex < argumentTypes.size())

@@ -9,20 +9,16 @@
 
 #include "jitcat/BuildIndicesHelper.h"
 #include "jitcat/CatGenericType.h"
-#include "jitcat/Configuration.h"
 #include "jitcat/FunctionSignature.h"
 #include "jitcat/MemberVisibility.h"
-#include "jitcat/Tools.h"
-#include "jitcat/TypeConversionCastHelper.h"
-#include "jitcat/TypeTraits.h"
 
 #include <string>
 #include <vector>
 
+
 namespace jitcat
 {
 	class CatRuntimeContext;
-	
 }
 
 namespace jitcat::Reflection
@@ -54,30 +50,22 @@ namespace jitcat::Reflection
 
 	struct MemberFunctionInfo: public FunctionSignature
 	{
-		MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): 
-			memberFunctionName(memberFunctionName), 
-			lowerCaseMemberFunctionName(Tools::toLowerCase(memberFunctionName)),
-			returnType(returnType), 
-			visibility(MemberVisibility::Public)
-		{};
+		MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType);;
 		virtual ~MemberFunctionInfo() {}
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
 		inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
 		inline virtual bool isDeferredFunctionCall() {return false;}
+		// Inherited via FunctionSignature
+		virtual const std::string& getLowerCaseFunctionName() const override final;
+		virtual int getNumParameters() const override final; 
+		virtual const CatGenericType& getParameterType(int index) const override final;
 
 		template<typename ArgumentT>
-		inline void addParameterTypeInfo()
-		{
-			argumentTypes.push_back(TypeTraits<typename RemoveConst<ArgumentT>::type >::toGenericType());
-		}
-
-
+		inline void addParameterTypeInfo();
 
 		CatGenericType getArgumentType(std::size_t argumentIndex) const;
-
 		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember);
-
 
 		std::string memberFunctionName;
 		std::string lowerCaseMemberFunctionName;
@@ -85,11 +73,6 @@ namespace jitcat::Reflection
 		MemberVisibility visibility;
 
 		std::vector<CatGenericType> argumentTypes;
-
-		// Inherited via FunctionSignature
-		virtual const std::string& getLowerCaseFunctionName() const override final;
-		virtual int getNumParameters() const override final; 
-		virtual const CatGenericType& getParameterType(int index) const override final;
 	};
 
 	struct DeferredMemberFunctionInfo : public MemberFunctionInfo
@@ -108,234 +91,57 @@ namespace jitcat::Reflection
 	};
 
 
-
-#ifdef _MSC_VER
-	//#pragma warning (disable:4189)
-#endif
-
-template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
-struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
-{
-	MemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT (ClassT::*function)(TFunctionArguments...)):
-		MemberFunctionInfo(memberFunctionName, TypeTraits<ReturnT>::toGenericType()),
-		function(function)
+	template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
+	struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 	{
-		//Trick to call a function per variadic template item
-		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
-		//This gets the type info per parameter type
-		int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
-		//To silence unused variable warnings.
-		(void)dummy;
-	}
+		inline MemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(ClassT::* function)(TFunctionArguments...));
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+
+		template<std::size_t... Is>
+		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>);
+
+		inline virtual std::size_t getNumberOfArguments() const override final;
+		static inline ReturnT staticExecute(ClassT* base, MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
+		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
+
+		ReturnT (ClassT::*function)(TFunctionArguments...);
+	};
 
 
-	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
-	{ 
-		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
-		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
-	}
-
-
-	template<std::size_t... Is>
-	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
+	template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
+	struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 	{
-		ClassT* baseObject = std::any_cast<ClassT*>(base);
-		if (baseObject != nullptr)
-		{
-			//This calls the member function, expanding the argument list from the catvalue array
-			//std::decay removes const and & from the type.
-			if constexpr (std::is_void_v<ReturnT>)
-			{
-				(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
-			}
-			else
-			{
-				return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
-			}
-			
-		}
-		return TypeTraits<ReturnT>::toGenericType().createDefault();
-	}
+		inline ConstMemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(ClassT::* function)(TFunctionArguments...) const);
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+
+		template<std::size_t... Is>
+		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const;
+
+		inline virtual std::size_t getNumberOfArguments() const override final;
+		static inline ReturnT staticExecute(ClassT* base, ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
+		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
+
+		ReturnT (ClassT::*function)(TFunctionArguments...) const;
+	};
 
 
-	virtual std::size_t getNumberOfArguments() const override final
-	{ 
-		return sizeof...(TFunctionArguments);
-	}
-
-
-	static ReturnT staticExecute(ClassT* base, MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
+	template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
+	struct PseudoMemberFunctionInfoWithArgs: public MemberFunctionInfo
 	{
-		ReturnT (ClassT::*function)(TFunctionArguments...) = functionInfo->function;
-		return (base->*function)(args...);
-	}
+		inline PseudoMemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(*function)(ClassT*, TFunctionArguments...));
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
 
+		template<std::size_t... Is>
+		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>);
 
-	inline virtual MemberFunctionCallData getFunctionAddress() const override final
-	{
-		uintptr_t functionPtr = 0;
-		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
-		if constexpr (sizeof(function) == Configuration::basicMemberFunctionPointerSize)
-		{
-			memcpy(&functionPtr, &function, sizeof(uintptr_t));
-			callType = MemberFunctionCallType::ThisCall;
-		}
-		else
-		{
-			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
-			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
-		}
-		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType);
-	}
+		virtual inline std::size_t getNumberOfArguments() const override final;
+		static inline ReturnT staticExecute(ClassT* base, PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
+		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
 
-	ReturnT (ClassT::*function)(TFunctionArguments...);
-};
+		ReturnT (*function)(ClassT*, TFunctionArguments...);
+	};
 
-
-template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
-struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
-{
-	ConstMemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT (ClassT::*function)(TFunctionArguments...) const):
-		MemberFunctionInfo(memberFunctionName, TypeTraits<ReturnT>::toGenericType()),
-		function(function)
-	{
-		//Trick to call a function per variadic template item
-		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
-		//This gets the type info per parameter type
-		int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
-		//To silence unused variable warnings.
-		(void)dummy;
-	}
-
-
-	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
-	{ 
-		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
-		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
-	}
-
-
-	template<std::size_t... Is>
-	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const
-	{
-		ClassT* baseObject = std::any_cast<ClassT*>(base);
-		if (baseObject != nullptr)
-		{
-			//This calls the member function, expanding the argument list from the catvalue array
-			//std::decay removes const and & from the type.
-			if constexpr (std::is_void_v<ReturnT>)
-			{
-				(baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
-			}
-			else
-			{
-				return TypeTraits<ReturnT>::getCatValue((baseObject->*function)(TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
-			}
-		}
-		return TypeTraits<ReturnT>::toGenericType().createDefault();
-	}
-
-
-	virtual std::size_t getNumberOfArguments() const override final
-	{ 
-		return sizeof...(TFunctionArguments);
-	}
-
-
-	static ReturnT staticExecute(ClassT* base, ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
-	{
-		ReturnT (ClassT::*function)(TFunctionArguments...) const = functionInfo->function;;
-		return (base->*function)(args...);
-	}
-
-
-	inline virtual MemberFunctionCallData getFunctionAddress() const override final
-	{
-		uintptr_t functionPtr = 0;
-		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
-		if constexpr (sizeof(function) == Configuration::basicMemberFunctionPointerSize)
-		{
-			memcpy(&functionPtr, &function, sizeof(uintptr_t));
-			callType = MemberFunctionCallType::ThisCall;
-		}
-		else
-		{
-			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
-			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
-		}
-		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType);
-	}
-
-	ReturnT (ClassT::*function)(TFunctionArguments...) const;
-};
-
-
-template <typename ClassT, typename ReturnT, class ... TFunctionArguments>
-struct PseudoMemberFunctionInfoWithArgs: public MemberFunctionInfo
-{
-	PseudoMemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT (*function)(ClassT*, TFunctionArguments...)):
-		MemberFunctionInfo(memberFunctionName, TypeTraits<ReturnT>::toGenericType()),
-		function(function)
-	{
-		//Trick to call a function per variadic template item
-		//https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion
-		//This gets the type info per parameter type
-		int dummy[] = { 0, ( (void) addParameterTypeInfo<TFunctionArguments>(), 0) ... };
-		//To silence unused variable warnings.
-		(void)dummy;
-	}
-
-
-	inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final
-	{ 
-		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
-		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
-	}
-
-
-	template<std::size_t... Is>
-	std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
-	{
-		ClassT* baseObject = std::any_cast<ClassT*>(base);
-		if (baseObject != nullptr)
-		{
-			//This calls the member function, expanding the argument list from the catvalue array
-			//std::decay removes const and & from the type.
-			if constexpr (std::is_void_v<ReturnT>)
-			{
-				(*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...);
-			}
-			else
-			{
-				return TypeTraits<ReturnT>::getCatValue((*function)(baseObject, TypeConversionCast::convertCast<TFunctionArguments, typename TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValueType >(TypeTraits<typename RemoveConst<TFunctionArguments>::type>::getValue(parameters[Is]))...));
-			}
-			
-		}
-		return TypeTraits<ReturnT>::toGenericType().createDefault();
-	}
-
-
-	virtual std::size_t getNumberOfArguments() const override final
-	{ 
-		return sizeof...(TFunctionArguments);
-	}
-
-
-	static ReturnT staticExecute(ClassT* base, PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args)
-	{
-		ReturnT (*function)(ClassT*, TFunctionArguments...) = functionInfo->function;
-		return (*function)(base, args...);
-	}
-
-
-	inline virtual MemberFunctionCallData getFunctionAddress() const override final
-	{
-		uintptr_t pointer = 0;
-		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return MemberFunctionCallData(pointer, reinterpret_cast<uintptr_t>(this), MemberFunctionCallType::PseudoMemberCall);
-	}
-
-	ReturnT (*function)(ClassT*, TFunctionArguments...);
-};
 
 } //End namespace jitcat::Reflection
+
+#include "jitcat/MemberFunctionInfoHeaderImplementation.h"
