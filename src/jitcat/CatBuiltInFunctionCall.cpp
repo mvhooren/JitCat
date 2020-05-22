@@ -276,15 +276,15 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 		case CatBuiltInFunctionType::Abs:
 			if (arguments->getArgumentType(0).isFloatType())
 			{
-				return std::any(abs(std::any_cast<float>(argumentValues[0])));
+				return std::any(std::abs(std::any_cast<float>(argumentValues[0])));
 			}
 			else if (arguments->getArgumentType(0).isDoubleType())
 			{
-				return std::any(abs(std::any_cast<double>(argumentValues[0])));
+				return std::any(std::abs(std::any_cast<double>(argumentValues[0])));
 			}
 			else 
 			{
-				return std::any(abs(std::any_cast<int>(argumentValues[0])));
+				return std::any(std::abs(std::any_cast<int>(argumentValues[0])));
 			}
 		case CatBuiltInFunctionType::Cap:
 				if (arguments->getArgumentType(0).isDoubleType())
