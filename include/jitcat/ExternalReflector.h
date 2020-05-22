@@ -35,14 +35,14 @@ namespace jitcat::Reflection
 	template <typename EnumT>
 	const char* getEnumName()
 	{
-		static_assert(std::is_enum_v<EnumT>, "This function needs to be implemented for this enum.");
+		static_assert(!std::is_enum_v<EnumT>, "This function needs to be implemented for this enum.");
 		return nullptr;
 	}
 
 	template <typename EnumT>
 	void reflectEnum(ReflectedEnumTypeInfo& enumTypeInfo)
 	{
-		static_assert(std::is_enum_v<EnumT>, "This function needs to be implemented for this enum.");
+		static_assert(!std::is_enum_v<EnumT>, "This function needs to be implemented for this enum.");
 	}
 
 	template <typename T, typename = int>

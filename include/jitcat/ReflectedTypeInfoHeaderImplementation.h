@@ -90,7 +90,7 @@ namespace jitcat::Reflection
 		}
 		else
 		{
-			static_assert(!std::is_class_v<MemberT>, "Static member type not supported.");
+			static_assert(std::is_class_v<MemberT>, "Static member type not supported.");
 		}
 		staticMembers.emplace(identifier, memberInfo);
 		return *this;
