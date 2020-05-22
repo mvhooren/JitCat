@@ -9,6 +9,7 @@
 
 #include "jitcat/TypeOwnershipSemantics.h"
 #include "jitcat/STLTypeReflectors.h"
+#include "jitcat/TypeRegistry.h"
 #include "jitcat/TypeTools.h"
 
 namespace jitcat
