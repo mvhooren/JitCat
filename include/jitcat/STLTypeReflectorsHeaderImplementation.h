@@ -9,6 +9,7 @@
 
 
 #include "jitcat/ReflectedTypeInfo.h"
+#include "jitcat/TypeTraits.h"
 
 
 namespace jitcat::Reflection
