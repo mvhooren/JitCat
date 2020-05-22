@@ -89,6 +89,7 @@ namespace jitcat::Reflection
 #include "jitcat/Tools.h"
 #include "jitcat/TypeCaster.h"
 #include "jitcat/TypeTools.h"
+#include "jitcat/TypeTraits.h"
 
 namespace jitcat::Reflection
 {

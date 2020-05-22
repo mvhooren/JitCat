@@ -9,8 +9,6 @@
 
 #include "jitcat/MemberFlags.h"
 #include "jitcat/TypeMemberInfo.h"
-#include "jitcat/TypeRegistry.h"
-#include "jitcat/TypeTraits.h"
 
 #include <map>
 #include <memory>
