@@ -385,18 +385,18 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		case CatBuiltInFunctionType::Ceil:		return helper->callIntrinsic(llvm::Intrinsic::ceil, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
 		case CatBuiltInFunctionType::Floor:		return helper->callIntrinsic(llvm::Intrinsic::floor, getFPType(arguments->getArgumentType(0)), generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), context);
 
-		case CatBuiltInFunctionType::Tan:		return generateFPMath("tan", &tan, &tan, arguments, context);
-		case CatBuiltInFunctionType::Asin:		return generateFPMath("asin", &asin, &asin, arguments, context);
-		case CatBuiltInFunctionType::Acos:		return generateFPMath("acos", &acos, &acos, arguments, context);
-		case CatBuiltInFunctionType::Atan:		return generateFPMath("atan", &atan, &atan, arguments, context);
-		case CatBuiltInFunctionType::Sinh:		return generateFPMath("sinh", &sinh, &sinh, arguments, context);
-		case CatBuiltInFunctionType::Cosh:		return generateFPMath("cosh", &cosh, &cosh, arguments, context);
-		case CatBuiltInFunctionType::Tanh:		return generateFPMath("tanh", &tanh, &tanh, arguments, context);
-		case CatBuiltInFunctionType::Asinh:		return generateFPMath("asinh", &asinh, &asinh, arguments, context);
-		case CatBuiltInFunctionType::Acosh:		return generateFPMath("acosh", &acosh, &acosh, arguments, context);
-		case CatBuiltInFunctionType::Atanh:		return generateFPMath("atanh", &atanh, &atanh, arguments, context);
-		case CatBuiltInFunctionType::Atan2:		return generateFPMath("atan2", &atan2, &atan2, arguments, context);
-		case CatBuiltInFunctionType::Hypot:		return generateFPMath("hypot", &hypot, &hypot, arguments, context);
+		case CatBuiltInFunctionType::Tan:		return generateFPMath("tan", &tanf, &tan, arguments, context);
+		case CatBuiltInFunctionType::Asin:		return generateFPMath("asin", &asinf, &asin, arguments, context);
+		case CatBuiltInFunctionType::Acos:		return generateFPMath("acos", &acosf, &acos, arguments, context);
+		case CatBuiltInFunctionType::Atan:		return generateFPMath("atan", &atanf, &atan, arguments, context);
+		case CatBuiltInFunctionType::Sinh:		return generateFPMath("sinh", &sinhf, &sinh, arguments, context);
+		case CatBuiltInFunctionType::Cosh:		return generateFPMath("cosh", &coshf, &cosh, arguments, context);
+		case CatBuiltInFunctionType::Tanh:		return generateFPMath("tanh", &tanhf, &tanh, arguments, context);
+		case CatBuiltInFunctionType::Asinh:		return generateFPMath("asinh", &asinhf, &asinh, arguments, context);
+		case CatBuiltInFunctionType::Acosh:		return generateFPMath("acosh", &acoshf, &acosh, arguments, context);
+		case CatBuiltInFunctionType::Atanh:		return generateFPMath("atanh", &atanhf, &atanh, arguments, context);
+		case CatBuiltInFunctionType::Atan2:		return generateFPMath("atan2", &atan2f, &atan2, arguments, context);
+		case CatBuiltInFunctionType::Hypot:		return generateFPMath("hypot", &hypotf, &hypot, arguments, context);
 		case CatBuiltInFunctionType::Cap:
 		{
 			llvm::Value* value = generate(arguments->getArgument(0), context);
