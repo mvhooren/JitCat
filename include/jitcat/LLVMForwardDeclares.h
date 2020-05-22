@@ -40,5 +40,6 @@ namespace llvm
 		class RTDyldObjectLinkingLayer;
 		class IRCompileLayer;
 		class ExecutionSession;
+		class MangleAndInterner;
 	};
 };
