@@ -52,7 +52,7 @@ bool CatIndirectionConversion::isAssignable() const
 }
 
 
-CatTypedExpression* CatIndirectionConversion::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatIndirectionConversion::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
     ASTHelper::updatePointerIfChanged(expressionToConvert, expressionToConvert->constCollapse(compileTimeContext, errorManager, errorContext));
     return this;

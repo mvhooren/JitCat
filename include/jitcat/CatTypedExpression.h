@@ -7,22 +7,21 @@
 
 #pragma once
 
-#include "jitcat/CatExpression.h"
+#include "jitcat/CatStatement.h"
 #include "jitcat/CatGenericType.h"
 
 namespace jitcat::AST
 {
 
-	class CatTypedExpression: public CatExpression
+	class CatTypedExpression: public CatStatement
 	{
 	public:
-		CatTypedExpression(const Tokenizer::Lexeme& lexeme): CatExpression(lexeme) {}
-		CatTypedExpression(const CatTypedExpression& other): CatExpression(other) {}
+		CatTypedExpression(const Tokenizer::Lexeme& lexeme): CatStatement(lexeme) {}
+		CatTypedExpression(const CatTypedExpression& other): CatStatement(other) {}
 
 		virtual const CatGenericType& getType() const = 0;
 		virtual bool isConst() const = 0;
 		virtual bool isAssignable() const {return false;}
-		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) = 0;
 	};
 
 } //End namespace jitcat::AST

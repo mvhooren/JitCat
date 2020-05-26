@@ -9,11 +9,17 @@
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatDefinition.h"
 #include "jitcat/CatFunctionDefinition.h"
+#include "jitcat/CatLib.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatVariableDefinition.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/Reflectable.h"
+#ifdef ENABLE_LLVM
+	#include "jitcat/LLVMCodeGenerator.h"
+	#include "jitcat/LLVMCompileTimeContext.h"
+#endif
 
 #include <cassert>
 
@@ -23,7 +29,7 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme):
+CatSourceFile::CatSourceFile(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	name(name),
 	definitions(std::move(definitions)),
@@ -35,7 +41,7 @@ jitcat::AST::CatSourceFile::CatSourceFile(const std::string& name, std::vector<s
 }
 
 
-jitcat::AST::CatSourceFile::CatSourceFile(const CatSourceFile& other):
+CatSourceFile::CatSourceFile(const CatSourceFile& other):
 	CatASTNode(other),
 	name(other.name),
 	staticScopeId(InvalidScopeID),
@@ -50,18 +56,18 @@ jitcat::AST::CatSourceFile::CatSourceFile(const CatSourceFile& other):
 }
 
 
-jitcat::AST::CatSourceFile::~CatSourceFile()
+CatSourceFile::~CatSourceFile()
 {
 }
 
 
-CatASTNode* jitcat::AST::CatSourceFile::copy() const
+CatASTNode* CatSourceFile::copy() const
 {
 	return new CatSourceFile(*this);
 }
 
 
-void jitcat::AST::CatSourceFile::print() const
+void CatSourceFile::print() const
 {
 	for (auto& iter : definitions)
 	{
@@ -71,26 +77,27 @@ void jitcat::AST::CatSourceFile::print() const
 }
 
 
-CatASTNodeType jitcat::AST::CatSourceFile::getNodeType() const
+CatASTNodeType CatSourceFile::getNodeType() const
 {
 	return CatASTNodeType::SourceFile;
 }
 
 
-const std::vector<CatClassDefinition*>& jitcat::AST::CatSourceFile::getClassDefinitions() const
+const std::vector<CatClassDefinition*>& CatSourceFile::getClassDefinitions() const
 {
 	return classDefinitions;
 }
 
 
-const std::vector<CatFunctionDefinition*>& jitcat::AST::CatSourceFile::getFunctionDefinitions() const
+const std::vector<CatFunctionDefinition*>& CatSourceFile::getFunctionDefinitions() const
 {
 	return functionDefinitions;
 }
 
 
-bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+bool CatSourceFile::compile(CatLib& catLib)
 {
+	CatRuntimeContext* compiletimeContext = catLib.getRuntimeContext();
 	staticScopeId = compiletimeContext->addScope(scopeType.get(), scopeInstance.getObject(), true);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
@@ -99,25 +106,35 @@ bool jitcat::AST::CatSourceFile::typeCheck(CatRuntimeContext* compiletimeContext
 	{
 		noErrors &= iter->typeCheck(compiletimeContext);
 	}
+	if constexpr (Configuration::enableLLVM)
+	{
+		if (noErrors)
+		{
+			LLVM::LLVMCompileTimeContext llvmContext(compiletimeContext);
+			llvmContext.options.enableDereferenceNullChecks = true;
+			llvmContext.currentLib = &catLib;
+			compiletimeContext->getCodeGenerator()->generate(this, &llvmContext);
+		}
+	}
 	compiletimeContext->removeScope(staticScopeId);
 	compiletimeContext->setCurrentScope(previousScope);
 	return noErrors;
 }
 
 
-CatScopeID jitcat::AST::CatSourceFile::getScopeId() const
+CatScopeID CatSourceFile::getScopeId() const
 {
 	return staticScopeId;
 }
 
 
-Reflection::CustomTypeInfo* jitcat::AST::CatSourceFile::getCustomType()
+Reflection::CustomTypeInfo* CatSourceFile::getCustomType()
 {
 	return scopeType.get();
 }
 
 
-void jitcat::AST::CatSourceFile::extractDefinitionLists()
+void CatSourceFile::extractDefinitionLists()
 {
 	for (auto& iter : this->definitions)
 	{

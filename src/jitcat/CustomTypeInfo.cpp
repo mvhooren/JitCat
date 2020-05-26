@@ -25,7 +25,8 @@ CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 	TypeInfo(typeName, 0, std::make_unique<CustomObjectTypeCaster>(this)),
 	isConstType(isConstType),
 	defaultData(nullptr),
-	triviallyCopyable(true)
+	triviallyCopyable(true),
+	defaultConstructorFunction(nullptr)
 {
 }
 
@@ -370,6 +371,19 @@ CustomTypeMemberFunctionInfo* jitcat::Reflection::CustomTypeInfo::addMemberFunct
 }
 
 
+bool jitcat::Reflection::CustomTypeInfo::setDefaultConstructorFunction(const std::string& constructorFunctionName)
+{
+	SearchFunctionSignature sig(constructorFunctionName, {});
+	MemberFunctionInfo* functionInfo = getMemberFunctionInfo(sig);
+	if (functionInfo != nullptr)
+	{
+		defaultConstructorFunction = functionInfo;
+		return true;
+	}
+	return false;
+}
+
+
 void CustomTypeInfo::removeMember(const std::string& memberName)
 {
 	TypeMemberInfo* memberInfo = releaseMember(memberName);
@@ -400,6 +414,12 @@ void jitcat::Reflection::CustomTypeInfo::placementConstruct(unsigned char* buffe
 		instances.insert(reinterpret_cast<Reflectable*>(buffer));
 	}
 	createDataCopy(defaultData, typeSize, buffer, bufferSize);
+	if (defaultConstructorFunction != nullptr)
+	{
+		std::any base = reinterpret_cast<Reflectable*>(buffer);
+		CatRuntimeContext tempContext("temp");//QQQ
+		defaultConstructorFunction->call(&tempContext, base, {});
+	}
 	if constexpr (Configuration::logJitCatObjectConstructionEvents)
 	{
 		if (bufferSize > 0 && buffer != nullptr)

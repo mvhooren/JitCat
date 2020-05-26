@@ -148,7 +148,7 @@ bool CatMemberAccess::isConst() const
 }
 
 
-CatTypedExpression* CatMemberAccess::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatMemberAccess::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext, errorManager, errorContext));
 	if (type.isValidType() && isConst())

@@ -60,7 +60,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 	Document document(expression, strlen(expression));
 	ExpressionErrorManager errorManager;
 	errorManager.setCurrentDocument(&document);
-	std::unique_ptr<SLRParseResult> parseResult(JitCat::get()->parseExpression(&document, &context, &errorManager, nullptr));
+	std::unique_ptr<SLRParseResult> parseResult = JitCat::get()->parseExpression(&document, &context, &errorManager, nullptr);
 	CatTypedExpression* typedExpression = nullptr;
 
 	if (parseResult->success)

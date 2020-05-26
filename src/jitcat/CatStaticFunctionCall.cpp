@@ -174,7 +174,7 @@ bool CatStaticFunctionCall::isConst() const
 }
 
 
-CatTypedExpression* CatStaticFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatStaticFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	arguments->constCollapse(compileTimeContext, errorManager, errorContext);
 	return this;

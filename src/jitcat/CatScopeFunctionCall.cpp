@@ -125,7 +125,7 @@ bool CatScopeFunctionCall::isConst() const
 }
 
 
-CatTypedExpression* CatScopeFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatScopeFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
     ASTHelper::updatePointerIfChanged(functionCall, functionCall->constCollapse(compileTimeContext, errorManager, errorContext));
     return functionCall.release();

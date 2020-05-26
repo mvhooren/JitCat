@@ -92,6 +92,12 @@ void ExpressionErrorManager::errorSourceDeleted(void* errorSource)
 }
 
 
+std::size_t jitcat::ExpressionErrorManager::getNumErrors() const
+{
+	return errors.size();
+}
+
+
 void jitcat::ExpressionErrorManager::getAllErrors(std::vector<const Error*>& allErrors) const
 {
 	for (auto& iter : errors)

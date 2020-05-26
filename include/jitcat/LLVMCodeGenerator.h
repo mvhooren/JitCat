@@ -42,7 +42,9 @@ namespace jitcat::LLVM
 		LLVMCodeGenerator(const std::string& name);
 		~LLVMCodeGenerator();
 
+		void generate(const AST::CatSourceFile* sourceFile, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatTypedExpression* expression, LLVMCompileTimeContext* context);
+
 	
 		//Wraps an expression into a function that returns the expression's computed value.
 		//The function has one parameter, the CatRuntimeContext. 
@@ -69,6 +71,14 @@ namespace jitcat::LLVM
 		llvm::Value* generate(const AST::CatStaticMemberAccess* staticIdentifier, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatPrefixOperator* prefixOperator, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatScopeRoot* scopeRoot, LLVMCompileTimeContext* context);
+		void generate(const AST::CatScopeBlock* scopeBlock, LLVMCompileTimeContext* context);
+		llvm::Value* generate(const AST::CatReturnStatement* returnStatement, LLVMCompileTimeContext* context);
+
+		void generate(const AST::CatStatement* statement, LLVMCompileTimeContext* context);
+
+		void generate(const AST::CatDefinition* definition, LLVMCompileTimeContext* context);
+		void generate(const AST::CatClassDefinition* classDefinition, LLVMCompileTimeContext* context);
+		llvm::Function* generate(const AST::CatFunctionDefinition* functionDefinition, LLVMCompileTimeContext* context);
 
 		llvm::Value* generateAssign(const AST::CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);
 		llvm::Value* generateAssign(const AST::CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
@@ -94,6 +104,9 @@ namespace jitcat::LLVM
 
 		llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 		llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
+
+		llvm::Function* generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames);
+		void generateFunctionReturn(const CatGenericType& returnType, llvm::Value* expressionValue, llvm::Function* function, LLVMCompileTimeContext* context);
 
 	private:
 		//ExecutionSession represents a running JIT program

@@ -22,9 +22,12 @@ namespace jitcat::Reflection
 	//ReflectedTypeInfo represents type information about a C++ class or struct that is made to be Reflectable.
 
 	//Any class or struct can be made reflectable as follows:
-	//		Inherit from Reflectable so that a ReflectableHandle to the object can track if the object has been deleted.
+	//		Optionally inherit from Reflectable so that a ReflectableHandle to the object can track if the object has been deleted.
+	//		and
 	//		implement: static void reflect(ReflectedTypeInfo& typeInfo); //Add class members inside this function using typeInfo.addMember
 	//		implement: static const char* getTypeName(); //Return the name of the class
+	//		or
+	//		Implement an ExternalReflector<T> that implements above static functions. (See ExternalReflector.h)
 
 	//Creating an instance of ReflectedTypeInfo and then passing it into the static reflect member of a class or struct will fill the datastructure with type information.
 	//This is typically done through the TypeRegistry class (see TypeRegistry.h)

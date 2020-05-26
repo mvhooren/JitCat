@@ -127,7 +127,7 @@ bool CatAssignmentOperator::isConst() const
 }
 
 
-CatTypedExpression* CatAssignmentOperator::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatAssignmentOperator::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (operatorFunction != nullptr)
 	{

@@ -125,6 +125,16 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 }
 
 
+CatStatement* jitcat::AST::CatVariableDeclaration::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	if (initializationExpression != nullptr)
+	{
+		initializationExpression->constCollapse(compiletimeContext, errorManager, errorContext);
+	}
+	return this;
+}
+
+
 std::any jitcat::AST::CatVariableDeclaration::execute(CatRuntimeContext* runtimeContext)
 {
 	return initializationExpression->execute(runtimeContext);

@@ -141,6 +141,7 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 		compileTimeContext->setCurrentScope(previousScope);
 		return false;
 	}
+	ASTHelper::updatePointerIfChanged(scopeBlock, scopeBlock->constCollapse(compileTimeContext, errorManager, this));
 	compileTimeContext->removeScope(parametersScopeId);
 	compileTimeContext->setCurrentScope(previousScope);
 	compileTimeContext->setCurrentFunction(nullptr);

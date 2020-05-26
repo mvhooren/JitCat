@@ -756,9 +756,9 @@ std::string jitcat::Parser::SLRParser::getShiftErrorMessage(DFAState* currentSta
 }
 
 
-SLRParseResult* SLRParser::parse(const std::vector<std::unique_ptr<ParseToken>>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
+std::unique_ptr<SLRParseResult> SLRParser::parse(const std::vector<std::unique_ptr<ParseToken>>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
 {
-	SLRParseResult* parseResult = new SLRParseResult();
+	std::unique_ptr<SLRParseResult> parseResult = std::make_unique<SLRParseResult>();
 
 	std::vector<StackItem*> parseStack;
 	int tokenIndex = 0;

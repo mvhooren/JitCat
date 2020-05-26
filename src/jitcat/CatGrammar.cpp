@@ -185,6 +185,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Bool)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Int)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Float)}, basicTypeName);
+	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Double)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::String)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::TypeOrIdentifier), term(one, OneChar::Greater)}, arrayTypeName);
 
@@ -454,6 +455,7 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::basicTypeName(const Parser::ASTNodePa
 		case Identifier::Bool:		type = CatGenericType::boolType;					break;
 		case Identifier::Int:		type = CatGenericType::intType;						break;
 		case Identifier::Float:		type = CatGenericType::floatType;					break;
+		case Identifier::Double:	type = CatGenericType::doubleType;					break;
 		case Identifier::String:	type = CatGenericType::stringMemberValuePtrType;	break;
 		case Identifier::Void:		type = CatGenericType::voidType;					break;
 		default:					assert(false);										break;

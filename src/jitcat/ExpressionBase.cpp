@@ -17,8 +17,8 @@
 #include "jitcat/Document.h"
 #include "jitcat/JitCat.h"
 #ifdef ENABLE_LLVM
-#include "jitcat/LLVMCodeGenerator.h"
-#include "jitcat/LLVMCompileTimeContext.h"
+	#include "jitcat/LLVMCodeGenerator.h"
+	#include "jitcat/LLVMCompileTimeContext.h"
 #endif
 #include "jitcat/SLRParseResult.h"
 #include "jitcat/Tools.h"
@@ -138,7 +138,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 
 	Document document(expression.c_str(), expression.length());
 	context->getErrorManager()->setCurrentDocument(&document);
-	parseResult.reset(JitCat::get()->parseExpression(&document, context, errorManager, errorContext));
+	parseResult = JitCat::get()->parseExpression(&document, context, errorManager, errorContext);
 
 	if (parseResult->success)
 	{
@@ -165,7 +165,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 
 void ExpressionBase::constCollapse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatTypedExpression* newExpression = parseResult->getNode<CatTypedExpression>()->constCollapse(context, errorManager, errorContext);
+	CatTypedExpression* newExpression = static_cast<CatTypedExpression*>(parseResult->getNode<CatTypedExpression>()->constCollapse(context, errorManager, errorContext));
 	if (newExpression != parseResult->astRootNode.get())
 	{
 		parseResult->astRootNode.reset(newExpression);

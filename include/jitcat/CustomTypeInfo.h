@@ -108,6 +108,10 @@ namespace jitcat::Reflection
 
 		CustomTypeMemberFunctionInfo* addMemberFunction(const std::string& memberFunctionName, const CatGenericType& thisType, AST::CatFunctionDefinition* functionDefinition);
 
+		//Set a function that was previously added with addMemberFunction to be the default constructor.
+		//Returns true if the function name was found and if it is a valid default constructor (it has no arguments).
+		bool setDefaultConstructorFunction(const std::string& constructorFunctionName);
+
 		//This will not shrink the typeSize, only remove the member from the list.
 		//The data will only shrink after a restart of the program.
 		//Because of this, the CustomTypeInfo remains compatible with existing instances.
@@ -149,6 +153,8 @@ namespace jitcat::Reflection
 		std::vector<std::unique_ptr<unsigned char>> staticData;
 
 		bool triviallyCopyable;
+
+		MemberFunctionInfo* defaultConstructorFunction;
 
 		std::vector<std::unique_ptr<TypeMemberInfo>> removedMembers;
 	};

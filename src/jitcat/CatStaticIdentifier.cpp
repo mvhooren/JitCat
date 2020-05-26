@@ -88,7 +88,7 @@ bool CatStaticIdentifier::isConst() const
 }
 
 
-CatTypedExpression* CatStaticIdentifier::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatStaticIdentifier::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	ASTHelper::updatePointerIfChanged(disambiguatedIdentifier, disambiguatedIdentifier->constCollapse(compileTimeContext, errorManager, errorContext));
 	return disambiguatedIdentifier.release();

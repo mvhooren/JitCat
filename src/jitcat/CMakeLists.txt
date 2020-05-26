@@ -51,7 +51,6 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatDefinition.h
 	CatErrorExpression.cpp
 	${JitCatHeaderPath}/CatErrorExpression.h
-	${JitCatHeaderPath}/CatExpression.h
 	CatForLoop.cpp
 	${JitCatHeaderPath}/CatForLoop.h
 	CatFunctionDefinition.cpp
@@ -159,6 +158,8 @@ if(LLVM_ENABLED)
 endif()
 
 set(Source_Cat_Expression
+	CatLib.cpp
+	${JitCatHeaderPath}/CatLib.h
 	${JitCatHeaderPath}/Expression.h
 	ExpressionAny.cpp
 	${JitCatHeaderPath}/ExpressionAny.h

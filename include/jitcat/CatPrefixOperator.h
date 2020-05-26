@@ -34,7 +34,7 @@ namespace jitcat::AST
 		virtual bool isConst() const override final;
 		virtual CatASTNodeType getNodeType() const override final {return CatASTNodeType::PrefixOperator;}
 
-		virtual CatTypedExpression* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
+		virtual CatStatement* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 

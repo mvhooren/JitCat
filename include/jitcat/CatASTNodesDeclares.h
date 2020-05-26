@@ -15,8 +15,8 @@ namespace jitcat::AST
 	class CatASTNode;
 	class CatBuiltInFunctionCall;
 	class CatClassDefinition;
+	class CatDefinition;
 	class CatErrorExpression;
-	class CatExpression;
 	class CatForLoop;
 	class CatFunctionDefinition;
 	class CatFunctionOrConstructor;

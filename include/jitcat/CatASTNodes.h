@@ -15,7 +15,6 @@
 #include "jitcat/CatStaticScope.h"
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatErrorExpression.h"
-#include "jitcat/CatExpression.h"
 #include "jitcat/CatForLoop.h"
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatFunctionOrConstructor.h"

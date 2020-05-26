@@ -120,7 +120,7 @@ bool CatReturnStatement::isConst() const
 }
 
 
-CatTypedExpression* CatReturnStatement::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatReturnStatement::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (returnExpression != nullptr)
 	{
@@ -133,4 +133,10 @@ CatTypedExpression* CatReturnStatement::constCollapse(CatRuntimeContext* compile
 std::optional<bool> jitcat::AST::CatReturnStatement::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
 {
 	return true;
+}
+
+
+const CatTypedExpression* jitcat::AST::CatReturnStatement::getReturnExpression() const
+{
+	return returnExpression.get();
 }

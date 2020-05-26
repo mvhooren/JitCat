@@ -60,6 +60,7 @@ namespace jitcat
 		void compiledWithoutErrors(void* errorSource);
 		void errorSourceDeleted(void* errorSource);
 
+		std::size_t getNumErrors() const;
 		void getAllErrors(std::vector<const Error*>& errors) const;
 
 		//Whenever errors are added or removed, the error revision is incremented.

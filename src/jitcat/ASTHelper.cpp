@@ -11,6 +11,7 @@
 #include "jitcat/CatBuiltInFunctionCall.h"
 #include "jitcat/CatIndirectionConversion.h"
 #include "jitcat/CatRuntimeContext.h"
+#include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/ReflectableHandle.h"
@@ -22,12 +23,28 @@ using namespace jitcat;
 using namespace jitcat::AST;
 using namespace jitcat::Reflection;
 
-
-void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatTypedExpression* expression)
+void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatScopeBlock>& uPtr, CatStatement* statement)
 {
-	if (uPtr.get() != expression)
+	if (uPtr.get() != static_cast<CatScopeBlock*>(statement))
 	{
-		uPtr.reset(expression);
+		uPtr.reset(static_cast<CatScopeBlock*>(statement));
+	}
+}
+
+void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatStatement>& uPtr, CatStatement* statement)
+{
+	if (uPtr.get() != statement)
+	{
+		uPtr.reset(statement);
+	}
+}
+
+
+void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatStatement* expression)
+{
+	if (uPtr.get() != static_cast<CatTypedExpression*>(expression))
+	{
+		uPtr.reset(static_cast<CatTypedExpression*>(expression));
 	}
 }
 

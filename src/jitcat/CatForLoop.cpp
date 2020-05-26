@@ -103,6 +103,11 @@ bool CatForLoop::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErro
 	return true;
 }
 
+CatStatement* jitcat::AST::CatForLoop::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	return this;
+}
+
 
 std::any CatForLoop::execute(jitcat::CatRuntimeContext* runtimeContext)
 {

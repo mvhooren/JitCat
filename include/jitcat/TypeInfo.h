@@ -54,9 +54,12 @@ namespace jitcat::Reflection
 	//(See CustomTypeInfo.h)
 	
 	//The TypeInfo system can store information about members of the following types:
-	//- Common basic types: int, bool, float and std::string
-	//- Common stl containers: std::vector<T>, std::map<U, T> where T and U are themselves a reflectable class/struct.
-	//- Structs and classes that have been made reflectable. In value, pointer or unique_ptr forms.
+	//- Common basic types: void, int, bool, float, double
+	//- std::string
+	//- pointers and std::unique_ptr that point to a supported type.
+	//- Common stl containers: std::vector<T>, std::deque<T>, std::array<T, int>, std::unordered_map<U, T> and std::map<U, T> 
+	//  where T and U are themselves supported types.
+	//- Structs and classes that have been made reflectable.
 	//- Member functions, including static member functions, that use supported types as parameters and return value (including void).
 	//- Overloaded operators (both the static and the member variants.)
 	//- Named static constants of a supported data type.
@@ -66,11 +69,7 @@ namespace jitcat::Reflection
 	//Static member functions are described by classes that inherit from StaticMemberfunctionInfo. (See StaticMemberFunctionInfo.h)
 	//Finally, static members are described by classes that inherit from StaticMemberInfo. (See StaticMemberInfo.h)
 
-	//These types should be enough to implement most common data structures. Adding more types is possible, but it would lead to a lot more template-nastyness in TypeInfo.h
-	//Also, this system is designed to work with JitCat, which currently only supportes the basic types mentioned above.
-
-	//TypeInfo can also construct and delete instances of the type it represents, if construction/deletion is allowed. 
-
+	//TypeInfo can also construct and delete instances of the type it represents, if construction/deletion is allowed/possible. 
 	class TypeInfo
 	{
 	public:

@@ -39,6 +39,7 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
+		virtual CatStatement* constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 
@@ -48,6 +49,8 @@ namespace jitcat::AST
 
 		virtual Reflection::CustomTypeInfo* getCustomType() override final;
 		virtual CatScopeID getScopeId() const override final;
+
+		const std::vector<std::unique_ptr<CatStatement>>& getStatements() const;
 
 		void insertStatementFront(CatStatement* statement);
 

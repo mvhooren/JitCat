@@ -27,12 +27,13 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
+		virtual CatStatement* constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const override final;
 
 	private:
 		std::unique_ptr<CatTypedExpression> condition;
-		std::unique_ptr<CatScopeBlock> ifBody;
+		std::unique_ptr<CatStatement> ifBody;
 		//This is either a CatScopeBlock in case of an 'else' or another CatIfStatement in case of an 'else if' or nullptr if there is no else.
 		std::unique_ptr<CatStatement> elseNode;
 	};

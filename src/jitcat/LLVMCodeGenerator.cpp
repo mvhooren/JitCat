@@ -7,7 +7,9 @@
 
 #include "jitcat/LLVMCodeGenerator.h"
 #include "jitcat/CatASTNodes.h"
+#include "jitcat/CatLib.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/ErrorContext.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMCatIntrinsics.h"
@@ -150,6 +152,19 @@ LLVMCodeGenerator::~LLVMCodeGenerator()
 }
 
 
+void LLVMCodeGenerator::generate(const AST::CatSourceFile* sourceFile, LLVMCompileTimeContext* context)
+{
+	for (auto& iter : sourceFile->getFunctionDefinitions())
+	{
+		generate(iter, context);
+	}
+	for (auto& iter : sourceFile->getClassDefinitions())
+	{
+		generate(iter, context);
+	}
+}
+
+
 llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, LLVMCompileTimeContext* context)
 {
 	initContext(context);
@@ -167,6 +182,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatTypedExpression* expression, L
 		case CatASTNodeType::ScopeRoot:						return generate(static_cast<const CatScopeRoot*>(expression), context);		
 		case CatASTNodeType::StaticFunctionCall:			return generate(static_cast<const CatStaticFunctionCall*>(expression), context);
 		case CatASTNodeType::StaticMemberAccess:			return generate(static_cast<const CatStaticMemberAccess*>(expression), context);
+		case CatASTNodeType::ReturnStatement:				return generate(static_cast<const CatReturnStatement*>(expression), context);
 		default:											assert(false);
 	}
 	assert(false);
@@ -178,43 +194,10 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 {
 	initContext(context);
 	
-	//Define the parameters for the function.
-	//Each function will at least get a CatRuntimeContext* as a parameter.
-	//If the function returns a string by value, the string is returned through a string pointer parameter and the function returns void.
-	//The string pointer should point to pre-allocated memory where the returned string will be constructed.
-	std::vector<llvm::Type*> parameters;
-	llvm::FunctionType* functionType = nullptr;
 	CatGenericType expressionType = expression->getType();
-	if (expressionType.isReflectableObjectType())
-	{
-		parameters.push_back(LLVMTypes::pointerType);
-		parameters.push_back(LLVMTypes::pointerType);
-		functionType = llvm::FunctionType::get(LLVMTypes::voidType, parameters, false);		
-	}
-	else
-	{
-		parameters.push_back(LLVMTypes::pointerType);
-		functionType = llvm::FunctionType::get(helper->toLLVMType(expressionType), parameters, false);
-	}
 
-	//Create the function signature. No code is yet associated with the function at this time.
-	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, name.c_str(), currentModule.get());
-
-	//Attributes and names for the parameters can now be set on the function signature.
-	//When returning a string, the StructRet attribute is set to indicate that the parameter is used for returning a structure by value.
-	llvm::Argument* firstArg = function->arg_begin();
-	if ( expressionType.isReflectableObjectType())
-	{
-		firstArg->setName(Tools::append(expressionType.getObjectTypeName(), "Ret"));
-		firstArg++;
-		firstArg->setName("RuntimeContext");
-		function->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
-		function->addParamAttr(0, llvm::Attribute::AttrKind::NoAlias);
-	}
-	else
-	{
-		firstArg->setName("RuntimeContext");
-	}
+	//Generate the prototype for the function. No code is yet associated with the function at this time.
+	llvm::Function* function = generateFunctionPrototype(name, false, expressionType, {TypeTraits<CatRuntimeContext*>::toGenericType()}, {"RuntimeContext"});
 	
 	//Now, generate code for the function
 	context->currentFunction = function;
@@ -226,32 +209,9 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 	//Generate code for the expression.
 	llvm::Value* expressionValue = generate(expression, context);
 
-	//If the expression returns a string or a reflectable object, copy construct it into the StructRet parameter and return void.
-	//If it is some other type, just return the value.
-	if (expressionType.isReflectableObjectType())
-	{
-		llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(expressionType.getObjectType()), Tools::append(name, "_typeInfo"));
-		llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(name, "_typeInfoPtr"));
-		assert(expressionType.isCopyConstructible());
-		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, LLVMTypes::pointerType, Tools::append(name, "_ObjectPointerCast"));
-		helper->createOptionalNullCheckSelect(castPointer, 
-			[&](LLVMCompileTimeContext* context)
-			{
-				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {function->arg_begin(), castPointer, typeInfoConstantAsIntPtr}, Tools::append(name, "_copyConstructor"));
-			},
-			[&](LLVMCompileTimeContext* context)
-			{
-				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {function->arg_begin(), typeInfoConstantAsIntPtr},  Tools::append(name, "_defaultConstructor"));
-			}, context);
+	//Return the expression value
+	generateFunctionReturn(expressionType, expressionValue, function, context);
 
-		helper->generateBlockDestructors(context);
-		builder->CreateRetVoid();
-	}
-	else
-	{
-		helper->generateBlockDestructors(context);
-		builder->CreateRet(expressionValue);
-	}
 	context->currentFunction = nullptr;
 
 	//Verify the correctness of the function and execute optimization passes.
@@ -976,10 +936,117 @@ llvm::Value* LLVMCodeGenerator::generate(const CatScopeRoot* scopeRoot, LLVMComp
 }
 
 
+void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBlock, LLVMCompileTimeContext* context)
+{
+	if (scopeBlock != nullptr)
+	{
+		for (auto& iter : scopeBlock->getStatements())
+		{
+			generate(iter.get(), context);
+		}
+	}
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatReturnStatement* returnStatement, LLVMCompileTimeContext* context)
+{
+	if (context->currentFunctionDefinition != nullptr)
+	{
+		generate(context->currentFunctionDefinition->getEpilogBlock(), context);
+	}
+	llvm::Value* returnValue = nullptr;
+	if (!returnStatement->getType().isVoidType())
+	{
+		returnValue = generate(returnStatement->getReturnExpression(), context);
+	}
+	generateFunctionReturn(returnStatement->getType(), returnValue, context->currentFunction, context);
+	return nullptr;
+}
+
+
+void LLVMCodeGenerator::generate(const AST::CatStatement* statement, LLVMCompileTimeContext* context)
+{
+	switch (statement->getNodeType())
+	{
+		case CatASTNodeType::ForLoop:
+		case CatASTNodeType::IfStatement:
+		case CatASTNodeType::ScopeBlock:
+		case CatASTNodeType::VariableDeclaration:
+		assert(false); return;
+		default:
+			generate(static_cast<const CatTypedExpression*>(statement), context);
+	}
+}
+
+
+void LLVMCodeGenerator::generate(const AST::CatDefinition* definition, LLVMCompileTimeContext* context)
+{
+	initContext(context);
+	createNewModule(context);
+
+	switch (definition->getNodeType())
+	{
+		case CatASTNodeType::ClassDefinition:
+		case CatASTNodeType::InheritanceDefinition:
+		case CatASTNodeType::FunctionDefinition:	
+		case CatASTNodeType::VariableDefinition:
+		default: assert(false);
+	}
+	
+}
+
+
+void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition, LLVMCompileTimeContext* context)
+{
+	assert(context->currentLib != nullptr);
+	context->currentClass = classDefinition;
+	ErrorContext errorContext(context->catContext, classDefinition->getClassName());
+	for (auto& iter: classDefinition->getClassDefinitions())
+	{
+		generate(iter, context);
+	}
+	for (auto& iter: classDefinition->getFunctionDefinitions())
+	{
+		generate(iter, context);
+	}
+}
+
+
+llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* functionDefinition, LLVMCompileTimeContext* context)
+{
+	assert(context->currentLib != nullptr);
+	const std::string& name = functionDefinition->getFunctionName();
+	CatGenericType returnType = functionDefinition->getReturnTypeNode()->getType();
+	std::vector<CatGenericType> parameterTypes;
+	std::vector<std::string> parameterNames;
+	for (int i = 0; i < functionDefinition->getNumParameters(); i++)
+	{
+		parameterTypes.push_back(functionDefinition->getParameterType(i));
+		parameterNames.push_back(functionDefinition->getParameterName(i));
+	}
+	llvm::Function* function = generateFunctionPrototype(name, context->currentClass != nullptr, returnType, parameterTypes, parameterNames);
+	//Function entry block
+	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
+	builder->SetInsertPoint(&function->getEntryBlock());
+
+	context->currentFunctionDefinition = functionDefinition;
+
+	CatScopeBlock* scopeBlock = functionDefinition->getScopeBlock();
+	generate(scopeBlock, context);
+	
+	context->currentFunction = nullptr;
+	if constexpr (Configuration::dumpFunctionIR)
+	{
+		function->dump();
+	}
+	//Verify the correctness of the function and execute optimization passes.
+	return verifyAndOptimizeFunction(function);
+}
+
+
 llvm::Value* LLVMCodeGenerator::generateAssign(const CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context)
 {
 	context->helper = helper.get();
-	context->currentDyLib = dylib;
 	if (expression->getType().isPointerToReflectableObjectType()
 		&& expression->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)
 	{
@@ -1111,7 +1178,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
 		MemberFunctionCallData callData = memberFunction->getFunctionAddress();
-
+		assert(callData.functionAddress != 0);
 		std::vector<llvm::Value*> argumentList;
 		llvm::Value* functionThis = compileContext->helper->convertToPointer(baseObject, memberFunction->memberFunctionName + "_This_Ptr");
 		argumentList.push_back(functionThis);
@@ -1211,7 +1278,6 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberF
 void LLVMCodeGenerator::initContext(LLVMCompileTimeContext* context)
 {
 	context->helper = helper.get();
-	context->currentDyLib = dylib;
 }
 
 
@@ -1279,5 +1345,110 @@ llvm::JITTargetAddress LLVMCodeGenerator::getSymbolAddress(const std::string& na
 {
 	return llvm::cantFail(findSymbol(name, dyLib)).getAddress();
 }
+
+
+llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames)
+{
+	assert(parameterTypes.size() == parameterNames.size());
+
+	//Define the parameters for the function.
+	//If the function returns an object by value, the object is returned through an object pointer parameter and the function returns void.
+	//The object pointer should point to pre-allocated memory where the returned object will be constructed.
+	std::vector<llvm::Type*> parameters;
+	llvm::FunctionType* functionType = nullptr;
+
+	llvm::Type* functionReturnType = nullptr;
+
+	if (isThisCall)
+	{
+		parameters.push_back(LLVMTypes::pointerType);
+	}
+	if (returnType.isReflectableObjectType())
+	{
+		parameters.push_back(LLVMTypes::pointerType);
+		functionReturnType = LLVMTypes::voidType;
+	}
+	else
+	{
+		functionReturnType = helper->toLLVMType(returnType);
+	}
+	for (std::size_t i = 0; i < parameterTypes.size(); i++)
+	{
+		parameters.push_back(helper->toLLVMType(parameterTypes[i]));
+	}
+	functionType = llvm::FunctionType::get(functionReturnType, parameters, false);		
+
+	//Create the function signature. No code is yet associated with the function at this time.
+	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), currentModule.get());
+
+	//Attributes and names for the parameters can now be set on the function signature.
+	//When returning a string, the StructRet attribute is set to indicate that the parameter is used for returning a structure by value.
+	llvm::Argument* currentArg = function->arg_begin();
+	if (returnType.isReflectableObjectType())
+	{
+		if (!isThisCall || Configuration::sretBeforeThis)
+		{
+			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "Ret"));
+			function->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
+			function->addParamAttr(0, llvm::Attribute::AttrKind::NoAlias);
+		}
+		else
+		{
+			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "this"));
+		}
+		currentArg++;
+		if (isThisCall && Configuration::sretBeforeThis)
+		{
+			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "this"));
+			currentArg++;
+		}
+		else if (isThisCall)
+		{
+			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "Ret"));
+			currentArg++;
+			function->addParamAttr(1, llvm::Attribute::AttrKind::StructRet);
+			function->addParamAttr(1, llvm::Attribute::AttrKind::NoAlias);
+		}
+		
+	}
+	for (std::size_t i = 0; i < parameterNames.size(); i++)
+	{
+		currentArg->setName(parameterNames[i]);
+		currentArg++;
+	}
+	return function;
+}
+
+
+void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType, llvm::Value* expressionValue, llvm::Function* function, LLVMCompileTimeContext* context)
+{
+	//If the expression returns a string or a reflectable object, copy construct it into the StructRet parameter and return void.
+	//If it is some other type, just return the value.
+	if (returnType.isReflectableObjectType())
+	{
+		llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(returnType.getObjectType()), Tools::append(returnType.toString(), "_typeInfo"));
+		llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(returnType.toString(), "_typeInfoPtr"));
+		assert(returnType.isCopyConstructible());
+		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, LLVMTypes::pointerType, Tools::append(returnType.toString(), "_ObjectPointerCast"));
+		helper->createOptionalNullCheckSelect(castPointer, 
+			[&](LLVMCompileTimeContext* context)
+			{
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {function->arg_begin(), castPointer, typeInfoConstantAsIntPtr}, Tools::append(returnType.toString(), "_copyConstructor"));
+			},
+			[&](LLVMCompileTimeContext* context)
+			{
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {function->arg_begin(), typeInfoConstantAsIntPtr},  Tools::append(returnType.toString(), "_defaultConstructor"));
+			}, context);
+
+		helper->generateBlockDestructors(context);
+		builder->CreateRetVoid();
+	}
+	else
+	{
+		helper->generateBlockDestructors(context);
+		builder->CreateRet(expressionValue);
+	}
+}
+
 
 std::unique_ptr<LLVMMemoryManager> LLVMCodeGenerator::memoryManager = std::make_unique<LLVMMemoryManager>();

@@ -34,7 +34,7 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme):
+CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme):
 	CatDefinition(lexeme),
 	name(name),
 	nameLexeme(nameLexeme),
@@ -46,7 +46,7 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const std::string& name, std
 }
 
 
-jitcat::AST::CatClassDefinition::CatClassDefinition(const CatClassDefinition& other):
+CatClassDefinition::CatClassDefinition(const CatClassDefinition& other):
 	CatDefinition(other),
 	name(other.name),
 	nameLexeme(other.nameLexeme),
@@ -61,18 +61,18 @@ jitcat::AST::CatClassDefinition::CatClassDefinition(const CatClassDefinition& ot
 }
 
 
-jitcat::AST::CatClassDefinition::~CatClassDefinition()
+CatClassDefinition::~CatClassDefinition()
 {
 }
 
 
-CatASTNode* jitcat::AST::CatClassDefinition::copy() const
+CatASTNode* CatClassDefinition::copy() const
 {
 	return new CatClassDefinition(*this);
 }
 
 
-void jitcat::AST::CatClassDefinition::print() const
+void CatClassDefinition::print() const
 {
 	if (definitions.size() == 0)
 	{
@@ -91,13 +91,13 @@ void jitcat::AST::CatClassDefinition::print() const
 }
 
 
-CatASTNodeType jitcat::AST::CatClassDefinition::getNodeType() const
+CatASTNodeType CatClassDefinition::getNodeType() const
 {
 	return CatASTNodeType::ClassDefinition;
 }
 
 
-bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
+bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 {
 	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
 	compileTimeContext->setCurrentClass(this);
@@ -131,11 +131,12 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 	{
 		noErrors &= generateConstructor(compileTimeContext);
 		noErrors &= generateDestructor(compileTimeContext);
+
 	}
 
 	for (auto& iter: functionDefinitions)
 	{
-		noErrors &= iter->typeCheck(compileTimeContext);;
+		noErrors &= iter->typeCheck(compileTimeContext);
 	}
 	
 	if (noErrors)
@@ -153,6 +154,13 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 
 	if (noErrors)
 	{
+		if (!customType->setDefaultConstructorFunction("init"))
+		{
+			if (!customType->setDefaultConstructorFunction("__init"))
+			{
+				assert(false);
+			}
+		}
 		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
 	}
 	
@@ -160,7 +168,7 @@ bool jitcat::AST::CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeCo
 }
 
 
-bool jitcat::AST::CatClassDefinition::isTriviallyCopyable() const
+bool CatClassDefinition::isTriviallyCopyable() const
 {
 	for (const auto& iter : variableDefinitions)
 	{
@@ -173,31 +181,31 @@ bool jitcat::AST::CatClassDefinition::isTriviallyCopyable() const
 }
 
 
-Reflection::CustomTypeInfo* jitcat::AST::CatClassDefinition::getCustomType()
+Reflection::CustomTypeInfo* CatClassDefinition::getCustomType()
 {
 	return customType.get();
 }
 
 
-CatScopeID jitcat::AST::CatClassDefinition::getScopeId() const
+CatScopeID CatClassDefinition::getScopeId() const
 {
 	return scopeId;
 }
 
 
-const std::string& jitcat::AST::CatClassDefinition::getClassName() const
+const std::string& CatClassDefinition::getClassName() const
 {
 	return name;
 }
 
 
-Tokenizer::Lexeme jitcat::AST::CatClassDefinition::getClassNameLexeme() const
+Tokenizer::Lexeme CatClassDefinition::getClassNameLexeme() const
 {
 	return nameLexeme;
 }
 
 
-CatVariableDefinition* jitcat::AST::CatClassDefinition::getVariableDefinitionByName(const std::string& name)
+CatVariableDefinition* CatClassDefinition::getVariableDefinitionByName(const std::string& name)
 {
 	for (auto& iter : variableDefinitions)
 	{
@@ -209,7 +217,7 @@ CatVariableDefinition* jitcat::AST::CatClassDefinition::getVariableDefinitionByN
 	return nullptr;
 }
 
-CatFunctionDefinition* jitcat::AST::CatClassDefinition::getFunctionDefinitionByName(const std::string& name)
+CatFunctionDefinition* CatClassDefinition::getFunctionDefinitionByName(const std::string& name)
 {
 	for (auto& iter : functionDefinitions)
 	{
@@ -226,13 +234,13 @@ CatFunctionDefinition* jitcat::AST::CatClassDefinition::getFunctionDefinitionByN
 }
 
 
-void jitcat::AST::CatClassDefinition::enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const
+void CatClassDefinition::enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const
 {
 	customType->enumerateMemberVariables(enumerator);
 }
 
 
-bool jitcat::AST::CatClassDefinition::injectCode(const std::string& functionName, const std::string& statement, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+bool CatClassDefinition::injectCode(const std::string& functionName, const std::string& statement, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	ErrorContext errorContextName(compileTimeContext, Tools::append("Injected code in ", functionName, ": ", statement));
 
@@ -250,11 +258,10 @@ bool jitcat::AST::CatClassDefinition::injectCode(const std::string& functionName
 	{
 		Tokenizer::Document doc(statement);
 		errorManager->setCurrentDocument(&doc);
-		Parser::SLRParseResult* parseResult = JitCat::get()->parseStatement(&doc, compileTimeContext, errorManager, errorContext);
+		std::unique_ptr<Parser::SLRParseResult> parseResult = JitCat::get()->parseStatement(&doc, compileTimeContext, errorManager, errorContext);
 		if (parseResult->success)
 		{
 			CatStatement* statement = static_cast<CatStatement*>(parseResult->astRootNode.release());
-			delete parseResult;
 
 			//Build the context as it would have been in the function scope block
 			CatScopeID functionParamsScopeId = InvalidScopeID;
@@ -291,7 +298,31 @@ bool jitcat::AST::CatClassDefinition::injectCode(const std::string& functionName
 }
 
 
-bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeContext)
+const std::vector<CatClassDefinition*>& CatClassDefinition::getClassDefinitions() const
+{
+	return classDefinitions;
+}
+
+
+const std::vector<CatFunctionDefinition*>& CatClassDefinition::getFunctionDefinitions() const
+{
+	return functionDefinitions;
+}
+
+
+const std::vector<CatVariableDefinition*>& CatClassDefinition::getVariableDefinitions() const
+{
+	return variableDefinitions;
+}
+
+
+const std::vector<CatInheritanceDefinition*>& CatClassDefinition::getInheritanceDefinitions() const
+{
+	return inheritanceDefinitions;
+}
+
+
+bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeContext)
 {
 	CatTypeNode* typeNode = new CatTypeNode(CatGenericType::voidType, nameLexeme);
 	CatFunctionParameterDefinitions* parameters = new CatFunctionParameterDefinitions({}, nameLexeme);
@@ -344,17 +375,16 @@ bool jitcat::AST::CatClassDefinition::generateConstructor(CatRuntimeContext* com
 	generatedConstructor = std::make_unique<CatFunctionDefinition>(typeNode, "__init", nameLexeme, parameters, scopeBlock, nameLexeme);
 	generatedConstructor->setFunctionVisibility(MemberVisibility::Constructor);
 	return generatedConstructor->typeCheck(compileTimeContext);
-
 }
 
 
-bool jitcat::AST::CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContext)
+bool CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContext)
 {
 	return true;
 }
 
 
-void jitcat::AST::CatClassDefinition::extractDefinitionLists()
+void CatClassDefinition::extractDefinitionLists()
 {
 	for (auto& iter : this->definitions)
 	{

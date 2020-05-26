@@ -8,6 +8,7 @@
 #include "jitcat/SourceFile.h"
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatFunctionDefinition.h"
+#include "jitcat/CatLib.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatSourceFile.h"
 #include "jitcat/Document.h"
@@ -23,9 +24,13 @@ using namespace jitcat::Parser;
 using namespace jitcat::Tokenizer;
 
 
-SourceFile::SourceFile(const std::string& fileContents, CatRuntimeContext* context)
+SourceFile::SourceFile(const std::string& fileContents, CatLib* catLib)
 {
-	setSource(fileContents, context);
+	setSource(fileContents);
+	if (catLib != nullptr)
+	{
+		compile(*catLib);
+	}
 }
 
 
@@ -38,26 +43,19 @@ SourceFile::~SourceFile()
 }
 
 
-void SourceFile::compile(CatRuntimeContext* context)
+void SourceFile::compile(CatLib& catLib)
 {
-	if (context == nullptr)
-	{
-		context = &CatRuntimeContext::defaultContext;
-		context->getErrorManager()->clear();
-	}
-
-	ExpressionErrorManager* errorManager = nullptr;
-	errorManager = context->getErrorManager();
-	errorManagerHandle = errorManager;
-	errorManager->setCurrentDocument(sourceText.get());
+	ExpressionErrorManager& errorManager = catLib.getErrorManager();
+	errorManagerHandle = &errorManager;
+	errorManager.setCurrentDocument(sourceText.get());
 	sourceTokens.clear();
-	parseResult.reset(JitCat::get()->parseFull(sourceText.get(), sourceTokens, context, errorManager, this));
+	parseResult = JitCat::get()->parseFull(sourceText.get(), sourceTokens, catLib.getRuntimeContext(), &errorManager, this);
 	if (parseResult->success)
 	{
 		AST::CatSourceFile* sourceFileNode = parseResult->getNode<AST::CatSourceFile>();
-		if (sourceFileNode->typeCheck(context, errorManager, this))
+		if (sourceFileNode->compile(catLib))
 		{
-			errorManager->compiledWithoutErrors(this);
+			errorManager.compiledWithoutErrors(this);
 		}
 		else
 		{
@@ -68,20 +66,13 @@ void SourceFile::compile(CatRuntimeContext* context)
 	{
 		parseResult->success = false;
 	}
-	errorManager->setCurrentDocument(nullptr);
+	errorManager.setCurrentDocument(nullptr);
 }
 
 
-void jitcat::SourceFile::setSource(const std::string& source, CatRuntimeContext* context)
+void jitcat::SourceFile::setSource(const std::string& source)
 {
-	if (context == nullptr)
-	{
-		context = &CatRuntimeContext::defaultContext;
-		context->getErrorManager()->clear();
-	}
-	context->getErrorManager()->errorSourceDeleted(this);	
 	sourceText = std::make_unique<Document>(source.c_str(), source.size());
-	compile(context);
 }
 
 

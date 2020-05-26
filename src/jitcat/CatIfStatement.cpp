@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatIfStatement.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeBlock.h"
@@ -29,7 +30,7 @@ CatIfStatement::CatIfStatement(CatTypedExpression* condition, CatScopeBlock* ifB
 jitcat::AST::CatIfStatement::CatIfStatement(const CatIfStatement& other):
 	CatStatement(other),
 	condition(static_cast<CatTypedExpression*>(other.condition->copy())),
-	ifBody(static_cast<CatScopeBlock*>(other.ifBody->copy())),
+	ifBody(static_cast<CatStatement*>(other.ifBody->copy())),
 	elseNode(other.elseNode != nullptr ? static_cast<CatStatement*>(other.elseNode->copy()) : nullptr)
 {
 }
@@ -80,6 +81,36 @@ bool jitcat::AST::CatIfStatement::typeCheck(CatRuntimeContext* compiletimeContex
 		errorManager->compiledWithError("Condition expression does not evaluate to a boolean.", errorContext, compiletimeContext->getContextName(), condition->getLexeme());
 	}
 	return conditionOk && ifBodyOk && elseBodyOk && conditionIsBool;
+}
+
+
+CatStatement* CatIfStatement::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	ASTHelper::updatePointerIfChanged(condition, condition->constCollapse(compiletimeContext, errorManager, errorContext));
+	if (condition->isConst())
+	{
+		if (std::any_cast<bool>(condition->execute(nullptr)))
+		{
+			return ifBody.release();
+		}
+		else if (elseNode != nullptr)
+		{
+			return elseNode.release();
+		}
+		else
+		{
+			return new CatScopeBlock({}, getLexeme());
+		}
+	}
+	else
+	{
+		ASTHelper::updatePointerIfChanged(ifBody, ifBody->constCollapse(compiletimeContext, errorManager, errorContext));
+		if (elseNode != nullptr)
+		{
+			ASTHelper::updatePointerIfChanged(elseNode, elseNode->constCollapse(compiletimeContext, errorManager, errorContext));
+		}
+	}
+	return this;
 }
 
 

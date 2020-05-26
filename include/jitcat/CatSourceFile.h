@@ -16,6 +16,11 @@
 
 #include <vector>
 
+namespace jitcat
+{
+	class CatLib;
+}
+
 namespace jitcat::Reflection
 {
 	class CustomTypeInfo;
@@ -41,7 +46,7 @@ namespace jitcat::AST
 		const std::vector<CatClassDefinition*>& getClassDefinitions() const;
 		const std::vector<CatFunctionDefinition*>& getFunctionDefinitions() const;
 
-		bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+		bool compile(CatLib& catLib);
 
 		// Inherited via CatScope
 		virtual CatScopeID getScopeId() const override;

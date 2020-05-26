@@ -13,8 +13,10 @@ using namespace jitcat::LLVM;
 
 LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):
 	catContext(catContext),
+	currentLib(nullptr),
+	currentClass(nullptr),
+	currentFunctionDefinition(nullptr),
 	currentFunction(nullptr),
-	currentDyLib(nullptr),
 	helper(nullptr)
 {
 }

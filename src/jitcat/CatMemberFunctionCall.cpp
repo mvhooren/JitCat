@@ -214,7 +214,7 @@ bool CatMemberFunctionCall::isConst() const
 }
 
 
-CatTypedExpression* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext, errorManager, errorContext));
 	arguments->constCollapse(compileTimeContext, errorManager, errorContext);

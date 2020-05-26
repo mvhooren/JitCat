@@ -9,7 +9,13 @@
 
 namespace jitcat
 {
+	class CatLib;
 	class CatRuntimeContext;
+	namespace AST
+	{
+		class CatClassDefinition;
+		class CatFunctionDefinition;
+	}
 }
 #include "jitcat/LLVMCompileOptions.h"
 #include "jitcat/LLVMForwardDeclares.h"
@@ -27,8 +33,11 @@ namespace jitcat::LLVM
 		LLVMCompileTimeContext(CatRuntimeContext* catContext);
 
 		CatRuntimeContext* catContext;
+
+		CatLib* currentLib;
+		const AST::CatClassDefinition* currentClass;
+		const AST::CatFunctionDefinition* currentFunctionDefinition;
 		llvm::Function* currentFunction;
-		llvm::orc::JITDylib* currentDyLib;
 
 		LLVMCodeGeneratorHelper* helper;
 		std::vector<std::function<llvm::Value*()>> blockDestructorGenerators;

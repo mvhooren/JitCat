@@ -83,7 +83,7 @@ bool CatStaticMemberAccess::isConst() const
 }
 
 
-CatTypedExpression* CatStaticMemberAccess::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatStaticMemberAccess::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	return this;
 }

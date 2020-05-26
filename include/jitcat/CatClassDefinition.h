@@ -56,6 +56,11 @@ namespace jitcat::AST
 		//Injected code must be a single statement.
 		bool injectCode(const std::string& functionName, const std::string& statement, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
+		const std::vector<CatClassDefinition*>& getClassDefinitions() const;
+		const std::vector<CatFunctionDefinition*>& getFunctionDefinitions() const;
+		const std::vector<CatVariableDefinition*>& getVariableDefinitions() const;
+		const std::vector<CatInheritanceDefinition*>& getInheritanceDefinitions() const;
+
 	private:
 		bool generateConstructor(CatRuntimeContext* compileTimeContext);
 		bool generateDestructor(CatRuntimeContext* compileTimeContext);

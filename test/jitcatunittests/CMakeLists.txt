@@ -12,6 +12,15 @@ if (JitCatUnitTestsHeaderFiles)
 	set_source_files_properties(${JitCatUnitTestsHeaderFiles} PROPERTIES HEADER_FILE_ONLY ON)
 endif()
 
+
+set(Source_BuiltInFunctionTests
+	MathsFunctionsTests.cpp
+	RandomFunctionsTests.cpp
+	SelectFunctionTests.cpp
+	TrigonometricFunctionsTests.cpp
+	TypeConversionFunctionTests.cpp
+)
+
 set(Source_GeneralTests
 	AssignmentTests.cpp
 	BasicTypesTests.cpp
@@ -28,14 +37,6 @@ set(Source_GeneralTests
 	StringTests.cpp
 )
 
-set(Source_BuiltInFunctionTests
-	MathsFunctionsTests.cpp
-	RandomFunctionsTests.cpp
-	SelectFunctionTests.cpp
-	TrigonometricFunctionsTests.cpp
-	TypeConversionFunctionTests.cpp
-)
-
 set(Source_Helper
 	NestedReflectedObject.cpp
 	NestedReflectedObject.h
@@ -48,6 +49,10 @@ set(Source_Helper
 	TestVector4.h
 )
 
+set(Source_CatLibTests
+	CatLibTests.cpp
+)
+
 set(Source_RegressionTests
 	RegressionTests.cpp
 )
@@ -57,17 +62,19 @@ set(Source_Root
 	Tests.cpp
 )
 	
-source_group(GeneralTests FILES	${Source_GeneralTests})
 source_group(BuiltInFunctionTests FILES	${Source_BuiltInFunctionTests})
-source_group(RegressionTests FILES	${Source_RegressionTests})
+source_group(GeneralTests FILES	${Source_GeneralTests})
 source_group(Helper FILES	${Source_Helper})
+source_group(CatLibTests FILES ${Source_CatLibTests})
+source_group(RegressionTests FILES	${Source_RegressionTests})
 source_group("" FILES ${Source_Root})
 
 add_executable(JitCatUnitTests 
-	${Source_GeneralTests}
 	${Source_BuiltInFunctionTests}
-	${Source_RegressionTests}
+	${Source_GeneralTests}
 	${Source_Helper}
+	${Source_CatLibTests}
+	${Source_RegressionTests}
 	${Source_Root}
 )
 	

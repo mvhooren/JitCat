@@ -47,7 +47,7 @@ bool LLVMPreGeneratedExpression::isConst() const
 }
 
 
-CatTypedExpression* LLVMPreGeneratedExpression::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* LLVMPreGeneratedExpression::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
     return this;
 }

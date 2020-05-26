@@ -130,7 +130,7 @@ bool CatOperatorNew::isConst() const
 }
 
 
-CatTypedExpression* CatOperatorNew::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatOperatorNew::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	functionCall->constCollapse(compileTimeContext, errorManager, errorContext);
 	return this;

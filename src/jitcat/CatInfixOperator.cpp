@@ -77,7 +77,7 @@ bool CatInfixOperator::isConst() const
 }
 
 
-CatTypedExpression* CatInfixOperator::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatInfixOperator::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (overloadedOperator != nullptr)
 	{

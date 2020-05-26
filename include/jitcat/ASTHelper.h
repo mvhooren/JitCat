@@ -25,6 +25,8 @@ namespace jitcat::AST
 {
 	class CatAssignableExpression;
 	class CatTypedExpression;
+	class CatScopeBlock;
+	class CatStatement;
 
 
 	class ASTHelper
@@ -32,7 +34,9 @@ namespace jitcat::AST
 	private:
 		ASTHelper() = delete;
 	public:
-		static void updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatTypedExpression* expression);
+		static void updatePointerIfChanged(std::unique_ptr<CatScopeBlock>& uPtr, CatStatement* statement);
+		static void updatePointerIfChanged(std::unique_ptr<CatStatement>& uPtr, CatStatement* statement);
+		static void updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatStatement* expression);
 		static void doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType);
 		//This inserts a CatIndirectionConversion before the CatTypedExpression contained in uPtr.
 		static bool doIndirectionConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& expectedType, bool allowAddressOf, IndirectionConversionMode& conversionMode);

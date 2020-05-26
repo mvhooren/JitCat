@@ -29,18 +29,18 @@ namespace jitcat
 	{
 		class CatSourceFile;
 	}
-	class CatRuntimeContext;
+	class CatLib;
 
 
 	class SourceFile
 	{
 	public:
-		SourceFile(const std::string& fileContents, CatRuntimeContext* context = nullptr);
+		SourceFile(const std::string& fileContents, CatLib* catLib = nullptr);
 		~SourceFile();
 
-		void compile(CatRuntimeContext* context);
+		void compile(CatLib& catLib);
 
-		void setSource(const std::string& source, CatRuntimeContext* context = nullptr);
+		void setSource(const std::string& source);
 
 		bool hasErrors() const;
 		AST::CatSourceFile* getAST() const;

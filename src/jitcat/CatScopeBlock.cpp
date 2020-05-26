@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatScopeBlock.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
@@ -85,9 +86,26 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 	{
 		noErrors &= iter->typeCheck(compiletimeContext, errorManager, errorContext);
 	}
+	if (noErrors)
+	{
+		for (auto& iter : statements)
+		{
+			noErrors &= iter->typeCheck(compiletimeContext, errorManager, errorContext);
+		}
+	}
 	compiletimeContext->removeScope(myScopeId);
 	compiletimeContext->setCurrentScope(previousScope);
 	return noErrors;
+}
+
+
+CatStatement* CatScopeBlock::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	for (auto& iter : statements)
+	{
+		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compiletimeContext, errorManager, errorContext));
+	}
+	return this;
 }
 
 
@@ -168,6 +186,12 @@ Reflection::CustomTypeInfo* jitcat::AST::CatScopeBlock::getCustomType()
 CatScopeID jitcat::AST::CatScopeBlock::getScopeId() const
 {
 	return scopeId;
+}
+
+
+const std::vector<std::unique_ptr<CatStatement>>& jitcat::AST::CatScopeBlock::getStatements() const
+{
+	return statements;
 }
 
 
