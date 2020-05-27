@@ -9,6 +9,8 @@
 #include "jitcat/CatASTNodes.h"
 #include "jitcat/CatLib.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ErrorContext.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
@@ -51,13 +53,13 @@ using namespace jitcat::Reflection;
 
 
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
-	executionSession(new llvm::orc::ExecutionSession()),
-	currentModule(new llvm::Module("JitCat", LLVMJit::get().getContext())),
-	builder(new llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>(LLVMJit::get().getContext())),
-	objectLinkLayer(new llvm::orc::RTDyldObjectLinkingLayer(*executionSession.get(),
+	executionSession(std::make_unique<llvm::orc::ExecutionSession>()),
+	currentModule(std::make_unique<llvm::Module>("JitCat", LLVMJit::get().getContext())),
+	builder(std::make_unique<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>>(LLVMJit::get().getContext())),
+	objectLinkLayer(std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(*executionSession.get(),
 															[]() {	return memoryManager->createExpressionAllocator();})),
-	mangler(new llvm::orc::MangleAndInterner(*executionSession, LLVMJit::get().getDataLayout())),
-	compileLayer(new llvm::orc::IRCompileLayer(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder()))),
+	mangler(std::make_unique<llvm::orc::MangleAndInterner>(*executionSession, LLVMJit::get().getDataLayout())),
+	compileLayer(std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder()))),
 	helper(std::make_unique<LLVMCodeGeneratorHelper>(builder.get(), currentModule.get()))
 {
 	llvm::orc::SymbolMap intrinsicSymbols;
@@ -154,6 +156,10 @@ LLVMCodeGenerator::~LLVMCodeGenerator()
 
 void LLVMCodeGenerator::generate(const AST::CatSourceFile* sourceFile, LLVMCompileTimeContext* context)
 {
+	initContext(context);
+	createNewModule(context);
+	CatScopeID staticScopeId = context->catContext->addScope(sourceFile->getCustomType(), sourceFile->getScopeObjectInstance(), true);
+	assert(staticScopeId == sourceFile->getScopeId());
 	for (auto& iter : sourceFile->getFunctionDefinitions())
 	{
 		generate(iter, context);
@@ -162,6 +168,9 @@ void LLVMCodeGenerator::generate(const AST::CatSourceFile* sourceFile, LLVMCompi
 	{
 		generate(iter, context);
 	}
+	context->catContext->removeScope(staticScopeId);
+	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
+	link(sourceFile->getCustomType());
 }
 
 
@@ -940,10 +949,13 @@ void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBl
 {
 	if (scopeBlock != nullptr)
 	{
+		CatScopeID blockScopeId = context->catContext->addScope(scopeBlock->getCustomType(), nullptr, false);
+		assert(blockScopeId == scopeBlock->getScopeId());
 		for (auto& iter : scopeBlock->getStatements())
 		{
 			generate(iter.get(), context);
 		}
+		context->catContext->removeScope(blockScopeId);
 	}
 }
 
@@ -982,7 +994,6 @@ void LLVMCodeGenerator::generate(const AST::CatStatement* statement, LLVMCompile
 void LLVMCodeGenerator::generate(const AST::CatDefinition* definition, LLVMCompileTimeContext* context)
 {
 	initContext(context);
-	createNewModule(context);
 
 	switch (definition->getNodeType())
 	{
@@ -999,16 +1010,26 @@ void LLVMCodeGenerator::generate(const AST::CatDefinition* definition, LLVMCompi
 void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition, LLVMCompileTimeContext* context)
 {
 	assert(context->currentLib != nullptr);
+	const CatClassDefinition* previousClass = context->currentClass;
 	context->currentClass = classDefinition;
 	ErrorContext errorContext(context->catContext, classDefinition->getClassName());
 	for (auto& iter: classDefinition->getClassDefinitions())
 	{
 		generate(iter, context);
 	}
+	CatScopeID classScopeId = context->catContext->addScope(classDefinition->getCustomType(), nullptr, false);
+	assert(classScopeId == classDefinition->getScopeId());
 	for (auto& iter: classDefinition->getFunctionDefinitions())
 	{
 		generate(iter, context);
 	}
+	CatFunctionDefinition* constructorDefinition = classDefinition->getFunctionDefinitionByName("__init");
+	if (constructorDefinition != nullptr)
+	{
+		generate(constructorDefinition, context);
+	}
+	context->currentClass = previousClass;
+	context->catContext->removeScope(classScopeId);
 }
 
 
@@ -1024,16 +1045,53 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 		parameterTypes.push_back(functionDefinition->getParameterType(i));
 		parameterNames.push_back(functionDefinition->getParameterName(i));
 	}
-	llvm::Function* function = generateFunctionPrototype(name, context->currentClass != nullptr, returnType, parameterTypes, parameterNames);
+
+	bool isThisCall = context->currentClass != nullptr;
+
+	llvm::Function* function = generateFunctionPrototype(name, isThisCall, returnType, parameterTypes, parameterNames);
 	//Function entry block
 	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
 	builder->SetInsertPoint(&function->getEntryBlock());
 
 	context->currentFunctionDefinition = functionDefinition;
 
+	CatScopeID classScopeId = InvalidScopeID;
+	if (isThisCall)
+	{
+		classScopeId = context->currentClass->getScopeId();
+		if (returnType.isReflectableObjectType())
+		{
+			auto argIter = function->arg_begin();
+			if (Configuration::sretBeforeThis)
+			{
+				argIter++;
+			}
+			context->scopeValues[classScopeId] = argIter;
+		}
+		else
+		{
+			context->scopeValues[classScopeId] = function->arg_begin();
+		}
+	}
+
 	CatScopeBlock* scopeBlock = functionDefinition->getScopeBlock();
+	CatScopeID parametersScopeId = InvalidScopeID;
+	if (functionDefinition->getNumParameters() > 0)
+	{
+		parametersScopeId = context->catContext->addScope(functionDefinition->getParametersType(), nullptr, false);
+	}
+	assert(parametersScopeId == functionDefinition->getScopeId());
 	generate(scopeBlock, context);
-	
+	if (!functionDefinition->getAllControlPathsReturn() && returnType.isVoidType())
+	{
+		builder->CreateRetVoid();
+	}
+	context->catContext->removeScope(parametersScopeId);
+	if (classScopeId != InvalidScopeID)
+	{
+		context->scopeValues.erase(classScopeId);
+	}
+
 	context->currentFunction = nullptr;
 	if constexpr (Configuration::dumpFunctionIR)
 	{
@@ -1133,7 +1191,11 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateFPMath(const char* name, f
 llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTimeContext* context)
 {
 	llvm::Value* parentObjectAddress = nullptr;
-	if (context->catContext->isStaticScope(scopeId))
+	if (auto scopeIter = context->scopeValues.find(scopeId); scopeIter != context->scopeValues.end())
+	{
+		return scopeIter->second;
+	}
+	else if (context->catContext->isStaticScope(scopeId))
 	{
 		unsigned char* object = context->catContext->getScopeObject(scopeId);
 		parentObjectAddress = llvm::ConstantInt::get(LLVMJit::get().getContext(), llvm::APInt(sizeof(std::uintptr_t) * 8, (uint64_t)reinterpret_cast<std::uintptr_t>(object), false));
@@ -1447,6 +1509,19 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 	{
 		helper->generateBlockDestructors(context);
 		builder->CreateRet(expressionValue);
+	}
+}
+
+
+void LLVMCodeGenerator::link(CustomTypeInfo* customType)
+{
+	for (auto& iter : customType->getTypes())
+	{
+		link(static_cast<CustomTypeInfo*>(iter.second));
+	}
+	for (auto& iter : customType->getMemberFunctions())
+	{
+		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->nativeAddress = (intptr_t)getSymbolAddress(iter.second->memberFunctionName, *dylib);
 	}
 }
 

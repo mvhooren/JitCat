@@ -77,7 +77,9 @@ namespace jitcat::AST
 
 		// Inherited via CatScope
 		virtual CatScopeID getScopeId() const override final;
-		virtual Reflection::CustomTypeInfo* getCustomType() override final;
+		virtual Reflection::CustomTypeInfo* getCustomType() const override final;
+
+		bool getAllControlPathsReturn() const;
 
 	private:
 		CatScopeID pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance);
@@ -87,6 +89,7 @@ namespace jitcat::AST
 		std::string lowerCaseName;
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypeNode> type;
+		std::optional<bool> allControlPathsReturn;
 		std::unique_ptr<CatFunctionParameterDefinitions> parameters;
 		Reflection::MemberVisibility visibility;
 

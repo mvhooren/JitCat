@@ -416,9 +416,16 @@ void jitcat::Reflection::CustomTypeInfo::placementConstruct(unsigned char* buffe
 	createDataCopy(defaultData, typeSize, buffer, bufferSize);
 	if (defaultConstructorFunction != nullptr)
 	{
-		std::any base = reinterpret_cast<Reflectable*>(buffer);
-		CatRuntimeContext tempContext("temp");//QQQ
-		defaultConstructorFunction->call(&tempContext, base, {});
+		if constexpr (Configuration::enableLLVM)
+		{
+			reinterpret_cast<void(*)(unsigned char*)>(defaultConstructorFunction->getFunctionAddress().functionAddress)(buffer);
+		}
+		else
+		{
+			std::any base = reinterpret_cast<Reflectable*>(buffer);
+			CatRuntimeContext tempContext("temp");
+			defaultConstructorFunction->call(&tempContext, base, {});
+		}
 	}
 	if constexpr (Configuration::logJitCatObjectConstructionEvents)
 	{

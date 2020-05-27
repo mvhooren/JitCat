@@ -41,14 +41,14 @@ namespace jitcat::AST
 
 		bool isTriviallyCopyable() const;
 
-		virtual Reflection::CustomTypeInfo* getCustomType() override final;
+		virtual Reflection::CustomTypeInfo* getCustomType() const override final;
 		virtual CatScopeID getScopeId() const override final;
 
 		const std::string& getClassName() const;
 		Tokenizer::Lexeme getClassNameLexeme() const;
 
-		CatVariableDefinition* getVariableDefinitionByName(const std::string& name);
-		CatFunctionDefinition* getFunctionDefinitionByName(const std::string& name);
+		CatVariableDefinition* getVariableDefinitionByName(const std::string& name) const;
+		CatFunctionDefinition* getFunctionDefinitionByName(const std::string& name) const;
 
 		void enumerateMemberVariables(std::function<void(const CatGenericType&, const std::string&)>& enumerator) const;
 

@@ -153,7 +153,7 @@ CatScopeID CatForLoop::getScopeId() const
 }
 
 
-Reflection::CustomTypeInfo* CatForLoop::getCustomType()
+Reflection::CustomTypeInfo* CatForLoop::getCustomType() const
 {
 	return scopeType.get();
 }

@@ -19,7 +19,7 @@ using namespace jitcat::Reflection;
 using namespace TestObjects;
 
 
-TEST_CASE("CatLib Tests", "[.catlib]" ) 
+TEST_CASE("CatLib Basic Tests", "[catlib]" ) 
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;

@@ -46,7 +46,7 @@ namespace jitcat::AST
 
 		// Inherited via CatScope
 		virtual CatScopeID getScopeId() const override final;
-		virtual Reflection::CustomTypeInfo* getCustomType() override final;
+		virtual Reflection::CustomTypeInfo* getCustomType() const override final;
 
 	private:
 		Tokenizer::Lexeme iteratorLexeme;

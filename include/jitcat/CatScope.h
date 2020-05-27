@@ -20,6 +20,6 @@ namespace jitcat
 	{
 	public:
 		virtual CatScopeID getScopeId() const = 0;
-		virtual Reflection::CustomTypeInfo* getCustomType() = 0;
+		virtual Reflection::CustomTypeInfo* getCustomType() const = 0;
 	};
 }

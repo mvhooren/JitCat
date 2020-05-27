@@ -13,6 +13,7 @@ namespace jitcat
 	class CatRuntimeContext;
 	namespace Reflection
 	{
+		class CustomTypeInfo;
 		struct MemberFunctionInfo;
 	}
 }
@@ -107,6 +108,8 @@ namespace jitcat::LLVM
 
 		llvm::Function* generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames);
 		void generateFunctionReturn(const CatGenericType& returnType, llvm::Value* expressionValue, llvm::Function* function, LLVMCompileTimeContext* context);
+
+		void link(Reflection::CustomTypeInfo* customType);
 
 	private:
 		//ExecutionSession represents a running JIT program

@@ -146,8 +146,8 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 	compileTimeContext->setCurrentScope(previousScope);
 	compileTimeContext->setCurrentFunction(nullptr);
 	bool unreachableCodeDetected = false;
-	auto returnCheck = scopeBlock->checkControlFlow(compileTimeContext, errorManager, this, unreachableCodeDetected);
-	if(!type->getType().isVoidType() &&(!returnCheck.has_value() || !(*returnCheck)))
+	allControlPathsReturn = scopeBlock->checkControlFlow(compileTimeContext, errorManager, this, unreachableCodeDetected);
+	if(!type->getType().isVoidType() && !getAllControlPathsReturn())
 	{
 		const Tokenizer::Lexeme& typeLexeme = type->getLexeme();
 		const Tokenizer::Lexeme& paramLexeme = parameters->getLexeme();
@@ -320,9 +320,15 @@ CatScopeID CatFunctionDefinition::getScopeId() const
 }
 
 
-Reflection::CustomTypeInfo* CatFunctionDefinition::getCustomType()
+Reflection::CustomTypeInfo* CatFunctionDefinition::getCustomType() const
 {
 	return parameters->getCustomType();
+}
+
+
+bool jitcat::AST::CatFunctionDefinition::getAllControlPathsReturn() const
+{
+	return allControlPathsReturn.has_value() && allControlPathsReturn.value();
 }
 
 

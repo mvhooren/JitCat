@@ -47,7 +47,7 @@ namespace jitcat::AST
 
 		bool containsReturnStatement() const;
 
-		virtual Reflection::CustomTypeInfo* getCustomType() override final;
+		virtual Reflection::CustomTypeInfo* getCustomType() const override final;
 		virtual CatScopeID getScopeId() const override final;
 
 		const std::vector<std::unique_ptr<CatStatement>>& getStatements() const;

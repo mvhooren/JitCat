@@ -78,7 +78,7 @@ CatASTNodeType CatScopeBlock::getNodeType() const
 
 bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatScopeID myScopeId = compiletimeContext->addScope(customType.get(), nullptr, false);
+	scopeId = compiletimeContext->addScope(customType.get(), nullptr, false);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
@@ -93,7 +93,7 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 			noErrors &= iter->typeCheck(compiletimeContext, errorManager, errorContext);
 		}
 	}
-	compiletimeContext->removeScope(myScopeId);
+	compiletimeContext->removeScope(scopeId);
 	compiletimeContext->setCurrentScope(previousScope);
 	return noErrors;
 }
@@ -177,7 +177,7 @@ bool jitcat::AST::CatScopeBlock::containsReturnStatement() const
 }
 
 
-Reflection::CustomTypeInfo* jitcat::AST::CatScopeBlock::getCustomType()
+Reflection::CustomTypeInfo* jitcat::AST::CatScopeBlock::getCustomType() const
 {
 	return customType.get();
 }

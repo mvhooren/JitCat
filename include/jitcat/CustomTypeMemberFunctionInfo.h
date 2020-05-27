@@ -25,7 +25,8 @@ namespace jitcat::Reflection
 		CustomTypeMemberFunctionInfo(AST::CatFunctionDefinition* functionDefinition, const CatGenericType& thisType) :
 			MemberFunctionInfo(functionDefinition->getFunctionName(), functionDefinition->getReturnTypeNode()->getType()),
 			thisType(thisType),
-			functionDefinition(functionDefinition)
+			functionDefinition(functionDefinition),
+			nativeAddress(0)
 		{
 			int numParameters = functionDefinition->getNumParameters(); 
 			for (int i = 0; i < numParameters; i++)
@@ -57,10 +58,11 @@ namespace jitcat::Reflection
 
 		inline virtual MemberFunctionCallData getFunctionAddress() const override final
 		{
-			return MemberFunctionCallData();
+			return MemberFunctionCallData(nativeAddress, reinterpret_cast<uintptr_t>(this), MemberFunctionCallType::ThisCall);
 		}
 
 		CatGenericType thisType;
 		AST::CatFunctionDefinition* functionDefinition;
+		intptr_t nativeAddress;
 	};
 }

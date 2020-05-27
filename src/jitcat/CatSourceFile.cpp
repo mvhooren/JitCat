@@ -106,6 +106,9 @@ bool CatSourceFile::compile(CatLib& catLib)
 	{
 		noErrors &= iter->typeCheck(compiletimeContext);
 	}
+	compiletimeContext->removeScope(staticScopeId);
+	compiletimeContext->setCurrentScope(previousScope);
+
 	if constexpr (Configuration::enableLLVM)
 	{
 		if (noErrors)
@@ -116,8 +119,7 @@ bool CatSourceFile::compile(CatLib& catLib)
 			compiletimeContext->getCodeGenerator()->generate(this, &llvmContext);
 		}
 	}
-	compiletimeContext->removeScope(staticScopeId);
-	compiletimeContext->setCurrentScope(previousScope);
+
 	return noErrors;
 }
 
@@ -128,9 +130,15 @@ CatScopeID CatSourceFile::getScopeId() const
 }
 
 
-Reflection::CustomTypeInfo* CatSourceFile::getCustomType()
+Reflection::CustomTypeInfo* CatSourceFile::getCustomType() const
 {
 	return scopeType.get();
+}
+
+
+unsigned char* jitcat::AST::CatSourceFile::getScopeObjectInstance() const
+{
+	return scopeInstance.getObject();
 }
 
 

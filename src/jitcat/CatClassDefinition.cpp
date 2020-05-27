@@ -117,11 +117,6 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		noErrors = false;
 	}
 
-	for (auto& iter : classDefinitions)
-	{
-		noErrors &= iter->typeCheck(compileTimeContext);
-	}
-
 	for (auto& iter: variableDefinitions)
 	{
 		noErrors &= iter->typeCheck(compileTimeContext);;
@@ -149,6 +144,11 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	}
 
 	compileTimeContext->removeScope(scopeId);
+
+	for (auto& iter : classDefinitions)
+	{
+		noErrors &= iter->typeCheck(compileTimeContext);
+	}
 	compileTimeContext->setCurrentScope(previousScope);
 	compileTimeContext->setCurrentClass(parentClass);
 
@@ -181,7 +181,7 @@ bool CatClassDefinition::isTriviallyCopyable() const
 }
 
 
-Reflection::CustomTypeInfo* CatClassDefinition::getCustomType()
+Reflection::CustomTypeInfo* CatClassDefinition::getCustomType() const
 {
 	return customType.get();
 }
@@ -205,7 +205,7 @@ Tokenizer::Lexeme CatClassDefinition::getClassNameLexeme() const
 }
 
 
-CatVariableDefinition* CatClassDefinition::getVariableDefinitionByName(const std::string& name)
+CatVariableDefinition* CatClassDefinition::getVariableDefinitionByName(const std::string& name) const
 {
 	for (auto& iter : variableDefinitions)
 	{
@@ -217,7 +217,7 @@ CatVariableDefinition* CatClassDefinition::getVariableDefinitionByName(const std
 	return nullptr;
 }
 
-CatFunctionDefinition* CatClassDefinition::getFunctionDefinitionByName(const std::string& name)
+CatFunctionDefinition* CatClassDefinition::getFunctionDefinitionByName(const std::string& name) const
 {
 	for (auto& iter : functionDefinitions)
 	{

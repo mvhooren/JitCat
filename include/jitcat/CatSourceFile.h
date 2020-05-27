@@ -49,8 +49,10 @@ namespace jitcat::AST
 		bool compile(CatLib& catLib);
 
 		// Inherited via CatScope
-		virtual CatScopeID getScopeId() const override;
-		virtual Reflection::CustomTypeInfo* getCustomType() override;
+		virtual CatScopeID getScopeId() const override final;
+		virtual Reflection::CustomTypeInfo* getCustomType() const override final;
+
+		unsigned char* getScopeObjectInstance() const;
 
 	private:
 		void extractDefinitionLists();
