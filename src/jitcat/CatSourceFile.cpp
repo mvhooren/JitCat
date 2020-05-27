@@ -109,16 +109,15 @@ bool CatSourceFile::compile(CatLib& catLib)
 	compiletimeContext->removeScope(staticScopeId);
 	compiletimeContext->setCurrentScope(previousScope);
 
-	if constexpr (Configuration::enableLLVM)
+#ifdef ENABLE_LLVM
+	if (noErrors)
 	{
-		if (noErrors)
-		{
-			LLVM::LLVMCompileTimeContext llvmContext(compiletimeContext);
-			llvmContext.options.enableDereferenceNullChecks = true;
-			llvmContext.currentLib = &catLib;
-			compiletimeContext->getCodeGenerator()->generate(this, &llvmContext);
-		}
+		LLVM::LLVMCompileTimeContext llvmContext(compiletimeContext);
+		llvmContext.options.enableDereferenceNullChecks = true;
+		llvmContext.currentLib = &catLib;
+		compiletimeContext->getCodeGenerator()->generate(this, &llvmContext);
 	}
+#endif
 
 	return noErrors;
 }
