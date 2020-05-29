@@ -34,6 +34,7 @@ namespace jitcat::Reflection
 namespace jitcat::AST
 {
 	class CatAssignableExpression;
+	class CatClassDefinition;
 	class CatTypeNode;
 	class CatFunctionParameterDefinitions;
 	class CatScopeBlock;
@@ -61,15 +62,20 @@ namespace jitcat::AST
 		jitcat::Reflection::CustomTypeInfo* getParametersType() const;
 		CatTypeNode* getReturnTypeNode() const;
 		virtual int getNumParameters() const override final;
+
 		const std::string& getParameterName(int index) const;
-		//const CatTypeNode* getParameterType(int index) const;
+
 		virtual const CatGenericType& getParameterType(int index) const override final;
 
 		Reflection::MemberVisibility getFunctionVisibility() const;
 		void setFunctionVisibility(Reflection::MemberVisibility functionVisibility);
 
+		void setParentClass(const CatClassDefinition* classDefinition);
+
 		virtual const std::string& getLowerCaseFunctionName() const override final;
 		const std::string& getFunctionName() const;
+		//This function name disambiguates between overloaded functions based on return type and argument types.
+		const std::string& getMangledFunctionName() const;
 
 		CatScopeBlock* getScopeBlock() const;
 		CatScopeBlock* getEpilogBlock() const;
@@ -81,12 +87,15 @@ namespace jitcat::AST
 
 		bool getAllControlPathsReturn() const;
 
+
 	private:
 		CatScopeID pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance);
+		void updateMangledName();
 
 	private:
 		std::string name;
 		std::string lowerCaseName;
+		std::string mangledName;
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypeNode> type;
 		std::optional<bool> allControlPathsReturn;
@@ -101,6 +110,8 @@ namespace jitcat::AST
 
 		Reflection::ReflectableHandle errorManagerHandle;
 		
+		const CatClassDefinition* parentClass;
+
 		//not owned
 		Reflection::CustomTypeMemberFunctionInfo* memberFunctionInfo;
 	};

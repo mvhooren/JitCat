@@ -740,12 +740,12 @@ std::string CatGenericType::toString() const
 {
 	switch (specificType)
 	{
-		default:								return "Unknown";
+		default:								return "unknown";
 		case SpecificType::Basic:				return toString(basicType);
 		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:	return nestedType->getTypeName();
-		case SpecificType::Pointer:				return Tools::append("Pointer to ", pointeeType->toString());
-		case SpecificType::ReflectableHandle:	return Tools::append("Handle to ", pointeeType->toString());
+		case SpecificType::Pointer:				return Tools::append("pointer to ", pointeeType->toString());
+		case SpecificType::ReflectableHandle:	return Tools::append("handle to ", pointeeType->toString());
 	}
 }
 
@@ -1827,9 +1827,22 @@ void jitcat::CatGenericType::toBuffer(const std::any& value, const unsigned char
 			} 
 		} break;
 		case SpecificType::Enum:
-		case SpecificType::Pointer:
-		case SpecificType::ReflectableHandle:	
 		case SpecificType::ReflectableObject:	nestedType->toBuffer(value, buffer, bufferSize); break;
+		case SpecificType::Pointer:
+			if (pointeeType->isReflectableObjectType())
+			{
+				if (ownershipSemantics == TypeOwnershipSemantics::Value)
+				{
+					const TypeCaster* typeCaster = getPointeeType()->getObjectType()->getTypeCaster();
+					buffer = reinterpret_cast<const unsigned char*>(typeCaster->castToRawPointer(typeCaster->getAddressOfValue(const_cast<std::any&>(value))));
+				}
+				else
+				{
+					const TypeCaster* typeCaster = getPointeeType()->getObjectType()->getTypeCaster();
+					buffer = reinterpret_cast<const unsigned char*>(typeCaster->castToRawPointerPointer(typeCaster->getAddressOfPointer(const_cast<std::any&>(value))));
+				}
+			} break;
+		case SpecificType::ReflectableHandle:	
 		default: assert(false); break;
 	}
 }

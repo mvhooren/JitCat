@@ -418,6 +418,12 @@ const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& TypeInfo::getMembe
 }
 
 
+const std::map<unsigned long long, TypeMemberInfo*>& jitcat::Reflection::TypeInfo::getMembersByOrdinal() const
+{
+	return membersByOrdinal;
+}
+
+
 const std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>>& TypeInfo::getMemberFunctions() const
 {
 	return memberFunctions;

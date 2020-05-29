@@ -620,7 +620,10 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 	{
 		std::string destructorName = Tools::append(name, "_destructor");
 		assert(objectType.isDestructible());
-		context->blockDestructorGenerators.push_back([=](){return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);});
+		context->blockDestructorGenerators.push_back([=]()
+			{
+				return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);
+			});
 	}
 	if (currentBlockIsEntryBlock)
 	{

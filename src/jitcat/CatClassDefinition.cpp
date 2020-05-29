@@ -37,7 +37,9 @@ using namespace jitcat::Tools;
 CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme):
 	CatDefinition(lexeme),
 	name(name),
+	qualifiedName(name),
 	nameLexeme(nameLexeme),
+	parentClass(nullptr),
 	definitions(std::move(definitions)),
 	scopeId(InvalidScopeID),
 	customType(makeTypeInfo<CustomTypeInfo>(this->name.c_str()))
@@ -50,6 +52,7 @@ CatClassDefinition::CatClassDefinition(const CatClassDefinition& other):
 	CatDefinition(other),
 	name(other.name),
 	nameLexeme(other.nameLexeme),
+	parentClass(other.parentClass),
 	scopeId(InvalidScopeID),
 	customType(makeTypeInfo<CustomTypeInfo>(this->name.c_str()))
 {
@@ -131,6 +134,7 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 
 	for (auto& iter: functionDefinitions)
 	{
+		iter->setParentClass(this);
 		noErrors &= iter->typeCheck(compileTimeContext);
 	}
 	
@@ -147,6 +151,7 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 
 	for (auto& iter : classDefinitions)
 	{
+		iter->setParentClass(this);
 		noErrors &= iter->typeCheck(compileTimeContext);
 	}
 	compileTimeContext->setCurrentScope(previousScope);
@@ -196,6 +201,12 @@ CatScopeID CatClassDefinition::getScopeId() const
 const std::string& CatClassDefinition::getClassName() const
 {
 	return name;
+}
+
+
+const std::string& jitcat::AST::CatClassDefinition::getQualifiedName() const
+{
+	return qualifiedName;
 }
 
 
@@ -322,6 +333,13 @@ const std::vector<CatInheritanceDefinition*>& CatClassDefinition::getInheritance
 }
 
 
+void CatClassDefinition::setParentClass(const CatClassDefinition* classDefinition)
+{
+	parentClass = classDefinition;
+	qualifiedName = Tools::append(parentClass->getQualifiedName(), "::", name);
+}
+
+
 bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeContext)
 {
 	CatTypeNode* typeNode = new CatTypeNode(CatGenericType::voidType, nameLexeme);
@@ -373,6 +391,7 @@ bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeConte
 	}
 	CatScopeBlock* scopeBlock = new CatScopeBlock(statements, nameLexeme);
 	generatedConstructor = std::make_unique<CatFunctionDefinition>(typeNode, "__init", nameLexeme, parameters, scopeBlock, nameLexeme);
+	generatedConstructor->setParentClass(this);
 	generatedConstructor->setFunctionVisibility(MemberVisibility::Constructor);
 	return generatedConstructor->typeCheck(compileTimeContext);
 }

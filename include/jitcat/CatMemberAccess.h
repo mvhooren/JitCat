@@ -41,6 +41,7 @@ namespace jitcat::AST
 
 		CatTypedExpression* getBase() const;
 		Reflection::TypeMemberInfo* getMemberInfo() const;
+		const std::string& getMemberName() const;
 
 	private:
 		std::unique_ptr<CatTypedExpression> base;

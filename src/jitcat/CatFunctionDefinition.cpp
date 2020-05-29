@@ -18,6 +18,7 @@
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatScopeRoot.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -26,7 +27,7 @@
 #include "jitcat/TypeRegistry.h"
 
 #include <cassert>
-
+#include <sstream>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -34,7 +35,7 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme):
+CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatFunctionParameterDefinitions* parameters, CatScopeBlock* scopeBlock, const Tokenizer::Lexeme& lexeme):
 	CatDefinition(lexeme),
 	name(name),
 	lowerCaseName(Tools::toLowerCase(name)),
@@ -44,12 +45,13 @@ jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(CatTypeNode* type, con
 	visibility(MemberVisibility::Public),
 	parametersScopeId(InvalidScopeID),
 	scopeBlock(scopeBlock),
+	parentClass(nullptr),
 	memberFunctionInfo(nullptr)
 {
 }
 
 
-jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(const CatFunctionDefinition& other):
+CatFunctionDefinition::CatFunctionDefinition(const CatFunctionDefinition& other):
 	CatDefinition(other),
 	name(other.name),
 	lowerCaseName(other.lowerCaseName),
@@ -64,7 +66,7 @@ jitcat::AST::CatFunctionDefinition::CatFunctionDefinition(const CatFunctionDefin
 }
 
 
-jitcat::AST::CatFunctionDefinition::~CatFunctionDefinition()
+CatFunctionDefinition::~CatFunctionDefinition()
 {
 	if (errorManagerHandle.getIsValid())
 	{
@@ -73,13 +75,13 @@ jitcat::AST::CatFunctionDefinition::~CatFunctionDefinition()
 }
 
 
-CatASTNode* jitcat::AST::CatFunctionDefinition::copy() const
+CatASTNode* CatFunctionDefinition::copy() const
 {
 	return new CatFunctionDefinition(*this);
 }
 
 
-void jitcat::AST::CatFunctionDefinition::print() const
+void CatFunctionDefinition::print() const
 {
 	type->print();
 	CatLog::log(" ", name, "(");
@@ -89,13 +91,13 @@ void jitcat::AST::CatFunctionDefinition::print() const
 }
 
 
-CatASTNodeType jitcat::AST::CatFunctionDefinition::getNodeType() const
+CatASTNodeType CatFunctionDefinition::getNodeType() const
 {
 	return CatASTNodeType::FunctionDefinition;
 }
 
 
-bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
+bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 {
 	if (errorManagerHandle.getIsValid())
 	{
@@ -173,11 +175,12 @@ bool jitcat::AST::CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTim
 		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, thisType, this);
 		memberFunctionInfo->visibility = visibility;
 	}
+	updateMangledName();
 	return true;
 }
 
 
-std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId)
+std::any CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId)
 {
 	std::any result = scopeBlock->execute(runtimeContext);
 	if (epilogBlock != nullptr)
@@ -190,7 +193,7 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithPack(CatRuntimeC
 }
 
 
-std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments)
+std::any CatFunctionDefinition::executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments)
 {
 	assert(parameterAssignables.size() == arguments.size());
 	CatScopeID scopeId = InvalidScopeID;
@@ -205,18 +208,21 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 				std::cout << "(CatFunctionDefinition::executeFunctionWithArguments) Stack-allocated buffer of size " << std::dec << parameters->getCustomType()->getTypeSize() << ": " << std::hex << reinterpret_cast<uintptr_t>(scopeMem) << "\n";
 			}
 		}
-		parameters->getCustomType()->placementConstruct(scopeMem, parameters->getCustomType()->getTypeSize());
 
 		scopeId = pushScope(runtimeContext, scopeMem);
 		//The scopeId should match the scopeId that was obtained during type checking.
 		assert(scopeId == parametersScopeId);
 
-		int i = 0;
-		for (auto& iter : parameterAssignables)
+		auto& members = parameters->getCustomType()->getMembersByOrdinal();
+		int index = 0;
+		for (auto& iter : members)
 		{
-			std::any target = iter->executeAssignable(runtimeContext);
-			ASTHelper::doAssignment(target, arguments[i], iter->getAssignableType(), iter->getType());
-			i++;
+			const unsigned char* sourceBuffer = nullptr;
+			std::size_t sourceBufferSize = 0;
+			iter.second->catType.toBuffer(arguments[index], sourceBuffer, sourceBufferSize);
+			assert(sourceBuffer != nullptr);
+			iter.second->catType.copyConstruct(scopeMem + iter.first, iter.second->catType.getTypeSize(), sourceBuffer, sourceBufferSize);
+			++index;
 		}
 	}
 	std::any result = executeFunctionWithPack(runtimeContext, scopeId);
@@ -228,48 +234,43 @@ std::any jitcat::AST::CatFunctionDefinition::executeFunctionWithArguments(CatRun
 }
 
 
-jitcat::Reflection::CustomTypeInfo* jitcat::AST::CatFunctionDefinition::getParametersType() const
+jitcat::Reflection::CustomTypeInfo* CatFunctionDefinition::getParametersType() const
 {
 	return parameters->getCustomType();
 }
 
 
-CatTypeNode* jitcat::AST::CatFunctionDefinition::getReturnTypeNode() const
+CatTypeNode* CatFunctionDefinition::getReturnTypeNode() const
 {
 	return type.get();
 }
 
 
-int jitcat::AST::CatFunctionDefinition::getNumParameters() const
+int CatFunctionDefinition::getNumParameters() const
 {
 	return parameters->getNumParameters();
 }
 
 
-const std::string& jitcat::AST::CatFunctionDefinition::getParameterName(int index) const
+const std::string& CatFunctionDefinition::getParameterName(int index) const
 {
 	return parameters->getParameterName(index);
 }
 
-const CatGenericType& jitcat::AST::CatFunctionDefinition::getParameterType(int index) const
+
+const CatGenericType& CatFunctionDefinition::getParameterType(int index) const
 {
 	return parameters->getParameterType(index)->getType();
 }
 
 
-/*const CatTypeNode* jitcat::AST::CatFunctionDefinition::getParameterType(int index) const
-{
-	return parameters->getParameterType(index);
-}*/
-
-
-Reflection::MemberVisibility jitcat::AST::CatFunctionDefinition::getFunctionVisibility() const
+Reflection::MemberVisibility CatFunctionDefinition::getFunctionVisibility() const
 {
 	return visibility;
 }
 
 
-void jitcat::AST::CatFunctionDefinition::setFunctionVisibility(Reflection::MemberVisibility functionVisibility)
+void CatFunctionDefinition::setFunctionVisibility(Reflection::MemberVisibility functionVisibility)
 {
 	visibility = functionVisibility;
 	if (memberFunctionInfo != nullptr)
@@ -279,31 +280,44 @@ void jitcat::AST::CatFunctionDefinition::setFunctionVisibility(Reflection::Membe
 }
 
 
-const std::string& jitcat::AST::CatFunctionDefinition::getLowerCaseFunctionName() const
+void CatFunctionDefinition::setParentClass(const CatClassDefinition* classDefinition)
+{
+	parentClass = classDefinition;
+	updateMangledName();
+}
+
+
+const std::string& CatFunctionDefinition::getLowerCaseFunctionName() const
 {
 	return lowerCaseName;
 }
 
 
-const std::string & jitcat::AST::CatFunctionDefinition::getFunctionName() const
+const std::string & CatFunctionDefinition::getFunctionName() const
 {
 	return name;
 }
 
 
-CatScopeBlock* jitcat::AST::CatFunctionDefinition::getScopeBlock() const
+const std::string& CatFunctionDefinition::getMangledFunctionName() const
+{
+	return mangledName;
+}
+
+
+CatScopeBlock* CatFunctionDefinition::getScopeBlock() const
 {
 	return scopeBlock.get();
 }
 
 
-CatScopeBlock* jitcat::AST::CatFunctionDefinition::getEpilogBlock() const
+CatScopeBlock* CatFunctionDefinition::getEpilogBlock() const
 {
 	return epilogBlock.get();
 }
 
 
-CatScopeBlock* jitcat::AST::CatFunctionDefinition::getOrCreateEpilogBlock(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatScopeBlock* CatFunctionDefinition::getOrCreateEpilogBlock(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (epilogBlock == nullptr)
 	{
@@ -326,13 +340,68 @@ Reflection::CustomTypeInfo* CatFunctionDefinition::getCustomType() const
 }
 
 
-bool jitcat::AST::CatFunctionDefinition::getAllControlPathsReturn() const
+bool CatFunctionDefinition::getAllControlPathsReturn() const
 {
 	return allControlPathsReturn.has_value() && allControlPathsReturn.value();
 }
 
 
-CatScopeID jitcat::AST::CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance)
+CatScopeID CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance)
 {
 	return runtimeContext->addScope(parameters->getCustomType(), instance, false);
+}
+
+
+void CatFunctionDefinition::updateMangledName()
+{
+	const CatGenericType* returnType = &type->getType();
+
+	std::vector<std::string> parameterNames;
+	if (type->getType().isReflectableObjectType())
+	{
+		returnType = &CatGenericType::voidType;
+		
+		if (Configuration::sretBeforeThis)
+		{
+			parameterNames.push_back(Tools::append("__sret ", type->getType().toString()));
+		}
+		if (parentClass != nullptr)
+		{
+			parameterNames.push_back(Tools::append("__this ", parentClass->getQualifiedName()));
+		}
+		if (!Configuration::sretBeforeThis)
+		{
+			parameterNames.push_back(Tools::append("__sret ", type->getType().toString()));
+		}
+	}
+	else
+	{
+		if (parentClass != nullptr)
+		{
+			parameterNames.push_back(Tools::append("__this ", parentClass->getQualifiedName()));
+		}
+	}
+	
+	for (int i = 0; i < parameters->getNumParameters(); ++i)
+	{
+		parameterNames.push_back(parameters->getParameterType(i)->getType().toString());
+	}
+
+	std::ostringstream stream;
+	std::string qualifiedParent;
+	if (parentClass != nullptr)
+	{
+		qualifiedParent = parentClass->getQualifiedName() + "::";
+	}
+	stream << returnType->toString() << " " << qualifiedParent << lowerCaseName << "(";
+	for (std::size_t i = 0; i < parameterNames.size(); ++i)
+	{
+		if (i != 0)
+		{
+			stream << ", ";
+		}
+		stream << parameterNames[i];
+	}
+	stream << ")";
+	mangledName = stream.str();
 }

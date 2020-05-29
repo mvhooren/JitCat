@@ -18,8 +18,8 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 using namespace TestObjects;
 
-
-TEST_CASE("CatLib Basic Tests", "[catlib]" ) 
+//Tests simple variable initialization and access.
+TEST_CASE("CatLib basic tests", "[catlib]" ) 
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
@@ -114,4 +114,72 @@ TEST_CASE("CatLib Basic Tests", "[catlib]" )
 	}
 
 	testClassInfo->destruct(testClassInstance);
+}
+
+
+//Tests overloaded funcion functionality.
+TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	library.addSource("test1.jc", 
+		"class TestClass\n"
+		"{\n"
+		"	string testString = \"Hello!\";\n"
+		"\n"
+		"	string addToTestString(int value) { return testString + value;}\n"
+		"	string addToTestString(string value) { return testString + value;}\n"
+		"}\n"
+		"class DuplicateTestClass\n"
+		"{\n"
+		"	string testString = \"Hello2!\";\n"
+		"\n"
+		"	string addToTestString(int value) { return testString + value * 2;}\n"
+		"	string addToTestString(string value) { return testString + value + value;}\n"
+		"}\n"
+		);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	TypeInfo* duplicateTestClassInfo = library.getTypeInfo("DuplicateTestClass");
+	REQUIRE(duplicateTestClassInfo != nullptr);
+	unsigned char* duplicateTestClassInstance = duplicateTestClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	CatRuntimeContext alternativeContext("jitlib_alternative", &errorManager);
+	alternativeContext.addScope(duplicateTestClassInfo, duplicateTestClassInstance, false);
+
+	SECTION("Test function")
+	{
+		Expression<std::string> testExpression1(&context, "addToTestString(42)");
+		doChecks(std::string("Hello!42"), false, false, false, testExpression1, context);
+
+		Expression<std::string> testExpression2(&context, "addToTestString(\" World!\")");
+		doChecks(std::string("Hello! World!"), false, false, false, testExpression2, context);
+
+		Expression<std::string> testExpression3(&alternativeContext, "addToTestString(42)");
+		doChecks(std::string("Hello2!84"), false, false, false, testExpression3, alternativeContext);
+
+		Expression<std::string> testExpression4(&alternativeContext, "addToTestString(\" World!\")");
+		doChecks(std::string("Hello2! World! World!"), false, false, false, testExpression4, alternativeContext);
+	}
+
+
+	testClassInfo->destruct(testClassInstance);
+	duplicateTestClassInfo->destruct(duplicateTestClassInstance);
 }

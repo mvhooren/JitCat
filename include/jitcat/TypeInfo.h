@@ -151,6 +151,7 @@ namespace jitcat::Reflection
 
 		//Beware that these lists are case insensitive because the keys have been converted to lower case
 		const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;
+		const std::map<unsigned long long, TypeMemberInfo*>& getMembersByOrdinal() const;
 		const std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
 		const std::map<std::string, TypeInfo*>& getTypes() const;
 

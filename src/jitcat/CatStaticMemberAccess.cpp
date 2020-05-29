@@ -126,7 +126,14 @@ bool CatStaticMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	if (staticMemberInfo != nullptr)
 	{
 		type = staticMemberInfo->catType;
-		assignableType = type.toPointer(TypeOwnershipSemantics::Weak, type.isWritable(), false);
+		if (!type.isPointerType() || type.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
+		{
+			assignableType = type.toPointer(TypeOwnershipSemantics::Weak, type.isWritable(), false);
+		}
+		else
+		{
+			assignableType = type;
+		}
 	}
 	else
 	{

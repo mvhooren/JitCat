@@ -113,7 +113,14 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 		if (memberInfo != nullptr)
 		{
 			type = memberInfo->catType;
-			assignableType = type.toPointer();
+			if (!type.isPointerType() || type.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
+			{
+				assignableType = type.toPointer();
+			}
+			else
+			{
+				assignableType = type;
+			}
 			return true;
 		}
 		else
@@ -175,4 +182,10 @@ CatTypedExpression* CatMemberAccess::getBase() const
 TypeMemberInfo* CatMemberAccess::getMemberInfo() const
 {
 	return memberInfo;
+}
+
+
+const std::string& jitcat::AST::CatMemberAccess::getMemberName() const
+{
+	return memberName;
 }

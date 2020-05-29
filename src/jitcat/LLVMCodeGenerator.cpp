@@ -846,7 +846,25 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 llvm::Value* LLVMCodeGenerator::generate(const CatMemberAccess* memberAccess, LLVMCompileTimeContext* context)
 {
 	llvm::Value* base = generate(memberAccess->getBase(), context);
-	return memberAccess->getMemberInfo()->generateDereferenceCode(base, context);
+	if (base != nullptr)
+	{
+		return memberAccess->getMemberInfo()->generateDereferenceCode(base, context);
+	}
+	else
+	{
+		//This means that the member is a function parameter
+		const std::string& memberName = memberAccess->getMemberName();
+		for (auto iter = context->currentFunction->arg_begin(); iter != context->currentFunction->arg_end(); ++iter)
+		{
+			if (Tools::equalsWhileIgnoringCase(memberName, iter->getName()))
+			{
+				return iter;
+			}
+		}
+		assert(false);
+		return nullptr;
+	}
+	
 }
 
 
@@ -962,16 +980,13 @@ void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBl
 
 llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatReturnStatement* returnStatement, LLVMCompileTimeContext* context)
 {
-	if (context->currentFunctionDefinition != nullptr)
-	{
-		generate(context->currentFunctionDefinition->getEpilogBlock(), context);
-	}
+	generate(context->currentFunctionDefinition->getEpilogBlock(), context);
 	llvm::Value* returnValue = nullptr;
 	if (!returnStatement->getType().isVoidType())
 	{
 		returnValue = generate(returnStatement->getReturnExpression(), context);
 	}
-	generateFunctionReturn(returnStatement->getType(), returnValue, context->currentFunction, context);
+	generateFunctionReturn(context->currentFunctionDefinition->getReturnTypeNode()->getType(), returnValue, context->currentFunction, context);
 	return nullptr;
 }
 
@@ -1036,19 +1051,28 @@ void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition,
 llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* functionDefinition, LLVMCompileTimeContext* context)
 {
 	assert(context->currentLib != nullptr);
-	const std::string& name = functionDefinition->getFunctionName();
+	const std::string& name = functionDefinition->getMangledFunctionName();
 	CatGenericType returnType = functionDefinition->getReturnTypeNode()->getType();
 	std::vector<CatGenericType> parameterTypes;
 	std::vector<std::string> parameterNames;
 	for (int i = 0; i < functionDefinition->getNumParameters(); i++)
 	{
-		parameterTypes.push_back(functionDefinition->getParameterType(i));
+		if (!functionDefinition->getParameterType(i).isReflectableObjectType())
+		{
+			parameterTypes.push_back(functionDefinition->getParameterType(i));
+		}
+		else
+		{
+			parameterTypes.push_back(functionDefinition->getParameterType(i).toPointer(TypeOwnershipSemantics::Value, true, false));
+		}
 		parameterNames.push_back(functionDefinition->getParameterName(i));
 	}
 
 	bool isThisCall = context->currentClass != nullptr;
 
 	llvm::Function* function = generateFunctionPrototype(name, isThisCall, returnType, parameterTypes, parameterNames);
+	
+	context->currentFunction = function;
 	//Function entry block
 	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
 	builder->SetInsertPoint(&function->getEntryBlock());
@@ -1079,24 +1103,31 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 	if (functionDefinition->getNumParameters() > 0)
 	{
 		parametersScopeId = context->catContext->addScope(functionDefinition->getParametersType(), nullptr, false);
+		context->scopeValues[parametersScopeId] = nullptr;
 	}
 	assert(parametersScopeId == functionDefinition->getScopeId());
 	generate(scopeBlock, context);
 	if (!functionDefinition->getAllControlPathsReturn() && returnType.isVoidType())
 	{
-		builder->CreateRetVoid();
+		generateFunctionReturn(returnType, nullptr, function, context);
 	}
+	
 	context->catContext->removeScope(parametersScopeId);
+
 	if (classScopeId != InvalidScopeID)
 	{
 		context->scopeValues.erase(classScopeId);
 	}
 
-	context->currentFunction = nullptr;
-	if constexpr (Configuration::dumpFunctionIR)
+	if (parametersScopeId != InvalidScopeID)
 	{
-		function->dump();
+		context->scopeValues.erase(parametersScopeId);
 	}
+
+	context->currentFunction = nullptr;
+
+	context->blockDestructorGenerators.clear();
+
 	//Verify the correctness of the function and execute optimization passes.
 	return verifyAndOptimizeFunction(function);
 }
@@ -1450,28 +1481,32 @@ llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateFunctionPrototype(const
 	{
 		if (!isThisCall || Configuration::sretBeforeThis)
 		{
-			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "Ret"));
+			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "__sret"));
 			function->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
 			function->addParamAttr(0, llvm::Attribute::AttrKind::NoAlias);
 		}
 		else
 		{
-			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "this"));
+			currentArg->setName("__this");
 		}
 		currentArg++;
 		if (isThisCall && Configuration::sretBeforeThis)
 		{
-			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "this"));
+			currentArg->setName("__this");
 			currentArg++;
 		}
 		else if (isThisCall)
 		{
-			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "Ret"));
+			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "__sret"));
 			currentArg++;
 			function->addParamAttr(1, llvm::Attribute::AttrKind::StructRet);
 			function->addParamAttr(1, llvm::Attribute::AttrKind::NoAlias);
 		}
-		
+	}
+	else if (isThisCall)
+	{
+		currentArg->setName("__this");
+		currentArg++;
 	}
 	for (std::size_t i = 0; i < parameterNames.size(); i++)
 	{
@@ -1492,14 +1527,20 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 		llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(returnType.toString(), "_typeInfoPtr"));
 		assert(returnType.isCopyConstructible());
 		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, LLVMTypes::pointerType, Tools::append(returnType.toString(), "_ObjectPointerCast"));
+
+		llvm::Argument* sretArgument = function->arg_begin();
+		if (context->currentClass != nullptr && !Configuration::sretBeforeThis)
+		{
+			++sretArgument;
+		}
 		helper->createOptionalNullCheckSelect(castPointer, 
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {function->arg_begin(), castPointer, typeInfoConstantAsIntPtr}, Tools::append(returnType.toString(), "_copyConstructor"));
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {sretArgument, castPointer, typeInfoConstantAsIntPtr}, Tools::append(returnType.toString(), "_copyConstructor"));
 			},
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {function->arg_begin(), typeInfoConstantAsIntPtr},  Tools::append(returnType.toString(), "_defaultConstructor"));
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {sretArgument, typeInfoConstantAsIntPtr},  Tools::append(returnType.toString(), "_defaultConstructor"));
 			}, context);
 
 		helper->generateBlockDestructors(context);
@@ -1521,7 +1562,8 @@ void LLVMCodeGenerator::link(CustomTypeInfo* customType)
 	}
 	for (auto& iter : customType->getMemberFunctions())
 	{
-		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->nativeAddress = (intptr_t)getSymbolAddress(iter.second->memberFunctionName, *dylib);
+		const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->functionDefinition->getMangledFunctionName();
+		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->nativeAddress = (intptr_t)getSymbolAddress(mangledName, *dylib);
 	}
 }
 

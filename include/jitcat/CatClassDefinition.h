@@ -45,6 +45,7 @@ namespace jitcat::AST
 		virtual CatScopeID getScopeId() const override final;
 
 		const std::string& getClassName() const;
+		const std::string& getQualifiedName() const;
 		Tokenizer::Lexeme getClassNameLexeme() const;
 
 		CatVariableDefinition* getVariableDefinitionByName(const std::string& name) const;
@@ -61,6 +62,8 @@ namespace jitcat::AST
 		const std::vector<CatVariableDefinition*>& getVariableDefinitions() const;
 		const std::vector<CatInheritanceDefinition*>& getInheritanceDefinitions() const;
 
+		void setParentClass(const CatClassDefinition* classDefinition);
+
 	private:
 		bool generateConstructor(CatRuntimeContext* compileTimeContext);
 		bool generateDestructor(CatRuntimeContext* compileTimeContext);
@@ -69,7 +72,10 @@ namespace jitcat::AST
 
 	private:
 		std::string name;
+		std::string qualifiedName;
 		Tokenizer::Lexeme nameLexeme;
+
+		const CatClassDefinition* parentClass;
 
 		//All definitions
 		std::vector<std::unique_ptr<CatDefinition>> definitions;

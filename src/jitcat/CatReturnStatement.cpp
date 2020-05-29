@@ -87,11 +87,17 @@ bool CatReturnStatement::typeCheck(CatRuntimeContext* compiletimeContext, Expres
 		{
 			return false;
 		}
-		else if (returnExpression->getType() != currentFunction->getReturnTypeNode()->getType())
+		else if (!returnExpression->getType().compare(currentFunction->getReturnTypeNode()->getType(), false, false))
 		{
 			errorManager->compiledWithError("Returned type does not match function return type.", errorContext, compiletimeContext->getContextName(), getLexeme());
 			return false;
 		}
+		IndirectionConversionMode conversionMode = IndirectionConversionMode::None;
+		bool indirectionConversionSuccess = ASTHelper::doIndirectionConversion(returnExpression, currentFunction->getReturnTypeNode()->getType(), false, conversionMode);
+		//To silence unused variable warning in release builds.
+		(void)indirectionConversionSuccess;
+		assert(indirectionConversionSuccess);
+
 	}
 	return true;
 }
