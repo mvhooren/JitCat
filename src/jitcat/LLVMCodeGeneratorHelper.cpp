@@ -602,29 +602,17 @@ void LLVMCodeGeneratorHelper::setCurrentModule(llvm::Module* module)
 
 llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool generateDestructorCall)
 {
-	llvm::Type* llvmObjectType = llvm::ArrayType::get(LLVMTypes::ucharType, objectType.getTypeSize());;
+	llvm::Type* llvmObjectType = llvm::ArrayType::get(LLVMTypes::ucharType, objectType.getTypeSize());
 	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
 	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
 	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
 	llvm::AllocaInst* objectAllocation = builder->CreateAlloca(llvmObjectType, 0, nullptr);
 	objectAllocation->setName(name);
+	
 	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, LLVMTypes::pointerType);
-	Reflection::TypeInfo* typeInfo = objectType.getObjectType();
-	assert(typeInfo != nullptr);
 
-	llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(typeInfo), Tools::append(name, "_typeInfo"));
-	llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(name, "_typeInfoPtr"));
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
 
-	if (generateDestructorCall)
-	{
-		std::string destructorName = Tools::append(name, "_destructor");
-		assert(objectType.isDestructible());
-		context->blockDestructorGenerators.push_back([=]()
-			{
-				return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);
-			});
-	}
 	if (currentBlockIsEntryBlock)
 	{
 		builder->SetInsertPoint(updatedBlock);
@@ -632,6 +620,19 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 	else
 	{
 		builder->SetInsertPoint(previousInsertBlock);
+	}
+	if (generateDestructorCall)
+	{
+		Reflection::TypeInfo* typeInfo = objectType.getObjectType();
+		assert(typeInfo != nullptr);
+		llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(typeInfo), Tools::append(name, "_typeInfo"));
+		llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(name, "_typeInfoPtr"));
+		std::string destructorName = Tools::append(name, "_destructor");
+		assert(objectType.isDestructible());
+		context->blockDestructorGenerators.push_back([=]()
+			{
+				return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);
+			});
 	}
 	return objectAllocationAsIntPtr;
 

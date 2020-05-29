@@ -88,9 +88,9 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 	}
 	if (noErrors)
 	{
-		for (auto& iter : statements)
+		for (std::size_t i = 0; i < statements.size(); ++i)
 		{
-			noErrors &= iter->typeCheck(compiletimeContext, errorManager, errorContext);
+			ASTHelper::updatePointerIfChanged(statements[i], statements[i]->constCollapse(compiletimeContext, errorManager, errorContext));
 		}
 	}
 	compiletimeContext->removeScope(scopeId);
@@ -101,10 +101,17 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 
 CatStatement* CatScopeBlock::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	CatScopeID collapseScopeId = compiletimeContext->addScope(customType.get(), nullptr, false);
+	assert(scopeId == collapseScopeId);
+	CatScope* previousScope = compiletimeContext->getCurrentScope();
+	compiletimeContext->setCurrentScope(this);
+
 	for (auto& iter : statements)
 	{
 		ASTHelper::updatePointerIfChanged(iter, iter->constCollapse(compiletimeContext, errorManager, errorContext));
 	}
+	compiletimeContext->removeScope(scopeId);
+	compiletimeContext->setCurrentScope(previousScope);
 	return this;
 }
 

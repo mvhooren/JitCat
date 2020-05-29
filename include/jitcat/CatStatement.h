@@ -23,6 +23,7 @@ namespace jitcat::AST
 
 		virtual ~CatStatement() {};
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) = 0;
+		virtual bool isTypedExpression() const { return false;}
 		virtual CatStatement* constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) = 0;
 
 		virtual std::any execute(jitcat::CatRuntimeContext* runtimeContext) = 0;

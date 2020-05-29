@@ -183,3 +183,59 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 	testClassInfo->destruct(testClassInstance);
 	duplicateTestClassInfo->destruct(duplicateTestClassInstance);
 }
+
+
+//Tests overloaded funcion functionality.
+TEST_CASE("CatLib local variable tests", "[catlib][locals]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	library.addSource("test1.jc", 
+		"class TestClass\n"
+		"{\n"
+		"	string testString = \"Hello!\";\n"
+		"\n"
+		"	string addToTestString(int value)\n"
+		"	{\n"
+		"		string tempString = testString + value;\n"
+		"		string tempString2 = value + tempString;\n"
+		"		return tempString2\n;"
+		"	}\n"
+		"\n"
+		"	float checkFloats(float a, float b)\n"
+		"	{\n"
+		"		//Intentionally named tempString to check if there are no naming conflicts with locals defined in addToTestString. \n"
+		"		float tempString = 11.0f;\n"
+		"		float tempFloat = tempString * a;\n"
+		"		return tempString + tempFloat * b;\n"
+		"	}\n"
+		"}\n"
+		);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("Test function")
+	{
+		Expression<std::string> testExpression1(&context, "addToTestString(42)");
+		doChecks(std::string("42Hello!42"), false, false, false, testExpression1, context);
+
+		Expression<float> testExpression2(&context, "checkFloats(12.0f, 91.0f)");
+		doChecks(12023.0f, false, false, false, testExpression2, context);
+	}
+}

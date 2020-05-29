@@ -542,7 +542,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const CatIndirectionConversion* indirectionConversion, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGenerator::generate(const CatIndirectionConversion* indirectionConversion, LLVMCompileTimeContext* context)
 {
 	const CatTypedExpression* expressionToConvert = indirectionConversion->getExpressionToConvert();
 	llvm::Value* generatedExpression = generate(expressionToConvert, context);
@@ -882,7 +882,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatMemberFunctionCall* memberFunc
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* staticFunctionCall, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* staticFunctionCall, LLVMCompileTimeContext* context)
 {
 	const CatArgumentList* arguments = staticFunctionCall-> getArguments();
 	std::vector<const CatTypedExpression*> expressionArguments;
@@ -907,7 +907,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticFunct
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatStaticMemberAccess* staticIdentifier, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticMemberAccess* staticIdentifier, LLVMCompileTimeContext* context)
 {
 	const StaticMemberInfo* staticMemberInfo = staticIdentifier->getStaticMemberInfo();
 
@@ -963,22 +963,53 @@ llvm::Value* LLVMCodeGenerator::generate(const CatScopeRoot* scopeRoot, LLVMComp
 }
 
 
-void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBlock, LLVMCompileTimeContext* context)
+void LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBlock, LLVMCompileTimeContext* context)
 {
 	if (scopeBlock != nullptr)
 	{
 		CatScopeID blockScopeId = context->catContext->addScope(scopeBlock->getCustomType(), nullptr, false);
 		assert(blockScopeId == scopeBlock->getScopeId());
+		if (scopeBlock->getCustomType()->getTypeSize() > 0)
+		{
+			llvm::Value* scopeAlloc = helper->createObjectAllocA(context, "scope_locals", CatGenericType(scopeBlock->getCustomType(), true, false), false);
+			context->scopeValues[blockScopeId] = scopeAlloc;
+
+			//Generate default constructors
+			for (auto& iter : scopeBlock->getCustomType()->getMembersByOrdinal())
+			{
+				CatGenericType itemType = iter.second->catType;
+				if (itemType.isPointerToReflectableObjectType() && itemType.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
+				{
+					itemType = *itemType.getPointeeType();
+				}
+				if (itemType.isReflectableObjectType())
+				{
+					llvm::Value* localPtr = builder->CreateGEP(scopeAlloc, helper->createConstant((int)iter.first), Tools::append(iter.second->memberName, "_ptr"));
+					llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(itemType.getObjectType()), Tools::append(itemType.getObjectType()->getTypeName(), "_typeInfo"));
+					llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(itemType.getObjectType()->getTypeName(), "_typeInfoPtr"));
+					helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {localPtr, typeInfoConstantAsIntPtr}, Tools::append(itemType.toString(), "_defaultConstruct"));
+					context->blockDestructorGenerators.push_back([=]()
+					{
+						return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "destructor");					
+					});
+				}
+			}
+
+		}
 		for (auto& iter : scopeBlock->getStatements())
 		{
 			generate(iter.get(), context);
+		}
+		if (auto iter = context->scopeValues.find(blockScopeId); iter != context->scopeValues.end())
+		{
+			context->scopeValues.erase(iter);
 		}
 		context->catContext->removeScope(blockScopeId);
 	}
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatReturnStatement* returnStatement, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGenerator::generate(const AST::CatReturnStatement* returnStatement, LLVMCompileTimeContext* context)
 {
 	generate(context->currentFunctionDefinition->getEpilogBlock(), context);
 	llvm::Value* returnValue = nullptr;
@@ -991,17 +1022,40 @@ llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatReturnState
 }
 
 
+void LLVMCodeGenerator::generate(const AST::CatVariableDeclaration* variableDeclaration, LLVMCompileTimeContext* context)
+{
+	generate(variableDeclaration->getInitializationExpression(), context);
+}
+
+
+void LLVMCodeGenerator::generate(const AST::CatIfStatement* variableDeclaration, LLVMCompileTimeContext* context)
+{
+	assert(false);
+}
+
+
+void LLVMCodeGenerator::generate(const AST::CatForLoop* variableDeclaration, LLVMCompileTimeContext* context)
+{
+	assert(false);
+}
+
+
 void LLVMCodeGenerator::generate(const AST::CatStatement* statement, LLVMCompileTimeContext* context)
 {
-	switch (statement->getNodeType())
+	if (statement->isTypedExpression())
 	{
-		case CatASTNodeType::ForLoop:
-		case CatASTNodeType::IfStatement:
-		case CatASTNodeType::ScopeBlock:
-		case CatASTNodeType::VariableDeclaration:
-		assert(false); return;
-		default:
-			generate(static_cast<const CatTypedExpression*>(statement), context);
+		generate(static_cast<const CatTypedExpression*>(statement), context);
+	}
+	else
+	{
+		switch (statement->getNodeType())
+		{
+			case CatASTNodeType::ForLoop:				generate(static_cast<const CatForLoop*>(statement), context);				return;
+			case CatASTNodeType::IfStatement:			generate(static_cast<const CatIfStatement*>(statement), context);			return;
+			case CatASTNodeType::VariableDeclaration:	generate(static_cast<const CatVariableDeclaration*>(statement), context);	return;
+			case CatASTNodeType::ScopeBlock:			generate(static_cast<const CatScopeBlock*>(statement), context);			return;
+			default:									assert(false);																return;
+		}
 	}
 }
 
@@ -1170,7 +1224,7 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatMemberAccess* memberAcce
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateAssign(const AST::CatStaticMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGenerator::generateAssign(const AST::CatStaticMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context)
 {
 	const StaticMemberInfo* staticMemberInfo = memberAccess->getStaticMemberInfo();
 
@@ -1201,7 +1255,7 @@ llvm::Value* LLVMCodeGenerator::generateFPMath(const char* name, float(*floatVar
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateFPMath(const char* name, float(*floatVariant)(float, float), double(*doubleVariant)(double, double), 
+llvm::Value* LLVMCodeGenerator::generateFPMath(const char* name, float(*floatVariant)(float, float), double(*doubleVariant)(double, double), 
 															 const AST::CatArgumentList* argumentList, LLVMCompileTimeContext* context)
 {
 	if (argumentList->getArgumentType(0).isDoubleType() || argumentList->getArgumentType(1).isDoubleType())
@@ -1253,7 +1307,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* memberFunction, const CatTypedExpression* base, 
+llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* memberFunction, const CatTypedExpression* base, 
 																		 const std::vector<const CatTypedExpression*>& arguments, 
 																		 LLVMCompileTimeContext* context)
 {
@@ -1440,7 +1494,7 @@ llvm::JITTargetAddress LLVMCodeGenerator::getSymbolAddress(const std::string& na
 }
 
 
-llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames)
+llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames)
 {
 	assert(parameterTypes.size() == parameterNames.size());
 

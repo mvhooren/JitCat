@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatVariableDeclaration.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatAssignmentOperator.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLiteral.h"
@@ -39,7 +40,7 @@ CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std:
 }
 
 
-jitcat::AST::CatVariableDeclaration::CatVariableDeclaration(const CatVariableDeclaration& other):
+CatVariableDeclaration::CatVariableDeclaration(const CatVariableDeclaration& other):
 	CatStatement(other),
 	type(static_cast<CatTypeNode*>(other.type->copy())),
 	name(other.name),
@@ -55,7 +56,7 @@ CatVariableDeclaration::~CatVariableDeclaration()
 }
 
 
-CatASTNode* jitcat::AST::CatVariableDeclaration::copy() const
+CatASTNode* CatVariableDeclaration::copy() const
 {
 	return new CatVariableDeclaration(*this);
 }
@@ -82,7 +83,7 @@ CatASTNodeType CatVariableDeclaration::getNodeType() const
 }
 
 
-bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+bool CatVariableDeclaration::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (!type->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
@@ -125,29 +126,35 @@ bool jitcat::AST::CatVariableDeclaration::typeCheck(CatRuntimeContext* compileti
 }
 
 
-CatStatement* jitcat::AST::CatVariableDeclaration::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+CatStatement* CatVariableDeclaration::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (initializationExpression != nullptr)
 	{
-		initializationExpression->constCollapse(compiletimeContext, errorManager, errorContext);
+		ASTHelper::updatePointerIfChanged(initializationExpression,	initializationExpression->constCollapse(compiletimeContext, errorManager, errorContext));
 	}
 	return this;
 }
 
 
-std::any jitcat::AST::CatVariableDeclaration::execute(CatRuntimeContext* runtimeContext)
+std::any CatVariableDeclaration::execute(CatRuntimeContext* runtimeContext)
 {
 	return initializationExpression->execute(runtimeContext);
 }
 
 
-const std::string& jitcat::AST::CatVariableDeclaration::getName() const
+const std::string& CatVariableDeclaration::getName() const
 {
 	return name;
 }
 
 
-const CatTypeNode& jitcat::AST::CatVariableDeclaration::getType() const
+const CatTypeNode& CatVariableDeclaration::getType() const
 {
 	return *type.get();
+}
+
+
+const CatTypedExpression* CatVariableDeclaration::getInitializationExpression() const
+{
+	return initializationExpression.get();
 }

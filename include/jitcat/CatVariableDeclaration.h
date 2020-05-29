@@ -42,12 +42,14 @@ namespace jitcat::AST
 		const std::string& getName() const;
 		const CatTypeNode& getType() const;
 		
+		const CatTypedExpression* getInitializationExpression() const;
+
 	private:
 		std::unique_ptr<CatTypeNode> type;
 		std::string name;
 		Tokenizer::Lexeme nameLexeme;
 
-		std::unique_ptr<CatAssignmentOperator> initializationExpression;
+		std::unique_ptr<CatTypedExpression> initializationExpression;
 		Reflection::TypeMemberInfo* memberInfo;
 	};
 

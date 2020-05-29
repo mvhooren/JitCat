@@ -22,6 +22,7 @@ namespace jitcat::AST
 		virtual const CatGenericType& getType() const = 0;
 		virtual bool isConst() const = 0;
 		virtual bool isAssignable() const {return false;}
+		virtual bool isTypedExpression() const override final { return true;}
 	};
 
 } //End namespace jitcat::AST
