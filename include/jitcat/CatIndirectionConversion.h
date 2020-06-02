@@ -27,7 +27,7 @@ namespace jitcat::AST
 		virtual CatStatement* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual std::any execute(jitcat::CatRuntimeContext* runtimeContext) override final;
-		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const override final;
+		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) override final;
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;

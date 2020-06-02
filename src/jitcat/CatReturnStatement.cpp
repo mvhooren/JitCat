@@ -136,9 +136,10 @@ CatStatement* CatReturnStatement::constCollapse(CatRuntimeContext* compileTimeCo
 }
 
 
-std::optional<bool> jitcat::AST::CatReturnStatement::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+std::optional<bool> jitcat::AST::CatReturnStatement::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected)
 {
-	return true;
+	allControlPathsReturn = true;
+	return allControlPathsReturn;
 }
 
 

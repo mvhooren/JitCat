@@ -10,6 +10,7 @@
 #include "jitcat/CatASTNode.h"
 
 #include <any>
+#include <cassert>
 #include <optional>
 
 namespace jitcat::AST
@@ -27,7 +28,12 @@ namespace jitcat::AST
 		virtual CatStatement* constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) = 0;
 
 		virtual std::any execute(jitcat::CatRuntimeContext* runtimeContext) = 0;
-		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const {return std::nullopt;}
+		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) {return std::nullopt;}
+
+		bool getAllControlPathsReturn() const {return allControlPathsReturn.has_value() && allControlPathsReturn.value(); }
+
+	protected:
+		std::optional<bool> allControlPathsReturn;
 	};
 
 };

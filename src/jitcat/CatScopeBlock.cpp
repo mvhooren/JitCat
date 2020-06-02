@@ -150,7 +150,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-std::optional<bool> jitcat::AST::CatScopeBlock::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+std::optional<bool> jitcat::AST::CatScopeBlock::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected)
 {
 	bool controlFlowReturns = false;
 	for (auto& iter : statements)
@@ -164,10 +164,12 @@ std::optional<bool> jitcat::AST::CatScopeBlock::checkControlFlow(CatRuntimeConte
 		{
 			unreachableCodeDetected = true;
 			errorManager->compiledWithError("Code is unreachable.", errorContext, compiletimeContext->getContextName(), iter->getLexeme());
-			return true;
+			allControlPathsReturn = true;
+			return allControlPathsReturn;
 		}
 	}
-	return controlFlowReturns;
+	allControlPathsReturn = controlFlowReturns;
+	return allControlPathsReturn;
 }
 
 

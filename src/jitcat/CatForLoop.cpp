@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatForLoop.h"
+#include "jitcat/ASTHelper.h"
 #include "jitcat/CatRange.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeBlock.h"
@@ -105,6 +106,18 @@ bool CatForLoop::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErro
 
 CatStatement* jitcat::AST::CatForLoop::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	range->constCollapse(compiletimeContext, errorManager, errorContext);
+
+	CatScopeID iteratorScope = compiletimeContext->addScope(scopeType.get(), nullptr, false);
+	assert(iteratorScope == loopIteratorScope);
+	CatScope* previousScope = compiletimeContext->getCurrentScope();
+	compiletimeContext->setCurrentScope(this);
+
+	ASTHelper::updatePointerIfChanged(loopBody, loopBody->constCollapse(compiletimeContext, errorManager, errorContext));
+
+	compiletimeContext->removeScope(iteratorScope);
+	compiletimeContext->setCurrentScope(previousScope);
+
 	return this;
 }
 
@@ -124,26 +137,33 @@ std::any CatForLoop::execute(jitcat::CatRuntimeContext* runtimeContext)
 	loopIteratorScope = runtimeContext->addScope(scopeType.get(), scopeMem, false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
+	std::any returnValue;
 
 	if (range->begin(iterator, runtimeContext))
 	{
 		do
 		{
-			loopBody->execute(runtimeContext);
+			std::any value = loopBody->execute(runtimeContext);
+			if (runtimeContext->getIsReturning())
+			{
+				returnValue = value;
+				break;
+			}
 		} while (range->next(iterator, runtimeContext));
 	}
 
 	runtimeContext->removeScope(loopIteratorScope);
 	runtimeContext->setCurrentScope(previousScope);
 	scopeType->placementDestruct(scopeMem, scopeType->getTypeSize());
-	return std::any();
+	return returnValue;
 }
 
 
-std::optional<bool> CatForLoop::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+std::optional<bool> CatForLoop::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected)
 {
 	auto returns = loopBody->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
-	return returns.has_value() && *returns && range->hasAlwaysAtLeastOneIteration(compiletimeContext);
+	allControlPathsReturn = returns.has_value() && *returns && range->hasAlwaysAtLeastOneIteration(compiletimeContext);
+	return allControlPathsReturn;
 }
 
 
@@ -156,4 +176,16 @@ CatScopeID CatForLoop::getScopeId() const
 Reflection::CustomTypeInfo* CatForLoop::getCustomType() const
 {
 	return scopeType.get();
+}
+
+
+const CatRange* jitcat::AST::CatForLoop::getRange() const
+{
+	return range.get();
+}
+
+
+const CatStatement* jitcat::AST::CatForLoop::getBody() const
+{
+	return loopBody.get();
 }

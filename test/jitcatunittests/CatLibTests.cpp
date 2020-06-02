@@ -185,7 +185,7 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 }
 
 
-//Tests overloaded funcion functionality.
+//Tests local variable functionality.
 TEST_CASE("CatLib local variable tests", "[catlib][locals]" ) 
 {
 	ReflectedObject reflectedObject;
@@ -230,12 +230,307 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.addScope(testClassInfo, testClassInstance, false);
 
-	SECTION("Test function")
+	SECTION("Local tests")
 	{
 		Expression<std::string> testExpression1(&context, "addToTestString(42)");
 		doChecks(std::string("42Hello!42"), false, false, false, testExpression1, context);
 
 		Expression<float> testExpression2(&context, "checkFloats(12.0f, 91.0f)");
 		doChecks(12023.0f, false, false, false, testExpression2, context);
+	}
+}
+
+
+//Tests if-statement functionality.
+TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	library.addSource("test1.jc", 
+		"class TestClass\n"
+		"{\n"
+		"	string testString = \"Hello!\";\n"
+		"	string testString2 = \"World!\";\n"
+		"	string testString3 = \"Hello world!\";\n"
+		"\n"
+		"	string basicIf(int value)\n"
+		"	{\n"
+		"		if (value > 0)\n"
+		"		{\n"
+		"			return testString;\n"
+		"		}\n"
+		"		else\n"
+		"		{\n"
+		"			return testString2;\n"
+		"		}\n"
+		"	}\n"
+		"\n"
+		"	string fallThroughIf(int value)\n"
+		"	{\n"
+		"		if (value > 0)\n"
+		"		{\n"
+		"			return testString;\n"
+		"		}\n"
+		"		return testString2;\n"
+		"	}\n"
+		"\n"
+		"	string basicElseIf(int value)\n"
+		"	{\n"
+		"		if (value > 0)\n"
+		"		{\n"
+		"			return testString;\n"
+		"		}\n"
+		"		else if (value == 0)\n"
+		"		{\n"
+		"			return testString2;\n"
+		"		}\n"
+		"		else\n"
+		"		{\n"
+		"			return testString3;\n"
+		"		}\n"
+		"	}\n"
+		"\n"
+		"	string nestedElseIf(int value)\n"
+		"	{\n"
+		"		if (value > 0)\n"
+		"		{\n"
+		"			return testString;\n"
+		"		}\n"
+		"		else\n"
+		"		{\n"
+		"			if (value == 0)\n"
+		"			{\n"
+		"				return testString2;\n"
+		"			}\n"
+		"			else\n"
+		"			{\n"
+		"				return testString3;\n"
+		"			}\n"
+		"		}\n"
+		"	}\n"
+		"\n"
+		"	string nestedElseIf2(int value)\n"
+		"	{\n"
+		"		if (value <= 0)\n"
+		"		{\n"
+		"			if (value == 0)\n"
+		"			{\n"
+		"				return testString2;\n"
+		"			}\n"
+		"			else\n"
+		"			{\n"
+		"				return testString3;\n"
+		"			}\n"
+		"		}\n"
+		"		else\n"
+		"		{\n"
+		"			return testString;\n"
+		"		}\n"
+		"	}\n"
+		"\n"
+		"	int floatIf(float value)\n"
+		"	{\n"
+		"		int result = 0;\n"
+		"		if (value > 0.0f)\n"
+		"		{\n"
+		"			result = result + 1;\n"
+		"		}\n"
+		"		if (value > 1.0f)\n"
+		"		{\n"
+		"			result = result + 1;\n"
+		"		}\n"
+		"		return result;\n"
+		"	}\n"
+		"}\n"
+		);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("If tests")
+	{
+		Expression<std::string> testExpression1(&context, "basicIf(42)");
+		doChecks(std::string("Hello!"), false, false, false, testExpression1, context);
+
+		Expression<std::string> testExpression2(&context, "basicIf(-1)");
+		doChecks(std::string("World!"), false, false, false, testExpression2, context);
+
+		Expression<std::string> testExpression3(&context, "fallThroughIf(42)");
+		doChecks(std::string("Hello!"), false, false, false, testExpression3, context);
+
+		Expression<std::string> testExpression4(&context, "fallThroughIf(-1)");
+		doChecks(std::string("World!"), false, false, false, testExpression4, context);
+
+		Expression<std::string> testExpression5(&context, "basicElseIf(42)");
+		doChecks(std::string("Hello!"), false, false, false, testExpression5, context);
+
+		Expression<std::string> testExpression6(&context, "basicElseIf(-1)");
+		doChecks(std::string("Hello world!"), false, false, false, testExpression6, context);
+
+		Expression<std::string> testExpression7(&context, "basicElseIf(0)");
+		doChecks(std::string("World!"), false, false, false, testExpression7, context);
+
+		Expression<std::string> testExpression8(&context, "nestedElseIf(42)");
+		doChecks(std::string("Hello!"), false, false, false, testExpression8, context);
+
+		Expression<std::string> testExpression9(&context, "nestedElseIf(-1)");
+		doChecks(std::string("Hello world!"), false, false, false, testExpression9, context);
+
+		Expression<std::string> testExpression10(&context, "nestedElseIf(0)");
+		doChecks(std::string("World!"), false, false, false, testExpression10, context);
+
+		Expression<std::string> testExpression11(&context, "nestedElseIf2(42)");
+		doChecks(std::string("Hello!"), false, false, false, testExpression11, context);
+
+		Expression<std::string> testExpression12(&context, "nestedElseIf2(-1)");
+		doChecks(std::string("Hello world!"), false, false, false, testExpression12, context);
+
+		Expression<std::string> testExpression13(&context, "nestedElseIf2(0)");
+		doChecks(std::string("World!"), false, false, false, testExpression13, context);
+
+		Expression<int> testExpression14(&context, "floatIf(-1.0f)");
+		doChecks(0, false, false, false, testExpression14, context);
+
+		Expression<int> testExpression15(&context, "floatIf(0.1f)");
+		doChecks(1, false, false, false, testExpression15, context);
+
+		Expression<int> testExpression16(&context, "floatIf(11.0f)");
+		doChecks(2, false, false, false, testExpression16, context);
+	}
+}
+
+
+//Tests for-loop functionality.
+TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	library.addSource("test1.jc", 
+		"class TestClass\n"
+		"{\n"
+		"	string testString = \"Hello!\";\n"
+		"\n"
+		"	int simpleFor(int value)\n"
+		"	{\n"
+		"		int total = 0;\n"
+		"		for i in range (value)\n"
+		"		{\n"
+		"			total = total + i * i;\n"
+		"		}\n"
+		"		return total;\n"
+		"	}\n"
+		"\n"
+		"	int simpleFor2(int value)\n"
+		"	{\n"
+		"		int total = 0;\n"
+		"		for i in range (0, value)\n"
+		"		{\n"
+		"			total = total + i * i;\n"
+		"		}\n"
+		"		return total;\n"
+		"	}\n"
+		"\n"
+		"	int nestedFor(int value, int value2)\n"
+		"	{\n"
+		"		int total = 0;\n"
+		"		for i in range (0, value)\n"
+		"		{\n"
+		"			for j in range (0, value2)\n"
+		"			{\n"
+		"				total = total + 1;\n"
+		"			}\n"
+		"		}\n"
+		"		return total;\n"
+		"	}\n"
+		"\n"
+		"	int earlyOutFor(int value)\n"
+		"	{\n"
+		"		int total = 0;\n"
+		"		for i in range (value)\n"
+		"		{\n"
+		"			return total + 42;\n"
+		"		}\n"
+		"		return total;\n"
+		"	}\n"
+		"\n"
+		"	int stepFor(int value)\n"
+		"	{\n"
+		"		int total = 0;\n"
+		"		for i in range (0, value, 2)\n"
+		"		{\n"
+		"			total = total + 1;\n"
+		"		}\n"
+		"		return total;\n"
+		"	}\n"
+		"\n"
+		"}\n"
+		);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("Local tests")
+	{
+		{
+			Expression<int> testExpression(&context, "simpleFor(4)");
+			doChecks(14, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "simpleFor(0)");
+			doChecks(0, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "simpleFor2(5)");
+			doChecks(30, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "nestedFor(5, 11)");
+			doChecks(55, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "earlyOutFor(5)");
+			doChecks(42, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "earlyOutFor(0)");
+			doChecks(0, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "stepFor(0)");
+			doChecks(0, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "stepFor(2)");
+			doChecks(1, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "stepFor(3)");
+			doChecks(2, false, false, false, testExpression, context);
+		}{
+			Expression<int> testExpression(&context, "stepFor(4)");
+			doChecks(2, false, false, false, testExpression, context);
+		}
 	}
 }

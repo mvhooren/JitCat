@@ -207,3 +207,21 @@ CatASTNode* jitcat::AST::CatRange::constCollapse(CatRuntimeContext* compiletimeC
 	ASTHelper::updatePointerIfChanged(rangeStep, rangeStep->constCollapse(compiletimeContext, errorManager, errorContext));
 	return this;
 }
+
+
+const CatTypedExpression* jitcat::AST::CatRange::getRangeMin() const
+{
+	return rangeMin.get();
+}
+
+
+const CatTypedExpression* jitcat::AST::CatRange::getRangeMax() const
+{
+	return rangeMax.get();
+}
+
+
+const CatTypedExpression* jitcat::AST::CatRange::getRangeStep() const
+{
+	return rangeStep.get();
+}

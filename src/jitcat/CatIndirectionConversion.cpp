@@ -79,9 +79,10 @@ std::any CatIndirectionConversion::execute(jitcat::CatRuntimeContext* runtimeCon
 }
 
 
-std::optional<bool> CatIndirectionConversion::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+std::optional<bool> CatIndirectionConversion::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected)
 {
-    return expressionToConvert->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
+    allControlPathsReturn = expressionToConvert->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
+    return allControlPathsReturn;
 }
 
 

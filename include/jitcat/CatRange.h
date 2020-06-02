@@ -48,6 +48,10 @@ namespace jitcat::AST
 		
 		CatASTNode* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
+		const CatTypedExpression* getRangeMin() const;
+		const CatTypedExpression* getRangeMax() const;
+		const CatTypedExpression* getRangeStep() const;
+
 	private:
 		bool isDefaultMin;
 		std::unique_ptr<CatTypedExpression> rangeMin;

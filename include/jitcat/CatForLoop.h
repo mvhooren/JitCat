@@ -42,11 +42,14 @@ namespace jitcat::AST
 		virtual CatStatement* constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 
 		virtual std::any execute(jitcat::CatRuntimeContext* runtimeContext) override final;
-		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const override final;
+		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) override final;
 
 		// Inherited via CatScope
 		virtual CatScopeID getScopeId() const override final;
 		virtual Reflection::CustomTypeInfo* getCustomType() const override final;
+
+		const CatRange* getRange() const;
+		const CatStatement* getBody() const;
 
 	private:
 		Tokenizer::Lexeme iteratorLexeme;
@@ -57,8 +60,6 @@ namespace jitcat::AST
 		Reflection::TypeMemberInfo* iteratorMember;
 
 		std::unique_ptr<CatRange> range;
-		std::unique_ptr<CatScopeBlock> loopBody;
-		
-
+		std::unique_ptr<CatStatement> loopBody;
 	};
 }

@@ -32,7 +32,7 @@ namespace jitcat::AST
 		virtual const CatGenericType& getType() const override final;
 		virtual bool isConst() const override final;
 		virtual CatStatement* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
-		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const override final;
+		virtual std::optional<bool> checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) override final;
 
 		const CatTypedExpression* getReturnExpression() const;
 

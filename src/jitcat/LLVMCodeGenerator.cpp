@@ -1028,15 +1028,107 @@ void LLVMCodeGenerator::generate(const AST::CatVariableDeclaration* variableDecl
 }
 
 
-void LLVMCodeGenerator::generate(const AST::CatIfStatement* variableDeclaration, LLVMCompileTimeContext* context)
+void LLVMCodeGenerator::generate(const AST::CatIfStatement* ifStatement, LLVMCompileTimeContext* context)
 {
-	assert(false);
+	llvm::Value* conditionValue = generate(ifStatement->getConditionExpression(), context);
+	assert(conditionValue->getType() == LLVMTypes::boolType);
+	llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(helper->getContext(), "then", context->currentFunction);
+	llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(helper->getContext(), "else");
+	bool allIfControlPathsReturn = ifStatement->getAllControlPathsReturn();
+	llvm::BasicBlock* continueBlock = nullptr;
+	if (!allIfControlPathsReturn)
+	{
+		continueBlock = llvm::BasicBlock::Create(helper->getContext(), "continue");
+	}
+	builder->CreateCondBr(conditionValue, thenBlock, elseBlock);
+
+	builder->SetInsertPoint(thenBlock);
+	generate(ifStatement->getIfBody(), context);
+	if (!allIfControlPathsReturn
+		&& (ifStatement->getIfBody()->getNodeType() != CatASTNodeType::ScopeBlock 
+		    || !static_cast<const CatScopeBlock*>(ifStatement->getIfBody())->containsReturnStatement()))
+	{
+		//Insert branch to continue block
+		builder->CreateBr(continueBlock);
+	}
+	context->currentFunction->getBasicBlockList().push_back(elseBlock);
+	builder->SetInsertPoint(elseBlock);
+	if (ifStatement->getElseBody() != nullptr)
+	{
+		generate(ifStatement->getElseBody(), context);
+	}
+	if (!allIfControlPathsReturn
+		&& (ifStatement->getElseBody() == nullptr 
+			|| ifStatement->getElseBody()->getNodeType() != CatASTNodeType::ScopeBlock
+			|| !static_cast<const CatScopeBlock*>(ifStatement->getElseBody())->containsReturnStatement()))
+	{
+		//Insert branch to continue block
+		builder->CreateBr(continueBlock);
+	}
+	if (!allIfControlPathsReturn)
+	{
+		context->currentFunction->getBasicBlockList().push_back(continueBlock);
+		builder->SetInsertPoint(continueBlock);
+	}
 }
 
 
-void LLVMCodeGenerator::generate(const AST::CatForLoop* variableDeclaration, LLVMCompileTimeContext* context)
+void LLVMCodeGenerator::generate(const AST::CatForLoop* forLoop, LLVMCompileTimeContext* context)
 {
-	assert(false);
+	CatScopeID iteratorScopeId = context->catContext->addScope(forLoop->getCustomType(), nullptr, false);
+	assert(iteratorScopeId == forLoop->getScopeId());
+	llvm::Value* iteratorAlloc = helper->createObjectAllocA(context, "iterator_locals", CatGenericType(forLoop->getCustomType(), true, false), false);
+	context->scopeValues[iteratorScopeId] = iteratorAlloc;
+	const CatRange* range = forLoop->getRange();
+	assert(range->getRangeMin()->getType().isIntType());
+	assert(range->getRangeMax()->getType().isIntType());
+	assert(range->getRangeStep()->getType().isIntType());
+	TypeMemberInfo* memberInfo = forLoop->getCustomType()->getMembers().begin()->second.get();
+	memberInfo->generateAssignCode(iteratorAlloc, generate(range->getRangeMin(), context), context);
+	llvm::BasicBlock* preheaderBlock = builder->GetInsertBlock();
+
+	//Create the basic blocks for the for-loop
+	llvm::BasicBlock* conditionBlock = llvm::BasicBlock::Create(helper->getContext(), "loopCondition", context->currentFunction);
+	llvm::BasicBlock* loopBlock = llvm::BasicBlock::Create(helper->getContext(), "loopBody");
+	bool allForControlPathsReturn = forLoop->getAllControlPathsReturn();
+	llvm::BasicBlock* continueBlock = continueBlock = llvm::BasicBlock::Create(helper->getContext(), "continue");
+
+	//Insert an explicit fall through from the current block to the conditionBlock.
+	builder->CreateBr(conditionBlock);
+	//Start insertion in conditionBlock.
+	builder->SetInsertPoint(conditionBlock);
+
+	// Check the loop condition
+	llvm::Value* condition = builder->CreateICmpSLT(memberInfo->generateDereferenceCode(iteratorAlloc, context), generate(range->getRangeMax(), context));
+	
+	//Jump to either the loop block, or the continuation block.
+	builder->CreateCondBr(condition, loopBlock, continueBlock);
+
+
+	context->currentFunction->getBasicBlockList().push_back(loopBlock);
+
+	// Start insertion in loopBlock.
+	builder->SetInsertPoint(loopBlock);
+	
+	//Generate loop body
+	generate(forLoop->getBody(), context);
+	if (!forLoop->getBody()->getAllControlPathsReturn())
+	{
+		//Generate step value
+		llvm::Value* stepValue = generate(range->getRangeStep(), context);
+
+		//Increment iterator
+		memberInfo->generateAssignCode(iteratorAlloc, builder->CreateAdd(memberInfo->generateDereferenceCode(iteratorAlloc, context), stepValue, "loopStep"), context);
+	
+		//Jump back to the condition
+		builder->CreateBr(conditionBlock);
+	}
+	context->currentFunction->getBasicBlockList().push_back(continueBlock);
+	//Continue insertion in continueBlock.
+	builder->SetInsertPoint(continueBlock);
+
+	context->scopeValues.erase(iteratorScopeId);
+	context->catContext->removeScope(iteratorScopeId);
 }
 
 

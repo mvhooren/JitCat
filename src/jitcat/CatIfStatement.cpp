@@ -129,24 +129,43 @@ std::any jitcat::AST::CatIfStatement::execute(CatRuntimeContext* runtimeContext)
 }
 
 
-std::optional<bool> jitcat::AST::CatIfStatement::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected) const
+std::optional<bool> jitcat::AST::CatIfStatement::checkControlFlow(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext, bool& unreachableCodeDetected)
 {
 	auto ifBodyReturns = ifBody->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
 	if (elseNode == nullptr)
 	{
 		if (condition->isConst() && std::any_cast<bool>(condition->execute(compiletimeContext)))
 		{
-			return ifBodyReturns;
+			allControlPathsReturn = ifBodyReturns;
 		}
 		else
 		{
-			return false;
+			allControlPathsReturn = false;
 		}
 	}
 	else
 	{
 		auto elseBodyReturns = elseNode->checkControlFlow(compiletimeContext, errorManager, errorContext, unreachableCodeDetected);
 		assert(ifBodyReturns.has_value() && elseBodyReturns.has_value());
-		return (*ifBodyReturns) && (*elseBodyReturns);
+		allControlPathsReturn = (*ifBodyReturns) && (*elseBodyReturns);
 	}
+	return allControlPathsReturn;
+}
+
+
+const CatTypedExpression* jitcat::AST::CatIfStatement::getConditionExpression() const
+{
+	return condition.get();
+}
+
+
+const CatStatement* jitcat::AST::CatIfStatement::getIfBody() const
+{
+	return ifBody.get();
+}
+
+
+const CatStatement* jitcat::AST::CatIfStatement::getElseBody() const
+{
+	return elseNode.get();
 }

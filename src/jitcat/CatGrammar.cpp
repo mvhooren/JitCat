@@ -212,7 +212,7 @@ const char* CatGrammar::getProductionName(int production) const
 {
 	switch((Prod)production)
 	{
-		default:								return "unknown";
+		default:				assert(false);	return "unknown";
 		case Prod::Root:						return "root";
 		case Prod::TypeOrIdentifier:			return "TypeOrIdentifier";
 		case Prod::StaticAccessor:				return "StaticAccessor";

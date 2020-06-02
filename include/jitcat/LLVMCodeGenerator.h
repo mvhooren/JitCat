@@ -75,8 +75,8 @@ namespace jitcat::LLVM
 		void generate(const AST::CatScopeBlock* scopeBlock, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatReturnStatement* returnStatement, LLVMCompileTimeContext* context);
 		void generate(const AST::CatVariableDeclaration* variableDeclaration, LLVMCompileTimeContext* context);
-		void generate(const AST::CatIfStatement* variableDeclaration, LLVMCompileTimeContext* context);
-		void generate(const AST::CatForLoop* variableDeclaration, LLVMCompileTimeContext* context);
+		void generate(const AST::CatIfStatement* ifStatement, LLVMCompileTimeContext* context);
+		void generate(const AST::CatForLoop* forLoop, LLVMCompileTimeContext* context);
 
 		void generate(const AST::CatStatement* statement, LLVMCompileTimeContext* context);
 
