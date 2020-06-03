@@ -30,6 +30,7 @@
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
+#include <llvm/IR/Argument.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/LegacyPassManager.h>
@@ -1229,9 +1230,10 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 			{
 				llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(functionDefinition->getParameterType(i).getObjectType()), Tools::append(functionDefinition->getParameterType(i).getObjectType()->getTypeName(), "_typeInfo"));
 				llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(functionDefinition->getParameterType(i).getObjectType()->getTypeName(), "_typeInfoPtr"));
+				llvm::Argument* argument = function->arg_begin() + (i + parameterOffset);
 				context->blockDestructorGenerators.push_back([=]()
 						{
-							return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {function->arg_begin() + (i + parameterOffset), typeInfoConstantAsIntPtr}, "destructor");					
+							return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {argument, typeInfoConstantAsIntPtr}, "destructor");					
 						});
 			}
 		}
