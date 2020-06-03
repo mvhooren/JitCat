@@ -758,7 +758,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::copyConstructIfValueType(llv
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context)
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context)
 {
 	const std::vector<CatGenericType>& argumentTypes = functionInfo->getArgumentTypes();
 	assert(arguments.size() == argumentTypes.size());

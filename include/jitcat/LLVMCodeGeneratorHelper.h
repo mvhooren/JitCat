@@ -127,7 +127,7 @@ namespace jitcat::LLVM
 	private:
 		llvm::Value* convertIndirection(llvm::Value* value, llvm::Type* expectedType);
 		llvm::Value* copyConstructIfValueType(llvm::Value* value, const CatGenericType& type, LLVMCompileTimeContext* context, const std::string& valueName);
-		llvm::Value* generateCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context);
+		llvm::Value* generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context);
 
 		llvm::Value* createZeroStringPtrConstant();
 		llvm::Value* createOneStringPtrConstant();
@@ -155,7 +155,7 @@ namespace jitcat::LLVM
 	{
 		Reflection::StaticFunctionInfoWithArgs<ReturnT, Args...> functionInfo(name, functionPointer);
 		std::vector<llvm::Value*> argumentsCopy = arguments;
-		return generateCall(&functionInfo, argumentsCopy, context);
+		return generateIntrinsicCall(&functionInfo, argumentsCopy, context);
 	}
 
 } //End namespace jitcat::LLVM
