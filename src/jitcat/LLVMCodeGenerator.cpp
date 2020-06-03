@@ -1219,7 +1219,7 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 
 	llvm::Function* function = generateFunctionPrototype(name, isThisCall, returnType, parameterTypes, parameterNames);
 	
-	if constexpr (!Configuration::callerDestroysTemporaryArguments)
+	if (!Configuration::callerDestroysTemporaryArguments)
 	{
 		int parameterOffset = 0;
 		if (isThisCall)								parameterOffset++;
