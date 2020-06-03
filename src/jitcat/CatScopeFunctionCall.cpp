@@ -33,6 +33,7 @@ CatScopeFunctionCall::CatScopeFunctionCall(const std::string& name, CatArgumentL
     lexeme(lexeme),
     arguments(arguments)
 {
+    assert(arguments != nullptr);
     nameLowerCase = Tools::toLowerCase(name);
 }
 
@@ -42,7 +43,8 @@ CatScopeFunctionCall::CatScopeFunctionCall(const CatScopeFunctionCall& other):
     name(other.name),
     nameLexeme(other.nameLexeme),
     lexeme(other.lexeme),
-    arguments(static_cast<CatArgumentList*>(other.arguments->copy()))
+    arguments(other.arguments != nullptr ? static_cast<CatArgumentList*>(other.arguments->copy()) : nullptr),
+    functionCall(other.functionCall != nullptr ? static_cast<CatTypedExpression*>(other.functionCall->copy()) : nullptr)
 {
     nameLowerCase = Tools::toLowerCase(name);
 }
