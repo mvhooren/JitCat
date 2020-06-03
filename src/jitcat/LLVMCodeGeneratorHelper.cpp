@@ -746,7 +746,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::copyConstructIfValueType(llv
 	//If a parameter is passed by value, it should be copy constructed.
 	if (type.isReflectableObjectType())
 	{
-		llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", valueName, "_copy"), type, false);
+		llvm::Value* copyAllocation = context->helper->createObjectAllocA(context, Tools::append("Argument_", valueName, "_copy"), type, Configuration::callerDestroysTemporaryArguments);
 		const std::string& typeName = type.getObjectType()->getTypeName();
 		llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(type.getObjectType()), Tools::append(typeName, "_typeInfo"));
 		llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));

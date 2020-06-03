@@ -34,6 +34,16 @@ namespace Configuration
 		true;
 #endif
 
+	//Determines who is responsible for destroying temporary argument values that are passed to a function.
+	//In the Windows/MSVC ABI, the callee is responsible for destroying temporaries.
+	//On Linux/GCC/Clang, which use the Itanium C++ ABI, the caller is responsible.
+	static constexpr bool callerDestroysTemporaryArguments = 
+#ifdef WIN32
+		false;
+#else
+		true;
+#endif
+
 	//Sets the calling convention for member function calls. Similar to the sretBeforeThis option.
 	static constexpr bool useThisCall = 
 #ifdef WIN32
