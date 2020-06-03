@@ -6,6 +6,7 @@
 */
 
 #include <catch2/catch.hpp>
+#include "jitcat/CatLib.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
 #include "TestHelperFunctions.h"
@@ -41,6 +42,54 @@ TEST_CASE("Basic memory leak test", "[memory]" )
 		{
 			Expression<TestVector4> testExpression(&context, "addVectors(getTestVector(), getTestVectorPtr())");
 			doChecks(reflectedObject.addVectors(reflectedObject.getTestVector(), *reflectedObject.getTestVectorPtr()), false, false, false, testExpression, context);
+		}
+		CHECK(currentInstances == TestVector4::instanceCount);
+	}
+}
+
+
+//Tests memory leaks in catlib code.
+TEST_CASE("CatLib memory leak tests", "[catlib][memory]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+	std::string source =
+		"class TestClass\n"
+		"{\n"
+		"	TestVector4 testVector = getTestVector();\n"
+		"\n"
+		"	TestVector4 getTestVector()\n"
+		"	{\n"
+		"		return testVector;\n"
+		"	}\n"
+		"}\n";
+	library.addSource("test1.jc", 
+		source
+		);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("Get TestVector4")
+	{
+		int currentInstances = TestVector4::instanceCount;
+		{
+			Expression<TestVector4> testExpression1(&context, "getTestVector()");
+			doChecks(TestVector4(1.0f, 2.0f, 3.0f, 4.0f), false, false, false, testExpression1, context);
 		}
 		CHECK(currentInstances == TestVector4::instanceCount);
 	}

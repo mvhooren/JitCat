@@ -44,6 +44,7 @@ namespace TestObjects
 		float w;
 		static TestVector4 zero;
 		static int instanceCount;
+		static bool enableConstructionAndDestructionLogging;
 	};
 
 	TestVector4 operator/(const TestVector4& lhs, const TestVector4& rhs);

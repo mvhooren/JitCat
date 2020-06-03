@@ -8,6 +8,7 @@
 #include "TestVector4.h"
 #include "jitcat/ReflectedTypeInfo.h"
 
+#include <iostream>
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
@@ -21,6 +22,10 @@ TestObjects::TestVector4::TestVector4():
 	w(0.0f)
 {
 	instanceCount++;
+	if (TestVector4::enableConstructionAndDestructionLogging)
+	{
+		std::cout << "Default constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+	}
 }
 
 
@@ -31,6 +36,10 @@ TestObjects::TestVector4::TestVector4(float x, float y, float z, float w):
 	w(w)
 {
 	instanceCount++;
+	if (TestVector4::enableConstructionAndDestructionLogging)
+	{
+		std::cout << "Constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+	}
 }
 
 
@@ -41,6 +50,10 @@ TestObjects::TestVector4::TestVector4(const TestVector4& other):
 	w(other.w)
 {
 	instanceCount++;
+	if (TestVector4::enableConstructionAndDestructionLogging)
+	{
+		std::cout << "Copy constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+	}
 }
 
 
@@ -51,6 +64,10 @@ TestObjects::TestVector4::TestVector4(const TestVector4&& other) noexcept:
 	w(other.w)
 {
 	instanceCount++;
+	if (TestVector4::enableConstructionAndDestructionLogging)
+	{
+		std::cout << "Move constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+	}
 }
 
 
@@ -67,16 +84,20 @@ TestVector4& TestObjects::TestVector4::operator=(const TestVector4& other)
 TestObjects::TestVector4::~TestVector4()
 {
 	instanceCount--;
+	if (TestVector4::enableConstructionAndDestructionLogging)
+	{
+		std::cout << "Destructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+	}
 }
 
 
 void TestObjects::TestVector4::reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo)
 {
 	typeInfo
-		.addMember("x", &TestVector4::x)
-		.addMember("y", &TestVector4::y)
-		.addMember("z", &TestVector4::z)
-		.addMember("w", &TestVector4::w)
+		.addMember("x", &TestVector4::x, MemberFlags::isWritable)
+		.addMember("y", &TestVector4::y, MemberFlags::isWritable)
+		.addMember("z", &TestVector4::z, MemberFlags::isWritable)
+		.addMember("w", &TestVector4::w, MemberFlags::isWritable)
 		.addMember("doAdd", &TestVector4::doAdd)
 		.addMember("staticAdd", &TestVector4::staticAdd)
 		.template addMember<TestVector4, TestVector4, const TestVector4&>("*", &TestVector4::operator*)
@@ -162,6 +183,7 @@ float TestObjects::TestVector4::operator[](int index)
 
 TestVector4 TestVector4::zero = TestVector4();
 int TestVector4::instanceCount = 0;
+bool TestVector4::enableConstructionAndDestructionLogging = false;
 
 
 TestVector4 TestObjects::operator/(const TestVector4& lhs, const TestVector4& rhs)
