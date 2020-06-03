@@ -24,7 +24,7 @@ namespace jitcat::Tokenizer
 		~Document();
 		const std::string& getDocumentData() const;
 		std::size_t getDocumentSize() const;
-		Lexeme createLexeme(std::size_t offset, std::size_t length);
+		Lexeme createLexeme(std::size_t offset, std::size_t length) const;
 
 		std::size_t getOffsetInDocument(const Lexeme& lexeme) const;
 		DocumentSelection toSelection(const Lexeme& lexeme) const;

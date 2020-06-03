@@ -1218,6 +1218,25 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 
 	llvm::Function* function = generateFunctionPrototype(name, isThisCall, returnType, parameterTypes, parameterNames);
 	
+	if constexpr (!Configuration::callerDestroysTemporaryArguments)
+	{
+		int parameterOffset = 0;
+		if (isThisCall)								parameterOffset++;
+		if (returnType.isReflectableObjectType())	parameterOffset++;
+		for (int i = 0; i < functionDefinition->getNumParameters(); i++)
+		{
+			if (functionDefinition->getParameterType(i).isReflectableObjectType())
+			{
+				llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(functionDefinition->getParameterType(i).getObjectType()), Tools::append(functionDefinition->getParameterType(i).getObjectType()->getTypeName(), "_typeInfo"));
+				llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(functionDefinition->getParameterType(i).getObjectType()->getTypeName(), "_typeInfoPtr"));
+				context->blockDestructorGenerators.push_back([=]()
+						{
+							return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {function->arg_begin() + (i + parameterOffset), typeInfoConstantAsIntPtr}, "destructor");					
+						});
+			}
+		}
+	}
+
 	context->currentFunction = function;
 	//Function entry block
 	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);

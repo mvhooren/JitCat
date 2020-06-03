@@ -19,7 +19,9 @@ using namespace TestObjects;
 
 //This test case is meant to test things out while developing
 //Do not commit tests in this file.
-TEST_CASE("DevelopmentTests", "[development]" ) 
+//To enable this test, remove the '.' in [.development] to enable the test by default or
+//add [.development] to the command line arguments of JitCatUnitTests
+TEST_CASE("DevelopmentTests", "[.development]" ) 
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;

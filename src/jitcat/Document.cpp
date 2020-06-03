@@ -46,7 +46,7 @@ std::size_t Document::getDocumentSize() const
 }
 
 
-Lexeme jitcat::Tokenizer::Document::createLexeme(std::size_t offset, std::size_t length)
+Lexeme jitcat::Tokenizer::Document::createLexeme(std::size_t offset, std::size_t length) const
 {
 	if (offset + length <= document.size())
 	{

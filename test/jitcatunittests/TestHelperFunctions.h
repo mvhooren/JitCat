@@ -15,6 +15,7 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/TypeMemberInfo.h"
 #include "jitcat/TypeTraits.h"
+#include "TestObjects.h"
 
 #include <catch2/catch.hpp>
 #include <functional>
@@ -135,7 +136,15 @@ inline void doChecks(const T& expectedValue, bool shouldHaveError, bool shouldBe
 {
 	if (doCommonChecks(&expression, shouldHaveError, shouldBeConst, shouldBeLiteral, context))
 	{
+		if (TestOptions::enableVerboseLogging)
+		{
+			std::cout << "Checking native code implementation:\n";
+		}
 		checkValueIsEqual(expression.getValue(&context), expectedValue); 
+		if (TestOptions::enableVerboseLogging)
+		{
+			std::cout << "Checking interpreted implementation:\n";
+		}
 		checkValueIsEqual(expression.getInterpretedValue(&context), expectedValue); 
 	}
 	else if (shouldHaveError)

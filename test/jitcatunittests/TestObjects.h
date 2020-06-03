@@ -24,6 +24,12 @@
 #include <vector>
 
 
+class TestOptions
+{
+public:
+	static bool enableVerboseLogging;
+};
+
 
 namespace TestObjects
 {
@@ -35,7 +41,6 @@ namespace TestObjects
 			return jitcat::Tools::lessWhileIgnoringCase(first, second);
 		}
 	};
-
 
 	class ReflectedObject: public jitcat::Reflection::Reflectable
 	{

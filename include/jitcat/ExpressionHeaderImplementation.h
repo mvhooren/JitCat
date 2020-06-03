@@ -174,11 +174,13 @@ namespace jitcat
 			if constexpr (!std::is_same<void, ExpressionResultT>::value)
 			{
 				std::any value = parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
+				runtimeContext->clearTemporaries();
 				return getActualValue(value);
 			}
 			else
 			{
 				parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
+				runtimeContext->clearTemporaries();
 				return;
 			}
 		}

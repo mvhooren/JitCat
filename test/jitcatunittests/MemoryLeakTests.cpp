@@ -56,7 +56,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 
 	CatLib library("TestLib");
 	library.addStaticScope(&reflectedObject);
-	std::string source =
+	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
 		"	TestVector4 testVector = getTestVector();\n"
@@ -65,10 +65,14 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 		"	{\n"
 		"		return testVector;\n"
 		"	}\n"
-		"}\n";
-	library.addSource("test1.jc", 
-		source
-		);
+		"\n"
+		"	TestVector4 addTestVector(TestVector4 vectorToAdd)\n"
+		"	{\n"
+		"		TestVector4 result = vectorToadd + testVector;\n"
+		"		return result;\n"
+		"	}\n"
+		"}\n");
+	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
 	library.getErrorManager().getAllErrors(errors);
 	for (auto& iter : errors)
@@ -90,6 +94,16 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 		{
 			Expression<TestVector4> testExpression1(&context, "getTestVector()");
 			doChecks(TestVector4(1.0f, 2.0f, 3.0f, 4.0f), false, false, false, testExpression1, context);
+		}
+		CHECK(currentInstances == TestVector4::instanceCount);
+	}
+
+	SECTION("Add TestVector4")
+	{
+		int currentInstances = TestVector4::instanceCount;
+		{
+			Expression<TestVector4> testExpression1(&context, "addTestVector(getTestVector())");
+			doChecks(TestVector4(2.0f, 4.0f, 6.0f, 8.0f), false, false, false, testExpression1, context);
 		}
 		CHECK(currentInstances == TestVector4::instanceCount);
 	}

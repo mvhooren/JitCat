@@ -17,6 +17,7 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 using namespace TestObjects;
 
+bool TestOptions::enableVerboseLogging = false;
 
 ReflectedObject::ReflectedObject():
 	v1(1.0f, 2.0f, 3.0f, 4.0f),

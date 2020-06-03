@@ -26,8 +26,7 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 
 	CatLib library("TestLib");
 	library.addStaticScope(&reflectedObject);
-
-	library.addSource("test1.jc", 
+	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
 		"	float testFloat = 42.0f;\n"
@@ -41,8 +40,8 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 		"	int getInt() { return testInt;}\n"
 		"	bool getBool() { return testBool;}\n"
 		"	string getString() { return testString;}\n"
-		"}\n"
-		);
+		"}\n");
+	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
 	library.getErrorManager().getAllErrors(errors);
 	for (auto& iter : errors)
@@ -126,7 +125,7 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 	CatLib library("TestLib");
 	library.addStaticScope(&reflectedObject);
 
-	library.addSource("test1.jc", 
+	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
 		"	string testString = \"Hello!\";\n"
@@ -140,8 +139,9 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 		"\n"
 		"	string addToTestString(int value) { return testString + value * 2;}\n"
 		"	string addToTestString(string value) { return testString + value + value;}\n"
-		"}\n"
-		);
+		"}\n");
+
+	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
 	library.getErrorManager().getAllErrors(errors);
 	for (auto& iter : errors)
@@ -194,7 +194,7 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 	CatLib library("TestLib");
 	library.addStaticScope(&reflectedObject);
 
-	library.addSource("test1.jc", 
+	Tokenizer::Document source(		
 		"class TestClass\n"
 		"{\n"
 		"	string testString = \"Hello!\";\n"
@@ -213,8 +213,9 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 		"		float tempFloat = tempString * a;\n"
 		"		return tempString + tempFloat * b;\n"
 		"	}\n"
-		"}\n"
-		);
+		"}\n");
+
+	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
 	library.getErrorManager().getAllErrors(errors);
 	for (auto& iter : errors)
@@ -250,7 +251,7 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 	CatLib library("TestLib");
 	library.addStaticScope(&reflectedObject);
 
-	library.addSource("test1.jc", 
+	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
 		"	string testString = \"Hello!\";\n"
@@ -345,8 +346,9 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 		"		}\n"
 		"		return result;\n"
 		"	}\n"
-		"}\n"
-		);
+		"}\n");
+
+	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
 	library.getErrorManager().getAllErrors(errors);
 	for (auto& iter : errors)
@@ -424,7 +426,7 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 	CatLib library("TestLib");
 	library.addStaticScope(&reflectedObject);
 
-	library.addSource("test1.jc", 
+	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
 		"	string testString = \"Hello!\";\n"
@@ -482,8 +484,9 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 		"		return total;\n"
 		"	}\n"
 		"\n"
-		"}\n"
-		);
+		"}\n");
+
+	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
 	library.getErrorManager().getAllErrors(errors);
 	for (auto& iter : errors)
