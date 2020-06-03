@@ -30,6 +30,7 @@ set(Source_GeneralTests
 	ExpressionAnyTests.cpp
 	IndirectionTests.cpp
 	MemberFunctionCallTests.cpp
+	MemoryLeakTests.cpp
 	OperatorPrecedenceTests.cpp
 	OperatorOverloadingTests.cpp
 	StaticFunctionCallTests.cpp
