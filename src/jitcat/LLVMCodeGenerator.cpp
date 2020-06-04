@@ -60,9 +60,9 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	objectLinkLayer(std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(*executionSession.get(),
 															[]() {	return memoryManager->createExpressionAllocator();})),
 	mangler(std::make_unique<llvm::orc::MangleAndInterner>(*executionSession, LLVMJit::get().getDataLayout())),
-	compileLayer(std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder()))),
-	helper(std::make_unique<LLVMCodeGeneratorHelper>(builder.get(), currentModule.get()))
+	compileLayer(std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder())))
 {
+	helper = std::make_unique<LLVMCodeGeneratorHelper>(this);
 	llvm::orc::SymbolMap intrinsicSymbols;
 	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary");
 
@@ -132,7 +132,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	std::string targetTriple = LLVMJit::get().getTargetMachine().getTargetTriple().str();
 	currentModule->setTargetTriple(targetTriple);
 	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
-	helper->setCurrentModule(currentModule.get());
+
 	// Create a new pass manager attached to it.
 	passManager = std::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
 
@@ -1560,9 +1560,6 @@ void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
 	passManager->add(llvm::createCFGSimplificationPass());
 
 	passManager->doInitialization();
-
-	helper->setCurrentModule(currentModule.get());
-
 }
 
 
@@ -1732,6 +1729,18 @@ void LLVMCodeGenerator::link(CustomTypeInfo* customType)
 		const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->functionDefinition->getMangledFunctionName();
 		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->nativeAddress = (intptr_t)getSymbolAddress(mangledName, *dylib);
 	}
+}
+
+
+llvm::Module* jitcat::LLVM::LLVMCodeGenerator::getCurrentModule() const
+{
+	return currentModule.get();
+}
+
+
+llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* jitcat::LLVM::LLVMCodeGenerator::getBuilder() const
+{
+	return builder.get();
 }
 
 

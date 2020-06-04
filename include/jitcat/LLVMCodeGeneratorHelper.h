@@ -38,7 +38,7 @@ namespace jitcat::LLVM
 	class LLVMCodeGeneratorHelper
 	{
 	public:
-		LLVMCodeGeneratorHelper(llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder, llvm::Module* module);
+		LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerator);
 
 		template<typename ReturnT, typename ... Args>
 		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
@@ -102,9 +102,6 @@ namespace jitcat::LLVM
 		llvm::Constant* createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType);
 		llvm::Value* constantToValue(llvm::Constant* constant) const;
 
-
-		void setCurrentModule(llvm::Module* module);
-
 		llvm::Value* createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool generateDestructorCall);
 		void generateBlockDestructors(LLVMCompileTimeContext* context);
 
@@ -133,9 +130,8 @@ namespace jitcat::LLVM
 		llvm::Value* createOneStringPtrConstant();
 
 	private:
+		LLVMCodeGenerator* codeGenerator;
 		llvm::LLVMContext& llvmContext;
-		llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder;
-		llvm::Module* currentModule;
 
 		static const std::string emptyString;
 		static const std::string oneString;

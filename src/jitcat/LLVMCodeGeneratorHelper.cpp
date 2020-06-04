@@ -37,10 +37,9 @@
 using namespace jitcat;
 using namespace jitcat::LLVM;
 
-LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* builder, llvm::Module* module):
-	llvmContext(LLVMJit::get().getContext()),
-	builder(builder),
-	currentModule(module)
+LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerator):
+	codeGenerator(codeGenerator),
+	llvmContext(LLVMJit::get().getContext())
 {
 }
 
@@ -49,9 +48,10 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionTyp
 {
 	llvm::Value* functionAddressConstant = createIntPtrConstant(functionAddress, functionName + "_Address");
 	functionAddressConstant->setName(functionName + "_IntPtr");
-	llvm::Value* addressAsPointer = builder->CreateIntToPtr(functionAddressConstant, llvm::PointerType::get(functionType, 0));
+
+	llvm::Value* addressAsPointer = codeGenerator->getBuilder()->CreateIntToPtr(functionAddressConstant, llvm::PointerType::get(functionType, 0));
 	addressAsPointer->setName(functionName + "_Ptr");
-	llvm::CallInst* callInstruction = builder->CreateCall(functionType, addressAsPointer, arguments);
+	llvm::CallInst* callInstruction = codeGenerator->getBuilder()->CreateCall(functionType, addressAsPointer, arguments);
 	if (functionType->getReturnType() != LLVMTypes::voidType)
 	{
 		callInstruction->setName(functionName);
@@ -87,6 +87,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 {
 	if (context->options.enableDereferenceNullChecks)
 	{
+		auto builder = codeGenerator->getBuilder();
 		llvm::Value* isNotNull = nullptr;
 		if (valueToCheck->getType() != LLVMTypes::boolType)
 		{
@@ -150,11 +151,12 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 													llvm::Value* argument, const CatGenericType& argumentType, 
 													LLVMCompileTimeContext* context)
 {
+	auto builder = codeGenerator->getBuilder();
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(parameterType));
 	std::vector<llvm::Value*> arguments;
 	arguments.push_back(convertType(argument, argumentType, parameterType, context));
-	llvm::Function *fun = llvm::Intrinsic::getDeclaration(currentModule, intrinsic, paramaterTypes);
+	llvm::Function *fun = llvm::Intrinsic::getDeclaration(codeGenerator->getCurrentModule(), intrinsic, paramaterTypes);
 	return builder->CreateCall(fun, arguments);
 }
 
@@ -164,12 +166,13 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 													llvm::Value* argument2, const CatGenericType& argument2Type, 
 													LLVMCompileTimeContext * context)
 {
+	auto builder = codeGenerator->getBuilder();
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(overload1Type));
 	std::vector<llvm::Value*> arguments;
 	arguments.push_back(convertType(argument1, argument1Type, overload1Type, context));
 	arguments.push_back(convertType(argument2, argument2Type, overload1Type, context));
-	llvm::Function* fun = llvm::Intrinsic::getDeclaration(currentModule, intrinsic, paramaterTypes);
+	llvm::Function* fun = llvm::Intrinsic::getDeclaration(codeGenerator->getCurrentModule(), intrinsic, paramaterTypes);
 	return builder->CreateCall(fun, arguments);
 }
 
@@ -179,13 +182,14 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 													llvm::Value* argument2, const CatGenericType& argument2Type,
 													LLVMCompileTimeContext* context)
 {
+	auto builder = codeGenerator->getBuilder();
 	std::vector<llvm::Type *> paramaterTypes;
 	paramaterTypes.push_back(toLLVMType(parameter1Type));
 	paramaterTypes.push_back(toLLVMType(parameter2Type));
 	std::vector<llvm::Value*> arguments;
 	arguments.push_back(convertType(argument1, argument1Type, parameter1Type, context));
 	arguments.push_back(convertType(argument2, argument2Type, parameter2Type, context));
-	llvm::Function* fun = llvm::Intrinsic::getDeclaration(currentModule, intrinsic, paramaterTypes);
+	llvm::Function* fun = llvm::Intrinsic::getDeclaration(codeGenerator->getCurrentModule(), intrinsic, paramaterTypes);
 	return builder->CreateCall(fun, arguments);
 }
 
@@ -234,7 +238,7 @@ llvm::PointerType* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& 
 
 void LLVMCodeGeneratorHelper::writeToPointer(llvm::Value* lValue, llvm::Value* rValue)
 {
-	builder->CreateStore(rValue, lValue);
+	codeGenerator->getBuilder()->CreateStore(rValue, lValue);
 }
 
 
@@ -279,6 +283,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertType(llvm::Value* val
 
 llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, llvm::Type* type, LLVMCompileTimeContext* context)
 {
+	auto builder = codeGenerator->getBuilder();
 	if (valueToConvert->getType() == type)
 	{
 		return valueToConvert;
@@ -399,7 +404,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertToString(llvm::Value*
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
-	llvm::Value* intToPtr = builder->CreateIntToPtr(addressValue, type);
+	llvm::Value* intToPtr =  codeGenerator->getBuilder()->CreateIntToPtr(addressValue, type);
 	intToPtr->setName(name);
 	return intToPtr;
 }
@@ -413,7 +418,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertToPointer(llvm::Const
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToIntPtr(llvm::Value* llvmPointer, const std::string& name)
 {
-	llvm::Value* ptrToInt = builder->CreatePtrToInt(llvmPointer, LLVMTypes::uintPtrType);
+	llvm::Value* ptrToInt = codeGenerator->getBuilder()->CreatePtrToInt(llvmPointer, LLVMTypes::uintPtrType);
 	ptrToInt->setName(name);
 	return ptrToInt;
 }
@@ -457,6 +462,7 @@ bool jitcat::LLVM::LLVMCodeGeneratorHelper::isInt(llvm::Value* value)
 
 llvm::Value* LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Value* addressValue, const std::string& name)
 {
+	auto builder = codeGenerator->getBuilder();
 	llvm::Value* addressAsPointer = builder->CreateIntToPtr(addressValue, llvm::PointerType::getUnqual(type));
 	addressAsPointer->setName(name + "_Ptr");
 	llvm::LoadInst* load = builder->CreateLoad(addressAsPointer);
@@ -472,6 +478,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* ty
 
 llvm::Value* LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
+	auto builder = codeGenerator->getBuilder();
 	llvm::Value* addressAsPointer = builder->CreateIntToPtr(addressValue, llvm::PointerType::getUnqual(type));
 	addressAsPointer->setName(name + "_Ptr");
 	llvm::LoadInst* load = builder->CreateLoad(addressAsPointer);
@@ -488,13 +495,13 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::C
 
 llvm::Value* LLVMCodeGeneratorHelper::createAdd(llvm::Value* value1, llvm::Value* value2, const std::string& name)
 {
-	return builder->CreateAdd(value1, value2, name);
+	return codeGenerator->getBuilder()->CreateAdd(value1, value2, name);
 }
 
 
 llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createAdd(llvm::Value* value1, llvm::Constant* value2, const std::string& name)
 {
-	return builder->CreateAdd(value1, value2, name);
+	return codeGenerator->getBuilder()->CreateAdd(value1, value2, name);
 }
 
 
@@ -594,14 +601,9 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::constantToValue(llvm::Consta
 }
 
 
-void LLVMCodeGeneratorHelper::setCurrentModule(llvm::Module* module)
-{
-	currentModule = module;
-}
-
-
 llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool generateDestructorCall)
 {
+	auto builder = codeGenerator->getBuilder();
 	llvm::Type* llvmObjectType = llvm::ArrayType::get(LLVMTypes::ucharType, objectType.getTypeSize());
 	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
 	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
@@ -656,7 +658,7 @@ llvm::LLVMContext& LLVMCodeGeneratorHelper::getContext()
 
 llvm::IRBuilder<>* LLVMCodeGeneratorHelper::getBuilder()
 {
-	return builder;
+	return codeGenerator->getBuilder();
 }
 
 
@@ -722,6 +724,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(c
 
 llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertIndirection(llvm::Value* value, llvm::Type* expectedType)
 {
+	auto builder = codeGenerator->getBuilder();
 	if (llvm::Type* argumentLLVMType = value->getType(); argumentLLVMType != expectedType)
 	{
 		//Check if the types can be converted.

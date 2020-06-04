@@ -39,6 +39,7 @@ namespace jitcat::LLVM
 	//Not thread safe. Create multiple code generators for different threads instead.
 	class LLVMCodeGenerator
 	{
+		friend class LLVMCodeGeneratorHelper;
 	public:
 		LLVMCodeGenerator(const std::string& name);
 		~LLVMCodeGenerator();
@@ -113,6 +114,9 @@ namespace jitcat::LLVM
 		void generateFunctionReturn(const CatGenericType& returnType, llvm::Value* expressionValue, llvm::Function* function, LLVMCompileTimeContext* context);
 
 		void link(Reflection::CustomTypeInfo* customType);
+
+		llvm::Module* getCurrentModule() const;
+		llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* getBuilder() const;
 
 	private:
 		//ExecutionSession represents a running JIT program
