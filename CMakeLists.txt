@@ -19,6 +19,7 @@ if(NOT MSVC)
 	endif ()
 else()
 	option(MSVC_EXPERIMENTAL_DISABLE_EXTERNAL_WARNINGS "Enable the experimental msvc feature to disable warnings from headers included using angle brackets <>" OFF)
+	set(LLVM_NATVIS_FILE "" CACHE FILEPATH "LLVM natvis file for Visual Studio debugger natvis visualisation of LLVM types.")	
 endif()
 
 #Set up some variables that are used later on

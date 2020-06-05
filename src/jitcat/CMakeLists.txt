@@ -18,6 +18,9 @@ set(Source_Root
 	JitCat.cpp
 	${JitCatHeaderPath}/JitCat.h
 )
+if(LLVM_ENABLED AND NOT ${LLVM_NATVIS_FILE} STREQUAL "")
+	list(APPEND Source_Root ${LLVM_NATVIS_FILE})
+endif()
 
 set(Source_Cat
 	CatGenericType.cpp
