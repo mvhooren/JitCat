@@ -11,7 +11,9 @@
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMTypes.h"
+#include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeTools.h"
 #include "StaticMemberInfo.h"
 
 
@@ -43,7 +45,14 @@ namespace jitcat::Reflection
 	{
 	#ifdef ENABLE_LLVM
 		llvm::Value* uniquePtrPtr = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "UniquePtrPtr");
-		return context->helper->createCall( LLVM::LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), {uniquePtrPtr}, "getUniquePtr");
+
+		std::ostringstream mangledNameStream;
+		std::string classTypeName = TypeNameGetter<ClassT>::get();
+		mangledNameStream << classTypeName << "* StaticClassUniquePtrMemberInfo<" << classTypeName << ">::getPointer(std::unique_ptr<" << classTypeName << ">*)";
+		std::string mangledName = mangledNameStream.str();
+		context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName);
+
+		return context->helper->createCall( LLVM::LLVMTypes::functionRetPtrArgPtr, {uniquePtrPtr}, mangledName, "getUniquePtr");
 	#else 
 		return nullptr;
 	#endif // ENABLE_LLVM

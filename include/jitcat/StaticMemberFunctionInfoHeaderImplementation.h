@@ -21,8 +21,8 @@ namespace jitcat::Reflection
 	}
 
 	template<typename ReturnT, class ...TFunctionArguments>
-	inline StaticFunctionInfoWithArgs<ReturnT, TFunctionArguments...>::StaticFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(*function)(TFunctionArguments...)) :
-		StaticFunctionInfo(memberFunctionName, TypeTraits<std::remove_cv_t<ReturnT>>::toGenericType()),
+	inline StaticFunctionInfoWithArgs<ReturnT, TFunctionArguments...>::StaticFunctionInfoWithArgs(const std::string& memberFunctionName, TypeInfo* parentType, ReturnT(*function)(TFunctionArguments...)) :
+		StaticFunctionInfo(memberFunctionName, parentType, TypeTraits<std::remove_cv_t<ReturnT>>::toGenericType()),
 		function(function)
 	{
 		//Trick to call a function per variadic template item

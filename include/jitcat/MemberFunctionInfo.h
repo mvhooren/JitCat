@@ -36,17 +36,17 @@ namespace jitcat::Reflection
 
 	struct MemberFunctionCallData
 	{
-		MemberFunctionCallData(): functionAddress(0), functionInfoStructAddress(0), callType(MemberFunctionCallType::Unknown), generateSymbol(false) {}
-		MemberFunctionCallData(uintptr_t functionAddress, uintptr_t functionInfoStructAddress, MemberFunctionCallType callType, bool generateSymbol): 
+		MemberFunctionCallData(): functionAddress(0), functionInfoStructAddress(0), callType(MemberFunctionCallType::Unknown), linkDylib(false) {}
+		MemberFunctionCallData(uintptr_t functionAddress, uintptr_t functionInfoStructAddress, MemberFunctionCallType callType, bool linkDylib): 
 			functionAddress(functionAddress), 
 			functionInfoStructAddress(functionInfoStructAddress), 
 			callType(callType),
-			generateSymbol(generateSymbol)
+			linkDylib(linkDylib)
 		{}
 		uintptr_t functionAddress;
 		uintptr_t functionInfoStructAddress;
 		MemberFunctionCallType callType;
-		bool generateSymbol;
+		bool linkDylib;
 	};
 
 

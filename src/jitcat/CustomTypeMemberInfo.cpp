@@ -51,7 +51,9 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 		//Pointer to a ReflectableHandle
 		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
 		//Call function that gets the member
-		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), {reflectableHandle}, "getReflectable");
+		std::string mangledName = "Reflectable* __getReflectable(const ReflectableHandle& handle)";
+		context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), mangledName);
+		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, {reflectableHandle}, mangledName, "getReflectable");
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 

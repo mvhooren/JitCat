@@ -119,7 +119,7 @@ namespace jitcat::Reflection
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, ReturnT (*function)(Args...))
 	{
 		std::string identifier = Tools::toLowerCase(identifier_);
-		staticFunctions.emplace(identifier, new StaticFunctionInfoWithArgs<ReturnT, Args...>(identifier_, function));
+		staticFunctions.emplace(identifier, new StaticFunctionInfoWithArgs<ReturnT, Args...>(identifier_, this, function));
 		return *this;
 	}
 

@@ -11,7 +11,8 @@
 using namespace jitcat;
 using namespace jitcat::Reflection;
 
-StaticFunctionInfo::StaticFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType): 
+StaticFunctionInfo::StaticFunctionInfo(const std::string& memberFunctionName, TypeInfo* parentType, const CatGenericType& returnType): 
+			parentType(parentType),
 			memberFunctionName(memberFunctionName), 
 			lowerCaseFunctionName(Tools::toLowerCase(memberFunctionName)),
 			returnType(returnType),
@@ -35,6 +36,12 @@ const CatGenericType& jitcat::Reflection::StaticFunctionInfo::getArgumentType(st
 	{
 		return CatGenericType::unknownType;
 	}
+}
+
+
+TypeInfo* jitcat::Reflection::StaticFunctionInfo::getParentType() const
+{
+	return parentType;
 }
 
 

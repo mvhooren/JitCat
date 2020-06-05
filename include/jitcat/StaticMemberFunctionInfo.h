@@ -29,7 +29,7 @@ namespace jitcat::Reflection
 	class StaticFunctionInfo: public FunctionSignature
 	{
 	public:
-		StaticFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType);
+		StaticFunctionInfo(const std::string& memberFunctionName, TypeInfo* parentType, const CatGenericType& returnType);
 		virtual ~StaticFunctionInfo() {}
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, const std::vector<std::any>& parameters) { return std::any(); }
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
@@ -44,7 +44,8 @@ namespace jitcat::Reflection
 		inline void addParameterTypeInfo();
 
 		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
-
+		
+		TypeInfo* getParentType() const;
 
 		// Inherited via FunctionSignature
 		virtual const std::string& getLowerCaseFunctionName() const override;
@@ -54,6 +55,7 @@ namespace jitcat::Reflection
 		const std::string& getNormalFunctionName() const;
 
 	private:
+		TypeInfo* parentType;
 		std::string memberFunctionName;
 		std::string lowerCaseFunctionName;
 		CatGenericType returnType;
@@ -68,7 +70,7 @@ namespace jitcat::Reflection
 	class StaticFunctionInfoWithArgs: public StaticFunctionInfo
 	{
 	public:
-		inline StaticFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(*function)(TFunctionArguments...));
+		inline StaticFunctionInfoWithArgs(const std::string& memberFunctionName, TypeInfo* parentType, ReturnT(*function)(TFunctionArguments...));
 
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, const std::vector<std::any>& parameters) override final;
 

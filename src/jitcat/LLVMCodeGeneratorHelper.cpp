@@ -44,39 +44,25 @@ LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerato
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName)
+llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, const std::string& mangledFunctionName, const std::string& shortFunctionName)
 {
 	llvm::CallInst* callInstruction = nullptr;
-	if (functionAddress != 0)
+	//First try and find the function in the current module.
+	llvm::Function* function = codeGenerator->getCurrentModule()->getFunction(mangledFunctionName);
+	if (function == nullptr)
 	{
-		//Call the function through the provided address
-		llvm::Value* functionAddressConstant = createIntPtrConstant(functionAddress, functionName + "_Address");
-		functionAddressConstant->setName(functionName + "_IntPtr");
-		llvm::Value* addressAsPointer = codeGenerator->getBuilder()->CreateIntToPtr(functionAddressConstant, llvm::PointerType::get(functionType, 0));
-		addressAsPointer->setName(functionName + "_Ptr");
-		callInstruction = codeGenerator->getBuilder()->CreateCall(functionType, addressAsPointer, arguments);
+		//If the function was not found, create the function signature and add it to the module. 
+		function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, mangledFunctionName.c_str(), codeGenerator->getCurrentModule());
 	}
 	else
 	{
-		//Call the function by symbol.
-
-		//First try and find the function in the current module.
-		llvm::Function* function = codeGenerator->getCurrentModule()->getFunction(functionName);
-		if (function == nullptr)
-		{
-			//If the function was not found, create the function signature and add it to the module. 
-			function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), codeGenerator->getCurrentModule());
-		}
-		else
-		{
-			//Check if the function has the correct signature
-			assert(function->getFunctionType() == functionType);
-		}
-		callInstruction = getBuilder()->CreateCall(function, arguments);
+		//Check if the function has the correct signature
+		assert(function->getFunctionType() == functionType);
 	}
+	callInstruction = getBuilder()->CreateCall(function, arguments);
 	if (functionType->getReturnType() != LLVMTypes::voidType)
 	{
-		callInstruction->setName(functionName);
+		callInstruction->setName(shortFunctionName + "_result");
 	}
 	return callInstruction;
 }
@@ -730,12 +716,15 @@ void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::CatGenericType& returnType, const std::vector<llvm::Value*>& argumentList, const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, uintptr_t functionAddress, const std::string& functionName, llvm::Value* returnedObjectAllocation)
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::CatGenericType& returnType, const std::vector<llvm::Value*>& argumentList, 
+																			   const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, 
+																			   const std::string& mangledFunctionName, const std::string& shortFunctionName,
+																			   llvm::Value* returnedObjectAllocation)
 {
 	if (returnType.isReflectableObjectType())
 	{
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, functionAddress, argumentList, functionName));
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, argumentList, mangledFunctionName, shortFunctionName));
 		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
 		call->addDereferenceableAttr(1 , returnType.getTypeSize());
 		return returnedObjectAllocation;
@@ -744,8 +733,23 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(c
 	{
 		llvm::Type* returnLLVMType = toLLVMType(returnType);
 		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-		return createCall(functionType, functionAddress, argumentList, functionName);
+		return createCall(functionType, argumentList, mangledFunctionName, shortFunctionName);
 	}
+}
+
+
+void jitcat::LLVM::LLVMCodeGeneratorHelper::defineWeakSymbol(intptr_t functionAddress, const std::string& mangledFunctionName)
+{
+	//Define the function in the runtime library.
+	llvm::JITSymbolFlags functionFlags;
+	functionFlags |= llvm::JITSymbolFlags::Callable;
+	functionFlags |= llvm::JITSymbolFlags::Exported;
+	functionFlags |= llvm::JITSymbolFlags::Absolute;
+	functionFlags |= llvm::JITSymbolFlags::Weak;
+	llvm::orc::SymbolMap intrinsicSymbols;
+	llvm::JITTargetAddress address = functionAddress;
+	intrinsicSymbols[codeGenerator->executionSession->intern(mangledFunctionName)] = llvm::JITEvaluatedSymbol(address, functionFlags);
+	llvm::cantFail(codeGenerator->runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
 }
 
 
@@ -791,15 +795,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::copyConstructIfValueType(llv
 llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context)
 {
 	//Define the function in the runtime library.
-	llvm::JITSymbolFlags functionFlags;
-	functionFlags |= llvm::JITSymbolFlags::Callable;
-	functionFlags |= llvm::JITSymbolFlags::Exported;
-	functionFlags |= llvm::JITSymbolFlags::Absolute;
-	functionFlags |= llvm::JITSymbolFlags::Weak;
-	llvm::orc::SymbolMap intrinsicSymbols;
-	llvm::JITTargetAddress address = functionInfo->getFunctionAddress();
-	intrinsicSymbols[codeGenerator->executionSession->intern(functionInfo->getNormalFunctionName())] = llvm::JITEvaluatedSymbol(address, functionFlags);
-	llvm::cantFail(codeGenerator->runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
+	defineWeakSymbol(functionInfo->getFunctionAddress(), functionInfo->getNormalFunctionName());
 	
 	const std::vector<CatGenericType>& argumentTypes = functionInfo->getArgumentTypes();
 	assert(arguments.size() == argumentTypes.size());
@@ -817,7 +813,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat
 		argumentLLVMTypes.insert(argumentLLVMTypes.begin(), returnValueAllocation->getType());
 	}
 
-	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, 0, functionInfo->getNormalFunctionName(), returnValueAllocation);
+	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getNormalFunctionName(), functionInfo->getNormalFunctionName(),  returnValueAllocation);
 }
 
 

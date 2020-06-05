@@ -12,6 +12,7 @@
 #include "jitcat/CatStaticScope.h"
 #include "jitcat/CatTypeNode.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/FunctionNameMangler.h"
 #include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 
@@ -66,6 +67,12 @@ const std::string& jitcat::AST::CatStaticFunctionCall::getFunctionName() const
 }
 
 
+const std::string& jitcat::AST::CatStaticFunctionCall::getMangledFunctionName() const
+{
+	return mangledName;
+}
+
+
 CatASTNode* CatStaticFunctionCall::copy() const
 {
 	return new CatStaticFunctionCall(*this);
@@ -101,6 +108,7 @@ std::any CatStaticFunctionCall::execute(CatRuntimeContext* runtimeContext)
 
 bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
+	mangledName = "";
 	if (!parentScope->typeCheck(compiletimeContext, errorManager, errorContext)
 		|| !arguments->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
@@ -152,6 +160,12 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			return false;
 		}
 		returnType = staticFunctionInfo->getReturnType();
+		std::string qualifiedParent;
+		if (TypeInfo* functionParentType = staticFunctionInfo->getParentType(); functionParentType != nullptr)
+		{
+			qualifiedParent = functionParentType->getQualifiedTypeName();
+		}
+		mangledName = FunctionNameMangler::getMangledFunctionName(returnType, name, staticFunctionInfo->getArgumentTypes(), false, qualifiedParent);
 		return true;
 	}
 	else

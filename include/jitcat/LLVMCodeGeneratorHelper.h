@@ -42,7 +42,7 @@ namespace jitcat::LLVM
 
 		template<typename ReturnT, typename ... Args>
 		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
-		llvm::Value* createCall(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName);
+		llvm::Value* createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, const std::string& mangledFunctionName, const std::string& shortFunctionName);
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
 												   llvm::Type* resultType, LLVMCompileTimeContext* context); 
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
@@ -119,8 +119,12 @@ namespace jitcat::LLVM
 												const std::vector<llvm::Value*>& argumentList, 
 												const std::vector<llvm::Type*>& argumentTypes, 
 												LLVMCompileTimeContext* context,
-												uintptr_t functionAddress, const std::string& functionName,
+												const std::string& mangledFunctionName, 
+												const std::string& shortFunctionName,
 												llvm::Value* returnedObjectAllocation);
+		
+		void defineWeakSymbol(intptr_t functionAddress, const std::string& mangledFunctionName);
+
 	private:
 		llvm::Value* convertIndirection(llvm::Value* value, llvm::Type* expectedType);
 		llvm::Value* copyConstructIfValueType(llvm::Value* value, const CatGenericType& type, LLVMCompileTimeContext* context, const std::string& valueName);
@@ -149,7 +153,7 @@ namespace jitcat::LLVM
 	template<typename ReturnT, typename ...Args>
 	inline llvm::Value* LLVMCodeGeneratorHelper::createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args...), const std::vector<llvm::Value*>& arguments, const std::string& name)
 	{
-		Reflection::StaticFunctionInfoWithArgs<ReturnT, Args...> functionInfo(name, functionPointer);
+		Reflection::StaticFunctionInfoWithArgs<ReturnT, Args...> functionInfo(name, nullptr, functionPointer);
 		std::vector<llvm::Value*> argumentsCopy = arguments;
 		return generateIntrinsicCall(&functionInfo, argumentsCopy, context);
 	}

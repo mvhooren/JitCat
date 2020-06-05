@@ -12,7 +12,11 @@
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/MemberInfo.h"
+#include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeTools.h"
+
+#include <sstream>
 
 namespace jitcat::Reflection
 {
@@ -200,8 +204,15 @@ inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereference
 	}
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
+		std::ostringstream mangledNameStream;
+		std::string baseTypeName = TypeNameGetter<BaseT>::get();
+		std::string classTypeName = TypeNameGetter<ClassT>::get();
+		mangledNameStream << classTypeName << "* ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">::getPointer(" << baseTypeName << "*, ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">*)";
+		std::string mangledName = mangledNameStream.str();
+		context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer), mangledName);
+		
 		llvm::Value* thisPointer = context->helper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
-		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer), {parentObjectPointer, thisPointer}, "getUniquePtr");
+		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, {parentObjectPointer, thisPointer}, mangledName, "getUniquePtr");
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
