@@ -9,6 +9,7 @@
 
 #include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/TypeOwnershipSemantics.h"
 
@@ -132,6 +133,9 @@ namespace jitcat::Reflection
 
 		virtual bool canBeDeleted() const override final;
 
+		llvm::orc::JITDylib* getDylib() const;
+		void setDylib(llvm::orc::JITDylib* generatedDylib);
+
 	private:
 		void instanceDestructor(unsigned char* data);
 		void instanceDestructorInPlace(unsigned char* data);
@@ -157,6 +161,8 @@ namespace jitcat::Reflection
 		MemberFunctionInfo* defaultConstructorFunction;
 
 		std::vector<std::unique_ptr<TypeMemberInfo>> removedMembers;
+
+		llvm::orc::JITDylib* dylib;
 	};
 
 

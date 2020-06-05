@@ -7,8 +7,10 @@
 #pragma once
 
 #include "jitcat/Configuration.h"
+#include "jitcat/FunctionNameMangler.h"
 #include "jitcat/TypeConversionCastHelper.h"
 #include "jitcat/TypeTraits.h"
+#include "jitcat/MemberFunctionInfo.h"
 
 
 namespace jitcat::Reflection
@@ -72,7 +74,15 @@ namespace jitcat::Reflection
 			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
 			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
 		}
-		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType);
+		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType, false);
+	}
+
+
+	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
+	inline std::string MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
+	{
+		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
+		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
 	}
 
 
@@ -151,7 +161,15 @@ namespace jitcat::Reflection
 			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
 			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
 		}
-		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType);
+		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), callType, false);
+	}
+
+
+	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
+	inline std::string ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
+	{
+		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
+		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
 	}
 
 
@@ -215,8 +233,16 @@ namespace jitcat::Reflection
 	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return MemberFunctionCallData(pointer, reinterpret_cast<uintptr_t>(this), MemberFunctionCallType::PseudoMemberCall);
+		return MemberFunctionCallData(pointer, reinterpret_cast<uintptr_t>(this), MemberFunctionCallType::PseudoMemberCall, false);
 	}
+
+	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
+	inline std::string PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
+	{
+		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
+		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
+	}
+
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
 	template<std::size_t ...Is>

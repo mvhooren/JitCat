@@ -25,6 +25,7 @@ namespace jitcat
 #include <llvm/Support/Error.h>
 #include <llvm/Support/ErrorHandling.h>
 #include <memory>
+#include <set>
 #include <string>
 
 
@@ -110,7 +111,9 @@ namespace jitcat::LLVM
 		llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 		llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 
+		llvm::FunctionType* createFunctionType(bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes);
 		llvm::Function* generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames);
+		llvm::Function* generateFunctionPrototype(const std::string& functionName, llvm::FunctionType* functionType, bool isThisCall, const CatGenericType& returnType, const std::vector<std::string>& parameterNames);
 		void generateFunctionReturn(const CatGenericType& returnType, llvm::Value* expressionValue, llvm::Function* function, LLVMCompileTimeContext* context);
 
 		void link(Reflection::CustomTypeInfo* customType);
@@ -125,6 +128,8 @@ namespace jitcat::LLVM
 		std::unique_ptr<llvm::Module> currentModule;
 		//
 		llvm::orc::JITDylib* dylib;
+		std::set<const llvm::orc::JITDylib*> linkedLibs;
+
 		std::unique_ptr<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>> builder;
 		//Can be used to add object files to the JIT.
 		std::unique_ptr<llvm::orc::RTDyldObjectLinkingLayer> objectLinkLayer;

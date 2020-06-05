@@ -209,9 +209,9 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 		"	float checkFloats(float a, float b)\n"
 		"	{\n"
 		"		//Intentionally named tempString to check if there are no naming conflicts with locals defined in addToTestString. \n"
-		"		float tempString = 11.0f;\n"
-		"		float tempFloat = tempString * a;\n"
-		"		return tempString + tempFloat * b;\n"
+		"		float tempFloat = 11.0f;\n"
+		"		float tempFloat2 = tempFloat * a;\n"
+		"		return tempFloat + tempFloat2 * b;\n"
 		"	}\n"
 		"}\n");
 

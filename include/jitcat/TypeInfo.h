@@ -134,6 +134,9 @@ namespace jitcat::Reflection
 
 		//Returns the type name of the class/struct
 		const char* getTypeName() const;
+		//Includes parent type names with :: delimiter.
+		std::string getQualifiedTypeName() const;
+
 		void setTypeName(const char* newTypeName);
 
 		//Enumerates all the members of the class described by this TypeInfo by passing them to the VariableEnumerator in alphabetical order

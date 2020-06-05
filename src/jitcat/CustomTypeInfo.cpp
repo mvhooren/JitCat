@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
@@ -40,7 +41,7 @@ CustomTypeInfo::~CustomTypeInfo()
 }
 
 
-TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDoubleMember(const std::string& memberName, float defaultValue, bool isWritable, bool isConst)
+TypeMemberInfo* CustomTypeInfo::addDoubleMember(const std::string& memberName, float defaultValue, bool isWritable, bool isConst)
 {
 	unsigned char* data = increaseDataSize(sizeof(double));
 	memcpy(data, &defaultValue, sizeof(double));
@@ -185,7 +186,7 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, u
 }
 
 
-TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo)
+TypeMemberInfo* CustomTypeInfo::addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo)
 {
 	if (objectTypeInfo != this)
 	{
@@ -223,7 +224,7 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addDataObjectMember(const st
 }
 
 
-TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string& memberName, const CatGenericType& type)
+TypeMemberInfo* CustomTypeInfo::addMember(const std::string& memberName, const CatGenericType& type)
 {
 	if		(type.isFloatType())						return addFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
 	else if	(type.isDoubleType())						return addDoubleMember(memberName, 0.0, type.isWritable(), type.isConst());
@@ -236,7 +237,7 @@ TypeMemberInfo* jitcat::Reflection::CustomTypeInfo::addMember(const std::string&
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticDoubleMember(const std::string& memberName, double defaultValue, bool isWritable, bool isConst)
+StaticMemberInfo* CustomTypeInfo::addStaticDoubleMember(const std::string& memberName, double defaultValue, bool isWritable, bool isConst)
 {
 	constexpr std::size_t dataSize = sizeof(double);
 	unsigned char* memberData = new unsigned char[dataSize];
@@ -249,7 +250,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticDoubleMember(cons
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticFloatMember(const std::string& memberName, float defaultValue, bool isWritable, bool isConst)
+StaticMemberInfo* CustomTypeInfo::addStaticFloatMember(const std::string& memberName, float defaultValue, bool isWritable, bool isConst)
 {
 	constexpr std::size_t dataSize = sizeof(float);
 	unsigned char* memberData = new unsigned char[dataSize];
@@ -262,7 +263,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticFloatMember(const
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticIntMember(const std::string& memberName, int defaultValue, bool isWritable, bool isConst)
+StaticMemberInfo* CustomTypeInfo::addStaticIntMember(const std::string& memberName, int defaultValue, bool isWritable, bool isConst)
 {
 	constexpr std::size_t dataSize = sizeof(int);
 	unsigned char* memberData = new unsigned char[dataSize];
@@ -275,7 +276,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticIntMember(const s
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticBoolMember(const std::string& memberName, bool defaultValue, bool isWritable, bool isConst)
+StaticMemberInfo* CustomTypeInfo::addStaticBoolMember(const std::string& memberName, bool defaultValue, bool isWritable, bool isConst)
 {
 	constexpr std::size_t dataSize = sizeof(bool);
 	unsigned char* memberData = new unsigned char[dataSize];
@@ -288,7 +289,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticBoolMember(const 
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable, bool isConst)
+StaticMemberInfo* CustomTypeInfo::addStaticStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable, bool isConst)
 {
 	constexpr std::size_t dataSize = sizeof(Configuration::CatString);
 	unsigned char* memberData = new unsigned char[dataSize];
@@ -301,7 +302,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticStringMember(cons
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics, bool isWritable, bool isConst)
+StaticMemberInfo* CustomTypeInfo::addStaticObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics, bool isWritable, bool isConst)
 {
 	if (ownershipSemantics != TypeOwnershipSemantics::Value)
 	{
@@ -324,7 +325,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticObjectMember(cons
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo)
+StaticMemberInfo* CustomTypeInfo::addStaticDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo)
 {
 	if (objectTypeInfo != this)
 	{
@@ -350,7 +351,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticDataObjectMember(
 }
 
 
-StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticMember(const std::string& memberName, const CatGenericType& type)
+StaticMemberInfo* CustomTypeInfo::addStaticMember(const std::string& memberName, const CatGenericType& type)
 {
 	if		(type.isFloatType())						return addStaticFloatMember(memberName, 0.0f, type.isWritable(), type.isConst());
 	else if (type.isDoubleType())						return addStaticDoubleMember(memberName, 0.0, type.isWritable(), type.isConst());
@@ -363,7 +364,7 @@ StaticMemberInfo* jitcat::Reflection::CustomTypeInfo::addStaticMember(const std:
 }
 
 
-CustomTypeMemberFunctionInfo* jitcat::Reflection::CustomTypeInfo::addMemberFunction(const std::string& memberFunctionName, const CatGenericType& thisType, AST::CatFunctionDefinition* functionDefinition)
+CustomTypeMemberFunctionInfo* CustomTypeInfo::addMemberFunction(const std::string& memberFunctionName, const CatGenericType& thisType, AST::CatFunctionDefinition* functionDefinition)
 {
 	CustomTypeMemberFunctionInfo* functionInfo = new CustomTypeMemberFunctionInfo(functionDefinition, thisType);
 	memberFunctions.emplace(Tools::toLowerCase(memberFunctionName), functionInfo);
@@ -371,7 +372,7 @@ CustomTypeMemberFunctionInfo* jitcat::Reflection::CustomTypeInfo::addMemberFunct
 }
 
 
-bool jitcat::Reflection::CustomTypeInfo::setDefaultConstructorFunction(const std::string& constructorFunctionName)
+bool CustomTypeInfo::setDefaultConstructorFunction(const std::string& constructorFunctionName)
 {
 	SearchFunctionSignature sig(constructorFunctionName, {});
 	MemberFunctionInfo* functionInfo = getMemberFunctionInfo(sig);
@@ -406,7 +407,7 @@ bool CustomTypeInfo::isCustomType() const
 }
 
 
-void jitcat::Reflection::CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
+void CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
 {
 	auto iter = instances.find(reinterpret_cast<Reflectable*>(buffer));
 	if (iter == instances.end())
@@ -437,7 +438,7 @@ void jitcat::Reflection::CustomTypeInfo::placementConstruct(unsigned char* buffe
 }
 
 
-void jitcat::Reflection::CustomTypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
+void CustomTypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
 {
 	instanceDestructorInPlace(buffer);
 	removeInstance(reinterpret_cast<Reflectable*>(buffer));
@@ -451,7 +452,7 @@ void jitcat::Reflection::CustomTypeInfo::placementDestruct(unsigned char* buffer
 }
 
 
-void jitcat::Reflection::CustomTypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void CustomTypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	std::size_t typeSize = getTypeSize();
 	assert(typeSize <= targetBufferSize && typeSize <= sourceBufferSize);
@@ -466,7 +467,7 @@ void jitcat::Reflection::CustomTypeInfo::copyConstruct(unsigned char* targetBuff
 }
 
 
-void jitcat::Reflection::CustomTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void CustomTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	std::size_t typeSize = getTypeSize();
 	assert(targetBufferSize >= typeSize && sourceBufferSize >= typeSize);
@@ -499,15 +500,27 @@ void jitcat::Reflection::CustomTypeInfo::moveConstruct(unsigned char* targetBuff
 }
 
 
-bool jitcat::Reflection::CustomTypeInfo::isTriviallyCopyable() const
+bool CustomTypeInfo::isTriviallyCopyable() const
 {
 	return triviallyCopyable;
 }
 
 
-bool jitcat::Reflection::CustomTypeInfo::canBeDeleted() const
+bool CustomTypeInfo::canBeDeleted() const
 {
 	return dependentTypes.size() == 0 && instances.size() == 0;
+}
+
+
+llvm::orc::JITDylib* CustomTypeInfo::getDylib() const
+{
+	return dylib;
+}
+
+
+void CustomTypeInfo::setDylib(llvm::orc::JITDylib* generatedDylib)
+{
+	dylib = generatedDylib;
 }
 
 
@@ -522,7 +535,7 @@ void CustomTypeInfo::instanceDestructor(unsigned char* data)
 }
 
 
-void jitcat::Reflection::CustomTypeInfo::instanceDestructorInPlace(unsigned char* data)
+void CustomTypeInfo::instanceDestructorInPlace(unsigned char* data)
 {
 	auto end = membersByOrdinal.end();
 	for (auto iter = membersByOrdinal.begin(); iter != end; ++iter)
@@ -541,7 +554,7 @@ void jitcat::Reflection::CustomTypeInfo::instanceDestructorInPlace(unsigned char
 }
 
 
-std::size_t jitcat::Reflection::CustomTypeInfo::addReflectableHandle(Reflectable* defaultValue)
+std::size_t CustomTypeInfo::addReflectableHandle(Reflectable* defaultValue)
 {
 	unsigned char* data = increaseDataSize(sizeof(ReflectableHandle));
 	std::size_t offset = (data - defaultData);
@@ -638,7 +651,7 @@ void CustomTypeInfo::createDataCopy(const unsigned char* sourceData, std::size_t
 }
 
 
-void jitcat::Reflection::CustomTypeInfo::removeInstance(Reflectable* instance)
+void CustomTypeInfo::removeInstance(Reflectable* instance)
 {
 	auto iter = instances.find(instance);
 	if (iter != instances.end())

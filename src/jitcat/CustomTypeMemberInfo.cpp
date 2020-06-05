@@ -130,7 +130,7 @@ llvm::Value* jitcat::Reflection::CustomTypeObjectDataMemberInfo::generateDerefer
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a Reflectable
-		llvm::Value* reflectable = context->helper->convertToPointer(addressValue, "Reflectable");
+		llvm::Value* reflectable = context->helper->convertToPointer(addressValue, memberName);
 		//Call function that gets the member
 		return reflectable;
 	};

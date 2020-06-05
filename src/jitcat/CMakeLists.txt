@@ -154,7 +154,9 @@ if(LLVM_ENABLED)
 		LLVMCodeGeneratorHelper.cpp
 		LLVMCompileTimeContext.cpp
 		LLVMJit.cpp
-		LLVMMemoryManager.cpp)	
+		LLVMMemoryManager.cpp
+		LLVMReinterningReexportsGenerator.cpp
+		${JitCatHeaderPath}/LLVMReinterningReexportsGenerator.h)
 endif()
 
 set(Source_Cat_Expression
@@ -288,6 +290,7 @@ set(Source_Reflection_TypeInfo_Members
 
 set(Source_Reflection_TypeInfo_MemberFunctions
 	${JitCatHeaderPath}/BuildIndicesHelper.h
+	CustomTypeMemberFunctionInfo.cpp
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h
 	FunctionSignature.cpp
 	${JitCatHeaderPath}/FunctionSignature.h
@@ -301,6 +304,8 @@ set(Source_Reflection_TypeInfo_MemberFunctions
 )
 
 set(Source_Reflection_TypeInfo_Helper
+	FunctionNameMangler.cpp
+	${JitCatHeaderPath}/FunctionNameMangler.h
 	${JitCatHeaderPath}/FunctionPresenceTest.h
 	${JitCatHeaderPath}/MemberTypeInfoCreator.h
 	${JitCatHeaderPath}/MemberVisibility.h

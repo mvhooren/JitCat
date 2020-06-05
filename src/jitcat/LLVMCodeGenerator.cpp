@@ -18,6 +18,7 @@
 #include "jitcat/LLVMJit.h"
 #include "jitcat/LLVMMemoryManager.h"
 #include "jitcat/LLVMPreGeneratedExpression.h"
+#include "jitcat/LLVMReInterningReexportsGenerator.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/MemberInfo.h"
@@ -1217,7 +1218,22 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 
 	bool isThisCall = context->currentClass != nullptr;
 
-	llvm::Function* function = generateFunctionPrototype(name, isThisCall, returnType, parameterTypes, parameterNames);
+	llvm::FunctionType* functionType = createFunctionType(isThisCall, returnType, parameterTypes);
+
+	llvm::Function* function = currentModule->getFunction(name);
+	if (function == nullptr)
+	{
+		//The function was not previously defined, create a new function prototype.
+		function = generateFunctionPrototype(name, functionType, isThisCall, returnType, parameterNames);
+	}
+	else
+	{
+		//Check that the previously defined function prototype has the same type.
+		assert(function->getFunctionType() == functionType);
+		//Check that the function has no code associated with it.
+		assert(function->empty());
+	}
+	
 	
 	if (!Configuration::callerDestroysTemporaryArguments)
 	{
@@ -1454,19 +1470,37 @@ llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* m
 		}
 		helper->generateFunctionCallArgumentEvalatuation(arguments, memberFunction->argumentTypes, argumentList, argumentTypes, this, context);
 
-		uintptr_t functionAddress = callData.functionAddress;
+		uintptr_t functionAddress = 0;
+		if (!callData.generateSymbol)
+		{
+			functionAddress = callData.functionAddress;
+		}
+		else
+		{
+			//Make sure the dylib that contains the symbol is added to the search order.
+			TypeInfo* typeInfo = base->getType().removeIndirection().getObjectType();
+			if (typeInfo->isCustomType())
+			{
+				llvm::orc::JITDylib* functionLib = static_cast<CustomTypeInfo*>(typeInfo)->getDylib();
+				if (functionLib != dylib && linkedLibs.find(functionLib) == linkedLibs.end())
+				{
+					dylib->addGenerator(std::make_unique<LLVMReinterningReexportsGenerator>(*functionLib));
+					linkedLibs.insert(functionLib);
+				}
+			}
+		}
 
 		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
 		if (!returnType.isReflectableObjectType())
 		{
 			if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
 			{
-				return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->memberFunctionName, returnedObjectAllocation);
+				return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->getMangledName(), returnedObjectAllocation);
 			}
 			else
 			{
 				llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));
+				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, memberFunction->getMangledName()));
 				if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 				{
 					call->setCallingConv(llvm::CallingConv::X86_ThisCall);
@@ -1478,7 +1512,7 @@ llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* m
 		{
 			argumentTypes.insert(argumentTypes.begin(), LLVMTypes::pointerType);
 			argumentList.insert(argumentList.begin(), returnedObjectAllocation);
-			return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->memberFunctionName, returnedObjectAllocation);
+			return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, functionAddress, memberFunction->getMangledName(), returnedObjectAllocation);
 		}
 		else if (returnType.isReflectableObjectType())
 		{
@@ -1496,7 +1530,7 @@ llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* m
 				sretInsertPoint++;
 			}
 			argumentList.insert(sretInsertPoint, returnedObjectAllocation);
-			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, base->getType().toString() + "." + memberFunction->memberFunctionName));
+			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, functionAddress, argumentList, memberFunction->getMangledName()));
 			if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 			{
 				call->setCallingConv(llvm::CallingConv::X86_ThisCall);
@@ -1604,10 +1638,8 @@ llvm::JITTargetAddress LLVMCodeGenerator::getSymbolAddress(const std::string& na
 }
 
 
-llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames)
+llvm::FunctionType* jitcat::LLVM::LLVMCodeGenerator::createFunctionType(bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes)
 {
-	assert(parameterTypes.size() == parameterNames.size());
-
 	//Define the parameters for the function.
 	//If the function returns an object by value, the object is returned through an object pointer parameter and the function returns void.
 	//The object pointer should point to pre-allocated memory where the returned object will be constructed.
@@ -1635,6 +1667,22 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 	}
 	functionType = llvm::FunctionType::get(functionReturnType, parameters, false);		
 
+	return functionType;
+}
+
+
+llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames)
+{
+	assert(parameterTypes.size() == parameterNames.size());
+
+	llvm::FunctionType* functionType = createFunctionType(isThisCall, returnType, parameterTypes);
+
+	return generateFunctionPrototype(functionName, functionType, isThisCall, returnType, parameterNames);
+}
+
+
+llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, llvm::FunctionType* functionType, bool isThisCall, const CatGenericType& returnType, const std::vector<std::string>& parameterNames)
+{
 	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), currentModule.get());
 
@@ -1720,6 +1768,7 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 
 void LLVMCodeGenerator::link(CustomTypeInfo* customType)
 {
+	customType->setDylib(dylib);
 	for (auto& iter : customType->getTypes())
 	{
 		link(static_cast<CustomTypeInfo*>(iter.second));

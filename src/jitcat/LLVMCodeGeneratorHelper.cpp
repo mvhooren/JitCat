@@ -46,12 +46,34 @@ LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerato
 
 llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionType, uintptr_t functionAddress, const std::vector<llvm::Value*>& arguments, const std::string& functionName)
 {
-	llvm::Value* functionAddressConstant = createIntPtrConstant(functionAddress, functionName + "_Address");
-	functionAddressConstant->setName(functionName + "_IntPtr");
+	llvm::CallInst* callInstruction = nullptr;
+	if (functionAddress != 0)
+	{
+		//Call the function through the provided address
+		llvm::Value* functionAddressConstant = createIntPtrConstant(functionAddress, functionName + "_Address");
+		functionAddressConstant->setName(functionName + "_IntPtr");
+		llvm::Value* addressAsPointer = codeGenerator->getBuilder()->CreateIntToPtr(functionAddressConstant, llvm::PointerType::get(functionType, 0));
+		addressAsPointer->setName(functionName + "_Ptr");
+		callInstruction = codeGenerator->getBuilder()->CreateCall(functionType, addressAsPointer, arguments);
+	}
+	else
+	{
+		//Call the function by symbol.
 
-	llvm::Value* addressAsPointer = codeGenerator->getBuilder()->CreateIntToPtr(functionAddressConstant, llvm::PointerType::get(functionType, 0));
-	addressAsPointer->setName(functionName + "_Ptr");
-	llvm::CallInst* callInstruction = codeGenerator->getBuilder()->CreateCall(functionType, addressAsPointer, arguments);
+		//First try and find the function in the current module.
+		llvm::Function* function = codeGenerator->getCurrentModule()->getFunction(functionName);
+		if (function == nullptr)
+		{
+			//If the function was not found, create the function signature and add it to the module. 
+			function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), codeGenerator->getCurrentModule());
+		}
+		else
+		{
+			//Check if the function has the correct signature
+			assert(function->getFunctionType() == functionType);
+		}
+		callInstruction = getBuilder()->CreateCall(function, arguments);
+	}
 	if (functionType->getReturnType() != LLVMTypes::voidType)
 	{
 		callInstruction->setName(functionName);
@@ -91,7 +113,13 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 		llvm::Value* isNotNull = nullptr;
 		if (valueToCheck->getType() != LLVMTypes::boolType)
 		{
-			isNotNull = builder->CreateIsNotNull(valueToCheck, "IsNotNull");
+			std::string name = "IsNotNull";
+			if (valueToCheck->getName() != "")
+			{
+				name = valueToCheck->getName().str() + name;
+			}
+
+			isNotNull = builder->CreateIsNotNull(valueToCheck, name);
 		}
 		else
 		{
@@ -629,11 +657,10 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompi
 		assert(typeInfo != nullptr);
 		llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(typeInfo), Tools::append(name, "_typeInfo"));
 		llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(name, "_typeInfoPtr"));
-		std::string destructorName = Tools::append(name, "_destructor");
 		assert(objectType.isDestructible());
 		context->blockDestructorGenerators.push_back([=]()
 			{
-				return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, destructorName);
+				return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, "placementDestructType");
 			});
 	}
 	return objectAllocationAsIntPtr;
@@ -708,14 +735,14 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(c
 	if (returnType.isReflectableObjectType())
 	{
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(context->helper->createCall(functionType, functionAddress, argumentList, functionName));
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, functionAddress, argumentList, functionName));
 		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
 		call->addDereferenceableAttr(1 , returnType.getTypeSize());
 		return returnedObjectAllocation;
 	}
 	else
 	{
-		llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
+		llvm::Type* returnLLVMType = toLLVMType(returnType);
 		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
 		return createCall(functionType, functionAddress, argumentList, functionName);
 	}
@@ -763,6 +790,17 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::copyConstructIfValueType(llv
 
 llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context)
 {
+	//Define the function in the runtime library.
+	llvm::JITSymbolFlags functionFlags;
+	functionFlags |= llvm::JITSymbolFlags::Callable;
+	functionFlags |= llvm::JITSymbolFlags::Exported;
+	functionFlags |= llvm::JITSymbolFlags::Absolute;
+	functionFlags |= llvm::JITSymbolFlags::Weak;
+	llvm::orc::SymbolMap intrinsicSymbols;
+	llvm::JITTargetAddress address = functionInfo->getFunctionAddress();
+	intrinsicSymbols[codeGenerator->executionSession->intern(functionInfo->getNormalFunctionName())] = llvm::JITEvaluatedSymbol(address, functionFlags);
+	llvm::cantFail(codeGenerator->runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
+	
 	const std::vector<CatGenericType>& argumentTypes = functionInfo->getArgumentTypes();
 	assert(arguments.size() == argumentTypes.size());
 	llvm::Value* returnValueAllocation = generateFunctionCallReturnValueAllocation(functionInfo->getReturnType(), functionInfo->getNormalFunctionName(), context);
@@ -779,7 +817,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat
 		argumentLLVMTypes.insert(argumentLLVMTypes.begin(), returnValueAllocation->getType());
 	}
 
-	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getFunctionAddress(), functionInfo->getNormalFunctionName(), returnValueAllocation);
+	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, 0, functionInfo->getNormalFunctionName(), returnValueAllocation);
 }
 
 

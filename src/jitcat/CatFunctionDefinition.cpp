@@ -22,6 +22,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/FunctionNameMangler.h"
 #include "jitcat/ObjectInstance.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
@@ -354,54 +355,15 @@ CatScopeID CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, u
 
 void CatFunctionDefinition::updateMangledName()
 {
-	const CatGenericType* returnType = &type->getType();
-
-	std::vector<std::string> parameterNames;
-	if (type->getType().isReflectableObjectType())
-	{
-		returnType = &CatGenericType::voidType;
-		
-		if (Configuration::sretBeforeThis)
-		{
-			parameterNames.push_back(Tools::append("__sret ", type->getType().toString()));
-		}
-		if (parentClass != nullptr)
-		{
-			parameterNames.push_back(Tools::append("__this ", parentClass->getQualifiedName()));
-		}
-		if (!Configuration::sretBeforeThis)
-		{
-			parameterNames.push_back(Tools::append("__sret ", type->getType().toString()));
-		}
-	}
-	else
-	{
-		if (parentClass != nullptr)
-		{
-			parameterNames.push_back(Tools::append("__this ", parentClass->getQualifiedName()));
-		}
-	}
-	
+	std::vector<CatGenericType> parameterTypes;
 	for (int i = 0; i < parameters->getNumParameters(); ++i)
 	{
-		parameterNames.push_back(parameters->getParameterType(i)->getType().toString());
+		parameterTypes.push_back(parameters->getParameterType(i)->getType());
 	}
-
-	std::ostringstream stream;
 	std::string qualifiedParent;
 	if (parentClass != nullptr)
 	{
-		qualifiedParent = parentClass->getQualifiedName() + "::";
+		qualifiedParent = parentClass->getQualifiedName();
 	}
-	stream << returnType->toString() << " " << qualifiedParent << lowerCaseName << "(";
-	for (std::size_t i = 0; i < parameterNames.size(); ++i)
-	{
-		if (i != 0)
-		{
-			stream << ", ";
-		}
-		stream << parameterNames[i];
-	}
-	stream << ")";
-	mangledName = stream.str();
+	mangledName = FunctionNameMangler::getMangledFunctionName(type->getType(), name, parameterTypes, true, qualifiedParent);
 }

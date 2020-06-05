@@ -58,6 +58,12 @@ const CatGenericType& jitcat::Reflection::MemberFunctionInfo::getParameterType(i
 }
 
 
+std::string jitcat::Reflection::MemberFunctionInfo::getMangledName() const
+{
+	return memberFunctionName;
+}
+
+
 DeferredMemberFunctionInfo::DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, MemberFunctionInfo* deferredFunction):
 	MemberFunctionInfo(deferredFunction->memberFunctionName, deferredFunction->returnType),
 	baseMember(baseMember), deferredFunction(deferredFunction)
@@ -92,4 +98,10 @@ inline MemberFunctionCallData DeferredMemberFunctionInfo::getFunctionAddress() c
 inline bool DeferredMemberFunctionInfo::isDeferredFunctionCall()
 {
 	return true;
+}
+
+
+std::string jitcat::Reflection::DeferredMemberFunctionInfo::getMangledName() const
+{
+	return deferredFunction->getMangledName();
 }

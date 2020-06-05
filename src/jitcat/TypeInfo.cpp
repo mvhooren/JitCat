@@ -329,6 +329,19 @@ const char* TypeInfo::getTypeName() const
 }
 
 
+std::string jitcat::Reflection::TypeInfo::getQualifiedTypeName() const
+{
+	if (parentType != nullptr)
+	{
+		return Tools::append(parentType->getQualifiedTypeName(), "::", typeName);
+	}
+	else
+	{
+		return typeName;
+	}
+}
+
+
 void TypeInfo::setTypeName(const char* newTypeName)
 {
 	typeName = newTypeName;
