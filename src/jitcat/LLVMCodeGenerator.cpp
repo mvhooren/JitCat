@@ -18,7 +18,7 @@
 #include "jitcat/LLVMJit.h"
 #include "jitcat/LLVMMemoryManager.h"
 #include "jitcat/LLVMPreGeneratedExpression.h"
-#include "jitcat/LLVMReInterningReexportsGenerator.h"
+#include "jitcat/LLVMReinterningReexportsGenerator.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/MemberInfo.h"
