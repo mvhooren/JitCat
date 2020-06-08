@@ -59,6 +59,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
+		"	//This calls the getTestVector from reflectedObject.\n"
 		"	TestVector4 testVector = getTestVector();\n"
 		"\n"
 		"	TestVector4 getTestVector()\n"

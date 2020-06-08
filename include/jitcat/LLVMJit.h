@@ -67,6 +67,7 @@ namespace jitcat::LLVM
 	
 		llvm::LLVMContext& getContext() const;
 		llvm::orc::ThreadSafeContext& getThreadSafeContext() const;
+		std::shared_ptr<llvm::orc::SymbolStringPool> getSymbolStringPool() const;
 
 		llvm::TargetMachine& getTargetMachine() const;
 		const llvm::orc::JITTargetMachineBuilder& getTargetMachineBuilder() const;
@@ -80,6 +81,9 @@ namespace jitcat::LLVM
 		//LLVM functionality is isolated per context. For instance, modules and types created on different contexts cannot interact.
 		//Used for building LLVM IR modules.
 		std::unique_ptr<llvm::orc::ThreadSafeContext> context;
+
+		//A string pool that is shared among executionSessions. It stores symbol names.
+		std::shared_ptr<llvm::orc::SymbolStringPool> symbolStringPool;
 		//A helper class for building the target machine information.
 		llvm::orc::JITTargetMachineBuilder targetMachineBuilder;
 		//Contains all the target specific information for the machine that we are compiling for. Among other things, the target CPU type.

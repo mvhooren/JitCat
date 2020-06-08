@@ -157,9 +157,7 @@ if(LLVM_ENABLED)
 		LLVMCodeGeneratorHelper.cpp
 		LLVMCompileTimeContext.cpp
 		LLVMJit.cpp
-		LLVMMemoryManager.cpp
-		LLVMReinterningReexportsGenerator.cpp
-		${JitCatHeaderPath}/LLVMReinterningReexportsGenerator.h)
+		LLVMMemoryManager.cpp)
 endif()
 
 set(Source_Cat_Expression

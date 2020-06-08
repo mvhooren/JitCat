@@ -18,7 +18,6 @@
 #include "jitcat/LLVMJit.h"
 #include "jitcat/LLVMMemoryManager.h"
 #include "jitcat/LLVMPreGeneratedExpression.h"
-#include "jitcat/LLVMReinterningReexportsGenerator.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/MemberInfo.h"
@@ -55,7 +54,7 @@ using namespace jitcat::Reflection;
 
 
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
-	executionSession(std::make_unique<llvm::orc::ExecutionSession>()),
+	executionSession(std::make_unique<llvm::orc::ExecutionSession>(LLVMJit::get().getSymbolStringPool())),
 	currentModule(std::make_unique<llvm::Module>("JitCat", LLVMJit::get().getContext())),
 	builder(std::make_unique<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>>(LLVMJit::get().getContext())),
 	objectLinkLayer(std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(*executionSession.get(),
@@ -1483,7 +1482,7 @@ llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* m
 				llvm::orc::JITDylib* functionLib = static_cast<CustomTypeInfo*>(typeInfo)->getDylib();
 				if (functionLib != dylib && linkedLibs.find(functionLib) == linkedLibs.end())
 				{
-					dylib->addGenerator(std::make_unique<LLVMReinterningReexportsGenerator>(*functionLib));
+					dylib->addToSearchOrder(*functionLib);
 					linkedLibs.insert(functionLib);
 				}
 			}

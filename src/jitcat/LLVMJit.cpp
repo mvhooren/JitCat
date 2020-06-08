@@ -21,7 +21,8 @@ LLVMJit::LLVMJit():
 	context(new llvm::orc::ThreadSafeContext(std::make_unique<llvm::LLVMContext>())),
 	targetMachineBuilder(llvm::cantFail(llvm::orc::JITTargetMachineBuilder::detectHost())),
 	targetMachine(llvm::cantFail(targetMachineBuilder.createTargetMachine())),
-	dataLayout(new llvm::DataLayout(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget())))
+	dataLayout(new llvm::DataLayout(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),
+	symbolStringPool(std::make_shared<llvm::orc::SymbolStringPool>())
 {
     //executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
 	LLVMTypes::doubleType = llvm::Type::getDoubleTy(*context->getContext());
@@ -70,6 +71,12 @@ llvm::LLVMContext& LLVMJit::getContext() const
 llvm::orc::ThreadSafeContext& jitcat::LLVM::LLVMJit::getThreadSafeContext() const
 {
 	return *context;
+}
+
+
+std::shared_ptr<llvm::orc::SymbolStringPool> jitcat::LLVM::LLVMJit::getSymbolStringPool() const
+{
+	return symbolStringPool;
 }
 
 
