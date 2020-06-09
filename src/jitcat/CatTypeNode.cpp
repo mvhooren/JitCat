@@ -6,12 +6,19 @@
 */
 
 #include "jitcat/CatTypeNode.h"
+#include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatGenericType.h"
+#include "jitcat/CatInheritanceDefinition.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatStaticScope.h"
+#include "jitcat/CatVariableDefinition.h"
+#include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
+
+#include <sstream>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -136,6 +143,58 @@ void CatTypeNode::setType(const CatGenericType& newType)
 }
 
 
+bool CatTypeNode::defineCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, 
+							  void* errorContext, std::vector<const CatASTNode*>& loopDetectionStack)
+{
+	bool typeCheckResult = typeCheck(compileTimeContext, errorManager, errorContext);
+	if (typeCheckResult && type.isReflectableObjectType())
+	{
+		TypeInfo* foundTypeInfo = type.getObjectType();
+		if (foundTypeInfo->isCustomType())
+		{
+			CustomTypeInfo* customType = static_cast<CustomTypeInfo*>(foundTypeInfo);
+			CatClassDefinition* classDefinition = customType->getClassDefinition();
+			if (classDefinition != nullptr)
+			{
+				for (std::size_t i = 0; i < loopDetectionStack.size(); ++i)
+				{
+					if (loopDetectionStack[i] == classDefinition)
+					{
+						std::ostringstream errorStream;
+						errorStream << "Recursive dependency detected.\n";
+						for (i = i; i < loopDetectionStack.size(); ++i)
+						{
+							switch (loopDetectionStack[i]->getNodeType())
+							{
+								default: assert(false); break;
+								case CatASTNodeType::ClassDefinition:
+									errorStream << "\tIn class definition: " << static_cast<const CatClassDefinition*>(loopDetectionStack[i])->getClassName() << ".\n";
+									break;
+								case CatASTNodeType::VariableDefinition:
+								{
+									const CatVariableDefinition* variableDefinition = static_cast<const CatVariableDefinition*>(loopDetectionStack[i]);
+									errorStream << "\tIn variable definition: " << variableDefinition->getName() << " of type: " << variableDefinition->getType().getType().toString() << ".\n";
+									break;
+								}
+								case CatASTNodeType::InheritanceDefinition:
+									errorStream << "\tIn inheritance definition of type " <<  static_cast<const CatInheritanceDefinition*>(loopDetectionStack[i])->getType().toString() << ".\n";
+									break;
+							}
+						}
+						errorManager->compiledWithError(errorStream.str(), errorContext, compileTimeContext->getContextName(), getLexeme());
+						return false;
+					}
+				}
+				return classDefinition->defineCheck(compileTimeContext, loopDetectionStack);
+			}
+
+			return true;
+		}
+	}
+	return typeCheckResult;
+}
+
+
 bool CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	//Check the return type
@@ -169,7 +228,7 @@ bool CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErr
 
 			if (typeInfo == nullptr)
 			{
-				errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), this, compileTimeContext->getContextName(), getLexeme());
+				errorManager->compiledWithError(Tools::append("Type not found: ", getTypeName()), errorContext, compileTimeContext->getContextName(), getLexeme());
 				return false;
 			}
 			else
@@ -186,7 +245,7 @@ bool CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErr
 		}
 		else
 		{
-			errorManager->compiledWithError(Tools::append("Arrays are not supported for now."), this, compileTimeContext->getContextName(), getLexeme());
+			errorManager->compiledWithError(Tools::append("Arrays are not supported for now."), errorContext, compileTimeContext->getContextName(), getLexeme());
 			return false;
 		}
 	}
@@ -198,4 +257,10 @@ bool CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErr
 void CatTypeNode::setOwnershipSemantics(Reflection::TypeOwnershipSemantics ownership)
 {
 	ownershipSemantics = ownership;
+}
+
+
+TypeInfo* jitcat::AST::CatTypeNode::findType(CatRuntimeContext* compileTimeContext, const std::string* typeName)
+{
+	return nullptr;
 }

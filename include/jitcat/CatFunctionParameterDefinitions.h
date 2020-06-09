@@ -37,6 +37,8 @@ namespace jitcat::AST
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
+
+		bool defineCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext, std::vector<const CatASTNode*>& loopDetectionStack);
 		bool typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 		Reflection::CustomTypeInfo* getCustomType() const;
 		int getNumParameters() const;

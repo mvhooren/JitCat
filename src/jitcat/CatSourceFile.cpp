@@ -102,9 +102,25 @@ bool CatSourceFile::compile(CatLib& catLib)
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
+	std::vector<const CatASTNode*> loopDetectionStack;
 	for (auto& iter: definitions)
 	{
-		noErrors &= iter->typeCheck(compiletimeContext);
+		noErrors &= iter->typeGatheringCheck(compiletimeContext);
+	}
+	if (noErrors)
+	{
+		for (auto& iter: definitions)
+		{
+			noErrors &= iter->defineCheck(compiletimeContext, loopDetectionStack);
+			assert(loopDetectionStack.empty());
+		}
+	}
+	if (noErrors)
+	{
+		for (auto& iter: definitions)
+		{
+			noErrors &= iter->typeCheck(compiletimeContext);
+		}
 	}
 	compiletimeContext->removeScope(staticScopeId);
 	compiletimeContext->setCurrentScope(previousScope);

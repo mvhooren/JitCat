@@ -9,6 +9,7 @@
 
 #include "jitcat/CatDefinition.h"
 #include "jitcat/MemberVisibility.h"
+#include "jitcat/ReflectableHandle.h"
 
 #include <any>
 #include <memory>
@@ -36,6 +37,9 @@ namespace jitcat::AST
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
+
+		virtual bool typeGatheringCheck(CatRuntimeContext* compileTimeContext) override final;
+		virtual bool defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack) override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 
 		const std::string& getName() const;
@@ -55,6 +59,8 @@ namespace jitcat::AST
 		std::unique_ptr<CatTypedExpression> initializationExpression;
 
 		Tokenizer::Lexeme initOperatorLexeme;
+		
+		Reflection::ReflectableHandle errorManagerHandle;
 
 		Reflection::TypeMemberInfo* memberInfo;
 	};

@@ -537,3 +537,52 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 		}
 	}
 }
+
+
+TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	Tokenizer::Document source(		
+		"class TestClass\n"
+		"{\n"
+		"\n"
+		"	float addToFloat(int value)\n"
+		"	{\n"
+		"		return getMyFloat() + value\n;"
+		"	}\n"
+		"\n"
+		"	float getMyFloat()\n"
+		"	{\n"
+		"		return myFloat;\n"
+		"	}\n"
+		"\n"
+		"	float myFloat = 42.0f;\n"
+		"}\n");
+
+	library.addSource("test1.jc", source);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine + 1 << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("Local tests")
+	{
+		Expression<float> testExpression1(&context, "addToFloat(42)");
+		doChecks(84.0f, false, false, false, testExpression1, context);
+	}
+}

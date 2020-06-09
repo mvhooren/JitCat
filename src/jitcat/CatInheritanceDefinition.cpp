@@ -20,7 +20,7 @@ using namespace jitcat;
 using namespace jitcat::AST;
 
 
-jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(CatTypeNode* typeNode, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme):
+CatInheritanceDefinition::CatInheritanceDefinition(CatTypeNode* typeNode, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme):
 	CatDefinition(lexeme),
 	nameLexeme(nameLexeme),
 	type(typeNode),
@@ -29,7 +29,7 @@ jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(CatTypeNode* typ
 }
 
 
-jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(const CatInheritanceDefinition& other):
+CatInheritanceDefinition::CatInheritanceDefinition(const CatInheritanceDefinition& other):
 	CatDefinition(other),
 	nameLexeme(other.nameLexeme),
 	type(static_cast<CatTypeNode*>(other.type->copy())),
@@ -38,7 +38,7 @@ jitcat::AST::CatInheritanceDefinition::CatInheritanceDefinition(const CatInherit
 }
 
 
-jitcat::AST::CatInheritanceDefinition::~CatInheritanceDefinition()
+CatInheritanceDefinition::~CatInheritanceDefinition()
 {
 	if (errorManagerHandle.getIsValid())
 	{
@@ -47,7 +47,7 @@ jitcat::AST::CatInheritanceDefinition::~CatInheritanceDefinition()
 }
 
 
-CatASTNode* jitcat::AST::CatInheritanceDefinition::copy() const
+CatASTNode* CatInheritanceDefinition::copy() const
 {
 	return new CatInheritanceDefinition(*this);
 }
@@ -65,7 +65,13 @@ CatASTNodeType CatInheritanceDefinition::getNodeType() const
 }
 
 
-bool jitcat::AST::CatInheritanceDefinition::typeCheck(CatRuntimeContext* compiletimeContext)
+bool CatInheritanceDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContext)
+{
+	return true;
+}
+
+
+bool CatInheritanceDefinition::defineCheck(CatRuntimeContext* compiletimeContext, std::vector<const CatASTNode*>& loopDetectionStack)
 {
 	if (errorManagerHandle.getIsValid())
 	{
@@ -74,37 +80,42 @@ bool jitcat::AST::CatInheritanceDefinition::typeCheck(CatRuntimeContext* compile
 	}
 	ExpressionErrorManager* errorManager = compiletimeContext->getErrorManager();
 	errorManagerHandle = errorManager;
-	if (!type->typeCheck(compiletimeContext, errorManager, this))
+	loopDetectionStack.push_back(this);
+	bool result = type->defineCheck(compiletimeContext, errorManager, this, loopDetectionStack);
+	loopDetectionStack.pop_back();
+	if (!result)
 	{
 		return false;
 	}
-	else
+	const CatGenericType& inheritedType = type->getType();
+	if (!inheritedType.isReflectableObjectType())
 	{
-		const CatGenericType& inheritedType = type->getType();
-		if (!inheritedType.isReflectableObjectType())
-		{
-			errorManager->compiledWithError(Tools::append("Inheritance only supports object types, ", inheritedType.toString(), " not supported."), this, compiletimeContext->getContextName(), getLexeme());
-			return false;
-		}
-		else if (!inheritedType.getObjectType()->getAllowInheritance())
-		{
-			errorManager->compiledWithError(Tools::append("Inheritance from, ", inheritedType.toString(), " is not allowed."), this, compiletimeContext->getContextName(), getLexeme());
-			return false;
-		}
-
-		CatScope* currentScope = compiletimeContext->getCurrentScope();
-		if (currentScope != nullptr)
-		{
-			inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType.toString()), type->getType());
-			inheritedMember->visibility = Reflection::MemberVisibility::Hidden;
-		}
+		errorManager->compiledWithError(Tools::append("Inheritance only supports object types, ", inheritedType.toString(), " not supported."), this, compiletimeContext->getContextName(), getLexeme());
+		return false;
+	}
+	else if (!inheritedType.getObjectType()->getAllowInheritance())
+	{
+		errorManager->compiledWithError(Tools::append("Inheritance from, ", inheritedType.toString(), " is not allowed."), this, compiletimeContext->getContextName(), getLexeme());
+		return false;
 	}
 
+	CatScope* currentScope = compiletimeContext->getCurrentScope();
+	if (currentScope != nullptr)
+	{
+		inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType.toString()), type->getType());
+		inheritedMember->visibility = Reflection::MemberVisibility::Hidden;
+	}
 	return true;
 }
 
 
-bool jitcat::AST::CatInheritanceDefinition::postTypeCheck(CatRuntimeContext* compileTimeContext)
+bool CatInheritanceDefinition::typeCheck(CatRuntimeContext* compiletimeContext)
+{
+	return true;
+}
+
+
+bool CatInheritanceDefinition::postTypeCheck(CatRuntimeContext* compileTimeContext)
 {
 	if (errorManagerHandle.getIsValid())
 	{
@@ -122,7 +133,7 @@ bool jitcat::AST::CatInheritanceDefinition::postTypeCheck(CatRuntimeContext* com
 }
 
 
-CatGenericType jitcat::AST::CatInheritanceDefinition::getType() const
+CatGenericType CatInheritanceDefinition::getType() const
 {
 	if (type != nullptr && type->isKnownType())
 	{
@@ -132,7 +143,7 @@ CatGenericType jitcat::AST::CatInheritanceDefinition::getType() const
 }
 
 
-Reflection::TypeMemberInfo* jitcat::AST::CatInheritanceDefinition::getInheritedMember() const
+Reflection::TypeMemberInfo* CatInheritanceDefinition::getInheritedMember() const
 {
 	return inheritedMember;
 }

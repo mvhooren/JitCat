@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeMemberInfo.h"
@@ -24,10 +25,24 @@ using namespace jitcat::Reflection;
 
 CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 	TypeInfo(typeName, 0, std::make_unique<CustomObjectTypeCaster>(this)),
+	classDefinition(nullptr),
 	isConstType(isConstType),
 	defaultData(nullptr),
 	triviallyCopyable(true),
-	defaultConstructorFunction(nullptr)
+	defaultConstructorFunction(nullptr),
+	dylib(nullptr)
+{
+}
+
+
+CustomTypeInfo::CustomTypeInfo(AST::CatClassDefinition* classDefinition):
+	TypeInfo(classDefinition->getClassName().c_str(), 0, std::make_unique<CustomObjectTypeCaster>(this)),
+	classDefinition(classDefinition),
+	isConstType(false),
+	defaultData(nullptr),
+	triviallyCopyable(true),
+	defaultConstructorFunction(nullptr),
+	dylib(nullptr)
 {
 }
 
@@ -404,6 +419,12 @@ Reflectable* CustomTypeInfo::getDefaultInstance()
 bool CustomTypeInfo::isCustomType() const
 {
 	return true;
+}
+
+
+jitcat::AST::CatClassDefinition* CustomTypeInfo::getClassDefinition()
+{
+	return classDefinition;
 }
 
 

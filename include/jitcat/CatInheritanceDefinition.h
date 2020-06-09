@@ -37,7 +37,10 @@ namespace jitcat::AST
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
 
+		virtual bool typeGatheringCheck(CatRuntimeContext* compileTimeContext) override final;
+		virtual bool defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack) override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
+
 		bool postTypeCheck(CatRuntimeContext* compileTimeContext);
 
 		CatGenericType getType() const;

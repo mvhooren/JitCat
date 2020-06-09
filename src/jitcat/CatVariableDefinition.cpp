@@ -31,7 +31,7 @@ CatVariableDefinition::CatVariableDefinition(CatTypeNode* typeNode, const std::s
 }
 
 
-jitcat::AST::CatVariableDefinition::CatVariableDefinition(const CatVariableDefinition& other):
+CatVariableDefinition::CatVariableDefinition(const CatVariableDefinition& other):
 	CatDefinition(other),
 	type(static_cast<CatTypeNode*>(other.type->copy())),
 	name(other.name),
@@ -44,10 +44,14 @@ jitcat::AST::CatVariableDefinition::CatVariableDefinition(const CatVariableDefin
 
 CatVariableDefinition::~CatVariableDefinition()
 {
+	if (errorManagerHandle.getIsValid())
+	{
+		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+	}
 }
 
 
-CatASTNode* jitcat::AST::CatVariableDefinition::copy() const
+CatASTNode* CatVariableDefinition::copy() const
 {
 	return new CatVariableDefinition(*this);
 }
@@ -71,9 +75,39 @@ CatASTNodeType CatVariableDefinition::getNodeType() const
 }
 
 
+bool CatVariableDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContext)
+{
+	return true;
+}
+
+
+bool CatVariableDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack)
+{
+	if (errorManagerHandle.getIsValid())
+	{
+		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		errorManagerHandle = nullptr;
+	}	
+	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
+	errorManagerHandle = errorManager;
+
+	loopDetectionStack.push_back(this);
+	bool result = type->defineCheck(compileTimeContext, errorManager, this, loopDetectionStack);
+	loopDetectionStack.pop_back();
+	return result;
+}
+
+
 bool CatVariableDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 {
+	if (errorManagerHandle.getIsValid())
+	{
+		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		errorManagerHandle = nullptr;
+	}	
 	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
+	errorManagerHandle = errorManager;
+
 	if (!type->typeCheck(compileTimeContext, errorManager, this))
 	{
 		return false;
@@ -122,25 +156,25 @@ const CatTypeNode& CatVariableDefinition::getType() const
 }
 
 
-const CatTypedExpression* jitcat::AST::CatVariableDefinition::getInitializationExpression() const
+const CatTypedExpression* CatVariableDefinition::getInitializationExpression() const
 {
 	return initializationExpression.get();
 }
 
 
-Tokenizer::Lexeme jitcat::AST::CatVariableDefinition::getInitializationOperatorLexeme() const
+Tokenizer::Lexeme CatVariableDefinition::getInitializationOperatorLexeme() const
 {
 	return initOperatorLexeme;
 }
 
 
-Reflection::MemberVisibility jitcat::AST::CatVariableDefinition::getVariableVisibility() const
+Reflection::MemberVisibility CatVariableDefinition::getVariableVisibility() const
 {
 	return visibility;
 }
 
 
-void jitcat::AST::CatVariableDefinition::setVariableVisibility(Reflection::MemberVisibility variableVisibility)
+void CatVariableDefinition::setVariableVisibility(Reflection::MemberVisibility variableVisibility)
 {
 	visibility = variableVisibility;
 	if (memberInfo != nullptr)

@@ -53,6 +53,29 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 
 
+struct ScopeChecker
+{
+	ScopeChecker(LLVMCompileTimeContext* context):
+		numScopeValues(context->scopeValues.size()),
+		numScopes(context->catContext->getNumScopes()),
+		context(context)
+	{}
+	~ScopeChecker()
+	{
+		assert(numScopeValues == context->scopeValues.size());
+		assert(numScopes == context->catContext->getNumScopes());
+	}
+
+	std::size_t numScopeValues;
+	int numScopes;
+	LLVMCompileTimeContext* context;
+};
+#ifdef NDEBUG
+#define ScopeCheck(expression) ((void)0)
+#else
+#define ScopeCheck(expression) ScopeChecker checker(expression)
+#endif
+
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	executionSession(std::make_unique<llvm::orc::ExecutionSession>(LLVMJit::get().getSymbolStringPool())),
 	currentModule(std::make_unique<llvm::Module>("JitCat", LLVMJit::get().getContext())),
@@ -1171,23 +1194,28 @@ void LLVMCodeGenerator::generate(const AST::CatDefinition* definition, LLVMCompi
 
 void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition, LLVMCompileTimeContext* context)
 {
+	ScopeCheck(context);
 	assert(context->currentLib != nullptr);
 	const CatClassDefinition* previousClass = context->currentClass;
 	context->currentClass = classDefinition;
 	ErrorContext errorContext(context->catContext, classDefinition->getClassName());
+	classDefinition->getCustomType()->setDylib(dylib);
 	for (auto& iter: classDefinition->getClassDefinitions())
 	{
+		ScopeCheck(context);
 		generate(iter, context);
 	}
 	CatScopeID classScopeId = context->catContext->addScope(classDefinition->getCustomType(), nullptr, false);
 	assert(classScopeId == classDefinition->getScopeId());
 	for (auto& iter: classDefinition->getFunctionDefinitions())
 	{
+		ScopeCheck(context);
 		generate(iter, context);
 	}
 	CatFunctionDefinition* constructorDefinition = classDefinition->getFunctionDefinitionByName("__init");
 	if (constructorDefinition != nullptr)
 	{
+		ScopeCheck(context);
 		generate(constructorDefinition, context);
 	}
 	context->currentClass = previousClass;
@@ -1197,6 +1225,7 @@ void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition,
 
 llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* functionDefinition, LLVMCompileTimeContext* context)
 {
+	ScopeCheck(context);
 	assert(context->currentLib != nullptr);
 	const std::string& name = functionDefinition->getMangledFunctionName();
 	CatGenericType returnType = functionDefinition->getReturnTypeNode()->getType();
@@ -1480,6 +1509,7 @@ llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* m
 			if (typeInfo->isCustomType())
 			{
 				llvm::orc::JITDylib* functionLib = static_cast<CustomTypeInfo*>(typeInfo)->getDylib();
+				assert(functionLib != nullptr);
 				if (functionLib != dylib && linkedLibs.find(functionLib) == linkedLibs.end())
 				{
 					dylib->addToSearchOrder(*functionLib);
@@ -1683,7 +1713,10 @@ llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateFunctionPrototype(const
 {
 	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), currentModule.get());
-
+	if (isThisCall && Configuration::useThisCall)
+	{
+		function->setCallingConv(llvm::CallingConv::X86_ThisCall);
+	}
 	//Attributes and names for the parameters can now be set on the function signature.
 	//When returning a string, the StructRet attribute is set to indicate that the parameter is used for returning a structure by value.
 	llvm::Argument* currentArg = function->arg_begin();

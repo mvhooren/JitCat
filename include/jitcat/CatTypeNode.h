@@ -11,6 +11,11 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/TypeOwnershipSemantics.h"
 
+#include <vector>
+namespace jitcat::Reflection
+{
+	class TypeInfo;
+}
 
 namespace jitcat::AST
 {
@@ -36,9 +41,13 @@ namespace jitcat::AST
 
 		void setType(const CatGenericType& newType);
 
+		bool defineCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext, std::vector<const CatASTNode*>& loopDetectionStack);
 		bool typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
 		void setOwnershipSemantics(Reflection::TypeOwnershipSemantics ownership);
+
+	private:
+		Reflection::TypeInfo* findType(CatRuntimeContext* compileTimeContext, const std::string* typeName);
 
 	private:
 		Reflection::TypeOwnershipSemantics ownershipSemantics;

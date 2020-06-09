@@ -1654,7 +1654,7 @@ bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::siz
 		{
 			//Implies value ownership, copy contruct
 			nestedType->copyConstruct(targetBuffer, targetBufferSize, sourceBuffer, sourceBufferSize);
-			return false;
+			return true;
 		}
 		default:
 		{

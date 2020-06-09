@@ -17,6 +17,7 @@
 
 namespace jitcat::AST
 {
+	class CatClassDefinition;
 	class CatFunctionDefinition;
 }
 
@@ -40,6 +41,7 @@ namespace jitcat::Reflection
 	{
 	public:
 		CustomTypeInfo(const char* typeName, bool isConstType = false);
+		CustomTypeInfo(AST::CatClassDefinition* classDefinition);
 	protected:
 		virtual ~CustomTypeInfo();
 	public:
@@ -124,6 +126,8 @@ namespace jitcat::Reflection
 
 		virtual bool isCustomType() const override final;
 
+		AST::CatClassDefinition* getClassDefinition();
+
 		virtual void placementConstruct(unsigned char* buffer, std::size_t bufferSize) const override final;
 		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize) override final;
 		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
@@ -150,6 +154,9 @@ namespace jitcat::Reflection
 
 	private:
 		mutable std::set<Reflectable*> instances;
+
+		//If this custom type belongs to a CatClassDefinition, classDefinition is non-null.
+		AST::CatClassDefinition* classDefinition;
 
 		bool isConstType;
 		unsigned char* defaultData;

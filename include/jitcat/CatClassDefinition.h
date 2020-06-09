@@ -29,6 +29,14 @@ namespace jitcat::AST
 	
 	class CatClassDefinition: public CatDefinition, public CatScope
 	{
+		enum class CheckStatus
+		{
+			Unchecked,
+			Unsized,
+			Sized,
+			Failed,
+			Succeeded
+		};
 	public:
 		CatClassDefinition(const std::string& name, std::vector<std::unique_ptr<CatDefinition>>&& definitions, const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme& nameLexeme);
 		CatClassDefinition(const CatClassDefinition& other);
@@ -37,6 +45,9 @@ namespace jitcat::AST
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
+
+		virtual bool typeGatheringCheck(CatRuntimeContext* compileTimeContext) override final;
+		virtual bool defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack) override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 
 		bool isTriviallyCopyable() const;
@@ -74,6 +85,8 @@ namespace jitcat::AST
 		std::string name;
 		std::string qualifiedName;
 		Tokenizer::Lexeme nameLexeme;
+		
+		CheckStatus checkStatus;
 
 		const CatClassDefinition* parentClass;
 

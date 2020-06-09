@@ -62,7 +62,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 		"	//This calls the getTestVector from reflectedObject.\n"
 		"	TestVector4 testVector = getTestVector();\n"
 		"\n"
-		"	TestVector4 getTestVector()\n"
+		"	TestVector4 getTestVector2()\n"
 		"	{\n"
 		"		return testVector;\n"
 		"	}\n"
@@ -93,7 +93,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 	{
 		int currentInstances = TestVector4::instanceCount;
 		{
-			Expression<TestVector4> testExpression1(&context, "getTestVector()");
+			Expression<TestVector4> testExpression1(&context, "getTestVector2()");
 			doChecks(TestVector4(1.0f, 2.0f, 3.0f, 4.0f), false, false, false, testExpression1, context);
 		}
 		CHECK(currentInstances == TestVector4::instanceCount);
@@ -103,7 +103,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 	{
 		int currentInstances = TestVector4::instanceCount;
 		{
-			Expression<TestVector4> testExpression1(&context, "addTestVector(getTestVector())");
+			Expression<TestVector4> testExpression1(&context, "addTestVector(getTestVector2())");
 			doChecks(TestVector4(2.0f, 4.0f, 6.0f, 8.0f), false, false, false, testExpression1, context);
 		}
 		CHECK(currentInstances == TestVector4::instanceCount);

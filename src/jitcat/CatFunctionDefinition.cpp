@@ -98,6 +98,62 @@ CatASTNodeType CatFunctionDefinition::getNodeType() const
 }
 
 
+bool CatFunctionDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContext)
+{
+	return true;
+}
+
+
+bool CatFunctionDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack)
+{
+	if (errorManagerHandle.getIsValid())
+	{
+		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		errorManagerHandle = nullptr;
+	}	
+	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
+	errorManagerHandle = errorManager;
+
+	if (!type->typeCheck(compileTimeContext, errorManager, this))
+	{
+		return false;
+	}
+
+	if (parameters->getNumParameters() > 0)
+	{
+		parametersScopeId = compileTimeContext->addScope(parameters->getCustomType(), nullptr, false);
+	}
+	CatScope* previousScope = compileTimeContext->getCurrentScope();
+	compileTimeContext->setCurrentScope(this);
+	if (!parameters->defineCheck(compileTimeContext, errorManager, this, loopDetectionStack))
+	{
+		compileTimeContext->setCurrentScope(previousScope);
+		compileTimeContext->removeScope(parametersScopeId);
+		return false;
+	}
+	compileTimeContext->removeScope(parametersScopeId);
+	compileTimeContext->setCurrentScope(previousScope);
+
+	CatScope* currentScope = compileTimeContext->getCurrentScope();
+	if (currentScope != nullptr)
+	{
+		CatScopeID existingFunctionScopeId = InvalidScopeID;
+		if (compileTimeContext->findMemberFunction(this, existingFunctionScopeId) != nullptr && existingFunctionScopeId == currentScope->getScopeId())
+		{
+			errorManager->compiledWithError(Tools::append("A member function with the same signature and name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), nameLexeme);
+			return false;
+		}
+		CatGenericType thisType(compileTimeContext->getScopeType(currentScope->getScopeId()), false, false);
+		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, thisType, this);
+		memberFunctionInfo->visibility = visibility;
+	}
+
+	errorManager->compiledWithoutErrors(this);
+	updateMangledName();
+	return true;
+}
+
+
 bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 {
 	if (errorManagerHandle.getIsValid())
@@ -107,10 +163,7 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	}	
 	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
 	errorManagerHandle = errorManager;
-	if (!type->typeCheck(compileTimeContext, errorManager, this))
-	{
-		return false;
-	}
+
 	if (parameters->getNumParameters() > 0)
 	{
 		parametersScopeId = compileTimeContext->addScope(parameters->getCustomType(), nullptr, false);
@@ -141,6 +194,7 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	if (!scopeBlock->typeCheck(compileTimeContext, errorManager, this))
 	{
 		compileTimeContext->removeScope(parametersScopeId);
+		compileTimeContext->setCurrentFunction(nullptr);
 		compileTimeContext->setCurrentScope(previousScope);
 		return false;
 	}
@@ -163,19 +217,6 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		return false;
 	}
 	errorManager->compiledWithoutErrors(this);
-	CatScope* currentScope = compileTimeContext->getCurrentScope();
-	if (currentScope != nullptr)
-	{
-		CatScopeID existingFunctionScopeId = InvalidScopeID;
-		if (compileTimeContext->findMemberFunction(this, existingFunctionScopeId) != nullptr && existingFunctionScopeId == currentScope->getScopeId())
-		{
-			errorManager->compiledWithError(Tools::append("A member function with the same signature and name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), nameLexeme);
-			return false;
-		}
-		CatGenericType thisType(compileTimeContext->getScopeType(currentScope->getScopeId()), false, false);
-		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, thisType, this);
-		memberFunctionInfo->visibility = visibility;
-	}
 	updateMangledName();
 	return true;
 }

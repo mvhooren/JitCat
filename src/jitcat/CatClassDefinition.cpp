@@ -39,11 +39,12 @@ CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std:
 	name(name),
 	qualifiedName(name),
 	nameLexeme(nameLexeme),
+	checkStatus(CheckStatus::Unchecked),
 	parentClass(nullptr),
 	definitions(std::move(definitions)),
-	scopeId(InvalidScopeID),
-	customType(makeTypeInfo<CustomTypeInfo>(this->name.c_str()))
+	scopeId(InvalidScopeID)
 {
+	customType = makeTypeInfo<CustomTypeInfo>(this);
 	extractDefinitionLists();
 }
 
@@ -52,10 +53,11 @@ CatClassDefinition::CatClassDefinition(const CatClassDefinition& other):
 	CatDefinition(other),
 	name(other.name),
 	nameLexeme(other.nameLexeme),
+	checkStatus(CheckStatus::Unchecked),
 	parentClass(other.parentClass),
-	scopeId(InvalidScopeID),
-	customType(makeTypeInfo<CustomTypeInfo>(this->name.c_str()))
+	scopeId(InvalidScopeID)
 {
+	customType = makeTypeInfo<CustomTypeInfo>(this);
 	for (auto& iter : other.definitions)
 	{
 		definitions.emplace_back(static_cast<CatDefinition*>(iter->copy()));
@@ -100,19 +102,16 @@ CatASTNodeType CatClassDefinition::getNodeType() const
 }
 
 
-bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
+bool CatClassDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContext)
 {
+	assert(checkStatus == CheckStatus::Unchecked);
 	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
 	compileTimeContext->setCurrentClass(this);
-	bool noErrors = true;
 	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
-	compileTimeContext->setCurrentScope(this);
 
-	for (auto& iter : inheritanceDefinitions)
-	{
-		noErrors &= iter->typeCheck(compileTimeContext);
-	}
+	compileTimeContext->setCurrentClass(parentClass);
+	bool noErrors = true;
 
 	if (!previousScope->getCustomType()->addType(customType.get()))
 	{
@@ -120,16 +119,115 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		noErrors = false;
 	}
 
+	compileTimeContext->removeScope(scopeId);
+
+	for (auto& iter : classDefinitions)
+	{
+		iter->setParentClass(this);
+		noErrors &= iter->typeGatheringCheck(compileTimeContext);
+	}
+
+	if (noErrors)
+	{
+		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
+	}
+	checkStatus = noErrors ? CheckStatus::Unsized : CheckStatus::Failed;
+	return noErrors;
+}
+
+
+bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack)
+{
+	if (checkStatus == CheckStatus::Failed)
+	{
+		return false;
+	}
+	if (checkStatus == CheckStatus::Sized)
+	{
+		return true;
+	}
+	assert(checkStatus == CheckStatus::Unsized);
+
+	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
+	compileTimeContext->setCurrentClass(this);
+	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
+	CatScope* previousScope = compileTimeContext->getCurrentScope();
+	compileTimeContext->setCurrentScope(this);
+
+	bool noErrors = true;
+
+	loopDetectionStack.push_back(this);
+
+	for (auto& iter : inheritanceDefinitions)
+	{
+		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+	}
+
 	for (auto& iter: variableDefinitions)
 	{
-		noErrors &= iter->typeCheck(compileTimeContext);;
+		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+	}
+
+	loopDetectionStack.pop_back();
+	checkStatus = noErrors ? CheckStatus::Sized : CheckStatus::Failed;
+
+	for (auto& iter: functionDefinitions)
+	{
+		iter->setParentClass(this);
+		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+	}
+
+	compileTimeContext->removeScope(scopeId);
+
+	for (auto& iter : classDefinitions)
+	{
+		iter->setParentClass(this);
+		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+	}
+	
+
+	compileTimeContext->setCurrentScope(previousScope);
+	compileTimeContext->setCurrentClass(parentClass);
+
+	if (noErrors)
+	{
+		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
+	}
+	return noErrors;
+}
+
+
+bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
+{
+	if (checkStatus == CheckStatus::Failed)
+	{
+		return false;
+	}
+	assert(checkStatus == CheckStatus::Sized);
+	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
+	compileTimeContext->setCurrentClass(this);
+	CatScopeID addedScopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
+	assert(scopeId == addedScopeId);
+	(void)addedScopeId;
+	CatScope* previousScope = compileTimeContext->getCurrentScope();
+	compileTimeContext->setCurrentScope(this);
+
+	bool noErrors = true;
+
+	for (auto& iter : inheritanceDefinitions)
+	{
+		noErrors &= iter->typeCheck(compileTimeContext);
+	}
+
+	for (auto& iter: variableDefinitions)
+	{
+		noErrors &= iter->typeCheck(compileTimeContext);
 	}
 
 	if (noErrors)
 	{
 		noErrors &= generateConstructor(compileTimeContext);
 		noErrors &= generateDestructor(compileTimeContext);
-
 	}
 
 	for (auto& iter: functionDefinitions)
@@ -168,7 +266,7 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		}
 		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
 	}
-	
+	checkStatus = noErrors ? CheckStatus::Succeeded : CheckStatus::Failed;
 	return noErrors;
 }
 
@@ -393,7 +491,12 @@ bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeConte
 	generatedConstructor = std::make_unique<CatFunctionDefinition>(typeNode, "__init", nameLexeme, parameters, scopeBlock, nameLexeme);
 	generatedConstructor->setParentClass(this);
 	generatedConstructor->setFunctionVisibility(MemberVisibility::Constructor);
-	return generatedConstructor->typeCheck(compileTimeContext);
+	std::vector<const CatASTNode*> loopDetection;
+	if (generatedConstructor->defineCheck(compileTimeContext, loopDetection))
+	{
+		return generatedConstructor->typeCheck(compileTimeContext);
+	}
+	return false;
 }
 
 

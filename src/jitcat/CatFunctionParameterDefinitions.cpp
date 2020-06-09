@@ -70,7 +70,7 @@ CatASTNodeType CatFunctionParameterDefinitions::getNodeType() const
 }
 
 
-bool jitcat::AST::CatFunctionParameterDefinitions::typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+bool jitcat::AST::CatFunctionParameterDefinitions::defineCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext, std::vector<const CatASTNode*>& loopDetectionStack)
 {
 	bool success = true;
 	for (auto& iter : parameters)
@@ -81,6 +81,12 @@ bool jitcat::AST::CatFunctionParameterDefinitions::typeCheck(CatRuntimeContext* 
 		}
 	}
 	return success;
+}
+
+
+bool jitcat::AST::CatFunctionParameterDefinitions::typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	return true;
 }
 
 
