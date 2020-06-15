@@ -251,6 +251,20 @@ MemberFunctionInfo* TypeInfo::getFirstMemberFunctionInfo(const std::string& iden
 }
 
 
+std::vector<MemberFunctionInfo*> jitcat::Reflection::TypeInfo::getMemberFunctionsByName(const std::string& functionName) const
+{
+	std::vector<MemberFunctionInfo*> foundFunctions;
+	std::string lowerCaseFunctionName = Tools::toLowerCase(functionName);
+	auto lowerBound = memberFunctions.lower_bound(lowerCaseFunctionName);
+	auto upperBound = memberFunctions.upper_bound(lowerCaseFunctionName);
+	for (auto& iter = lowerBound; iter != upperBound; ++iter)
+	{
+		foundFunctions.push_back(iter->second.get());
+	}
+	return foundFunctions;
+}
+
+
 MemberFunctionInfo* TypeInfo::getMemberFunctionInfo(const FunctionSignature* functionSignature) const
 {
 	return getMemberFunctionInfo(*functionSignature);

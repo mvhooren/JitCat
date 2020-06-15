@@ -72,3 +72,9 @@ const CatGenericType& SearchFunctionSignature::getParameterType(int index) const
 {
 	return parameterTypes[index];
 }
+
+
+void SearchFunctionSignature::setFunctionName(const std::string& name)
+{
+	lowerCaseName = Tools::toLowerCase(name);
+}

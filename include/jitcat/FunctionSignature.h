@@ -33,6 +33,7 @@ namespace jitcat::Reflection
 		virtual const std::string& getLowerCaseFunctionName() const override final;
 		virtual int getNumParameters() const override final;
 		virtual const CatGenericType& getParameterType(int index) const override final;
+		void setFunctionName(const std::string& name);
 
 	private:
 		std::string lowerCaseName;

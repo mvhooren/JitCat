@@ -76,8 +76,15 @@ namespace jitcat::AST
 		void setParentClass(const CatClassDefinition* classDefinition);
 
 	private:
+		bool defineConstructor(CatRuntimeContext* compileTimeContext);
+		bool defineCopyConstructor(CatRuntimeContext* compileTimeContext);
+		bool defineDestructor(CatRuntimeContext* compileTimeContext);
+		bool defineOperatorAssign(CatRuntimeContext* compileTimeContext);
+
 		bool generateConstructor(CatRuntimeContext* compileTimeContext);
+		bool generateCopyConstructor(CatRuntimeContext* compileTimeContext);
 		bool generateDestructor(CatRuntimeContext* compileTimeContext);
+		bool generateOperatorAssign(CatRuntimeContext* compileTimeContext);
 
 		void extractDefinitionLists();
 

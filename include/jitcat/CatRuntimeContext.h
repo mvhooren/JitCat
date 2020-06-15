@@ -47,6 +47,10 @@ namespace jitcat
 		class CatClassDefinition;
 		class CatScopeBlock;
 	}
+	namespace Reflection
+	{
+		class ObjectInstance;
+	}
 
 	//A CatRuntimeContext provides variables and functions for use in expressions. (See Expression.h, ExpressionAny.h)
 	//It can contain multiple "scopes" of variables.
@@ -98,6 +102,8 @@ namespace jitcat
 		CatScopeID addScope(ReflectableType* scopeObject, bool isStatic);
 		//Same as above addObject, but explicitly specify type and scopeObject instead of deriving typeInfo from the scopeObject;
 		CatScopeID addScope(Reflection::TypeInfo* typeInfo, unsigned char* scopeObject, bool isStatic);
+		//Same as above addObject, but type and scopeObject are contained in an objectInstance
+		CatScopeID addScope(const Reflection::ObjectInstance& objectInstance, bool isStatic);
 
 		void pushStackFrame();
 		void popStackFrame();

@@ -169,11 +169,11 @@ TEST_CASE("Custom type static member Variables", "[staticmembervariables][custom
 	TypeInfo* typeInfo = TypeRegistry::get()->registerType<TestVector4>();
 	customType->addStaticObjectMember("myObjectPtr", &vector4Obj, typeInfo);
 	customType->addStaticDataObjectMember("myObjectValue", typeInfo);
-	ObjectInstance typeInstance(customType->construct(), customType.get());
+	ObjectInstance typeInstance(customType.get());
 
 	
 	CatRuntimeContext context("customtypestaticmembervariables_tests", &errorManager);
-	context.addScope(customType.get(), typeInstance.getObject(), false);
+	context.addScope(typeInstance, false);
 
 	SECTION("Static float")
 	{
@@ -233,12 +233,12 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 	TypeInfo* typeInfo = TypeRegistry::get()->registerType<TestVector4>();
 	customType->addStaticObjectMember("myObjectPtr", &vector4Obj, typeInfo);
 	customType->addStaticDataObjectMember("myObjectValue", typeInfo);
-	ObjectInstance typeInstance(customType->construct(), customType.get());
+	ObjectInstance typeInstance( customType.get());
 
 	ReflectedObject reflectedObject;
 
 	CatRuntimeContext context("customtypestaticmembervariables_tests", &errorManager);
-	context.addScope(customType.get(), typeInstance.getObject(), false);
+	context.addScope(typeInstance, false);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Static invalid")

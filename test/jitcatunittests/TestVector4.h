@@ -8,7 +8,8 @@
 #pragma once
 
 #include "jitcat/Reflectable.h"
-
+#include <iostream>
+#include <catch2/catch.hpp>
 
 namespace TestObjects
 {
@@ -48,5 +49,14 @@ namespace TestObjects
 	};
 
 	TestVector4 operator/(const TestVector4& lhs, const TestVector4& rhs);
+}
 
+std::ostream& operator<<(std::ostream& os, const TestObjects::TestVector4& vector);
+
+namespace Catch 
+{
+	template<> struct StringMaker<TestObjects::TestVector4>
+	{
+		static std::string convert(const TestObjects::TestVector4& vector); 
+	};
 }

@@ -184,6 +184,10 @@ void LLVMCodeGenerator::generate(const AST::CatSourceFile* sourceFile, LLVMCompi
 	createNewModule(context);
 	CatScopeID staticScopeId = context->catContext->addScope(sourceFile->getCustomType(), sourceFile->getScopeObjectInstance(), true);
 	assert(staticScopeId == sourceFile->getScopeId());
+	for (auto& iter : sourceFile->getClassDefinitions())
+	{
+		iter->getCustomType()->setDylib(dylib);
+	}
 	for (auto& iter : sourceFile->getFunctionDefinitions())
 	{
 		generate(iter, context);
@@ -1011,7 +1015,6 @@ void LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBlock, LLVMCompi
 					llvm::Value* localPtr = builder->CreateGEP(scopeAlloc, helper->createConstant((int)iter.first), Tools::append(iter.second->memberName, "_ptr"));
 					llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(itemType.getObjectType()), Tools::append(itemType.getObjectType()->getTypeName(), "_typeInfo"));
 					llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(itemType.getObjectType()->getTypeName(), "_typeInfoPtr"));
-					helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {localPtr, typeInfoConstantAsIntPtr}, "placementConstructType");
 					context->blockDestructorGenerators.push_back([=]()
 					{
 						return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "placementDestructType");					
@@ -1029,6 +1032,41 @@ void LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBlock, LLVMCompi
 			context->scopeValues.erase(iter);
 		}
 		context->catContext->removeScope(blockScopeId);
+	}
+}
+
+
+void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompileTimeContext* context)
+{
+	CatAssignableExpression* assignable = constructor->getAssignable();
+	assert(assignable != nullptr 
+		  && (assignable->getType().isReflectableObjectType()
+			  || (assignable->getType().isPointerToReflectableObjectType() && assignable->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)));
+	llvm::Value* target = generate(static_cast<CatTypedExpression*>(assignable), context);
+
+	TypeInfo* objectType = nullptr;
+	if (assignable->getType().isReflectableObjectType())
+	{
+		objectType = assignable->getType().getObjectType();
+	}
+	else
+	{
+		objectType = assignable->getType().getPointeeType()->getObjectType();
+	}
+
+	llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
+	llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
+
+	if (!constructor->getIsCopyConstructor())
+	{
+		helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {target, typeInfoConstantAsIntPtr}, "placementConstructType");
+	}
+	else
+	{
+		CatArgumentList* arguments = constructor->getArgumentList();
+		assert(arguments != nullptr && arguments->getNumArguments() == 1);
+		llvm::Value* source = generate(arguments->getArgument(0), context);
+		helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {target, source, typeInfoConstantAsIntPtr}, "placementCopyConstructType");
 	}
 }
 
@@ -1170,6 +1208,7 @@ void LLVMCodeGenerator::generate(const AST::CatStatement* statement, LLVMCompile
 			case CatASTNodeType::IfStatement:			generate(static_cast<const CatIfStatement*>(statement), context);			return;
 			case CatASTNodeType::VariableDeclaration:	generate(static_cast<const CatVariableDeclaration*>(statement), context);	return;
 			case CatASTNodeType::ScopeBlock:			generate(static_cast<const CatScopeBlock*>(statement), context);			return;
+			case CatASTNodeType::Contruct:				generate(static_cast<const CatConstruct*>(statement), context);		return;
 			default:									assert(false);																return;
 		}
 	}

@@ -14,10 +14,13 @@
 #include "jitcat/CatScopeBlock.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/FunctionSignature.h"
 #include "jitcat/ReflectableHandle.h"
+#include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
 
 #include <cassert>
+#include <sstream>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -48,6 +51,14 @@ void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr
 	}
 }
 
+
+void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatAssignableExpression>& uPtr, CatStatement* expression)
+{
+	if (uPtr.get() != static_cast<CatAssignableExpression*>(expression))
+	{
+		uPtr.reset(static_cast<CatAssignableExpression*>(expression));
+	}
+}
 
 void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType)
 {
@@ -315,6 +326,135 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 	}
 	assert(false);
 	return std::any();
+}
+
+
+MemberFunctionInfo* ASTHelper::memberFunctionSearch(const std::string& functionName, const std::vector<CatGenericType>& argumentTypes, TypeInfo* type, 
+													ExpressionErrorManager* errorManager, CatRuntimeContext* context, void* errorSource, const Tokenizer::Lexeme& lexeme)
+{
+	SearchFunctionSignature signature(functionName, argumentTypes);
+	MemberFunctionInfo* functionInfo = type->getMemberFunctionInfo(signature);
+	if (functionInfo != nullptr)
+	{
+		return functionInfo;
+	}
+	else if (functionName == "init")
+	{
+		//If it is the constructor function, also search for the auto-generated constructor if the user-defined constructor was not found.
+		signature.setFunctionName("__init");
+		functionInfo = type->getMemberFunctionInfo(signature);
+		if (functionInfo != nullptr)
+		{
+			return functionInfo;
+		}
+	}
+	//The function was not found. Generate a list of all the functions with that name (that do not match the argument types).
+	std::vector<MemberFunctionInfo*> foundFunctions = type->getMemberFunctionsByName(functionName);
+	if (foundFunctions.size() == 0 && functionName == "init")
+	{
+		foundFunctions = type->getMemberFunctionsByName("__init");
+	}
+	if (foundFunctions.size() == 0)
+	{
+		//There exist no functions of that name.
+		errorManager->compiledWithError(Tools::append("Member function not found: ", functionName, "."), errorSource, context->getContextName(), lexeme);
+		return nullptr;
+	}
+	else 
+	{
+		MemberFunctionInfo* onlyFunction = nullptr;
+		if (foundFunctions.size() == 1)
+		{
+			onlyFunction = foundFunctions[0];
+		}
+		else
+		{
+			MemberFunctionInfo* potentialOnlyFunction;
+			int functionsWithSameNumberOfArguments = 0;
+			for (auto& iter : foundFunctions)
+			{
+				if (iter->getNumParameters() == (int)argumentTypes.size())
+				{
+					functionsWithSameNumberOfArguments++;
+					potentialOnlyFunction = iter;
+				}
+			}
+			if (functionsWithSameNumberOfArguments == 1)
+			{
+				onlyFunction = potentialOnlyFunction;
+			}
+			else if (functionsWithSameNumberOfArguments > 1)
+			{
+				//Print an error with each potential match.
+				std::ostringstream errorStream;
+				errorStream << "Invalid argument(s) for function " << functionName << ". There are " << functionsWithSameNumberOfArguments << " potential candidates: \n";
+				for (auto& iter : foundFunctions)
+				{
+					if (iter->getNumParameters() == (int)argumentTypes.size())
+					{
+						errorStream << "\t" << iter->returnType.toString() << " " << functionName << "(" << ASTHelper::getTypeListString(iter->argumentTypes) << ")\n";
+					}
+				}
+				errorManager->compiledWithError(errorStream.str(), errorSource, context->getContextName(), lexeme);
+				return nullptr;
+			}
+		}
+		//There is only one function of that name, or only one function with that number of arguments.
+		//Print errors based on number of arguments and argument types.
+		if (onlyFunction != nullptr)
+		{
+			if (onlyFunction->getNumberOfArguments() != argumentTypes.size())
+			{
+				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", 
+															  onlyFunction->getNumberOfArguments(), " arguments."), 
+												errorSource, context->getContextName(), lexeme);
+				return nullptr;
+			}
+			else
+			{
+				for (unsigned int i = 0; i < argumentTypes.size(); i++)
+				{
+					if (!onlyFunction->getArgumentType(i).compare(argumentTypes[i], false, false))
+					{
+						errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, 
+																	  " expected: ", onlyFunction->getArgumentType(i).toString()), 
+														errorSource, context->getContextName(), lexeme);
+						return nullptr;
+					}
+					else if (!ASTHelper::checkOwnershipSemantics(onlyFunction->getArgumentType(i), argumentTypes[i], errorManager, context, errorSource, lexeme, "pass"))
+					{
+						return nullptr;
+					}
+				}
+			}
+		}
+		else
+		{
+			//There are multiple functions with that name, all with a different number of arguments that the number of arguments supplied.
+			//Print an error with each potential match.
+			std::ostringstream errorStream;
+			errorStream << "Invalid number of arguments for function " << functionName << ". There are " << foundFunctions.size() << " potential candidates: \n";
+			for (auto& iter : foundFunctions)
+			{
+				errorStream << "\t" << iter->returnType.toString() << " " << functionName << "(" << ASTHelper::getTypeListString(iter->argumentTypes) << ")\n";
+			}
+			errorManager->compiledWithError(errorStream.str(), errorSource, context->getContextName(), lexeme);
+			return nullptr;
+		}
+	}
+	return nullptr;
+}
+
+
+std::string jitcat::AST::ASTHelper::getTypeListString(const std::vector<CatGenericType>& types)
+{
+	std::ostringstream typeListStream;
+	for (std::size_t i = 0; i < types.size(); ++i)
+	{
+		if (i != 0) typeListStream << ", ";
+		typeListStream << types[i].toString();
+	}
+	return typeListStream.str();
 }
 
 

@@ -41,7 +41,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject2", objectUniquePtr.get(), objectTypeInfo);
 	customType->addDataObjectMember("myVector4DataObject", vectorTypeInfo);
-	ObjectInstance typeInstance(customType->construct(), customType.get());
+	ObjectInstance typeInstance(customType.get());
 	std::any vector4 = customType->getMemberInfo("myVector4DataObject")->getMemberReference(typeInstance.getObject());
 	TestVector4* vector4Member = std::any_cast<TestVector4*>(vector4);
 	vector4Member->x = 42.0f;
@@ -72,7 +72,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	CatRuntimeContext context("customTypes", &errorManager);
 	context.addScope(&reflectedObject, true);
 	context.addScope(customType2.get(), nullptr, false);
-	context.addScope(customType.get(), typeInstance.getObject(), false);
+	context.addScope(typeInstance, false);
 
 	SECTION("Float Variable")
 	{

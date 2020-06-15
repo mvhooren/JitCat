@@ -94,7 +94,28 @@ bool CatVariableDefinition::defineCheck(CatRuntimeContext* compileTimeContext, s
 	loopDetectionStack.push_back(this);
 	bool result = type->defineCheck(compileTimeContext, errorManager, this, loopDetectionStack);
 	loopDetectionStack.pop_back();
-	return result;
+	if (!result)
+	{
+		return false;
+	}
+	if (!type->typeCheck(compileTimeContext, errorManager, this))
+	{
+		return false;
+	}
+
+	CatScopeID id = InvalidScopeID;
+	if (memberInfo == nullptr && compileTimeContext->findVariable(Tools::toLowerCase(name), id) != nullptr)
+	{
+		errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), getLexeme());
+		return false;
+	}
+	CatScope* currentScope = compileTimeContext->getCurrentScope();
+	if (memberInfo == nullptr && currentScope != nullptr)
+	{
+		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
+		memberInfo->visibility = visibility;
+	}
+	return true;
 }
 
 
@@ -113,7 +134,7 @@ bool CatVariableDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		return false;
 	}
 	CatScopeID id = InvalidScopeID;
-	if (compileTimeContext->findVariable(Tools::toLowerCase(name), id) != nullptr)
+	if (memberInfo == nullptr && compileTimeContext->findVariable(Tools::toLowerCase(name), id) != nullptr)
 	{
 		errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), this, compileTimeContext->getContextName(), getLexeme());
 		return false;
@@ -135,7 +156,7 @@ bool CatVariableDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		}
 	}
 	CatScope* currentScope = compileTimeContext->getCurrentScope();
-	if (currentScope != nullptr)
+	if (memberInfo == nullptr && currentScope != nullptr)
 	{
 		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
 		memberInfo->visibility = visibility;

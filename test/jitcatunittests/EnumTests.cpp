@@ -30,11 +30,11 @@ TEST_CASE("Enum Tests", "[enum]" )
 	TypeRegistry::get()->registerType(customTypeName, customType.get());
 	customType->addEnumMember("myEnumMember", TestEnum::TestValue2);
 	customType->addConstant("myEnumConstant", TestEnum::TestValue3);
-	ObjectInstance typeInstance(customType->construct(), customType.get());
+	ObjectInstance typeInstance(customType.get());
 
 	CatRuntimeContext context("enumTests", &errorManager);
 	context.addScope(&reflectedObject, true);	
-	context.addScope(customType.get(), typeInstance.getObject(), false);
+	context.addScope(typeInstance, false);
 
 	SECTION("Constant")
 	{

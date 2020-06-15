@@ -13,6 +13,7 @@
 #ifdef ENABLE_LLVM
 #include "jitcat/LLVMCodeGenerator.h"
 #endif
+#include "jitcat/ObjectInstance.h"
 
 #include <cassert>
 #include <sstream>
@@ -86,6 +87,12 @@ CatScopeID CatRuntimeContext::addScope(TypeInfo* typeInfo, unsigned char* scopeO
 	//If this is a static scope, scopeObject must not be nullptr.
 	assert(!isStatic || scopeObject != nullptr);
 	return createScope(scopeObject, typeInfo, isStatic);
+}
+
+
+CatScopeID CatRuntimeContext::addScope(const ObjectInstance& objectInstance, bool isStatic)
+{
+	return addScope(objectInstance.getType(), objectInstance.getObject(), isStatic);
 }
 
 

@@ -744,8 +744,8 @@ std::string CatGenericType::toString() const
 		case SpecificType::Basic:				return toString(basicType);
 		case SpecificType::Enum:
 		case SpecificType::ReflectableObject:	return nestedType->getTypeName();
-		case SpecificType::Pointer:				return Tools::append("pointer to ", pointeeType->toString());
-		case SpecificType::ReflectableHandle:	return Tools::append("handle to ", pointeeType->toString());
+		case SpecificType::Pointer:				return Tools::append(pointeeType->toString(), "*");
+		case SpecificType::ReflectableHandle:	return Tools::append(pointeeType->toString(), "#");
 	}
 }
 

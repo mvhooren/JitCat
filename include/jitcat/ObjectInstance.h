@@ -21,9 +21,18 @@ namespace jitcat::Reflection
 	{
 	public:
 		ObjectInstance();
+		//Default constructs the object instance
+		ObjectInstance(TypeInfo* objectType);
+		//Takes ownership of the object. Use createCopy to copy construct the object.
 		ObjectInstance(unsigned char* object, TypeInfo* objectType);
-		~ObjectInstance();
+		//Also copy constructs the object instance
+		ObjectInstance(const ObjectInstance& other);
+		//Also move constructs the object instance
+		ObjectInstance(ObjectInstance&& other) noexcept;
 		ObjectInstance& operator=(ObjectInstance&& other) noexcept;
+		~ObjectInstance();
+
+		static ObjectInstance createCopy(unsigned char* object, TypeInfo* objectType);
 
 		unsigned char* getObject() const;
 		TypeInfo* getType() const;

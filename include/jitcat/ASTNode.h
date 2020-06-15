@@ -20,7 +20,6 @@ namespace jitcat::AST
 		virtual ~ASTNode() {};
 		const Tokenizer::Lexeme& getLexeme() const {return lexeme;};
 		void setLexeme(const Tokenizer::Lexeme& lexeme_) {lexeme = lexeme_;}
-		//virtual const Tokenizer::Lexeme& getTotalLexeme() = 0;
 
 	protected:
 		Tokenizer::Lexeme lexeme;

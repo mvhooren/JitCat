@@ -53,6 +53,7 @@ namespace jitcat::AST
 		const std::vector<std::unique_ptr<CatStatement>>& getStatements() const;
 
 		void insertStatementFront(CatStatement* statement);
+		void addStatement(CatStatement* statement);
 
 	private:
 		std::vector<std::unique_ptr<CatStatement>> statements;

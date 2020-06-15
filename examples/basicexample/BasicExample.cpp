@@ -78,10 +78,10 @@ int MAIN(int argc, char* argv[])
 	customType->addObjectMember("anObject", &exampleObject, exampleObjectType, TypeOwnershipSemantics::Weak, false);
 
 	//Create an instance of the runtime-defined type
-	ObjectInstance customTypeInstance(customType->construct(), customType);
+	ObjectInstance customTypeInstance(customType);
 
 	//Add the type to the context so we can access the variables in an expression
-	context.addScope(customType, customTypeInstance.getObject(), false);
+	context.addScope(customTypeInstance, false);
 
 	//This time we do not provide the context in the constructor so we need to call compile before calling getValue.
 	//We use the built-in function abs. A list of all built-in functions can be found in the CatBuiltInFunctionType header.

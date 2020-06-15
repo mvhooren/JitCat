@@ -6,7 +6,9 @@
 */
 
 #include "jitcat/CatClassDefinition.h"
+#include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignmentOperator.h"
+#include "jitcat/CatConstruct.h"
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatIdentifier.h"
@@ -167,6 +169,14 @@ bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std:
 	{
 		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
 	}
+	
+	if (noErrors)
+	{
+		noErrors &= defineConstructor(compileTimeContext);
+		noErrors &= defineCopyConstructor(compileTimeContext);
+		noErrors &= defineOperatorAssign(compileTimeContext);
+		noErrors &= defineDestructor(compileTimeContext);
+	}
 
 	loopDetectionStack.pop_back();
 	checkStatus = noErrors ? CheckStatus::Sized : CheckStatus::Failed;
@@ -227,6 +237,8 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	if (noErrors)
 	{
 		noErrors &= generateConstructor(compileTimeContext);
+		noErrors &= generateCopyConstructor(compileTimeContext);
+		noErrors &= generateOperatorAssign(compileTimeContext);
 		noErrors &= generateDestructor(compileTimeContext);
 	}
 
@@ -438,70 +450,89 @@ void CatClassDefinition::setParentClass(const CatClassDefinition* classDefinitio
 }
 
 
-bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeContext)
+bool CatClassDefinition::defineConstructor(CatRuntimeContext* compileTimeContext)
 {
 	CatTypeNode* typeNode = new CatTypeNode(CatGenericType::voidType, nameLexeme);
 	CatFunctionParameterDefinitions* parameters = new CatFunctionParameterDefinitions({}, nameLexeme);
-	std::vector<CatStatement*> statements;
-	for (auto& iter : inheritanceDefinitions)
-	{
-		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
-		TypeInfo* inheritedType = inheritedMember->catType.getPointeeType()->getObjectType();
-		if (inheritedType->isCustomType())
-		{
-			//Call constructor for inherited type
-			CatIdentifier* id = new CatIdentifier(inheritedMember->memberName, iter->getLexeme());
-			std::string constructorName = "__init";
-			if (inheritedType->getFirstMemberFunctionInfo("init") != nullptr)
-			{
-				constructorName = "init";
-			}
-			CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme(), std::vector<CatTypedExpression*>()), nameLexeme);
-			statements.push_back(functionCall);
-		}
-	}
-	for (auto& iter : variableDefinitions)
-	{
-		if (iter->getInitializationExpression() != nullptr)
-		{
-			CatTypedExpression* variableInitExpr = static_cast<CatTypedExpression*>(iter->getInitializationExpression()->copy());
-			CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
-			CatAssignmentOperator* assignment = new CatAssignmentOperator(id, variableInitExpr, variableInitExpr->getLexeme(), variableInitExpr->getLexeme());
-			statements.push_back(assignment);
-		}
-		else if (iter->getType().getType().isReflectableObjectType() 
-			     && iter->getType().getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)
-		{
-			TypeInfo* dateMemberType = iter->getType().getType().getObjectType();
-			if (dateMemberType->isCustomType())
-			{
-				//Call constructor for data member type
-				CatIdentifier* id = new CatIdentifier(iter->getName(), iter->getLexeme());
-				std::string constructorName = "__init";
-				if (dateMemberType->getFirstMemberFunctionInfo("init") != nullptr)
-				{
-					constructorName = "init";
-				}
-				CatMemberFunctionCall* functionCall = new CatMemberFunctionCall(constructorName, iter->getLexeme(), id, new CatArgumentList(iter->getLexeme(), std::vector<CatTypedExpression*>()), nameLexeme);
-				statements.push_back(functionCall);
-			}
-		}
-	}
-	CatScopeBlock* scopeBlock = new CatScopeBlock(statements, nameLexeme);
+	CatScopeBlock* scopeBlock = new CatScopeBlock({}, nameLexeme);
 	generatedConstructor = std::make_unique<CatFunctionDefinition>(typeNode, "__init", nameLexeme, parameters, scopeBlock, nameLexeme);
 	generatedConstructor->setParentClass(this);
 	generatedConstructor->setFunctionVisibility(MemberVisibility::Constructor);
 	std::vector<const CatASTNode*> loopDetection;
-	if (generatedConstructor->defineCheck(compileTimeContext, loopDetection))
+	return generatedConstructor->defineCheck(compileTimeContext, loopDetection);
+}
+
+
+bool CatClassDefinition::defineCopyConstructor(CatRuntimeContext* compileTimeContext)
+{
+	return true;
+}
+
+
+bool CatClassDefinition::defineDestructor(CatRuntimeContext* compileTimeContext)
+{
+	return true;
+}
+
+
+bool CatClassDefinition::defineOperatorAssign(CatRuntimeContext* compileTimeContext)
+{
+	return true;
+}
+
+
+bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeContext)
+{
+	CatScopeBlock* scopeBlock = generatedConstructor->getScopeBlock();
+	for (auto& iter : inheritanceDefinitions)
 	{
-		return generatedConstructor->typeCheck(compileTimeContext);
+		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
+		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->memberName, iter->getLexeme()), nullptr));
 	}
-	return false;
+	for (auto& iter : variableDefinitions)
+	{
+		std::unique_ptr<CatArgumentList> arguments;
+		if (iter->getInitializationExpression() != nullptr)
+		{
+			CatTypedExpression* variableInitExpr = static_cast<CatTypedExpression*>(iter->getInitializationExpression()->copy());
+			arguments = std::make_unique<CatArgumentList>(variableInitExpr->getLexeme(), std::vector<CatTypedExpression*>({variableInitExpr}));
+		}
+		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(iter->getName(), iter->getLexeme()), std::move(arguments)));
+	}
+	return generatedConstructor->typeCheck(compileTimeContext);
+}
+
+
+bool CatClassDefinition::generateCopyConstructor(CatRuntimeContext* compileTimeContext)
+{
+	//First check that no copy constructor has been defined by the user.
+
+	//Then check if all members are copy-constructible
+
+	//Check if all members are trivially copyable and if so, generate a memcpy.
+	//Otherwise, generate the copy constructor for each member.
+	//assert(false);
+	return true;
 }
 
 
 bool CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContext)
 {
+	//assert(false);
+	return true;
+}
+
+
+bool jitcat::AST::CatClassDefinition::generateOperatorAssign(CatRuntimeContext* compileTimeContext)
+{
+	//First check that no operator= has been defined by the user.
+
+	//Then check if all members have an operator= or copy contructor defined.
+
+	//Check if all members are trivially copyable and if so, generate a memcpy.
+
+	//Otherwise, generate the operator= or copy constructor for each member.
+	//assert(false);
 	return true;
 }
 

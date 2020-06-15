@@ -51,6 +51,8 @@ set(Source_Cat_ASTNodes
 	${JitCatHeaderPath}/CatBuiltInFunctionType.h
 	CatClassDefinition.cpp
 	${JitCatHeaderPath}/CatClassDefinition.h
+	CatConstruct.cpp
+	${JitCatHeaderPath}/CatConstruct.h
 	${JitCatHeaderPath}/CatDefinition.h
 	CatErrorExpression.cpp
 	${JitCatHeaderPath}/CatErrorExpression.h

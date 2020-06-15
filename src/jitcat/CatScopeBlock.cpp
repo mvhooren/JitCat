@@ -126,7 +126,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 			std::cout << "(CatScopeBlock::execute) Stack-allocated buffer of size " << std::dec << customType->getTypeSize() << ": " << std::hex << reinterpret_cast<uintptr_t>(scopeMem) << "\n";
 		}
 	}
-	customType->placementConstruct(scopeMem, customType->getTypeSize());
+	memset(scopeMem, 0, customType->getTypeSize());
 	scopeId = runtimeContext->addScope(customType.get(), scopeMem, false);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
@@ -207,4 +207,10 @@ const std::vector<std::unique_ptr<CatStatement>>& jitcat::AST::CatScopeBlock::ge
 void jitcat::AST::CatScopeBlock::insertStatementFront(CatStatement* statement)
 {
 	statements.emplace(statements.begin(), statement);
+}
+
+
+void CatScopeBlock::addStatement(CatStatement* statement)
+{
+	statements.emplace_back(statement);
 }

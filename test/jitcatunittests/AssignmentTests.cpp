@@ -38,16 +38,16 @@ TEST_CASE("Assign tests", "[assign]" )
 	customType->addBoolMember("myBoolean", true);
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
-	ObjectInstance typeInstance(customType->construct(), customType.get());
-	context.addScope(customType.get(), typeInstance.getObject(), false);
+	ObjectInstance typeInstance(customType.get());
+	context.addScope(typeInstance, false);
 
 	const char* customStaticTypeName = "MyStaticType";
 	TypeRegistry::get()->removeType(customStaticTypeName);
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customStaticType = makeTypeInfo<CustomTypeInfo>(customStaticTypeName);
 	customStaticType->addObjectMember("myStaticObject", &reflectedObject, objectTypeInfo);
 	customStaticType->addObjectMember("myStaticCustomObject", typeInstance.getObject(), customType.get());
-	ObjectInstance staticTypeInstance(customStaticType->construct(), customStaticType.get());
-	context.addScope(customStaticType.get(), staticTypeInstance.getObject(), true);
+	ObjectInstance staticTypeInstance(customStaticType.get());
+	context.addScope(staticTypeInstance, true);
 
 	SECTION("Assign reflected int")
 	{
@@ -172,8 +172,8 @@ TEST_CASE("Expression assign tests", "[assign][expressionassign]" )
 	customType->addBoolMember("myBoolean", true);
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
-	ObjectInstance typeInstance(customType->construct(), customType.get());
-	context.addScope(customType.get(), typeInstance.getObject(), false);
+	ObjectInstance typeInstance(customType.get());
+	context.addScope(typeInstance, false);
 
 
 	SECTION("Assign reflected int")
@@ -276,8 +276,8 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	customType->addBoolMember("myBoolean", true);
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
-	ObjectInstance typeInstance(customType->construct(), customType.get());
-	context.addScope(customType.get(), typeInstance.getObject(), false);
+	ObjectInstance typeInstance(customType.get());
+	context.addScope(typeInstance, false);
 
 
 	SECTION("Assign reflected int")

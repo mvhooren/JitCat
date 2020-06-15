@@ -35,6 +35,7 @@ namespace jitcat::AST
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
+		virtual bool defineCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual CatStatement* constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
@@ -42,14 +43,14 @@ namespace jitcat::AST
 		const std::string& getName() const;
 		const CatTypeNode& getType() const;
 		
-		const CatTypedExpression* getInitializationExpression() const;
+		const CatStatement* getInitializationExpression() const;
 
 	private:
 		std::unique_ptr<CatTypeNode> type;
 		std::string name;
 		Tokenizer::Lexeme nameLexeme;
 
-		std::unique_ptr<CatTypedExpression> initializationExpression;
+		std::unique_ptr<CatStatement> initializationExpression;
 		Reflection::TypeMemberInfo* memberInfo;
 	};
 

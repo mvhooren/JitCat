@@ -75,7 +75,7 @@ bool jitcat::AST::CatFunctionParameterDefinitions::defineCheck(CatRuntimeContext
 	bool success = true;
 	for (auto& iter : parameters)
 	{
-		if (!iter->typeCheck(runtimeContext, errorManager, errorContext))
+		if (!iter->defineCheck(runtimeContext, errorManager, errorContext))
 		{
 			success = false;
 		}
@@ -86,7 +86,15 @@ bool jitcat::AST::CatFunctionParameterDefinitions::defineCheck(CatRuntimeContext
 
 bool jitcat::AST::CatFunctionParameterDefinitions::typeCheck(CatRuntimeContext* runtimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	return true;
+	bool success = true;
+	for (auto& iter : parameters)
+	{
+		if (!iter->typeCheck(runtimeContext, errorManager, errorContext))
+		{
+			success = false;
+		}
+	}
+	return success;
 }
 
 

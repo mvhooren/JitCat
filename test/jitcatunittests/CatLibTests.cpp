@@ -586,3 +586,60 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 		doChecks(84.0f, false, false, false, testExpression1, context);
 	}
 }
+
+
+TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	Tokenizer::Document source(		
+		"class TestClass\n"
+		"{\n"
+		"\n"
+		"	VectorClass addToVector(int value)\n"
+		"	{\n"
+		"		VectorClass test;\n"
+		"		test.x = test.x + value;\n"
+		"		return test;\n"
+		"	}\n"
+		"\n"
+		"	float getX()\n"
+		"	{\n"
+		"		return addToVector(42).x;\n"
+		"	}\n"
+		"}\n"
+		"\n"
+		"class VectorClass\n"
+		"{\n"
+		"	float x = 1.0f;\n"
+		"	float y = 2.0f;\n"
+		"	float z = 3.0f;\n"
+		"	float w = 4.0f;\n"
+		"}\n"	);
+
+	library.addSource("test1.jc", source);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine + 1 << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("getX")
+	{
+		Expression<float> testExpression1(&context, "getX()");
+		doChecks(43.0f, false, false, false, testExpression1, context);
+	}
+}

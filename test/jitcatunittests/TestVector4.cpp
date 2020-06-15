@@ -9,6 +9,8 @@
 #include "jitcat/ReflectedTypeInfo.h"
 
 #include <iostream>
+#include <sstream>
+
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
@@ -24,7 +26,8 @@ TestObjects::TestVector4::TestVector4():
 	instanceCount++;
 	if (TestVector4::enableConstructionAndDestructionLogging)
 	{
-		std::cout << "Default constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+		std::cout << "Default constructed TestVector4: " << this << *this << " instance count: " << TestVector4::instanceCount << "\n";
+		std::cout << *this;
 	}
 }
 
@@ -38,7 +41,7 @@ TestObjects::TestVector4::TestVector4(float x, float y, float z, float w):
 	instanceCount++;
 	if (TestVector4::enableConstructionAndDestructionLogging)
 	{
-		std::cout << "Constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+		std::cout << "Constructed TestVector4: " << this << *this << " instance count: " << TestVector4::instanceCount << "\n";
 	}
 }
 
@@ -52,7 +55,7 @@ TestObjects::TestVector4::TestVector4(const TestVector4& other):
 	instanceCount++;
 	if (TestVector4::enableConstructionAndDestructionLogging)
 	{
-		std::cout << "Copy constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+		std::cout << "Copy constructed TestVector4: " << this << *this << " instance count: " << TestVector4::instanceCount << "\n";
 	}
 }
 
@@ -66,7 +69,7 @@ TestObjects::TestVector4::TestVector4(const TestVector4&& other) noexcept:
 	instanceCount++;
 	if (TestVector4::enableConstructionAndDestructionLogging)
 	{
-		std::cout << "Move constructed TestVector4: " << this << " instance count: " << TestVector4::instanceCount << "\n";
+		std::cout << "Move constructed TestVector4: " << this << *this << " instance count: " << TestVector4::instanceCount << "\n";
 	}
 }
 
@@ -77,6 +80,10 @@ TestVector4& TestObjects::TestVector4::operator=(const TestVector4& other)
 	y = other.y;
 	z = other.z;
 	w = other.w;
+	if (TestVector4::enableConstructionAndDestructionLogging)
+	{
+		std::cout << "Assigned TestVector4: " << this << *this << "\n";
+	}
 	return *this;
 }
 
@@ -189,4 +196,19 @@ bool TestVector4::enableConstructionAndDestructionLogging = false;
 TestVector4 TestObjects::operator/(const TestVector4& lhs, const TestVector4& rhs)
 {
 	return TestVector4(lhs.x / rhs.x, lhs.y / rhs.y, lhs.z / rhs.z, lhs.w / rhs.w);
+}
+
+
+std::ostream& operator<<(std::ostream& os, const TestObjects::TestVector4& vector)
+{
+    os << "[" << vector.x << ", " << vector.y << ", " << vector.z << ", " << vector.w << "]";
+    return os;
+}
+
+
+std::string Catch::StringMaker<TestObjects::TestVector4>::convert(const TestObjects::TestVector4& vector)
+{
+	std::ostringstream ss;
+	ss << "[" << vector.x << ", " << vector.y << ", " << vector.z << ", " << vector.w << "]";
+	return ss.str();
 }

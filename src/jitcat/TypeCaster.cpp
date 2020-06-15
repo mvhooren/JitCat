@@ -7,6 +7,7 @@
 
 #include "jitcat/TypeCaster.h"
 #include "jitcat/CustomTypeInfo.h"
+#include "jitcat/ObjectInstance.h"
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
@@ -40,9 +41,7 @@ void CustomObjectTypeCaster::toBuffer(const std::any& value, const unsigned char
 
 std::any CustomObjectTypeCaster::getValueOfPointer(std::any& value) const
 {
-	//Custom objects can not be passed by value at this time
-	assert(false);
-	return getNull();
+	return std::any(ObjectInstance::createCopy(reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(value)), customType));
 }
 
 
@@ -55,9 +54,7 @@ std::any CustomObjectTypeCaster::getValueOfPointerToPointer(std::any& value) con
 
 std::any CustomObjectTypeCaster::getAddressOfValue(std::any& value) const
 {
-	//Custom objects can not be passed by value at this time
-	assert(false);
-	return getNull();
+	return reinterpret_cast<Reflectable*>(std::any_cast<ObjectInstance>(&value)->getObject());
 }
 
 

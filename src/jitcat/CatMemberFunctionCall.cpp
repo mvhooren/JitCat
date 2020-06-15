@@ -141,7 +141,11 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		if (baseType.isPointerToReflectableObjectType()
 			|| baseType.isReflectableHandleType())
 		{
-			memberFunctionInfo = baseType.getPointeeType()->getObjectType()->getMemberFunctionInfo(this);
+			memberFunctionInfo = ASTHelper::memberFunctionSearch(functionName, arguments->getArgumentTypes(), baseType.getPointeeType()->getObjectType(), errorManager, compiletimeContext, errorContext, getLexeme());
+			if (memberFunctionInfo == nullptr)
+			{
+				return false;
+			}
 		}
 		else
 		{
@@ -165,25 +169,6 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 				}
 			}
 
-			std::size_t numArgumentsSupplied = arguments->getNumArguments();
-			if (numArgumentsSupplied != memberFunctionInfo->getNumberOfArguments())
-			{
-				errorManager->compiledWithError(Tools::append("Invalid number of arguments for function: ", functionName, " expected ", memberFunctionInfo->getNumberOfArguments(), " arguments."), errorContext, compiletimeContext->getContextName(), getLexeme());
-				return false;
-			}
-
-			for (unsigned int i = 0; i < numArgumentsSupplied; i++)
-			{
-				if (!memberFunctionInfo->getArgumentType(i).compare(arguments->getArgumentType(i), false, false))
-				{
-					errorManager->compiledWithError(Tools::append("Invalid argument for function: ", functionName, " argument nr: ", i, " expected: ", memberFunctionInfo->getArgumentType(i).toString()), errorContext, compiletimeContext->getContextName(), getLexeme());
-					return false;
-				}
-				else if (!ASTHelper::checkOwnershipSemantics(memberFunctionInfo->getArgumentType(i), arguments->getArgumentType(i), errorManager, compiletimeContext, errorContext, arguments->getArgumentLexeme(i), "pass"))
-				{
-					return false;
-				}
-			}
 			if (!arguments->applyIndirectionConversions(memberFunctionInfo->argumentTypes, functionName, compiletimeContext, errorManager, errorContext))
 			{
 				return false;
@@ -191,11 +176,6 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 
 			returnType = memberFunctionInfo->returnType;
 			return true;
-		}
-		else
-		{
-			errorManager->compiledWithError(Tools::append("Member function not found: ", functionName), errorContext, compiletimeContext->getContextName(), getLexeme());
-			return false;
 		}
 	}
 	return false;

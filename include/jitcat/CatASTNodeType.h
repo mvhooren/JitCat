@@ -15,6 +15,7 @@ namespace jitcat::AST
 		AssignmentOperator,
 		BuiltInFunctionCall,
 		ClassDefinition,
+		Contruct,
 		ForLoop,
 		FunctionDefinition,
 		FunctionOrConstructorCall,

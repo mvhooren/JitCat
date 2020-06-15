@@ -117,7 +117,8 @@ namespace jitcat::Reflection
 
 		//Gets the type information of a member function given its name.
 		MemberFunctionInfo* getFirstMemberFunctionInfo(const std::string& identifier) const;
-		
+		std::vector<MemberFunctionInfo*> getMemberFunctionsByName(const std::string& functionName) const;
+
 		//Gets the type information of a member function given its name.
 		MemberFunctionInfo* getMemberFunctionInfo(const FunctionSignature* functionSignature) const;
 		MemberFunctionInfo* getMemberFunctionInfo(const FunctionSignature& functionSignature) const;

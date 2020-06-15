@@ -7,7 +7,9 @@
 
 #include "jitcat/CatVariableDeclaration.h"
 #include "jitcat/ASTHelper.h"
+#include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignmentOperator.h"
+#include "jitcat/CatConstruct.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatRuntimeContext.h"
@@ -23,6 +25,7 @@
 
 using namespace jitcat;
 using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 
 
 CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std::string& name, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme, 
@@ -33,10 +36,16 @@ CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std:
 	nameLexeme(nameLexeme),
 	memberInfo(nullptr)
 {
+	std::unique_ptr<CatArgumentList> arguments;
 	if (initialization != nullptr)
 	{
-		initializationExpression = std::make_unique<CatAssignmentOperator>(new CatIdentifier(name, nameLexeme), initialization, lexeme, initializationOperatorLexeme);
+		arguments = std::make_unique<CatArgumentList>(initialization->getLexeme(), std::vector<CatTypedExpression*>({initialization}));
 	}
+	else
+	{
+		arguments = std::make_unique<CatArgumentList>(lexeme, std::vector<CatTypedExpression*>());
+	}
+	initializationExpression = std::make_unique<CatConstruct>(lexeme, std::make_unique<CatIdentifier>(name, nameLexeme), std::move(arguments));
 }
 
 
@@ -83,6 +92,27 @@ CatASTNodeType CatVariableDeclaration::getNodeType() const
 }
 
 
+bool CatVariableDeclaration::defineCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
+{
+	if (!type->typeCheck(compiletimeContext, errorManager, errorContext))
+	{
+		return false;
+	}
+	CatScopeID id = InvalidScopeID;
+	if (memberInfo == nullptr && compiletimeContext->findVariable(Tools::toLowerCase(name), id) != nullptr)
+	{
+		errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), errorContext, compiletimeContext->getContextName(), getLexeme());
+		return false;
+	}
+	CatScope* currentScope = compiletimeContext->getCurrentScope();
+	if (currentScope != nullptr && memberInfo == nullptr)
+	{
+		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
+	}
+	return true;
+}
+
+
 bool CatVariableDeclaration::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	if (!type->typeCheck(compiletimeContext, errorManager, errorContext))
@@ -90,39 +120,22 @@ bool CatVariableDeclaration::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 		return false;
 	}
 	CatScopeID id = InvalidScopeID;
-	if (compiletimeContext->findVariable(Tools::toLowerCase(name), id) != nullptr)
+	if (memberInfo == nullptr)
 	{
-		errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), errorContext, compiletimeContext->getContextName(), getLexeme());
-		return false;
-	}
-	if (initializationExpression == nullptr)
-	{
-		Reflection::TypeOwnershipSemantics initExpressionOwnership = Reflection::TypeOwnershipSemantics::Value;
-		if (type->getType().isPointerToReflectableObjectType() || type->getType().isReflectableHandleType())
+		if (compiletimeContext->findVariable(Tools::toLowerCase(name), id) != nullptr)
 		{
-			if (type->getType().getOwnershipSemantics() != Reflection::TypeOwnershipSemantics::Owned
-				&& type->getType().getOwnershipSemantics() != Reflection::TypeOwnershipSemantics::Shared)
-			{
-				initExpressionOwnership = Reflection::TypeOwnershipSemantics::Weak;
-			}
+			errorManager->compiledWithError(Tools::append("A variable with name \"", name, "\" already exists."), errorContext, compiletimeContext->getContextName(), getLexeme());
+			return false;
 		}
-		CatGenericType initExpressionType = type->getType();
-		initExpressionType.setOwnershipSemantics(initExpressionOwnership);
-		initializationExpression = std::make_unique<CatAssignmentOperator>(new CatIdentifier(name, nameLexeme), new CatLiteral(type->getType().createDefault(), initExpressionType, nameLexeme), nameLexeme, nameLexeme);
 	}
 
 	CatScope* currentScope = compiletimeContext->getCurrentScope();
-	if (currentScope != nullptr)
+	if (currentScope != nullptr && memberInfo == nullptr)
 	{
 		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
 	}
 
-	if (!initializationExpression->typeCheck(compiletimeContext, errorManager, errorContext))
-	{
-		return false;
-	}
-
-	return true;
+	return initializationExpression->typeCheck(compiletimeContext, errorManager, errorContext);
 }
 
 
@@ -154,7 +167,7 @@ const CatTypeNode& CatVariableDeclaration::getType() const
 }
 
 
-const CatTypedExpression* CatVariableDeclaration::getInitializationExpression() const
+const CatStatement* CatVariableDeclaration::getInitializationExpression() const
 {
 	return initializationExpression.get();
 }

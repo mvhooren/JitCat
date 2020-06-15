@@ -36,7 +36,7 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
  {}
 
 
- std::any CustomTypeMemberFunctionInfo::call(CatRuntimeContext * runtimeContext, std::any & base, const std::vector<std::any> & parameters)
+ std::any CustomTypeMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
  {
 	 if (base.has_value())
 	 {
