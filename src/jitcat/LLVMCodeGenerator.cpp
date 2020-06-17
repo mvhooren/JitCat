@@ -1080,7 +1080,7 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 				if (Tools::equalsWhileIgnoringCase(iter.second->memberName, nameToDestruct))
 				{
 					assert(iter.second->catType.compare(assignable->getType(), true, true));
-					auto& scopeIter = context->scopeValues.find(scopeID);
+					auto scopeIter = context->scopeValues.find(scopeID);
 					if (scopeIter != context->scopeValues.end())
 					{
 						llvm::Value* localPtr = builder->CreateGEP(scopeIter->second, helper->createConstant((int)iter.first), Tools::append(iter.second->memberName, "_ptr"));
