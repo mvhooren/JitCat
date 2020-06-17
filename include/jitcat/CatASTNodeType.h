@@ -16,6 +16,7 @@ namespace jitcat::AST
 		BuiltInFunctionCall,
 		ClassDefinition,
 		Contruct,
+		Destruct,
 		ForLoop,
 		FunctionDefinition,
 		FunctionOrConstructorCall,

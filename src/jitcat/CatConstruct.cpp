@@ -5,11 +5,11 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
+#include "jitcat/CatConstruct.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/ASTHelper.h"
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignmentOperator.h"
-#include "jitcat/CatConstruct.h"
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatMemberFunctionCall.h"

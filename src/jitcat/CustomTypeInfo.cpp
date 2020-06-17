@@ -30,6 +30,7 @@ CustomTypeInfo::CustomTypeInfo(const char* typeName, bool isConstType):
 	defaultData(nullptr),
 	triviallyCopyable(true),
 	defaultConstructorFunction(nullptr),
+	destructorFunction(nullptr),
 	dylib(nullptr)
 {
 }
@@ -42,6 +43,7 @@ CustomTypeInfo::CustomTypeInfo(AST::CatClassDefinition* classDefinition):
 	defaultData(nullptr),
 	triviallyCopyable(true),
 	defaultConstructorFunction(nullptr),
+	destructorFunction(nullptr),
 	dylib(nullptr)
 {
 }
@@ -400,6 +402,19 @@ bool CustomTypeInfo::setDefaultConstructorFunction(const std::string& constructo
 }
 
 
+bool jitcat::Reflection::CustomTypeInfo::setDestructorFunction(const std::string& destructorFunctionName)
+{
+	SearchFunctionSignature sig(destructorFunctionName, {});
+	MemberFunctionInfo* functionInfo = getMemberFunctionInfo(sig);
+	if (functionInfo != nullptr)
+	{
+		destructorFunction = functionInfo;
+		return true;
+	}
+	return false;
+}
+
+
 void CustomTypeInfo::removeMember(const std::string& memberName)
 {
 	TypeMemberInfo* memberInfo = releaseMember(memberName);
@@ -435,7 +450,7 @@ void CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t buffe
 	{
 		instances.insert(reinterpret_cast<Reflectable*>(buffer));
 	}
-	createDataCopy(defaultData, typeSize, buffer, bufferSize);
+	
 	if (defaultConstructorFunction != nullptr)
 	{
 		if constexpr (Configuration::enableLLVM)
@@ -449,6 +464,10 @@ void CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t buffe
 			defaultConstructorFunction->call(&tempContext, base, {});
 		}
 	}
+	else
+	{
+		createDataCopy(defaultData, typeSize, buffer, bufferSize);
+	}
 	if constexpr (Configuration::logJitCatObjectConstructionEvents)
 	{
 		if (bufferSize > 0 && buffer != nullptr)
@@ -461,7 +480,23 @@ void CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t buffe
 
 void CustomTypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
 {
-	instanceDestructorInPlace(buffer);
+	if (destructorFunction != nullptr)
+	{
+		if constexpr (Configuration::enableLLVM)
+		{
+			reinterpret_cast<void(*)(unsigned char*)>(destructorFunction->getFunctionAddress().functionAddress)(buffer);
+		}
+		else
+		{
+			std::any base = reinterpret_cast<Reflectable*>(buffer);
+			CatRuntimeContext tempContext("temp");
+			destructorFunction->call(&tempContext, base, {});
+		}
+	}
+	else
+	{
+		instanceDestructorInPlace(buffer);
+	}
 	removeInstance(reinterpret_cast<Reflectable*>(buffer));
 	if constexpr (Configuration::logJitCatObjectConstructionEvents)
 	{

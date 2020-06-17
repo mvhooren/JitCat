@@ -182,14 +182,17 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		parameterAssignables.emplace_back(new CatIdentifier(parameters->getParameterName(i), parameters->getParameterLexeme(i)));
 		parameterAssignables.back()->typeCheck(compileTimeContext, errorManager, this);
 	}
-	if (compileTimeContext->getCurrentClass() != nullptr && Tools::equalsWhileIgnoringCase(name, "init"))
+	if (compileTimeContext->getCurrentClass() != nullptr && 
+		(Tools::equalsWhileIgnoringCase(name, "init") 
+		 || Tools::equalsWhileIgnoringCase(name, "destroy")))
 	{
 		visibility = MemberVisibility::Constructor;
 		//init function is a special case. We should call the auto generated __init function first.
 		CatArgumentList* arguments = new CatArgumentList(lexeme, std::vector<CatTypedExpression*>());
 		CatScopeRoot* scopeRoot = new CatScopeRoot(compileTimeContext->getCurrentClass()->getScopeId(), lexeme);
-		CatMemberFunctionCall* callAutoInit = new CatMemberFunctionCall("__init", nameLexeme, scopeRoot, arguments, lexeme);
-		scopeBlock->insertStatementFront(callAutoInit);
+		std::string functionName = Tools::equalsWhileIgnoringCase(name, "init") ? "__init" : "__destroy";
+		CatMemberFunctionCall* callAutoInitDestroy = new CatMemberFunctionCall(functionName, nameLexeme, scopeRoot, arguments, lexeme);
+		scopeBlock->insertStatementFront(callAutoInitDestroy);
 	}
 	if (!scopeBlock->typeCheck(compileTimeContext, errorManager, this))
 	{

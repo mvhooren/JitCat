@@ -358,11 +358,25 @@ MemberFunctionInfo* ASTHelper::memberFunctionSearch(const std::string& functionN
 			return functionInfo;
 		}
 	}
+	else if (functionName == "destroy")
+	{
+		//If it is the constructor function, also search for the auto-generated constructor if the user-defined constructor was not found.
+		signature.setFunctionName("__destroy");
+		functionInfo = type->getMemberFunctionInfo(signature);
+		if (functionInfo != nullptr)
+		{
+			return functionInfo;
+		}
+	}
 	//The function was not found. Generate a list of all the functions with that name (that do not match the argument types).
 	std::vector<MemberFunctionInfo*> foundFunctions = type->getMemberFunctionsByName(functionName);
 	if (foundFunctions.size() == 0 && functionName == "init")
 	{
 		foundFunctions = type->getMemberFunctionsByName("__init");
+	}
+	else if (foundFunctions.size() == 0 && functionName == "detroy")
+	{
+		foundFunctions = type->getMemberFunctionsByName("__destroy");
 	}
 	if (foundFunctions.size() == 0)
 	{

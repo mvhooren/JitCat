@@ -54,6 +54,8 @@ set(Source_Cat_ASTNodes
 	CatConstruct.cpp
 	${JitCatHeaderPath}/CatConstruct.h
 	${JitCatHeaderPath}/CatDefinition.h
+	CatDestruct.cpp
+	${JitCatHeaderPath}/CatDestruct.h
 	CatErrorExpression.cpp
 	${JitCatHeaderPath}/CatErrorExpression.h
 	CatForLoop.cpp

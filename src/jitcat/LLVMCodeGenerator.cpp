@@ -1100,6 +1100,31 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 }
 
 
+void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatDestruct* destructor, LLVMCompileTimeContext* context)
+{
+	CatAssignableExpression* assignable = destructor->getAssignable();
+	assert(assignable != nullptr 
+		  && (assignable->getType().isReflectableObjectType()
+			  || (assignable->getType().isPointerToReflectableObjectType() && assignable->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)));
+	llvm::Value* target = generate(static_cast<CatTypedExpression*>(assignable), context);
+
+	TypeInfo* objectType = nullptr;
+	if (assignable->getType().isReflectableObjectType())
+	{
+		objectType = assignable->getType().getObjectType();
+	}
+	else
+	{
+		objectType = assignable->getType().getPointeeType()->getObjectType();
+	}
+	llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
+	llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
+
+	helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {target, typeInfoConstantAsIntPtr}, "placementDestructType");
+
+}
+
+
 llvm::Value* LLVMCodeGenerator::generate(const AST::CatReturnStatement* returnStatement, LLVMCompileTimeContext* context)
 {
 	generate(context->currentFunctionDefinition->getEpilogBlock(), context);
@@ -1237,7 +1262,8 @@ void LLVMCodeGenerator::generate(const AST::CatStatement* statement, LLVMCompile
 			case CatASTNodeType::IfStatement:			generate(static_cast<const CatIfStatement*>(statement), context);			return;
 			case CatASTNodeType::VariableDeclaration:	generate(static_cast<const CatVariableDeclaration*>(statement), context);	return;
 			case CatASTNodeType::ScopeBlock:			generate(static_cast<const CatScopeBlock*>(statement), context);			return;
-			case CatASTNodeType::Contruct:				generate(static_cast<const CatConstruct*>(statement), context);		return;
+			case CatASTNodeType::Contruct:				generate(static_cast<const CatConstruct*>(statement), context);				return;
+			case CatASTNodeType::Destruct:				generate(static_cast<const CatDestruct*>(statement), context);				return;
 			default:									assert(false);																return;
 		}
 	}
@@ -1285,6 +1311,12 @@ void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition,
 	{
 		ScopeCheck(context);
 		generate(constructorDefinition, context);
+	}
+	CatFunctionDefinition* destructorDefinition = classDefinition->getFunctionDefinitionByName("__destroy");
+	if (destructorDefinition != nullptr)
+	{
+		ScopeCheck(context);
+		generate(destructorDefinition, context);
 	}
 	context->currentClass = previousClass;
 	context->catContext->removeScope(classScopeId);

@@ -9,6 +9,7 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignmentOperator.h"
 #include "jitcat/CatConstruct.h"
+#include "jitcat/CatDestruct.h"
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatFunctionParameterDefinitions.h"
 #include "jitcat/CatIdentifier.h"
@@ -276,6 +277,13 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 				assert(false);
 			}
 		}
+		if (!customType->setDestructorFunction("destroy"))
+		{
+			if (!customType->setDestructorFunction("__destroy"))
+			{
+				assert(false);
+			}
+		}
 		compileTimeContext->getErrorManager()->compiledWithoutErrors(this);
 	}
 	checkStatus = noErrors ? CheckStatus::Succeeded : CheckStatus::Failed;
@@ -350,6 +358,10 @@ CatFunctionDefinition* CatClassDefinition::getFunctionDefinitionByName(const std
 	if (name == "__init" || name == "init")
 	{
 		return generatedConstructor.get();
+	}
+	else if (name == "__destroy" || name == "destroy")
+	{
+		return generatedDestructor.get();
 	}
 	return nullptr;
 }
@@ -471,7 +483,14 @@ bool CatClassDefinition::defineCopyConstructor(CatRuntimeContext* compileTimeCon
 
 bool CatClassDefinition::defineDestructor(CatRuntimeContext* compileTimeContext)
 {
-	return true;
+	CatTypeNode* typeNode = new CatTypeNode(CatGenericType::voidType, nameLexeme);
+	CatFunctionParameterDefinitions* parameters = new CatFunctionParameterDefinitions({}, nameLexeme);
+	CatScopeBlock* scopeBlock = new CatScopeBlock({}, nameLexeme);
+	generatedDestructor = std::make_unique<CatFunctionDefinition>(typeNode, "__destroy", nameLexeme, parameters, scopeBlock, nameLexeme);
+	generatedDestructor->setParentClass(this);
+	generatedDestructor->setFunctionVisibility(MemberVisibility::Constructor);
+	std::vector<const CatASTNode*> loopDetection;
+	return generatedDestructor->defineCheck(compileTimeContext, loopDetection);
 }
 
 
@@ -518,8 +537,20 @@ bool CatClassDefinition::generateCopyConstructor(CatRuntimeContext* compileTimeC
 
 bool CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContext)
 {
-	//assert(false);
-	return true;
+	CatScopeBlock* scopeBlock = generatedDestructor->getScopeBlock();
+	for (auto& iter : inheritanceDefinitions)
+	{
+		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
+		scopeBlock->addStatement(new CatDestruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->memberName, iter->getLexeme())));
+	}
+	for (auto& iter : variableDefinitions)
+	{
+		if (iter->getType().getType().isReflectableObjectType())
+		{
+			scopeBlock->addStatement(new CatDestruct(iter->getLexeme(), std::make_unique<CatIdentifier>(iter->getName(), iter->getLexeme())));
+		}
+	}
+	return generatedDestructor->typeCheck(compileTimeContext);
 }
 
 

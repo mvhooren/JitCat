@@ -14,6 +14,8 @@
 #include "jitcat/CatBuiltInFunctionCall.h"
 #include "jitcat/CatClassDefinition.h"
 #include "jitcat/CatConstruct.h"
+#include "jitcat/CatDefinition.h"
+#include "jitcat/CatDestruct.h"
 #include "jitcat/CatErrorExpression.h"
 #include "jitcat/CatForLoop.h"
 #include "jitcat/CatFunctionDefinition.h"

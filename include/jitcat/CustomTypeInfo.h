@@ -115,6 +115,10 @@ namespace jitcat::Reflection
 		//Returns true if the function name was found and if it is a valid default constructor (it has no arguments).
 		bool setDefaultConstructorFunction(const std::string& constructorFunctionName);
 
+		//Set a function that was previously added with addMemberFunction to be the destructor.
+		//Returns true if the function name was found and if it is a valid destructor (it has no arguments).
+		bool setDestructorFunction(const std::string& constructorFunctionName);
+
 		//This will not shrink the typeSize, only remove the member from the list.
 		//The data will only shrink after a restart of the program.
 		//Because of this, the CustomTypeInfo remains compatible with existing instances.
@@ -166,6 +170,7 @@ namespace jitcat::Reflection
 		bool triviallyCopyable;
 
 		MemberFunctionInfo* defaultConstructorFunction;
+		MemberFunctionInfo* destructorFunction;
 
 		std::vector<std::unique_ptr<TypeMemberInfo>> removedMembers;
 
