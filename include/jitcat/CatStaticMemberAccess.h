@@ -31,6 +31,7 @@ namespace jitcat::AST
 		virtual const CatGenericType& getType() const override final;
 		virtual const CatGenericType& getAssignableType() const override final;
 		virtual bool isAssignable() const override final;
+		virtual std::optional<std::string> getAssignableVariableName() const override final;
 
 		virtual void print() const override final;
 		virtual bool isConst() const override final;

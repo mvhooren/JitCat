@@ -70,6 +70,12 @@ const CatGenericType& jitcat::AST::CatIdentifier::getAssignableType() const
 }
 
 
+std::optional<std::string> jitcat::AST::CatIdentifier::getAssignableVariableName() const
+{
+	return name;
+}
+
+
 void CatIdentifier::print() const
 {
 	CatLog::log(name.c_str());

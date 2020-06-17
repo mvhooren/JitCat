@@ -34,6 +34,7 @@ namespace jitcat::AST
 		virtual bool typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 		virtual const CatGenericType& getType() const override final;
 		virtual const CatGenericType& getAssignableType() const override final;
+		virtual std::optional<std::string> getAssignableVariableName() const override final;
 		virtual bool isConst() const override final;
 		virtual CatStatement* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 

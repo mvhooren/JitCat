@@ -145,6 +145,12 @@ const CatGenericType& jitcat::AST::CatMemberAccess::getAssignableType() const
 }
 
 
+std::optional<std::string> jitcat::AST::CatMemberAccess::getAssignableVariableName() const
+{
+	return memberName;
+}
+
+
 bool CatMemberAccess::isConst() const
 {
 	if (memberInfo != nullptr)

@@ -487,7 +487,7 @@ bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeConte
 	for (auto& iter : inheritanceDefinitions)
 	{
 		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
-		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->memberName, iter->getLexeme()), nullptr));
+		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->memberName, iter->getLexeme()), nullptr, false));
 	}
 	for (auto& iter : variableDefinitions)
 	{
@@ -497,7 +497,7 @@ bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeConte
 			CatTypedExpression* variableInitExpr = static_cast<CatTypedExpression*>(iter->getInitializationExpression()->copy());
 			arguments = std::make_unique<CatArgumentList>(variableInitExpr->getLexeme(), std::vector<CatTypedExpression*>({variableInitExpr}));
 		}
-		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(iter->getName(), iter->getLexeme()), std::move(arguments)));
+		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(iter->getName(), iter->getLexeme()), std::move(arguments), false));
 	}
 	return generatedConstructor->typeCheck(compileTimeContext);
 }

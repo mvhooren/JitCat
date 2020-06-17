@@ -995,43 +995,41 @@ void LLVMCodeGenerator::generate(const AST::CatScopeBlock* scopeBlock, LLVMCompi
 {
 	if (scopeBlock != nullptr)
 	{
+		std::size_t blockDestructorsSize = context->blockDestructorGenerators.size();
+		const CatScopeBlock* previousScopeBlock = context->currentScope;
+		context->currentScope = scopeBlock;
 		CatScopeID blockScopeId = context->catContext->addScope(scopeBlock->getCustomType(), nullptr, false);
 		assert(blockScopeId == scopeBlock->getScopeId());
 		if (scopeBlock->getCustomType()->getTypeSize() > 0)
 		{
 			llvm::Value* scopeAlloc = helper->createObjectAllocA(context, "scope_locals", CatGenericType(scopeBlock->getCustomType(), true, false), false);
 			context->scopeValues[blockScopeId] = scopeAlloc;
-
-			//Generate default constructors
-			for (auto& iter : scopeBlock->getCustomType()->getMembersByOrdinal())
-			{
-				CatGenericType itemType = iter.second->catType;
-				if (itemType.isPointerToReflectableObjectType() && itemType.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
-				{
-					itemType = *itemType.getPointeeType();
-				}
-				if (itemType.isReflectableObjectType())
-				{
-					llvm::Value* localPtr = builder->CreateGEP(scopeAlloc, helper->createConstant((int)iter.first), Tools::append(iter.second->memberName, "_ptr"));
-					llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(itemType.getObjectType()), Tools::append(itemType.getObjectType()->getTypeName(), "_typeInfo"));
-					llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(itemType.getObjectType()->getTypeName(), "_typeInfoPtr"));
-					context->blockDestructorGenerators.push_back([=]()
-					{
-						return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "placementDestructType");					
-					});
-				}
-			}
-
 		}
 		for (auto& iter : scopeBlock->getStatements())
 		{
 			generate(iter.get(), context);
 		}
+
+		//Generate destructors for objects defined in this scope.
+		if (!scopeBlock->getAllControlPathsReturn())
+		{
+			for (std::size_t i = blockDestructorsSize; i < context->blockDestructorGenerators.size(); ++i)
+			{
+				context->blockDestructorGenerators[i]();
+			}
+		}
+		int numGeneratorsToPop = (int)context->blockDestructorGenerators.size() - (int)blockDestructorsSize;
+		for (int i = 0; i < numGeneratorsToPop; ++i)
+		{
+			context->blockDestructorGenerators.pop_back();
+		}
+
 		if (auto iter = context->scopeValues.find(blockScopeId); iter != context->scopeValues.end())
 		{
 			context->scopeValues.erase(iter);
 		}
 		context->catContext->removeScope(blockScopeId);
+		context->currentScope = previousScopeBlock;
 	}
 }
 
@@ -1067,6 +1065,37 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 		assert(arguments != nullptr && arguments->getNumArguments() == 1);
 		llvm::Value* source = generate(arguments->getArgument(0), context);
 		helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {target, source, typeInfoConstantAsIntPtr}, "placementCopyConstructType");
+	}
+
+	//Generate a destructor if possible
+	if (std::optional<std::string> variableName = assignable->getAssignableVariableName(); variableName.has_value() && constructor->getAutoDestruct())
+	{
+		std::string nameToDestruct = variableName.value();
+		TypeInfo* scopeType = context->currentScope->getCustomType();
+		CatScopeID scopeID = context->currentScope->getScopeId();
+		context->blockDestructorGenerators.push_back([=]()
+		{
+			for (auto& iter : scopeType->getMembersByOrdinal())
+			{
+				if (Tools::equalsWhileIgnoringCase(iter.second->memberName, nameToDestruct))
+				{
+					assert(iter.second->catType.compare(assignable->getType(), true, true));
+					auto& scopeIter = context->scopeValues.find(scopeID);
+					if (scopeIter != context->scopeValues.end())
+					{
+						llvm::Value* localPtr = builder->CreateGEP(scopeIter->second, helper->createConstant((int)iter.first), Tools::append(iter.second->memberName, "_ptr"));
+						llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
+						llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
+						return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "placementDestructType");					
+					}
+					assert(false);
+					return (llvm::Value*)nullptr;
+					
+				}
+			}
+			assert(false);
+			return (llvm::Value*)nullptr;
+		});
 	}
 }
 

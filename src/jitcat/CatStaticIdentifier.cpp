@@ -75,6 +75,12 @@ bool jitcat::AST::CatStaticIdentifier::isAssignable() const
 }
 
 
+std::optional<std::string> jitcat::AST::CatStaticIdentifier::getAssignableVariableName() const
+{
+	return identifier;
+}
+
+
 void CatStaticIdentifier::print() const
 {
 	baseScope->print();

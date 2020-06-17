@@ -70,6 +70,12 @@ bool jitcat::AST::CatStaticMemberAccess::isAssignable() const
 }
 
 
+std::optional<std::string> jitcat::AST::CatStaticMemberAccess::getAssignableVariableName() const
+{
+	return identifier;
+}
+
+
 void CatStaticMemberAccess::print() const
 {
 	baseScope->print();

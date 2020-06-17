@@ -9,6 +9,7 @@
 #include "jitcat/CatArgumentList.h"
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatBuiltInFunctionCall.h"
+#include "jitcat/CatIdentifier.h"
 #include "jitcat/CatIndirectionConversion.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatScopeBlock.h"
@@ -57,6 +58,15 @@ void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatAssignableExpression>&
 	if (uPtr.get() != static_cast<CatAssignableExpression*>(expression))
 	{
 		uPtr.reset(static_cast<CatAssignableExpression*>(expression));
+	}
+}
+
+
+void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatIdentifier>& uPtr, CatStatement* expression)
+{
+	if (uPtr.get() != static_cast<CatIdentifier*>(expression))
+	{
+		uPtr.reset(static_cast<CatIdentifier*>(expression));
 	}
 }
 

@@ -45,7 +45,7 @@ CatVariableDeclaration::CatVariableDeclaration(CatTypeNode* typeNode, const std:
 	{
 		arguments = std::make_unique<CatArgumentList>(lexeme, std::vector<CatTypedExpression*>());
 	}
-	initializationExpression = std::make_unique<CatConstruct>(lexeme, std::make_unique<CatIdentifier>(name, nameLexeme), std::move(arguments));
+	initializationExpression = std::make_unique<CatConstruct>(lexeme, std::make_unique<CatIdentifier>(name, nameLexeme), std::move(arguments), true);
 }
 
 

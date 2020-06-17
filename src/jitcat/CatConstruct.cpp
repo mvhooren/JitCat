@@ -26,11 +26,12 @@ using namespace jitcat::AST;
 using namespace jitcat::Reflection;
 
 
-CatConstruct::CatConstruct(const Tokenizer::Lexeme& lexeme, std::unique_ptr<CatAssignableExpression> assignable, std::unique_ptr<CatArgumentList> arguments):
+CatConstruct::CatConstruct(const Tokenizer::Lexeme& lexeme, std::unique_ptr<CatIdentifier> identifier, std::unique_ptr<CatArgumentList> arguments, bool autoDestruct):
 	CatStatement(lexeme),
-	assignable(std::move(assignable)),
+	assignable(std::move(identifier)),
 	arguments(std::move(arguments)),
-	isCopyConstructor(false)
+	isCopyConstructor(false),
+	autoDestruct(autoDestruct)
 {
 	if (this->arguments == nullptr)
 	{
@@ -41,7 +42,9 @@ CatConstruct::CatConstruct(const Tokenizer::Lexeme& lexeme, std::unique_ptr<CatA
 
 CatConstruct::CatConstruct(const CatConstruct& other):
 	CatStatement(other.lexeme),
-	assignable(static_cast<CatAssignableExpression*>(other.assignable->copy()))
+	assignable(static_cast<CatAssignableExpression*>(other.assignable->copy())),
+	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
+	isCopyConstructor(false)
 {
 }
 
@@ -232,4 +235,10 @@ CatArgumentList* jitcat::AST::CatConstruct::getArgumentList() const
 bool CatConstruct::getIsCopyConstructor() const
 {
 	return isCopyConstructor;
+}
+
+
+bool jitcat::AST::CatConstruct::getAutoDestruct() const
+{
+	return autoDestruct;
 }

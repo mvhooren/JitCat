@@ -418,6 +418,10 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertToString(llvm::Value*
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
+	if (addressValue->getType() == type)
+	{
+		return addressValue;
+	}
 	llvm::Value* intToPtr =  codeGenerator->getBuilder()->CreateIntToPtr(addressValue, type);
 	intToPtr->setName(name);
 	return intToPtr;

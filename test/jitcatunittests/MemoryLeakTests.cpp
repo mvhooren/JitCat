@@ -72,6 +72,20 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 		"		TestVector4 result = vectorToadd + testVector;\n"
 		"		return result;\n"
 		"	}\n"
+		"\n"
+		"	TestVector4 checkTestVector(TestVector4 vectorToCheck)\n"
+		"	{\n"
+		"		if (vectorToCheck.x > 42.0f)\n"
+		"		{\n"
+		"			TestVector4 result = vectorToCheck + testVector;\n"
+		"			return result;\n"
+		"		}\n"
+		"		else\n"
+		"		{\n"
+		"			TestVector4 result = vectorToCheck - testVector;\n"
+		"			return result;\n"
+		"		}\n"
+		"	}\n"
 		"}\n");
 	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
@@ -105,6 +119,16 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 		{
 			Expression<TestVector4> testExpression1(&context, "addTestVector(getTestVector2())");
 			doChecks(TestVector4(2.0f, 4.0f, 6.0f, 8.0f), false, false, false, testExpression1, context);
+		}
+		CHECK(currentInstances == TestVector4::instanceCount);
+	}
+
+	SECTION("Check TestVector4")
+	{
+		int currentInstances = TestVector4::instanceCount;
+		{
+			Expression<TestVector4> testExpression1(&context, "checkTestVector(getTestVector2())");
+			doChecks(TestVector4(0.0f, 0.0f, 0.0f, 0.0f), false, false, false, testExpression1, context);
 		}
 		CHECK(currentInstances == TestVector4::instanceCount);
 	}

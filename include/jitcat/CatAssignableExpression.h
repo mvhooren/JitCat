@@ -9,6 +9,9 @@
 
 #include "jitcat/CatTypedExpression.h"
 
+#include <optional>
+#include <string>
+
 namespace jitcat::AST
 {
 
@@ -21,6 +24,7 @@ namespace jitcat::AST
 		virtual bool isAssignable() const override {return true;}
 		virtual const CatGenericType& getAssignableType() const = 0;
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) = 0;
+		virtual std::optional<std::string> getAssignableVariableName() const { return std::optional<std::string>();}
 	};
 
 

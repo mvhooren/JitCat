@@ -16,12 +16,12 @@ namespace jitcat::AST
 {
 	class CatAssignableExpression;
 	class CatArgumentList;
-
+	class CatIdentifier;
 	//Default constructs the target variable
 	class CatConstruct: public CatStatement
 	{
 	public:
-		CatConstruct(const Tokenizer::Lexeme& lexeme, std::unique_ptr<CatAssignableExpression> assignable, std::unique_ptr<CatArgumentList> arguments);
+		CatConstruct(const Tokenizer::Lexeme& lexeme, std::unique_ptr<CatIdentifier> identifier, std::unique_ptr<CatArgumentList> arguments, bool autoDestruct);
 		CatConstruct(const CatConstruct& other);
 		virtual ~CatConstruct();
 
@@ -37,12 +37,14 @@ namespace jitcat::AST
 		CatAssignableExpression* getAssignable() const;
 		CatArgumentList* getArgumentList() const;
 		bool getIsCopyConstructor() const;
+		bool getAutoDestruct() const;
 
 	private:
 		CatGenericType assignableType;
 		std::unique_ptr<CatAssignableExpression> assignable;
 		std::unique_ptr<CatArgumentList> arguments;
 		bool isCopyConstructor;
+		bool autoDestruct;
 
 		std::unique_ptr<CatStatement> constructorStatement;
 	};

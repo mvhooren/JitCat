@@ -15,6 +15,7 @@ namespace jitcat
 	{
 		class CatClassDefinition;
 		class CatFunctionDefinition;
+		class CatScopeBlock;
 	}
 }
 #include "jitcat/CatScopeID.h"
@@ -39,6 +40,7 @@ namespace jitcat::LLVM
 
 		CatLib* currentLib;
 		const AST::CatClassDefinition* currentClass;
+		const AST::CatScopeBlock* currentScope;
 		const AST::CatFunctionDefinition* currentFunctionDefinition;
 		llvm::Function* currentFunction;
 

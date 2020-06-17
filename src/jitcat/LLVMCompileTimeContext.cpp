@@ -17,6 +17,7 @@ LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):
 	currentClass(nullptr),
 	currentFunctionDefinition(nullptr),
 	currentFunction(nullptr),
+	currentScope(nullptr),
 	helper(nullptr)
 {
 }
