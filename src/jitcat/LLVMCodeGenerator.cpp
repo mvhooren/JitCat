@@ -1628,7 +1628,7 @@ llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* m
 			else
 			{
 				llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, memberFunction->getMangledName(), memberFunction->memberFunctionName));
+				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, callData.callType == MemberFunctionCallType::ThisCall, memberFunction->getMangledName(), memberFunction->memberFunctionName));
 				if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 				{
 					call->setCallingConv(llvm::CallingConv::X86_ThisCall);
@@ -1658,7 +1658,7 @@ llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* m
 				sretInsertPoint++;
 			}
 			argumentList.insert(sretInsertPoint, returnedObjectAllocation);
-			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, memberFunction->getMangledName(), memberFunction->memberFunctionName));
+			llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, callData.callType == MemberFunctionCallType::ThisCall, memberFunction->getMangledName(), memberFunction->memberFunctionName));
 			if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 			{
 				call->setCallingConv(llvm::CallingConv::X86_ThisCall);

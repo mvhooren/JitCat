@@ -209,9 +209,9 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 		"	float checkFloats(float a, float b)\n"
 		"	{\n"
 		"		//Intentionally named tempString to check if there are no naming conflicts with locals defined in addToTestString. \n"
-		"		float tempFloat = 11.0f;\n"
-		"		float tempFloat2 = tempFloat * a;\n"
-		"		return tempFloat + tempFloat2 * b;\n"
+		"		float tempString = 11.0f;\n"
+		"		float tempString2 = tempString * a;\n"
+		"		return tempString + tempString2 * b;\n"
 		"	}\n"
 		"}\n");
 
@@ -582,8 +582,8 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 
 	SECTION("Local tests")
 	{
-		Expression<float> testExpression1(&context, "addToFloat(42)");
-		doChecks(84.0f, false, false, false, testExpression1, context);
+		Expression<float> testExpression1(&context, "addToFloat(43)");
+		doChecks(85.0f, false, false, false, testExpression1, context);
 	}
 }
 
@@ -599,6 +599,7 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 	Tokenizer::Document source(		
 		"class TestClass\n"
 		"{\n"
+		"	VectorClass memberVector;\n"
 		"\n"
 		"	VectorClass addToVector(int value)\n"
 		"	{\n"
@@ -611,6 +612,11 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 		"	{\n"
 		"		return addToVector(42).x;\n"
 		"	}\n"
+		"\n"
+		"	float getY()\n"
+		"	{\n"
+		"		return memberVector.y + 42;\n"
+		"	}\n"
 		"}\n"
 		"\n"
 		"class VectorClass\n"
@@ -619,7 +625,8 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 		"	float y = 2.0f;\n"
 		"	float z = 3.0f;\n"
 		"	float w = 4.0f;\n"
-		"}\n"	);
+		"}\n"	
+	);
 
 	library.addSource("test1.jc", source);
 	std::vector<const ExpressionErrorManager::Error*> errors;
@@ -641,5 +648,88 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 	{
 		Expression<float> testExpression1(&context, "getX()");
 		doChecks(43.0f, false, false, false, testExpression1, context);
+	}
+	SECTION("getY")
+	{
+		Expression<float> testExpression1(&context, "getY()");
+		doChecks(44.0f, false, false, false, testExpression1, context);
+	}
+}
+
+
+TEST_CASE("CatLib inheritance", "[catlib][inheritance]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	Tokenizer::Document source(		
+		"class TestClass\n"
+		"{\n"
+		"	inherits VectorClass;\n"
+		"	inherits AnotherClass;\n"
+		"\n"
+		"	float getX()\n"
+		"	{\n"
+		"		return x + 1;\n"
+		"	}\n"
+		"\n"
+		"	float getY()\n"
+		"	{\n"
+		"		return y + 42;\n"
+		"	}\n"
+		"\n"
+		"	float getW()\n"
+		"	{\n"
+		"		return vector.w + 11;\n"
+		"	}\n"
+		"}\n"
+		"\n"
+		"class VectorClass\n"
+		"{\n"
+		"	float x = 1.0f;\n"
+		"	float y = 2.0f;\n"
+		"	float z = 3.0f;\n"
+		"	float w = 4.0f;\n"
+		"}\n"	
+		"\n"
+		"class AnotherClass\n"
+		"{\n"
+		"	VectorClass vector;\n"
+		"}\n"
+	);
+
+	library.addSource("test1.jc", source);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine + 1 << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("getX")
+	{
+		Expression<float> testExpression1(&context, "getX()");
+		doChecks(2.0f, false, false, false, testExpression1, context);
+	}
+	SECTION("getY")
+	{
+		Expression<float> testExpression1(&context, "getY()");
+		doChecks(44.0f, false, false, false, testExpression1, context);
+	}
+	SECTION("getW")
+	{
+		Expression<float> testExpression1(&context, "getW()");
+		doChecks(15.0f, false, false, false, testExpression1, context);
 	}
 }

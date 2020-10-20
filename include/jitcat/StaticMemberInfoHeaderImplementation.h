@@ -52,7 +52,7 @@ namespace jitcat::Reflection
 		std::string mangledName = mangledNameStream.str();
 		context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName);
 
-		return context->helper->createCall( LLVM::LLVMTypes::functionRetPtrArgPtr, {uniquePtrPtr}, mangledName, "getUniquePtr");
+		return context->helper->createCall( LLVM::LLVMTypes::functionRetPtrArgPtr, {uniquePtrPtr}, false, mangledName, "getUniquePtr");
 	#else 
 		return nullptr;
 	#endif // ENABLE_LLVM

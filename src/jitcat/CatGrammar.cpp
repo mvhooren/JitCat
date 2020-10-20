@@ -176,7 +176,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	
 	rule(Prod::OwnershipSemantics, {term(one, OneChar::BitwiseAnd)}, ownershipSemantics);
 	rule(Prod::OwnershipSemantics, {term(one, OneChar::At)}, ownershipSemantics);
-	rule(Prod::OwnershipSemantics, {}, ownershipSemantics); // Werkt dit???
+	rule(Prod::OwnershipSemantics, {}, ownershipSemantics);
 
 	//Typename or identifier
 	rule(Prod::TypeOrIdentifier, {prod(Prod::TypeOrIdentifier), term(two, TwoChar::StaticAccessor), term(id, Identifier::Identifier)}, nestedTypeName);

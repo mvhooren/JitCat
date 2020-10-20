@@ -111,7 +111,14 @@ bool CatSourceFile::compile(CatLib& catLib)
 	{
 		for (auto& iter: definitions)
 		{
-			noErrors &= iter->defineCheck(compiletimeContext, loopDetectionStack);
+			if (iter->getNodeType() == CatASTNodeType::ClassDefinition)
+			{
+				noErrors &= iter->defineCheck(static_cast<CatClassDefinition*>(iter.get())->getCompiletimeContext() , loopDetectionStack);
+			}
+			else
+			{
+				noErrors &= iter->defineCheck(compiletimeContext, loopDetectionStack);
+			}
 			assert(loopDetectionStack.empty());
 		}
 	}
@@ -119,7 +126,14 @@ bool CatSourceFile::compile(CatLib& catLib)
 	{
 		for (auto& iter: definitions)
 		{
-			noErrors &= iter->typeCheck(compiletimeContext);
+			if (iter->getNodeType() == CatASTNodeType::ClassDefinition)
+			{
+				noErrors &= iter->typeCheck(static_cast<CatClassDefinition*>(iter.get())->getCompiletimeContext());
+			}
+			else
+			{
+				noErrors &= iter->typeCheck(compiletimeContext);
+			}
 		}
 	}
 	compiletimeContext->removeScope(staticScopeId);

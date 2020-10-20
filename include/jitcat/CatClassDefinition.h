@@ -49,6 +49,7 @@ namespace jitcat::AST
 		virtual bool typeGatheringCheck(CatRuntimeContext* compileTimeContext) override final;
 		virtual bool defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack) override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
+		CatRuntimeContext* getCompiletimeContext() const;
 
 		bool isTriviallyCopyable() const;
 
@@ -93,6 +94,8 @@ namespace jitcat::AST
 		std::string qualifiedName;
 		Tokenizer::Lexeme nameLexeme;
 		
+		std::unique_ptr<CatRuntimeContext> compileTimeContext;
+
 		CheckStatus checkStatus;
 
 		const CatClassDefinition* parentClass;

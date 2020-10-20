@@ -30,7 +30,7 @@ namespace jitcat
 	}
 
 	//A CatLib is used to compile JitCat code from source through calls to addSource.
-	//Source code added in this way will be able to use functions, variables, types and constatns defined in source 
+	//Source code added in this way will be able to use functions, variables, types and constants defined in source 
 	//files that have previously been added.
 	//Through calls to addStaticScope, it is possible to also provide types, functions, variables and constants from reflected 
 	//C++ classes and/or run-time created custom types.
@@ -45,13 +45,13 @@ namespace jitcat
 
 		//addStaticScope adds a scope containing types, variables and/or functions that can be used by source files compiled by this CatLib. 
 		//ScopeObject must not be null when compiling a CatLib and is assumed to be "static", that is, 
-		//the address of the scopeObject must not change between compile time /and run time of functions 
+		//the address of the scopeObject must not change between compile time and run time of functions 
 		//within this CatLib.
 		//If a scope object is deleted, any CatLibs that were compiled using it should either also be deleted, or recompiled using a new static scope.
 		//Variables and functions are looked up in the reverse order in which the scopes were added. The most recently added scope is searched first.
-		//The scopeObject must either implement the static functions required for reflection (see TypeInfo.h), define an ExternalReflector (
+		//The scopeObject must either implement the static functions required for reflection (see TypeInfo.h), define an ExternalReflector, 
 		//or provide a TypeInfo object containing typeInfo about the scopeObject combined with a unsigned char* pointing to an instance of the scopeObject.
-		//ScopeObjects are not owned/deleted by the CatRuntimeContext.
+		//ScopeObjects are not owned/deleted by the CatLib.
 		//Adding a scope returns a ScopeID that can later be used to remove or change the scope object.
 		template<typename ReflectableType>
 		CatScopeID addStaticScope(ReflectableType* scopeObject);

@@ -105,10 +105,12 @@ CatASTNodeType CatClassDefinition::getNodeType() const
 }
 
 
-bool CatClassDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContext)
+bool CatClassDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContext_)
 {
 	assert(checkStatus == CheckStatus::Unchecked);
-	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
+	CatClassDefinition* parentClass = compileTimeContext_->getCurrentClass();
+
+	compileTimeContext = std::move(compileTimeContext_->clone());
 	compileTimeContext->setCurrentClass(this);
 	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
@@ -127,7 +129,7 @@ bool CatClassDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContex
 	for (auto& iter : classDefinitions)
 	{
 		iter->setParentClass(this);
-		noErrors &= iter->typeGatheringCheck(compileTimeContext);
+		noErrors &= iter->typeGatheringCheck(compileTimeContext_);
 	}
 
 	if (noErrors)
@@ -139,8 +141,9 @@ bool CatClassDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContex
 }
 
 
-bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack)
+bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext_, std::vector<const CatASTNode*>& loopDetectionStack)
 {
+	assert(compileTimeContext_ == compileTimeContext.get());
 	if (checkStatus == CheckStatus::Failed)
 	{
 		return false;
@@ -163,20 +166,20 @@ bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std:
 
 	for (auto& iter : inheritanceDefinitions)
 	{
-		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+		noErrors &= iter->defineCheck(compileTimeContext.get(), loopDetectionStack);
 	}
 
 	for (auto& iter: variableDefinitions)
 	{
-		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+		noErrors &= iter->defineCheck(compileTimeContext.get(), loopDetectionStack);
 	}
 	
 	if (noErrors)
 	{
-		noErrors &= defineConstructor(compileTimeContext);
-		noErrors &= defineCopyConstructor(compileTimeContext);
-		noErrors &= defineOperatorAssign(compileTimeContext);
-		noErrors &= defineDestructor(compileTimeContext);
+		noErrors &= defineConstructor(compileTimeContext.get());
+		noErrors &= defineCopyConstructor(compileTimeContext.get());
+		noErrors &= defineOperatorAssign(compileTimeContext.get());
+		noErrors &= defineDestructor(compileTimeContext.get());
 	}
 
 	loopDetectionStack.pop_back();
@@ -185,7 +188,7 @@ bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std:
 	for (auto& iter: functionDefinitions)
 	{
 		iter->setParentClass(this);
-		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+		noErrors &= iter->defineCheck(compileTimeContext.get(), loopDetectionStack);
 	}
 
 	compileTimeContext->removeScope(scopeId);
@@ -193,7 +196,7 @@ bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std:
 	for (auto& iter : classDefinitions)
 	{
 		iter->setParentClass(this);
-		noErrors &= iter->defineCheck(compileTimeContext, loopDetectionStack);
+		noErrors &= iter->defineCheck(iter->getCompiletimeContext(), loopDetectionStack);
 	}
 	
 
@@ -208,8 +211,9 @@ bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext, std:
 }
 
 
-bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
+bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext_)
 {
+	assert(compileTimeContext_ == compileTimeContext.get());
 	if (checkStatus == CheckStatus::Failed)
 	{
 		return false;
@@ -227,26 +231,26 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 
 	for (auto& iter : inheritanceDefinitions)
 	{
-		noErrors &= iter->typeCheck(compileTimeContext);
+		noErrors &= iter->typeCheck(compileTimeContext.get());
 	}
 
 	for (auto& iter: variableDefinitions)
 	{
-		noErrors &= iter->typeCheck(compileTimeContext);
+		noErrors &= iter->typeCheck(compileTimeContext.get());
 	}
 
 	if (noErrors)
 	{
-		noErrors &= generateConstructor(compileTimeContext);
-		noErrors &= generateCopyConstructor(compileTimeContext);
-		noErrors &= generateOperatorAssign(compileTimeContext);
-		noErrors &= generateDestructor(compileTimeContext);
+		noErrors &= generateConstructor(compileTimeContext.get());
+		noErrors &= generateCopyConstructor(compileTimeContext.get());
+		noErrors &= generateOperatorAssign(compileTimeContext.get());
+		noErrors &= generateDestructor(compileTimeContext.get());
 	}
 
 	for (auto& iter: functionDefinitions)
 	{
 		iter->setParentClass(this);
-		noErrors &= iter->typeCheck(compileTimeContext);
+		noErrors &= iter->typeCheck(compileTimeContext.get());
 	}
 	
 	if (noErrors)
@@ -254,7 +258,7 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		//Another pass to allow inheritance definitions to inspect the finalized, type-checked class.
 		for (auto& iter : inheritanceDefinitions)
 		{
-			noErrors &= iter->postTypeCheck(compileTimeContext);
+			noErrors &= iter->postTypeCheck(compileTimeContext.get());
 		}
 	}
 
@@ -263,7 +267,7 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	for (auto& iter : classDefinitions)
 	{
 		iter->setParentClass(this);
-		noErrors &= iter->typeCheck(compileTimeContext);
+		noErrors &= iter->typeCheck(iter->getCompiletimeContext());
 	}
 	compileTimeContext->setCurrentScope(previousScope);
 	compileTimeContext->setCurrentClass(parentClass);
@@ -288,6 +292,12 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	}
 	checkStatus = noErrors ? CheckStatus::Succeeded : CheckStatus::Failed;
 	return noErrors;
+}
+
+
+CatRuntimeContext* jitcat::AST::CatClassDefinition::getCompiletimeContext() const
+{
+	return compileTimeContext.get();
 }
 
 

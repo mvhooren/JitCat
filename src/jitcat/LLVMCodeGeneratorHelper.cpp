@@ -44,7 +44,7 @@ LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerato
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, const std::string& mangledFunctionName, const std::string& shortFunctionName)
+llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isThisCall, const std::string& mangledFunctionName, const std::string& shortFunctionName)
 {
 	llvm::CallInst* callInstruction = nullptr;
 	//First try and find the function in the current module.
@@ -53,6 +53,10 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionTyp
 	{
 		//If the function was not found, create the function signature and add it to the module. 
 		function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, mangledFunctionName.c_str(), codeGenerator->getCurrentModule());
+		if (Configuration::useThisCall && isThisCall)
+		{
+			function->setCallingConv(llvm::CallingConv::X86_ThisCall);
+		}
 	}
 	else
 	{
@@ -728,7 +732,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(c
 	if (returnType.isReflectableObjectType())
 	{
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, argumentList, mangledFunctionName, shortFunctionName));
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, argumentList, false, mangledFunctionName, shortFunctionName));
 		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
 		call->addDereferenceableAttr(1 , returnType.getTypeSize());
 		return returnedObjectAllocation;
@@ -737,7 +741,7 @@ llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::generateStaticFunctionCall(c
 	{
 		llvm::Type* returnLLVMType = toLLVMType(returnType);
 		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-		return createCall(functionType, argumentList, mangledFunctionName, shortFunctionName);
+		return createCall(functionType, argumentList, false, mangledFunctionName, shortFunctionName);
 	}
 }
 

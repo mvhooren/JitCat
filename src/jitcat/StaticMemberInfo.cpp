@@ -108,7 +108,7 @@ llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateDereferenc
 	//Call function that gets the value
 	std::string mangledName = "Reflectable* __getReflectable(const ReflectableHandle& handle)";
 	context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), mangledName);
-	return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, {reflectableHandle}, mangledName, "getReflectable");
+	return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, {reflectableHandle}, false, mangledName, "getReflectable");
 #else 
 	return nullptr;
 #endif //ENABLE_LLVM

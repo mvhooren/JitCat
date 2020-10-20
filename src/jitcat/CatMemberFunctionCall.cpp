@@ -37,6 +37,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 	arguments(arguments),
 	returnType(CatGenericType::unknownType)
 {
+	assert(arguments != nullptr);
 }
 
 

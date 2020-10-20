@@ -42,7 +42,7 @@ namespace jitcat::LLVM
 
 		template<typename ReturnT, typename ... Args>
 		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
-		llvm::Value* createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, const std::string& mangledFunctionName, const std::string& shortFunctionName);
+		llvm::Value* createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isThisCall, const std::string& mangledFunctionName, const std::string& shortFunctionName);
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
 												   llvm::Type* resultType, LLVMCompileTimeContext* context); 
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 

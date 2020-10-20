@@ -185,7 +185,7 @@ bool CatTypeNode::defineCheck(CatRuntimeContext* compileTimeContext, ExpressionE
 						return false;
 					}
 				}
-				return classDefinition->defineCheck(compileTimeContext, loopDetectionStack);
+				return classDefinition->defineCheck(classDefinition->getCompiletimeContext(), loopDetectionStack);
 			}
 
 			return true;

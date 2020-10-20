@@ -52,6 +52,31 @@ CatRuntimeContext::~CatRuntimeContext()
 	}
 }
 
+
+std::unique_ptr<CatRuntimeContext> jitcat::CatRuntimeContext::clone() const
+{
+	std::unique_ptr<CatRuntimeContext> cloned = std::make_unique<CatRuntimeContext>(contextName, ownsErrorManager ? nullptr : errorManager);
+	for (auto& iter : scopes)
+	{
+		cloned->addScope(iter->scopeType, reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
+	}
+	for (auto& iter : staticScopes)
+	{
+		cloned->addScope(iter->scopeType, reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
+	}
+	if constexpr (Configuration::enableLLVM)
+	{
+		cloned->codeGenerator = codeGenerator;
+	}
+	for (auto& iter : errorContextStack)
+	{
+		cloned->errorContextStack.push_back(iter);
+	}
+	cloned->currentScope = currentScope;
+	return cloned;
+}
+
+
 const char* jitcat::CatRuntimeContext::getTypeName()
 {
 	return "CatRuntimeContext";

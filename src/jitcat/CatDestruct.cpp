@@ -69,7 +69,7 @@ bool CatDestruct::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErr
 		TypeInfo* objectTypeInfo = pointeeType->getObjectType();
 		if (objectTypeInfo->getAllowConstruction() && objectTypeInfo->isCustomType() && static_cast<CustomTypeInfo*>(objectTypeInfo)->getClassDefinition() != nullptr)
 		{
-			destructorStatement = std::make_unique<CatMemberFunctionCall>("destroy", lexeme, assignable.release(), nullptr, lexeme);
+			destructorStatement = std::make_unique<CatMemberFunctionCall>("destroy", lexeme, assignable.release(), new CatArgumentList(lexeme, {}), lexeme);
 			return destructorStatement->typeCheck(compiletimeContext, errorManager, errorContext);
 		}
 		else

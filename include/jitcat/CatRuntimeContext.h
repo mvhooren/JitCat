@@ -83,6 +83,9 @@ namespace jitcat
 		CatRuntimeContext(const CatRuntimeContext&) = delete;
 		virtual ~CatRuntimeContext();
 
+		//Clone this context. Does not include state variables such as currentFunctionDefinition etc.
+		std::unique_ptr<CatRuntimeContext> clone() const;
+
 		static const char* getTypeName();
 		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
 
