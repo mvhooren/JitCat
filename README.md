@@ -1,5 +1,5 @@
 # JitCat
-A C++17 library for parsing and executing expressions. Allows easy exposure of variables and functions from C++ through built-in reflection functionality.
+A C++17 library for parsing and executing expressions. Allows easy exposure of variables and functions from C++ through built-in reflection functionality. JitCat is currently being expanded into a more fully featured scripting language.
 
 [Get it on github](https://github.com/mvhooren/JitCat).
 
