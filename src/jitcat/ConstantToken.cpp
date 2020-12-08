@@ -58,12 +58,12 @@ const char* ConstantToken::getSubTypeName(int subType_) const
 	switch ((ConstantType) subType_)
 	{
 		default:
-		case ConstantType::Integer:				return "int";
-		case ConstantType::DoubleFloatingPoint:	return "double";
-		case ConstantType::FloatingPoint:		return "float";
-		case ConstantType::String:				return "string";
-		case ConstantType::Char:				return "char";
-		case ConstantType::Bool:				return "bool";
+		case ConstantType::Integer:				return "int_literal";
+		case ConstantType::DoubleFloatingPoint:	return "double_literal";
+		case ConstantType::FloatingPoint:		return "float_literal";
+		case ConstantType::String:				return "string_literal";
+		case ConstantType::Char:				return "char_literal";
+		case ConstantType::Bool:				return "bool_literal";
 	}
 }
 
