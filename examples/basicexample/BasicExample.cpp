@@ -12,8 +12,10 @@
 #include "jitcat/Expression.h"
 #include "jitcat/ExpressionAny.h"
 #include "jitcat/ObjectInstance.h"
+#include "jitcat/TypeInfoDeleter.h"
 #include "ReflectionTestRoot.h"
 
+#include <memory>
 #include <string>
 #ifdef WIN32
 	#include <tchar.h>
@@ -32,7 +34,8 @@ int MAIN(int argc, char* argv[])
 	//#####################################
 	//# Route any debug output to std out #
 	//#####################################
-	Tools::CatLog::addListener(new Tools::CatLogStdOut());
+	std::unique_ptr<Tools::CatLogListener> logMethod = std::make_unique<Tools::CatLogStdOut>();
+	Tools::CatLog::addListener(logMethod.get());
 
 	//###############################
 	//# A simple consant expression #
@@ -68,17 +71,18 @@ int MAIN(int argc, char* argv[])
 
 	//Create a runtime-defined type
 	const char* customTypeName = "MyCustomType";
-	CustomTypeInfo* customType = new CustomTypeInfo(customTypeName);
+	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName);
 
 	//Add some fields to the type and some default values
 	customType->addFloatMember("aFloat", 666.0f);
 	customType->addIntMember("anInt", 43);
 	customType->addStringMember("aString", "ThisIsAString");
+	//Register a new type and use it to add an object-type member
 	TypeInfo* exampleObjectType = TypeRegistry::get()->registerType<ReflectionTestRoot>();
 	customType->addObjectMember("anObject", &exampleObject, exampleObjectType, TypeOwnershipSemantics::Weak, false);
 
 	//Create an instance of the runtime-defined type
-	ObjectInstance customTypeInstance(customType);
+	ObjectInstance customTypeInstance(customType.get());
 
 	//Add the type to the context so we can access the variables in an expression
 	context.addScope(customTypeInstance, false);
@@ -107,9 +111,11 @@ int MAIN(int argc, char* argv[])
 	//# Expressions return any type #
 	//###############################
 	
-	//You may not always know in advance what type an expression will return or perhaps your expression is based on user input and can contain any type.
+	//You may not always know in advance what type an expression will return or perhaps your expression is based on 
+	//user input and can contain any type.
 	//For that case there is ExpressionAny.
-	//This expression calls the getTest2 function on the testObject member inside the exampleObject and accesses the 'what' std::string member of the returned ReflectionTestObject2 object.
+	//This expression calls the getTest2 function on the testObject member inside the exampleObject and accesses the 'what' 
+	//std::string member of the returned ReflectionTestObject2 object.
 	ExpressionAny anyExpression(&context, "test.getTest2().what");
 	//Now getValue returns a std::any
 	std::any result = anyExpression.getValue(&context);
