@@ -51,7 +51,25 @@ void CatLog::removeListener(CatLogListener* listener)
 std::vector<CatLogListener*> CatLog::listeners = std::vector<CatLogListener*>();
 
 
-void jitcat::Tools::CatLogStdOut::catLog(const char* message)
+void CatLogStdOut::catLog(const char* message)
 {
 	std::cout << message;
+}
+
+
+CatLogFile::CatLogFile(const std::string& filename):
+	logFile(filename)
+{
+}
+
+
+CatLogFile::~CatLogFile()
+{
+}
+
+
+void CatLogFile::catLog(const char* message)
+{
+	logFile << message;
+	logFile.flush();
 }

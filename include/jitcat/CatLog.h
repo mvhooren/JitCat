@@ -7,7 +7,9 @@
 
 #pragma once
 
+#include <string>
 #include <sstream>
+#include <fstream>
 #include <vector>
 
 namespace jitcat::Tools
@@ -24,6 +26,18 @@ namespace jitcat::Tools
 	public:
 		CatLogStdOut() {};
 		virtual void catLog(const char* message) override final;
+	};
+
+	class CatLogFile: public CatLogListener
+	{
+	public:
+		CatLogFile(const std::string& filename);
+		virtual ~CatLogFile();
+
+		virtual void catLog(const char* message) override final;
+
+	private:
+		std::ofstream logFile;
 	};
 
 	class CatLog
