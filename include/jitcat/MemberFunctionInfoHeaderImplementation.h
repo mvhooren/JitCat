@@ -54,7 +54,7 @@ namespace jitcat::Reflection
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
 	inline ReturnT MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::staticExecute(ClassT* base, MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments ...args)
 	{
-		ReturnT(ClassT:: * function)(TFunctionArguments...) = functionInfo->function;
+		ReturnT(ClassT::*function)(TFunctionArguments...) = functionInfo->function;
 		return (base->*function)(args...);
 	}
 
@@ -93,7 +93,7 @@ namespace jitcat::Reflection
 		ClassT* baseObject = std::any_cast<ClassT*>(base);
 		if (baseObject != nullptr)
 		{
-			//This calls the member function, expanding the argument list from the catvalue array
+			//This calls the member function, expanding the argument list from the parameters array
 			//std::decay removes const and & from the type.
 			if constexpr (std::is_void_v<ReturnT>)
 			{
@@ -141,7 +141,7 @@ namespace jitcat::Reflection
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
 	inline ReturnT ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::staticExecute(ClassT* base, ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments ...args)
 	{
-		ReturnT(ClassT:: * function)(TFunctionArguments...) const = functionInfo->function;;
+		ReturnT(ClassT::*function)(TFunctionArguments...) const = functionInfo->function;;
 		return (base->*function)(args...);
 	}
 
