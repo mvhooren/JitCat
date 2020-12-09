@@ -239,6 +239,8 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 		Expression<float> testExpression2(&context, "checkFloats(12.0f, 91.0f)");
 		doChecks(12023.0f, false, false, false, testExpression2, context);
 	}
+
+	testClassInfo->destruct(testClassInstance);
 }
 
 
@@ -414,6 +416,8 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 		Expression<int> testExpression16(&context, "floatIf(11.0f)");
 		doChecks(2, false, false, false, testExpression16, context);
 	}
+
+	testClassInfo->destruct(testClassInstance);
 }
 
 
@@ -536,6 +540,8 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 			doChecks(2, false, false, false, testExpression, context);
 		}
 	}
+
+	testClassInfo->destruct(testClassInstance);
 }
 
 
@@ -585,6 +591,8 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 		Expression<float> testExpression1(&context, "addToFloat(43)");
 		doChecks(85.0f, false, false, false, testExpression1, context);
 	}
+
+	testClassInfo->destruct(testClassInstance);
 }
 
 
@@ -654,6 +662,8 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 		Expression<float> testExpression1(&context, "getY()");
 		doChecks(44.0f, false, false, false, testExpression1, context);
 	}
+
+	testClassInfo->destruct(testClassInstance);
 }
 
 
@@ -732,4 +742,6 @@ TEST_CASE("CatLib inheritance", "[catlib][inheritance]" )
 		Expression<float> testExpression1(&context, "getW()");
 		doChecks(15.0f, false, false, false, testExpression1, context);
 	}
+
+	testClassInfo->destruct(testClassInstance);
 }
