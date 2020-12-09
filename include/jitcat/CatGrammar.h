@@ -15,7 +15,8 @@
 namespace jitcat::Grammar
 {
 	//This class defines the grammar for the JitCat language.
-	//It can also do partial grammars like a grammar for just a JitCat expression.
+	//It can also do partial grammars, for example CatGrammarType::Expression generates 
+	//a grammar that can only handle expressions.
 	//The available types of grammars are defined by the CatGrammarType.
 	//GrammarBase contains all the plumbing for creating grammars, CatGrammar contains only the grammar specific to JitCat.
 	//Grammars are defined by a production rule system. Each production has a semantic action associated with it in the form of a static member function of this class.
@@ -75,7 +76,9 @@ namespace jitcat::Grammar
 			ScopeBlock,
 			ScopeBlockStatements
 		};
-	public: 
+	public:
+		//The constructor takes a tokenizer and the type of grammar that is to be defined.
+		//The tokenizer defines all the tokens for the language, such as literals, identifiers and operators.
 		CatGrammar(Tokenizer::TokenizerBase* tokenizer, CatGrammarType grammarType);
 		virtual const char* getProductionName(int production) const;
 
