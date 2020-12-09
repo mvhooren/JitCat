@@ -745,3 +745,55 @@ TEST_CASE("CatLib inheritance", "[catlib][inheritance]" )
 
 	testClassInfo->destruct(testClassInstance);
 }
+
+
+//Expected to fail for now
+TEST_CASE("CatLib arrays", "[.][catlib][arrays]" ) 
+{
+	ReflectedObject reflectedObject;
+	ExpressionErrorManager errorManager;
+
+	CatLib library("TestLib");
+	library.addStaticScope(&reflectedObject);
+
+	Tokenizer::Document source(		
+		"class TestClass\n"
+		"{\n"
+		"	float[] floats;\n"
+		"\n"
+		"	TestClass()\n"
+		"	{\n"
+		"		floats.add(12.34f);\n"
+		"	}\n"
+		"	float getFloat()\n"
+		"	{\n"
+		"		return floats[0];\n"
+		"	}\n"
+		"}\n"
+
+	);
+
+	library.addSource("test1.jc", source);
+	std::vector<const ExpressionErrorManager::Error*> errors;
+	library.getErrorManager().getAllErrors(errors);
+	for (auto& iter : errors)
+	{
+		std::cout << iter->contextName << " ERROR: Line: " << iter->errorLine + 1 << " Column: " << iter->errorColumn << " Length: " << iter->errorLength << "\n";
+		std::cout << iter->message << "\n";
+	}
+	REQUIRE(library.getErrorManager().getNumErrors() == 0);
+	TypeInfo* testClassInfo = library.getTypeInfo("TestClass");
+	REQUIRE(testClassInfo != nullptr);
+	unsigned char* testClassInstance = testClassInfo->construct();
+
+	CatRuntimeContext context("jitlib", &errorManager);
+	context.addScope(testClassInfo, testClassInstance, false);
+
+	SECTION("getX")
+	{
+		Expression<float> testExpression1(&context, "getFloat()");
+		doChecks(12.34f, false, false, false, testExpression1, context);
+	}
+
+	testClassInfo->destruct(testClassInstance);
+}
