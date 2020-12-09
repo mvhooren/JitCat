@@ -882,7 +882,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	SECTION("Pow_cc1")
 	{
 		Expression<float> testExpression(&context, "pow(11.1f, 1)");
-		doChecks<float>(pow(11.1f, 1), false, true, false, testExpression, context);
+		doChecks<float>((float)pow(11.1f, 1), false, true, false, testExpression, context);
 	}
 	SECTION("Pow_cc2")
 	{
