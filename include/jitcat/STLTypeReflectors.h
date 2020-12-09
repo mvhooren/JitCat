@@ -127,7 +127,7 @@ namespace jitcat::Reflection
 
 
 
-	//Reflection for std::array
+	//Reflection for std::deque
 	template <class ItemT, class AllocatorT>
 	class ExternalReflector<std::deque<ItemT, AllocatorT>>
 	{
