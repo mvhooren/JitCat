@@ -65,6 +65,7 @@ const char* TwoCharToken::getSubTypeName(int subType_) const
 		case TwoChar::Increment:		return "increment";
 		case TwoChar::Decrement:		return "decrement";
 		case TwoChar::StaticAccessor:	return "static accessor";
+		case TwoChar::ArrayBrackets:	return "array brackets";
 	}
 }
 
@@ -91,6 +92,7 @@ const char* TwoCharToken::getSubTypeSymbol(int subType_) const
 		case TwoChar::Increment:		return "++";
 		case TwoChar::Decrement:		return "--";
 		case TwoChar::StaticAccessor:	return "::";
+		case TwoChar::ArrayBrackets:	return "[]";
 		default:						return "??";
 	}
 		
@@ -131,6 +133,7 @@ ParseToken* TwoCharToken::createIfMatch(Document* document, const char* currentP
 		else if (lex == "++")		type = TwoChar::Increment;
 		else if (lex == "--")		type = TwoChar::Decrement;
 		else if (lex == "::")		type = TwoChar::StaticAccessor;
+		else if (lex == "[]")		type = TwoChar::ArrayBrackets;
 
 		if (type != TwoChar::Unknown)
 		{

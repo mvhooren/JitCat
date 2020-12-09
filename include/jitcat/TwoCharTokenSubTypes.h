@@ -30,7 +30,8 @@ namespace jitcat::Tokenizer
 		BitshiftRight,
 		Increment,
 		Decrement,
-		StaticAccessor
+		StaticAccessor,
+		ArrayBrackets
 	};
 
 } //End namespace jitcat::Tokenizers
