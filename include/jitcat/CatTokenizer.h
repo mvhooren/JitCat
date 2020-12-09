@@ -11,7 +11,7 @@
 
 namespace jitcat::Tokenizer
 {
-
+	//Defines the tokens that make up the JitCat language.
 	class CatTokenizer : public TokenizerBase
 	{
 	public:
