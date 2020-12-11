@@ -44,11 +44,11 @@ namespace jitcat::Reflection
 		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 
-		virtual bool getAllowInheritance() const;
-		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext);
-		virtual bool getAllowConstruction() const;
-		virtual bool getAllowCopyConstruction() const;
-		virtual bool getAllowMoveConstruction() const;
+		virtual bool getAllowInheritance() const override final;
+		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext) override final;
+		virtual bool getAllowConstruction() const override final;
+		virtual bool getAllowCopyConstruction() const override final;
+		virtual bool getAllowMoveConstruction() const override final;
 
 	private:
 		CatGenericType arrayItemType;
