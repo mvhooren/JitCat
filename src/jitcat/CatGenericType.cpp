@@ -1757,6 +1757,10 @@ bool CatGenericType::moveConstruct(unsigned char* targetBuffer, std::size_t targ
 
 bool CatGenericType::placementDestruct(unsigned char* buffer, std::size_t bufferSize) const
 {
+	if (buffer == nullptr)
+	{
+		return true;
+	}
 	switch (specificType)
 	{
 		case SpecificType::Enum:
