@@ -667,7 +667,7 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 }
 
 
-TEST_CASE("CatLib inheritance", "[catlib][inheritance]" ) 
+TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" ) 
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
