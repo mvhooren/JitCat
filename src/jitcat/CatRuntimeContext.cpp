@@ -64,10 +64,10 @@ std::unique_ptr<CatRuntimeContext> jitcat::CatRuntimeContext::clone() const
 	{
 		cloned->addScope(iter->scopeType, reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
 	}
-	if constexpr (Configuration::enableLLVM)
-	{
+	#ifdef ENABLE_LLVM
+		//This cannot be put inside a if constexpr unfortunately
 		cloned->codeGenerator = codeGenerator;
-	}
+	#endif
 	for (auto& iter : errorContextStack)
 	{
 		cloned->errorContextStack.push_back(iter);
