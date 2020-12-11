@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CatGenericType.h"
+#include "jitcat/ArrayTypeInfo.h"
 #include "jitcat/CatLog.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/MemberFunctionInfo.h"
@@ -87,7 +88,7 @@ CatGenericType::CatGenericType(TypeInfo* reflectableType, bool writable, bool co
 }
 
 
-jitcat::CatGenericType::CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable, bool constant) :
+CatGenericType::CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable, bool constant) :
 	specificType(isHandle ? SpecificType::ReflectableHandle : SpecificType::Pointer),
 	basicType(BasicType::None),
 	nestedType(nullptr),
@@ -146,7 +147,7 @@ bool CatGenericType::operator!=(const CatGenericType& other) const
 }
 
 
-bool jitcat::CatGenericType::compare(const CatGenericType& other, bool includeOwnershipSemantics, bool includeIndirection) const
+bool CatGenericType::compare(const CatGenericType& other, bool includeOwnershipSemantics, bool includeIndirection) const
 {
 	if (!includeIndirection
 		&& (specificType == SpecificType::Pointer || specificType == SpecificType::ReflectableHandle
@@ -220,7 +221,7 @@ bool CatGenericType::isIntType() const
 }
 
 
-bool jitcat::CatGenericType::isIntegeralType() const
+bool CatGenericType::isIntegralType() const
 {
 	return specificType == SpecificType::Basic && basicType == BasicType::Int;
 }
@@ -232,7 +233,7 @@ bool CatGenericType::isFloatType() const
 }
 
 
-bool jitcat::CatGenericType::isDoubleType() const
+bool CatGenericType::isDoubleType() const
 {
 	return specificType == SpecificType::Basic && basicType == BasicType::Double;
 }
@@ -244,13 +245,13 @@ bool CatGenericType::isStringType() const
 }
 
 
-bool jitcat::CatGenericType::isStringPtrType() const
+bool CatGenericType::isStringPtrType() const
 {
 	return isPointerType() && *getPointeeType() == CatGenericType::stringType;
 }
 
 
-bool jitcat::CatGenericType::isStringValueType() const
+bool CatGenericType::isStringValueType() const
 {
 	return compare(CatGenericType::stringType, false, true);
 }
@@ -271,7 +272,7 @@ bool CatGenericType::isVoidType() const
 }
 
 
-bool jitcat::CatGenericType::isEnumType() const
+bool CatGenericType::isEnumType() const
 {
 	return specificType == SpecificType::Enum;
 }
@@ -283,44 +284,44 @@ bool CatGenericType::isReflectableObjectType() const
 }
 
 
-bool jitcat::CatGenericType::isReflectableHandleType() const
+bool CatGenericType::isReflectableHandleType() const
 {
 	return specificType == SpecificType::ReflectableHandle;
 }
 
 
-bool jitcat::CatGenericType::isPointerToReflectableObjectType() const
+bool CatGenericType::isPointerToReflectableObjectType() const
 {
 	return specificType == SpecificType::Pointer && pointeeType->isReflectableObjectType();
 }
 
 
-bool jitcat::CatGenericType::isReflectablePointerOrHandle() const
+bool CatGenericType::isReflectablePointerOrHandle() const
 {
 	return (specificType == SpecificType::Pointer && pointeeType->isReflectableObjectType()) 
 		    || specificType == SpecificType::ReflectableHandle;
 }
 
 
-bool jitcat::CatGenericType::isPointerType() const
+bool CatGenericType::isPointerType() const
 {
 	return specificType == SpecificType::Pointer;
 }
 
 
-bool jitcat::CatGenericType::isPointerToPointerType() const
+bool CatGenericType::isPointerToPointerType() const
 {
 	return specificType == SpecificType::Pointer && pointeeType->isPointerType();
 }
 
 
-bool jitcat::CatGenericType::isPointerToHandleType() const
+bool CatGenericType::isPointerToHandleType() const
 {
 	return specificType == SpecificType::Pointer && pointeeType->isReflectableHandleType();
 }
 
 
-bool jitcat::CatGenericType::isAssignableType() const
+bool CatGenericType::isAssignableType() const
 {
 	return specificType == SpecificType::Pointer
 		   && pointeeType->isWritable()
@@ -334,13 +335,13 @@ bool jitcat::CatGenericType::isAssignableType() const
 }
 
 
-bool jitcat::CatGenericType::isNullptrType() const
+bool CatGenericType::isNullptrType() const
 {
 	return isPointerType() && getPointeeType()->isReflectableObjectType() && getPointeeType()->getObjectType()->getTypeName() == std::string("nullptr");
 }
 
 
-bool jitcat::CatGenericType::isTriviallyCopyable() const
+bool CatGenericType::isTriviallyCopyable() const
 {
 	return (isBasicType() 
 		   || (isReflectableObjectType() && nestedType->isTriviallyCopyable())
@@ -360,11 +361,11 @@ bool CatGenericType::isConst() const
 }
 
 
-void jitcat::CatGenericType::addDependentType(Reflection::TypeInfo* objectType)
+void CatGenericType::addDependentType(Reflection::TypeInfo* objectType)
 {
 	switch (specificType)
 	{
-		case SpecificType::Basic:				
+		case SpecificType::Basic:				return;
 		case SpecificType::ReflectableHandle:
 		case SpecificType::Pointer:				pointeeType->addDependentType(objectType); return;
 		case SpecificType::Enum:
@@ -374,7 +375,7 @@ void jitcat::CatGenericType::addDependentType(Reflection::TypeInfo* objectType)
 }
 
 
-bool jitcat::CatGenericType::isDependentOn(Reflection::TypeInfo* objectType) const
+bool CatGenericType::isDependentOn(Reflection::TypeInfo* objectType) const
 {
 	switch (specificType)
 	{
@@ -388,14 +389,14 @@ bool jitcat::CatGenericType::isDependentOn(Reflection::TypeInfo* objectType) con
 }
 
 
-const CatGenericType& jitcat::CatGenericType::getUnderlyingEnumType() const
+const CatGenericType& CatGenericType::getUnderlyingEnumType() const
 {
 	assert(isEnumType());
 	return getBasicType(basicType);
 }
 
 
-CatGenericType jitcat::CatGenericType::copyWithFlags(bool writable, bool constant) const
+CatGenericType CatGenericType::copyWithFlags(bool writable, bool constant) const
 {
 	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, pointeeType.get(), writable, constant);
 }
@@ -418,31 +419,39 @@ CatGenericType CatGenericType::toWritable() const
 	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics, pointeeType.get(), true, constant);
 }
 
-CatGenericType jitcat::CatGenericType::toValueOwnership() const
+
+CatGenericType CatGenericType::toValueOwnership() const
 {
 	return CatGenericType(specificType, basicType, nestedType, TypeOwnershipSemantics::Value, pointeeType.get(), true, constant);
 }
 
 
-CatGenericType jitcat::CatGenericType::toPointer(TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant) const
+CatGenericType CatGenericType::toChangedOwnership(Reflection::TypeOwnershipSemantics ownershipSemantics_) const
+{
+	return CatGenericType(specificType, basicType, nestedType, ownershipSemantics_, pointeeType.get(), true, constant);
+}
+
+
+CatGenericType CatGenericType::toPointer(TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant) const
 {
 	return CatGenericType(*this, ownershipSemantics, false, writable, constant);
 }
 
-CatGenericType jitcat::CatGenericType::toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant) const
+
+CatGenericType CatGenericType::toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics, bool writable, bool constant) const
 {
 	return CatGenericType(*this, ownershipSemantics, true, writable, constant);
 }
 
 
-CatGenericType jitcat::CatGenericType::convertPointerToHandle() const
+CatGenericType CatGenericType::convertPointerToHandle() const
 {
 	assert(specificType == SpecificType::Pointer);
 	return CatGenericType(SpecificType::ReflectableHandle, basicType, nestedType, ownershipSemantics, pointeeType.get(), writable, constant);
 }
 
 
-const CatGenericType& jitcat::CatGenericType::removeIndirection() const
+const CatGenericType& CatGenericType::removeIndirection() const
 {
 	const CatGenericType* currentType = this;
 	while (currentType->isPointerType() || currentType->isReflectableHandleType())
@@ -453,7 +462,7 @@ const CatGenericType& jitcat::CatGenericType::removeIndirection() const
 }
 
 
-const CatGenericType& jitcat::CatGenericType::removeIndirection(int& levelsOfIndirectionRemoved) const
+const CatGenericType& CatGenericType::removeIndirection(int& levelsOfIndirectionRemoved) const
 {
 	levelsOfIndirectionRemoved = 0;
 	const CatGenericType* currentType = this;
@@ -466,7 +475,7 @@ const CatGenericType& jitcat::CatGenericType::removeIndirection(int& levelsOfInd
 }
 
 
-IndirectionConversionMode jitcat::CatGenericType::getIndirectionConversion(const CatGenericType& other) const
+IndirectionConversionMode CatGenericType::getIndirectionConversion(const CatGenericType& other) const
 {
 	int fromIndirection = 0;
 	int toIndirection = 0;
@@ -529,7 +538,7 @@ IndirectionConversionMode jitcat::CatGenericType::getIndirectionConversion(const
 }
 
 
-std::any jitcat::CatGenericType::doIndirectionConversion(std::any& value, IndirectionConversionMode mode) const
+std::any CatGenericType::doIndirectionConversion(std::any& value, IndirectionConversionMode mode) const
 {
 	const CatGenericType& typeWithoutIndirection = removeIndirection();
 	const TypeCaster* typeCaster = typeWithoutIndirection.getTypeCaster();
@@ -680,7 +689,7 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 		resultInfo.setIsOverloaded(true);
 		if (memberFunctionInfo != nullptr)
 		{
-			resultInfo.setResultType(memberFunctionInfo->returnType);
+			resultInfo.setResultType(memberFunctionInfo->getReturnType());
 			return resultInfo;
 		}
 		else
@@ -750,13 +759,13 @@ std::string CatGenericType::toString() const
 }
 
 
-CatGenericType* jitcat::CatGenericType::getPointeeType() const
+CatGenericType* CatGenericType::getPointeeType() const
 {
 	return pointeeType.get();
 }
 
 
-void jitcat::CatGenericType::setPointeeType(std::unique_ptr<CatGenericType> pointee)
+void CatGenericType::setPointeeType(std::unique_ptr<CatGenericType> pointee)
 {
 	pointeeType = std::move(pointee);
 }
@@ -768,13 +777,13 @@ TypeInfo* CatGenericType::getObjectType() const
 }
 
 
-Reflection::TypeOwnershipSemantics jitcat::CatGenericType::getOwnershipSemantics() const
+Reflection::TypeOwnershipSemantics CatGenericType::getOwnershipSemantics() const
 {
 	return ownershipSemantics;
 }
 
 
-void jitcat::CatGenericType::setOwnershipSemantics(Reflection::TypeOwnershipSemantics semantics)
+void CatGenericType::setOwnershipSemantics(Reflection::TypeOwnershipSemantics semantics)
 {
 	ownershipSemantics = semantics;
 }
@@ -839,7 +848,7 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 }
 
 
-std::any jitcat::CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
+std::any CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 {
 	switch (specificType)
 	{
@@ -968,7 +977,7 @@ std::any CatGenericType::createDefault() const
 }
 
 
-std::size_t jitcat::CatGenericType::getTypeSize() const
+std::size_t CatGenericType::getTypeSize() const
 {
 	switch (specificType)
 	{
@@ -1121,7 +1130,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 }
 
 
-std::any jitcat::CatGenericType::toUnderlyingType(std::any enumValue) const
+std::any CatGenericType::toUnderlyingType(std::any enumValue) const
 {
 	assert(isEnumType());
 	const unsigned char* bufferAddress = nullptr;
@@ -1195,7 +1204,7 @@ float CatGenericType::convertToFloat(std::any value, const CatGenericType& value
 }
 
 
-double jitcat::CatGenericType::convertToDouble(std::any value, const CatGenericType& valueType)
+double CatGenericType::convertToDouble(std::any value, const CatGenericType& valueType)
 {
 	return std::any_cast<double>(doubleType.convertToType(value, valueType));
 }
@@ -1317,7 +1326,7 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 }
 
 
-void CatGenericType::writeToXML(std::ofstream& xmlFile, const char* linePrefixCharacters)
+void CatGenericType::writeToXML(std::ofstream& xmlFile, const char* linePrefixCharacters) const
 {
 	if (constant)
 	{
@@ -1344,7 +1353,7 @@ void CatGenericType::writeToXML(std::ofstream& xmlFile, const char* linePrefixCh
 }
 
 
-bool jitcat::CatGenericType::isConstructible() const
+bool CatGenericType::isConstructible() const
 {
 	switch (specificType)
 	{
@@ -1370,7 +1379,7 @@ bool jitcat::CatGenericType::isConstructible() const
 }
 
 
-bool jitcat::CatGenericType::isCopyConstructible() const
+bool CatGenericType::isCopyConstructible() const
 {
 	switch (specificType)
 	{
@@ -1396,7 +1405,7 @@ bool jitcat::CatGenericType::isCopyConstructible() const
 }
 
 
-bool jitcat::CatGenericType::isMoveConstructible() const
+bool CatGenericType::isMoveConstructible() const
 {
 	switch (specificType)
 	{
@@ -1422,7 +1431,7 @@ bool jitcat::CatGenericType::isMoveConstructible() const
 }
 
 
-bool jitcat::CatGenericType::isDestructible() const
+bool CatGenericType::isDestructible() const
 {
 	switch (specificType)
 	{
@@ -1448,7 +1457,7 @@ bool jitcat::CatGenericType::isDestructible() const
 }
 
 
-std::any jitcat::CatGenericType::construct() const
+std::any CatGenericType::construct() const
 {
 	std::size_t typeSize = getTypeSize();
 	switch (specificType)
@@ -1507,7 +1516,7 @@ std::any jitcat::CatGenericType::construct() const
 }
 
 
-bool jitcat::CatGenericType::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
+bool CatGenericType::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
 {
 	std::size_t typeSize = getTypeSize();
 	if (typeSize > bufferSize)
@@ -1560,7 +1569,7 @@ bool jitcat::CatGenericType::placementConstruct(unsigned char* buffer, std::size
 }
 
 
-bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) const
+bool CatGenericType::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) const
 {
 	std::size_t typeSize = getTypeSize();
 	if (typeSize > targetBufferSize || typeSize > sourceBufferSize)
@@ -1665,7 +1674,7 @@ bool jitcat::CatGenericType::copyConstruct(unsigned char* targetBuffer, std::siz
 }
 
 
-bool jitcat::CatGenericType::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) const
+bool CatGenericType::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) const
 {
 	std::size_t typeSize = getTypeSize();
 	if (typeSize > targetBufferSize || typeSize > sourceBufferSize)
@@ -1746,7 +1755,7 @@ bool jitcat::CatGenericType::moveConstruct(unsigned char* targetBuffer, std::siz
 }
 
 
-bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_t bufferSize) const
+bool CatGenericType::placementDestruct(unsigned char* buffer, std::size_t bufferSize) const
 {
 	switch (specificType)
 	{
@@ -1807,7 +1816,7 @@ bool jitcat::CatGenericType::placementDestruct(unsigned char* buffer, std::size_
 }
 
 
-void jitcat::CatGenericType::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
+void CatGenericType::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
 {
 	bufferSize = getTypeSize();
 	switch (specificType)
@@ -1848,7 +1857,7 @@ void jitcat::CatGenericType::toBuffer(const std::any& value, const unsigned char
 }
 
 
-const TypeCaster* jitcat::CatGenericType::getTypeCaster() const
+const TypeCaster* CatGenericType::getTypeCaster() const
 {
 	switch (specificType)
 	{
@@ -1872,7 +1881,7 @@ const TypeCaster* jitcat::CatGenericType::getTypeCaster() const
 }
 
 
-uintptr_t jitcat::CatGenericType::getRawPointer(const std::any& value) const
+uintptr_t CatGenericType::getRawPointer(const std::any& value) const
 {
 	assert(isPointerType() || isReflectableHandleType());
 	int indirectionLevels = 0;
@@ -1888,7 +1897,7 @@ uintptr_t jitcat::CatGenericType::getRawPointer(const std::any& value) const
 }
 
 
-std::any jitcat::CatGenericType::getAddressOf(std::any& value) const
+std::any CatGenericType::getAddressOf(std::any& value) const
 {
 	assert(isPointerType() || isReflectableHandleType() || isBasicType() || isReflectableObjectType());
 	int indirectionLevels = 0;
@@ -1904,7 +1913,7 @@ std::any jitcat::CatGenericType::getAddressOf(std::any& value) const
 }
 
 
-std::any jitcat::CatGenericType::getDereferencedOf(std::any& value) const
+std::any CatGenericType::getDereferencedOf(std::any& value) const
 {
 	assert(isPointerType() || isReflectableHandleType());
 	int indirectionLevels = 0;
@@ -1920,7 +1929,7 @@ std::any jitcat::CatGenericType::getDereferencedOf(std::any& value) const
 }
 
 
-std::any jitcat::CatGenericType::createFromRawPointer(const uintptr_t pointer) const
+std::any CatGenericType::createFromRawPointer(const uintptr_t pointer) const
 {
 	assert(isPointerType() || isReflectableHandleType() || isReflectableObjectType());
 	int indirectionLevels = 0;
@@ -1941,13 +1950,13 @@ std::any jitcat::CatGenericType::createFromRawPointer(const uintptr_t pointer) c
 }
 
 
-std::any jitcat::CatGenericType::createNullPtr() const
+std::any CatGenericType::createNullPtr() const
 {
 	return createFromRawPointer(0);
 }
 
 
-const CatGenericType& jitcat::CatGenericType::getWidestBasicType(const CatGenericType& left, const CatGenericType& right)
+const CatGenericType& CatGenericType::getWidestBasicType(const CatGenericType& left, const CatGenericType& right)
 {
 	assert(left.isBasicType() && right.isBasicType());
 	BasicType basicType = getWidestType(left.basicType, right.basicType);
@@ -1968,7 +1977,7 @@ CatGenericType CatGenericType::createFloatType(bool isWritable, bool isConst)
 }
 
 
-CatGenericType jitcat::CatGenericType::createDoubleType(bool isWritable, bool isConst)
+CatGenericType CatGenericType::createDoubleType(bool isWritable, bool isConst)
 {
 	return CatGenericType(BasicType::Double, isWritable, isConst);
 }
@@ -1983,6 +1992,12 @@ CatGenericType CatGenericType::createBoolType(bool isWritable, bool isConst)
 CatGenericType CatGenericType::createStringType(bool isWritable, bool isConst)
 {
 	return stringMemberValuePtrType.copyWithFlags(isWritable, isConst);
+}
+
+
+CatGenericType CatGenericType::createArrayType(const CatGenericType& arrayItemType, bool isWritable, bool isConst)
+{
+	return CatGenericType(&ArrayTypeInfo::createArrayTypeOf(arrayItemType), isWritable, isConst);
 }
 
 
@@ -2100,7 +2115,7 @@ CatGenericType::SpecificType CatGenericType::toSpecificType(const char * value)
 }
 
 
-const CatGenericType& jitcat::CatGenericType::getBasicType(BasicType type)
+const CatGenericType& CatGenericType::getBasicType(BasicType type)
 {
 	switch (type)
 	{

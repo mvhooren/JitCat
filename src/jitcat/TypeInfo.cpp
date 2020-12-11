@@ -147,7 +147,7 @@ void TypeInfo::addDeserializedMember(TypeMemberInfo* memberInfo)
 
 void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 {
-	std::string lowerCaseMemberFunctionName = Tools::toLowerCase(memberFunction->memberFunctionName);
+	std::string lowerCaseMemberFunctionName = Tools::toLowerCase(memberFunction->getMemberFunctionName());
 	memberFunctions.emplace(lowerCaseMemberFunctionName, memberFunction);
 }
 
@@ -367,7 +367,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 	for (auto& iter : memberFunctions)
 	{
 		std::stringstream result;
-		result << iter.second->memberFunctionName;
+		result << iter.second->getMemberFunctionName();
 		result << "(";
 		std::size_t numArguments = iter.second->getNumberOfArguments();
 		for (std::size_t i = 0; i < numArguments; i++)
@@ -379,7 +379,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 			result << iter.second->getArgumentType(i).toString();
 		}
 		result << ")";
-		enumerator->addFunction(iter.second->memberFunctionName, result.str());
+		enumerator->addFunction(iter.second->getMemberFunctionName(), result.str());
 	}
 
 	auto last = members.end();
@@ -428,6 +428,12 @@ bool TypeInfo::isCustomType() const
 
 
 bool TypeInfo::isReflectedType() const
+{
+	return false;
+}
+
+
+bool TypeInfo::isArrayType() const
 {
 	return false;
 }
@@ -608,8 +614,8 @@ void TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
 	}
 	for (auto& memberFunction : deferredMemberFunctions)
 	{
-		if (memberFunction.second->visibility == MemberVisibility::Public
-			|| memberFunction.second->visibility == MemberVisibility::Protected)
+		if (memberFunction.second->getVisibility() == MemberVisibility::Public
+			|| memberFunction.second->getVisibility() == MemberVisibility::Protected)
 		{
 			memberFunctions.emplace(memberFunction.first, memberFunction.second->toDeferredMemberFunction(deferredMember));
 		}

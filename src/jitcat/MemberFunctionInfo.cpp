@@ -21,7 +21,43 @@ jitcat::Reflection::MemberFunctionInfo::MemberFunctionInfo(const std::string& me
 {}
 
 
-CatGenericType MemberFunctionInfo::getArgumentType(std::size_t argumentIndex) const
+const CatGenericType& jitcat::Reflection::MemberFunctionInfo::getReturnType() const
+{
+	return returnType;
+}
+
+
+void MemberFunctionInfo::setReturnType(const CatGenericType& newReturnType)
+{
+	returnType = newReturnType;
+}
+
+
+MemberVisibility MemberFunctionInfo::getVisibility() const
+{
+	return visibility;
+}
+
+
+void MemberFunctionInfo::setVisibility(MemberVisibility newVisibility)
+{
+	visibility = newVisibility;
+}
+
+
+const std::string& MemberFunctionInfo::getMemberFunctionName() const
+{
+	return memberFunctionName;
+}
+
+
+const std::vector<CatGenericType>& MemberFunctionInfo::getArgumentTypes() const
+{
+	return argumentTypes;
+}
+
+
+const CatGenericType& MemberFunctionInfo::getArgumentType(std::size_t argumentIndex) const
 {
 	if (argumentIndex < argumentTypes.size())
 	{
@@ -29,7 +65,7 @@ CatGenericType MemberFunctionInfo::getArgumentType(std::size_t argumentIndex) co
 	}
 	else
 	{
-		return CatGenericType();
+		return CatGenericType::unknownType;
 	}
 }
 
@@ -64,10 +100,28 @@ std::string jitcat::Reflection::MemberFunctionInfo::getMangledName() const
 }
 
 
+void MemberFunctionInfo::addParameterType(const CatGenericType& type)
+{
+	argumentTypes.push_back(type);
+}
+
+
 DeferredMemberFunctionInfo::DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, MemberFunctionInfo* deferredFunction):
-	MemberFunctionInfo(deferredFunction->memberFunctionName, deferredFunction->returnType),
+	MemberFunctionInfo(deferredFunction->getMemberFunctionName(), deferredFunction->getReturnType()),
 	baseMember(baseMember), deferredFunction(deferredFunction)
 {
+}
+
+
+TypeMemberInfo* DeferredMemberFunctionInfo::getBaseMember() const
+{
+	return baseMember;
+}
+
+
+MemberFunctionInfo* DeferredMemberFunctionInfo::getDeferredFunction() const
+{
+	return deferredFunction;
 }
 
 

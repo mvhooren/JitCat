@@ -28,16 +28,15 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatTypeOrIdentifier::CatTypeOrIdentifier(CatTypeNode* type, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme):
+CatTypeOrIdentifier::CatTypeOrIdentifier(CatTypeNode* type, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
 	typeOrIdentifier(TypeOrIdentifier::Type),
 	parentScope(nullptr),
 	typeNode(type),
 	identifier(""),
 	identifierLexeme(identifier),
-	ownershipSemantics(ownershipSemantics)
+	ownershipSemantics(type->getOwnershipSemantics())
 {
-	typeNode->setOwnershipSemantics(ownershipSemantics);
 }
 
 

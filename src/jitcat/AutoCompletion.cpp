@@ -98,9 +98,9 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				{
 					addOptionsFromTypeInfo(currentMemberInfo->catType.getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
-				else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isPointerToReflectableObjectType())
+				else if (currentFunctionInfo != nullptr && currentFunctionInfo->getReturnType().isPointerToReflectableObjectType())
 				{
-					addOptionsFromTypeInfo(currentFunctionInfo->returnType.getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					addOptionsFromTypeInfo(currentFunctionInfo->getReturnType().getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
 				else
 				{
@@ -130,14 +130,14 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					}
 				}
 			}
-			else if (currentFunctionInfo != nullptr && currentFunctionInfo->returnType.isPointerToReflectableObjectType())
+			else if (currentFunctionInfo != nullptr && currentFunctionInfo->getReturnType().isPointerToReflectableObjectType())
 			{
 				MemberFunctionInfo* currentFunction = currentFunctionInfo;
 				std::string inheritedHostClassName;
-				currentFunctionInfo = currentFunctionInfo->returnType.getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
+				currentFunctionInfo = currentFunctionInfo->getReturnType().getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
 				if (currentFunctionInfo == nullptr)
 				{
-					currentMemberInfo = currentFunction->returnType.getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
+					currentMemberInfo = currentFunction->getReturnType().getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
 					if (currentMemberInfo == nullptr)
 					{
 						//failed
@@ -338,8 +338,8 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 				{
 					parenthesesToAdd = "()";
 				}
-				newExpression.replace(prefixOffset, lowercasePrefix.size(), iter.second->memberFunctionName + parenthesesToAdd);
-				results.push_back(AutoCompletionEntry(newExpression, iter.second->memberFunctionName  + parenthesesToAdd, findLocation == 0, prefixOffset + iter.second->memberFunctionName.size() + parenthesesToAdd.size()));
+				newExpression.replace(prefixOffset, lowercasePrefix.size(), iter.second->getMemberFunctionName() + parenthesesToAdd);
+				results.push_back(AutoCompletionEntry(newExpression, iter.second->getMemberFunctionName()  + parenthesesToAdd, findLocation == 0, prefixOffset + iter.second->getMemberFunctionName().size() + parenthesesToAdd.size()));
 			}
 		}
 	}

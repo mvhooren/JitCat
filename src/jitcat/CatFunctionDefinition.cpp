@@ -145,7 +145,7 @@ bool CatFunctionDefinition::defineCheck(CatRuntimeContext* compileTimeContext, s
 		}
 		CatGenericType thisType(compileTimeContext->getScopeType(currentScope->getScopeId()), false, false);
 		memberFunctionInfo = currentScope->getCustomType()->addMemberFunction(name, thisType, this);
-		memberFunctionInfo->visibility = visibility;
+		memberFunctionInfo->setVisibility(visibility);
 	}
 
 	errorManager->compiledWithoutErrors(this);
@@ -320,7 +320,7 @@ void CatFunctionDefinition::setFunctionVisibility(Reflection::MemberVisibility f
 	visibility = functionVisibility;
 	if (memberFunctionInfo != nullptr)
 	{
-		memberFunctionInfo->visibility = visibility;
+		memberFunctionInfo->setVisibility(visibility);
 	}
 }
 

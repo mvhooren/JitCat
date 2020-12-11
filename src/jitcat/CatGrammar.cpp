@@ -186,7 +186,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Int)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Float)}, basicTypeName);
 	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Double)}, basicTypeName);
-	rule(Prod::TypeOrIdentifier, {prod(Prod::OwnershipSemantics), term(id, Identifier::Array), term(one, OneChar::Smaller), prod(Prod::TypeOrIdentifier), term(one, OneChar::Greater)}, arrayTypeName);
+	rule(Prod::TypeOrIdentifier, {prod(Prod::TypeOrIdentifier), prod(Prod::OwnershipSemantics), term(two, TwoChar::ArrayBrackets)}, arrayTypeName);
 
 	rule(Prod::FunctionOrConstructorCall, {prod(Prod::TypeOrIdentifier), prod(Prod::FunctionCallArguments) }, functionCallToken);
 	rule(Prod::FunctionCallArguments, {term(one, OneChar::ParenthesesOpen), term(one, OneChar::ParenthesesClose)}, argumentListToken);
@@ -210,14 +210,14 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 
 const char* CatGrammar::getProductionName(int production) const
 {
-	switch((Prod)production)
+	switch ((Prod)production)
 	{
 		default:				assert(false);	return "unknown";
 		case Prod::Root:						return "root";
-		case Prod::TypeOrIdentifier:			return "TypeOrIdentifier";
-		case Prod::StaticAccessor:				return "StaticAccessor";
-		case Prod::StaticIdentifier:			return "StaticIdentifier";
-		case Prod::StaticFunctionCall:			return "StaticFunctionCall";
+		case Prod::TypeOrIdentifier:			return "type or identifier";
+		case Prod::StaticAccessor:				return "static accessor";
+		case Prod::StaticIdentifier:			return "static identifier";
+		case Prod::StaticFunctionCall:			return "static function call";
 		case Prod::SourceFile:					return "source file";
 		case Prod::Definitions:					return "definitions";
 		case Prod::Definition:					return "definition";
@@ -230,6 +230,7 @@ const char* CatGrammar::getProductionName(int production) const
 		case Prod::FunctionParameterDefinitions:return "function parameter definitions";
 		case Prod::VariableDeclaration:			return "variable declaration";
 		case Prod::VariableDefinition:			return "variable definition";
+		case Prod::VariableInitialization:		return "variable initialization";
 		case Prod::OperatorP2:					return "P2";
 		case Prod::OperatorP3:					return "P3";
 		case Prod::OperatorP4:					return "P4";
@@ -259,6 +260,9 @@ const char* CatGrammar::getProductionName(int production) const
 		case Prod::ObjectMemberAccess:			return "object member access";
 		case Prod::ObjectMemberAccessAction:	return "object member access action";
 		case Prod::Return:						return "return";
+		case Prod::Statement:					return "statement";
+		case Prod::ScopeBlock:					return "scope block";
+		case Prod::ScopeBlockStatements:		return "scope block statements";
 	}
 }
 
@@ -416,9 +420,15 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::variableDefinition(const Parser::ASTN
 
 AST::ASTNode* jitcat::Grammar::CatGrammar::arrayTypeName(const Parser::ASTNodeParser& nodeParser)
 {
-	//Arrays not supported anymore. Need to re-implement.
-	assert(false);
-	return nullptr;
+	CatTypeOrIdentifier* itemType = nodeParser.getASTNodeByIndex<CatTypeOrIdentifier>(0);
+	CatOwnershipSemanticsNode* ownershipSemantics = nodeParser.getASTNodeByIndex<CatOwnershipSemanticsNode>(1);
+
+	std::unique_ptr<CatTypeNode> typeNode(itemType->toType());
+	delete itemType;
+
+	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(std::move(typeNode), ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme()), nodeParser.getStackLexeme());
+	delete ownershipSemantics;
+	return typeOrIdentifier;
 }
 
 
@@ -458,7 +468,7 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::basicTypeName(const Parser::ASTNodePa
 		case Identifier::Void:		type = CatGenericType::voidType;					break;
 		default:					assert(false);										break;
 	}
-	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(type, nodeParser.getStackLexeme()), ownershipSemantics->getOwnershipSemantics(true), nodeParser.getStackLexeme());
+	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(type.toChangedOwnership(ownershipSemantics->getOwnershipSemantics(true)), nodeParser.getStackLexeme()), nodeParser.getStackLexeme());
 	delete ownershipSemantics;
 	return typeOrIdentifier;
 }
@@ -511,8 +521,6 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::scopeBlock(const Parser::ASTNodeParse
 }
 
 
-//For loop statement
-//rule(Prod::ForLoop, {term(id, Identifier::For), term(id, Identifier::Identifier), term(id, Identifier::In), prod(Prod::Range), prod(Prod::ScopeBlock)}, forLoop);
 AST::ASTNode* jitcat::Grammar::CatGrammar::forLoop(const Parser::ASTNodeParser& nodeParser)
 {
 	const ParseToken* token = nodeParser.getTerminalByIndex(1);

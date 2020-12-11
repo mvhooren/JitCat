@@ -10,8 +10,10 @@
 #include "jitcat/BuildIndicesHelper.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/FunctionSignature.h"
+#include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberVisibility.h"
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -19,6 +21,10 @@
 namespace jitcat
 {
 	class CatRuntimeContext;
+	namespace LLVM
+	{
+		struct LLVMCompileTimeContext;
+	}
 }
 
 namespace jitcat::Reflection
@@ -31,29 +37,48 @@ namespace jitcat::Reflection
 		ThisCall,
 		ThisCallThroughStaticFunction,
 		PseudoMemberCall,
+		InlineFunctionGenerator,
 		Unknown
 	};
 
 	struct MemberFunctionCallData
 	{
-		MemberFunctionCallData(): functionAddress(0), functionInfoStructAddress(0), callType(MemberFunctionCallType::Unknown), linkDylib(false) {}
-		MemberFunctionCallData(uintptr_t functionAddress, uintptr_t functionInfoStructAddress, MemberFunctionCallType callType, bool linkDylib): 
+		MemberFunctionCallData(): functionAddress(0), functionInfoStructAddress(0), callType(MemberFunctionCallType::Unknown), inlineFunctionGenerator(nullptr), linkDylib(false) {}
+		MemberFunctionCallData(uintptr_t functionAddress, uintptr_t functionInfoStructAddress, 
+							   const std::function<llvm::Value*(LLVM::LLVMCompileTimeContext* context, const std::vector<llvm::Value*>&)>* inlineFunctionGenerator,
+							   MemberFunctionCallType callType, bool linkDylib): 
 			functionAddress(functionAddress), 
-			functionInfoStructAddress(functionInfoStructAddress), 
+			functionInfoStructAddress(functionInfoStructAddress),
+			inlineFunctionGenerator(inlineFunctionGenerator),
 			callType(callType),
 			linkDylib(linkDylib)
 		{}
-		uintptr_t functionAddress;
-		uintptr_t functionInfoStructAddress;
-		MemberFunctionCallType callType;
-		bool linkDylib;
+		const uintptr_t functionAddress;
+		const uintptr_t functionInfoStructAddress;
+		const std::function<llvm::Value*(LLVM::LLVMCompileTimeContext* context, const std::vector<llvm::Value*>&)>* inlineFunctionGenerator;
+		const MemberFunctionCallType callType;
+		const bool linkDylib;
 	};
 
 
 	struct MemberFunctionInfo: public FunctionSignature
 	{
-		MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType);;
+		MemberFunctionInfo(const std::string& memberFunctionName, const CatGenericType& returnType);
 		virtual ~MemberFunctionInfo() {}
+
+		const CatGenericType& getReturnType() const;
+		void setReturnType(const CatGenericType& newReturnType);
+
+		MemberVisibility getVisibility() const;
+		void setVisibility(MemberVisibility newVisibility);
+
+		const std::string& getMemberFunctionName() const;
+
+		const std::vector<CatGenericType>& getArgumentTypes() const;
+		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
+		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember);
+
+
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
 		inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
@@ -66,11 +91,12 @@ namespace jitcat::Reflection
 		template<typename ArgumentT>
 		inline void addParameterTypeInfo();
 
-		CatGenericType getArgumentType(std::size_t argumentIndex) const;
-		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember);
+		void addParameterType(const CatGenericType& type);
 
-		std::string memberFunctionName;
-		std::string lowerCaseMemberFunctionName;
+
+	protected:
+		const std::string memberFunctionName;
+		const std::string lowerCaseMemberFunctionName;
 		CatGenericType returnType;
 		MemberVisibility visibility;
 
@@ -81,12 +107,17 @@ namespace jitcat::Reflection
 	{
 		DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, MemberFunctionInfo* deferredFunction);
 
+		TypeMemberInfo* getBaseMember() const;
+		MemberFunctionInfo* getDeferredFunction() const;
+
 		virtual ~DeferredMemberFunctionInfo();
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
 		virtual std::size_t getNumberOfArguments() const override final;
 		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
 		inline virtual bool isDeferredFunctionCall() override final;
 		virtual std::string getMangledName() const override final;
+
+	private:
 		TypeMemberInfo* baseMember;
 		MemberFunctionInfo* deferredFunction;
 
@@ -107,6 +138,7 @@ namespace jitcat::Reflection
 		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
 		virtual std::string getMangledName() const override final;
 
+	private:
 		ReturnT (ClassT::*function)(TFunctionArguments...);
 	};
 
@@ -125,6 +157,7 @@ namespace jitcat::Reflection
 		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
 		virtual std::string getMangledName() const override final;
 
+	private:
 		ReturnT (ClassT::*function)(TFunctionArguments...) const;
 	};
 
@@ -143,6 +176,7 @@ namespace jitcat::Reflection
 		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
 		virtual std::string getMangledName() const override final;
 
+	private:
 		ReturnT (*function)(ClassT*, TFunctionArguments...);
 	};
 

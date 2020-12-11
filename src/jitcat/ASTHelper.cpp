@@ -416,7 +416,7 @@ MemberFunctionInfo* ASTHelper::memberFunctionSearch(const std::string& functionN
 				{
 					if (iter->getNumParameters() == (int)argumentTypes.size())
 					{
-						errorStream << "\t" << iter->returnType.toString() << " " << functionName << "(" << ASTHelper::getTypeListString(iter->argumentTypes) << ")\n";
+						errorStream << "\t" << iter->getReturnType().toString() << " " << functionName << "(" << ASTHelper::getTypeListString(iter->getArgumentTypes()) << ")\n";
 					}
 				}
 				errorManager->compiledWithError(errorStream.str(), errorSource, context->getContextName(), lexeme);
@@ -460,7 +460,7 @@ MemberFunctionInfo* ASTHelper::memberFunctionSearch(const std::string& functionN
 			errorStream << "Invalid number of arguments for function " << functionName << ". There are " << foundFunctions.size() << " potential candidates: \n";
 			for (auto& iter : foundFunctions)
 			{
-				errorStream << "\t" << iter->returnType.toString() << " " << functionName << "(" << ASTHelper::getTypeListString(iter->argumentTypes) << ")\n";
+				errorStream << "\t" << iter->getReturnType().toString() << " " << functionName << "(" << ASTHelper::getTypeListString(iter->getArgumentTypes()) << ")\n";
 			}
 			errorManager->compiledWithError(errorStream.str(), errorSource, context->getContextName(), lexeme);
 			return nullptr;

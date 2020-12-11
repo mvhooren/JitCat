@@ -37,7 +37,7 @@ namespace jitcat::AST
 			Type
 		};
 	public:
-		CatTypeOrIdentifier(CatTypeNode* type, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme);
+		CatTypeOrIdentifier(CatTypeNode* type, const Tokenizer::Lexeme& lexeme);
 		CatTypeOrIdentifier(const std::string& identifier, const Tokenizer::Lexeme& identifierLexeme, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme);
 		CatTypeOrIdentifier(CatStaticScope* parentScope, const std::string& identifier, const Tokenizer::Lexeme& identifierLexeme, Reflection::TypeOwnershipSemantics ownershipSemantics, const Tokenizer::Lexeme& lexeme);
 		CatTypeOrIdentifier(const CatTypeOrIdentifier& other);

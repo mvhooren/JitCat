@@ -64,6 +64,8 @@ namespace jitcat
 		CatGenericType(const CatGenericType& other);
 
 		CatGenericType& operator=(const CatGenericType& other);
+
+		//Comparison operators do not compare the writable and constant flags
 		bool operator== (const CatGenericType& other) const;
 		bool operator!= (const CatGenericType& other) const;
 		bool compare(const CatGenericType& other, bool includeOwnershipSemantics, bool includeIndirection) const;
@@ -73,7 +75,7 @@ namespace jitcat
 		bool isBasicType() const;
 		bool isBoolType() const;
 		bool isIntType() const;
-		bool isIntegeralType() const;
+		bool isIntegralType() const;
 		bool isFloatType() const;
 		bool isDoubleType() const;
 
@@ -113,6 +115,8 @@ namespace jitcat
 		CatGenericType toWritable() const;
 		//Copies the type but sets the ownership to Value
 		CatGenericType toValueOwnership() const;
+		//Copies the type but sets the ownership to Value
+		CatGenericType toChangedOwnership(Reflection::TypeOwnershipSemantics ownershipSemantics) const;
 		//Gets a pointer type to this type
 		CatGenericType toPointer(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
@@ -140,9 +144,9 @@ namespace jitcat
 		std::any createAnyOfType(uintptr_t pointer);
 		//This will cast and dereference the pointer to the C++ type associate with this CatGenericType and returns it as a std::any.
 		std::any createAnyOfTypeAt(uintptr_t pointer);
-
+		//Creates a default value of this type and returns is in a std::any.
 		std::any createDefault() const;
-
+		//Returns the size of the type in bytes.
 		std::size_t getTypeSize() const;
 
 		//Converts value of valueType to this type if possible, otherwise returns default value
@@ -159,7 +163,7 @@ namespace jitcat
 		static bool convertToBoolean(std::any value, const CatGenericType& valueType);
 		static Configuration::CatString convertToString(std::any value, const CatGenericType& valueType);
 		static CatGenericType readFromXML(std::ifstream& xmlFile, const std::string& closingTag, std::map<std::string, Reflection::TypeInfo*>& typeInfos);
-		void writeToXML(std::ofstream& xmlFile, const char* linePrefixCharacters);
+		void writeToXML(std::ofstream& xmlFile, const char* linePrefixCharacters) const;
 
 		bool isConstructible() const;
 		bool isCopyConstructible() const;
@@ -198,6 +202,7 @@ namespace jitcat
 		static CatGenericType createDoubleType(bool isWritable, bool isConst);
 		static CatGenericType createBoolType(bool isWritable, bool isConst);
 		static CatGenericType createStringType(bool isWritable, bool isConst);
+		static CatGenericType createArrayType(const CatGenericType& arrayItemType, bool isWritable, bool isConst);
 
 	private:
 		static bool isValidSpecificType(SpecificType type);

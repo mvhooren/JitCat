@@ -93,7 +93,7 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 		runtimeContext->setReturning(false);
 		std::vector<std::any> argumentValues;
 		argumentValues.reserve(arguments->getNumArguments());
-		arguments->executeAllArguments(argumentValues, memberFunctionInfo->argumentTypes, runtimeContext);
+		arguments->executeAllArguments(argumentValues, memberFunctionInfo->getArgumentTypes(), runtimeContext);
 		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
 		runtimeContext->setReturning(wasReturning);
 		return value;
@@ -170,12 +170,12 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 				}
 			}
 
-			if (!arguments->applyIndirectionConversions(memberFunctionInfo->argumentTypes, functionName, compiletimeContext, errorManager, errorContext))
+			if (!arguments->applyIndirectionConversions(memberFunctionInfo->getArgumentTypes(), functionName, compiletimeContext, errorManager, errorContext))
 			{
 				return false;
 			}
 
-			returnType = memberFunctionInfo->returnType;
+			returnType = memberFunctionInfo->getReturnType();
 			return true;
 		}
 	}

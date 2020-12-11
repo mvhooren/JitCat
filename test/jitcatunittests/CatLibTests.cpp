@@ -761,7 +761,7 @@ TEST_CASE("CatLib arrays", "[.][catlib][arrays]" )
 		"{\n"
 		"	float[] floats;\n"
 		"\n"
-		"	TestClass()\n"
+		"	void init()\n"
 		"	{\n"
 		"		floats.add(12.34f);\n"
 		"	}\n"

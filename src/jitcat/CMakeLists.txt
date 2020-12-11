@@ -264,6 +264,8 @@ set(Source_Reflection_Serialisation
 )
 
 set(Source_Reflection_TypeInfo
+	ArrayTypeInfo.cpp
+	${JitCatHeaderPath}/ArrayTypeInfo.h
 	CustomTypeInfo.cpp
 	${JitCatHeaderPath}/CustomTypeInfo.h
 	ReflectedEnumTypeInfo.cpp
@@ -294,6 +296,8 @@ set(Source_Reflection_TypeInfo_Members
 )
 
 set(Source_Reflection_TypeInfo_MemberFunctions
+	ArrayMemberFunctionInfo.cpp
+	${JitCatHeaderPath}/ArrayMemberFunctionInfo.h
 	${JitCatHeaderPath}/BuildIndicesHelper.h
 	CustomTypeMemberFunctionInfo.cpp
 	${JitCatHeaderPath}/CustomTypeMemberFunctionInfo.h

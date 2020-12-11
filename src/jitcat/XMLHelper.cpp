@@ -174,7 +174,7 @@ bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType
 				CatGenericType argumentType = CatGenericType::readFromXML(xmlFile, "Argument", typeInfos);
 				if (argumentType.isValidType())
 				{
-					functionInfo->argumentTypes.push_back(argumentType);
+					functionInfo->addParameterType(argumentType);
 				}
 				else
 				{

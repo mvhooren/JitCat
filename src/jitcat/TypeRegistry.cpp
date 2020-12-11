@@ -299,12 +299,12 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 			for (auto& member : iter.second->getMemberFunctions())
 			{
 				xmlFile << "\t\t\t<MemberFunction>\n";
-				xmlFile << "\t\t\t\t<Name>" << member.second->memberFunctionName << "</Name>\n";		
+				xmlFile << "\t\t\t\t<Name>" << member.second->getMemberFunctionName() << "</Name>\n";		
 				xmlFile << "\t\t\t\t<ReturnType>\n";
-				member.second->returnType.writeToXML(xmlFile, "\t\t\t\t\t");
+				member.second->getReturnType().writeToXML(xmlFile, "\t\t\t\t\t");
 				xmlFile << "\t\t\t\t</ReturnType>\n";
 				xmlFile << "\t\t\t\t<Arguments>\n";
-				for (auto& argument : member.second->argumentTypes)
+				for (auto& argument : member.second->getArgumentTypes())
 				{
 					xmlFile << "\t\t\t\t\t<Argument>\n";
 					argument.writeToXML(xmlFile, "\t\t\t\t\t\t");

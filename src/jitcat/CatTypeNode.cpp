@@ -57,6 +57,28 @@ CatTypeNode::CatTypeNode(CatStaticScope* parentScope, const std::string& name, c
 }
 
 
+CatTypeNode::CatTypeNode(std::unique_ptr<CatTypeNode> arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnershipSemantics, const Tokenizer::Lexeme& lexeme):
+	CatASTNode(lexeme),
+	arrayItemType(std::move(arrayItemType)),
+	ownershipSemantics(arrayOwnershipSemantics),
+	isArrayType(true)
+{
+	assert(this->arrayItemType != nullptr);
+	knownType = this->arrayItemType->isKnownType();
+	if (knownType)
+	{
+		if (arrayOwnershipSemantics != TypeOwnershipSemantics::Value)
+		{
+			type = CatGenericType(CatGenericType::createArrayType(this->arrayItemType->getType(), true, false), arrayOwnershipSemantics, false, true, false);
+		}
+		else
+		{
+			type = CatGenericType::createArrayType(this->arrayItemType->getType(), true, false);
+		}
+	}
+}
+
+
 CatTypeNode::CatTypeNode(const CatTypeNode& other):
 	CatASTNode(other),
 	ownershipSemantics(other.ownershipSemantics),
@@ -110,6 +132,19 @@ std::string CatTypeNode::getTypeName() const
 const CatGenericType& CatTypeNode::getType() const
 {
 	return type;
+}
+
+
+Reflection::TypeOwnershipSemantics CatTypeNode::getOwnershipSemantics() const
+{
+	if (knownType)
+	{
+		return type.getOwnershipSemantics();
+	}
+	else
+	{
+		return ownershipSemantics;
+	}
 }
 
 
@@ -245,8 +280,19 @@ bool CatTypeNode::typeCheck(CatRuntimeContext* compileTimeContext, ExpressionErr
 		}
 		else
 		{
-			errorManager->compiledWithError(Tools::append("Arrays are not supported for now."), errorContext, compileTimeContext->getContextName(), getLexeme());
-			return false;
+			bool itemCheck = arrayItemType->typeCheck(compileTimeContext, errorManager, errorContext);
+			if (itemCheck)
+			{
+				if (ownershipSemantics != TypeOwnershipSemantics::Value)
+				{
+					setType(CatGenericType(CatGenericType::createArrayType(this->arrayItemType->getType(), true, false), ownershipSemantics, false, true, false));
+				}
+				else
+				{
+					setType(CatGenericType::createArrayType(arrayItemType->getType(), true, false));
+				}
+			}
+			return itemCheck;
 		}
 	}
 
