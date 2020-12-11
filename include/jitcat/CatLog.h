@@ -18,6 +18,7 @@ namespace jitcat::Tools
 	class CatLogListener
 	{
 	public:
+		virtual ~CatLogListener() {}
 		virtual void catLog(const char* message) = 0;
 	};
 
