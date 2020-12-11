@@ -55,9 +55,9 @@ namespace jitcat::AST
 		virtual bool defineCheck(CatRuntimeContext* compileTimeContext, std::vector<const CatASTNode*>& loopDetectionStack) override final;
 		virtual bool typeCheck(CatRuntimeContext* compileTimeContext) override final;
 		
-		std::any executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId);
+		std::any executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId) const;
 
-		std::any executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments);
+		std::any executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments) const;
 
 		template<typename... ArgumentsT>
 		std::any executeFunction(CatRuntimeContext* runtimeContext, ArgumentsT... arguments);
@@ -92,7 +92,7 @@ namespace jitcat::AST
 
 
 	private:
-		CatScopeID pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance);
+		CatScopeID pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance) const;
 		void updateMangledName();
 
 	private:

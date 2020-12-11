@@ -1921,8 +1921,8 @@ void LLVMCodeGenerator::link(CustomTypeInfo* customType)
 	}
 	for (auto& iter : customType->getMemberFunctions())
 	{
-		const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->functionDefinition->getMangledFunctionName();
-		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->nativeAddress = (intptr_t)getSymbolAddress(mangledName, *dylib);
+		const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->getFunctionDefinition()->getMangledFunctionName();
+		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->setFunctionNativeAddress((intptr_t)getSymbolAddress(mangledName, *dylib));
 	}
 }
 

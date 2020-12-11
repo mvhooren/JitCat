@@ -225,7 +225,7 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 }
 
 
-std::any CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId)
+std::any CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runtimeContext, CatScopeID packScopeId) const
 {
 	std::any result = scopeBlock->execute(runtimeContext);
 	if (epilogBlock != nullptr)
@@ -238,7 +238,7 @@ std::any CatFunctionDefinition::executeFunctionWithPack(CatRuntimeContext* runti
 }
 
 
-std::any CatFunctionDefinition::executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments)
+std::any CatFunctionDefinition::executeFunctionWithArguments(CatRuntimeContext* runtimeContext, const std::vector<std::any>& arguments) const
 {
 	assert(parameterAssignables.size() == arguments.size());
 	CatScopeID scopeId = InvalidScopeID;
@@ -391,7 +391,7 @@ bool CatFunctionDefinition::getAllControlPathsReturn() const
 }
 
 
-CatScopeID CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance)
+CatScopeID CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance) const
 {
 	return runtimeContext->addScope(parameters->getCustomType(), instance, false);
 }

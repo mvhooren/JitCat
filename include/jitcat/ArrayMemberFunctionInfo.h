@@ -33,7 +33,7 @@ namespace jitcat::Reflection
 
 		ArrayMemberFunctionInfo(Operation operation, ArrayTypeInfo* arrayTypeInfo);
 
-		virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+		virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 
 		virtual MemberFunctionCallData getFunctionAddress() const override final;
 

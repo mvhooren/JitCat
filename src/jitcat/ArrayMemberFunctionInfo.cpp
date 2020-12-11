@@ -59,7 +59,7 @@ ArrayMemberFunctionInfo::ArrayMemberFunctionInfo(Operation operation, ArrayTypeI
 }
 
 
-std::any ArrayMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
+std::any ArrayMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const
 { 
 	if (base.has_value())
 	{

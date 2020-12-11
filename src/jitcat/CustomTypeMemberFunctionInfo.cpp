@@ -36,7 +36,7 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
  {}
 
 
- std::any CustomTypeMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
+ std::any CustomTypeMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const
  {
 	 if (base.has_value())
 	 {
@@ -58,7 +58,19 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
  }
 
 
- std::string jitcat::Reflection::CustomTypeMemberFunctionInfo::getMangledName() const
+ std::string CustomTypeMemberFunctionInfo::getMangledName() const
  {
 	return functionDefinition->getMangledFunctionName();
+ }
+
+
+ const AST::CatFunctionDefinition*CustomTypeMemberFunctionInfo::getFunctionDefinition() const
+ {
+	 return functionDefinition;
+ }
+
+
+ void CustomTypeMemberFunctionInfo::setFunctionNativeAddress(intptr_t functionNativeAddress)
+ {
+	 nativeAddress = functionNativeAddress;
  }

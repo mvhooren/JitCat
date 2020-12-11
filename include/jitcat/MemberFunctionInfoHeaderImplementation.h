@@ -37,7 +37,7 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::any MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
+	inline std::any MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const
 	{
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -88,7 +88,7 @@ namespace jitcat::Reflection
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
 	template<std::size_t ...Is>
-	inline std::any MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
+	inline std::any MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const
 	{
 		ClassT* baseObject = std::any_cast<ClassT*>(base);
 		if (baseObject != nullptr)
@@ -124,7 +124,7 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::any ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
+	inline std::any ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const
 	{
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -209,7 +209,7 @@ namespace jitcat::Reflection
 	}
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::any PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters)
+	inline std::any PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const
 	{
 		//Generate a list of indices (statically) so the parameters list can be indices by the variadic template parameter index.
 		return callWithIndexed(parameters, base, BuildIndices<sizeof...(TFunctionArguments)>{});
@@ -246,7 +246,7 @@ namespace jitcat::Reflection
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
 	template<std::size_t ...Is>
-	inline std::any PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>)
+	inline std::any PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const
 	{
 		ClassT* baseObject = std::any_cast<ClassT*>(base);
 		if (baseObject != nullptr)

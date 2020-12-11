@@ -27,14 +27,19 @@ namespace jitcat::Reflection
 		CustomTypeMemberFunctionInfo(AST::CatFunctionDefinition* functionDefinition, const CatGenericType& thisType);
 		virtual ~CustomTypeMemberFunctionInfo();
 
-		virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+		virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 		
 		virtual MemberFunctionCallData getFunctionAddress() const override final;
 
 		virtual std::string getMangledName() const override final;
 
-		CatGenericType thisType;
-		AST::CatFunctionDefinition* functionDefinition;
+		const AST::CatFunctionDefinition* getFunctionDefinition() const;
+
+		void setFunctionNativeAddress(intptr_t functionNativeAddress);
+
+	private:
+		const CatGenericType thisType;
+		const AST::CatFunctionDefinition* functionDefinition;
 		intptr_t nativeAddress;
 	};
 }

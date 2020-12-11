@@ -76,10 +76,10 @@ namespace jitcat::Reflection
 
 		const std::vector<CatGenericType>& getArgumentTypes() const;
 		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
-		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember);
+		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember) const;
 
 
-		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) { return std::any(); }
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const { return std::any(); }
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
 		inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
 		inline virtual bool isDeferredFunctionCall() {return false;}
@@ -105,13 +105,15 @@ namespace jitcat::Reflection
 
 	struct DeferredMemberFunctionInfo : public MemberFunctionInfo
 	{
-		DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, MemberFunctionInfo* deferredFunction);
+		DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, const MemberFunctionInfo* deferredFunction);
 
-		TypeMemberInfo* getBaseMember() const;
-		MemberFunctionInfo* getDeferredFunction() const;
+		const TypeMemberInfo* getBaseMember() const;
+		TypeMemberInfo* getBaseMember();
+
+		const MemberFunctionInfo* getDeferredFunction() const;
 
 		virtual ~DeferredMemberFunctionInfo();
-		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 		virtual std::size_t getNumberOfArguments() const override final;
 		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
 		inline virtual bool isDeferredFunctionCall() override final;
@@ -119,7 +121,7 @@ namespace jitcat::Reflection
 
 	private:
 		TypeMemberInfo* baseMember;
-		MemberFunctionInfo* deferredFunction;
+		const MemberFunctionInfo* deferredFunction;
 
 	};
 
@@ -128,10 +130,10 @@ namespace jitcat::Reflection
 	struct MemberFunctionInfoWithArgs: public MemberFunctionInfo
 	{
 		inline MemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(ClassT::* function)(TFunctionArguments...));
-		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 
 		template<std::size_t... Is>
-		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>);
+		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const;
 
 		inline virtual std::size_t getNumberOfArguments() const override final;
 		static inline ReturnT staticExecute(ClassT* base, MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
@@ -147,7 +149,7 @@ namespace jitcat::Reflection
 	struct ConstMemberFunctionInfoWithArgs: public MemberFunctionInfo
 	{
 		inline ConstMemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(ClassT::* function)(TFunctionArguments...) const);
-		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 
 		template<std::size_t... Is>
 		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const;
@@ -166,10 +168,10 @@ namespace jitcat::Reflection
 	struct PseudoMemberFunctionInfoWithArgs: public MemberFunctionInfo
 	{
 		inline PseudoMemberFunctionInfoWithArgs(const std::string& memberFunctionName, ReturnT(*function)(ClassT*, TFunctionArguments...));
-		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) override final;
+		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 
 		template<std::size_t... Is>
-		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>);
+		inline std::any callWithIndexed(const std::vector<std::any>& parameters, std::any& base, Indices<Is...>) const;
 
 		virtual inline std::size_t getNumberOfArguments() const override final;
 		static inline ReturnT staticExecute(ClassT* base, PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
