@@ -38,11 +38,11 @@ TypeInfo::~TypeInfo()
 {
 	for (auto& iter : members)
 	{
-		if ((iter.second->catType.isPointerToReflectableObjectType()
-			|| iter.second->catType.isReflectableHandleType())
-			&& (Tools::startsWith(iter.first, "$") || iter.second->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Value))
+		if ((iter.second->getType().isPointerToReflectableObjectType()
+			|| iter.second->getType().isReflectableHandleType())
+			&& (Tools::startsWith(iter.first, "$") || iter.second->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value))
 		{
-			TypeInfo* typeInfo = iter.second->catType.getPointeeType()->getObjectType();
+			TypeInfo* typeInfo = iter.second->getType().getPointeeType()->getObjectType();
 			typeInfo->removeDependentType(this);
 		}
 	}
@@ -140,7 +140,7 @@ bool TypeInfo::removeType(const std::string& typeName)
 
 void TypeInfo::addDeserializedMember(TypeMemberInfo* memberInfo)
 {
-	std::string lowerCaseMemberName = Tools::toLowerCase(memberInfo->memberName);
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberInfo->getMemberName());
 	members.emplace(lowerCaseMemberName,  memberInfo);
 }
 
@@ -175,18 +175,18 @@ const CatGenericType& TypeInfo::getType(const std::vector<std::string>& indirect
 		if (iter != members.end())
 		{
 			TypeMemberInfo* memberInfo = iter->second.get();
-			if (memberInfo->catType.isBasicType())
+			if (memberInfo->getType().isBasicType())
 			{
 				if (offset == indirectionListSize - 1)
 				{
-					return memberInfo->catType;
+					return memberInfo->getType();
 				}
 			}
-			else if (memberInfo->catType.isPointerToReflectableObjectType())
+			else if (memberInfo->getType().isPointerToReflectableObjectType())
 			{
 				if (indirectionListSize > offset + 1)
 				{
-					return memberInfo->catType.getPointeeType()->getObjectType()->getType(indirectionList, offset + 1);
+					return memberInfo->getType().getPointeeType()->getObjectType()->getType(indirectionList, offset + 1);
 				}
 			}
 		}
@@ -385,11 +385,11 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 	auto last = members.end();
 	for (auto iter = members.begin(); iter != last; ++iter)
 	{
-		const CatGenericType& memberType = iter->second->catType;
+		const CatGenericType& memberType = iter->second->getType();
 		if (memberType.isBasicType())
 		{
 			std::string catTypeName = memberType.toString();
-			enumerator->addVariable(iter->second->memberName, catTypeName, iter->second->catType.isWritable(), iter->second->catType.isConst());
+			enumerator->addVariable(iter->second->getMemberName(), catTypeName, iter->second->getType().isWritable(), iter->second->getType().isConst());
 			break;
 		}
 		else if (memberType.isPointerToReflectableObjectType() || memberType.isReflectableHandleType())
@@ -397,7 +397,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 			std::string nestedTypeName = memberType.toString();
 			if (allowEmptyStructs || memberType.getPointeeType()->getObjectType()->getMembers().size() > 0)
 			{
-				enumerator->enterNameSpace(iter->second->memberName, nestedTypeName, NamespaceType::Object);
+				enumerator->enterNameSpace(iter->second->getMemberName(), nestedTypeName, NamespaceType::Object);
 				if (!Tools::isInList(enumerator->loopDetectionTypeStack, nestedTypeName))
 				{
 					enumerator->loopDetectionTypeStack.push_back(nestedTypeName);
@@ -416,7 +416,7 @@ void TypeInfo::enumerateMemberVariables(std::function<void(const CatGenericType&
 {
 	for (auto& iter : membersByOrdinal)
 	{
-		enumerator(iter.second->catType, iter.second->memberName);
+		enumerator(iter.second->getType(), iter.second->getMemberName());
 	}
 }
 
@@ -601,13 +601,13 @@ void TypeInfo::removeDependentType(TypeInfo* otherType)
 
 void TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
 {
-	auto& deferredMembers = deferredMember->catType.getPointeeType()->getObjectType()->getMembers();
-	auto& deferredMemberFunctions = deferredMember->catType.getPointeeType()->getObjectType()->getMemberFunctions();
+	auto& deferredMembers = deferredMember->getType().getPointeeType()->getObjectType()->getMembers();
+	auto& deferredMemberFunctions = deferredMember->getType().getPointeeType()->getObjectType()->getMemberFunctions();
 
 	for (auto& member : deferredMembers)
 	{
-		if (member.second->visibility == MemberVisibility::Public
-			|| member.second->visibility == MemberVisibility::Protected)
+		if (member.second->getMemberVisibility() == MemberVisibility::Public
+			|| member.second->getMemberVisibility() == MemberVisibility::Protected)
 		{
 			members.emplace(member.first, member.second->toDeferredTypeMemberInfo(deferredMember));
 		}
@@ -636,7 +636,7 @@ void TypeInfo::renameMember(const std::string& oldMemberName, const std::string&
 	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end() && !iter->second->isDeferred())
 	{
 		std::unique_ptr<TypeMemberInfo> memberInfo = std::move(iter->second);
-		memberInfo->memberName = newMemberName;
+		memberInfo->setMemberName(newMemberName);
 		members.erase(iter);
 		std::string lowerCaseMemberName = Tools::toLowerCase(newMemberName);
 		members.emplace(lowerCaseMemberName, std::move(memberInfo));

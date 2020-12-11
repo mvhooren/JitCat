@@ -46,3 +46,33 @@ TypeMemberInfo* TypeMemberInfo::toDeferredTypeMemberInfo(TypeMemberInfo* baseMem
 {
 	return new DeferredMemberInfo(baseMember, this);
 }
+
+
+const CatGenericType& TypeMemberInfo::getType() const
+{
+	return catType;
+}
+
+
+const std::string& TypeMemberInfo::getMemberName() const
+{
+	return memberName;
+}
+
+
+void TypeMemberInfo::setMemberName(const std::string& newMemberName)
+{
+	memberName = newMemberName;
+}
+
+
+MemberVisibility TypeMemberInfo::getMemberVisibility() const
+{
+	return visibility;
+}
+
+
+void TypeMemberInfo::setVisibility(MemberVisibility newVisibility)
+{
+	visibility = newVisibility;
+}

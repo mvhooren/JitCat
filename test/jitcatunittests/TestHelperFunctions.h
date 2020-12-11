@@ -62,7 +62,9 @@ inline void setMemberValue(const std::string& memberName, unsigned char* instanc
 	std::any assignable = memberInfo->getAssignableMemberReference(instance);
 	if constexpr (!std::is_class_v<ResultT> || std::is_enum_v<ResultT>)
 	{
-		jitcat::AST::ASTHelper::doAssignment(assignable, jitcat::TypeTraits<ResultT>::getCatValue(value), memberInfo->catType.toPointer(jitcat::Reflection::TypeOwnershipSemantics::Weak, true, false), memberInfo->catType);
+		jitcat::AST::ASTHelper::doAssignment(assignable, jitcat::TypeTraits<ResultT>::getCatValue(value), 
+											 memberInfo->getType().toPointer(jitcat::Reflection::TypeOwnershipSemantics::Weak, true, false), 
+											 memberInfo->getType());
 	}
 	else
 	{

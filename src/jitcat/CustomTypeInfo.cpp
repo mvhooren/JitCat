@@ -543,7 +543,10 @@ void CustomTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targ
 				continue;
 			}
 			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second)->memberOffset;
-			iter->second->catType.moveConstruct(&targetBuffer[memberOffset], iter->second->catType.getTypeSize(), &sourceBuffer[memberOffset], iter->second->catType.getTypeSize());
+			iter->second->getType().moveConstruct(&targetBuffer[memberOffset], 
+												  iter->second->getType().getTypeSize(), 
+												  &sourceBuffer[memberOffset], 
+												  iter->second->getType().getTypeSize());
 		}
 	}
 	if constexpr (Configuration::logJitCatObjectConstructionEvents)
@@ -603,7 +606,7 @@ void CustomTypeInfo::instanceDestructorInPlace(unsigned char* data)
 		else
 		{
 			CustomMemberInfo* customMember = static_cast<CustomMemberInfo*>(iter->second);
-			iter->second->catType.placementDestruct(&data[customMember->memberOffset], customMember->catType.getTypeSize());
+			iter->second->getType().placementDestruct(&data[customMember->memberOffset], customMember->getType().getTypeSize());
 		}
 	}
 	Reflectable::placementDestruct(reinterpret_cast<Reflectable*>(data));
@@ -697,7 +700,8 @@ void CustomTypeInfo::createDataCopy(const unsigned char* sourceData, std::size_t
 				continue;
 			}
 			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second)->memberOffset;
-			iter->second->catType.copyConstruct(&copyData[memberOffset], iter->second->catType.getTypeSize(), &sourceData[memberOffset], iter->second->catType.getTypeSize());
+			iter->second->getType().copyConstruct(&copyData[memberOffset], iter->second->getType().getTypeSize(), 
+												  &sourceData[memberOffset], iter->second->getType().getTypeSize());
 		}
 	}
 	else

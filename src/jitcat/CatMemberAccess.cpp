@@ -112,7 +112,7 @@ bool CatMemberAccess::typeCheck(CatRuntimeContext* compiletimeContext, Expressio
 		memberInfo = baseType.getPointeeType()->getObjectType()->getMemberInfo(Tools::toLowerCase(memberName));
 		if (memberInfo != nullptr)
 		{
-			type = memberInfo->catType;
+			type = memberInfo->getType();
 			if (!type.isPointerType() || type.getOwnershipSemantics() != TypeOwnershipSemantics::Value)
 			{
 				assignableType = type.toPointer();
@@ -155,7 +155,7 @@ bool CatMemberAccess::isConst() const
 {
 	if (memberInfo != nullptr)
 	{
-		return memberInfo->catType.isConst() && base->isConst();
+		return memberInfo->getType().isConst() && base->isConst();
 	}
 	return false;
 }

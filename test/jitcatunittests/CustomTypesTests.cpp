@@ -64,7 +64,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 
 	//The case where the pointer is set to null manually
 	std::any instanceAny = typeInstance.getObjectAsAny();
-	std::any nullAny = customType->getMemberInfo("myNullObject")->catType.createNullPtr();
+	std::any nullAny = customType->getMemberInfo("myNullObject")->getType().createNullPtr();
 	static_cast<CustomTypeObjectMemberInfo*>(customType->getMemberInfo("myNullObject"))->assign(instanceAny, nullAny);
 	//The case where the reflectable handle is set to null through deletion of the observed object.
 	objectUniquePtr.reset(nullptr);

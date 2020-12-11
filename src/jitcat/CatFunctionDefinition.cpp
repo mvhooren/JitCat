@@ -264,9 +264,9 @@ std::any CatFunctionDefinition::executeFunctionWithArguments(CatRuntimeContext* 
 		{
 			const unsigned char* sourceBuffer = nullptr;
 			std::size_t sourceBufferSize = 0;
-			iter.second->catType.toBuffer(arguments[index], sourceBuffer, sourceBufferSize);
+			iter.second->getType().toBuffer(arguments[index], sourceBuffer, sourceBufferSize);
 			assert(sourceBuffer != nullptr);
-			iter.second->catType.copyConstruct(scopeMem + iter.first, iter.second->catType.getTypeSize(), sourceBuffer, sourceBufferSize);
+			iter.second->getType().copyConstruct(scopeMem + iter.first, iter.second->getType().getTypeSize(), sourceBuffer, sourceBufferSize);
 			++index;
 		}
 	}

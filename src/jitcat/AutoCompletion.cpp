@@ -94,9 +94,9 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 						addOptionsFromBuiltIn(results, memberPrefix, expression, completionOffset);
 					}
 				}
-				else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isPointerToReflectableObjectType())
+				else if (currentMemberInfo != nullptr && currentMemberInfo->getType().isPointerToReflectableObjectType())
 				{
-					addOptionsFromTypeInfo(currentMemberInfo->catType.getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					addOptionsFromTypeInfo(currentMemberInfo->getType().getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
 				}
 				else if (currentFunctionInfo != nullptr && currentFunctionInfo->getReturnType().isPointerToReflectableObjectType())
 				{
@@ -116,13 +116,13 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 					currentFunctionInfo = context->findFirstMemberFunction(lowercaseIdentifier, scopeId);
 				}
 			}
-			else if (currentMemberInfo != nullptr && currentMemberInfo->catType.isPointerToReflectableObjectType())
+			else if (currentMemberInfo != nullptr && currentMemberInfo->getType().isPointerToReflectableObjectType())
 			{
 				TypeMemberInfo* currentMember = currentMemberInfo;
-				currentMemberInfo = currentMemberInfo->catType.getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
+				currentMemberInfo = currentMemberInfo->getType().getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
 				if (currentMemberInfo == nullptr)
 				{
-					currentFunctionInfo = currentMember->catType.getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
+					currentFunctionInfo = currentMember->getType().getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
 					if (currentFunctionInfo == nullptr)
 					{
 						//failed
@@ -316,7 +316,7 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 			if (findLocation != iter.first.npos)
 			{
 				std::string newExpression = originalExpression;
-				std::string replacement = iter.second->memberName;
+				std::string replacement = iter.second->getMemberName();
 				int numberOfCharactersToAdd = (int)replacement.size();
 				/*if (expressionTailEnd.size() == 0 && iter.second->catType.isContainerType())
 				{
@@ -324,7 +324,7 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 					replacement += "[";
 				}*/
 				newExpression.replace(prefixOffset, lowercasePrefix.size(), replacement);
-				results.push_back(AutoCompletionEntry(newExpression, iter.second->memberName, findLocation == 0, prefixOffset + numberOfCharactersToAdd));
+				results.push_back(AutoCompletionEntry(newExpression, iter.second->getMemberName(), findLocation == 0, prefixOffset + numberOfCharactersToAdd));
 			}
 		}
 		for (const auto& iter : memberFunctions)

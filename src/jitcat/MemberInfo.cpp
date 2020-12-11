@@ -12,13 +12,13 @@ using namespace jitcat::Reflection;
 
 std::any DeferredMemberInfo::getMemberReference(unsigned char* base)
 {
-	return deferredMember->getMemberReference(reinterpret_cast<unsigned char*>(baseMember->catType.getRawPointer(baseMember->getMemberReference(base))));
+	return deferredMember->getMemberReference(reinterpret_cast<unsigned char*>(baseMember->getType().getRawPointer(baseMember->getMemberReference(base))));
 }
 
 
 std::any DeferredMemberInfo::getAssignableMemberReference(unsigned char* base)
 {
-	return deferredMember->getAssignableMemberReference(reinterpret_cast<unsigned char*>(baseMember->catType.getRawPointer(baseMember->getMemberReference(base))));
+	return deferredMember->getAssignableMemberReference(reinterpret_cast<unsigned char*>(baseMember->getType().getRawPointer(baseMember->getMemberReference(base))));
 }
 
 

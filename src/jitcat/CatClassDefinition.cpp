@@ -516,7 +516,7 @@ bool CatClassDefinition::generateConstructor(CatRuntimeContext* compileTimeConte
 	for (auto& iter : inheritanceDefinitions)
 	{
 		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
-		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->memberName, iter->getLexeme()), nullptr, false));
+		scopeBlock->addStatement(new CatConstruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->getMemberName(), iter->getLexeme()), nullptr, false));
 	}
 	for (auto& iter : variableDefinitions)
 	{
@@ -551,7 +551,7 @@ bool CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContex
 	for (auto& iter : inheritanceDefinitions)
 	{
 		TypeMemberInfo* inheritedMember = iter->getInheritedMember();
-		scopeBlock->addStatement(new CatDestruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->memberName, iter->getLexeme())));
+		scopeBlock->addStatement(new CatDestruct(iter->getLexeme(), std::make_unique<CatIdentifier>(inheritedMember->getMemberName(), iter->getLexeme())));
 	}
 	for (auto& iter : variableDefinitions)
 	{

@@ -103,7 +103,7 @@ bool CatInheritanceDefinition::defineCheck(CatRuntimeContext* compiletimeContext
 	if (currentScope != nullptr)
 	{
 		inheritedMember = currentScope->getCustomType()->addMember(Tools::append("$", inheritedType.toString()), type->getType());
-		inheritedMember->visibility = Reflection::MemberVisibility::Hidden;
+		inheritedMember->setVisibility(Reflection::MemberVisibility::Hidden);
 	}
 	return true;
 }

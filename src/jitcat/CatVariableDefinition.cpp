@@ -113,7 +113,7 @@ bool CatVariableDefinition::defineCheck(CatRuntimeContext* compileTimeContext, s
 	if (memberInfo == nullptr && currentScope != nullptr)
 	{
 		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
-		memberInfo->visibility = visibility;
+		memberInfo->setVisibility(visibility);
 	}
 	return true;
 }
@@ -159,7 +159,7 @@ bool CatVariableDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 	if (memberInfo == nullptr && currentScope != nullptr)
 	{
 		memberInfo = currentScope->getCustomType()->addMember(name, type->getType().toWritable());
-		memberInfo->visibility = visibility;
+		memberInfo->setVisibility(visibility);
 	}
 	return true;
 }
@@ -200,6 +200,6 @@ void CatVariableDefinition::setVariableVisibility(Reflection::MemberVisibility v
 	visibility = variableVisibility;
 	if (memberInfo != nullptr)
 	{
-		memberInfo->visibility = visibility;
+		memberInfo->setVisibility(visibility);
 	}
 }

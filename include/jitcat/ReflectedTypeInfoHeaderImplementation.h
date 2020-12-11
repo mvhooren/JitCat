@@ -35,13 +35,13 @@ namespace jitcat::Reflection
 		TypeMemberInfo* memberInfo = MemberTypeInfoCreator<MemberT>::getMemberInfo(identifier_, member, isConst, isWritable);
 		if (memberInfo != nullptr)
 		{
-			if ((memberInfo->catType.isReflectableHandleType() || memberInfo->catType.isPointerToReflectableObjectType())
-				&& (Tools::startsWith(identifier, "$") || memberInfo->catType.getOwnershipSemantics() == TypeOwnershipSemantics::Value))
+			if ((memberInfo->getType().isReflectableHandleType() || memberInfo->getType().isPointerToReflectableObjectType())
+				&& (Tools::startsWith(identifier, "$") || memberInfo->getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value))
 			{
-				memberInfo->catType.getPointeeType()->getObjectType()->addDependentType(this);
+				memberInfo->getType().getPointeeType()->getObjectType()->addDependentType(this);
 			}
 			TypeInfo::addMember(identifier, memberInfo);
-			if (memberInfo->catType.isPointerToReflectableObjectType() && Tools::startsWith(identifier, "$"))
+			if (memberInfo->getType().isPointerToReflectableObjectType() && Tools::startsWith(identifier, "$"))
 			{
 				addDeferredMembers(memberInfo);
 			}

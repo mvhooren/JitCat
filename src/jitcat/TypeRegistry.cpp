@@ -285,9 +285,9 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 			for (auto& member : iter.second->getMembers())
 			{
 				xmlFile << "\t\t\t<Member>\n";
-				xmlFile << "\t\t\t\t<Name>" << member.second->memberName << "</Name>\n";
+				xmlFile << "\t\t\t\t<Name>" << member.second->getMemberName() << "</Name>\n";
 
-				member.second->catType.writeToXML(xmlFile, "\t\t\t\t");
+				member.second->getType().writeToXML(xmlFile, "\t\t\t\t");
 			
 				xmlFile << "\t\t\t</Member>\n";
 			}

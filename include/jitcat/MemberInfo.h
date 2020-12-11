@@ -32,7 +32,7 @@ namespace jitcat::Reflection
 	struct DeferredMemberInfo: public TypeMemberInfo
 	{
 		DeferredMemberInfo(TypeMemberInfo* baseMember, TypeMemberInfo* deferredMember):
-			TypeMemberInfo(deferredMember->memberName, deferredMember->catType),
+			TypeMemberInfo(deferredMember->getMemberName(), deferredMember->getType()),
 			baseMember(baseMember),
 			deferredMember(deferredMember)
 		{}
@@ -45,6 +45,7 @@ namespace jitcat::Reflection
 		virtual bool isDeferred() const override final { return true; }
 		virtual unsigned long long getOrdinal() const override final;
 
+	private:
 		TypeMemberInfo* baseMember;
 		TypeMemberInfo* deferredMember;
 	};
@@ -64,6 +65,7 @@ namespace jitcat::Reflection
 
 		inline virtual unsigned long long getOrdinal() const override final;
 
+	private:
 		ClassT* BaseT::* memberPointer;
 	};
 
@@ -80,6 +82,7 @@ namespace jitcat::Reflection
 
 		inline virtual unsigned long long getOrdinal() const override final;
 
+	private:
 		ClassT BaseT::* memberPointer;
 	};
 
@@ -96,6 +99,7 @@ namespace jitcat::Reflection
 
 		inline virtual unsigned long long getOrdinal() const override final;
 
+	private:
 		std::unique_ptr<ClassT> BaseT::* memberPointer;
 	};
 
@@ -115,6 +119,7 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual unsigned long long getOrdinal() const override final;
 
+	private:
 		BasicT BaseT::* memberPointer;
 	};
 

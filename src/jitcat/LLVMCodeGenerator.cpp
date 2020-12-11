@@ -1077,13 +1077,13 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 		{
 			for (auto& iter : scopeType->getMembersByOrdinal())
 			{
-				if (Tools::equalsWhileIgnoringCase(iter.second->memberName, nameToDestruct))
+				if (Tools::equalsWhileIgnoringCase(iter.second->getMemberName(), nameToDestruct))
 				{
-					assert(iter.second->catType.compare(assignable->getType(), true, true));
+					assert(iter.second->getType().compare(assignable->getType(), true, true));
 					auto scopeIter = context->scopeValues.find(scopeID);
 					if (scopeIter != context->scopeValues.end())
 					{
-						llvm::Value* localPtr = builder->CreateGEP(scopeIter->second, helper->createConstant((int)iter.first), Tools::append(iter.second->memberName, "_ptr"));
+						llvm::Value* localPtr = builder->CreateGEP(scopeIter->second, helper->createConstant((int)iter.first), Tools::append(iter.second->getMemberName(), "_ptr"));
 						llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
 						llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
 						return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "placementDestructType");					

@@ -36,6 +36,15 @@ namespace jitcat::Reflection
 
 		TypeMemberInfo* toDeferredTypeMemberInfo(TypeMemberInfo* baseMember);
 
+		const CatGenericType& getType() const;
+		
+		const std::string& getMemberName() const;
+		void setMemberName(const std::string& newMemberName);
+
+		MemberVisibility getMemberVisibility() const;
+		void setVisibility(MemberVisibility newVisibility);
+
+	protected:
 		CatGenericType catType;
 		MemberVisibility visibility;
 
