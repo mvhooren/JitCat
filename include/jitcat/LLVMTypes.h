@@ -28,8 +28,8 @@ namespace jitcat::LLVM
 		static llvm::Type* doubleType;
 		static llvm::Type* floatType;
 		static llvm::Type* intType;
+		static llvm::Type* longintType;
 		static llvm::Type* charType;
-		static llvm::Type* ucharType;
 		static llvm::Type* boolType;
 		static llvm::PointerType* pointerType;
 		static llvm::Type* pointerTypeAsType;
@@ -57,8 +57,11 @@ namespace jitcat::LLVM
 		if		constexpr (std::is_same<T, float>::value)			return LLVMTypes::floatType;
 		else if	constexpr (std::is_same<T, double>::value)			return LLVMTypes::doubleType;
 		else if	constexpr (std::is_same<T, char>::value)			return LLVMTypes::charType;
-		else if	constexpr (std::is_same<T, unsigned char>::value)	return LLVMTypes::ucharType;
+		else if	constexpr (std::is_same<T, unsigned char>::value)	return LLVMTypes::charType;
 		else if constexpr (std::is_same<T, int>::value)				return LLVMTypes::intType;
+		else if constexpr (std::is_same<T, unsigned int>::value)	return LLVMTypes::intType;
+		else if constexpr (std::is_same<T, int64_t>::value)			return LLVMTypes::longintType;
+		else if constexpr (std::is_same<T, uint64_t>::value)		return LLVMTypes::longintType;
 		else if constexpr (std::is_same<T, bool>::value)			return LLVMTypes::boolType;
 		else if constexpr (std::is_same<T, void>::value)			return LLVMTypes::voidType;
 		else if constexpr (std::is_pointer<T>::value)				return LLVMTypes::pointerTypeAsType;

@@ -13,14 +13,11 @@ namespace jitcat::Reflection
 		{
 			Array():
 				arrayData(nullptr),
-				size(0),
-				reserved(0)
+				size(0)
 			{}
 			unsigned char* arrayData;
 			//current size in number of items (not bytes)
 			int size;
-			//reserved size in number of items (not bytes)
-			int reserved;
 		};
 	private:
 		ArrayTypeInfo(CatGenericType arrayItemType);
@@ -28,14 +25,13 @@ namespace jitcat::Reflection
 		virtual ~ArrayTypeInfo();
 
 	public:
-		int add(Array* array, const std::any& value);
-		void remove(Array* array, int index);
 		std::any index(Array* array, int index);
 
-		static ArrayTypeInfo& createArrayTypeOf(CatGenericType arrayItemType);
-		static void deleteArrayTypeOfType(CatGenericType arrayItemType);
+		static ArrayTypeInfo& createArrayTypeOf(const CatGenericType& arrayItemType);
+		static void deleteArrayTypeOfType(const CatGenericType& arrayItemType);
 
 		const CatGenericType& getArrayItemType() const;
+		std::size_t getItemSize() const;
 
 		//from TypeInfo:
 		virtual bool isArrayType() const override final;

@@ -215,15 +215,47 @@ bool CatGenericType::isBoolType() const
 }
 
 
+bool CatGenericType::isCharType() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::Char;
+}
+
+
+bool CatGenericType::isUCharType() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::UChar;
+}
+
+
 bool CatGenericType::isIntType() const
 {
 	return specificType == SpecificType::Basic && basicType == BasicType::Int;
 }
 
 
+bool CatGenericType::isUIntType() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::UInt;
+}
+
+
+bool CatGenericType::isInt64Type() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::Int64;
+}
+
+
+bool jitcat::CatGenericType::isUInt64Type() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::UInt64;
+}
+
+
 bool CatGenericType::isIntegralType() const
 {
-	return specificType == SpecificType::Basic && basicType == BasicType::Int;
+	return specificType == SpecificType::Basic 
+		   && (basicType == BasicType::Int
+			   || basicType == BasicType::UInt64);
 }
 
 
@@ -262,7 +294,32 @@ bool CatGenericType::isScalarType() const
 	return specificType == SpecificType::Basic 
 						   && (	  basicType == BasicType::Float 
 							   || basicType == BasicType::Double 
-							   || basicType == BasicType::Int);
+							   || basicType == BasicType::Char
+							   || basicType == BasicType::UChar
+							   || basicType == BasicType::Int
+							   || basicType == BasicType::UInt
+							   || basicType == BasicType::Int64
+							   || basicType == BasicType::UInt64);
+}
+
+
+bool CatGenericType::isSignedType() const
+{
+	return specificType == SpecificType::Basic 
+						   && (	  basicType == BasicType::Float 
+							   || basicType == BasicType::Double 
+							   || basicType == BasicType::Char
+							   || basicType == BasicType::Int
+							   || basicType == BasicType::Int64);
+}
+
+
+bool CatGenericType::isUnsignedType() const
+{
+	return specificType == SpecificType::Basic 
+						   && (  basicType == BasicType::UChar
+							   || basicType == BasicType::UInt
+							   || basicType == BasicType::UInt64);
 }
 
 
@@ -448,6 +505,12 @@ CatGenericType CatGenericType::convertPointerToHandle() const
 {
 	assert(specificType == SpecificType::Pointer);
 	return CatGenericType(SpecificType::ReflectableHandle, basicType, nestedType, ownershipSemantics, pointeeType.get(), writable, constant);
+}
+
+
+CatGenericType jitcat::CatGenericType::toArray() const
+{
+	return createArrayType(*this, true, false);
 }
 
 
@@ -805,7 +868,12 @@ std::any CatGenericType::createAnyOfType(uintptr_t pointer)
 				{
 					switch (pointeeType->basicType)
 					{
+						case BasicType::Char:	return std::any(reinterpret_cast<char*>(pointer));
+						case BasicType::UChar:	return std::any(reinterpret_cast<unsigned char*>(pointer));
 						case BasicType::Int:	return std::any(reinterpret_cast<int*>(pointer));
+						case BasicType::UInt:	return std::any(reinterpret_cast<unsigned int*>(pointer));
+						case BasicType::Int64:	return std::any(reinterpret_cast<int64_t*>(pointer));
+						case BasicType::UInt64:	return std::any(reinterpret_cast<uint64_t*>(pointer));
 						case BasicType::Float:	return std::any(reinterpret_cast<float*>(pointer));
 						case BasicType::Double:	return std::any(reinterpret_cast<double*>(pointer));
 						case BasicType::Bool:	return std::any(reinterpret_cast<bool*>(pointer));
@@ -860,7 +928,12 @@ std::any CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 		{
 			switch (basicType)
 			{
+				case BasicType::Char:	return std::any(*reinterpret_cast<char*>(pointer));
+				case BasicType::UChar:	return std::any(*reinterpret_cast<unsigned char*>(pointer));
 				case BasicType::Int:	return std::any(*reinterpret_cast<int*>(pointer));
+				case BasicType::UInt:	return std::any(*reinterpret_cast<unsigned int*>(pointer));
+				case BasicType::Int64:	return std::any(*reinterpret_cast<int64_t*>(pointer));
+				case BasicType::UInt64:	return std::any(*reinterpret_cast<uint64_t*>(pointer));
 				case BasicType::Float:	return std::any(*reinterpret_cast<float*>(pointer));
 				case BasicType::Double:	return std::any(*reinterpret_cast<double*>(pointer));
 				case BasicType::Bool:	return std::any(*reinterpret_cast<bool*>(pointer));
@@ -880,7 +953,12 @@ std::any CatGenericType::createAnyOfTypeAt(uintptr_t pointer)
 				{
 					switch (pointeeType->basicType)
 					{
+						case BasicType::Char:	return std::any(*reinterpret_cast<char**>(pointer));
+						case BasicType::UChar:	return std::any(*reinterpret_cast<unsigned char**>(pointer));
 						case BasicType::Int:	return std::any(*reinterpret_cast<int**>(pointer));
+						case BasicType::UInt:	return std::any(*reinterpret_cast<unsigned int**>(pointer));
+						case BasicType::Int64:	return std::any(*reinterpret_cast<int64_t**>(pointer));
+						case BasicType::UInt64:	return std::any(*reinterpret_cast<uint64_t**>(pointer));
 						case BasicType::Float:	return std::any(*reinterpret_cast<float**>(pointer));
 						case BasicType::Double:	return std::any(*reinterpret_cast<double**>(pointer));
 						case BasicType::Bool:	return std::any(*reinterpret_cast<bool**>(pointer));
@@ -915,7 +993,12 @@ std::any CatGenericType::createDefault() const
 		{
 			switch (basicType)
 			{
+				case BasicType::Char:	return (char)0;
+				case BasicType::UChar:	return (unsigned char)0;
 				case BasicType::Int:	return 0;
+				case BasicType::UInt:	return (unsigned int)0;
+				case BasicType::Int64:	return (int64_t)0;
+				case BasicType::UInt64:	return (uint64_t)0;
 				case BasicType::Float:	return 0.0f;
 				case BasicType::Double:	return 0.0;
 				case BasicType::Bool:	return false;
@@ -936,7 +1019,12 @@ std::any CatGenericType::createDefault() const
 				{
 					switch (pointeeType->basicType)
 					{
+						case BasicType::Char:	return (char*)nullptr;
+						case BasicType::UChar:	return (unsigned char*)nullptr;
 						case BasicType::Int:	return (int*)nullptr;
+						case BasicType::UInt:	return (unsigned int*)nullptr;
+						case BasicType::Int64:	return (int64_t*)nullptr;
+						case BasicType::UInt64:	return (uint64_t*)nullptr;
 						case BasicType::Float:	return (float*)nullptr;
 						case BasicType::Double:	return (double*)nullptr;
 						case BasicType::Bool:	return (bool*)nullptr;
@@ -988,7 +1076,12 @@ std::size_t CatGenericType::getTypeSize() const
 				case BasicType::Bool:	return sizeof(bool);
 				case BasicType::Float:	return sizeof(float);
 				case BasicType::Double:	return sizeof(double);
+				case BasicType::Char:	return sizeof(char);
+				case BasicType::UChar:	return sizeof(unsigned char);
 				case BasicType::Int:	return sizeof(int);
+				case BasicType::UInt:	return sizeof(unsigned int);
+				case BasicType::Int64:	return sizeof(int64_t);
+				case BasicType::UInt64:	return sizeof(uint64_t);
 				case BasicType::Void:	return 0;
 				default:	assert(false);
 			}
@@ -1023,13 +1116,61 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 	{
 		switch(basicType)
 		{
+			case BasicType::Char:
+			{
+				switch (valueType.basicType)
+				{
+					case BasicType::UChar:	return (char)std::any_cast<unsigned char>(value);
+					case BasicType::Int:	return (char)std::any_cast<int>(value);
+					case BasicType::Int64:	return (char)std::any_cast<int64_t>(value);
+					case BasicType::UInt64:	return (char)std::any_cast<uint64_t>(value);
+					case BasicType::Float:	return (char)std::any_cast<float>(value);
+					case BasicType::Double:	return (char)std::any_cast<double>(value);
+					case BasicType::Bool:	return (char)std::any_cast<bool>(value) ? 1 : 0;
+					default: assert(false);
+				}
+			} break;
+			case BasicType::UChar:
+			{
+				switch (valueType.basicType)
+				{
+					case BasicType::Char:	return (unsigned char)std::any_cast<char>(value);
+					case BasicType::Int:	return (unsigned char)std::any_cast<int>(value);
+					case BasicType::Int64:	return (unsigned char)std::any_cast<int64_t>(value);
+					case BasicType::UInt64:	return (unsigned char)std::any_cast<uint64_t>(value);
+					case BasicType::Float:	return (unsigned char)std::any_cast<float>(value);
+					case BasicType::Double:	return (unsigned char)std::any_cast<double>(value);
+					case BasicType::Bool:	return (unsigned char)std::any_cast<bool>(value) ? 1 : 0;
+					default: assert(false);
+				}
+			} break;
 			case BasicType::Int:
 			{
 				switch (valueType.basicType)
 				{
+					case BasicType::Char:	return (int)std::any_cast<char>(value);
+					case BasicType::UChar:	return (int)std::any_cast<unsigned char>(value);
+					case BasicType::UInt:	return (int)std::any_cast<unsigned int>(value);
+					case BasicType::Int64:	return (int)std::any_cast<int64_t>(value);
+					case BasicType::UInt64:	return (int)std::any_cast<uint64_t>(value);
 					case BasicType::Float:	return (int)std::any_cast<float>(value);
 					case BasicType::Double:	return (int)std::any_cast<double>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1 : 0;
+					default: assert(false);
+				}
+			} break;
+			case BasicType::UInt64:
+			{
+				switch (valueType.basicType)
+				{
+					case BasicType::Char:	return (uint64_t)std::any_cast<char>(value);
+					case BasicType::UChar:	return (uint64_t)std::any_cast<unsigned char>(value);
+					case BasicType::Int:	return (uint64_t)std::any_cast<int>(value);
+					case BasicType::UInt:	return (uint64_t)std::any_cast<unsigned int>(value);
+					case BasicType::Int64:	return (uint64_t)std::any_cast<int64_t>(value);
+					case BasicType::Float:	return (uint64_t)std::any_cast<float>(value);
+					case BasicType::Double:	return (uint64_t)std::any_cast<double>(value);
+					case BasicType::Bool:	return (uint64_t)std::any_cast<bool>(value) ? 1 : 0;
 					default: assert(false);
 				}
 			} break;
@@ -1037,8 +1178,13 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 			{
 				switch (valueType.basicType)
 				{
-					case BasicType::Double:	return (float)std::any_cast<double>(value);
+					case BasicType::Char:	return (float)std::any_cast<char>(value);
+					case BasicType::UChar:	return (float)std::any_cast<unsigned char>(value);
 					case BasicType::Int:	return (float)std::any_cast<int>(value);
+					case BasicType::UInt:	return (float)std::any_cast<unsigned int>(value);
+					case BasicType::Int64:	return (float)std::any_cast<int64_t>(value);
+					case BasicType::UInt64:	return (float)std::any_cast<uint64_t>(value);
+					case BasicType::Double:	return (float)std::any_cast<double>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1.0f : 0.0f;
 					default: assert(false);
 				}
@@ -1047,8 +1193,13 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 			{
 				switch (valueType.basicType)
 				{
-					case BasicType::Float:	return (double)std::any_cast<float>(value);
+					case BasicType::Char:	return (double)std::any_cast<char>(value);
+					case BasicType::UChar:	return (double)std::any_cast<unsigned char>(value);
 					case BasicType::Int:	return (double)std::any_cast<int>(value);
+					case BasicType::UInt:	return (double)std::any_cast<unsigned int>(value);
+					case BasicType::Int64:	return (double)std::any_cast<int64_t>(value);
+					case BasicType::UInt64:	return (double)std::any_cast<uint64_t>(value);
+					case BasicType::Float:	return (double)std::any_cast<float>(value);
 					case BasicType::Bool:	return std::any_cast<bool>(value) ? 1.0 : 0.0;
 					default: assert(false);
 				}
@@ -1057,9 +1208,14 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 			{
 				switch (valueType.basicType)
 				{
+					case BasicType::Char:	return std::any_cast<char>(value) > 0;
+					case BasicType::UChar:	return std::any_cast<unsigned char>(value) > 0;
+					case BasicType::Int:	return std::any_cast<int>(value) > 0;
+					case BasicType::UInt:	return std::any_cast<unsigned int>(value) > 0;
+					case BasicType::Int64:	return std::any_cast<int64_t>(value) > 0;
+					case BasicType::UInt64:	return std::any_cast<uint64_t>(value) > 0;
 					case BasicType::Double:	return std::any_cast<double>(value) > 0.0;
 					case BasicType::Float:	return std::any_cast<float>(value) > 0.0f;
-					case BasicType::Int:		return std::any_cast<int>(value) > 0;
 					default: assert(false);
 				}
 			} break;
@@ -1070,6 +1226,42 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 	{
 		switch (valueType.basicType)
 		{
+			case BasicType::Char:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<char>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::UChar:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<unsigned char>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::Int:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<int>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::UInt:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<unsigned int>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::Int64:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<int64_t>(value);
+				return Configuration::CatString(ss.str());
+			}
+			case BasicType::UInt64:
+			{
+				Configuration::CatStringOStream ss;
+				ss << std::any_cast<uint64_t>(value);
+				return Configuration::CatString(ss.str());
+			}
 			case BasicType::Double:
 			{
 				Configuration::CatStringOStream ss;
@@ -1080,12 +1272,6 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 			{
 				Configuration::CatStringOStream ss;
 				ss << std::any_cast<float>(value);
-				return Configuration::CatString(ss.str());
-			}
-			case BasicType::Int:
-			{
-				Configuration::CatStringOStream ss;
-				ss << std::any_cast<int>(value);
 				return Configuration::CatString(ss.str());
 			}
 			case BasicType::Bool:		
@@ -1099,7 +1285,12 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 	{
 		switch(basicType)
 		{
+			case BasicType::Char:	return (char)Tools::StringConstants<Configuration::CatString>::stringToInt(std::any_cast<Configuration::CatString>(value));
 			case BasicType::Int:	return Tools::StringConstants<Configuration::CatString>::stringToInt(std::any_cast<Configuration::CatString>(value));
+			case BasicType::Int64:	return Tools::StringConstants<Configuration::CatString>::stringToInt64(std::any_cast<Configuration::CatString>(value));
+			case BasicType::UChar:	return (unsigned char)Tools::StringConstants<Configuration::CatString>::stringToUInt64(std::any_cast<Configuration::CatString>(value));
+			case BasicType::UInt:	return (unsigned int)Tools::StringConstants<Configuration::CatString>::stringToUInt64(std::any_cast<Configuration::CatString>(value));
+			case BasicType::UInt64:	return Tools::StringConstants<Configuration::CatString>::stringToUInt64(std::any_cast<Configuration::CatString>(value));
 			case BasicType::Float:	return Tools::StringConstants<Configuration::CatString>::stringToFloat(std::any_cast<Configuration::CatString>(value));
 			case BasicType::Double:	return Tools::StringConstants<Configuration::CatString>::stringToDouble(std::any_cast<Configuration::CatString>(value));
 			case BasicType::Bool:
@@ -1114,7 +1305,12 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 	{
 		switch(basicType)
 		{
+			case BasicType::Char:	return (char)Tools::StringConstants<Configuration::CatString>::stringToInt(*std::any_cast<Configuration::CatString*>(value));
 			case BasicType::Int:	return Tools::StringConstants<Configuration::CatString>::stringToInt(*std::any_cast<Configuration::CatString*>(value));
+			case BasicType::Int64:	return Tools::StringConstants<Configuration::CatString>::stringToInt64(*std::any_cast<Configuration::CatString*>(value));
+			case BasicType::UChar:	return (unsigned char)Tools::StringConstants<Configuration::CatString>::stringToUInt64(*std::any_cast<Configuration::CatString*>(value));
+			case BasicType::UInt:	return (unsigned int)Tools::StringConstants<Configuration::CatString>::stringToUInt64(*std::any_cast<Configuration::CatString*>(value));
+			case BasicType::UInt64:	return Tools::StringConstants<Configuration::CatString>::stringToUInt64(*std::any_cast<Configuration::CatString*>(value));
 			case BasicType::Float:	return Tools::StringConstants<Configuration::CatString>::stringToFloat(*std::any_cast<Configuration::CatString*>(value));
 			case BasicType::Double:	return Tools::StringConstants<Configuration::CatString>::stringToDouble(*std::any_cast<Configuration::CatString*>(value));
 			case BasicType::Bool:
@@ -1155,7 +1351,12 @@ void CatGenericType::printValue(std::any& value)
 		{
 			switch (basicType)
 			{
+				case BasicType::Char:	CatLog::log(std::any_cast<char>(value)); break;
+				case BasicType::UChar:	CatLog::log(std::any_cast<unsigned char>(value)); break;
 				case BasicType::Int:	CatLog::log(std::any_cast<int>(value)); break;
+				case BasicType::UInt:	CatLog::log(std::any_cast<unsigned int>(value)); break;
+				case BasicType::Int64:	CatLog::log(std::any_cast<int64_t>(value)); break;
+				case BasicType::UInt64:	CatLog::log(std::any_cast<uint64_t>(value)); break;
 				case BasicType::Float:	CatLog::log(std::any_cast<float>(value)); break;
 				case BasicType::Double:	CatLog::log(std::any_cast<double>(value)); break;
 				case BasicType::Bool:	CatLog::log(std::any_cast<bool>(value) ? Tools::StringConstants<Configuration::CatString>::trueStr : Tools::StringConstants<Configuration::CatString>::falseStr); break;
@@ -1169,7 +1370,12 @@ void CatGenericType::printValue(std::any& value)
 			nestedType->getTypeCaster()->toBuffer(value, enumPtr, bufferSize);
 			switch (basicType)
 			{
+				case BasicType::Char:	CatLog::log(*reinterpret_cast<const char*>(enumPtr)); break;
+				case BasicType::UChar:	CatLog::log(*reinterpret_cast<const unsigned char*>(enumPtr)); break;
 				case BasicType::Int:	CatLog::log(*reinterpret_cast<const unsigned int*>(enumPtr)); break;
+				case BasicType::UInt:	CatLog::log(*reinterpret_cast<const unsigned int*>(enumPtr)); break;
+				case BasicType::Int64:	CatLog::log(*reinterpret_cast<const uint64_t*>(enumPtr)); break;
+				case BasicType::UInt64:	CatLog::log(*reinterpret_cast<const uint64_t*>(enumPtr)); break;
 				case BasicType::Double:	CatLog::log(*reinterpret_cast<const double*>(enumPtr)); break;
 				case BasicType::Float:	CatLog::log(*reinterpret_cast<const float*>(enumPtr)); break;
 				case BasicType::Bool:	CatLog::log(*reinterpret_cast<const bool*>(enumPtr)); break;
@@ -1210,9 +1416,39 @@ double CatGenericType::convertToDouble(std::any value, const CatGenericType& val
 }
 
 
+char CatGenericType::convertToChar(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<char>(charType.convertToType(value, valueType));
+}
+
+
+unsigned char CatGenericType::convertToUChar(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<unsigned char>(uCharType.convertToType(value, valueType));
+}
+
+
 int CatGenericType::convertToInt(std::any value, const CatGenericType& valueType)
 {
 	return std::any_cast<int>(intType.convertToType(value, valueType));
+}
+
+
+unsigned int CatGenericType::convertToUInt(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<unsigned int>(uIntType.convertToType(value, valueType));
+}
+
+
+int64_t CatGenericType::convertToInt64(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<int64_t>(int64Type.convertToType(value, valueType));
+}
+
+
+uint64_t CatGenericType::convertToUInt64(std::any value, const CatGenericType& valueType)
+{
+	return std::any_cast<uint64_t>(uInt64Type.convertToType(value, valueType));
 }
 
 
@@ -1473,7 +1709,12 @@ std::any CatGenericType::construct() const
 					return std::any();
 				case BasicType::Float:	return 0.0f;
 				case BasicType::Double:	return 0.0;
+				case BasicType::Char:	return (char)0;
+				case BasicType::UChar:	return (unsigned char)0;
 				case BasicType::Int:	return 0;
+				case BasicType::UInt:	return (unsigned int)0;
+				case BasicType::Int64:	return (int64_t)0;
+				case BasicType::UInt64:	return (uint64_t)0;
 				case BasicType::Bool:	return false;
 			} 
 		} return true;
@@ -1534,10 +1775,15 @@ bool CatGenericType::placementConstruct(unsigned char* buffer, std::size_t buffe
 				case BasicType::Void:
 				case BasicType::None:
 					return false;
-				case BasicType::Float:	*reinterpret_cast<float*>(buffer) = 0.0f;	break;
-				case BasicType::Double:	*reinterpret_cast<double*>(buffer) = 0.0f;	break;
-				case BasicType::Int:	*reinterpret_cast<int*>(buffer) = 0;		break;
-				case BasicType::Bool:	*reinterpret_cast<bool*>(buffer) = false;	break;
+				case BasicType::Float:	*reinterpret_cast<float*>(buffer) = 0.0f;		break;
+				case BasicType::Double:	*reinterpret_cast<double*>(buffer) = 0.0f;		break;
+				case BasicType::Char:	*reinterpret_cast<char*>(buffer) = 0;			break;
+				case BasicType::UChar:	*reinterpret_cast<unsigned char*>(buffer) = 0;	break;
+				case BasicType::Int:	*reinterpret_cast<int*>(buffer) = 0;			break;
+				case BasicType::UInt:	*reinterpret_cast<unsigned int*>(buffer) = 0;	break;
+				case BasicType::Int64:	*reinterpret_cast<int64_t*>(buffer) = 0;		break;
+				case BasicType::UInt64:	*reinterpret_cast<uint64_t*>(buffer) = 0;		break;
+				case BasicType::Bool:	*reinterpret_cast<bool*>(buffer) = false;		break;
 			} 
 		} return true;
 		case SpecificType::Pointer:
@@ -1588,10 +1834,15 @@ bool CatGenericType::copyConstruct(unsigned char* targetBuffer, std::size_t targ
 				case BasicType::Void:
 				case BasicType::None:
 					return false;
-				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<const float*>(sourceBuffer);	break;
-				case BasicType::Double:	*reinterpret_cast<double*>(targetBuffer) = *reinterpret_cast<const double*>(sourceBuffer);	break;
-				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<const int*>(sourceBuffer);		break;
-				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<const bool*>(sourceBuffer);		break;
+				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<const float*>(sourceBuffer);				break;
+				case BasicType::Double:	*reinterpret_cast<double*>(targetBuffer) = *reinterpret_cast<const double*>(sourceBuffer);				break;
+				case BasicType::Char:	*reinterpret_cast<char*>(targetBuffer) = *reinterpret_cast<const char*>(sourceBuffer);					break;
+				case BasicType::UChar:	*reinterpret_cast<unsigned char*>(targetBuffer) = *reinterpret_cast<const unsigned char*>(sourceBuffer);break;
+				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<const int*>(sourceBuffer);					break;
+				case BasicType::UInt:	*reinterpret_cast<unsigned int*>(targetBuffer) = *reinterpret_cast<const unsigned int*>(sourceBuffer);	break;
+				case BasicType::Int64:	*reinterpret_cast<int64_t*>(targetBuffer) = *reinterpret_cast<const int64_t*>(sourceBuffer);			break;
+				case BasicType::UInt64:	*reinterpret_cast<uint64_t*>(targetBuffer) = *reinterpret_cast<const uint64_t*>(sourceBuffer);			break;
+				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<const bool*>(sourceBuffer);					break;
 			} 
 		} return true;
 		case SpecificType::Pointer:
@@ -1693,10 +1944,15 @@ bool CatGenericType::moveConstruct(unsigned char* targetBuffer, std::size_t targ
 				case BasicType::Void:
 				case BasicType::None:
 					return false;
-				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<float*>(sourceBuffer);	break;
-				case BasicType::Double:	*reinterpret_cast<double*>(targetBuffer) = *reinterpret_cast<double*>(sourceBuffer);break;
-				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<int*>(sourceBuffer);		break;
-				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<bool*>(sourceBuffer);	break;
+				case BasicType::Float:	*reinterpret_cast<float*>(targetBuffer) = *reinterpret_cast<float*>(sourceBuffer);					break;
+				case BasicType::Double:	*reinterpret_cast<double*>(targetBuffer) = *reinterpret_cast<double*>(sourceBuffer);				break;
+				case BasicType::Char:	*reinterpret_cast<char*>(targetBuffer) = *reinterpret_cast<char*>(sourceBuffer);					break;
+				case BasicType::UChar:	*reinterpret_cast<unsigned char*>(targetBuffer) = *reinterpret_cast<unsigned char*>(sourceBuffer);	break;
+				case BasicType::Int:	*reinterpret_cast<int*>(targetBuffer) = *reinterpret_cast<int*>(sourceBuffer);						break;
+				case BasicType::UInt:	*reinterpret_cast<unsigned int*>(targetBuffer) = *reinterpret_cast<unsigned int*>(sourceBuffer);	break;
+				case BasicType::Int64:	*reinterpret_cast<int64_t*>(targetBuffer) = *reinterpret_cast<int64_t*>(sourceBuffer);				break;
+				case BasicType::UInt64:	*reinterpret_cast<uint64_t*>(targetBuffer) = *reinterpret_cast<uint64_t*>(sourceBuffer);			break;
+				case BasicType::Bool:	*reinterpret_cast<bool*>(targetBuffer) = *reinterpret_cast<bool*>(sourceBuffer);					break;
 			} 
 		} return true;
 		case SpecificType::Pointer:
@@ -1833,10 +2089,15 @@ void CatGenericType::toBuffer(const std::any& value, const unsigned char*& buffe
 				case BasicType::Void:
 				case BasicType::None:
 					assert(false); break;
-				case BasicType::Float:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const float>(&value));	break;
-				case BasicType::Double:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const double>(&value));	break;
-				case BasicType::Int:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const int>(&value));		break;
-				case BasicType::Bool:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const bool>(&value));		break;
+				case BasicType::Float:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const float>(&value));		break;
+				case BasicType::Double:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const double>(&value));		break;
+				case BasicType::Char:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const char>(&value));			break;
+				case BasicType::UChar:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const unsigned char>(&value));break;
+				case BasicType::Int:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const int>(&value));			break;
+				case BasicType::UInt:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const unsigned int>(&value));	break;
+				case BasicType::Int64:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const int64_t>(&value));		break;
+				case BasicType::UInt64:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const uint64_t>(&value));		break;
+				case BasicType::Bool:	buffer = reinterpret_cast<const unsigned char*>(std::any_cast<const bool>(&value));			break;
 			} 
 		} break;
 		case SpecificType::Enum:
@@ -1870,7 +2131,12 @@ const TypeCaster* CatGenericType::getTypeCaster() const
 			switch (basicType)
 			{
 				case BasicType::Bool:	return boolTypeCaster.get();
+				case BasicType::Char:	return charTypeCaster.get();
+				case BasicType::UChar:	return uCharTypeCaster.get();
 				case BasicType::Int:	return intTypeCaster.get();
+				case BasicType::UInt:	return uIntTypeCaster.get();
+				case BasicType::Int64:	return int64TypeCaster.get();
+				case BasicType::UInt64:	return uInt64TypeCaster.get();
 				case BasicType::Float:	return floatTypeCaster.get();
 				case BasicType::Double:	return doubleTypeCaster.get();
 				default: assert(false);
@@ -1969,9 +2235,38 @@ const CatGenericType& CatGenericType::getWidestBasicType(const CatGenericType& l
 }
 
 
+CatGenericType CatGenericType::createCharType(bool isWritable, bool isConst)
+{
+	return CatGenericType(BasicType::Char, isWritable, isConst);
+}
+
+
+CatGenericType CatGenericType::createUCharType(bool isWritable, bool isConst)
+{
+	return CatGenericType(BasicType::UChar, isWritable, isConst);
+}
+
+
 CatGenericType CatGenericType::createIntType(bool isWritable, bool isConst)
 {
 	return CatGenericType(BasicType::Int, isWritable, isConst);
+}
+
+
+CatGenericType CatGenericType::createUIntType(bool isWritable, bool isConst)
+{
+	return CatGenericType(BasicType::UInt, isWritable, isConst);
+}
+
+CatGenericType CatGenericType::createInt64Type(bool isWritable, bool isConst)
+{
+	return CatGenericType(BasicType::Int64, isWritable, isConst);
+}
+
+
+CatGenericType jitcat::CatGenericType::createUInt64Type(bool isWritable, bool isConst)
+{
+	return CatGenericType(BasicType::UInt64, isWritable, isConst);
 }
 
 
@@ -2021,7 +2316,12 @@ const char* CatGenericType::toString(BasicType type)
 {
 	switch (type)
 	{
+		case BasicType::Char:		return "char";
+		case BasicType::UChar:		return "uchar";
 		case BasicType::Int:		return "int";
+		case BasicType::UInt:		return "uint";
+		case BasicType::Int64:		return "int64";
+		case BasicType::UInt64:		return "uint64";
 		case BasicType::Float:		return "float";
 		case BasicType::Double:		return "double";
 		case BasicType::Bool:		return "bool";
@@ -2062,14 +2362,29 @@ CatGenericType::BasicType CatGenericType::getWidestType(BasicType lType, BasicTy
 		case BasicType::Count:
 		case BasicType::Void:
 		case BasicType::None:
+		case BasicType::UChar:
+		case BasicType::Char:	
 		case BasicType::Bool:	return rType;
+		case BasicType::UInt:
 		case BasicType::Int:
 		{
 			switch (rType)
 			{
 				default: return lType;
 				case BasicType::Double:	
+				case BasicType::Int64:
+				case BasicType::UInt64:
 				case BasicType::Float:	return rType;
+			}
+		}
+		case BasicType::Int64:
+		case BasicType::UInt64:
+		{
+			switch (rType)
+			{
+				default: return lType;
+				case BasicType::Float:
+				case BasicType::Double: return rType;
 			}
 		}
 		case BasicType::Float:
@@ -2126,15 +2441,24 @@ const CatGenericType& CatGenericType::getBasicType(BasicType type)
 		case BasicType::Bool:	return boolType;
 		case BasicType::Float:	return floatType;
 		case BasicType::Double:	return doubleType;
+		case BasicType::Char:	return charType;
+		case BasicType::UChar:	return uCharType;
 		case BasicType::Int:	return intType;
+		case BasicType::UInt:	return uIntType;
+		case BasicType::Int64:	return int64Type;
+		case BasicType::UInt64:	return uInt64Type;
 		case BasicType::Void:	return voidType;
 		default: assert(false);	return CatGenericType::unknownType;
 	}
 	
 }
 
-
+const CatGenericType CatGenericType::charType		= CatGenericType(BasicType::Char, true);
+const CatGenericType CatGenericType::uCharType		= CatGenericType(BasicType::UChar, true);
 const CatGenericType CatGenericType::intType		= CatGenericType(BasicType::Int, true);
+const CatGenericType CatGenericType::uIntType		= CatGenericType(BasicType::UInt, true);
+const CatGenericType CatGenericType::int64Type		= CatGenericType(BasicType::Int64, true);
+const CatGenericType CatGenericType::uInt64Type		= CatGenericType(BasicType::UInt64, true);
 const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Float, true);
 const CatGenericType CatGenericType::doubleType		= CatGenericType(BasicType::Double, true);
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool, true);
@@ -2146,7 +2470,12 @@ const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void)
 const std::unique_ptr<TypeInfo, Reflection::TypeInfoDeleter> CatGenericType::nullptrTypeInfo = makeTypeInfo<TypeInfo>("nullptr", 0, std::make_unique<NullptrTypeCaster>());
 const CatGenericType CatGenericType::nullptrType	= CatGenericType(nullptrTypeInfo.get(), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();
+const std::unique_ptr<TypeCaster> CatGenericType::charTypeCaster	= std::make_unique<ObjectTypeCaster<char>>();
+const std::unique_ptr<TypeCaster> CatGenericType::uCharTypeCaster	= std::make_unique<ObjectTypeCaster<unsigned char>>();
 const std::unique_ptr<TypeCaster> CatGenericType::intTypeCaster		= std::make_unique<ObjectTypeCaster<int>>();
+const std::unique_ptr<TypeCaster> CatGenericType::uIntTypeCaster	= std::make_unique<ObjectTypeCaster<unsigned int>>();
+const std::unique_ptr<TypeCaster> CatGenericType::int64TypeCaster	= std::make_unique<ObjectTypeCaster<int64_t>>();
+const std::unique_ptr<TypeCaster> CatGenericType::uInt64TypeCaster	= std::make_unique<ObjectTypeCaster<uint64_t>>();
 const std::unique_ptr<TypeCaster> CatGenericType::floatTypeCaster	= std::make_unique<ObjectTypeCaster<float>>();
 const std::unique_ptr<TypeCaster> CatGenericType::doubleTypeCaster	= std::make_unique<ObjectTypeCaster<double>>();
 const std::unique_ptr<TypeCaster> CatGenericType::boolTypeCaster	= std::make_unique<ObjectTypeCaster<bool>>();

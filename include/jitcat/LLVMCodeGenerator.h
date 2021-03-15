@@ -21,12 +21,10 @@ namespace jitcat
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/CatScopeID.h"
 
-#include <llvm/ExecutionEngine/Orc/Core.h>
-#include <llvm/Support/Error.h>
-#include <llvm/Support/ErrorHandling.h>
 #include <memory>
 #include <set>
 #include <string>
+#include <vector>
 
 
 namespace jitcat::LLVM
@@ -92,6 +90,7 @@ namespace jitcat::LLVM
 		llvm::Value* generateAssign(const AST::CatAssignableExpression* expression, llvm::Value* rValue, LLVMCompileTimeContext* context);
 		llvm::Value* generateAssign(const AST::CatMemberAccess* memberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
 		llvm::Value* generateAssign(const AST::CatStaticMemberAccess* staticMemberAccess, llvm::Value* rValue, LLVMCompileTimeContext* context);
+		llvm::Value* generateAssign(const AST::CatMemberFunctionCall* memberFunction, llvm::Value* rValue, LLVMCompileTimeContext* context);
 
 		llvm::Value* generateFPMath(const char* floatName, float(*floatVariant)(float), const char* doubleName, double(*doubleVariant)(double), 
 								    const AST::CatArgumentList* argumentList, LLVMCompileTimeContext* context);
@@ -101,18 +100,12 @@ namespace jitcat::LLVM
 
 		llvm::Value* getBaseAddress(CatScopeID source, LLVMCompileTimeContext* context);
 
-		llvm::Value* generateMemberFunctionCall(Reflection::MemberFunctionInfo* memberFunction, const AST::CatTypedExpression* base, 
-											    const std::vector<const AST::CatTypedExpression*>& arguments, 
-												LLVMCompileTimeContext* context);
-
-
 		void initContext(LLVMCompileTimeContext* context);
 		void createNewModule(LLVMCompileTimeContext* context);
 		std::string getNextFunctionName(LLVMCompileTimeContext* context);
 		llvm::Function* verifyAndOptimizeFunction(llvm::Function* function);
 
-		llvm::Expected<llvm::JITEvaluatedSymbol> findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const;
-		llvm::JITTargetAddress getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
+		uint64_t getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
 
 		llvm::FunctionType* createFunctionType(bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes);
 		llvm::Function* generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames);

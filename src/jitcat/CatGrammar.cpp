@@ -172,6 +172,7 @@ CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	if (grammarType == CatGrammarType::Full || grammarType == CatGrammarType::Statement)
 	{
 		rule(Prod::OperatorP2, { term(id, Identifier::New), prod(Prod::FunctionOrConstructorCall)}, toOperatorNew);
+		rule(Prod::OperatorP2, { term(id, Identifier::New), prod(Prod::TypeOrIdentifier), term(one, OneChar::BracketOpen), prod(Prod::OperatorP10), term(one, OneChar::BracketClose)}, toOperatorNewArray);
 	}
 	
 	rule(Prod::OwnershipSemantics, {term(one, OneChar::BitwiseAnd)}, ownershipSemantics);
@@ -638,6 +639,17 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::toOperatorNew(const Parser::ASTNodePa
 	CatFunctionOrConstructor* callNode = nodeParser.getASTNodeByIndex<CatFunctionOrConstructor>(0);
 	CatASTNode* operatorNew = callNode->toConstructorCall();
 	delete callNode;
+	return operatorNew;
+}
+
+
+AST::ASTNode* CatGrammar::toOperatorNewArray(const Parser::ASTNodeParser& nodeParser)
+{
+	CatTypeOrIdentifier* typeOrIdentifier = nodeParser.getASTNodeByIndex<CatTypeOrIdentifier>(0);
+	CatTypedExpression* sizeExpresison = nodeParser.getASTNodeByIndex<CatTypedExpression>(1);
+	CatArgumentList* arguments = new CatArgumentList(sizeExpresison->getLexeme(), {sizeExpresison});
+	CatOperatorNew* operatorNew =  new CatOperatorNew(typeOrIdentifier->toType(), arguments, true, nodeParser.getStackLexeme());
+	delete typeOrIdentifier;
 	return operatorNew;
 }
 

@@ -37,6 +37,14 @@ namespace jitcat::Tools
 		{
 			return atoi(string.c_str());
 		}
+		static inline int64_t stringToInt64(const StringT& string)
+		{
+			return atoll(string.c_str());
+		}
+		static inline uint64_t stringToUInt64(const StringT& string)
+		{
+			return _atoi64(string.c_str());
+		}
 		static inline float stringToFloat(const StringT& string)
 		{
 			return (float)atof(string.c_str());
@@ -74,6 +82,20 @@ namespace jitcat::Tools
 		{
 			OStreamT stream(string);
 			int out = 0;
+			out << stream;
+			return out;
+		}
+		static inline int64_t stringToInt64(const StringT& string)
+		{
+			OStreamT stream(string);
+			int64_t out = 0;
+			out << stream;
+			return out;
+		}
+		static inline uint64_t stringToUInt64(const StringT& string)
+		{
+			OStreamT stream(string);
+			uint64_t out = 0;
 			out << stream;
 			return out;
 		}

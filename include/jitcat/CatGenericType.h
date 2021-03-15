@@ -45,7 +45,12 @@ namespace jitcat
 		enum class BasicType
 		{
 			None,
+			Char,
+			UChar,
 			Int,
+			UInt,
+			Int64,
+			UInt64,
 			Float,
 			Double,
 			Bool,
@@ -74,7 +79,12 @@ namespace jitcat
 		bool isValidType() const;
 		bool isBasicType() const;
 		bool isBoolType() const;
+		bool isCharType() const;
+		bool isUCharType() const;
 		bool isIntType() const;
+		bool isUIntType() const;
+		bool isInt64Type() const;
+		bool isUInt64Type() const;
 		bool isIntegralType() const;
 		bool isFloatType() const;
 		bool isDoubleType() const;
@@ -84,6 +94,8 @@ namespace jitcat
 		bool isStringValueType() const;
 
 		bool isScalarType() const;
+		bool isSignedType() const;
+		bool isUnsignedType() const;
 		bool isVoidType() const;
 		bool isEnumType() const;
 		bool isReflectableObjectType() const;
@@ -121,6 +133,7 @@ namespace jitcat
 		CatGenericType toPointer(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
 		CatGenericType convertPointerToHandle() const;
+		CatGenericType toArray() const;
 		//Removes pointers and handles
 		const CatGenericType& removeIndirection() const;
 		const CatGenericType& removeIndirection(int& levelsOfIndirectionRemoved) const;
@@ -159,7 +172,12 @@ namespace jitcat
 
 		static float convertToFloat(std::any value, const CatGenericType& valueType);
 		static double convertToDouble(std::any value, const CatGenericType& valueType);
+		static char convertToChar(std::any value, const CatGenericType& valueType);
+		static unsigned char convertToUChar(std::any value, const CatGenericType& valueType);
 		static int convertToInt(std::any value, const CatGenericType& valueType);
+		static unsigned int convertToUInt(std::any value, const CatGenericType& valueType);
+		static int64_t convertToInt64(std::any value, const CatGenericType& valueType);
+		static uint64_t convertToUInt64(std::any value, const CatGenericType& valueType);
 		static bool convertToBoolean(std::any value, const CatGenericType& valueType);
 		static Configuration::CatString convertToString(std::any value, const CatGenericType& valueType);
 		static CatGenericType readFromXML(std::ifstream& xmlFile, const std::string& closingTag, std::map<std::string, Reflection::TypeInfo*>& typeInfos);
@@ -197,7 +215,12 @@ namespace jitcat
 		std::any createNullPtr() const;
 
 		static const CatGenericType& getWidestBasicType(const CatGenericType& left, const CatGenericType& right);
+		static CatGenericType createCharType(bool isWritable, bool isConst);
+		static CatGenericType createUCharType(bool isWritable, bool isConst);
 		static CatGenericType createIntType(bool isWritable, bool isConst);
+		static CatGenericType createUIntType(bool isWritable, bool isConst);
+		static CatGenericType createInt64Type(bool isWritable, bool isConst);
+		static CatGenericType createUInt64Type(bool isWritable, bool isConst);
 		static CatGenericType createFloatType(bool isWritable, bool isConst);
 		static CatGenericType createDoubleType(bool isWritable, bool isConst);
 		static CatGenericType createBoolType(bool isWritable, bool isConst);
@@ -215,7 +238,12 @@ namespace jitcat
 		static const CatGenericType& getBasicType(BasicType type);
 
 	public:
+		static const CatGenericType charType;
+		static const CatGenericType uCharType;
 		static const CatGenericType intType;
+		static const CatGenericType uIntType;
+		static const CatGenericType int64Type;
+		static const CatGenericType uInt64Type;
 		static const CatGenericType floatType;
 		static const CatGenericType doubleType;
 		static const CatGenericType boolType;
@@ -229,7 +257,12 @@ namespace jitcat
 		static const CatGenericType nullptrType;
 		static const CatGenericType unknownType;
 
+		static const std::unique_ptr<Reflection::TypeCaster> charTypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> uCharTypeCaster;
 		static const std::unique_ptr<Reflection::TypeCaster> intTypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> uIntTypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> int64TypeCaster;
+		static const std::unique_ptr<Reflection::TypeCaster> uInt64TypeCaster;
 		static const std::unique_ptr<Reflection::TypeCaster> floatTypeCaster;
 		static const std::unique_ptr<Reflection::TypeCaster> doubleTypeCaster;
 		static const std::unique_ptr<Reflection::TypeCaster> boolTypeCaster; 

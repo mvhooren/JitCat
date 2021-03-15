@@ -28,7 +28,7 @@ using namespace jitcat::Tools;
 
 
 CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
-	CatTypedExpression(lexeme),
+	CatAssignableExpression(lexeme),
 	memberFunctionInfo(nullptr),
 	functionName(name),
 	lowerCaseFunctionName(Tools::toLowerCase(name)),
@@ -42,7 +42,7 @@ CatMemberFunctionCall::CatMemberFunctionCall(const std::string& name, const Toke
 
 
 CatMemberFunctionCall::CatMemberFunctionCall(const CatMemberFunctionCall& other):
-	CatTypedExpression(other),
+	CatAssignableExpression(other),
 	memberFunctionInfo(nullptr),
 	functionName(other.functionName),
 	lowerCaseFunctionName(other.lowerCaseFunctionName),
@@ -200,6 +200,26 @@ CatStatement* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTim
 	ASTHelper::updatePointerIfChanged(base, base->constCollapse(compileTimeContext, errorManager, errorContext));
 	arguments->constCollapse(compileTimeContext, errorManager, errorContext);
 	return this;
+}
+
+
+bool jitcat::AST::CatMemberFunctionCall::isAssignable() const
+{
+	return returnType.isPointerType() 
+		   && returnType.isWritable() 
+		   && returnType.getPointeeType()->isWritable();
+}
+
+
+const CatGenericType& jitcat::AST::CatMemberFunctionCall::getAssignableType() const
+{
+	return returnType;
+}
+
+
+std::any jitcat::AST::CatMemberFunctionCall::executeAssignable(CatRuntimeContext* runtimeContext)
+{
+	return execute(runtimeContext);
 }
 
 

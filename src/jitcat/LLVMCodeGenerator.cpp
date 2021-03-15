@@ -835,7 +835,12 @@ llvm::Value* LLVMCodeGenerator::generate(const CatAssignmentOperator* assignment
 llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileTimeContext* context)
 {
 	CatGenericType literalType = literal->getType();
-	if		(literalType.isIntType())		return helper->createConstant(std::any_cast<int>(literal->getValue()));
+	if	(literalType.isCharType())			return helper->createConstant(std::any_cast<char>(literal->getValue()));
+	else if	(literalType.isUCharType())		return helper->createConstant(std::any_cast<unsigned char>(literal->getValue()));
+	else if	(literalType.isIntType())		return helper->createConstant(std::any_cast<int>(literal->getValue()));
+	else if	(literalType.isUIntType())		return helper->createConstant(std::any_cast<unsigned int>(literal->getValue()));
+	else if	(literalType.isInt64Type())		return helper->createConstant(std::any_cast<int64_t>(literal->getValue()));
+	else if	(literalType.isUInt64Type())	return helper->createConstant(std::any_cast<uint64_t>(literal->getValue()));
 	else if (literalType.isDoubleType())	return helper->createConstant(std::any_cast<double>(literal->getValue()));
 	else if (literalType.isFloatType())		return helper->createConstant(std::any_cast<float>(literal->getValue()));
 	else if (literalType.isBoolType())		return helper->createConstant(std::any_cast<bool>(literal->getValue()));
@@ -904,9 +909,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatMemberFunctionCall* memberFunc
 	{
 		expressionArguments.push_back(arguments->getArgument(i));
 	}
-	return generateMemberFunctionCall(memberFunctionCall->getMemberFunctionInfo(), memberFunctionCall->getBase(), expressionArguments, context);
-
-
+	return helper->generateMemberFunctionCall(memberFunctionCall->getMemberFunctionInfo(), memberFunctionCall->getBase(), expressionArguments, context);
 }
 
 
@@ -1456,7 +1459,7 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatAssignableExpression* ex
 		if (functionInfo != nullptr)
 		{
 			LLVMPreGeneratedExpression preGenerated(rValue, expression->getType().removeIndirection().toPointer());
-			return generateMemberFunctionCall(functionInfo, expression, {&preGenerated}, context);
+			return helper->generateMemberFunctionCall(functionInfo, expression, {&preGenerated}, context);
 		}
 		assert(false);
 	}
@@ -1464,8 +1467,9 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatAssignableExpression* ex
 	{
 		switch (expression->getNodeType())
 		{
-			case CatASTNodeType::StaticIdentifier:	return generateAssign(static_cast<const CatStaticIdentifier*>(expression), rValue, context);
-			case CatASTNodeType::MemberAccess:		return generateAssign(static_cast<const CatMemberAccess*>(expression), rValue, context);
+			case CatASTNodeType::StaticIdentifier:		return generateAssign(static_cast<const CatStaticIdentifier*>(expression), rValue, context);
+			case CatASTNodeType::MemberAccess:			return generateAssign(static_cast<const CatMemberAccess*>(expression), rValue, context);
+			case CatASTNodeType::MemberFunctionCall:	return generateAssign(static_cast<const CatMemberFunctionCall*>(expression), rValue, context);
 			default:									assert(false);
 		}
 	}
@@ -1495,6 +1499,14 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const AST::CatStaticMemberAccess*
 		assert(false);
 		return LLVMJit::logError("ERROR: Not supported.");
 	}
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::generateAssign(const AST::CatMemberFunctionCall* memberFunction, llvm::Value* rValue, LLVMCompileTimeContext* context)
+{
+	llvm::Value* base = generate(memberFunction, context);
+	helper->writeToPointer(base, rValue);
+	return rValue;
 }
 
 
@@ -1564,154 +1576,6 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 }
 
 
-llvm::Value* LLVMCodeGenerator::generateMemberFunctionCall(MemberFunctionInfo* memberFunction, const CatTypedExpression* base, 
-																		 const std::vector<const CatTypedExpression*>& arguments, 
-																		 LLVMCompileTimeContext* context)
-{
-	const CatGenericType& returnType = memberFunction->getReturnType();
-	llvm::Value* baseObject = generate(base, context);
-	if (memberFunction->isDeferredFunctionCall())
-	{
-		//We must first get the deferred base.
-		DeferredMemberFunctionInfo* deferredFunctionInfo = static_cast<DeferredMemberFunctionInfo*>(memberFunction);
-		baseObject = deferredFunctionInfo->getBaseMember()->generateDereferenceCode(baseObject, context);
-	}
-	//If the member function call returns an object by value, we must allocate the object on the stack.
-	llvm::Value* returnedObjectAllocation = helper->generateFunctionCallReturnValueAllocation(returnType, memberFunction->getMemberFunctionName(), context);
-	
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
-	{
-		MemberFunctionCallData callData = memberFunction->getFunctionAddress();
-		assert(callData.functionAddress != 0 || callData.linkDylib || callData.inlineFunctionGenerator != nullptr);
-		std::vector<llvm::Value*> argumentList;
-		llvm::Value* functionThis = compileContext->helper->convertToPointer(baseObject, memberFunction->getMemberFunctionName() + "_This_Ptr");
-		argumentList.push_back(functionThis);
-		std::vector<llvm::Type*> argumentTypes;
-		argumentTypes.push_back(LLVMTypes::pointerType);
-		if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
-		{
-			//Add an argument that contains a pointer to a MemberFunctionInfo object.
-			llvm::Value* memberFunctionAddressValue = compileContext->helper->createIntPtrConstant(callData.functionInfoStructAddress, "MemberFunctionInfo_IntPtr");
-			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionAddressValue, "MemberFunctionInfo_Ptr");
-			argumentList.push_back(memberFunctionPtrValue);
-			argumentTypes.push_back(LLVMTypes::pointerType);
-		}
-		helper->generateFunctionCallArgumentEvalatuation(arguments, memberFunction->getArgumentTypes(), argumentList, argumentTypes, this, context);
-
-		if (callData.callType != MemberFunctionCallType::InlineFunctionGenerator)
-		{
-			if (!callData.linkDylib)
-			{
-				helper->defineWeakSymbol(callData.functionAddress, memberFunction->getMangledName());
-			}
-			else
-			{
-				//Make sure the dylib that contains the symbol is added to the search order.
-				TypeInfo* typeInfo = base->getType().removeIndirection().getObjectType();
-				if (typeInfo->isCustomType())
-				{
-					llvm::orc::JITDylib* functionLib = static_cast<CustomTypeInfo*>(typeInfo)->getDylib();
-					assert(functionLib != nullptr);
-					if (functionLib != dylib && linkedLibs.find(functionLib) == linkedLibs.end())
-					{
-						dylib->addToSearchOrder(*functionLib);
-						linkedLibs.insert(functionLib);
-					}
-				}
-			}
-		
-			llvm::Type* returnLLVMType = context->helper->toLLVMType(returnType);
-			if (!returnType.isReflectableObjectType())
-			{
-				if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
-				{
-					return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), memberFunction->getMemberFunctionName(), returnedObjectAllocation);
-				}
-				else
-				{
-					llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-					llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, 
-																										   callData.callType == MemberFunctionCallType::ThisCall, 
-																										   memberFunction->getMangledName(), 
-																										   memberFunction->getMemberFunctionName()));
-					if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
-					{
-						call->setCallingConv(llvm::CallingConv::X86_ThisCall);
-					}
-					return static_cast<llvm::Value*>(call);
-				}
-			}
-			else if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
-			{
-				argumentTypes.insert(argumentTypes.begin(), LLVMTypes::pointerType);
-				argumentList.insert(argumentList.begin(), returnedObjectAllocation);
-				return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), 
-														  memberFunction->getMemberFunctionName(), returnedObjectAllocation);
-			}
-			else if (returnType.isReflectableObjectType())
-			{
-				auto sretTypeInsertPoint = argumentTypes.begin();
-				if (!Configuration::sretBeforeThis && callData.callType == MemberFunctionCallType::ThisCall)
-				{
-					sretTypeInsertPoint++;
-				}
-				argumentTypes.insert(sretTypeInsertPoint, LLVMTypes::pointerType);
-
-				llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
-				auto sretInsertPoint = argumentList.begin();
-				if (!Configuration::sretBeforeThis && callData.callType == MemberFunctionCallType::ThisCall)
-				{
-					sretInsertPoint++;
-				}
-				argumentList.insert(sretInsertPoint, returnedObjectAllocation);
-				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, 
-																									   callData.callType == MemberFunctionCallType::ThisCall, 
-																									   memberFunction->getMangledName(), 
-																									   memberFunction->getMemberFunctionName()));
-				if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
-				{
-					call->setCallingConv(llvm::CallingConv::X86_ThisCall);
-				}
-				call->addParamAttr(Configuration::sretBeforeThis ? 0 : 1, llvm::Attribute::AttrKind::StructRet);
-				call->addDereferenceableAttr(Configuration::sretBeforeThis ? 1 : 2, returnType.getTypeSize());
-				return returnedObjectAllocation;
-			}
-			else
-			{
-				return LLVMJit::logError("ERROR: Not yet supported.");
-			}
-		}
-		else
-		{
-			assert(callData.inlineFunctionGenerator != nullptr);
-			return (*callData.inlineFunctionGenerator)(context, argumentList);
-		}
-	};
-
-	llvm::Type* resultType = helper->toLLVMType(returnType);
-	if (returnType.isReflectableObjectType())
-	{
-		resultType = resultType->getPointerTo();
-	}
-	if (returnType.isReflectableObjectType())
-	{
-		auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
-		{
-			assert(returnType.isConstructible());
-			llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(returnType.getObjectType()), Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfo"));
-			llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfoPtr"));
-			helper->createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "placementConstructType");
-			return returnedObjectAllocation;
-		};
-		return helper->createOptionalNullCheckSelect(baseObject, notNullCodeGen, codeGenIfNull, context);
-	}
-	else
-	{
-		return helper->createOptionalNullCheckSelect(baseObject, notNullCodeGen, resultType, context);
-	}
-}
-
-
 void LLVMCodeGenerator::initContext(LLVMCompileTimeContext* context)
 {
 	context->helper = helper.get();
@@ -1769,15 +1633,9 @@ llvm::Function* LLVMCodeGenerator::verifyAndOptimizeFunction(llvm::Function* fun
 }
 
 
-llvm::Expected<llvm::JITEvaluatedSymbol> LLVMCodeGenerator::findSymbol(const std::string& name, llvm::orc::JITDylib& dyLib) const
+uint64_t LLVMCodeGenerator::getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const
 {
-	return executionSession->lookup({&dyLib}, mangler->operator()(name));
-}
-
-
-llvm::JITTargetAddress LLVMCodeGenerator::getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const
-{
-	return llvm::cantFail(findSymbol(name, dyLib)).getAddress();
+	return llvm::cantFail(executionSession->lookup({&dyLib}, mangler->operator()(name))).getAddress();
 }
 
 

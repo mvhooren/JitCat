@@ -748,7 +748,7 @@ TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" )
 
 
 //Expected to fail for now
-TEST_CASE("CatLib arrays", "[.][catlib][arrays]" ) 
+TEST_CASE("CatLib arrays", "[catlib][arrays]" ) 
 {
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
@@ -759,11 +759,11 @@ TEST_CASE("CatLib arrays", "[.][catlib][arrays]" )
 	Tokenizer::Document source(		
 		"class TestClass\n"
 		"{\n"
-		"	float[] floats;\n"
+		"	float[] floats = new float[3];\n"
 		"\n"
 		"	void init()\n"
 		"	{\n"
-		"		floats.add(12.34f);\n"
+		"		floats[0] = 12.34f;\n"
 		"	}\n"
 		"	float getFloat()\n"
 		"	{\n"

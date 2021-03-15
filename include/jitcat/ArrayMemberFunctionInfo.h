@@ -9,10 +9,19 @@
 
 #include "jitcat/CatGenericType.h"
 #include "jitcat/FunctionSignature.h"
+#include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/MemberFunctionInfo.h"
 
+#include <functional>
+#include <memory>
 #include <vector>
 
+
+namespace jitcat::LLVM
+{
+	struct LLVMCompileTimeContext;
+	class LLVMCodeGeneratorHelper;
+}
 
 namespace jitcat::Reflection
 {
@@ -23,10 +32,10 @@ namespace jitcat::Reflection
 	public:
 		enum class Operation
 		{
-			Add,
 			Index,
-			Remove,
-			Size
+			Size,
+			Init,
+			Destroy
 		};
 
 		static const char* toString(Operation operation);
@@ -38,7 +47,18 @@ namespace jitcat::Reflection
 		virtual MemberFunctionCallData getFunctionAddress() const override final;
 
 	private:
+		void createIndexGeneratorFunction();
+		void createSizeGeneratorFunction();
+		void createInitGeneratorFunction();
+		void createDestroyGeneratorFunction();
+
+		llvm::Type* getIndexReturnType(LLVM::LLVMCodeGeneratorHelper* codeGeneratorHelper) const;
+
+	private:
 		Operation operation;
 		ArrayTypeInfo* arrayTypeInfo;
+
+		//A generator function for generating inline LLVM IR for the array member function
+		std::unique_ptr<std::function<llvm::Value*(LLVM::LLVMCompileTimeContext* context, const std::vector<llvm::Value*>&)>> inlineFunctionGenerator;
 	};
 }

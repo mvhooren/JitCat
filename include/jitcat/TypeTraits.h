@@ -271,11 +271,16 @@ namespace jitcat
 	public:
 		static inline const CatGenericType& toGenericType() 
 		{ 
-			if constexpr		(std::is_same_v<float, FundamentalT>)	return CatGenericType::floatType; 
-			else if constexpr	(std::is_same_v<double, FundamentalT>)	return CatGenericType::doubleType; 
-			else if constexpr	(std::is_same_v<int,   FundamentalT>)	return CatGenericType::intType;
-			else if constexpr	(std::is_same_v<bool,  FundamentalT>)	return CatGenericType::boolType;
-			else														static_assert(std::is_same_v<bool,  FundamentalT>, "Fundamental type not yet supported by JitCat.");
+			if constexpr		(std::is_same_v<float,			FundamentalT>)	return CatGenericType::floatType; 
+			else if constexpr	(std::is_same_v<double,			FundamentalT>)	return CatGenericType::doubleType; 
+			else if constexpr	(std::is_same_v<char,			FundamentalT>)	return CatGenericType::charType;
+			else if constexpr	(std::is_same_v<unsigned char,	FundamentalT>)	return CatGenericType::uCharType;
+			else if constexpr	(std::is_same_v<int,			FundamentalT>)	return CatGenericType::intType;
+			else if constexpr	(std::is_same_v<unsigned int,	FundamentalT>)	return CatGenericType::uIntType;
+			else if constexpr	(std::is_same_v<int64_t,		FundamentalT>)	return CatGenericType::int64Type;
+			else if constexpr	(std::is_same_v<uint64_t,		FundamentalT>)	return CatGenericType::uInt64Type;
+			else if constexpr	(std::is_same_v<bool,			FundamentalT>)	return CatGenericType::boolType;
+			else static_assert(std::is_same_v<bool,  FundamentalT>, "Fundamental type not yet supported by JitCat.");
 		}
 
 		static constexpr bool isReflectableType() { return false; }

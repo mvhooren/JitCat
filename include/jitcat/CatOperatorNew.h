@@ -25,7 +25,7 @@ namespace jitcat::AST
 	class CatOperatorNew: public CatTypedExpression
 	{
 	public:
-		CatOperatorNew(CatTypeNode* type, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
+		CatOperatorNew(CatTypeNode* type, CatArgumentList* arguments, bool isArray, const Tokenizer::Lexeme& lexeme);
 		CatOperatorNew(const CatOperatorNew& other);
 
 		virtual CatASTNode* copy() const override final;
@@ -36,9 +36,11 @@ namespace jitcat::AST
 		virtual const CatGenericType& getType() const override final;
 		virtual bool isConst() const override final;
 		virtual CatStatement* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
-
+		
+		CatArgumentList* releaseArguments();
 
 	private:
+		bool isArray;
 		std::unique_ptr<CatTypeNode> type;
 		std::unique_ptr<CatArgumentList> arguments;
 		std::unique_ptr<CatMemberFunctionCall> functionCall;

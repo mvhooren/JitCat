@@ -17,9 +17,12 @@ namespace jitcat
 	}
 	namespace Reflection
 	{
+		class CustomTypeInfo;
 		class StaticFunctionInfo;
+		struct MemberFunctionInfo;
 	}
 }
+#include "jitcat/CatScopeID.h"
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/LLVMTypes.h"
@@ -43,6 +46,14 @@ namespace jitcat::LLVM
 		template<typename ReturnT, typename ... Args>
 		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
 		llvm::Value* createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isThisCall, const std::string& mangledFunctionName, const std::string& shortFunctionName);
+		
+		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
+										   llvm::Type* resultType, LLVMCompileTimeContext* context); 
+		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
+										   llvm::PointerType* resultType, LLVMCompileTimeContext* context); 
+		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
+										   std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context); 
+		
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
 												   llvm::Type* resultType, LLVMCompileTimeContext* context); 
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
@@ -66,9 +77,9 @@ namespace jitcat::LLVM
 		void writeToPointer(llvm::Value* lValue, llvm::Value* rValue);
 
 		llvm::Value* convertType(llvm::Value* valueToConvert, const CatGenericType& fromType, const CatGenericType& toType, LLVMCompileTimeContext* context);
+		llvm::Value* convertType(llvm::Value* valueToConvert, bool valueIsSigned, llvm::Type* toType, bool toIsSigned, LLVMCompileTimeContext* context);
 	private:
-		llvm::Value* convertType(llvm::Value* valueToConvert, llvm::Type* type, LLVMCompileTimeContext* context);
-		llvm::Value* convertToString(llvm::Value* valueToConvert, LLVMCompileTimeContext* context);
+		llvm::Value* convertToString(llvm::Value* valueToConvert, const CatGenericType& fromType, LLVMCompileTimeContext* context);
 	public:
 		llvm::Value* convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
@@ -93,7 +104,12 @@ namespace jitcat::LLVM
 		llvm::Constant* createIntPtrConstant(unsigned long long constant, const std::string& name);
 		llvm::Constant* createCharConstant(char constant);
 		llvm::Constant* createUCharConstant(unsigned char constant);
+		llvm::Constant* createConstant(char constant);
+		llvm::Constant* createConstant(unsigned char constant);
 		llvm::Constant* createConstant(int constant);
+		llvm::Constant* createConstant(unsigned int constant);
+		llvm::Constant* createConstant(int64_t constant);
+		llvm::Constant* createConstant(uint64_t constant);
 		llvm::Constant* createConstant(double constant);
 		llvm::Constant* createConstant(float constant);
 		llvm::Constant* createConstant(bool constant);
@@ -122,6 +138,18 @@ namespace jitcat::LLVM
 												const std::string& mangledFunctionName, 
 												const std::string& shortFunctionName,
 												llvm::Value* returnedObjectAllocation);
+
+		llvm::Value* generateMemberFunctionCall(jitcat::Reflection::MemberFunctionInfo* memberFunction, const jitcat::AST::CatTypedExpression* base, 
+											    const std::vector<const jitcat::AST::CatTypedExpression*>& arguments, 
+												LLVMCompileTimeContext* context);
+
+		//Generates a simple loop
+		void generateLoop(LLVMCompileTimeContext* context,
+						  llvm::Value* iteratorBeginValue,
+						  llvm::Value* iteratorStepValue,
+						  llvm::Value* iteratorEndValue,
+						  const std::function<void (LLVMCompileTimeContext*, llvm::Value*)>& generateLoopBody);
+		
 		
 		void defineWeakSymbol(intptr_t functionAddress, const std::string& mangledFunctionName);
 

@@ -49,7 +49,13 @@ namespace jitcat::LLVM
 		static double stringToDouble(const Configuration::CatString& string);
 		static float stringToFloat(const Configuration::CatString& string);
 		static Configuration::CatString intToString(int number);
+		static Configuration::CatString uIntToString(unsigned int number);
+		static Configuration::CatString int64ToString(int64_t number);
+		static Configuration::CatString uInt64ToString(uint64_t number);
 		static int stringToInt(const Configuration::CatString& string);
+		static unsigned int stringToUInt(const Configuration::CatString& string);
+		static int64_t stringToInt64(const Configuration::CatString& string);
+		static uint64_t stringToUInt64(const Configuration::CatString& string);
 		static Configuration::CatString intToPrettyString(int number);
 		static Configuration::CatString intToFixedLengthString(int number, int stringLength);
 		static float getRandomFloat();
@@ -64,6 +70,8 @@ namespace jitcat::LLVM
 		static void placementCopyConstructType(Reflection::Reflectable* target, Reflection::Reflectable* source,  Reflection::TypeInfo* type);
 		static void placementConstructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);
 		static void placementDestructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);
+		static unsigned char* allocateMemory(std::size_t size);
+		static void freeMemory(unsigned char* memory);
 
 	private:
 		static Configuration::CatString formatRoundString(const Configuration::CatString& string);

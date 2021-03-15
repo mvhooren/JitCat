@@ -18,18 +18,18 @@ using namespace jitcat::LLVM;
 
 
 LLVMJit::LLVMJit():
-	context(new llvm::orc::ThreadSafeContext(std::make_unique<llvm::LLVMContext>())),
+	context(std::make_unique<llvm::orc::ThreadSafeContext>(std::make_unique<llvm::LLVMContext>())),
 	targetMachineBuilder(llvm::cantFail(llvm::orc::JITTargetMachineBuilder::detectHost())),
 	targetMachine(llvm::cantFail(targetMachineBuilder.createTargetMachine())),
-	dataLayout(new llvm::DataLayout(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),
+	dataLayout(std::make_unique<llvm::DataLayout>(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),
 	symbolStringPool(std::make_shared<llvm::orc::SymbolStringPool>())
 {
     //executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
 	LLVMTypes::doubleType = llvm::Type::getDoubleTy(*context->getContext());
 	LLVMTypes::floatType = llvm::Type::getFloatTy(*context->getContext());
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
+	LLVMTypes::longintType = llvm::Type::getInt64Ty(*context->getContext());
 	LLVMTypes::charType = llvm::Type::getInt8Ty(*context->getContext());
-	LLVMTypes::ucharType = llvm::Type::getInt8Ty(*context->getContext());
 	LLVMTypes::boolType = llvm::Type::getInt1Ty(*context->getContext());
 	LLVMTypes::pointerType = llvm::Type::getInt8PtrTy(*context->getContext());
 	LLVMTypes::pointerTypeAsType = static_cast<llvm::Type*>(LLVMTypes::pointerType);

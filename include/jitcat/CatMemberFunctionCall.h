@@ -11,7 +11,7 @@ namespace jitcat::Reflection
 {
 	struct MemberFunctionInfo;
 }
-#include "jitcat/CatTypedExpression.h"
+#include "jitcat/CatAssignableExpression.h"
 #include "jitcat/FunctionSignature.h"
 
 #include <memory>
@@ -21,7 +21,7 @@ namespace jitcat::AST
 	class CatArgumentList;
 
 
-	class CatMemberFunctionCall: public CatTypedExpression, public Reflection::FunctionSignature
+	class CatMemberFunctionCall: public CatAssignableExpression, public Reflection::FunctionSignature
 	{
 	public:
 		CatMemberFunctionCall(const std::string& name, const Tokenizer::Lexeme& nameLexeme, CatTypedExpression* base, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme);
@@ -38,6 +38,11 @@ namespace jitcat::AST
 		virtual bool isConst() const override final;
 		virtual CatStatement* constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext) override final;
 	
+		// Inherited from CatAssignableExpression
+		virtual bool isAssignable() const override final;
+		virtual const CatGenericType& getAssignableType() const override final;
+		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) override final;
+
 		Reflection::MemberFunctionInfo* getMemberFunctionInfo() const;
 		CatTypedExpression* getBase() const;
 		const CatArgumentList* getArguments() const;

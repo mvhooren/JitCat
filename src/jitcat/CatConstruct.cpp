@@ -13,6 +13,7 @@
 #include "jitcat/CatIdentifier.h"
 #include "jitcat/CatLiteral.h"
 #include "jitcat/CatMemberFunctionCall.h"
+#include "jitcat/CatOperatorNew.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ExpressionErrorManager.h"
@@ -44,7 +45,8 @@ CatConstruct::CatConstruct(const CatConstruct& other):
 	CatStatement(other.lexeme),
 	assignable(static_cast<CatAssignableExpression*>(other.assignable->copy())),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
-	isCopyConstructor(false)
+	isCopyConstructor(false),
+	autoDestruct(other.autoDestruct)
 {
 }
 
@@ -102,6 +104,31 @@ bool CatConstruct::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionEr
 		{
 			constructorStatement = std::make_unique<CatMemberFunctionCall>("init", lexeme, assignable.release(), arguments.release(), lexeme);
 			return constructorStatement->typeCheck(compiletimeContext, errorManager, errorContext);
+		}
+		else if (objectTypeInfo->isArrayType())
+		{
+			if (!arguments->typeCheck(compiletimeContext, errorManager, errorContext))
+			{
+				return false;
+			}
+			CatTypedExpression* argument = arguments->releaseArgument(0);
+			assert(argument->getNodeType() == CatASTNodeType::OperatorNew);
+			CatOperatorNew* operatorNew = static_cast<CatOperatorNew*>(argument);
+			CatGenericType newType = operatorNew->getType();
+			bool succeeded= false;
+			if (assignableType.compare(newType, false, false))
+			{
+				arguments.reset(operatorNew->releaseArguments());
+				constructorStatement = std::make_unique<CatMemberFunctionCall>("init", lexeme, assignable.release(), arguments.release(), lexeme);
+				return constructorStatement->typeCheck(compiletimeContext, errorManager, errorContext);
+			}
+			else
+			{
+				errorManager->compiledWithError("Type mismatch.", errorContext, compiletimeContext->getContextName(), lexeme);
+				return false;
+			}
+			delete argument;
+			return succeeded;
 		}
 		else
 		{

@@ -216,5 +216,5 @@ CatASTNode* jitcat::AST::CatTypeOrIdentifier::toFunctionCall(CatArgumentList* ar
 
 CatOperatorNew* jitcat::AST::CatTypeOrIdentifier::toConstructorCall(CatArgumentList* argumentList)
 {
-	return new CatOperatorNew(toType(), argumentList, lexeme);
+	return new CatOperatorNew(toType(), argumentList, false, lexeme);
 }

@@ -1,6 +1,8 @@
 #include "jitcat/ArrayTypeInfo.h"
 #include "jitcat/ArrayMemberFunctionInfo.h"
 #include "jitcat/TypeCaster.h"
+#include "jitcat/LLVMCatIntrinsics.h"
+
 #include <cassert>
 #include <iostream>
 
@@ -13,8 +15,8 @@ ArrayTypeInfo::ArrayTypeInfo(CatGenericType arrayItemType):
 	TypeInfo("array", sizeof(Array), std::make_unique<ObjectTypeCaster<Array>>()),
 	arrayItemType(arrayItemType)
 {
-	memberFunctions.emplace("add", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Add, this));
-	memberFunctions.emplace("remove", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Remove, this));
+	memberFunctions.emplace("__init", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Init, this));
+	memberFunctions.emplace("__destroy", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Destroy, this));
 	memberFunctions.emplace("size", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Size, this));
 	memberFunctions.emplace("[]", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Index, this));
 	arrayItemType.addDependentType(this);
@@ -26,117 +28,13 @@ ArrayTypeInfo::~ArrayTypeInfo()
 }
 
 
-int ArrayTypeInfo::add(Array* array, const std::any& value)
-{
-	if (array == nullptr)
-	{
-		return -1;
-	}
-	const unsigned char* valueBuffer = nullptr;
-	std::size_t valueSize = 0;
-	if (!arrayItemType.isReflectableObjectType())
-	{
-		arrayItemType.toBuffer(value, valueBuffer, valueSize);
-	}
-	else
-	{
-		arrayItemType.toPointer(TypeOwnershipSemantics::Owned, false, false).toBuffer(value, valueBuffer, valueSize);
-		valueSize = arrayItemType.getTypeSize();
-	}
-	assert(valueSize == arrayItemType.getTypeSize());
-	if (array->size >= array->reserved)
-	{
-		//We need to resize the array, double the size each time
-		int newReserved = array->reserved * 2;
-		if (newReserved == 0)	newReserved = 1;
-		unsigned char* newArrayBuffer = new unsigned char[newReserved * valueSize];
-		if constexpr (Configuration::logJitCatObjectConstructionEvents)
-		{
-			std::cout << "(ArrayManipulator::add) Allocated buffer of size " << std::dec << newReserved * valueSize << ": " << std::hex << reinterpret_cast<uintptr_t>(newArrayBuffer) << "\n";
-		}
-		if (array->size > 0)
-		{
-			if (arrayItemType.isTriviallyCopyable())
-			{
-				memcpy(newArrayBuffer, array->arrayData, array->size * valueSize);
-			}
-			else
-			{
-				assert(arrayItemType.isMoveConstructible());
-				for (int i = 0; i < array->size; i++)
-				{
-					arrayItemType.moveConstruct(&newArrayBuffer[i * valueSize], valueSize, &array->arrayData[i * valueSize], valueSize);
-				}
-			}
-		}
-		delete[] array->arrayData;
-		if constexpr (Configuration::logJitCatObjectConstructionEvents)
-		{
-			std::cout << "(ArrayManipulator::add) Deallocated buffer of size " << std::dec << array->reserved * valueSize << ": " << std::hex << reinterpret_cast<uintptr_t>(array->arrayData) << "\n";
-		}
-		array->arrayData = newArrayBuffer;
-		array->reserved = newReserved;
-	}
-	unsigned char* targetLocation = &array->arrayData[valueSize * array->size];
-	array->size++;
-	if (arrayItemType.isReflectableObjectType())
-	{
-		assert(arrayItemType.isMoveConstructible());
-		arrayItemType.moveConstruct(targetLocation, valueSize, *reinterpret_cast<unsigned char**>(const_cast<unsigned char*>(valueBuffer)), valueSize);
-	}
-	else if (arrayItemType.isPointerType() && arrayItemType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
-	{
-		assert(arrayItemType.isMoveConstructible());
-		arrayItemType.moveConstruct(targetLocation, valueSize, const_cast<unsigned char*>(valueBuffer), valueSize);
-	}
-	else
-	{
-		assert(arrayItemType.isCopyConstructible());
-		arrayItemType.copyConstruct(targetLocation, valueSize, valueBuffer, valueSize);
-	}
-	return array->size - 1;
-}
-
-
-void ArrayTypeInfo::remove(Array* array, int index)
-{
-	if (array == nullptr)
-	{
-		return;
-	}
-	std::size_t valueSize = arrayItemType.getTypeSize();
-	if (index >= array->size || index < 0)
-	{
-		return;
-	}
-	arrayItemType.placementDestruct(&array->arrayData[index * valueSize], valueSize);
-	if (index + 1 != array->size)
-	{
-		//We need to shift elements that came after index
-		if (arrayItemType.isTriviallyCopyable())
-		{
-			memmove(&array->arrayData[index * valueSize], &array->arrayData[index + 1 * valueSize], (array->size - index - 1) * valueSize);
-		}
-		else
-		{
-			assert(arrayItemType.isMoveConstructible());
-			for (int i = index + 1; i < array->size; i++)
-			{
-				arrayItemType.moveConstruct(&array->arrayData[(i - 1) * valueSize], valueSize, &array->arrayData[i * valueSize], valueSize);
-			}			
-		}
-	}
-	array->size--;
-}
-
-
 std::any ArrayTypeInfo::index(Array* array, int index)
 {
 	if (array != nullptr && index >= 0 && index < array->size)
 	{
 		std::size_t itemSize = arrayItemType.getTypeSize();
 		uintptr_t itemAddress = reinterpret_cast<uintptr_t>(array->arrayData + index * itemSize);
-		return arrayItemType.createAnyOfType(itemAddress);
+		return arrayItemType.toPointer().createAnyOfType(itemAddress);
 	}
 	else
 	{
@@ -175,13 +73,12 @@ void ArrayTypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferS
 				arrayItemType.placementDestruct(&array->arrayData[typeSize * i], typeSize);
 			}
 		}
-		delete[] array->arrayData;
+		LLVM::LLVMCatIntrinsics::freeMemory(array->arrayData);
 		if constexpr (Configuration::logJitCatObjectConstructionEvents)
 		{
-			std::cout << "(ArrayManipulator::placementDestruct) deallocated buffer of size " << std::dec << array->reserved * typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(array->arrayData) << "\n";
+			std::cout << "(ArrayTypeInfo::placementDestruct) deallocated buffer of size " << std::dec << array->size * typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(array->arrayData) << "\n";
 		}
 		array->arrayData = nullptr;
-		array->reserved = 0;
 		array->size = 0;
 	}
 }
@@ -200,12 +97,11 @@ void ArrayTypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targe
 	assert(target->arrayData == nullptr);
 	std::size_t valueSize = arrayItemType.getTypeSize();
 	target->size = source->size;
-	target->reserved = source->reserved;
-	target->arrayData = new unsigned char[target->reserved * valueSize];
+	target->arrayData = new unsigned char[target->size * valueSize];
 
 	if constexpr (Configuration::logJitCatObjectConstructionEvents)
 	{
-		std::cout << "(ArrayManipulator::copyConstruct) Allocated buffer of size " << std::dec << target->reserved * valueSize << ": " << std::hex << reinterpret_cast<uintptr_t>(target->arrayData) << "\n";
+		std::cout << "(ArrayManipulator::copyConstruct) Allocated buffer of size " << std::dec << target->size * valueSize << ": " << std::hex << reinterpret_cast<uintptr_t>(target->arrayData) << "\n";
 	}
 
 	if (arrayItemType.isTriviallyCopyable())
@@ -234,10 +130,8 @@ void ArrayTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targe
 
 	assert(target->arrayData == nullptr);
 	target->size = source->size;
-	target->reserved = source->reserved;
 	target->arrayData = source->arrayData;
 	source->size = 0;
-	source->reserved = 0;
 	source->arrayData = nullptr;
 }
 
@@ -272,7 +166,7 @@ bool ArrayTypeInfo::getAllowMoveConstruction() const
 }
 
 
-ArrayTypeInfo& ArrayTypeInfo::createArrayTypeOf(CatGenericType arrayItemType)
+ArrayTypeInfo& ArrayTypeInfo::createArrayTypeOf(const CatGenericType& arrayItemType)
 {
 	for (auto& iter : arrayTypes)
 	{
@@ -287,7 +181,7 @@ ArrayTypeInfo& ArrayTypeInfo::createArrayTypeOf(CatGenericType arrayItemType)
 }
 
 
-void ArrayTypeInfo::deleteArrayTypeOfType(CatGenericType arrayItemType)
+void ArrayTypeInfo::deleteArrayTypeOfType(const CatGenericType& arrayItemType)
 {
 	for (int i = 0; i < arrayTypes.size(); i++)
 	{
@@ -304,6 +198,12 @@ void ArrayTypeInfo::deleteArrayTypeOfType(CatGenericType arrayItemType)
 const CatGenericType& ArrayTypeInfo::getArrayItemType() const
 {
 	return arrayItemType;
+}
+
+
+std::size_t ArrayTypeInfo::getItemSize() const
+{
+	return arrayItemType.getTypeSize();
 }
 
 

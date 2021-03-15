@@ -24,8 +24,9 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tools;
 
 
-CatOperatorNew::CatOperatorNew(CatTypeNode* type, CatArgumentList* arguments, const Tokenizer::Lexeme& lexeme):
+CatOperatorNew::CatOperatorNew(CatTypeNode* type, CatArgumentList* arguments, bool isArray, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
+	isArray(isArray),
 	type(type),
 	arguments(arguments),
 	newType(CatGenericType::unknownType)
@@ -35,6 +36,7 @@ CatOperatorNew::CatOperatorNew(CatTypeNode* type, CatArgumentList* arguments, co
 
 jitcat::AST::CatOperatorNew::CatOperatorNew(const CatOperatorNew& other):
 	CatTypedExpression(other),
+	isArray(other.isArray),
 	type(static_cast<CatTypeNode*>(other.type->copy())),
 	arguments(static_cast<CatArgumentList*>(other.arguments->copy())),
 	newType(CatGenericType::unknownType)
@@ -80,7 +82,11 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 	{
 		return false;
 	}
-	newType = type->getType().toPointer(TypeOwnershipSemantics::Value);
+	if (isArray)
+	{
+		newType = type->getType().toArray();
+	}
+	newType = newType.toPointer(TypeOwnershipSemantics::Value);
 
 	if (!newType.isPointerToReflectableObjectType())
 	{
@@ -92,7 +98,8 @@ bool CatOperatorNew::typeCheck(CatRuntimeContext* compiletimeContext, Expression
 		errorManager->compiledWithError(Tools::append("Construction of ", newType.toString(), " is not allowed."), errorContext, compiletimeContext->getContextName(), getLexeme());
 		return false;
 	}
-	else if (!newType.getPointeeType()->getObjectType()->isCustomType())
+	else if (!newType.getPointeeType()->getObjectType()->isCustomType()
+			 && !newType.getPointeeType()->getObjectType()->isArrayType())
 	{
 		functionCall = nullptr;
 		return true;
@@ -134,4 +141,10 @@ CatStatement* CatOperatorNew::constCollapse(CatRuntimeContext* compileTimeContex
 {
 	functionCall->constCollapse(compileTimeContext, errorManager, errorContext);
 	return this;
+}
+
+
+CatArgumentList* jitcat::AST::CatOperatorNew::releaseArguments()
+{
+	return arguments.release();
 }
