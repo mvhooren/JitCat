@@ -191,7 +191,7 @@ namespace jitcat::Reflection
 			}
 			else
 			{
-				std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createEnumTypeInfo(typeName, TypeTraits<typename std::underlying_type_t<ReflectableT>>::toGenericType(), typeSize, std::move(typeCaster));
+				std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createEnumTypeInfo(typeName, TypeTraits<typename UnderlyingType<ReflectableT>::type>::toGenericType(), typeSize, std::move(typeCaster));
 				types[lowerTypeName] = typeInfo.get();
 				jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
 				ownedTypes.emplace_back(std::move(typeInfo));

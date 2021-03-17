@@ -59,6 +59,21 @@ namespace jitcat
 	{
 		typedef typename RemoveConst<ConstType>::type type;
 	};
+
+
+	//UnderlyingType exists because std::underlying_type causes a compile error on VS2017
+	//when a std::underlying_type is used withing a if constexpr (std::is_enum_v<T>) and T is not an enum.
+	template <typename AnyType, typename EnabledT = void>
+	struct UnderlyingType
+	{
+		typedef AnyType type;
+	};
+	
+	template <typename EnumT>
+	struct UnderlyingType<EnumT, std::enable_if_t<std::is_enum_v<EnumT>>>
+	{
+		typedef typename std::underlying_type<EnumT>::type type;
+	};
 }
 
 namespace jitcat::Reflection

@@ -354,6 +354,7 @@ ReflectedTypeInfo* jitcat::Reflection::TypeRegistry::castToReflectedTypeInfo(Typ
 	return static_cast<ReflectedTypeInfo*>(typeInfo);
 }
 
+
 ReflectedEnumTypeInfo* jitcat::Reflection::TypeRegistry::castToReflectedEnumTypeInfo(TypeInfo* typeInfo)
 {
 	return static_cast<ReflectedEnumTypeInfo*>(typeInfo);

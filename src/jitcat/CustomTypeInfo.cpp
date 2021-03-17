@@ -20,6 +20,7 @@
 #include <cassert>
 #include <iostream>
 
+using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
