@@ -154,13 +154,13 @@ void CatRuntimeContext::removeScope(CatScopeID id)
 	{
 		//Static scope
 		id = std::abs(id) - 2;
-		assert(id >= 0 && id < staticScopes.size());
+		assert(id >= 0 && id < static_cast<CatScopeID>(staticScopes.size()));
 		staticScopes.erase(staticScopes.begin() + id);
 	}
 	else if (id != InvalidScopeID)
 	{
 		id += currentStackFrameOffset;
-		assert(id >= 0 && id < scopes.size());
+		assert(id >= 0 && id < static_cast<CatScopeID>(scopes.size()));
 		scopes.erase(scopes.begin() + id);
 	}
 }
@@ -501,14 +501,14 @@ CatRuntimeContext::Scope* jitcat::CatRuntimeContext::getScope(CatScopeID scopeId
 	{
 		//Static scope
 		scopeId = std::abs(scopeId) - 2;
-		assert(scopeId >= 0 && scopeId < staticScopes.size());
+		assert(scopeId >= 0 && scopeId < static_cast<CatScopeID>(staticScopes.size()));
 
 		return staticScopes[scopeId].get();
 	}
 	else if (scopeId != InvalidScopeID)
 	{
 		scopeId += currentStackFrameOffset;
-		assert(scopeId >= 0 && scopeId < scopes.size());
+		assert(scopeId >= 0 && scopeId < static_cast<CatScopeID>(scopes.size()));
 		return scopes[scopeId].get();
 	}
 	return nullptr;
