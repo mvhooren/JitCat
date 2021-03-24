@@ -226,6 +226,7 @@ namespace jitcat
 		static CatGenericType createBoolType(bool isWritable, bool isConst);
 		static CatGenericType createStringType(bool isWritable, bool isConst);
 		static CatGenericType createArrayType(const CatGenericType& arrayItemType, bool isWritable, bool isConst);
+		static CatGenericType createBasicTypeFromName(const std::string& name, bool isWritable, bool isConst);
 
 	private:
 		static bool isValidSpecificType(SpecificType type);

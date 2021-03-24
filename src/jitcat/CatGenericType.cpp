@@ -2300,6 +2300,21 @@ CatGenericType CatGenericType::createArrayType(const CatGenericType& arrayItemTy
 }
 
 
+CatGenericType jitcat::CatGenericType::createBasicTypeFromName(const std::string& name, bool isWritable, bool isConst)
+{
+	using EnumT = typename std::underlying_type_t<BasicType>;
+	for (EnumT iter = 0;  iter != static_cast<EnumT>(BasicType::Count); ++iter)
+	{
+		BasicType iterEnum = static_cast<BasicType>(iter);
+		if (Tools::equalsWhileIgnoringCase(toString(iterEnum), name))
+		{
+			return CatGenericType(iterEnum, isWritable, isConst);
+		}
+	}
+	return CatGenericType();
+}
+
+
 bool CatGenericType::isValidSpecificType(SpecificType type)
 {
 	return type != SpecificType::None && type != SpecificType::Count;
