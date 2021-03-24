@@ -65,6 +65,7 @@ namespace jitcat
 
 	protected:
 		virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
+		virtual void resetCompiledFunctionToDefault() override final;
 
 	private:
 		bool assignUncastedPointer(CatRuntimeContext* runtimeContext, uintptr_t pointerValue, const CatGenericType& valueType);

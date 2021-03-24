@@ -89,6 +89,13 @@ void ExpressionBase::setExpression(const std::string& expression_, CatRuntimeCon
 		{
 			compile(compileContext);
 		}
+		else
+		{
+			valueType = CatGenericType::unknownType;
+			parseResult.reset(nullptr);
+			isConstant = false;
+			expressionIsLiteral = false;
+		}
 	}
 }
 

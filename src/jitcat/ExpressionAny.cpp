@@ -123,3 +123,9 @@ void ExpressionAny::handleCompiledFunction(uintptr_t functionAddress)
 {
 	nativeFunctionAddress = functionAddress;
 }
+
+
+void jitcat::ExpressionAny::resetCompiledFunctionToDefault()
+{
+	nativeFunctionAddress = 0;
+}

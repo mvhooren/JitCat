@@ -11,6 +11,7 @@
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/Configuration.h"
+#include "ExpressionAssignment.h"
 
 namespace jitcat
 {
@@ -115,7 +116,7 @@ inline void ExpressionAssignment<ExpressionT>::compile(CatRuntimeContext* contex
 	}
 	if (!parse(context, context->getErrorManager(), this, expectedType))
 	{
-		assignValueFunc = &defaultAssignFunction;
+		resetCompiledFunctionToDefault();
 	}
 }
 
@@ -124,6 +125,13 @@ template<typename ExpressionT>
 inline void ExpressionAssignment<ExpressionT>::handleCompiledFunction(uintptr_t functionAddress)
 {
 	assignValueFunc = reinterpret_cast<void(*)(CatRuntimeContext*, typename TypeTraits<ExpressionT>::functionParameterType)>(functionAddress);
+}
+
+
+template<typename ExpressionT>
+inline void ExpressionAssignment<ExpressionT>::resetCompiledFunctionToDefault()
+{
+	assignValueFunc = &defaultAssignFunction;
 }
 
 

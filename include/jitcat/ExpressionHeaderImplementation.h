@@ -71,7 +71,7 @@ namespace jitcat
 		}
 		if (!parse(context, context->getErrorManager(), this, TypeTraits<ExpressionResultT>::toGenericType()))
 		{
-			getValueFunc = &getDefaultValue;
+			resetCompiledFunctionToDefault();
 		}
 		else
 		{
@@ -90,6 +90,13 @@ namespace jitcat
 	inline void Expression<ExpressionResultT>::handleCompiledFunction(uintptr_t functionAddress)
 	{
 		getValueFunc = reinterpret_cast<const ExpressionResultT(*)(CatRuntimeContext*)>(functionAddress);
+	}
+
+
+	template<typename ExpressionResultT>
+	inline void Expression<ExpressionResultT>::resetCompiledFunctionToDefault()
+	{
+		getValueFunc = &getDefaultValue;
 	}
 
 

@@ -53,6 +53,7 @@ namespace jitcat
 
 	protected:
 		virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
+		virtual void resetCompiledFunctionToDefault() override final;
 
 	private:
 		CatGenericType getExpectedCatType() const;

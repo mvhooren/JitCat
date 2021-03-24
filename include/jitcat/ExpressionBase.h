@@ -64,6 +64,7 @@ namespace jitcat
 	protected:
 		bool parse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext, const CatGenericType& expectedType);
 		virtual void handleCompiledFunction(uintptr_t functionAddress) = 0;
+		virtual void resetCompiledFunctionToDefault() = 0;
 
 	private:
 		void constCollapse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext);

@@ -153,6 +153,12 @@ void ExpressionAssignAny::handleCompiledFunction(uintptr_t functionAddress)
 }
 
 
+void jitcat::ExpressionAssignAny::resetCompiledFunctionToDefault()
+{
+	nativeFunctionAddress = 0;
+}
+
+
 bool jitcat::ExpressionAssignAny::assignUncastedPointer(CatRuntimeContext* runtimeContext, uintptr_t pointerValue, const CatGenericType& valueType)
 {
 	std::any reflectableAny = valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(pointerValue);
