@@ -45,6 +45,7 @@ namespace jitcat::Reflection
 	{
 		typeInfo
 			.template addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
+			.template addPseudoMemberFunction<VectorT>("index", &ExternalReflector<VectorT>::safeIndex)
 			.template addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
 	}
 
@@ -84,6 +85,7 @@ namespace jitcat::Reflection
 	{
 		typeInfo
 			.template addPseudoMemberFunction<VectorT>("[]", &ExternalReflector<VectorT>::safeIndex)
+			.template addPseudoMemberFunction<VectorT>("index", &ExternalReflector<VectorT>::safeIndex)
 			.template addPseudoMemberFunction<VectorT>("size", &ExternalReflector<VectorT>::size);
 	}
 
@@ -124,6 +126,7 @@ namespace jitcat::Reflection
 	{
 		typeInfo
 			.template addPseudoMemberFunction<ArrayT>("[]", &ExternalReflector<ArrayT>::safeIndex)
+			.template addPseudoMemberFunction<ArrayT>("index", &ExternalReflector<ArrayT>::safeIndex)
 			.template addPseudoMemberFunction<ArrayT>("size", &ExternalReflector<ArrayT>::size);
 	}
 
@@ -164,6 +167,7 @@ namespace jitcat::Reflection
 	{
 		typeInfo
 			.template addPseudoMemberFunction<DequeT>("[]", &ExternalReflector<DequeT>::safeIndex)
+			.template addPseudoMemberFunction<DequeT>("index", &ExternalReflector<DequeT>::safeIndex)
 			.template addPseudoMemberFunction<DequeT>("size", &ExternalReflector<DequeT>::size);
 	}
 
