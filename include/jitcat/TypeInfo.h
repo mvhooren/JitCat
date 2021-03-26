@@ -194,11 +194,12 @@ namespace jitcat::Reflection
 		void addDependentType(TypeInfo* otherType);
 		void removeDependentType(TypeInfo* otherType);
 
+		void renameMember(const std::string& oldMemberName, const std::string& newMemberName);
+
 	protected:
 		//Adds members from a member object that will automatically be forwarded.
 		void addDeferredMembers(TypeMemberInfo* deferredMember);
 		void addMember(const std::string& memberName, TypeMemberInfo* memberInfo);
-		void renameMember(const std::string& oldMemberName, const std::string& newMemberName);
 		TypeMemberInfo* releaseMember(const std::string& memberName);
 
 	protected:

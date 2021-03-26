@@ -589,6 +589,20 @@ void TypeInfo::addDependentType(TypeInfo* otherType)
 }
 
 
+void TypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
+{
+	auto iter = members.find(Tools::toLowerCase(oldMemberName));
+	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end() && !iter->second->isDeferred())
+	{
+		std::unique_ptr<TypeMemberInfo> memberInfo = std::move(iter->second);
+		memberInfo->setMemberName(newMemberName);
+		members.erase(iter);
+		std::string lowerCaseMemberName = Tools::toLowerCase(newMemberName);
+		members.emplace(lowerCaseMemberName, std::move(memberInfo));
+	}
+}
+
+
 void TypeInfo::removeDependentType(TypeInfo* otherType)
 {
 	auto iter = dependentTypes.find(otherType);
@@ -627,20 +641,6 @@ void TypeInfo::addMember(const std::string& memberName, TypeMemberInfo* memberIn
 {
 	members.emplace(memberName, memberInfo);
 	membersByOrdinal[memberInfo->getOrdinal()] = memberInfo;
-}
-
-
-void TypeInfo::renameMember(const std::string& oldMemberName, const std::string& newMemberName)
-{
-	auto iter = members.find(Tools::toLowerCase(oldMemberName));
-	if (iter != members.end() && members.find(Tools::toLowerCase(newMemberName)) == members.end() && !iter->second->isDeferred())
-	{
-		std::unique_ptr<TypeMemberInfo> memberInfo = std::move(iter->second);
-		memberInfo->setMemberName(newMemberName);
-		members.erase(iter);
-		std::string lowerCaseMemberName = Tools::toLowerCase(newMemberName);
-		members.emplace(lowerCaseMemberName, std::move(memberInfo));
-	}
 }
 
 
