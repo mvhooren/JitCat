@@ -78,6 +78,31 @@ namespace jitcat
 	};
 
 
+	template <typename ObjectT>
+	class TypeTraits<ObjectT, std::enable_if_t<std::is_abstract_v<ObjectT>>>
+	{
+	public:
+		static inline const CatGenericType& toGenericType();
+		static constexpr bool isReflectableType() { return true; }
+		static constexpr bool isUniquePtr() { return false; }
+
+		static inline const char* getTypeName();
+
+		static std::any getCatValue(ObjectT&& value);
+		static std::any getCatValue(ObjectT& value);
+		static std::any getDefaultCatValue() { return std::any(TypeTraits<ObjectT>::getDefaultValue()); }
+		static ObjectT& stripValue(ObjectT& value) { return value; }
+		static ObjectT& stripValue(ObjectT* value) {return *value;}
+		
+		static const TypeID getTypeId() { return TypeIdentifier<ObjectT>::getIdentifier();};
+
+		typedef ObjectT getValueType;
+		typedef ObjectT type;
+		typedef ObjectT cachedType;
+		typedef ObjectT functionParameterType;
+	};
+
+
 	template <typename PointerT>
 	class TypeTraits<const PointerT*, void>
 	{
