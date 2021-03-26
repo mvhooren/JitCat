@@ -58,14 +58,16 @@ namespace jitcat
 			Count
 		};
 
-		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, CatGenericType* pointeeType, bool writable, bool constant);
+		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, 
+					   Reflection::TypeOwnershipSemantics ownershipSemantics, CatGenericType* pointeeType, bool writable, bool constant);
 		CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 	public:
 		CatGenericType();
 		CatGenericType(const CatGenericType& enumUnderlyingType, Reflection::TypeInfo* enumValuesType, bool writable = false, bool constant = false);
 		CatGenericType(Reflection::TypeInfo* reflectableType, bool writable = false, bool constant = false);
-		CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable = false, bool constant = false);
+		CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, 
+					   bool isHandle, bool writable = false, bool constant = false);
 		CatGenericType(const CatGenericType& other);
 
 		CatGenericType& operator=(const CatGenericType& other);
@@ -130,8 +132,10 @@ namespace jitcat
 		//Copies the type but sets the ownership to Value
 		CatGenericType toChangedOwnership(Reflection::TypeOwnershipSemantics ownershipSemantics) const;
 		//Gets a pointer type to this type
-		CatGenericType toPointer(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
-		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, bool writable = false, bool constant = false) const;
+		CatGenericType toPointer(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, 
+								 bool writable = false, bool constant = false) const;
+		CatGenericType toHandle(Reflection::TypeOwnershipSemantics ownershipSemantics = Reflection::TypeOwnershipSemantics::Weak, 
+								bool writable = false, bool constant = false) const;
 		CatGenericType convertPointerToHandle() const;
 		CatGenericType toArray() const;
 		//Removes pointers and handles
