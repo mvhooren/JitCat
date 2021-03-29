@@ -92,7 +92,7 @@ void ExpressionBase::setExpression(const std::string& expression_, CatRuntimeCon
 		else
 		{
 			valueType = CatGenericType::unknownType;
-			parseResult.reset(nullptr);
+			parseResult.clear();
 			isConstant = false;
 			expressionIsLiteral = false;
 		}
@@ -120,8 +120,7 @@ bool ExpressionBase::isConst() const
 
 bool ExpressionBase::hasError() const
 {
-	return !(parseResult.get() != nullptr
-		     && parseResult->success);
+	return !(parseResult.success);
 }
 
 
@@ -147,56 +146,56 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 	context->getErrorManager()->setCurrentDocument(&document);
 	parseResult = JitCat::get()->parseExpression(&document, context, errorManager, errorContext);
 
-	if (parseResult->success)
+	if (parseResult.success)
 	{
 		typeCheck(expectedType, context, errorManager, errorContext);
-		if (parseResult->success)
+		if (parseResult.success)
 		{
 			constCollapse(context, errorManager, errorContext);
 		}
 	}
 	handleParseErrors(context);
-	//typeCheck may have changed parseResult->success
-	if (parseResult->success && !isConstant)
+	//typeCheck may have changed parseResult.success
+	if (parseResult.success && !isConstant)
 	{
 		compileToNativeCode(context);
 	}
-	if (!parseResult->success)
+	if (!parseResult.success)
 	{
-		parseResult->astRootNode.reset(nullptr);
+		parseResult.astRootNode.reset(nullptr);
 	}
 	context->getErrorManager()->setCurrentDocument(nullptr);
-	return parseResult->success;
+	return parseResult.success;
 }
 
 
 void ExpressionBase::constCollapse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatTypedExpression* newExpression = static_cast<CatTypedExpression*>(parseResult->getNode<CatTypedExpression>()->constCollapse(context, errorManager, errorContext));
-	if (newExpression != parseResult->astRootNode.get())
+	CatTypedExpression* newExpression = static_cast<CatTypedExpression*>(parseResult.getNode<CatTypedExpression>()->constCollapse(context, errorManager, errorContext));
+	if (newExpression != parseResult.astRootNode.get())
 	{
-		parseResult->astRootNode.reset(newExpression);
+		parseResult.astRootNode.reset(newExpression);
 	}
 	//Const collapse may have changed the expression from a non-constant to a constant.
 	//For example, in an expression like 0.0 * aVariable
-	if (parseResult->success)
+	if (parseResult.success)
 	{
-		isConstant = parseResult->getNode<CatTypedExpression>()->isConst();
+		isConstant = parseResult.getNode<CatTypedExpression>()->isConst();
 	}
 }
 
 
 void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	if (!parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext))
+	if (!parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext))
 	{
-		parseResult->success = false;
+		parseResult.success = false;
 	}
 	else 
 	{	
 		calculateLiteralStatus();
-		valueType = parseResult->getNode<CatTypedExpression>()->getType();
-		Lexeme expressionLexeme = parseResult->getNode<CatTypedExpression>()->getLexeme();
+		valueType = parseResult.getNode<CatTypedExpression>()->getType();
+		Lexeme expressionLexeme = parseResult.getNode<CatTypedExpression>()->getLexeme();
 		if (!expectedType.isUnknown())
 		{
 			IndirectionConversionMode mode = expectedType.getIndirectionConversion(valueType);
@@ -205,23 +204,23 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				if (mode == IndirectionConversionMode::AddressOfPointer
 					|| mode == IndirectionConversionMode::AddressOfValue)
 				{
-					parseResult->success = false;
+					parseResult.success = false;
 					errorManager->compiledWithError(std::string(Tools::append("Expression results in a value with a level of indirection that cannot be automatically converted. Trying to convert from ", valueType.toString(), " to ", expectedType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
 					return;
 				}
 				else if (mode != IndirectionConversionMode::None)
 				{
 					//Create an AST node that handles the indirection conversion
-					std::unique_ptr<CatTypedExpression> previousNode(parseResult->releaseNode<CatTypedExpression>());
-					parseResult->astRootNode = std::make_unique<CatIndirectionConversion>(expressionLexeme, expectedType, mode, std::move(previousNode));
-					parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+					std::unique_ptr<CatTypedExpression> previousNode(parseResult.releaseNode<CatTypedExpression>());
+					parseResult.astRootNode = std::make_unique<CatIndirectionConversion>(expressionLexeme, expectedType, mode, std::move(previousNode));
+					parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					
-					valueType = parseResult->getNode<CatTypedExpression>()->getType();					
+					valueType = parseResult.getNode<CatTypedExpression>()->getType();					
 				}
 			}
 			else if (mode != IndirectionConversionMode::ErrorTypeMismatch)
 			{
-				parseResult->success = false;
+				parseResult.success = false;
 				switch (mode)
 				{
 					case IndirectionConversionMode::ErrorNotCopyConstructible:	errorManager->compiledWithError(std::string(Tools::append("Expression result is not copy constructible.")), errorContext, context->getContextName(), expressionLexeme); return;
@@ -229,9 +228,9 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 					default: assert(isValidConversionMode(mode)); break;
 				}
 			}
-			if (expectAssignable && !parseResult->getNode<CatAssignableExpression>()->getAssignableType().isAssignableType())
+			if (expectAssignable && !parseResult.getNode<CatAssignableExpression>()->getAssignableType().isAssignableType())
 			{
-				parseResult->success = false;
+				parseResult.success = false;
  				errorManager->compiledWithError(std::string(Tools::append("Expression result is read only. Expected a writable ", expectedType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
 			}
 			if (expectedType.isPointerToReflectableObjectType() || expectedType.isReflectableHandleType())
@@ -239,73 +238,73 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 				const std::string typeName = expectedType.getPointeeType()->getObjectTypeName();
 				if (!valueType.isPointerToReflectableObjectType() && !valueType.isReflectableHandleType())
 				{
-					parseResult->success = false;
+					parseResult.success = false;
 					errorManager->compiledWithError(Tools::append("Expected a ", expectedType.toString(), " got a ", valueType.toString()), errorContext, context->getContextName(), expressionLexeme);
 				}
 				else if (valueType.getPointeeType()->getObjectTypeName() != typeName)
 				{
-					parseResult->success = false;
+					parseResult.success = false;
 					errorManager->compiledWithError(Tools::append("Expected a ", typeName, ", got a ", valueType.getPointeeType()->getObjectTypeName()), errorContext, context->getContextName(), expressionLexeme);
 				}
 			}
 			else if (expectedType.isVoidType() && valueType.isVoidType())
 			{
-				parseResult->success = true;
+				parseResult.success = true;
 			}
 			else if (!valueType.compare(expectedType, true, true))
 			{
 				if (expectedType.isVoidType())
 				{
 					//Insert an automatic type conversion to void.
-					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({parseResult->releaseNode<CatTypedExpression>()}));
+					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({parseResult.releaseNode<CatTypedExpression>()}));
 
-					parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toVoid", expressionLexeme, arguments, expressionLexeme);
-					parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+					parseResult.astRootNode = std::make_unique<CatBuiltInFunctionCall>("toVoid", expressionLexeme, arguments, expressionLexeme);
+					parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					
-					valueType = parseResult->getNode<CatTypedExpression>()->getType();
+					valueType = parseResult.getNode<CatTypedExpression>()->getType();
 				}
 				else if (expectedType.isScalarType() && valueType.isScalarType())
 				{
 					//Insert an automatic type conversion if the scalar types do not match.
-					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({ parseResult->releaseNode<CatTypedExpression>() }));
+					CatArgumentList* arguments = new CatArgumentList(expressionLexeme, std::vector<CatTypedExpression*>({ parseResult.releaseNode<CatTypedExpression>() }));
 
 					if (expectedType.isFloatType())
 					{
-						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toFloat", expressionLexeme, arguments, expressionLexeme);
-						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+						parseResult.astRootNode = std::make_unique<CatBuiltInFunctionCall>("toFloat", expressionLexeme, arguments, expressionLexeme);
+						parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else if (expectedType.isDoubleType())
 					{
-						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toDouble", expressionLexeme, arguments, expressionLexeme);
-						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+						parseResult.astRootNode = std::make_unique<CatBuiltInFunctionCall>("toDouble", expressionLexeme, arguments, expressionLexeme);
+						parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else if (expectedType.isIntType())
 					{
-						parseResult->astRootNode = std::make_unique<CatBuiltInFunctionCall>("toInt", expressionLexeme, arguments, expressionLexeme);
-						parseResult->getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+						parseResult.astRootNode = std::make_unique<CatBuiltInFunctionCall>("toInt", expressionLexeme, arguments, expressionLexeme);
+						parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
 					else
 					{
 						assert(false);	//Missing a conversion here?
 					}
 					
-					valueType = parseResult->getNode<CatTypedExpression>()->getType();
+					valueType = parseResult.getNode<CatTypedExpression>()->getType();
 				}
 				else
 				{
-					parseResult->success = false;
+					parseResult.success = false;
 					errorManager->compiledWithError(std::string(Tools::append("Expected a ", expectedType.toString(), " got a ", valueType.toString(), ".")), errorContext, context->getContextName(), expressionLexeme);
 				}
 			}
 		}
 		else if (expectAssignable && !valueType.isWritable())
 		{
-			parseResult->success = false;
+			parseResult.success = false;
 			errorManager->compiledWithError("Expression result is read only. Expected a writable value.", errorContext, context->getContextName(), expressionLexeme);
 		}
-		if (parseResult->success)
+		if (parseResult.success)
 		{
-			isConstant = parseResult->getNode<CatTypedExpression>()->isConst();
+			isConstant = parseResult.getNode<CatTypedExpression>()->isConst();
 		}
 	}
 }
@@ -313,7 +312,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 
 void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 {
-	if (!parseResult->success)
+	if (!parseResult.success)
 	{
 		expressionIsLiteral = false;
 		isConstant = false;
@@ -337,11 +336,11 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 		codeGenerator = context->getCodeGenerator();
 		if (!expectAssignable)
 		{
-			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult->getNode<CatTypedExpression>(), &llvmCompileContext);
+			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult.getNode<CatTypedExpression>(), &llvmCompileContext);
 		}
-		else if (parseResult->getNode<CatTypedExpression>()->isAssignable())
+		else if (parseResult.getNode<CatTypedExpression>()->isAssignable())
 		{
-			functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult->getNode<CatAssignableExpression>(), &llvmCompileContext);
+			functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult.getNode<CatAssignableExpression>(), &llvmCompileContext);
 		}
 		if (functionAddress != 0)
 		{
@@ -359,16 +358,16 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 void jitcat::ExpressionBase::calculateLiteralStatus()
 {
 	expressionIsLiteral = false;
-	if (parseResult->success)
+	if (parseResult.success)
 	{
-		if (parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::Literal)
+		if (parseResult.getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::Literal)
 		{
 			expressionIsLiteral = true;
 		}
-		else if (parseResult->getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::PrefixOperator)
+		else if (parseResult.getNode<CatTypedExpression>()->getNodeType() == CatASTNodeType::PrefixOperator)
 		{
 			//If the expression is a minus prefix operator combined with a literal, then we need to count the whole expression as a literal.
-			CatPrefixOperator* prefixOp = parseResult->getNode<CatPrefixOperator>();
+			CatPrefixOperator* prefixOp = parseResult.getNode<CatPrefixOperator>();
 			if (prefixOp->getRHS() != nullptr
 				&& prefixOp->getOperator() == CatPrefixOperator::Operator::Minus
 				&& prefixOp->getRHS()->getNodeType() == CatASTNodeType::Literal)

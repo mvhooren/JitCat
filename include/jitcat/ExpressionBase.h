@@ -11,6 +11,7 @@
 #include "jitcat/CatGenericType.h"
 #include "jitcat/IndirectionConversionMode.h"
 #include "jitcat/ReflectableHandle.h"
+#include "jitcat/SLRParseResult.h"
 
 #include <memory>
 #include <string>
@@ -76,7 +77,7 @@ namespace jitcat
 	protected:
 		std::string expression;
 		CatGenericType valueType;
-		std::unique_ptr<Parser::SLRParseResult> parseResult;
+		Parser::SLRParseResult parseResult;
 #ifdef ENABLE_LLVM
 		std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator;
 #endif

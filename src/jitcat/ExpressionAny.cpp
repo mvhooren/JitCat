@@ -53,7 +53,7 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 	{
 		return cachedValue;
 	}
-	else if (parseResult->astRootNode != nullptr)
+	else if (parseResult.astRootNode != nullptr)
 	{
 		if (runtimeContext == nullptr)
 		{
@@ -74,7 +74,7 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 		}
 		else
 		{
-			std::any result = parseResult->getNode<CatTypedExpression>()->execute(runtimeContext);
+			std::any result = parseResult.getNode<CatTypedExpression>()->execute(runtimeContext);
 			runtimeContext->clearTemporaries();
 			return result;
 		}
@@ -92,9 +92,9 @@ const std::any jitcat::ExpressionAny::getInterpretedValue(CatRuntimeContext* run
 	{
 		return cachedValue;
 	}
-	else if (parseResult->astRootNode != nullptr)
+	else if (parseResult.astRootNode != nullptr)
 	{
-		std::any result = parseResult->getNode<CatTypedExpression>()->execute(runtimeContext);
+		std::any result = parseResult.getNode<CatTypedExpression>()->execute(runtimeContext);
 		runtimeContext->clearTemporaries();
 		return result;
 	}
@@ -114,7 +114,7 @@ void ExpressionAny::compile(CatRuntimeContext* context)
 	}
 	if (parse(context, context->getErrorManager(), this, CatGenericType()) && isConstant)
 	{
-		cachedValue = parseResult->getNode<CatTypedExpression>()->execute(context);
+		cachedValue = parseResult.getNode<CatTypedExpression>()->execute(context);
 	}
 }
 

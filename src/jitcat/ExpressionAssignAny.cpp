@@ -60,7 +60,7 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 {
 	if constexpr (Configuration::enableLLVM)
 	{
-		if (parseResult->astRootNode != nullptr)
+		if (parseResult.astRootNode != nullptr)
 		{
 			const CatGenericType myType = getType();
 			std::any convertedValue = myType.convertToType(value, valueType);
@@ -90,9 +90,9 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 
 bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeContext, std::any value, const CatGenericType& rValueType)
 {
-	if (parseResult->astRootNode != nullptr && parseResult->getNode<AST::CatTypedExpression>()->isAssignable())
+	if (parseResult.astRootNode != nullptr && parseResult.getNode<AST::CatTypedExpression>()->isAssignable())
 	{
-		jitcat::AST::CatAssignableExpression* assignable = parseResult->getNode<AST::CatAssignableExpression>();
+		jitcat::AST::CatAssignableExpression* assignable = parseResult.getNode<AST::CatAssignableExpression>();
 		if (assignmentOperatorFunction != nullptr)
 		{
 			if (valueType.compare(rValueType, false, true))
@@ -131,7 +131,7 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 void ExpressionAssignAny::compile(CatRuntimeContext* context)
 {
 	parse(context, context->getErrorManager(), this, CatGenericType());
-	if (parseResult->astRootNode != nullptr && parseResult->getNode<AST::CatTypedExpression>()->isAssignable())
+	if (parseResult.astRootNode != nullptr && parseResult.getNode<AST::CatTypedExpression>()->isAssignable())
 	{
 		if (getType().isPointerToReflectableObjectType() && getType().getOwnershipSemantics() == TypeOwnershipSemantics::Value)
 		{
@@ -139,8 +139,8 @@ void ExpressionAssignAny::compile(CatRuntimeContext* context)
 			assignmentOperatorFunction = getType().getPointeeType()->getObjectType()->getMemberFunctionInfo(signature);
 			if (assignmentOperatorFunction == nullptr)
 			{
-				parseResult->astRootNode.reset(nullptr);
-				parseResult->success = false;
+				parseResult.astRootNode.reset(nullptr);
+				parseResult.success = false;
 			}
 		}
 	}

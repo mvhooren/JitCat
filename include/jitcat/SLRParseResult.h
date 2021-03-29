@@ -22,6 +22,11 @@ namespace jitcat::Parser
 	{
 		SLRParseResult();
 		~SLRParseResult();
+		SLRParseResult(SLRParseResult&& other);
+		SLRParseResult& operator=(SLRParseResult&& other);
+		SLRParseResult& operator=(std::unique_ptr<SLRParseResult>&& other);
+
+		void clear();
 
 		template<typename ASTNodeType>
 		ASTNodeType* getNode() { return static_cast<ASTNodeType*>(astRootNode.get());}

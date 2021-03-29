@@ -20,4 +20,37 @@ SLRParseResult::SLRParseResult():
 
 SLRParseResult::~SLRParseResult()
 {
-};
+}
+
+
+SLRParseResult::SLRParseResult(SLRParseResult&& other):
+	success(other.success),
+	astRootNode(std::move(other.astRootNode))
+{
+}
+
+
+SLRParseResult& SLRParseResult::operator=(SLRParseResult&& other)
+{
+	success = other.success;
+	astRootNode = std::move(other.astRootNode);
+	return *this;
+}
+
+
+SLRParseResult& jitcat::Parser::SLRParseResult::operator=(std::unique_ptr<SLRParseResult>&& other)
+{
+	SLRParseResult* otherPtr = other.release();
+	success = otherPtr->success;
+	astRootNode = std::move(otherPtr->astRootNode);
+	delete otherPtr;
+	return *this;
+}
+
+
+void SLRParseResult::clear()
+{
+	success = false;
+	astRootNode.reset(nullptr);
+}
+

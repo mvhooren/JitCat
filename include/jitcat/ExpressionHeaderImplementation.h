@@ -79,7 +79,7 @@ namespace jitcat
 			{
 				if constexpr (!std::is_same<void, ExpressionResultT>::value)
 				{
-					cachedValue = getActualValue(parseResult->getNode<AST::CatTypedExpression>()->execute(context));
+					cachedValue = getActualValue(parseResult.getNode<AST::CatTypedExpression>()->execute(context));
 				}
 			}
 		}
@@ -134,17 +134,17 @@ namespace jitcat
 			}
 			else
 			{
-				if (parseResult->success)
+				if (parseResult.success)
 				{
 					if constexpr (!std::is_same<void, ExpressionResultT>::value)
 					{
-						std::any value = parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
+						std::any value = parseResult.getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 						runtimeContext->clearTemporaries();
 						return getActualValue(value);
 					}
 					else
 					{
-						parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
+						parseResult.getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 						runtimeContext->clearTemporaries();
 						return;
 					}
@@ -172,7 +172,7 @@ namespace jitcat
 				return;
 			}
 		}
-		else if (parseResult->success)
+		else if (parseResult.success)
 		{
 			if (runtimeContext == nullptr)
 			{
@@ -180,13 +180,13 @@ namespace jitcat
 			}
 			if constexpr (!std::is_same<void, ExpressionResultT>::value)
 			{
-				std::any value = parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
+				std::any value = parseResult.getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 				runtimeContext->clearTemporaries();
 				return getActualValue(value);
 			}
 			else
 			{
-				parseResult->getNode<AST::CatTypedExpression>()->execute(runtimeContext);
+				parseResult.getNode<AST::CatTypedExpression>()->execute(runtimeContext);
 				runtimeContext->clearTemporaries();
 				return;
 			}
