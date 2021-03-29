@@ -72,7 +72,6 @@ inline bool ExpressionAssignment<ExpressionT>::assignValue(CatRuntimeContext* ru
 	{
 		return assignInterpretedValue(runtimeContext, value);
 	}
-	return false;
 }
 
 
