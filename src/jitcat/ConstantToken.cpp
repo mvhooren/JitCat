@@ -7,6 +7,7 @@
 
 #include "jitcat/ConstantToken.h"
 #include "jitcat/Document.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/ParseHelper.h"
 
@@ -150,7 +151,15 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 	{
 		if ((pastDot || pastExponent) && offset > 1)
 		{
-			return ConstantType::DoubleFloatingPoint;
+			if constexpr (Configuration::defaultFloatingPointLiteralIsDouble)
+			{
+				return ConstantType::DoubleFloatingPoint;
+			}
+			else
+			{
+				return ConstantType::FloatingPoint;
+			}
+
 		}
 		else
 		{
@@ -179,9 +188,22 @@ ConstantType ConstantToken::parseFloat(const char* text, std::size_t textLength,
 		offset++;
 		return ConstantType::FloatingPoint;
 	}
+	else if (((pastDot && offset > 1) || pastExponent) 
+		     && (text[offset] == 'd' || text[offset] == 'D'))
+	{
+		offset++;
+		return ConstantType::DoubleFloatingPoint;
+	}
 	else if (pastDot && offset > 1)
 	{
-		return ConstantType::DoubleFloatingPoint;
+		if constexpr (Configuration::defaultFloatingPointLiteralIsDouble)
+		{
+			return ConstantType::DoubleFloatingPoint;
+		}
+		else
+		{
+			return ConstantType::FloatingPoint;
+		}
 	}
 	else
 	{

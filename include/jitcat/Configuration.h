@@ -102,6 +102,9 @@ namespace Configuration
 	//spread of NaNs or program abort but breaking mathematical correctness.
 	static constexpr bool divisionByZeroYieldsZero = false;
 
+	//Weither or not floating point literals are doubles by default
+	static constexpr bool defaultFloatingPointLiteralIsDouble = false;
+
 	//The locale for when numbers are converted to strings.
 	static std::locale localeForStringConversions = std::locale("");
 };
