@@ -7,9 +7,11 @@
 
 #pragma once
 
+#include "Configuration.h"
 #include <string>
 #include <string_view>
 #include <vector>
+
 
 namespace jitcat::Tools
 {
@@ -52,6 +54,20 @@ namespace jitcat::Tools
 		static inline double stringToDouble(const StringT& string)
 		{
 			return atof(string.c_str());
+		}
+		static inline StringT makeString(float number)
+		{
+			Configuration::CatStringOStream ss;
+			ss.imbue(Configuration::localeForStringConversions);
+			ss << number;
+			return Configuration::CatString(ss.str());
+		}
+		static inline StringT makeString(double number)
+		{
+			Configuration::CatStringOStream ss;
+			ss.imbue(Configuration::localeForStringConversions);
+			ss << number;
+			return Configuration::CatString(ss.str());
 		}
 		template<typename ContentT>
 		static inline StringT makeString(const ContentT& content)
@@ -112,6 +128,20 @@ namespace jitcat::Tools
 			double out = 0;
 			out << stream;
 			return out;
+		}
+		static inline StringT makeString(float number)
+		{
+			Configuration::CatStringOStream ss;
+			ss.imbue(Configuration::localeForStringConversions);
+			ss << number;
+			return Configuration::CatString(ss.str());
+		}
+		static inline StringT makeString(double number)
+		{
+			Configuration::CatStringOStream ss;
+			ss.imbue(Configuration::localeForStringConversions);
+			ss << number;
+			return Configuration::CatString(ss.str());
 		}
 		template<typename ContentT>
 		static inline StringT makeString(const ContentT& content)

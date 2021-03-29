@@ -1265,12 +1265,14 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 			case BasicType::Double:
 			{
 				Configuration::CatStringOStream ss;
+				ss.imbue(Configuration::localeForStringConversions);
 				ss << std::any_cast<double>(value);
 				return Configuration::CatString(ss.str());
 			}
 			case BasicType::Float:
 			{
 				Configuration::CatStringOStream ss;
+				ss.imbue(Configuration::localeForStringConversions);
 				ss << std::any_cast<float>(value);
 				return Configuration::CatString(ss.str());
 			}
@@ -1322,7 +1324,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 		}
 	}
 	assert(false);
-	return createDefault();
+	return valueType.createDefault();
 }
 
 
@@ -2357,7 +2359,7 @@ CatGenericType::BasicType CatGenericType::toBasicType(const char* value)
 	std::size_t length = str.length();
 	for (std::size_t i = 0; i < length; i++)
 	{
-		str[i] = std::tolower(str[i], std::locale());
+		str[i] = std::tolower(str[i], Configuration::localeForStringConversions);
 	}
 	for (int i = 0; i < (int)BasicType::Count; i++)
 	{
@@ -2440,7 +2442,7 @@ CatGenericType::SpecificType CatGenericType::toSpecificType(const char * value)
 	std::size_t length = str.length();
 	for (std::size_t i = 0; i < length; i++)
 	{
-		str[i] = std::tolower(str[i], std::locale());
+		str[i] = std::tolower(str[i], Configuration::localeForStringConversions);
 	}
 	for (int i = 0; i < (int)SpecificType::Count; i++)
 	{

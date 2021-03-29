@@ -8,6 +8,7 @@
 #pragma once
 
 
+#include <locale>
 #include <sstream>
 #include <string>
 
@@ -101,6 +102,8 @@ namespace Configuration
 	//spread of NaNs or program abort but breaking mathematical correctness.
 	static constexpr bool divisionByZeroYieldsZero = false;
 
+	//The locale for when numbers are converted to strings.
+	static std::locale localeForStringConversions = std::locale("");
 };
 
 } //namespace jitcat
