@@ -639,8 +639,8 @@ void TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
 
 void TypeInfo::addMember(const std::string& memberName, TypeMemberInfo* memberInfo)
 {
-	members.emplace(memberName, memberInfo);
 	membersByOrdinal[memberInfo->getOrdinal()] = memberInfo;
+	members.emplace(memberName, memberInfo);
 }
 
 
