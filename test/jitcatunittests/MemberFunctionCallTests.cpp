@@ -247,3 +247,17 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 		doCommonChecks(&testExpression, false, false, false, context);
 	}
 }
+
+
+TEST_CASE("Member Functions with multiple inheritance base class", "[memberfunctions][multiple_inheritance]" ) 
+{
+	MultipleInheritanceClass reflectedObject;
+	ExpressionErrorManager errorManager;
+	CatRuntimeContext context("multiple_inheritance", &errorManager);
+	context.addScope(&reflectedObject, true);	
+	SECTION("Get int")
+	{
+		Expression<float> testExpression(&context, "1 + (1 + getAMember(\"hi\"))");
+		doChecks(2.0f + reflectedObject.getAMember("hi"), false, false, false, testExpression, context);
+	}
+}
