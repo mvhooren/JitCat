@@ -482,6 +482,26 @@ ReflectedObject* ReflectedObject::getThisObject(ReflectedObject* someObject) con
 }
 
 
+void TestObjects::MultipleInheritanceClass::reflect(jitcat::Reflection::ReflectedTypeInfo & typeInfo)
+{
+	typeInfo
+		.addMember("aMember", &MultipleInheritanceClass::aMember)
+		.addMember("getAMember", &MultipleInheritanceClass::getAMember);
+}
+
+
+const char* TestObjects::MultipleInheritanceClass::getTypeName()
+{
+	return "MultipleInheritanceClass";
+}
+
+
+float TestObjects::MultipleInheritanceClass::getAMember(const std::string& which) const
+{
+	return aMember;
+}
+
+
 float ReflectedObject::staticFloat = 1234.5f;
 double ReflectedObject::staticDouble = 7890.1;
 int ReflectedObject::staticInt = 33;
@@ -497,5 +517,3 @@ std::unique_ptr<NestedReflectedObject> ReflectedObject::staticObjectUniquePtr = 
 std::vector<int> ReflectedObject::staticVector = {42, 11, 0};;
 std::map<float, std::string> ReflectedObject::staticMap = {{1.0f, "1.0f"}, {42.0f , "42.0f"}};
 std::map<std::string, int> ReflectedObject::staticStringMap = {{"one", 1},{"two", 2}};
-
-

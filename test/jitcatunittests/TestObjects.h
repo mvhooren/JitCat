@@ -174,4 +174,30 @@ namespace TestObjects
 		static std::map<float, std::string> staticMap;
 		static std::map<std::string, int> staticStringMap;
 	};
+
+
+	class VirtualBaseClass
+	{
+	public:
+		VirtualBaseClass(): someMember(11.0f) {};
+		virtual ~VirtualBaseClass() {};
+
+		virtual float getStuff() = 0;
+
+		float someMember;
+	};
+
+	class MultipleInheritanceClass: public VirtualBaseClass, public jitcat::Reflection::Reflectable 
+	{
+	public:
+		MultipleInheritanceClass(): aMember(42.0f) {};
+		virtual ~MultipleInheritanceClass() {};
+
+		static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo);
+		static const char* getTypeName();
+		virtual float getStuff() override final {return (float)aMember;}
+		float getAMember(const std::string& which) const;
+
+		float aMember;
+	};
 }
