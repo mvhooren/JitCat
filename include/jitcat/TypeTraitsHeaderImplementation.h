@@ -24,8 +24,18 @@ namespace jitcat
 	}
 
 
-	template<typename ObjectT, typename EnabledT>
-	const char* TypeTraits<ObjectT, EnabledT>::getTypeName()
+	template<typename ObjectT>
+	const CatGenericType& TypeTraits<ObjectT, std::enable_if_t<std::is_abstract_v<ObjectT>>>::toGenericType()
+	{
+		static_assert(std::is_class_v<ObjectT>, "Type is not supported.");
+		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>();
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(typeInfo));
+		return *type.get();
+	}
+
+
+	template<typename ObjectT>
+	const char* TypeTraits<ObjectT, std::enable_if_t<std::is_abstract_v<ObjectT>>>::getTypeName()
 	{ 
 		return Reflection::TypeNameGetter<ObjectT>::get();
 	}
@@ -61,6 +71,20 @@ namespace jitcat
 	}
 
 
+		template<typename ObjectT>
+	std::any TypeTraits<ObjectT, std::enable_if_t<std::is_abstract_v<ObjectT>>>::getCatValue(ObjectT&& value)
+	{
+		return std::move(value);
+	}
+
+
+	template<typename ObjectT>
+	inline std::any TypeTraits<ObjectT, std::enable_if_t<std::is_abstract_v<ObjectT>>>::getCatValue(ObjectT& value)
+	{
+		return value;
+	}
+
+	
 	template <typename PointerT>
 	inline const CatGenericType& TypeTraits<const PointerT*>::toGenericType()
 	{
