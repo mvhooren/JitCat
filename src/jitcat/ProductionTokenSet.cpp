@@ -24,6 +24,11 @@ ProductionTokenSet::ProductionTokenSet(bool disallowEpsilons):
 }
 
 
+ProductionTokenSet::~ProductionTokenSet()
+{
+}
+
+
 void ProductionTokenSet::flatten()
 {
 	std::vector<ProductionTokenSet*> recursionBlock;

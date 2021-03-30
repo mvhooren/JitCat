@@ -22,7 +22,7 @@ namespace jitcat::Grammar
 	{
 	public:
 		ProductionTokenSet(bool disallowEpsilons);
-		virtual ~ProductionTokenSet() {}
+		virtual ~ProductionTokenSet();
 		void flatten();
 		virtual bool getIsSet() const override final;
 		void addMemberIfNotPresent(ProductionTokenSetMember* member);
