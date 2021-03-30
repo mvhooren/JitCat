@@ -423,11 +423,11 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::arrayTypeName(const Parser::ASTNodePa
 {
 	CatTypeOrIdentifier* itemType = nodeParser.getASTNodeByIndex<CatTypeOrIdentifier>(0);
 	CatOwnershipSemanticsNode* ownershipSemantics = nodeParser.getASTNodeByIndex<CatOwnershipSemanticsNode>(1);
+	Lexeme lexeme = nodeParser.getStackLexeme();
 
 	std::unique_ptr<CatTypeNode> typeNode(itemType->toType());
 	delete itemType;
-	Lexeme lexeme = nodeParser.getStackLexeme();
-	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(std::move(typeNode), ownershipSemantics->getOwnershipSemantics(true), lexeme), lexeme));
+	CatTypeOrIdentifier* typeOrIdentifier = new CatTypeOrIdentifier(new CatTypeNode(std::move(typeNode), ownershipSemantics->getOwnershipSemantics(true), lexeme), lexeme);
 	delete ownershipSemantics;
 	return typeOrIdentifier;
 }
