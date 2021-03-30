@@ -15,13 +15,19 @@ ErrorContext::ErrorContext(CatRuntimeContext* context, const std::string& contex
 	context(context),
 	contextDescription(contextDescription)
 {
-	context->pushErrorContext(this);
+	if (context != nullptr)
+	{
+		context->pushErrorContext(this);
+	}
 }
 
 
 ErrorContext::~ErrorContext()
 {
-	context->popErrorContext(this);
+	if (context != nullptr)
+	{
+		context->popErrorContext(this);
+	}
 }
 
 
