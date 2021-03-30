@@ -54,7 +54,7 @@ namespace jitcat::Reflection
 		//If the type is already registered, it will just return the TypeInfo.
 		//Never returns nullptr
 		template<typename T>
-		TypeInfo* registerType();
+		TypeInfo* registerType(TypeInfo** typeInfoToSet = nullptr);
 		void registerType(const char* typeName, TypeInfo* typeInfo);
 
 		void removeType(const char* typeName);
@@ -95,7 +95,7 @@ namespace jitcat::Reflection
 {
 
 	template<typename ReflectableCVT>
-	inline jitcat::Reflection::TypeInfo* jitcat::Reflection::TypeRegistry::registerType()
+	inline jitcat::Reflection::TypeInfo* jitcat::Reflection::TypeRegistry::registerType(TypeInfo** typeInfoToSet)
 	{
 		using ReflectableT = typename RemoveConst<ReflectableCVT>::type;
 
@@ -105,6 +105,10 @@ namespace jitcat::Reflection
 		std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerTypeName);
 		if (iter != types.end())
 		{
+			if (typeInfoToSet != nullptr)
+			{
+				*typeInfoToSet = iter->second;
+			}
 			return iter->second;
 		}
 		else
@@ -172,6 +176,10 @@ namespace jitcat::Reflection
 				std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, std::move(typeCaster), isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
 																					  placementConstructor, copyConstructor, moveConstructor, placementDestructor);
 				types[lowerTypeName] = typeInfo.get();
+				if (typeInfoToSet != nullptr)
+				{
+					*typeInfoToSet = typeInfo.get();
+				}
 				jitcat::Reflection::TypeInfo* returnTypeInfo = typeInfo.get();
 				ownedTypes.emplace_back(std::move(typeInfo));
 				if constexpr (GetTypeNameAndReflectExist<ReflectableT>::value)

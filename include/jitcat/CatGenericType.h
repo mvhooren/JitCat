@@ -218,6 +218,8 @@ namespace jitcat
 		std::any createFromRawPointer(const uintptr_t pointer) const;
 		std::any createNullPtr() const;
 
+		jitcat::Reflection::TypeInfo** getTypeInfoToSet();
+
 		static const CatGenericType& getWidestBasicType(const CatGenericType& left, const CatGenericType& right);
 		static CatGenericType createCharType(bool isWritable, bool isConst);
 		static CatGenericType createUCharType(bool isWritable, bool isConst);

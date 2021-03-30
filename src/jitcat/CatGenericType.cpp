@@ -2228,6 +2228,12 @@ std::any CatGenericType::createNullPtr() const
 }
 
 
+jitcat::Reflection::TypeInfo ** jitcat::CatGenericType::getTypeInfoToSet()
+{
+	return &nestedType;
+}
+
+
 const CatGenericType& CatGenericType::getWidestBasicType(const CatGenericType& left, const CatGenericType& right)
 {
 	assert(left.isBasicType() && right.isBasicType());

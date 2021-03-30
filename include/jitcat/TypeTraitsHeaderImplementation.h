@@ -18,8 +18,9 @@ namespace jitcat
 	const CatGenericType& TypeTraits<ObjectT, EnabledT>::toGenericType()
 	{
 		static_assert(std::is_class_v<ObjectT>, "Type is not supported.");
-		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>();
-		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(typeInfo));
+		Reflection::TypeInfo* nullTypeInfo = nullptr;
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(nullTypeInfo));
+		Reflection::TypeRegistry::get()->registerType<ObjectT>(type->getTypeInfoToSet());
 		return *type.get();
 	}
 
@@ -28,8 +29,9 @@ namespace jitcat
 	const CatGenericType& TypeTraits<ObjectT, std::enable_if_t<std::is_abstract_v<ObjectT>>>::toGenericType()
 	{
 		static_assert(std::is_class_v<ObjectT>, "Type is not supported.");
-		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>();
-		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(typeInfo));
+		Reflection::TypeInfo* nullTypeInfo = nullptr;
+		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(nullTypeInfo));
+		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>(type->getTypeInfoToSet());
 		return *type.get();
 	}
 
@@ -100,8 +102,12 @@ namespace jitcat
 		{
 			//Instead directly constructing the static type object. First construct it with a nullptr for the object type.
 			//This is done to prevent recursion deadlock.
-			type = std::make_unique<CatGenericType>(nullptr, Reflection::TypeOwnershipSemantics::Weak, false);
-			type->setPointeeType(std::make_unique<CatGenericType>(TypeTraits<PointerT>::toGenericType()));
+			CatGenericType pointeeType = TypeTraits<PointerT>::toGenericType();
+			if (type.get() == nullptr)
+			{
+				type = std::make_unique<CatGenericType>(nullptr, Reflection::TypeOwnershipSemantics::Weak, false);
+				type->setPointeeType(std::make_unique<CatGenericType>(pointeeType));
+			}
 		}
 		return *type.get();
 	}
