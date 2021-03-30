@@ -63,7 +63,14 @@ TEST_CASE("Regression testing", "[regression]")
 	{
 		ExpressionAny testExpression(&context, "1.");
 		doCommonChecks(&testExpression, false, true, true, context);
-		CHECK(testExpression.getType().isDoubleType());
+		if (Configuration::defaultFloatingPointLiteralIsDouble)
+		{
+			CHECK(testExpression.getType().isDoubleType());
+		}
+		else
+		{
+			CHECK(testExpression.getType().isFloatType());
+		}
 	}
 	SECTION("Constant with extraneous negative")
 	{

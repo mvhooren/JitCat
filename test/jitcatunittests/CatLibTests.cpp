@@ -30,7 +30,7 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 		"class TestClass\n"
 		"{\n"
 		"	float testFloat = 42.0f;\n"
-		"	double testDouble = 84.0;\n"
+		"	double testDouble = 84.0d;\n"
 		"	int testInt = -1;\n"
 		"	bool testBool = true;\n"
 		"	string testString = \"Hello!\";\n"
