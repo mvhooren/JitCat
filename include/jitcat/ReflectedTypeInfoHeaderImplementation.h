@@ -28,6 +28,13 @@ namespace jitcat::Reflection
 	template<typename ReflectedT, typename MemberT>
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberT ReflectedT::* member, MemberFlags flags)
 	{
+		//Check if a member with this name already exists
+		TypeMemberInfo* info = getMemberInfo(identifier_);
+		assert(info == nullptr);
+		if (info != nullptr)
+		{
+			return *this;
+		}
 		std::string identifier = Tools::toLowerCase(identifier_);
 		bool isConst = (flags & MF::isConst) != 0
 						|| (flags & MF::isStaticConst) != 0;
@@ -53,6 +60,13 @@ namespace jitcat::Reflection
 	template<typename MemberCVT>
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addMember(const std::string& identifier_, MemberCVT* member, MemberFlags flags)
 	{
+		//Check if a member with this name already exists
+		TypeMemberInfo* info = getMemberInfo(identifier_);
+		assert(info == nullptr);
+		if (info != nullptr)
+		{
+			return *this;
+		}
 		using MemberT = typename RemoveConst<MemberCVT>::type;
 		std::string identifier = Tools::toLowerCase(identifier_);
 		bool isConst = (flags & MF::isConst) != 0
@@ -136,6 +150,13 @@ namespace jitcat::Reflection
 	template<typename ConstantT>
 	inline ReflectedTypeInfo& ReflectedTypeInfo::addConstant(const std::string& identifier, ConstantT value)
 	{
+		//Check if a constant with this name already exists
+		StaticConstMemberInfo* info = getStaticConstMemberInfo(identifier);
+		assert(info == nullptr);
+		if (info != nullptr)
+		{
+			return *this;
+		}
 		CatGenericType type = TypeTraits<typename RemoveConst<ConstantT>::type>::toGenericType();
 		std::any anyValue = TypeTraits<ConstantT>::getCatValue(value);
 		TypeInfo::addConstant(identifier, type, anyValue);
