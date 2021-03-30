@@ -486,12 +486,12 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	}
 	SECTION("Smaller_1")
 	{
-		Expression<bool> testExpression(&context, "aDouble < 1000.0");
+		Expression<bool> testExpression(&context, "aDouble < 1000.0d");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("Smaller_2")
 	{
-		Expression<bool> testExpression(&context, "aDouble < 900.0");
+		Expression<bool> testExpression(&context, "aDouble < 900.0d");
 		doChecks(false, false, false, false, testExpression, context);
 	}
 	SECTION("Smaller_3")
@@ -501,12 +501,12 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	}
 	SECTION("Greater_1")
 	{
-		Expression<bool> testExpression(&context, "aDouble > 1000.0");
+		Expression<bool> testExpression(&context, "aDouble > 1000.0d");
 		doChecks(false, false, false, false, testExpression, context);
 	}
 	SECTION("Greater_2")
 	{
-		Expression<bool> testExpression(&context, "aDouble > 900.0");
+		Expression<bool> testExpression(&context, "aDouble > 900.0d");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("Greater_3")
@@ -516,12 +516,12 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	}
 	SECTION("GreaterOrEqual_1")
 	{
-		Expression<bool> testExpression(&context, "aDouble >= 1000.0");
+		Expression<bool> testExpression(&context, "aDouble >= 1000.0d");
 		doChecks(false, false, false, false, testExpression, context);
 	}
 	SECTION("GreaterOrEqual_2")
 	{
-		Expression<bool> testExpression(&context, "aDouble >= 900.0");
+		Expression<bool> testExpression(&context, "aDouble >= 900.0d");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("GreaterOrEqual_3")
@@ -531,12 +531,12 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	}
 	SECTION("SmallerOrEqual_1")
 	{
-		Expression<bool> testExpression(&context, "aDouble <= 1000.0");
+		Expression<bool> testExpression(&context, "aDouble <= 1000.0d");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("SmallerOrEqual_2")
 	{
-		Expression<bool> testExpression(&context, "aDouble <= 900.0");
+		Expression<bool> testExpression(&context, "aDouble <= 900.0d");
 		doChecks(false, false, false, false, testExpression, context);
 	}
 	SECTION("SmallerOrEqual_3")
@@ -546,7 +546,7 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	}
 	SECTION("Equals_1")
 	{
-		Expression<bool> testExpression(&context, "aDouble == 1000.0");
+		Expression<bool> testExpression(&context, "aDouble == 1000.0d");
 		doChecks(false, false, false, false, testExpression, context);
 	}
 	SECTION("Equals_2")
@@ -556,22 +556,22 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	}
 	SECTION("Equals_3")
 	{
-		Expression<bool> testExpression(&context, "aDouble == 999.9");
+		Expression<bool> testExpression(&context, "aDouble == 999.9d");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("NotEquals_1")
 	{
-		Expression<bool> testExpression(&context, "aDouble != 1000.0");
+		Expression<bool> testExpression(&context, "aDouble != 1000.0d");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("NotEquals_2")
 	{
-		Expression<bool> testExpression(&context, "aDouble != 900.0");
+		Expression<bool> testExpression(&context, "aDouble != 900.0d");
 		doChecks(true, false, false, false, testExpression, context);
 	}
 	SECTION("NotEquals_3")
 	{
-		Expression<bool> testExpression(&context, "aDouble != 999.9");
+		Expression<bool> testExpression(&context, "aDouble != 999.9d");
 		doChecks(false, false, false, false, testExpression, context);
 	}
 }
