@@ -497,6 +497,9 @@ CatScopeID CatRuntimeContext::createScope(unsigned char* scopeObject, TypeInfo* 
 
 CatRuntimeContext::Scope* jitcat::CatRuntimeContext::getScope(CatScopeID scopeId) const
 {
+	//A break / crash in this function usually means that the CatRuntimeContext that was provided when
+	//calling the expression does not contain the same number of scopes as the CatRuntimeContext that
+	//was used to compile the expression.
 	if (scopeId < InvalidScopeID)
 	{
 		//Static scope
