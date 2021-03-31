@@ -661,8 +661,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 	llvm::Value* right = generate(infixOperator->getRight(), context);
 	CatInfixOperatorType oper = infixOperator->getOperatorType();
 
-	const CatGenericType& leftType = infixOperator->getLeft()->getType();
-	const CatGenericType& rightType = infixOperator->getRight()->getType();
+	CatGenericType leftType = infixOperator->getLeft()->getType();
+	CatGenericType rightType = infixOperator->getRight()->getType();
 
 	assert(left != nullptr && right != nullptr);
 
@@ -685,24 +685,32 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 		{
 			left = helper->convertType(left, leftType, CatGenericType::stringWeakPtrType, context);
 			right = helper->convertType(right, rightType, CatGenericType::stringWeakPtrType, context);
+			leftType = CatGenericType::stringWeakPtrType;
+			rightType = CatGenericType::stringWeakPtrType;
 		}
 		else if (leftType.isDoubleType()
 				|| rightType.isDoubleType())
 		{
 			left = helper->convertType(left, leftType, CatGenericType::doubleType, context);
 			right = helper->convertType(right, rightType, CatGenericType::doubleType, context);
+			leftType = CatGenericType::doubleType;
+			rightType = CatGenericType::doubleType;
 		}
 		else if (leftType.isFloatType()
 				|| rightType.isFloatType())
 		{
 			left = helper->convertType(left, leftType, CatGenericType::floatType, context);
 			right = helper->convertType(right, rightType, CatGenericType::floatType, context);
+			leftType = CatGenericType::floatType;
+			rightType = CatGenericType::floatType;
 		}
 		else
 		{
 			//left and right are ints or booleans, booleans will be promoted to ints
 			left = helper->convertType(left, leftType, CatGenericType::intType, context);
 			right = helper->convertType(right, rightType, CatGenericType::intType, context);
+			leftType = CatGenericType::intType;
+			rightType = CatGenericType::intType;
 		}
 	}
 	if (leftType.isFloatType() || leftType.isDoubleType())
