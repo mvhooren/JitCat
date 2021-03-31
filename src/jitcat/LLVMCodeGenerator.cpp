@@ -125,6 +125,11 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	double(*expPtr)(double) = &exp;
 	intrinsicSymbols[executionSession->intern("exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(expPtr), functionFlags);
 
+	intrinsicSymbols[executionSession->intern("exp2f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&exp2f), functionFlags);
+	intrinsicSymbols[executionSession->intern("_exp2")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&exp2l), functionFlags);
+	double(*exp2Ptr)(double) = &exp2;
+	intrinsicSymbols[executionSession->intern("exp2")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(exp2Ptr), functionFlags);
+
 	intrinsicSymbols[executionSession->intern("powf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powl), functionFlags);
 	double(*powPtr)(double, double) = &pow;
