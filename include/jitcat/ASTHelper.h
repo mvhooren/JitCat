@@ -48,8 +48,8 @@ namespace jitcat::AST
 		static void updatePointerIfChanged(std::unique_ptr<CatTypedExpression>& uPtr, CatStatement* expression);
 		static void updatePointerIfChanged(std::unique_ptr<CatAssignableExpression>& uPtr, CatStatement* expression);
 		static void updatePointerIfChanged(std::unique_ptr<CatIdentifier>& uPtr, CatStatement* expression);
-
-		static void doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType);
+		//Returns true if a conversion was inserted
+		static bool doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType);
 		//This inserts a CatIndirectionConversion before the CatTypedExpression contained in uPtr.
 		static bool doIndirectionConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& expectedType, bool allowAddressOf, IndirectionConversionMode& conversionMode);
 

@@ -70,11 +70,12 @@ void ASTHelper::updatePointerIfChanged(std::unique_ptr<CatIdentifier>& uPtr, Cat
 	}
 }
 
-void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType)
+bool ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& targetType)
 {
 	CatGenericType sourceType = uPtr->getType();
 	//Currently, only basic type conversions are supported.
-	if (sourceType.isBasicType() && targetType.isBasicType()
+	if ((sourceType.isBasicType() || sourceType.isStringType()) 
+		&& (targetType.isBasicType() || targetType.isStringType())
 		&& sourceType != targetType)
 	{
 		CatTypedExpression* sourceExpression = uPtr.release();
@@ -91,7 +92,9 @@ void ASTHelper::doTypeConversion(std::unique_ptr<CatTypedExpression>& uPtr, cons
 		assert(functionName != nullptr);
 		CatBuiltInFunctionCall* functionCall = new CatBuiltInFunctionCall(functionName, sourceExpression->getLexeme(), arguments, sourceExpression->getLexeme());
 		uPtr.reset(functionCall);
+		return true;
 	}
+	return false;
 }
 
 

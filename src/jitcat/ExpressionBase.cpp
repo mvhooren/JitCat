@@ -251,7 +251,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 			{
 				parseResult.success = true;
 			}
-			else if (!valueType.compare(expectedType, true, true))
+			else if (!expectAssignable && !valueType.compare(expectedType, true, true))
 			{
 				if (expectedType.isVoidType())
 				{

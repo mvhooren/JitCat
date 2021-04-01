@@ -85,13 +85,46 @@ bool CatAssignmentOperator::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 	}
 	else if (lhs->typeCheck(compiletimeContext, errorManager, errorContext) && rhs->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
+		if (lhs.get()->isAssignable())
+		{
+			//Do indirection conversion if needed.
+			const CatGenericType& assignableType = static_cast<CatAssignableExpression*>( lhs.get())->getAssignableType();
+			int expectedIndirection = 0;
+			assignableType.removeIndirection(expectedIndirection);
+			assert(expectedIndirection > 0);
+			//this is the expected indirection;
+			expectedIndirection--;
+
+			int rhsIndirection = 0;
+			rhs->getType().removeIndirection(rhsIndirection);
+			
+			CatGenericType expectedType = rhs->getType();
+
+			while (rhsIndirection > expectedIndirection && expectedIndirection > 0)
+			{
+				rhsIndirection--;
+				expectedType = *expectedType.getPointeeType();
+			}
+
+			//CatGenericType expectedType = 
+			IndirectionConversionMode conversionMode = IndirectionConversionMode::None;
+			bool indirectionConversionSuccess = ASTHelper::doIndirectionConversion(rhs, expectedType, false, conversionMode);
+			//To silence unused variable warning in release builds.
+			(void)indirectionConversionSuccess;
+			assert(indirectionConversionSuccess);
+		}
+
 		CatGenericType leftType = lhs->getType();
 		CatGenericType rightType = rhs->getType();
 		if (leftType != rightType
-			&& leftType.isBasicType() && rightType.isBasicType())
+			&& (leftType.isBasicType() || leftType.isStringType())
+			&& (rightType.isBasicType() || rightType.isStringType()))
 		{
 			//Automatic type conversion
-			ASTHelper::doTypeConversion(this->rhs, lhs->getType());
+			if (ASTHelper::doTypeConversion(this->rhs, lhs->getType()))
+			{
+				rhs->typeCheck(compiletimeContext, errorManager, errorContext);
+			}
 		}
 		if (!ASTHelper::checkAssignment(lhs.get(), rhs.get(), errorManager, compiletimeContext, errorContext, getLexeme()))
 		{
