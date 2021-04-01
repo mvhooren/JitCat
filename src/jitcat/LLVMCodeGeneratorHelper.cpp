@@ -253,8 +253,8 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
 	else if (type.isReflectableObjectType())			
 	{
-		//This is a compound type. For now, just create a byte array type.
-		return llvm::ArrayType::get(LLVMTypes::charType, type.getTypeSize());
+		//This is a compound type. For now, just create a pointer type.
+		return LLVMTypes::pointerType;
 	}
 	else if (type.isPointerType())
 	{
