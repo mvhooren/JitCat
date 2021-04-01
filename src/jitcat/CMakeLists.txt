@@ -427,3 +427,6 @@ add_library(JitCat STATIC
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER JitCat)
+if (MSVC)
+	set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_PDB_NAME "$(ProjectName)")
+endif()
