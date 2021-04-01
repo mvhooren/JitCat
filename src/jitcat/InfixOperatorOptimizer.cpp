@@ -38,8 +38,10 @@ CatTypedExpression* InfixOperatorOptimizer::tryCollapseInfixOperator(std::unique
 	{
 		if (resultType != constCollapsed->getType())
 		{
-			ASTHelper::doTypeConversion(constCollapsed, resultType);
-			constCollapsed->typeCheck(compileTimeContext, errorManager, errorContext);
+			if (ASTHelper::doTypeConversion(constCollapsed, resultType))
+			{
+				constCollapsed->typeCheck(compileTimeContext, errorManager, errorContext);
+			}
 			ASTHelper::updatePointerIfChanged(constCollapsed, constCollapsed->constCollapse(compileTimeContext, errorManager, errorContext));
 		}
 		return constCollapsed.release();
