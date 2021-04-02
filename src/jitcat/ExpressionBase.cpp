@@ -298,8 +298,7 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 			}
 		}
 		else if (expectAssignable && 
-				(!parseResult.getNode<CatTypedExpression>()->isAssignable() 
-				 || !static_cast<CatAssignableExpression*>(parseResult.getNode<CatTypedExpression>())->getAssignableType().isAssignableType()))
+				!parseResult.getNode<CatTypedExpression>()->isAssignable())
 		{
 			parseResult.success = false;
 			errorManager->compiledWithError("Expression result is read only. Expected a writable value.", errorContext, context->getContextName(), expressionLexeme);

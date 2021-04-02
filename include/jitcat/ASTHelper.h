@@ -57,7 +57,7 @@ namespace jitcat::AST
 		static std::any doGetArgument(CatTypedExpression* argument, const CatGenericType& parameterType, CatRuntimeContext* context);
 
 		//Source and target must be of the same type and target must be a writable type. Source must be a writable type if its ownership semantics are Owned and the target type's ownership semantics is Owned or Shared.
-		static std::any doAssignment(std::any& target, const std::any& source, const CatGenericType& targetType, const CatGenericType& sourceType);
+		static std::any doAssignment(std::any& target, std::any& source, const CatGenericType& targetType, const CatGenericType& sourceType);
 
 		//Searches type for a function that matches the provided name and argument types. 
 		//Generates an error if the function was not found, or if the argumentTypes did not match the expected types.

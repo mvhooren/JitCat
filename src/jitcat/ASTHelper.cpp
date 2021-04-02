@@ -185,16 +185,17 @@ std::any jitcat::AST::ASTHelper::doGetArgument(CatTypedExpression* argument, con
 }
 
 
-std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const CatGenericType& targetType, const CatGenericType& sourceType)
+std::any ASTHelper::doAssignment(std::any& target, std::any& source, const CatGenericType& targetType, const CatGenericType& sourceType)
 {
 	if (targetType.isPointerType() && targetType.getPointeeType()->isBasicType())
 	{
+		std::any convertedSource = targetType.removeIndirection().convertToType(source, sourceType);
 		if (targetType.getPointeeType()->isIntType())
 		{
 			int* intTarget = std::any_cast<int*>(target);
 			if (intTarget != nullptr)
 			{
-				*intTarget = std::any_cast<int>(source);
+				*intTarget = std::any_cast<int>(convertedSource);
 			}
 		}
 		else if (targetType.getPointeeType()->isFloatType())
@@ -202,7 +203,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			float* floatTarget = std::any_cast<float*>(target);
 			if (floatTarget != nullptr)
 			{
-				*floatTarget = std::any_cast<float>(source);
+				*floatTarget = std::any_cast<float>(convertedSource);
 			}
 		}
 		else if (targetType.getPointeeType()->isDoubleType())
@@ -210,7 +211,7 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			double* doubleTarget = std::any_cast<double*>(target);
 			if (doubleTarget != nullptr)
 			{
-				*doubleTarget = std::any_cast<double>(source);
+				*doubleTarget = std::any_cast<double>(convertedSource);
 			}
 		}
 		else if (targetType.getPointeeType()->isBoolType())
@@ -218,13 +219,24 @@ std::any ASTHelper::doAssignment(std::any& target, const std::any& source, const
 			bool* boolTarget = std::any_cast<bool*>(target);
 			if (boolTarget != nullptr)
 			{
-				*boolTarget = std::any_cast<bool>(source);
+				*boolTarget = std::any_cast<bool>(convertedSource);
 			}
 		}
 		else if (targetType.isPointerToReflectableObjectType())
 		{
 			//Not supported for now. This would need to call operator= on the target object, not all objects will have implemented this.
+			assert(false);
 		}
+		return target;
+	}
+	else if (targetType.isStringPtrType() && sourceType.isStringPtrType())
+	{
+		*std::any_cast<Configuration::CatString*>(target) = *std::any_cast<Configuration::CatString*>(source);
+		return target;
+	}
+	else if (targetType.isStringPtrType() && sourceType.isStringType())
+	{
+		*std::any_cast<Configuration::CatString*>(target) = std::any_cast<Configuration::CatString>(source);
 		return target;
 	}
 	else if (targetType.isPointerToPointerType() && targetType.getPointeeType()->isPointerToReflectableObjectType())

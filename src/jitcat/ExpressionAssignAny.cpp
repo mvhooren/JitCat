@@ -68,7 +68,17 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 			else if (myType.isFloatType())	reinterpret_cast<void(*)(CatRuntimeContext*, float)>(nativeFunctionAddress)(runtimeContext, std::any_cast<float>(convertedValue));
 			else if (myType.isDoubleType())	reinterpret_cast<void(*)(CatRuntimeContext*, double)>(nativeFunctionAddress)(runtimeContext, std::any_cast<double>(convertedValue));
 			else if (myType.isBoolType())	reinterpret_cast<void(*)(CatRuntimeContext*, bool)>(nativeFunctionAddress)(runtimeContext, std::any_cast<bool>(convertedValue));
-			else if (myType.isStringType())	reinterpret_cast<void(*)(CatRuntimeContext*, const Configuration::CatString&)>(nativeFunctionAddress)(runtimeContext, std::any_cast<Configuration::CatString>(convertedValue));
+			else if (myType.isStringType())
+			{
+				if (valueType.isStringPtrType())
+				{
+					reinterpret_cast<void(*)(CatRuntimeContext*, const Configuration::CatString&)>(nativeFunctionAddress)(runtimeContext, *std::any_cast<Configuration::CatString*>(convertedValue));
+				}
+				else
+				{
+					reinterpret_cast<void(*)(CatRuntimeContext*, const Configuration::CatString&)>(nativeFunctionAddress)(runtimeContext, std::any_cast<Configuration::CatString>(convertedValue));
+				}
+			}
 			else if (myType.isReflectableHandleType() || myType.isPointerToReflectableObjectType())
 			{
 				reinterpret_cast<void(*)(CatRuntimeContext*, uintptr_t)>(nativeFunctionAddress)(runtimeContext, myType.getRawPointer(value));

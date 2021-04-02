@@ -205,9 +205,7 @@ CatStatement* CatMemberFunctionCall::constCollapse(CatRuntimeContext* compileTim
 
 bool jitcat::AST::CatMemberFunctionCall::isAssignable() const
 {
-	return returnType.isPointerType() 
-		   && returnType.isWritable() 
-		   && returnType.getPointeeType()->isWritable();
+	return returnType.isAssignableType();
 }
 
 

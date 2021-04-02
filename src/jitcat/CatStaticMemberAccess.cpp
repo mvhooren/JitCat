@@ -66,7 +66,7 @@ const CatGenericType& CatStaticMemberAccess::getAssignableType() const
 
 bool jitcat::AST::CatStaticMemberAccess::isAssignable() const
 {
-	return !type.isConst();
+	return assignableType.isAssignableType();
 }
 
 
