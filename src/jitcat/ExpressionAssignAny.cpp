@@ -81,10 +81,16 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 			}
 			else if (myType.isReflectableHandleType() || myType.isPointerToReflectableObjectType())
 			{
-				reinterpret_cast<void(*)(CatRuntimeContext*, uintptr_t)>(nativeFunctionAddress)(runtimeContext, myType.getRawPointer(value));
+				assert(myType.compare(valueType, false, false));
+				if (valueType.isPointerToPointerType())
+				{
+					convertedValue = valueType.getPointeeType()->getPointeeType()->getTypeCaster()->getValueOfPointerToPointer(convertedValue);
+				}
+				reinterpret_cast<void(*)(CatRuntimeContext*, uintptr_t)>(nativeFunctionAddress)(runtimeContext, myType.getRawPointer(convertedValue));
 			}
 			else
 			{
+				assert(false);
 				return false;
 			}
 		}
