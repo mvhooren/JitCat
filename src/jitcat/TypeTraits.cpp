@@ -9,10 +9,3 @@
 #include "jitcat/TypeTraits.h"
 using namespace jitcat;
 
-const TypeID jitcat::TypeCounter::getNextTypeId()
-{
-	return typeIdCounter++;
-}
-
-
-std::atomic<TypeID> jitcat::TypeCounter::typeIdCounter = 1;

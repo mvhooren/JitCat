@@ -34,8 +34,20 @@ namespace jitcat::Reflection
 	template <class ItemT, class AllocatorT>
 	inline const char* ExternalReflector<std::vector<ItemT, AllocatorT>>::getTypeName()
 	{
-		static const std::string vectorName = jitcat::Tools::append("vector<", TypeNameGetter<ItemT>::get() , 
-																	",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+		static std::string vectorName;
+		
+		if (vectorName == "")
+		{
+			if constexpr (std::is_same_v<AllocatorT, typename std::vector<ItemT>::allocator_type>)
+			{
+				vectorName = jitcat::Tools::append("vector<", QualifiedTypeNameGetter<ItemT>::get(), ">");
+			}
+			else
+			{
+				vectorName = jitcat::Tools::append("vector<", QualifiedTypeNameGetter<ItemT>::get(), ",", QualifiedTypeNameGetter<AllocatorT>::get(), ">");
+			}
+		}
+
 		return vectorName.c_str();
 	}
 
@@ -75,7 +87,18 @@ namespace jitcat::Reflection
 	template <class AllocatorT>
 	inline const char*  ExternalReflector<std::vector<bool, AllocatorT>>::getTypeName()
 	{
-		static const std::string vectorName = jitcat::Tools::append("vector<bool,", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+		static std::string vectorName;
+		if (vectorName == "")
+		{
+			if constexpr (std::is_same_v<AllocatorT, typename std::vector<bool>::allocator_type>)
+			{
+				vectorName = "vector<bool>";
+			}
+			else
+			{
+				vectorName = jitcat::Tools::append("vector<bool,", QualifiedTypeNameGetter<AllocatorT>::get(), ">");
+			}
+		}
 		return vectorName.c_str();
 	}
 
@@ -115,7 +138,7 @@ namespace jitcat::Reflection
 	template<class ItemT, std::size_t ArraySize>
 	inline const char* ExternalReflector<std::array<ItemT, ArraySize>>::getTypeName()
 	{
-		static const std::string arrayName = jitcat::Tools::append("array<", TypeNameGetter<ItemT>::get(),
+		static const std::string arrayName = jitcat::Tools::append("array<", QualifiedTypeNameGetter<ItemT>::get(),
 																   ",", ArraySize, ">");
 		return arrayName.c_str();
 	}
@@ -156,8 +179,20 @@ namespace jitcat::Reflection
 	template<class ItemT, class AllocatorT>
 	inline const char* ExternalReflector<std::deque<ItemT, AllocatorT>>::getTypeName()
 	{
-		static const std::string dequeName = jitcat::Tools::append("deque<", TypeNameGetter<ItemT>::get(),
-			",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+		static std::string dequeName;
+		
+		if (dequeName == "")
+		{
+			if constexpr (std::is_same_v<AllocatorT, typename std::deque<ItemT>::allocator_type>)
+			{
+				dequeName = jitcat::Tools::append("deque<", QualifiedTypeNameGetter<ItemT>::get(), ">");
+			}
+			else
+			{
+				dequeName = jitcat::Tools::append("deque<", QualifiedTypeNameGetter<ItemT>::get(), ",", QualifiedTypeNameGetter<AllocatorT>::get(), ">");
+			}
+		}
+															    
 		return dequeName.c_str();
 	}
 
@@ -197,11 +232,22 @@ namespace jitcat::Reflection
 	template<class KeyT, class ValueT, class PredicateT, class AllocatorT>
 	inline const char* ExternalReflector<std::map<KeyT, ValueT, PredicateT, AllocatorT>>::getTypeName()
 	{
-		static const std::string unorderedMapName = jitcat::Tools::append("map<", TypeNameGetter<KeyT>::get(),
-			",", TypeNameGetter<ValueT>::get(),
-			",", TypeIdentifier<PredicateT>::getIdentifier(),
-			",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
-		return unorderedMapName.c_str();
+		static std::string mapName = "";
+		if (mapName == "")
+		{
+			mapName = jitcat::Tools::append("map<", QualifiedTypeNameGetter<KeyT>::get(), ", ", QualifiedTypeNameGetter<ValueT>::get());
+			if constexpr (!std::is_same_v<PredicateT, typename std::map<KeyT, ValueT>::key_compare>)
+			{
+				mapName = jitcat::Tools::append(mapName, ", ", QualifiedTypeNameGetter<PredicateT>::get());
+			}
+			if constexpr (!std::is_same_v<AllocatorT, typename std::map<KeyT, ValueT>::allocator_type>)
+			{
+				mapName = jitcat::Tools::append(mapName, ", ", QualifiedTypeNameGetter<AllocatorT>::get());
+			}
+			mapName = jitcat::Tools::append(mapName, ">");
+		}
+			
+		return mapName.c_str();
 	}
 
 
@@ -263,11 +309,24 @@ namespace jitcat::Reflection
 	template<class KeyT, class ValueT, class HashT, class PredicateT, class AllocatorT>
 	inline const char* ExternalReflector<std::unordered_map<KeyT, ValueT, HashT, PredicateT, AllocatorT>>::getTypeName()
 	{
-		static const std::string unorderedMapName = jitcat::Tools::append("unordered_map<", TypeNameGetter<KeyT>::get(),
-			",", TypeNameGetter<ValueT>::get(),
-			",", TypeIdentifier<HashT>::getIdentifier(),
-			",", TypeIdentifier<PredicateT>::getIdentifier(),
-			",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+		static std::string unorderedMapName = "";
+		if (unorderedMapName == "")
+		{
+			unorderedMapName = jitcat::Tools::append("unordered_map<", QualifiedTypeNameGetter<KeyT>::get(), ", ", QualifiedTypeNameGetter<ValueT>::get());
+			if constexpr (!std::is_same_v<HashT, typename std::unordered_map<KeyT, ValueT>::hasher>)
+			{
+				unorderedMapName = jitcat::Tools::append(unorderedMapName, ", ", QualifiedTypeNameGetter<HashT>::get());
+			}
+			if constexpr (!std::is_same_v<PredicateT, typename std::unordered_map<KeyT, ValueT>::key_equal>)
+			{
+				unorderedMapName = jitcat::Tools::append(unorderedMapName, ", ", QualifiedTypeNameGetter<PredicateT>::get());
+			}
+			if constexpr (!std::is_same_v<AllocatorT, typename std::unordered_map<KeyT, ValueT>::allocator_type>)
+			{
+				unorderedMapName = jitcat::Tools::append(unorderedMapName, ", ", QualifiedTypeNameGetter<AllocatorT>::get());
+			}
+			unorderedMapName = jitcat::Tools::append(unorderedMapName, ">");
+		}
 		return unorderedMapName.c_str();
 	}
 
@@ -336,9 +395,9 @@ namespace jitcat::Reflection
 		}
 		else
 		{
-			static const std::string stringName = jitcat::Tools::append("string<", TypeNameGetter<CharT>::get(),
-				",", TypeIdentifier<TraitsT>::getIdentifier(),
-				",", TypeIdentifier<AllocatorT>::getIdentifier(), ">");
+			static const std::string stringName = jitcat::Tools::append("string<", QualifiedTypeNameGetter<CharT>::get(),
+				",", QualifiedTypeNameGetter<TraitsT>::get(),
+				",", QualifiedTypeNameGetter<AllocatorT>::get(), ">");
 			return stringName.c_str();
 		}
 	}

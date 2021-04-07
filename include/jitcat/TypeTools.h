@@ -9,6 +9,7 @@
 
 #include "jitcat/ExternalReflector.h"
 #include "jitcat/FunctionPresenceTest.h"
+#include "jitcat/Tools.h"
 
 #include <memory>
 #include <string>
@@ -81,11 +82,12 @@ namespace jitcat::Reflection
     template<typename ReflectableT>
     class TypeNameGetter
     {
-		using DecayedT = typename remove_all<ReflectableT>::type;
         TypeNameGetter() = delete;
         ~TypeNameGetter() = delete;
         TypeNameGetter(const TypeNameGetter&) = delete;
     public:
+		using DecayedT = typename remove_all<ReflectableT>::type;
+
         static const char* get()
         {
 			if constexpr (GetTypeNameAndReflectExist<DecayedT>::value)			return DecayedT::getTypeName();
@@ -123,4 +125,88 @@ namespace jitcat::Reflection
 		static const char* get() { return TypeNameGetter<ReflectableT>::get();}
 	};
 
+	template<typename ReflectableT>
+	class QualifiedTypeNameGetter
+	{
+        QualifiedTypeNameGetter() = delete;
+        ~QualifiedTypeNameGetter() = delete;
+        QualifiedTypeNameGetter(const QualifiedTypeNameGetter&) = delete;
+		public:
+		static const char* get()
+		{
+			static_assert(std::is_same_v<ReflectableT, typename remove_all<ReflectableT>::type>, "Type should be fully unqualified at this point. There must be a missing specialization of QualifiedTypeNameGetter if this fails.");
+			return TypeNameGetter<ReflectableT>::get();
+		}
+	};
+
+
+	template<typename ReflectableT>
+	class QualifiedTypeNameGetter<std::unique_ptr<ReflectableT>>
+	{
+		QualifiedTypeNameGetter() = delete;
+		~QualifiedTypeNameGetter() = delete;
+		QualifiedTypeNameGetter(const QualifiedTypeNameGetter&) = delete;
+	public:
+		static const char* get() 
+		{
+			static std::string typeName = Tools::append("unique_ptr<", QualifiedTypeNameGetter<ReflectableT>::get(), ">");
+			return typeName.c_str();
+		}
+	};
+
+	template<typename ReflectableT>
+	class QualifiedTypeNameGetter<std::shared_ptr<ReflectableT>>
+	{
+		QualifiedTypeNameGetter() = delete;
+		~QualifiedTypeNameGetter() = delete;
+		QualifiedTypeNameGetter(const QualifiedTypeNameGetter&) = delete;
+	public:
+		static const char* get() 
+		{
+			static std::string typeName = Tools::append("shared_ptr<", QualifiedTypeNameGetter<ReflectableT>::get(), ">");
+			return typeName.c_str();
+		}
+	};
+
+	template<typename ReflectableT>
+	class QualifiedTypeNameGetter<ReflectableT*>
+	{
+		QualifiedTypeNameGetter() = delete;
+		~QualifiedTypeNameGetter() = delete;
+		QualifiedTypeNameGetter(const QualifiedTypeNameGetter&) = delete;
+	public:
+		static const char* get() 
+		{
+			static const std::string typeName = Tools::append(QualifiedTypeNameGetter<ReflectableT>::get(), "*");
+			return typeName.c_str();
+		}
+	};
+
+	template<typename ReflectableT>
+	class QualifiedTypeNameGetter<ReflectableT&>
+	{
+		QualifiedTypeNameGetter() = delete;
+		~QualifiedTypeNameGetter() = delete;
+		QualifiedTypeNameGetter(const QualifiedTypeNameGetter&) = delete;
+	public:
+		static const char* get() 
+		{
+			static const std::string typeName = Tools::append(QualifiedTypeNameGetter<ReflectableT>::get(), "&");
+			return typeName.c_str();
+		}
+	};
+
+	template<typename ReflectableT>
+	class QualifiedTypeNameGetter<const ReflectableT>
+	{
+		QualifiedTypeNameGetter() = delete;
+		~QualifiedTypeNameGetter() = delete;
+		QualifiedTypeNameGetter(const QualifiedTypeNameGetter&) = delete;
+	public:
+		static const char* get() 
+		{
+			static const std::string typeName = Tools::append("const ", QualifiedTypeNameGetter<ReflectableT>::get());
+			return typeName.c_str();
+		}
+	};
 }

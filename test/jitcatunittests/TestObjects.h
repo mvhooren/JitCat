@@ -10,6 +10,7 @@
 #include "NestedReflectedObject.h"
 #include "TestEnum.h"
 #include "TestVector4.h"
+#include "jitcat/ExternalReflector.h"
 #include "jitcat/Reflectable.h"
 #include "jitcat/ReflectedTypeInfo.h"
 #include "jitcat/Tools.h"
@@ -41,7 +42,20 @@ namespace TestObjects
 			return jitcat::Tools::lessWhileIgnoringCase(first, second);
 		}
 	};
+}
 
+template <>
+class jitcat::Reflection::ExternalReflector<TestObjects::CaseInsensitiveCompare>
+{
+public:
+	static const char* getTypeName() {return "Test_CaseInsensitiveCompare";}
+	static void reflect(jitcat::Reflection::ReflectedTypeInfo& typeInfo) {}	
+	static constexpr bool exists = true;
+};
+
+
+namespace TestObjects
+{
 	class ReflectedObject: public jitcat::Reflection::Reflectable
 	{
 	public:
