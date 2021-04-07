@@ -117,6 +117,8 @@ namespace jitcat::LLVM
 		llvm::Module* getCurrentModule() const;
 		llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* getBuilder() const;
 
+		llvm::Value* booleanCast(llvm::Value* boolean);
+
 	private:
 		//ExecutionSession represents a running JIT program
 		std::unique_ptr<llvm::orc::ExecutionSession> executionSession;

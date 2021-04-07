@@ -31,6 +31,7 @@ namespace jitcat::LLVM
 		static llvm::Type* longintType;
 		static llvm::Type* charType;
 		static llvm::Type* boolType;
+		static llvm::Type* bool1Type;
 		static llvm::PointerType* pointerType;
 		static llvm::Type* pointerTypeAsType;
 		static llvm::Type* uintPtrType;

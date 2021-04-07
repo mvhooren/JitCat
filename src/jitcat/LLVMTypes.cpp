@@ -16,6 +16,7 @@ llvm::Type* LLVMTypes::intType = nullptr;
 llvm::Type* LLVMTypes::longintType = nullptr;
 llvm::Type* LLVMTypes::charType = nullptr;
 llvm::Type* LLVMTypes::boolType = nullptr;
+llvm::Type* LLVMTypes::bool1Type = nullptr;
 llvm::PointerType* LLVMTypes::pointerType = nullptr;
 llvm::Type* LLVMTypes::pointerTypeAsType = nullptr;
 llvm::Type* LLVMTypes::uintPtrType = nullptr;

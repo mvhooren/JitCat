@@ -30,7 +30,8 @@ LLVMJit::LLVMJit():
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
 	LLVMTypes::longintType = llvm::Type::getInt64Ty(*context->getContext());
 	LLVMTypes::charType = llvm::Type::getInt8Ty(*context->getContext());
-	LLVMTypes::boolType = llvm::Type::getInt1Ty(*context->getContext());
+	LLVMTypes::boolType = llvm::Type::getIntNTy(*context->getContext(), sizeof(bool) * 8);
+	LLVMTypes::bool1Type = llvm::Type::getInt1Ty(*context->getContext());
 	LLVMTypes::pointerType = llvm::Type::getInt8PtrTy(*context->getContext());
 	LLVMTypes::pointerTypeAsType = static_cast<llvm::Type*>(LLVMTypes::pointerType);
 	if constexpr (sizeof(uintptr_t) == 8)

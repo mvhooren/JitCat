@@ -372,23 +372,23 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, b
 			if (valueIsSigned)
 			{
 				llvm::Value* zero = llvm::ConstantInt::get(llvmContext, llvm::APInt(bitWidth, 0, true));
-				return builder->CreateICmpSGT(valueToConvert, zero, "GreaterThanZero");
+				return codeGenerator->booleanCast(builder->CreateICmpSGT(valueToConvert, zero, "GreaterThanZero"));
 			}
 			else
 			{
 				llvm::Value* zero = llvm::ConstantInt::get(llvmContext, llvm::APInt(bitWidth, 0, false));
-				return builder->CreateICmpUGT(valueToConvert, zero, "GreaterThanZero");
+				return codeGenerator->booleanCast(builder->CreateICmpUGT(valueToConvert, zero, "GreaterThanZero"));
 			}
 		}
 		else if (valueToConvert->getType() == LLVMTypes::floatType)
 		{
 			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0f));
-			return builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero");
+			return codeGenerator->booleanCast(builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero"));
 		}
 		else if (valueToConvert->getType() == LLVMTypes::doubleType)
 		{
 			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0));
-			return builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero");
+			return codeGenerator->booleanCast(builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero"));
 		}
 	}
 	else if (toType == LLVMTypes::charType)
@@ -853,7 +853,7 @@ llvm::Constant* LLVMCodeGeneratorHelper::createConstant(float constant)
 
 llvm::Constant* LLVMCodeGeneratorHelper::createConstant(bool constant)
 {
-	return constant ? llvm::ConstantInt::getTrue(llvmContext) : llvm::ConstantInt::getFalse(llvmContext);
+	return constant ? createConstant((char)1) : createConstant((char)0);
 }
 
 

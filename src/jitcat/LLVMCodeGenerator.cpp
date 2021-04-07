@@ -357,7 +357,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			llvm::Value* conditionValue = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::boolType, context);
 			llvm::Value* trueValue = generate(arguments->getArgument(1), context);
 			llvm::Value* falseValue = helper->convertType(generate(arguments->getArgument(2), context), arguments->getArgument(2)->getType(), arguments->getArgument(1)->getType(), context);
-			return builder->CreateSelect(conditionValue, trueValue, falseValue);
+			return builder->CreateSelect(builder->CreateTrunc(conditionValue, LLVMTypes::bool1Type), trueValue, falseValue);
 		}
 		case CatBuiltInFunctionType::Abs:
 		{
@@ -749,12 +749,12 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 					return builder->CreateFRem(left, right, "divided");
 				}
 			}
-			case CatInfixOperatorType::Greater:				return builder->CreateFCmpUGT(left, right, "greater");		
-			case CatInfixOperatorType::Smaller:				return builder->CreateFCmpULT(left, right, "smaller");		
-			case CatInfixOperatorType::GreaterOrEqual:		return builder->CreateFCmpUGE(left, right, "greaterOrEqual");	
-			case CatInfixOperatorType::SmallerOrEqual:		return builder->CreateFCmpULE(left, right, "lessOrEqual");	
-			case CatInfixOperatorType::Equals:				return builder->CreateFCmpUEQ(left, right, "equal");			
-			case CatInfixOperatorType::NotEquals:			return builder->CreateFCmpUNE(left, right, "notEqual");
+			case CatInfixOperatorType::Greater:				return booleanCast(builder->CreateFCmpUGT(left, right, "greater"));
+			case CatInfixOperatorType::Smaller:				return booleanCast(builder->CreateFCmpULT(left, right, "smaller"));		
+			case CatInfixOperatorType::GreaterOrEqual:		return booleanCast(builder->CreateFCmpUGE(left, right, "greaterOrEqual"));	
+			case CatInfixOperatorType::SmallerOrEqual:		return booleanCast(builder->CreateFCmpULE(left, right, "lessOrEqual"));	
+			case CatInfixOperatorType::Equals:				return booleanCast(builder->CreateFCmpUEQ(left, right, "equal"));			
+			case CatInfixOperatorType::NotEquals:			return booleanCast(builder->CreateFCmpUNE(left, right, "notEqual"));
 			default:										assert(false);
 		}
 	}
@@ -789,12 +789,12 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 					return builder->CreateSRem(left, right, "modulo");
 				}
 			}
-			case CatInfixOperatorType::Greater:				return builder->CreateICmpSGT(left, right, "greater");		
-			case CatInfixOperatorType::Smaller:				return builder->CreateICmpSLT(left, right, "smaller");		
-			case CatInfixOperatorType::GreaterOrEqual:		return builder->CreateICmpSGE(left, right, "greaterOrEqual");	
-			case CatInfixOperatorType::SmallerOrEqual:		return builder->CreateICmpSLE(left, right, "smallerOrEqual");	
-			case CatInfixOperatorType::Equals:				return builder->CreateICmpEQ(left, right, "equal");
-			case CatInfixOperatorType::NotEquals:			return builder->CreateICmpNE(left, right, "notEqual");		
+			case CatInfixOperatorType::Greater:				return booleanCast(builder->CreateICmpSGT(left, right, "greater"));		
+			case CatInfixOperatorType::Smaller:				return booleanCast(builder->CreateICmpSLT(left, right, "smaller"));		
+			case CatInfixOperatorType::GreaterOrEqual:		return booleanCast(builder->CreateICmpSGE(left, right, "greaterOrEqual"));	
+			case CatInfixOperatorType::SmallerOrEqual:		return booleanCast(builder->CreateICmpSLE(left, right, "smallerOrEqual"));	
+			case CatInfixOperatorType::Equals:				return booleanCast(builder->CreateICmpEQ(left, right, "equal"));
+			case CatInfixOperatorType::NotEquals:			return booleanCast(builder->CreateICmpNE(left, right, "notEqual"));		
 			default:										assert(false);
 		}
 	}
@@ -802,8 +802,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatInfixOperator* infixOperator, 
 	{
 		switch (oper)
 		{
-			case CatInfixOperatorType::Equals:				return builder->CreateICmpEQ(left, right, "equal");
-			case CatInfixOperatorType::NotEquals:			return builder->CreateICmpNE(left, right, "notEqual");		
+			case CatInfixOperatorType::Equals:				return booleanCast(builder->CreateICmpEQ(left, right, "equal"));
+			case CatInfixOperatorType::NotEquals:			return booleanCast(builder->CreateICmpNE(left, right, "notEqual"));		
 			default:										assert(false);
 		}
 	}
@@ -980,7 +980,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatPrefixOperator* prefixOperator
 	}
 	if (prefixOperator->getOperator() == CatPrefixOperator::Operator::Not)
 	{
-		return builder->CreateNot(helper->convertType(right, prefixOperator->getRHS()->getType(), CatGenericType::boolType, context), "not");
+		return builder->CreateXor(helper->convertType(right, prefixOperator->getRHS()->getType(), CatGenericType::boolType, context), helper->createConstant(true), "not");
 	}
 	else if (prefixOperator->getOperator() == CatPrefixOperator::Operator::Minus)
 	{
@@ -1162,8 +1162,8 @@ void LLVMCodeGenerator::generate(const AST::CatVariableDeclaration* variableDecl
 
 void LLVMCodeGenerator::generate(const AST::CatIfStatement* ifStatement, LLVMCompileTimeContext* context)
 {
-	llvm::Value* conditionValue = generate(ifStatement->getConditionExpression(), context);
-	assert(conditionValue->getType() == LLVMTypes::boolType);
+	llvm::Value* conditionValue = builder->CreateTrunc(generate(ifStatement->getConditionExpression(), context), LLVMTypes::bool1Type);
+	assert(conditionValue->getType() == LLVMTypes::bool1Type);
 	llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(helper->getContext(), "then", context->currentFunction);
 	llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(helper->getContext(), "else");
 	bool allIfControlPathsReturn = ifStatement->getAllControlPathsReturn();
@@ -1807,6 +1807,12 @@ llvm::Module* jitcat::LLVM::LLVMCodeGenerator::getCurrentModule() const
 llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* jitcat::LLVM::LLVMCodeGenerator::getBuilder() const
 {
 	return builder.get();
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGenerator::booleanCast(llvm::Value* boolean)
+{
+	return builder->CreateCast(llvm::Instruction::CastOps::ZExt ,boolean, LLVMTypes::boolType);
 }
 
 

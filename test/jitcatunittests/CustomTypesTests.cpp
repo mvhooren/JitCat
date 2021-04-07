@@ -94,6 +94,16 @@ TEST_CASE("Custom Types", "[customtypes]")
 		Expression<bool> testExpression(&context, "myBoolean");
 		doChecks(true, false, false, false, testExpression, context);
 	}
+	SECTION("Boolean Expression 1")
+	{
+		Expression<bool> testExpression(&context, "!myBoolean");
+		doChecks(false, false, false, false, testExpression, context);
+	}
+	SECTION("Boolean Expression 2")
+	{
+		Expression<bool> testExpression(&context, "!aBoolean && (!myBoolConstant || !no)");
+		doChecks(false, false, false, false, testExpression, context);
+	}
 	SECTION("Object Ptr Variable")
 	{
 		Expression<ReflectedObject*> testExpression(&context, "myObject");
