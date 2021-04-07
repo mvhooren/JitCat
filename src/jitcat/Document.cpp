@@ -59,8 +59,14 @@ Lexeme jitcat::Tokenizer::Document::createLexeme(std::size_t offset, std::size_t
 std::size_t jitcat::Tokenizer::Document::getOffsetInDocument(const Lexeme& lexeme) const
 {
 	//Check that the lexeme lies inside the document
-	assert(lexeme.data() >= document.c_str() && (lexeme.data() + lexeme.size()) < document.c_str() + document.size());
-	return lexeme.data() - document.c_str();
+	if (lexeme.data() >= document.c_str() && (lexeme.data() + lexeme.size()) < document.c_str() + document.size())
+	{
+		return lexeme.data() - document.c_str();
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 
