@@ -99,7 +99,7 @@ TEST_CASE("Assign tests", "[assign]" )
 		testExpression.getValue(&context);
 		testExpression.getInterpretedValue(&context);
 	}
-	SECTION("Assign nonWritable int")
+	SECTION("Assign nonWritable reflected int")
 	{
 		Expression<void> testExpression(&context, "largeInt = -99");
 		checkAssignment(reflectedObject.theInt, -99, true, false, false, testExpression, context);

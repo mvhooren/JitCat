@@ -384,7 +384,8 @@ bool CatGenericType::isAssignableType() const
 		   && pointeeType->isWritable()
 		   && (	  (pointeeType->isBasicType())
 			   || (pointeeType->isReflectableObjectType() 
-				   && pointeeType->getObjectType()->canBeAssignedBy(*this))
+				   && (pointeeType->getObjectType()->canBeAssignedBy(*this)
+					   || pointeeType->getOwnershipSemantics() == TypeOwnershipSemantics::Value))
 			   || (pointeeType->isEnumType())
 			   || (pointeeType->isReflectableHandleType())
 			   || (pointeeType->isPointerType() && pointeeType->pointeeType->isReflectableObjectType()));
@@ -2080,6 +2081,7 @@ bool CatGenericType::placementDestruct(unsigned char* buffer, std::size_t buffer
 
 void CatGenericType::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
 {
+	assert(value.has_value());
 	bufferSize = getTypeSize();
 	switch (specificType)
 	{
@@ -2155,6 +2157,7 @@ const TypeCaster* CatGenericType::getTypeCaster() const
 
 uintptr_t CatGenericType::getRawPointer(const std::any& value) const
 {
+	assert(value.has_value());
 	assert(isPointerType() || isReflectableHandleType());
 	int indirectionLevels = 0;
 	const CatGenericType& decayedType = removeIndirection(indirectionLevels);
@@ -2171,6 +2174,7 @@ uintptr_t CatGenericType::getRawPointer(const std::any& value) const
 
 std::any CatGenericType::getAddressOf(std::any& value) const
 {
+	assert(value.has_value());
 	assert(isPointerType() || isReflectableHandleType() || isBasicType() || isReflectableObjectType());
 	int indirectionLevels = 0;
 	const CatGenericType& decayedType = removeIndirection(indirectionLevels);
@@ -2187,6 +2191,7 @@ std::any CatGenericType::getAddressOf(std::any& value) const
 
 std::any CatGenericType::getDereferencedOf(std::any& value) const
 {
+	assert(value.has_value());
 	assert(isPointerType() || isReflectableHandleType());
 	int indirectionLevels = 0;
 	const CatGenericType& decayedType = removeIndirection(indirectionLevels);

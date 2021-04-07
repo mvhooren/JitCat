@@ -58,6 +58,12 @@ void CatMemberAccess::print() const
 }
 
 
+bool jitcat::AST::CatMemberAccess::isAssignable() const
+{
+	return assignableType.isAssignableType();
+}
+
+
 CatASTNodeType CatMemberAccess::getNodeType() const
 {
 	return CatASTNodeType::MemberAccess;

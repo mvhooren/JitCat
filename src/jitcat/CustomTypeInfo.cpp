@@ -485,6 +485,7 @@ void CustomTypeInfo::placementDestruct(unsigned char* buffer, std::size_t buffer
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
+			assert(destructorFunction->getFunctionAddress().functionAddress != 0);
 			reinterpret_cast<void(*)(unsigned char*)>(destructorFunction->getFunctionAddress().functionAddress)(buffer);
 		}
 		else

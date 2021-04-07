@@ -66,7 +66,13 @@ bool CatConstruct::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionEr
 	{
 		return false;
 	}
+	if (!assignable->isAssignable())
+	{
+		errorManager->compiledWithError("Construction failed because target cannot be assigned.", errorContext, compiletimeContext->getContextName(), lexeme);
+		return false;
+	}
 	assignableType = assignable->getAssignableType();
+
 	assert(assignableType.isPointerType());
 	CatGenericType* pointeeType = assignableType.getPointeeType();
 	if (!pointeeType->isConstructible())

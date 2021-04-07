@@ -28,6 +28,7 @@ namespace jitcat::AST
 
 		virtual CatASTNode* copy() const override final;
 		virtual void print() const override final;
+		virtual bool isAssignable() const override final;
 		virtual CatASTNodeType getNodeType() const override final;
 		virtual std::any execute(CatRuntimeContext* runtimeContext) override final;
 		virtual std::any executeAssignable(CatRuntimeContext* runtimeContext) override final;

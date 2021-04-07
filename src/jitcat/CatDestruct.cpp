@@ -55,6 +55,11 @@ bool CatDestruct::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErr
 	{
 		return false;
 	}
+	if (!assignable->isAssignable())
+	{
+		errorManager->compiledWithError("Destruction failed because target cannot be assigned.", errorContext, compiletimeContext->getContextName(), lexeme);
+		return false;
+	}
 	assignableType = assignable->getAssignableType();
 	assert(assignableType.isPointerType());
 	CatGenericType* pointeeType = assignableType.getPointeeType();
