@@ -63,7 +63,11 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 		if (parseResult.astRootNode != nullptr)
 		{
 			const CatGenericType myType = getType();
-			std::any convertedValue = myType.convertToType(value, valueType);
+			std::any convertedValue = value;
+			if (valueType.isBasicType() || valueType.isStringType())
+			{
+				convertedValue = myType.convertToType(value, valueType);
+			}
 			if (myType.isIntType())	reinterpret_cast<void(*)(CatRuntimeContext*, int)>(nativeFunctionAddress)(runtimeContext, std::any_cast<int>(convertedValue));
 			else if (myType.isFloatType())	reinterpret_cast<void(*)(CatRuntimeContext*, float)>(nativeFunctionAddress)(runtimeContext, std::any_cast<float>(convertedValue));
 			else if (myType.isDoubleType())	reinterpret_cast<void(*)(CatRuntimeContext*, double)>(nativeFunctionAddress)(runtimeContext, std::any_cast<double>(convertedValue));
