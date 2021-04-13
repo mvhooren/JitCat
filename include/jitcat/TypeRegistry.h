@@ -41,13 +41,6 @@ namespace jitcat::Reflection
 
 		//Returns nullptr if type wasn't found, type names are case sensitive
 		TypeInfo* getTypeInfo(const std::string& typeName);
-		//Never returns nullptr, creates a new empty TypeInfo if typeName does not exist.
-		TypeInfo* getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> caster, bool allowConstruction,
-									  bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
-									  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-									  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
-									  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
-									  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor);
 
 		const std::map<std::string, TypeInfo*>& getTypes() const;
 	
@@ -67,7 +60,7 @@ namespace jitcat::Reflection
 
 	private:
 		//This function exists to prevent circular includes via TypeInfo.h
-		static std::unique_ptr<TypeInfo, TypeInfoDeleter> createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction,
+		static std::unique_ptr<TypeInfo, TypeInfoDeleter> createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction, 
 												 bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
@@ -98,7 +91,7 @@ namespace jitcat::Reflection
 	inline jitcat::Reflection::TypeInfo* jitcat::Reflection::TypeRegistry::registerType(TypeInfo** typeInfoToSet)
 	{
 		using ReflectableT = typename RemoveConst<ReflectableCVT>::type;
-
+		
 		//A compile error on this line usually means that there was an attempt to reflect a type that is not reflectable (or an unsupported basic type).
 		const char* typeName = TypeNameGetter<ReflectableT>::get();
 		std::string lowerTypeName = Tools::toLowerCase(typeName);

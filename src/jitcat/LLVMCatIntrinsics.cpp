@@ -18,9 +18,9 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 
 
-Reflectable* LLVMCatIntrinsics::getScopePointerFromContext(CatRuntimeContext* context, int scopeId)
+unsigned char* LLVMCatIntrinsics::getScopePointerFromContext(CatRuntimeContext* context, int scopeId)
 {
-	return reinterpret_cast<Reflectable*>(context->getScopeObject((CatScopeID)scopeId));
+	return context->getScopeObject((CatScopeID)scopeId);
 }
 
 
@@ -261,24 +261,24 @@ Configuration::CatString LLVMCatIntrinsics::roundDoubleToString(double number, i
 }
 
 
-void LLVMCatIntrinsics::placementCopyConstructType(Reflectable* target, Reflectable* source, Reflection::TypeInfo* type)
+void LLVMCatIntrinsics::placementCopyConstructType(unsigned char* target, unsigned char* source, Reflection::TypeInfo* type)
 {
 	if (target != source)
 	{
-		type->copyConstruct(reinterpret_cast<unsigned char*>(target), type->getTypeSize(), reinterpret_cast<unsigned char*>(source), type->getTypeSize());
+		type->copyConstruct(target, type->getTypeSize(), source, type->getTypeSize());
 	}
 }
 
 
-void LLVMCatIntrinsics::placementConstructType(Reflectable* address, Reflection::TypeInfo* type)
+void LLVMCatIntrinsics::placementConstructType(unsigned char* address, Reflection::TypeInfo* type)
 {
-	type->placementConstruct(reinterpret_cast<unsigned char*>(address), type->getTypeSize());
+	type->placementConstruct(address, type->getTypeSize());
 }
 
 
-void LLVMCatIntrinsics::placementDestructType(Reflectable* address, TypeInfo* type)
+void LLVMCatIntrinsics::placementDestructType(unsigned char* address, TypeInfo* type)
 {
-	type->placementDestruct(reinterpret_cast<unsigned char*>(address), type->getTypeSize());
+	type->placementDestruct(address, type->getTypeSize());
 }
 
 

@@ -5,6 +5,7 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
+#include "jitcat/Configuration.h"
 #include "jitcat/ObjectInstance.h"
 #include "jitcat/Reflectable.h"
 #include "jitcat/TypeCaster.h"
@@ -14,59 +15,66 @@ using namespace jitcat;
 using namespace jitcat::Reflection;
 
 
-ObjectInstance::ObjectInstance():
-	object(nullptr),
-	objectType(nullptr)
+ObjectInstance::ObjectInstance()
 {
 }
 
 
 ObjectInstance::ObjectInstance(TypeInfo* objectType):
-	object(reinterpret_cast<Reflectable*>(objectType->construct())),
-	objectType(objectType)
+	object(objectType->construct(), objectType)
 {
 	assert(objectType->getAllowConstruction());
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		assert(object.validateHandles());
+	}
 }
 
 
 ObjectInstance::ObjectInstance(unsigned char* object, TypeInfo* objectType):
-	object(reinterpret_cast<Reflectable*>(object)),
-	objectType(objectType)
+	object(object, objectType)
 {
 	assert(objectType->getAllowConstruction());
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		assert(this->object.validateHandles());
+	}
 }
 
 
-ObjectInstance::ObjectInstance(const ObjectInstance& other):
-	objectType(other.objectType)
+ObjectInstance::ObjectInstance(const ObjectInstance& other)
 {
-	assert(objectType->getAllowCopyConstruction());
-	unsigned char* objectBuffer = new unsigned char[objectType->getTypeSize()];
-	objectType->copyConstruct(objectBuffer, objectType->getTypeSize(), other.getObject(), objectType->getTypeSize());
-	object = reinterpret_cast<Reflectable*>(objectBuffer);
+	assert(other.getType()->getAllowCopyConstruction());
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		assert(other.validateHandle());
+	}
+	unsigned char* objectBuffer = new unsigned char[other.getType()->getTypeSize()];
+	other.getType()->copyConstruct(objectBuffer, other.getType()->getTypeSize(), other.getObject(), other.getType()->getTypeSize());
+	object.setReflectable(objectBuffer, other.getType());
 }
 
 
-ObjectInstance::ObjectInstance(ObjectInstance&& other) noexcept :
-	objectType(other.objectType),
-	object(nullptr)
+ObjectInstance::ObjectInstance(ObjectInstance&& other) noexcept
 {
 	if (&other != this)
 	{
 		object = other.object;
-		objectType = other.objectType;
 		other.object = nullptr;
-		other.objectType = nullptr;
+	}
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		assert(object.validateHandles());
 	}
 }
 
 
 ObjectInstance::~ObjectInstance()
 {
-	assert(objectType == nullptr || objectType->getAllowConstruction());
-	if (objectType != nullptr && object.getIsValid())
+	assert(object.getObjectType() == nullptr || object.getObjectType()->getAllowConstruction());
+	if (object.getObjectType() != nullptr && object.getIsValid())
 	{
-		objectType->destruct(reinterpret_cast<unsigned char*>(object.get()));
+		object.getObjectType()->destruct(reinterpret_cast<unsigned char*>(object.get()));
 		object = nullptr;
 	}
 }
@@ -74,18 +82,16 @@ ObjectInstance::~ObjectInstance()
 
 ObjectInstance& ObjectInstance::operator=(ObjectInstance&& other) noexcept
 {
-	if (objectType != nullptr && object.getIsValid())
+	if (object.getObjectType() != nullptr && object.getIsValid())
 	{
-		assert(objectType->getAllowConstruction());
-		objectType->destruct(reinterpret_cast<unsigned char*>(object.get()));
+		assert(object.getObjectType()->getAllowConstruction());
+		object.getObjectType()->destruct(reinterpret_cast<unsigned char*>(object.get()));
 		object = nullptr;
 	}
 	if (&other != this)
 	{
 		object = other.object;
-		objectType = other.objectType;
 		other.object = nullptr;
-		other.objectType = nullptr;
 	}
 	return *this;
 }
@@ -108,11 +114,24 @@ unsigned char* ObjectInstance::getObject() const
 
 TypeInfo* ObjectInstance::getType() const
 {
-	return objectType;
+	return object.getObjectType();
 }
 
 
-std::any jitcat::Reflection::ObjectInstance::getObjectAsAny() const
+std::any ObjectInstance::getObjectAsAny() const
 {
-	return objectType->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t>(object.get()));
+	return object.getObjectType()->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t>(object.get()));
+}
+
+
+bool ObjectInstance::validateHandle() const
+{
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		return object.validateHandles();
+	}
+	else
+	{
+		return true;
+	}
 }

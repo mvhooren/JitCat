@@ -58,11 +58,11 @@ std::unique_ptr<CatRuntimeContext> jitcat::CatRuntimeContext::clone() const
 	std::unique_ptr<CatRuntimeContext> cloned = std::make_unique<CatRuntimeContext>(contextName, ownsErrorManager ? nullptr : errorManager);
 	for (auto& iter : scopes)
 	{
-		cloned->addScope(iter->scopeType, reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
+		cloned->addScope(iter->scopeObject.getObjectType(), reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
 	}
 	for (auto& iter : staticScopes)
 	{
-		cloned->addScope(iter->scopeType, reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
+		cloned->addScope(iter->scopeObject.getObjectType(), reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
 	}
 	#ifdef ENABLE_LLVM
 		//This cannot be put inside a if constexpr unfortunately
@@ -169,7 +169,7 @@ void CatRuntimeContext::removeScope(CatScopeID id)
 void CatRuntimeContext::setScopeObject(CatScopeID id, unsigned char* scopeObject)
 {
 	Scope* scope = getScope(id);
-	scope->scopeObject = reinterpret_cast<Reflectable*>(scopeObject);
+	scope->scopeObject.setReflectable(scopeObject, getScopeType(id));
 }
 
 
@@ -190,7 +190,7 @@ unsigned char* CatRuntimeContext::getScopeObject(CatScopeID id) const
 TypeInfo* CatRuntimeContext::getScopeType(CatScopeID id) const
 {
 	Scope* scope = getScope(id);
-	return scope->scopeType;
+	return scope->scopeObject.getObjectType();
 }
 
 
@@ -224,7 +224,7 @@ TypeMemberInfo* CatRuntimeContext::findVariable(const std::string& lowercaseName
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		TypeMemberInfo* memberInfo = scopes[i]->scopeType->getMemberInfo(lowercaseName);
+		TypeMemberInfo* memberInfo = scopes[i]->scopeObject.getObjectType()->getMemberInfo(lowercaseName);
 		if (memberInfo != nullptr)
 		{
 			scopeId = i;
@@ -233,7 +233,7 @@ TypeMemberInfo* CatRuntimeContext::findVariable(const std::string& lowercaseName
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		TypeMemberInfo* memberInfo = staticScopes[i]->scopeType->getMemberInfo(lowercaseName);
+		TypeMemberInfo* memberInfo = staticScopes[i]->scopeObject.getObjectType()->getMemberInfo(lowercaseName);
 		if (memberInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
@@ -248,7 +248,7 @@ Reflection::StaticMemberInfo* jitcat::CatRuntimeContext::findStaticVariable(cons
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		StaticMemberInfo* staticMemberInfo = scopes[i]->scopeType->getStaticMemberInfo(lowercaseName);
+		StaticMemberInfo* staticMemberInfo = scopes[i]->scopeObject.getObjectType()->getStaticMemberInfo(lowercaseName);
 		if (staticMemberInfo != nullptr)
 		{
 			scopeId = i;
@@ -257,7 +257,7 @@ Reflection::StaticMemberInfo* jitcat::CatRuntimeContext::findStaticVariable(cons
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		StaticMemberInfo* staticMemberInfo = staticScopes[i]->scopeType->getStaticMemberInfo(lowercaseName);
+		StaticMemberInfo* staticMemberInfo = staticScopes[i]->scopeObject.getObjectType()->getStaticMemberInfo(lowercaseName);
 		if (staticMemberInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
@@ -272,7 +272,7 @@ Reflection::StaticConstMemberInfo* jitcat::CatRuntimeContext::findStaticConstant
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		StaticConstMemberInfo* staticConstMemberInfo = scopes[i]->scopeType->getStaticConstMemberInfo(lowercaseName);
+		StaticConstMemberInfo* staticConstMemberInfo = scopes[i]->scopeObject.getObjectType()->getStaticConstMemberInfo(lowercaseName);
 		if (staticConstMemberInfo != nullptr)
 		{
 			scopeId = i;
@@ -281,7 +281,7 @@ Reflection::StaticConstMemberInfo* jitcat::CatRuntimeContext::findStaticConstant
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		StaticConstMemberInfo* staticConstMemberInfo = staticScopes[i]->scopeType->getStaticConstMemberInfo(lowercaseName);
+		StaticConstMemberInfo* staticConstMemberInfo = staticScopes[i]->scopeObject.getObjectType()->getStaticConstMemberInfo(lowercaseName);
 		if (staticConstMemberInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
@@ -296,7 +296,7 @@ MemberFunctionInfo* CatRuntimeContext::findFirstMemberFunction(const std::string
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getFirstMemberFunctionInfo(lowercaseName);
+		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeObject.getObjectType()->getFirstMemberFunctionInfo(lowercaseName);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = i;
@@ -305,7 +305,7 @@ MemberFunctionInfo* CatRuntimeContext::findFirstMemberFunction(const std::string
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getFirstMemberFunctionInfo(lowercaseName);
+		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeObject.getObjectType()->getFirstMemberFunctionInfo(lowercaseName);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
@@ -320,7 +320,7 @@ Reflection::MemberFunctionInfo* jitcat::CatRuntimeContext::findMemberFunction(co
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getMemberFunctionInfo(functionSignature);
+		MemberFunctionInfo* memberFunctionInfo = scopes[i]->scopeObject.getObjectType()->getMemberFunctionInfo(functionSignature);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = i;
@@ -329,7 +329,7 @@ Reflection::MemberFunctionInfo* jitcat::CatRuntimeContext::findMemberFunction(co
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getMemberFunctionInfo(functionSignature);
+		MemberFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeObject.getObjectType()->getMemberFunctionInfo(functionSignature);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
@@ -344,7 +344,7 @@ Reflection::StaticFunctionInfo* jitcat::CatRuntimeContext::findStaticFunction(co
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		StaticFunctionInfo* memberFunctionInfo = scopes[i]->scopeType->getStaticMemberFunctionInfo(functionSignature);
+		StaticFunctionInfo* memberFunctionInfo = scopes[i]->scopeObject.getObjectType()->getStaticMemberFunctionInfo(functionSignature);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = i;
@@ -353,7 +353,7 @@ Reflection::StaticFunctionInfo* jitcat::CatRuntimeContext::findStaticFunction(co
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		StaticFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeType->getStaticMemberFunctionInfo(functionSignature);
+		StaticFunctionInfo* memberFunctionInfo = staticScopes[i]->scopeObject.getObjectType()->getStaticMemberFunctionInfo(functionSignature);
 		if (memberFunctionInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
@@ -368,7 +368,7 @@ Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& low
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
-		TypeInfo* scopeInfo = scopes[i]->scopeType->getTypeInfo(lowercaseName);
+		TypeInfo* scopeInfo = scopes[i]->scopeObject.getObjectType()->getTypeInfo(lowercaseName);
 		if (scopeInfo != nullptr)
 		{
 			scopeId = i;
@@ -377,7 +377,7 @@ Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& low
 	}
 	for (int i = (int)staticScopes.size() - 1; i >= 0; i--)
 	{
-		TypeInfo* scopeInfo = staticScopes[i]->scopeType->getTypeInfo(lowercaseName);
+		TypeInfo* scopeInfo = staticScopes[i]->scopeObject.getObjectType()->getTypeInfo(lowercaseName);
 		if (scopeInfo != nullptr)
 		{
 			scopeId = InvalidScopeID - i - 1;
@@ -481,7 +481,7 @@ void jitcat::CatRuntimeContext::clearTemporaries()
 
 CatScopeID CatRuntimeContext::createScope(unsigned char* scopeObject, TypeInfo* type, bool isStatic)
 {
-	Scope* scope = new Scope(type, reinterpret_cast<Reflectable*>(scopeObject), isStatic);
+	Scope* scope = new Scope(type, scopeObject, isStatic);
 	if (!isStatic)
 	{
 		scopes.emplace_back(scope);

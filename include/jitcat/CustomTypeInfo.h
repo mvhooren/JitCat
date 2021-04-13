@@ -9,6 +9,7 @@
 
 #include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/HandleTrackingMethod.h"
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/TypeOwnershipSemantics.h"
@@ -40,8 +41,8 @@ namespace jitcat::Reflection
 	class CustomTypeInfo: public TypeInfo
 	{
 	public:
-		CustomTypeInfo(const char* typeName, bool isConstType = false);
-		CustomTypeInfo(AST::CatClassDefinition* classDefinition);
+		CustomTypeInfo(const char* typeName, HandleTrackingMethod trackingMethod = HandleTrackingMethod::InternalHandlePointer);
+		CustomTypeInfo(AST::CatClassDefinition* classDefinition, HandleTrackingMethod trackingMethod );
 	protected:
 		virtual ~CustomTypeInfo();
 	public:
@@ -69,8 +70,8 @@ namespace jitcat::Reflection
 				offset = 0;
 			}
 
-			std::set<Reflectable*>::iterator end = instances.end();
-			for (std::set<Reflectable*>::iterator iter = instances.begin(); iter != end; ++iter)
+			std::set<unsigned char*>::iterator end = instances.end();
+			for (std::set<unsigned char*>::iterator iter = instances.begin(); iter != end; ++iter)
 			{
 				memcpy((unsigned char*)(*iter) + offset, &defaultValue, sizeof(EnumT));
 			}
@@ -126,7 +127,7 @@ namespace jitcat::Reflection
 		void removeMember(const std::string& memberName);
 		
 		//For creating a "static" data type, this instance points directly to the default data.
-		Reflectable* getDefaultInstance();
+		unsigned char* getDefaultInstance();
 
 		virtual bool isCustomType() const override final;
 
@@ -144,25 +145,28 @@ namespace jitcat::Reflection
 		llvm::orc::JITDylib* getDylib() const;
 		void setDylib(llvm::orc::JITDylib* generatedDylib);
 
+		HandleTrackingMethod getHandleTrackingMethod() const;
+
 	private:
 		void instanceDestructor(unsigned char* data);
 		void instanceDestructorInPlace(unsigned char* data);
 
-		std::size_t addReflectableHandle(Reflectable* defaultValue);
+		std::size_t addReflectableHandle(unsigned char* defaultValue, TypeInfo* objectType);
 		//Returns a pointer to the start of the newly added size
 		unsigned char* increaseDataSize(std::size_t amount);
 		void increaseDataSize(unsigned char*& data, std::size_t amount, std::size_t currentSize);
 		void createDataCopy(const unsigned char* sourceData, std::size_t sourceSize, unsigned char* copyData, std::size_t copySize) const;
 
-		void removeInstance(Reflectable* instance);
+		void removeInstance(unsigned char* instance);
 
 	private:
-		mutable std::set<Reflectable*> instances;
+		mutable std::set<unsigned char*> instances;
+
+		HandleTrackingMethod trackingMethod;
 
 		//If this custom type belongs to a CatClassDefinition, classDefinition is non-null.
 		AST::CatClassDefinition* classDefinition;
 
-		bool isConstType;
 		unsigned char* defaultData;
 
 		std::vector<std::unique_ptr<unsigned char>> staticData;

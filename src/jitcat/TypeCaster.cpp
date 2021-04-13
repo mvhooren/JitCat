@@ -8,6 +8,7 @@
 #include "jitcat/TypeCaster.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ObjectInstance.h"
+#include "jitcat/CustomObject.h"
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
@@ -19,79 +20,91 @@ CustomObjectTypeCaster::CustomObjectTypeCaster(CustomTypeInfo* customType):
 
 bool CustomObjectTypeCaster::isNullPtr(const std::any & value) const
 {
-	Reflectable* reflectable = std::any_cast<Reflectable*>(value);
-	return reflectable == nullptr;
+	CustomObject* object = std::any_cast<CustomObject*>(value);
+	return object == nullptr;
 }
 
 
 bool CustomObjectTypeCaster::isNullPtrPtr(const std::any& value) const
 {
-	Reflectable** reflectable = std::any_cast<Reflectable**>(value);
-	return reflectable == nullptr;
+	CustomObject** object = std::any_cast<CustomObject**>(value);
+	return object == nullptr;
 }
 
 
 void CustomObjectTypeCaster::toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const
 {
-	Reflectable* reflectable = std::any_cast<Reflectable*>(value);
-	buffer = reinterpret_cast<const unsigned char*>(reflectable);
+	CustomObject* object = std::any_cast<CustomObject*>(value);
+	buffer = reinterpret_cast<const unsigned char*>(object);
 	bufferSize = customType->getTypeSize();
 }
 
 
 std::any CustomObjectTypeCaster::getValueOfPointer(std::any& value) const
 {
-	return std::any(ObjectInstance::createCopy(reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(value)), customType));
+	return std::any(ObjectInstance::createCopy(reinterpret_cast<unsigned char*>(std::any_cast<CustomObject*>(value)), customType));
 }
 
 
 std::any CustomObjectTypeCaster::getValueOfPointerToPointer(std::any& value) const
 {
-	Reflectable** ptrptr = std::any_cast<Reflectable**>(value);
+	CustomObject* ptrptr = *std::any_cast<CustomObject**>(value);
 	return *ptrptr;
 }
 
 
 std::any CustomObjectTypeCaster::getAddressOfValue(std::any& value) const
 {
-	return reinterpret_cast<Reflectable*>(std::any_cast<ObjectInstance>(&value)->getObject());
+	return reinterpret_cast<CustomObject*>(std::any_cast<ObjectInstance>(&value)->getObject());
 }
 
 
 std::any CustomObjectTypeCaster::getAddressOfPointer(std::any& value) const
 {
-	Reflectable** addressOf = std::any_cast<Reflectable*>(&value);
+	CustomObject** addressOf = std::any_cast<CustomObject*>(&value);
 	return addressOf;
 }
 
 
 std::any CustomObjectTypeCaster::castFromRawPointer(uintptr_t pointer) const
 {
-	return reinterpret_cast<Reflectable*>(pointer);
+	return reinterpret_cast<CustomObject*>(pointer);
 }
 
 
 uintptr_t CustomObjectTypeCaster::castToRawPointer(const std::any& pointer) const
 {
-	return reinterpret_cast<uintptr_t>(std::any_cast<Reflectable*>(pointer));
+	return reinterpret_cast<uintptr_t>(std::any_cast<CustomObject*>(pointer));
 }
 
 
 std::any CustomObjectTypeCaster::castFromRawPointerPointer(uintptr_t pointer) const
 {
-	return reinterpret_cast<Reflectable**>(pointer);
+	return reinterpret_cast<CustomObject**>(pointer);
 }
 
 
 uintptr_t CustomObjectTypeCaster::castToRawPointerPointer(const std::any& pointer) const
 {
-	return reinterpret_cast<uintptr_t>(std::any_cast<Reflectable**>(pointer));
+	return reinterpret_cast<uintptr_t>(std::any_cast<CustomObject**>(pointer));
 }
 
 
 std::any CustomObjectTypeCaster::getNull() const
 {
-	return static_cast<Reflectable*>(nullptr);
+	return static_cast<CustomObject*>(nullptr);
+}
+
+
+Reflectable* CustomObjectTypeCaster::castToReflectable(unsigned char* object) const
+{
+	return nullptr;
+}
+
+
+unsigned char* jitcat::Reflection::CustomObjectTypeCaster::castToObject(Reflectable* reflectable) const
+{
+	return nullptr;
 }
 
 
@@ -163,6 +176,18 @@ void NullptrTypeCaster::toBuffer(const std::any& value, const unsigned char*& bu
 
 
 std::any NullptrTypeCaster::getNull() const
+{
+	return nullptr;
+}
+
+
+Reflectable* NullptrTypeCaster::castToReflectable(unsigned char* object) const
+{
+	return nullptr;
+}
+
+
+unsigned char* jitcat::Reflection::NullptrTypeCaster::castToObject(Reflectable* reflectable) const
 {
 	return nullptr;
 }

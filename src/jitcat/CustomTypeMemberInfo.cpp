@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/CustomTypeMemberInfo.h"
+#include "jitcat/CustomObject.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 
 #include <cassert>
@@ -51,7 +52,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 		//Pointer to a ReflectableHandle
 		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
 		//Call function that gets the member
-		std::string mangledName = "Reflectable* __getReflectable(const ReflectableHandle& handle)";
+		std::string mangledName = "unsigned char* __getReflectable(const ReflectableHandle& handle)";
 		context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), mangledName);
 		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, {reflectableHandle}, false, mangledName, "getReflectable");
 	};
@@ -75,8 +76,11 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a ReflectableHandle
 		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
+		//Type info of the object that will be assigned
+		llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(catType.removeIndirection().getObjectType()), Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfo"));
+		llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfoPtr"));
 		//Call function that gets the member
-		context->helper->createIntrinsicCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "staticAssign");
+		context->helper->createIntrinsicCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue, typeInfoConstantAsIntPtr}, "staticAssign");
 		return rValue;
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
@@ -88,11 +92,11 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 
 void CustomTypeObjectMemberInfo::assign(std::any& base, std::any& valueToSet)
 {
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
+	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<CustomObject*>(base));
 	if (baseData != nullptr)
 	{
 		ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(baseData + memberOffset);
-		*handle = ReflectableHandle(reinterpret_cast<Reflectable*>(catType.getRawPointer(valueToSet)));
+		*handle = ReflectableHandle(reinterpret_cast<unsigned char*>(catType.getRawPointer(valueToSet)), catType.removeIndirection().getObjectType());
 	}
 }
 

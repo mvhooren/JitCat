@@ -64,15 +64,12 @@ namespace jitcat
 	{
 		struct Scope
 		{
-			Scope(Reflection::TypeInfo* type, Reflection::Reflectable* object, bool isStatic):
-				scopeType(type),
-				scopeObject(object),
+			Scope(Reflection::TypeInfo* objectType, unsigned char* object, bool isStatic):
+				scopeObject(object, objectType),
 				isStatic(isStatic)
 			{
 			}
 			~Scope() {};
-			//The TypeInfo and Reflectable are not owned here.
-			Reflection::TypeInfo* scopeType;
 			Reflection::ReflectableHandle scopeObject;
 			bool isStatic;
 		};

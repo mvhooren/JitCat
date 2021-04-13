@@ -7,37 +7,47 @@
 
 #include "jitcat/Reflectable.h"
 #include "jitcat/ReflectableHandle.h"
+#include "jitcat/TypeCaster.h"
+#include "jitcat/TypeInfo.h"
 
 #include <algorithm>
-
+#include <cassert>
+#include <iostream>
 using namespace jitcat::Reflection;
 
 
-jitcat::Reflection::Reflectable::Reflectable(const Reflectable& other)
+Reflectable::Reflectable(const Reflectable& other):
+	firstHandle(nullptr)
 {
 	//Observers are not copied.
 	//Use move constructor if observers should be copied and updated.
 }
 
 
-Reflectable::Reflectable()
+Reflectable::Reflectable():
+	firstHandle(nullptr)
 {
 }
 
 
-Reflectable::Reflectable(Reflectable&& other) noexcept
+Reflectable::Reflectable(Reflectable&& other) noexcept:
+	firstHandle(other.firstHandle)
 {
-	while (true)
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+		if (other.firstHandle != nullptr)
+				assert(other.validateHandles(other.firstHandle->getObjectType()));
+
+	other.firstHandle = nullptr;
+	ReflectableHandle* currentHandle = firstHandle;
+	while (currentHandle != nullptr)
 	{
-		if (auto iter = observers->find(&other); iter != observers->end())
-		{
-			iter->second->operator=(this);
-		}
-		else
-		{
-			break;
-		}
+		unsigned char* object = currentHandle->getObjectType()->getTypeCaster()->castToObject(this);
+		currentHandle->setReflectableReplacement(object, currentHandle->getObjectType());
+		currentHandle = currentHandle->getNextHandle();
 	}
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+		if (firstHandle != nullptr)
+			assert(validateHandles(firstHandle->getObjectType()));
 }
 
 
@@ -51,67 +61,135 @@ Reflectable& jitcat::Reflection::Reflectable::operator=(const Reflectable& other
 
 Reflectable::~Reflectable()
 {
-	while (true)
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+		if (firstHandle != nullptr)
+			assert(validateHandles(firstHandle->getObjectType()));
+
+	ReflectableHandle* currentHandle = firstHandle;
+	while (currentHandle != nullptr)
 	{
-		if (auto iter = observers->find(this); iter != observers->end())
-		{
-			iter->second->notifyDeletion();
-			observers->erase(iter);
-		}
-		else
-		{
-			break;
-		}
+		currentHandle->setReflectableReplacement(nullptr, nullptr);
+		ReflectableHandle* previousHandle = currentHandle;
+		currentHandle = currentHandle->getNextHandle();
+		previousHandle->setNextHandle(nullptr);
+		previousHandle->setPreviousHandle(nullptr);
 	}
 }
 
 
 void Reflectable::addObserver(ReflectableHandle* observer)
 {
-	observers->insert(std::pair<Reflectable*,ReflectableHandle*>(this, observer));
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		if (firstHandle != nullptr)
+		{
+			assert(validateHandles(firstHandle->getObjectType()));
+			assert(!hasHandle(observer));
+		}
+	}
+	if (firstHandle == nullptr)
+	{
+		firstHandle = observer;
+	}
+	else
+	{
+		firstHandle->setPreviousHandle(observer);
+		observer->setNextHandle(firstHandle);
+		firstHandle = observer;
+	}
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		assert(hasHandle(observer));
+		assert(validateHandles(firstHandle->getObjectType()));
+	}
 }
 
 
 void Reflectable::removeObserver(ReflectableHandle* observer)
 {
-	auto range = observers->equal_range(this);
-	for (auto& iter = range.first; iter != range.second; ++iter)
+	if constexpr (Configuration::enableHandleVerificationAsserts)
 	{
-		if (iter->second == observer)
+		if (firstHandle != nullptr)
 		{
-			observers->erase(iter);
-			break;
+			assert(validateHandles(firstHandle->getObjectType()));
 		}
+		assert(hasHandle(observer));
+	}
+	ReflectableHandle* nextHandle = observer->getNextHandle();
+	if (nextHandle != nullptr)
+	{
+		nextHandle->setPreviousHandle(observer->getPreviousHandle());
+	}
+	if (observer->getPreviousHandle() != nullptr)
+	{
+		observer->getPreviousHandle()->setNextHandle(nextHandle);
+	}
+	else
+	{
+		firstHandle = nextHandle;
+	}
+	observer->setPreviousHandle(nullptr);
+	observer->setNextHandle(nullptr);
+	assert(!hasHandle(observer));
+	if (firstHandle != nullptr)
+	{	
+		assert(validateHandles(firstHandle->getObjectType()));
 	}
 }
 
 
-void jitcat::Reflection::Reflectable::destruct(Reflectable* reflectable)
+std::size_t Reflectable::getNumReflectableHandles() const
 {
-	delete reflectable;
-}
-
-
-void jitcat::Reflection::Reflectable::placementDestruct(Reflectable* reflectable)
-{
-	reflectable->~Reflectable();
-}
-
-
-void jitcat::Reflection::Reflectable::replaceReflectable(Reflectable* oldReflectable, Reflectable* newReflectable)
-{
-	while (true)
+	ReflectableHandle* currentHandle = firstHandle;
+	std::size_t count = 0;
+	while (currentHandle != nullptr)
 	{
-		if (auto iter = observers->find(oldReflectable); iter != observers->end())
-		{
-			(*iter->second) = newReflectable;
-		}
-		else
-		{
-			break;
-		}
+		count++;
+		currentHandle = currentHandle->getNextHandle();
 	}
+	return count;
 }
 
 
-std::unordered_multimap<Reflectable*, ReflectableHandle*>* Reflectable::observers = new std::unordered_multimap<Reflectable*, ReflectableHandle*>();
+bool Reflectable::validateHandles(TypeInfo* reflectableType)
+{
+	if (this == nullptr)
+	{
+		return true;
+	}
+	const ReflectableHandle* currentHandle = firstHandle;
+	while (currentHandle != nullptr)
+	{
+		if (currentHandle->getNextHandle() == currentHandle->getPreviousHandle() 
+			&& currentHandle->getNextHandle() != nullptr)
+		{
+			return false;
+		}
+		if (currentHandle->get() != reflectableType->getTypeCaster()->castToObject(this))
+		{
+			return false;
+		}
+		if (currentHandle->getNextHandle() != nullptr 
+			&& currentHandle->getNextHandle()->getPreviousHandle() != currentHandle)
+		{
+			return false;
+		}
+		currentHandle = currentHandle->getNextHandle();
+	}
+	return true;
+}
+
+
+bool Reflectable::hasHandle(ReflectableHandle* handle) const
+{
+	const ReflectableHandle* currentHandle = firstHandle;
+	while (currentHandle != nullptr)
+	{
+		if (currentHandle == handle)
+		{
+			return true;
+		}
+		currentHandle = currentHandle->getNextHandle();
+	}
+	return false;
+}

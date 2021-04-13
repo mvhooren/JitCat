@@ -106,7 +106,7 @@ llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateDereferenc
 	//Create a constant with the pointer to the reflectable handle.
 	llvm::Value* reflectableHandle = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
 	//Call function that gets the value
-	std::string mangledName = "Reflectable* __getReflectable(const ReflectableHandle& handle)";
+	std::string mangledName = "unsigned char* __getReflectable(const ReflectableHandle& handle)";
 	context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&ReflectableHandle::staticGet), mangledName);
 	return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr, {reflectableHandle}, false, mangledName, "getReflectable");
 #else 
@@ -120,8 +120,11 @@ llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateAssignCode
 #ifdef ENABLE_LLVM
 	//Create a constant with the pointer to the reflectable handle.
 	llvm::Value* reflectableHandle = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
+	//Wether or not the assigned value inherits from reflectable
+	llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(catType.removeIndirection().getObjectType()), Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfo"));
+	llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfoPtr"));
 	//Call function that gets the member
-	context->helper->createIntrinsicCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue}, "staticAssign");
+	context->helper->createIntrinsicCall(context, &ReflectableHandle::staticAssign, {reflectableHandle, rValue, typeInfoConstantAsIntPtr}, "staticAssign");
 	return rValue;
 #else
 	return nullptr;

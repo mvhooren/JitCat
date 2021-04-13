@@ -8,6 +8,7 @@
 
 #include "jitcat/STLTypeReflectors.h"
 #include "jitcat/TypeTools.h"
+#include "TypeCaster.h"
 
 
 namespace jitcat::Reflection
@@ -119,6 +120,34 @@ namespace jitcat::Reflection
 	inline std::any ObjectTypeCaster<ObjectT>::getNull() const
 	{
 		return (ObjectT*)nullptr;
+	}
+
+
+	template<typename ObjectT>
+	inline Reflectable* ObjectTypeCaster<ObjectT>::castToReflectable(unsigned char* object) const
+	{
+		if constexpr (std::is_base_of_v<Reflectable, ObjectT>)
+		{
+			return static_cast<Reflectable*>(reinterpret_cast<ObjectT*>(object));
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+
+
+	template<typename ObjectT>
+	inline unsigned char* ObjectTypeCaster<ObjectT>::castToObject(Reflectable* reflectable) const
+	{
+		if constexpr (std::is_base_of_v<Reflectable, ObjectT>)
+		{
+			return reinterpret_cast<unsigned char*>(static_cast<ObjectT*>(reflectable));
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 
 } //End namespace jitcat::Reflection

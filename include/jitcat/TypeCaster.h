@@ -36,6 +36,8 @@ namespace jitcat::Reflection
 		virtual uintptr_t castToRawPointer(const std::any& pointer) const = 0;
 		virtual std::any castFromRawPointerPointer(uintptr_t pointer) const = 0;
 		virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const = 0;
+		virtual Reflectable* castToReflectable(unsigned char* object) const = 0;
+		virtual unsigned char* castToObject(Reflectable* reflectable) const = 0;
 
 		virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const = 0;
 		virtual std::any getNull() const = 0;
@@ -61,6 +63,8 @@ namespace jitcat::Reflection
 		inline virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final;
 		inline virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const override final;
 		inline virtual std::any getNull() const override final;
+		virtual Reflectable* castToReflectable(unsigned char* object) const override final;
+		virtual unsigned char* castToObject(Reflectable* reflectable) const override final;
 	};
 
 
@@ -82,6 +86,8 @@ public:
 	virtual std::any castFromRawPointerPointer(uintptr_t pointer) const override final;
 	virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final;
 	virtual std::any getNull() const override final;
+	virtual Reflectable* castToReflectable(unsigned char* object) const override final;
+	virtual unsigned char* castToObject(Reflectable* reflectable) const override final;
 
 private:
 	CustomTypeInfo* customType;
@@ -106,6 +112,8 @@ public:
 	virtual uintptr_t castToRawPointerPointer(const std::any& pointer) const override final;
 	virtual void toBuffer(const std::any& value, const unsigned char*& buffer, std::size_t& bufferSize) const override final;
 	virtual std::any getNull() const override final;
+	virtual Reflectable* castToReflectable(unsigned char* object) const override final;
+	virtual unsigned char* castToObject(Reflectable* reflectable) const override final;
 };
 
 }

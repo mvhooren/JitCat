@@ -241,6 +241,7 @@ set(Source_Parser
 )
 
 set(Source_Reflection
+	${JitCatHeaderPath}/CustomObject.h
 	${JitCatHeaderPath}/ExternalReflector.h
 	Reflectable.cpp
 	${JitCatHeaderPath}/Reflectable.h
@@ -316,6 +317,7 @@ set(Source_Reflection_TypeInfo_Helper
 	FunctionNameMangler.cpp
 	${JitCatHeaderPath}/FunctionNameMangler.h
 	${JitCatHeaderPath}/FunctionPresenceTest.h
+	${JitCatHeaderPath}/HandleTrackingMethod.h
 	${JitCatHeaderPath}/MemberTypeInfoCreator.h
 	${JitCatHeaderPath}/MemberVisibility.h
 	TypeCaster.cpp
@@ -323,7 +325,6 @@ set(Source_Reflection_TypeInfo_Helper
 	${JitCatHeaderPath}/TypeCasterHeaderImplementation.h
 	${JitCatHeaderPath}/TypeTools.h
 	${JitCatHeaderPath}/TypeOwnershipSemantics.h
-	TypeTraits.cpp
 	${JitCatHeaderPath}/TypeTraits.h
 	${JitCatHeaderPath}/TypeTraitsHeaderImplementation.h
 	${JitCatHeaderPath}/VariableEnumerator.h

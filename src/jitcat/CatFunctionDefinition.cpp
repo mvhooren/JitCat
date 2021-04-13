@@ -71,7 +71,7 @@ CatFunctionDefinition::~CatFunctionDefinition()
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 	}
 }
 
@@ -108,11 +108,11 @@ bool CatFunctionDefinition::defineCheck(CatRuntimeContext* compileTimeContext, s
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 		errorManagerHandle = nullptr;
 	}	
 	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
-	errorManagerHandle = errorManager;
+	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());
 
 	if (!type->typeCheck(compileTimeContext, errorManager, this))
 	{
@@ -158,11 +158,11 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 		errorManagerHandle = nullptr;
 	}	
 	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
-	errorManagerHandle = errorManager;
+	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());
 
 	if (parameters->getNumParameters() > 0)
 	{

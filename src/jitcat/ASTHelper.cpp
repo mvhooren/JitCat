@@ -303,19 +303,19 @@ std::any ASTHelper::doAssignment(std::any& target, std::any& source, const CatGe
 			TypeOwnershipSemantics targetOwnership = targetType.getPointeeType()->getOwnershipSemantics();
 			if (targetOwnership == TypeOwnershipSemantics::Owned && handleTarget->getIsValid())
 			{
-				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(reinterpret_cast<unsigned char*>(handleTarget->get()));
+				targetType.getPointeeType()->getPointeeType()->getObjectType()->destruct(handleTarget->get());
 			}
 			if (sourceType.isPointerToReflectableObjectType()
 				|| sourceType.isReflectableHandleType())
 			{
-				*handleTarget = reinterpret_cast<Reflectable*>(sourceType.getRawPointer(source));
+				handleTarget->setReflectable(reinterpret_cast<unsigned char*>(sourceType.getRawPointer(source)), sourceType.removeIndirection().getObjectType());
 			}
 			else if (sourceType.isPointerToHandleType())
 			{
 				ReflectableHandle* sourceHandle = std::any_cast<ReflectableHandle*>(source);
 				if (sourceHandle != nullptr)
 				{
-					*handleTarget = sourceHandle->get();
+					*handleTarget = *sourceHandle;
 					if ((targetOwnership == TypeOwnershipSemantics::Owned
 						|| targetOwnership == TypeOwnershipSemantics::Shared)
 						&& sourceType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Owned)
@@ -333,7 +333,7 @@ std::any ASTHelper::doAssignment(std::any& target, std::any& source, const CatGe
 				unsigned char** sourcePointer = reinterpret_cast<unsigned char**>(sourceType.getRawPointer(source));
 				if (sourcePointer != nullptr)
 				{
-					*handleTarget = reinterpret_cast<Reflectable*>(*sourcePointer);
+					handleTarget->setReflectable(*sourcePointer, sourceType.removeIndirection().getObjectType());
 					if ((targetOwnership == TypeOwnershipSemantics::Owned
 						|| targetOwnership == TypeOwnershipSemantics::Shared)
 						&& sourceType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Owned)

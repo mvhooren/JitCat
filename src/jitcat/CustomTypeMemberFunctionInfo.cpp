@@ -9,6 +9,7 @@
 #include "jitcat/CatFunctionDefinition.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypeNode.h"
+#include "jitcat/CustomObject.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/FunctionNameMangler.h"
 #include "jitcat/TypeInfo.h"
@@ -40,7 +41,7 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
  {
 	 if (base.has_value())
 	 {
-		 Reflectable* baseReflectable = std::any_cast<Reflectable*>(base);
+		 CustomObject* baseReflectable = std::any_cast<CustomObject*>(base);
 		 runtimeContext->pushStackFrame();
 		 CatScopeID scope = runtimeContext->addScope(thisType.getObjectType(), reinterpret_cast<unsigned char*>(baseReflectable), false);
 		 std::any result = functionDefinition->executeFunctionWithArguments(runtimeContext, parameters);

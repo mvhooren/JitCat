@@ -47,7 +47,7 @@ CatClassDefinition::CatClassDefinition(const std::string& name, std::vector<std:
 	definitions(std::move(definitions)),
 	scopeId(InvalidScopeID)
 {
-	customType = makeTypeInfo<CustomTypeInfo>(this);
+	customType = makeTypeInfo<CustomTypeInfo>(this, HandleTrackingMethod::ExternallyTracked);
 	extractDefinitionLists();
 }
 
@@ -60,7 +60,7 @@ CatClassDefinition::CatClassDefinition(const CatClassDefinition& other):
 	parentClass(other.parentClass),
 	scopeId(InvalidScopeID)
 {
-	customType = makeTypeInfo<CustomTypeInfo>(this);
+	customType = makeTypeInfo<CustomTypeInfo>(this, HandleTrackingMethod::ExternallyTracked);
 	for (auto& iter : other.definitions)
 	{
 		definitions.emplace_back(static_cast<CatDefinition*>(iter->copy()));

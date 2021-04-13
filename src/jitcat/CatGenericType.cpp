@@ -1803,7 +1803,7 @@ bool CatGenericType::placementConstruct(unsigned char* buffer, std::size_t buffe
 		}
 		case SpecificType::ReflectableHandle:
 		{
-			new(buffer) ReflectableHandle(nullptr);
+			new(buffer) ReflectableHandle();
 			return true;
 		}
 		case SpecificType::Enum:
@@ -1887,24 +1887,34 @@ bool CatGenericType::copyConstruct(unsigned char* targetBuffer, std::size_t targ
 				{
 					const ReflectableHandle* sourceHandle = reinterpret_cast<const ReflectableHandle*>(sourceBuffer);
 					unsigned char* objectMemory = nullptr;
+					TypeInfo* objectType = nullptr;
 					if (sourceHandle->getIsValid())
 					{
 						//Allocate heap memory for the object and copy-construct into it.
 						//Then store the pointer to the heap memory in a ReflectableHandle.
 						std::size_t objectSize = pointeeType->getTypeSize();
 						objectMemory = new unsigned char[objectSize];
+						objectType = sourceHandle->getObjectType();
 						if constexpr (Configuration::logJitCatObjectConstructionEvents)
 						{
 							std::cout << "(CatGenericType::copyConstruct) Allocated buffer of size " << std::dec << objectSize << ": " << std::hex << reinterpret_cast<uintptr_t>(objectMemory) << "\n";
 						}
 						pointeeType->copyConstruct(objectMemory, objectSize, reinterpret_cast<unsigned char*>(sourceHandle->get()), objectSize);
 					}
-					new(targetBuffer) ReflectableHandle(reinterpret_cast<Reflectable*>(objectMemory));
+					new(targetBuffer) ReflectableHandle(objectMemory, objectType);
 				} break;
 				case TypeOwnershipSemantics::Weak:
 				{
-					//Simply assign one handle to the other.
-					*reinterpret_cast<ReflectableHandle*>(targetBuffer) = reinterpret_cast<const ReflectableHandle*>(sourceBuffer)->get();
+					//Simply copy construct ReflectableHandle.
+					const ReflectableHandle* otherHandle = reinterpret_cast<const ReflectableHandle*>(sourceBuffer);
+					if (otherHandle == nullptr)
+					{
+						new (targetBuffer) ReflectableHandle();
+					}
+					else
+					{
+						new (targetBuffer) ReflectableHandle(*otherHandle);
+					}
 				} break;
 				case TypeOwnershipSemantics::Shared: //Shared pointers not yet implemented
 				default:
@@ -1989,9 +1999,17 @@ bool CatGenericType::moveConstruct(unsigned char* targetBuffer, std::size_t targ
 				case TypeOwnershipSemantics::Owned:
 				case TypeOwnershipSemantics::Weak:
 				{
+					const ReflectableHandle* otherHandle = reinterpret_cast<const ReflectableHandle*>(sourceBuffer);
 					//Simply copy the pointer and then set the source pointer to nullptr. Ownership is now moved.
-					*reinterpret_cast<ReflectableHandle*>(targetBuffer) = reinterpret_cast<ReflectableHandle*>(sourceBuffer)->get();
-					reinterpret_cast<ReflectableHandle*>(sourceBuffer)->operator=(nullptr);
+					if (otherHandle == nullptr)
+					{
+						new (targetBuffer) ReflectableHandle();
+					}
+					else
+					{
+						new (targetBuffer) ReflectableHandle(*otherHandle);
+						reinterpret_cast<ReflectableHandle*>(sourceBuffer)->setReflectable(nullptr, false);
+					}
 				} break;
 				case TypeOwnershipSemantics::Shared: //Shared pointers not yet implemented
 				default:
@@ -2058,18 +2076,16 @@ bool CatGenericType::placementDestruct(unsigned char* buffer, std::size_t buffer
 			assert(ownershipSemantics != TypeOwnershipSemantics::Value); //ReflectableHandles cant be value owned
 			assert(ownershipSemantics != TypeOwnershipSemantics::Shared); //Shared ownership not yet implemented.
 			ReflectableHandle* handle = reinterpret_cast<ReflectableHandle*>(buffer);
-			Reflectable* reflectable = handle->get();
+			unsigned char* object = handle->get();
 			handle->~ReflectableHandle();
 			if (ownershipSemantics == TypeOwnershipSemantics::Owned)
 			{
-				pointeeType->placementDestruct(reinterpret_cast<unsigned char*>(reflectable), pointeeType->getTypeSize());
-				Reflectable::destruct(reflectable);
+				pointeeType->placementDestruct(object, pointeeType->getTypeSize());
 			}
 			return true;
 		}
 		case SpecificType::ReflectableObject:
 		{
-			Reflectable::placementDestruct(reinterpret_cast<Reflectable*>(buffer));
 			nestedType->placementDestruct(buffer, bufferSize);
 			return true;
 		}

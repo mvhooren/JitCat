@@ -18,7 +18,7 @@ using namespace jitcat::Reflection;
 
 CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(const std::vector<CatVariableDeclaration*>& parameterDeclarations, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
-	customType(makeTypeInfo<CustomTypeInfo>("__ParameterPack"))
+	customType(makeTypeInfo<CustomTypeInfo>("__ParameterPack", HandleTrackingMethod::None))
 {
 	for (auto& iter : parameterDeclarations)
 	{
@@ -29,7 +29,7 @@ CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(const std::vect
 
 jitcat::AST::CatFunctionParameterDefinitions::CatFunctionParameterDefinitions(const CatFunctionParameterDefinitions& other):
 	CatASTNode(other),
-	customType(makeTypeInfo<CustomTypeInfo>("__ParameterPack"))
+	customType(makeTypeInfo<CustomTypeInfo>("__ParameterPack", HandleTrackingMethod::None))
 {
 	for (auto& iter : other.parameters)
 	{

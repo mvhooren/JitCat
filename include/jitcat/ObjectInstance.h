@@ -38,9 +38,10 @@ namespace jitcat::Reflection
 		TypeInfo* getType() const;
 		std::any getObjectAsAny() const;
 
+		bool validateHandle() const;
+
 	private:
 
 		ReflectableHandle object;
-		TypeInfo* objectType;
 	};
 }

@@ -6,6 +6,7 @@
 */
 
 #include "jitcat/LLVMCatIntrinsics.h"
+#include "jitcat/CustomObject.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
@@ -89,7 +90,7 @@ inline llvm::Value* CustomBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::
 template<typename BasicT>
 inline void CustomBasicTypeMemberInfo<BasicT>::assign(std::any& base, const BasicT& valueToSet)
 {
-	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<Reflectable*>(base));
+	unsigned char* baseData = reinterpret_cast<unsigned char*>(std::any_cast<CustomObject*>(base));
 	if (baseData != nullptr)
 	{
 		BasicT& value = *reinterpret_cast<BasicT*>(&baseData[memberOffset]);

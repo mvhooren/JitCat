@@ -61,37 +61,6 @@ TypeInfo* TypeRegistry::getTypeInfo(const std::string& typeName)
 }
 
 
-TypeInfo* TypeRegistry::getOrCreateTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> caster, bool allowConstruction, 
-											bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
-											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
-											std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
-											std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
-											std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor)
-{
-	std::string lowerName = Tools::toLowerCase(typeName);
-	std::map<std::string, TypeInfo*>::iterator iter = types.find(lowerName);
-	if (iter == types.end())
-	{
-		ReflectedTypeInfo* typeInfo = new ReflectedTypeInfo(typeName, typeSize, std::move(caster), allowConstruction, placementConstructor, copyConstructor, moveConstructor, placementDestructor);
-		if (allowCopyConstruction)
-		{
-			typeInfo->enableCopyConstruction();
-		}
-		if (allowMoveConstruction)
-		{
-			typeInfo->enableMoveConstruction();
-		}
-		typeInfo->setTriviallyCopyable(triviallyCopyable);
-		types[lowerName] = typeInfo;
-		return typeInfo;
-	}
-	else
-	{
-		return iter->second;
-	}
-}
-
-
 const std::map<std::string, TypeInfo*>& TypeRegistry::getTypes() const
 {
 	return types;
@@ -322,7 +291,7 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 }
 
 
-std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction, 
+std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction,
 												bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,

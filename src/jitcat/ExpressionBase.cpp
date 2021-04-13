@@ -22,6 +22,7 @@
 #endif
 #include "jitcat/SLRParseResult.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TypeRegistry.h"
 
 #include <cassert>
 
@@ -29,14 +30,14 @@ using namespace jitcat;
 using namespace jitcat::AST;
 using namespace jitcat::LLVM;
 using namespace jitcat::Parser;
+using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
 
 ExpressionBase::ExpressionBase(bool expectAssignable):
 	expressionIsLiteral(false),
 	isConstant(false),
-	expectAssignable(expectAssignable),
-	errorManagerHandle(nullptr)
+	expectAssignable(expectAssignable)
 {
 }
 
@@ -45,8 +46,7 @@ ExpressionBase::ExpressionBase(const char* expression, bool expectAssignable):
 	expression(expression),
 	expressionIsLiteral(false),
 	isConstant(false),
-	expectAssignable(expectAssignable),
-	errorManagerHandle(nullptr)
+	expectAssignable(expectAssignable)
 {
 }
 
@@ -55,8 +55,7 @@ ExpressionBase::ExpressionBase(const std::string& expression, bool expectAssigna
 	expression(expression),
 	expressionIsLiteral(false),
 	isConstant(false),
-	expectAssignable(expectAssignable),
-	errorManagerHandle(nullptr)
+	expectAssignable(expectAssignable)
 {
 }
 
@@ -65,8 +64,7 @@ ExpressionBase::ExpressionBase(CatRuntimeContext* compileContext, const std::str
 	expression(expression),
 	expressionIsLiteral(false),
 	isConstant(false),
-	expectAssignable(expectAssignable),
-	errorManagerHandle(nullptr)
+	expectAssignable(expectAssignable)
 {
 }
 
@@ -75,7 +73,7 @@ ExpressionBase::~ExpressionBase()
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 	}
 }
 
@@ -137,7 +135,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 		context = &CatRuntimeContext::defaultContext;
 		context->getErrorManager()->clear();
 	}
-	errorManagerHandle = errorManager;
+	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());
 
 	isConstant = false;
 	expressionIsLiteral = false;

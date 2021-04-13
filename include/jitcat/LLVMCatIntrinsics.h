@@ -37,7 +37,7 @@ namespace jitcat::LLVM
 		~LLVMCatIntrinsics() = delete;
 
 	public:
-		static Reflection::Reflectable* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
+		static unsigned char* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
 		static bool stringEquals(const Configuration::CatString& left, const Configuration::CatString& right);
 		static bool stringNotEquals(const Configuration::CatString& left, const Configuration::CatString& right);
 		static void stringAssign(Configuration::CatString* left, const Configuration::CatString& right);
@@ -67,9 +67,9 @@ namespace jitcat::LLVM
 		static double roundDouble(double number, int decimals);
 		static Configuration::CatString roundFloatToString(float number, int decimals);
 		static Configuration::CatString roundDoubleToString(double number, int decimals);
-		static void placementCopyConstructType(Reflection::Reflectable* target, Reflection::Reflectable* source,  Reflection::TypeInfo* type);
-		static void placementConstructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);
-		static void placementDestructType(Reflection::Reflectable* address, Reflection::TypeInfo* type);
+		static void placementCopyConstructType(unsigned char* target, unsigned char* source,  Reflection::TypeInfo* type);
+		static void placementConstructType(unsigned char* address, Reflection::TypeInfo* type);
+		static void placementDestructType(unsigned char* address, Reflection::TypeInfo* type);
 		static unsigned char* allocateMemory(std::size_t size);
 		static void freeMemory(unsigned char* memory);
 

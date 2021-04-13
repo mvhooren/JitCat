@@ -17,10 +17,12 @@
 #include "jitcat/ParseToken.h"
 #include "jitcat/Reflectable.h"
 #include "jitcat/SLRParseResult.h"
+#include "jitcat/TypeRegistry.h"
 
 
 using namespace jitcat;
 using namespace jitcat::Parser;
+using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
 
@@ -38,7 +40,7 @@ SourceFile::~SourceFile()
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 	}
 }
 
@@ -46,7 +48,8 @@ SourceFile::~SourceFile()
 void SourceFile::compile(CatLib& catLib)
 {
 	ExpressionErrorManager& errorManager = catLib.getErrorManager();
-	errorManagerHandle = &errorManager;
+	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(&errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());
+
 	errorManager.setCurrentDocument(sourceText.get());
 	sourceTokens.clear();
 	parseResult = JitCat::get()->parseFull(sourceText.get(), sourceTokens, catLib.getRuntimeContext(), &errorManager, this);

@@ -12,10 +12,10 @@ using namespace jitcat::Reflection;
 
 
 jitcat::Reflection::ReflectedTypeInfo::ReflectedTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction, 
-														std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor, 
-														std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
-														std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
-														std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor):
+									 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor, 
+									 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
+									 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
+									 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor):
 	TypeInfo(typeName, typeSize, std::move(typeCaster)),
 	placementConstructor(placementConstructor),
 	copyConstructor(copyConstructor),
@@ -31,19 +31,19 @@ jitcat::Reflection::ReflectedTypeInfo::ReflectedTypeInfo(const char* typeName, s
 }
 
 
-jitcat::Reflection::ReflectedTypeInfo::~ReflectedTypeInfo()
+ReflectedTypeInfo::~ReflectedTypeInfo()
 {
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::enableConstruction()
+ReflectedTypeInfo& ReflectedTypeInfo::enableConstruction()
 {
 	allowConstruction = true;
 	return *this;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::disableConstruction()
+ReflectedTypeInfo& ReflectedTypeInfo::disableConstruction()
 {
 	allowConstruction = false;
 	allowCopyConstruction = false;
@@ -53,62 +53,62 @@ ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::disableConstruction()
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::enableCopyConstruction()
+ReflectedTypeInfo& ReflectedTypeInfo::enableCopyConstruction()
 {
 	allowCopyConstruction = true;
 	return *this;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::disableCopyConstruction()
+ReflectedTypeInfo& ReflectedTypeInfo::disableCopyConstruction()
 {
 	allowCopyConstruction = false;
 	return *this;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::enableMoveConstruction()
+ReflectedTypeInfo& ReflectedTypeInfo::enableMoveConstruction()
 {
 	allowMoveConstruction = true;
 	return *this;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::disableMoveConstruction()
+ReflectedTypeInfo& ReflectedTypeInfo::disableMoveConstruction()
 {
 	allowMoveConstruction = false;
 	return *this;
 }
 
 
-void jitcat::Reflection::ReflectedTypeInfo::setTriviallyCopyable(bool triviallyCopyable_)
+void ReflectedTypeInfo::setTriviallyCopyable(bool triviallyCopyable_)
 {
 	triviallyCopyable = triviallyCopyable_;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::enableInheritance()
+ReflectedTypeInfo& ReflectedTypeInfo::enableInheritance()
 {
 	allowInheritance = true;
 	return *this;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::disableInheritance()
+ReflectedTypeInfo& ReflectedTypeInfo::disableInheritance()
 {
 	allowInheritance = false;
 	return *this;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::setInheritanceChecker(const std::function<bool(CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)>& checkFunction)
+ReflectedTypeInfo& ReflectedTypeInfo::setInheritanceChecker(const std::function<bool(CatRuntimeContext*, AST::CatClassDefinition*, ExpressionErrorManager*, void*)>& checkFunction)
 {
 	inheritanceCheckFunction = checkFunction;
 	return *this;
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::setConstructors(std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor_, 
+ReflectedTypeInfo& ReflectedTypeInfo::setConstructors(std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor_, 
 																		  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor_,
 																		  std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor_,
 																		  std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementDestructor_)
@@ -121,34 +121,34 @@ ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::setConstructors(std::f
 }
 
 
-ReflectedTypeInfo& jitcat::Reflection::ReflectedTypeInfo::setTypeSize(std::size_t newSize)
+ReflectedTypeInfo& ReflectedTypeInfo::setTypeSize(std::size_t newSize)
 {
 	typeSize = newSize;
 	return *this;
 }
 
 
-bool jitcat::Reflection::ReflectedTypeInfo::isReflectedType() const
+bool ReflectedTypeInfo::isReflectedType() const
 {
 	return true;
 }
 
 
-void jitcat::Reflection::ReflectedTypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
+void ReflectedTypeInfo::placementConstruct(unsigned char* buffer, std::size_t bufferSize) const
 {
 	assert(allowConstruction);
 	placementConstructor(buffer, bufferSize);
 }
 
 
-void jitcat::Reflection::ReflectedTypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
+void ReflectedTypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferSize)
 {
 	assert(allowConstruction);
 	placementDestructor(buffer, bufferSize);
 }
 
 
-void jitcat::Reflection::ReflectedTypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void ReflectedTypeInfo::copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	assert(allowCopyConstruction);
 	assert(sourceBufferSize >= targetBufferSize);
@@ -163,7 +163,7 @@ void jitcat::Reflection::ReflectedTypeInfo::copyConstruct(unsigned char* targetB
 }
 
 
-void jitcat::Reflection::ReflectedTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
+void ReflectedTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)
 {
 	assert(allowMoveConstruction);
 	assert(sourceBufferSize >= targetBufferSize);
@@ -178,37 +178,37 @@ void jitcat::Reflection::ReflectedTypeInfo::moveConstruct(unsigned char* targetB
 }
 
 
-bool jitcat::Reflection::ReflectedTypeInfo::getAllowInheritance() const
+bool ReflectedTypeInfo::getAllowInheritance() const
 {
 	return allowInheritance;
 }
 
 
-bool jitcat::Reflection::ReflectedTypeInfo::inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext)
+bool ReflectedTypeInfo::inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	return inheritanceCheckFunction(context, childClass, errorManager, errorContext);
 }
 
 
-bool jitcat::Reflection::ReflectedTypeInfo::getAllowConstruction() const
+bool ReflectedTypeInfo::getAllowConstruction() const
 {
 	return allowConstruction;
 }
 
 
-bool jitcat::Reflection::ReflectedTypeInfo::getAllowCopyConstruction() const
+bool ReflectedTypeInfo::getAllowCopyConstruction() const
 {
 	return allowCopyConstruction;
 }
 
 
-bool jitcat::Reflection::ReflectedTypeInfo::getAllowMoveConstruction() const
+bool ReflectedTypeInfo::getAllowMoveConstruction() const
 {
 	return allowMoveConstruction;
 }
 
 
-bool jitcat::Reflection::ReflectedTypeInfo::isTriviallyCopyable() const
+bool ReflectedTypeInfo::isTriviallyCopyable() const
 {
 	return triviallyCopyable;
 }

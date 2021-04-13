@@ -19,6 +19,7 @@ namespace jitcat::Reflection
 	class CustomTypeInfo;
 	class ReflectableHandle;
 	class ReflectedTypeInfo;
+	class TypeInfo;
 
 	//Reflectable can optionally be inherited by any class that wants to reflect its members.
 	//Its main task is that it will make sure that any references created by the scripting 
@@ -42,17 +43,14 @@ namespace jitcat::Reflection
 	public:
 		void addObserver(ReflectableHandle* observer);
 		void removeObserver(ReflectableHandle* observer);
+		std::size_t getNumReflectableHandles() const;
 
-		static void destruct(Reflectable* reflectable);
-		static void placementDestruct(Reflectable* reflectable);
-		//Will replace the reflectable in all ReflectableHandle observers with the newReflectable.
-		static void replaceReflectable(Reflectable* oldReflectable, Reflectable* newReflectable);
+		bool validateHandles(TypeInfo* reflectableType);
+	private:
+		bool hasHandle(ReflectableHandle* handle) const;
 
 	private:
-		//This is a pointer because otherwise it would be subject to static member destruction order, causing
-		//static reflectable objects that are destructed to sometimes crash because observers was already destroyed.
-		//Because of this, observers is also intentionally leaked.
-		static std::unordered_multimap<Reflectable*, ReflectableHandle*>* observers;
+		ReflectableHandle* firstHandle;
 	};
 
 	template<>

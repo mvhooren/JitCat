@@ -15,9 +15,11 @@
 #include "jitcat/MemberInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
+#include "jitcat/TypeRegistry.h"
 
 using namespace jitcat;
 using namespace jitcat::AST;
+using namespace jitcat::Reflection;
 
 
 CatInheritanceDefinition::CatInheritanceDefinition(CatTypeNode* typeNode, const Tokenizer::Lexeme& nameLexeme, const Tokenizer::Lexeme& lexeme):
@@ -42,7 +44,7 @@ CatInheritanceDefinition::~CatInheritanceDefinition()
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 	}
 }
 
@@ -75,11 +77,12 @@ bool CatInheritanceDefinition::defineCheck(CatRuntimeContext* compiletimeContext
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 		errorManagerHandle = nullptr;
 	}
 	ExpressionErrorManager* errorManager = compiletimeContext->getErrorManager();
-	errorManagerHandle = errorManager;
+	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());
+
 	loopDetectionStack.push_back(this);
 	bool result = type->defineCheck(compiletimeContext, errorManager, this, loopDetectionStack);
 	loopDetectionStack.pop_back();
@@ -119,11 +122,12 @@ bool CatInheritanceDefinition::postTypeCheck(CatRuntimeContext* compileTimeConte
 {
 	if (errorManagerHandle.getIsValid())
 	{
-		static_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
 		errorManagerHandle = nullptr;
 	}
 	ExpressionErrorManager* errorManager = compileTimeContext->getErrorManager();
-	errorManagerHandle = errorManager;
+	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());
+
 	const CatGenericType& inheritedType = type->getType();
 	if (!inheritedType.getObjectType()->inheritTypeCheck(compileTimeContext, compileTimeContext->getCurrentClass(), errorManager, this))
 	{

@@ -96,6 +96,15 @@ namespace Configuration
 		false;
 #endif
 
+	//Whenever ReflectableHandles are changed, verify the linked list of handles.
+	//This can be very slow, but catches issues with corrupted handles.
+	static constexpr bool enableHandleVerificationAsserts = 
+#ifdef _DEBUG
+		false;
+#else
+		false;
+#endif
+
 	//Whenever a floating point number is divided by zero, normally a NaN or (+-)Infinity is returned.
 	//Dividing an integer by zero is undefined behaviour. The program will probably abort.
 	//By enabling this flag, dividing by zero within an expression will return 0, preventing the 

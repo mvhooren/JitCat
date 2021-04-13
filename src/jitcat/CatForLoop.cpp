@@ -28,7 +28,7 @@ CatForLoop::CatForLoop(const Tokenizer::Lexeme& lexeme, const Tokenizer::Lexeme&
 	iteratorLexeme(iteratorLexeme),
 	iteratorName(iteratorLexeme),
 	loopIteratorScope(InvalidScopeID),
-	scopeType(makeTypeInfo<CustomTypeInfo>("loopIterator", false)),
+	scopeType(makeTypeInfo<CustomTypeInfo>("loopIterator", HandleTrackingMethod::None)),
 	iteratorMember(nullptr),
 	range(range),
 	loopBody(loopBody)
