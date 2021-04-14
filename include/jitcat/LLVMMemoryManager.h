@@ -57,6 +57,9 @@ namespace jitcat::LLVM
 		void operator=(const LLVMExpressionMemoryAllocator&) = delete;
 		virtual ~LLVMExpressionMemoryAllocator() override;
 
+		virtual void registerEHFrames(uint8_t *Addr, uint64_t LoadAddr, size_t Size) override final;
+		virtual void deregisterEHFrames() override final;
+
 		//Allocates a memory block of (at least) the given size suitable for
 		//executable code.
 		//
@@ -101,6 +104,10 @@ namespace jitcat::LLVM
 		//Data sections are just allocated directly and stored in this vector since we do not need to set page permissions (read only data is allocated as read/write).
 		std::vector<SectionMemoryAllocation*> dataSectionMemoryAllocations;
 		std::vector<SectionMemoryAllocation*> codeSectionMemoryAllocations;
+
+		std::vector<unsigned char*> registeredEHTables;
+
+		uintptr_t imageBase;
 	};
 
 

@@ -241,6 +241,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 	//Generate the prototype for the function. No code is yet associated with the function at this time.
 	llvm::Function* function = generateFunctionPrototype(name, false, expressionType, {TypeTraits<CatRuntimeContext*>::toGenericType()}, {"RuntimeContext"});
 	
+	function->addFnAttr(llvm::Attribute::UWTable);
 	//Now, generate code for the function
 	context->currentFunction = function;
 	
@@ -274,6 +275,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(const CatAss
 	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, name.c_str(), currentModule.get());
 
+	function->addFnAttr(llvm::Attribute::UWTable);
 	//Name the parameters
 	llvm::Argument* argIter = function->arg_begin();
 	argIter->setName("RuntimeContext");

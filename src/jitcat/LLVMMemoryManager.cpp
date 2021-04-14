@@ -6,16 +6,23 @@
 */
 
 #include "jitcat/LLVMMemoryManager.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/Tools.h"
 
+#include <iostream>
 #include <llvm/Support/Memory.h>
+#include <cassert>
+#ifdef _WIN32
+	#include <Windows.h>
+#endif
 
 using namespace jitcat;
 using namespace jitcat::LLVM;
 
 
 LLVMExpressionMemoryAllocator::LLVMExpressionMemoryAllocator(LLVMMemoryManager* memoryManager):
-	memoryManager(memoryManager)
+	memoryManager(memoryManager),
+	imageBase(0)
 {
 }
 
@@ -26,9 +33,47 @@ LLVMExpressionMemoryAllocator::~LLVMExpressionMemoryAllocator()
 }
 
 
+void LLVMExpressionMemoryAllocator::registerEHFrames(uint8_t* ehFramesAddress, uint64_t ehFramesLoadAddress, size_t size)
+{
+	llvm::RTDyldMemoryManager::registerEHFrames(ehFramesAddress, ehFramesLoadAddress, size);
+	#ifdef _WIN32
+		if constexpr (Configuration::enableWin32ExperimentalUnwindTableRegistration)
+		{
+			PRUNTIME_FUNCTION functionEHTable = reinterpret_cast<PRUNTIME_FUNCTION>(ehFramesAddress);
+			BOOLEAN success = RtlAddFunctionTable(functionEHTable, (DWORD)(size / sizeof(RUNTIME_FUNCTION)), imageBase);
+			(void)success;
+			assert(success == TRUE);
+			registeredEHTables.push_back(reinterpret_cast<unsigned char*>(functionEHTable));
+		}
+	#endif
+}
+
+
+void LLVMExpressionMemoryAllocator::deregisterEHFrames()
+{
+	llvm::RTDyldMemoryManager::deregisterEHFrames();
+	#ifdef _WIN32
+		if constexpr (Configuration::enableWin32ExperimentalUnwindTableRegistration)
+		{
+			for (auto iter : registeredEHTables)
+			{
+				BOOLEAN success = RtlDeleteFunctionTable(reinterpret_cast<PRUNTIME_FUNCTION>(iter));
+				(void)success;
+				assert(success == TRUE);
+			}
+			registeredEHTables.clear();
+		}
+	#endif
+}
+
+
 uint8_t* jitcat::LLVM::LLVMExpressionMemoryAllocator::allocateCodeSection(uintptr_t size, unsigned alignment, unsigned sectionID, llvm::StringRef sectionName)
 {
 	SectionMemoryAllocation* allocation = memoryManager->allocateCodeSection(size, alignment, this);
+	if (imageBase == 0 || reinterpret_cast<uintptr_t>(allocation->data) < imageBase)
+	{
+		imageBase = reinterpret_cast<uintptr_t>(allocation->data);
+	}
 	codeSectionMemoryAllocations.push_back(allocation);
 	return allocation->data;
 }
@@ -37,6 +82,10 @@ uint8_t* jitcat::LLVM::LLVMExpressionMemoryAllocator::allocateCodeSection(uintpt
 uint8_t* jitcat::LLVM::LLVMExpressionMemoryAllocator::allocateDataSection(uintptr_t size, unsigned alignment, unsigned sectionID, llvm::StringRef sectionName, bool isReadOnly)
 {
 	SectionMemoryAllocation* allocation = memoryManager->allocateDataSection(size, alignment, this);
+	if (imageBase == 0 || reinterpret_cast<uintptr_t>(allocation->data) < imageBase)
+	{
+		imageBase = reinterpret_cast<uintptr_t>(allocation->data);
+	}
 	dataSectionMemoryAllocations.push_back(allocation);
 	return allocation->data;
 }

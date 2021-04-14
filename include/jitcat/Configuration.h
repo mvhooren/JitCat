@@ -58,6 +58,7 @@ namespace Configuration
 	static constexpr int basicMemberFunctionPointerSize = sizeof(uintptr_t);
 
 	//Dump LLVM IR whenever a function's code is being generated.
+	//This only works with debug builds and when linking against a debug build of LLVM.
 	static constexpr bool dumpFunctionIR = 
 #ifdef _DEBUG
 		false;
@@ -74,6 +75,15 @@ namespace Configuration
 		false;
 #endif
 
+	//Enable the registration of function unwind tables on Windows
+	//This will improve callstacks while debugging and profiling jitted code.
+	static constexpr bool enableWin32ExperimentalUnwindTableRegistration =
+#ifdef WIN32
+		false;
+#else
+		false;
+#endif
+
 	//Enable the LLVM code generator backend.
 	static constexpr bool enableLLVM =
 #ifdef ENABLE_LLVM
@@ -82,6 +92,7 @@ namespace Configuration
 		false;
 #endif
 
+	//Enables very verbose logging of the JitCat grammar
 	static constexpr bool debugGrammar = 
 #ifdef DEBUG_GRAMMAR
 		true;
@@ -89,6 +100,7 @@ namespace Configuration
 		false;
 #endif
 
+	//Enables verbose logging of the construction and destruction of objects from within jitcat code.
 	static constexpr bool logJitCatObjectConstructionEvents = 
 #ifdef _DEBUG
 		false;
@@ -98,6 +110,7 @@ namespace Configuration
 
 	//Whenever ReflectableHandles are changed, verify the linked list of handles.
 	//This can be very slow, but catches issues with corrupted handles.
+	//Only works if assertions are enabled.
 	static constexpr bool enableHandleVerificationAsserts = 
 #ifdef _DEBUG
 		false;
