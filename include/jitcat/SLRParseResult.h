@@ -34,8 +34,8 @@ namespace jitcat::Parser
 		template<typename ASTNodeType>
 		ASTNodeType* releaseNode() { return static_cast<ASTNodeType*>(astRootNode.release());}
 
-		bool success;
 		std::unique_ptr<AST::ASTNode> astRootNode;
+		bool success;
 	};
 
 }

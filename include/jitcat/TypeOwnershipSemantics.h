@@ -9,7 +9,7 @@
 
 namespace jitcat::Reflection
 {
-	enum class TypeOwnershipSemantics
+	enum class TypeOwnershipSemantics: unsigned char
 	{
 		None,
 		Value,

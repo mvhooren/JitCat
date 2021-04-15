@@ -31,7 +31,7 @@ namespace jitcat
 	class CatGenericType
 	{
 	private:
-		enum class SpecificType
+		enum class SpecificType: unsigned char
 		{
 			None,
 			Basic,
@@ -42,7 +42,7 @@ namespace jitcat
 			Count
 		};
 	
-		enum class BasicType
+		enum class BasicType: unsigned char
 		{
 			None,
 			Char,
@@ -279,15 +279,16 @@ namespace jitcat
 		SpecificType specificType;
 		BasicType basicType;
 
-		//not owned
-		Reflection::TypeInfo* nestedType;
-
-		Reflection::TypeOwnershipSemantics ownershipSemantics;
-		std::unique_ptr<CatGenericType> pointeeType;
-
 		//Type modifiers/flags. These are not taken into account when comparing CatGenericType objects using operator ==.
 		bool writable;
 		bool constant;
+
+		//not owned
+		Reflection::TypeInfo* nestedType;
+
+		std::unique_ptr<CatGenericType> pointeeType;
+
+		Reflection::TypeOwnershipSemantics ownershipSemantics;
 	};
 
 
