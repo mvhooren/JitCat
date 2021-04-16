@@ -41,6 +41,8 @@ set(Source_GeneralTests
 set(Source_Helper
 	NestedReflectedObject.cpp
 	NestedReflectedObject.h
+	PrecompilationTest.cpp
+	PrecompilationTest.h
 	TestEnum.cpp
 	TestEnum.h
 	TestHelperFunctions.h
