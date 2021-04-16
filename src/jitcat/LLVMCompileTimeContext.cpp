@@ -11,8 +11,9 @@ using namespace jitcat;
 using namespace jitcat::LLVM;
 
 
-LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):
+LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext, bool isPrecompilationContext):
 	catContext(catContext),
+	isPrecompilationContext(isPrecompilationContext),
 	currentLib(nullptr),
 	currentClass(nullptr),
 	currentFunctionDefinition(nullptr),
@@ -20,4 +21,18 @@ LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext):
 	currentScope(nullptr),
 	helper(nullptr)
 {
+}
+
+
+void LLVMCompileTimeContext::clearState()
+{
+	catContext = nullptr;
+	currentLib = nullptr;
+	currentClass = nullptr;
+	currentScope = nullptr;
+	currentFunctionDefinition = nullptr;
+	currentFunction = nullptr;
+	helper = nullptr;
+	blockDestructorGenerators.clear();
+	scopeValues.clear();
 }

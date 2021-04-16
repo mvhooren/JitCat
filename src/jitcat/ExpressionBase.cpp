@@ -20,6 +20,7 @@
 	#include "jitcat/LLVMCodeGenerator.h"
 	#include "jitcat/LLVMCompileTimeContext.h"
 #endif
+#include "jitcat/PrecompilationContext.h"
 #include "jitcat/SLRParseResult.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeRegistry.h"
@@ -329,17 +330,25 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 #ifdef ENABLE_LLVM
 	if (!isConstant)
 	{
-		LLVMCompileTimeContext llvmCompileContext(context);
+		LLVMCompileTimeContext llvmCompileContext(context, false);
 		llvmCompileContext.options.enableDereferenceNullChecks = true;
 		intptr_t functionAddress = 0;
 		codeGenerator = context->getCodeGenerator();
 		if (!expectAssignable)
 		{
-			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult.getNode<CatTypedExpression>(), &llvmCompileContext);
+ 			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult.getNode<CatTypedExpression>(), expression, &llvmCompileContext);
+			if (context->getPrecompilationContext() != nullptr)
+			{
+				context->getPrecompilationContext()->precompileExpression(parseResult.getNode<CatTypedExpression>(), expression, context);
+			}
 		}
 		else if (parseResult.getNode<CatTypedExpression>()->isAssignable())
 		{
-			functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult.getNode<CatAssignableExpression>(), &llvmCompileContext);
+			functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult.getNode<CatAssignableExpression>(), expression, &llvmCompileContext);
+			if (context->getPrecompilationContext() != nullptr)
+			{
+				context->getPrecompilationContext()->precompileAssignmentExpression(parseResult.getNode<CatAssignableExpression>(), expression, context);
+			}
 		}
 		if (functionAddress != 0)
 		{

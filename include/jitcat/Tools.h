@@ -219,7 +219,10 @@ namespace jitcat::Tools
 	bool equalsWhileIgnoringCase(const wchar_t* text1, const wchar_t* text2);
 	bool lessWhileIgnoringCase(const std::wstring& first, const std::wstring& second);
 
-	std::string toHexBytes(const unsigned char* data, int length);
+	std::string toHexBytes(std::size_t number, bool spaced = false);
+	std::string toHexBytes(const unsigned char* data, int length, bool spaced = false);
+
+	std::size_t hashCombine(std::size_t firstHash, std::size_t secondHash);
 
 	template <typename EnumT>
 	constexpr int enumToInt(EnumT enumValue);

@@ -10,6 +10,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/TypeInfoDeleter.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -25,6 +26,7 @@ TEST_CASE("Assign tests", "[assign]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("Assign", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
@@ -159,6 +161,7 @@ TEST_CASE("Expression assign tests", "[assign][expressionassign]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("Assign", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
@@ -262,6 +265,7 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("Assign", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();

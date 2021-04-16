@@ -9,6 +9,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -23,6 +24,7 @@ TEST_CASE("String Tests", "[string][operators]")
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("stringTests", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Constant")
@@ -220,6 +222,7 @@ TEST_CASE("Builtin functions test: StringRound", "[builtins][stringround]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_StringRound", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("StringRound_cc1")
@@ -325,6 +328,7 @@ TEST_CASE("Builtin functions test: find", "[builtins][string.find]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_String.find", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("String.find_cc1")
@@ -435,6 +439,7 @@ TEST_CASE("Builtin functions test: String.replace", "[builtins][String.replace]"
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_String.replace", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("String.replace_cc1")
@@ -545,6 +550,7 @@ TEST_CASE("Builtin functions test: String.length", "[builtins][String.length]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_String.length", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("String.length_cc1")
@@ -635,6 +641,7 @@ TEST_CASE("Builtin functions test: String.substring", "[builtins][subString]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_String.substring", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("String.substring_cc1")

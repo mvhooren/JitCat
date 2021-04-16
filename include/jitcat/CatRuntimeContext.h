@@ -41,6 +41,7 @@ namespace jitcat
 	class CatScope;
 	class ErrorContext;
 	class ExpressionErrorManager;
+	class PrecompilationContext;
 	namespace AST
 	{
 		class CatFunctionDefinition;
@@ -145,6 +146,7 @@ namespace jitcat
 
 		Reflection::TypeInfo* findType(const std::string& lowercaseName, CatScopeID& scopeId);
 
+		void setCodeGenerator(std::shared_ptr<LLVM::LLVMCodeGenerator> codegenerator);
 		std::shared_ptr<LLVM::LLVMCodeGenerator> getCodeGenerator();
 		int getNextFunctionIndex();
 
@@ -163,6 +165,11 @@ namespace jitcat
 
 		std::any& addTemporary(const std::any& value);
 		void clearTemporaries();
+
+		std::size_t getContextHash() const;
+
+		void setPrecompilationContext(std::shared_ptr<PrecompilationContext> precompilationContext);
+		std::shared_ptr<PrecompilationContext> getPrecompilationContext() const;
 
 	private:
 		CatScopeID createScope(unsigned char* scopeObject, Reflection::TypeInfo* type, bool isStatic);
@@ -192,6 +199,8 @@ namespace jitcat
 
 		CatScopeID currentStackFrameOffset;
 		std::vector<CatScopeID> stackFrameOffsets;
+
+		std::shared_ptr<PrecompilationContext> precompilationContext;
 
 	#ifdef ENABLE_LLVM
 		std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator;

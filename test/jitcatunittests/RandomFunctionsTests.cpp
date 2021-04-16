@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -22,6 +23,7 @@ TEST_CASE("Builtin functions test: Random", "[builtins][rand]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Random", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Random")
@@ -47,6 +49,7 @@ TEST_CASE("Builtin functions test: RandomRange", "[builtins][rand]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_RandomRange", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("RandomRange_float_constant")

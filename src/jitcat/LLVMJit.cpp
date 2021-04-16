@@ -7,6 +7,7 @@
 
 #include "jitcat/LLVMJit.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/LLVMPrecompilationContext.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/Tools.h"
 
@@ -24,7 +25,6 @@ LLVMJit::LLVMJit():
 	dataLayout(std::make_unique<llvm::DataLayout>(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),
 	symbolStringPool(std::make_shared<llvm::orc::SymbolStringPool>())
 {
-    //executionSession->getMainJITDylib().setGenerator(llvm::cantFail(llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(*dataLayout)));
 	LLVMTypes::doubleType = llvm::Type::getDoubleTy(*context->getContext());
 	LLVMTypes::floatType = llvm::Type::getFloatTy(*context->getContext());
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
@@ -104,6 +104,12 @@ void jitcat::LLVM::LLVMJit::cleanup()
 	targetMachine.reset(nullptr);
 	dataLayout.reset(nullptr);
 	context.reset(nullptr);
+}
+
+
+std::shared_ptr<PrecompilationContext> LLVMJit::createLLVMPrecompilationContext()
+{
+	return std::make_shared<LLVMPrecompilationContext>();
 }
 
 

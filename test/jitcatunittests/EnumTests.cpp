@@ -10,6 +10,7 @@
 #include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -33,6 +34,7 @@ TEST_CASE("Enum Tests", "[enum]" )
 	ObjectInstance typeInstance(customType.get());
 
 	CatRuntimeContext context("enumTests", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 	context.addScope(typeInstance, false);
 

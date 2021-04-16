@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -23,6 +24,7 @@ TEST_CASE("Operator overloading", "[operators][overloading]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("operatorOverloading", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Overloading operator V4 * V4")

@@ -9,6 +9,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -23,6 +24,7 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("floatTests", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 	SECTION("Constant")
 	{
@@ -325,6 +327,7 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("doubleTests", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 	SECTION("Constant")
 	{
@@ -582,6 +585,7 @@ TEST_CASE("Integer Tests", "[int][operators]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("intTests", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Constant")
@@ -753,6 +757,7 @@ TEST_CASE("Boolean Tests", "[bool][operators]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("boolTests", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("True Constant")

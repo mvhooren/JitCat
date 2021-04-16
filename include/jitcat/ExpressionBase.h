@@ -79,6 +79,8 @@ namespace jitcat
 		CatGenericType valueType;
 		Parser::SLRParseResult parseResult;
 #ifdef ENABLE_LLVM
+		//Storing a shared pointer to the code generator here guarantees that generated expression code
+		//does not get destroyed before the Expression gets destroyed.
 		std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator;
 #endif
 

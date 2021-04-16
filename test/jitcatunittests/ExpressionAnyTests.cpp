@@ -9,6 +9,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/StringConstantPool.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -26,6 +27,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	CatGenericType genericType = CatGenericType(objectTypeInfo);
 	CatRuntimeContext context("expressionAny", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Literal Float")

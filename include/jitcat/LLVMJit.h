@@ -39,10 +39,17 @@
 #include <map>
 #include <memory>
 
+namespace jitcat
+{
+	class PrecompilationContext;
+};
+
+
 namespace jitcat::LLVM
 {
 	class LLVMCodeGenerator;
 	class LLVMJit;
+	class LLVMPrecompilationContext;
 
 
 	class LLVMJitInitializer
@@ -75,6 +82,8 @@ namespace jitcat::LLVM
 		const llvm::DataLayout& getDataLayout() const;
 
 		void cleanup();
+
+		std::shared_ptr<PrecompilationContext> createLLVMPrecompilationContext();
 
 	private:
 		//A thread-safe version of a LLVM Context. 

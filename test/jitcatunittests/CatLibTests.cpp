@@ -10,6 +10,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -55,6 +56,7 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("Float variable")
@@ -159,6 +161,7 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 	unsigned char* duplicateTestClassInstance = duplicateTestClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	CatRuntimeContext alternativeContext("jitlib_alternative", &errorManager);
@@ -229,6 +232,7 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("Local tests")
@@ -364,6 +368,7 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("If tests")
@@ -504,6 +509,7 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("Local tests")
@@ -584,6 +590,7 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("Local tests")
@@ -650,6 +657,7 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("getX")
@@ -725,6 +733,7 @@ TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("getX")
@@ -787,6 +796,7 @@ TEST_CASE("CatLib arrays", "[catlib][arrays]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("getX")

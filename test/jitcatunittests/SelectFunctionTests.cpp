@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -22,6 +23,7 @@ TEST_CASE("Builtin functions test: Select", "[builtins][select]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Select", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Select_cc1")

@@ -13,11 +13,23 @@
 #include <catch2/catch.hpp>
 #include "jitcat/JitCat.h"
 
+#include "PrecompilationTest.h"
 
 int main( int argc, char* argv[] ) 
 {
+	#ifdef ENABLE_LLVM
+		Precompilation::precompContext = jitcat::JitCat::get()->createPrecompilationContext();
+	#endif
 	int result = Catch::Session().run( argc, argv );
 
+
+	if (Precompilation::precompContext != nullptr)
+	{
+		//Emit an object file
+		Precompilation::precompContext->finishPrecompilation();
+		//Make sure the precompContext is destroyed before JitCat::destroy is called.
+		Precompilation::precompContext = nullptr;
+	}
 	jitcat::JitCat::get()->destroy();
 
 	return result;

@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -23,6 +24,7 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("memberFunctions", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Get float")
@@ -254,6 +256,7 @@ TEST_CASE("Member Functions with multiple inheritance base class", "[memberfunct
 	MultipleInheritanceClass reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("multiple_inheritance", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 	SECTION("Get int")
 	{

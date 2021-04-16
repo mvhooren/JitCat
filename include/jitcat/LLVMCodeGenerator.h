@@ -55,10 +55,14 @@ namespace jitcat::LLVM
 		llvm::Function* generateExpressionAssignFunction(const AST::CatAssignableExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
 	
 		//Generates a function that returns the value of the expression.
-		intptr_t generateAndGetFunctionAddress(const AST::CatTypedExpression* expression, LLVMCompileTimeContext* context);
+		intptr_t generateAndGetFunctionAddress(const AST::CatTypedExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context);
 
 		//Generates a function that takes a parameter that will be assigned to the result of the expression. Expression must be of an assignable type (lValue).
-		intptr_t generateAndGetAssignFunctionAddress(const jitcat::AST::CatAssignableExpression* expression, LLVMCompileTimeContext* context);
+		intptr_t generateAndGetAssignFunctionAddress(const jitcat::AST::CatAssignableExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context);
+
+		void emitModuleToObjectFile(const std::string& objectFileName);
+
+		std::string getUniqueExpressionFunctionName(const std::string& expression, LLVMCompileTimeContext* context, bool isAssignExpression);
 
 	private:
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);
@@ -102,7 +106,7 @@ namespace jitcat::LLVM
 
 		void initContext(LLVMCompileTimeContext* context);
 		void createNewModule(LLVMCompileTimeContext* context);
-		std::string getNextFunctionName(LLVMCompileTimeContext* context);
+		
 		llvm::Function* verifyAndOptimizeFunction(llvm::Function* function);
 
 		uint64_t getSymbolAddress(const std::string& name, llvm::orc::JITDylib& dyLib) const;
@@ -139,7 +143,7 @@ namespace jitcat::LLVM
 		std::unique_ptr<LLVMCodeGeneratorHelper> helper;
 		//The runtime library dylib
 		llvm::orc::JITDylib* runtimeLibraryDyLib;
-
+		
 		static std::unique_ptr<LLVMMemoryManager> memoryManager;
 	};
 

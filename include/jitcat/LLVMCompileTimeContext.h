@@ -34,9 +34,12 @@ namespace jitcat::LLVM
 
 	struct LLVMCompileTimeContext
 	{
-		LLVMCompileTimeContext(CatRuntimeContext* catContext);
+		LLVMCompileTimeContext(CatRuntimeContext* catContext, bool isPrecompilationContext);
 
 		CatRuntimeContext* catContext;
+		bool isPrecompilationContext;
+
+		void clearState();
 
 		CatLib* currentLib;
 		const AST::CatClassDefinition* currentClass;

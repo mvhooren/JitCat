@@ -447,7 +447,13 @@ bool jitcat::Tools::lessWhileIgnoringCase(const std::wstring& text1, const std::
 }
 
 
-std::string jitcat::Tools::toHexBytes(const unsigned char* data, int length)
+std::string jitcat::Tools::toHexBytes(std::size_t number, bool spaced)
+{
+	return toHexBytes(reinterpret_cast<const unsigned char*>(&number), sizeof(std::size_t), spaced);
+}
+
+
+std::string jitcat::Tools::toHexBytes(const unsigned char* data, int length, bool spaced)
 {
 	std::stringstream stream;
 	for (int i = 0; i < length; i++)
@@ -457,7 +463,28 @@ std::string jitcat::Tools::toHexBytes(const unsigned char* data, int length)
 		{
 			stream << "0";
 		}
-		stream << std::hex << byteValue  << " ";
+		stream << std::hex << byteValue;
+		if (spaced)
+			stream << " ";
 	}
 	return stream.str();
+}
+
+
+std::size_t jitcat::Tools::hashCombine(std::size_t firstHash, std::size_t secondHash)
+{
+	if constexpr (sizeof(std::size_t) == 8)
+	{
+		const std::size_t kMul = 0x9ddfea08eb382d69ULL;
+		std::size_t a = (firstHash ^ secondHash) * kMul;
+		a ^= (a >> 47);
+		std::size_t b = (secondHash ^ a) * kMul;
+		b ^= (b >> 47);
+		secondHash = b * kMul;
+		return secondHash;
+	}
+	else
+	{
+		return secondHash ^ ( firstHash + 0x9e3779b9 + (secondHash<<6) + (secondHash>>2));
+	}
 }

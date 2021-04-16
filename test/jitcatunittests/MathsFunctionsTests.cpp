@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -22,6 +23,7 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Abs", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Abs_Constant")
@@ -107,6 +109,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Sqrt", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Sqrt_Constant")
@@ -187,6 +190,7 @@ TEST_CASE("Builtin functions test: Round", "[builtins][round]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Round", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Round_cc1")
@@ -292,6 +296,7 @@ TEST_CASE("Builtin functions test: Cap", "[builtins][cap]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Cap", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Cap_cc1")
@@ -422,6 +427,7 @@ TEST_CASE("Builtin functions test: Min", "[builtins][min]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Min", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Min_cc1")
@@ -537,6 +543,7 @@ TEST_CASE("Builtin functions test: Max", "[builtins][max]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Max", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Max_cc1")
@@ -652,6 +659,7 @@ TEST_CASE("Builtin functions test: Log10", "[builtins][log10]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Log10", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Log10_Constant")
@@ -732,6 +740,7 @@ TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Ln", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Ln_Constant")
@@ -812,6 +821,7 @@ TEST_CASE("Builtin functions test: Exp", "[builtins][exp]")
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Exp", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Exp_Constant")
@@ -877,6 +887,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Pow", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Pow_cc1")
@@ -987,6 +998,7 @@ TEST_CASE("Builtin functions test: Ceil", "[builtins][ceil]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Ceil", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Ceil_Constant")
@@ -1067,6 +1079,7 @@ TEST_CASE("Builtin functions test: Floor", "[builtins][floor]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Floor", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Floor_Constant")

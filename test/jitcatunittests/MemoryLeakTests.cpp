@@ -9,6 +9,7 @@
 #include "jitcat/CatLib.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -24,6 +25,7 @@ TEST_CASE("Basic memory leak test", "[memory]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("memberFunctions", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 
@@ -101,6 +103,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 	unsigned char* testClassInstance = testClassInfo->construct();
 
 	CatRuntimeContext context("jitlib", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(testClassInfo, testClassInstance, false);
 
 	SECTION("Get TestVector4")

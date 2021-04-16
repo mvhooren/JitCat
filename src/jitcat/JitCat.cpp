@@ -98,6 +98,16 @@ std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseFull(Tokenizer::Doc
 }
 
 
+std::shared_ptr<PrecompilationContext> JitCat::createPrecompilationContext() const
+{
+	#ifdef ENABLE_LLVM
+		return LLVM::LLVMJit::get().createLLVMPrecompilationContext();
+	#else
+		return nullptr;
+	#endif
+}
+
+
 void jitcat::JitCat::destroy()
 {
 	delete instance;

@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -23,6 +24,7 @@ TEST_CASE("Containers tests: Vector", "[containers][vector]")
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("vectorContainer", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Vector get object")
@@ -129,6 +131,7 @@ TEST_CASE("Containers tests: Vector of unique_ptr", "[containers][vector]")
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("vectorContainer", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Vector get object")
@@ -210,6 +213,7 @@ TEST_CASE("Containers tests: Map", "[containers][map]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("mapContainer", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Map get object")
@@ -331,6 +335,7 @@ TEST_CASE("Containers tests: Map with custom comparator", "[containers][map]")
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("mapContainer", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Map get object")
@@ -437,6 +442,7 @@ TEST_CASE("Containers tests: Map of unique_ptr", "[containers][map]")
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("mapContainer", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Map get object")
@@ -543,6 +549,7 @@ TEST_CASE("Containers tests: Unordered_Map", "[containers][unordered_map]" )
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("unordered_map_container", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);	
 
 	SECTION("Unordered_Map get object")
@@ -634,6 +641,7 @@ TEST_CASE("Containers tests: Array", "[containers][array]")
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("arrayContainer", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Array get object")
@@ -720,6 +728,7 @@ TEST_CASE("Containers tests: Deque", "[containers][deque]")
 	reflectedObject.createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("dequeContainer", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 	SECTION("Deque get object")

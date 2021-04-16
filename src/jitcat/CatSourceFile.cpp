@@ -142,7 +142,7 @@ bool CatSourceFile::compile(CatLib& catLib)
 #ifdef ENABLE_LLVM
 	if (noErrors)
 	{
-		LLVM::LLVMCompileTimeContext llvmContext(compiletimeContext);
+		LLVM::LLVMCompileTimeContext llvmContext(compiletimeContext, false);
 		llvmContext.options.enableDereferenceNullChecks = true;
 		llvmContext.currentLib = &catLib;
 		compiletimeContext->getCodeGenerator()->generate(this, &llvmContext);

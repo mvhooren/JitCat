@@ -14,8 +14,10 @@
 #include "jitcat/LLVMCodeGenerator.h"
 #endif
 #include "jitcat/ObjectInstance.h"
+#include "jitcat/Tools.h"
 
 #include <cassert>
+#include <functional>
 #include <sstream>
 
 using namespace jitcat;
@@ -388,6 +390,12 @@ Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& low
 }
 
 
+void CatRuntimeContext::setCodeGenerator(std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator_)
+{
+	codeGenerator = codeGenerator_;
+}
+
+
 std::shared_ptr<LLVMCodeGenerator> CatRuntimeContext::getCodeGenerator()
 {
 #ifdef ENABLE_LLVM
@@ -476,6 +484,34 @@ std::any& jitcat::CatRuntimeContext::addTemporary(const std::any& value)
 void jitcat::CatRuntimeContext::clearTemporaries()
 {
 	temporaries.clear();
+}
+
+
+std::size_t CatRuntimeContext::getContextHash() const
+{
+	std::hash<std::string> stringHasher;
+	std::size_t totalHash = 0;
+	for (const auto& iter : scopes)
+	{
+		totalHash = Tools::hashCombine(totalHash, stringHasher(iter->scopeObject.getObjectType()->getTypeName()));
+	}
+	for (const auto& iter : staticScopes)
+	{
+		totalHash = Tools::hashCombine(totalHash, stringHasher(iter->scopeObject.getObjectType()->getTypeName()));
+	}
+	return totalHash;
+}
+
+
+void CatRuntimeContext::setPrecompilationContext(std::shared_ptr<PrecompilationContext> precompilationContext_)
+{
+	precompilationContext = precompilationContext_;
+}
+
+
+std::shared_ptr<PrecompilationContext> CatRuntimeContext::getPrecompilationContext() const
+{
+	return precompilationContext;
 }
 
 

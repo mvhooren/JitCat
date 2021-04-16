@@ -8,6 +8,7 @@
 #include <catch2/catch.hpp>
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/TypeInfo.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -24,6 +25,7 @@ TEST_CASE("Regression testing", "[regression]")
 	reflectedObject.nestedSelfObject->createNestedObjects();
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("regressionTests", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 
 

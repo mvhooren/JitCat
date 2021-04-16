@@ -11,6 +11,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/TypeInfoDeleter.h"
+#include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
 #include "TestObjects.h"
 
@@ -70,6 +71,7 @@ TEST_CASE("Custom Types", "[customtypes]")
 	objectUniquePtr.reset(nullptr);
 
 	CatRuntimeContext context("customTypes", &errorManager);
+	context.setPrecompilationContext(Precompilation::precompContext);
 	context.addScope(&reflectedObject, true);
 	context.addScope(customType2.get(), nullptr, false);
 	context.addScope(typeInstance, false);

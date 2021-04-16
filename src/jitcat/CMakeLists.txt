@@ -138,6 +138,10 @@ set(Source_Cat_ASTNodes_ASTHelper
 	${JitCatHeaderPath}/StringConstantPool.h
 )
 
+set(Source_Cat_CodeGeneration
+	${JitCatHeaderPath}/PrecompilationContext.h
+)
+
 set(Source_Cat_CodeGeneration_LLVM
 	LLVMCatIntrinsics.cpp
 	${JitCatHeaderPath}/LLVMCatIntrinsics.h
@@ -149,6 +153,8 @@ set(Source_Cat_CodeGeneration_LLVM
 	${JitCatHeaderPath}/LLVMJit.h
 	${JitCatHeaderPath}/LLVMJitHeaderImplementation.h
 	${JitCatHeaderPath}/LLVMMemoryManager.h
+	LLVMPrecompilationContext.cpp
+	${JitCatHeaderPath}/LLVMPrecompilationContext.h
 	LLVMPreGeneratedExpression.cpp
 	${JitCatHeaderPath}/LLVMPreGeneratedExpression.h
 	LLVMTypes.cpp
@@ -379,6 +385,7 @@ set(Source_Tools
 source_group(Cat FILES ${Source_Cat})
 source_group(Cat\\ASTNodes FILES ${Source_Cat_ASTNodes})
 source_group(Cat\\ASTNodes\\ASTHelper FILES ${Source_Cat_ASTNodes_ASTHelper})
+source_group(Cat\\CodeGeneration FILES ${Source_Cat_CodeGeneration})
 source_group(Cat\\CodeGeneration\\LLVM FILES ${Source_Cat_CodeGeneration_LLVM})
 source_group(Cat\\Expression FILES ${Source_Cat_Expression})
 source_group(Cat\\Expression\\AutoCompletion FILES ${Source_Cat_Expression_Autocompletion})
@@ -407,6 +414,7 @@ add_library(JitCat STATIC
 	${Source_Cat}
 	${Source_Cat_ASTNodes}
 	${Source_Cat_ASTNodes_ASTHelper}
+	${Source_Cat_CodeGeneration}
 	${Source_Cat_CodeGeneration_LLVM}
 	${Source_Cat_Expression}
 	${Source_Cat_Expression_Autocompletion}

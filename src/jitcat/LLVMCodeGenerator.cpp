@@ -24,6 +24,7 @@
 #include "jitcat/StaticMemberInfo.h"
 #include "jitcat/StringConstantPool.h"
 
+#include <functional>
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
 #include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
@@ -43,9 +44,6 @@
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
-
-
-#include <iostream>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -303,31 +301,93 @@ llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(const CatAss
 }
 
 
-intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpression* expression, LLVMCompileTimeContext* context)
+intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context)
 {
 	initContext(context);
 	createNewModule(context);
-	std::string functionName = getNextFunctionName(context);
-	llvm::Function* function = generateExpressionFunction(expression, context, functionName);
-	//To silence unused variable warning in release builds.
-	(void)function;
-	assert(function != nullptr);
-	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
-	return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
+	std::string functionName = getUniqueExpressionFunctionName(expressionStr, context, false);
+
+	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
+	if (lookupResult && lookupResult.get())
+	{
+		return (intptr_t)lookupResult.get().getAddress();
+	}
+	else
+	{
+		if (!lookupResult)
+		{
+			lookupResult.takeError();
+		}
+		llvm::Function* function = generateExpressionFunction(expression, context, functionName);
+		//To silence unused variable warning in release builds.
+		(void)function;
+		assert(function != nullptr);
+		llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
+		return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
+	}
 }
 
 
-intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssignableExpression* expression, LLVMCompileTimeContext* context)
+intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssignableExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context)
 {
 	initContext(context);
 	createNewModule(context);
-	std::string functionName = getNextFunctionName(context);
-	llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
-	//To silence unused variable warning in release builds.
-	(void)function;
-	assert(function != nullptr);
-	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
-	return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
+	std::string functionName = getUniqueExpressionFunctionName(expressionStr, context, true);
+
+	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
+	if (lookupResult && lookupResult.get())
+	{
+		return (intptr_t)lookupResult.get().getAddress();
+	}
+	else
+	{	
+		if (!lookupResult)
+		{
+			lookupResult.takeError();
+		}
+		llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
+		//To silence unused variable warning in release builds.
+		(void)function;
+		assert(function != nullptr);
+		llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
+		return (intptr_t)getSymbolAddress(functionName.c_str(), *dylib);
+	}
+}
+
+
+void LLVMCodeGenerator::emitModuleToObjectFile(const std::string& objectFileName)
+{
+	llvm::legacy::PassManager pass;
+	auto FileType = llvm::CGFT_ObjectFile;
+
+	std::error_code EC;
+	llvm::raw_fd_ostream dest(objectFileName, EC, llvm::sys::fs::OF_None);
+
+	if (EC) {
+	  llvm::errs() << "Could not open file: " << EC.message();
+	  return;
+	}
+
+	if (LLVMJit::get().getTargetMachine().addPassesToEmitFile(pass, dest, nullptr, FileType)) 
+	{
+	  llvm::errs() << "TargetMachine can't emit a file of this type";
+	  return;
+	}
+
+	pass.run(*currentModule);
+	dest.flush();
+}
+
+
+std::string LLVMCodeGenerator::getUniqueExpressionFunctionName(const std::string& expression, LLVMCompileTimeContext* context, bool isAssignExpression)
+{
+	std::hash<std::string> stringHash;
+	std::size_t expressionHash = stringHash(expression);
+	std::size_t contextHash = context->catContext->getContextHash();
+	if (isAssignExpression)
+		return Tools::append("expressionAssign_", Tools::toHexBytes(expressionHash), "_", Tools::toHexBytes(contextHash));
+	else 
+		return Tools::append("expression_", Tools::toHexBytes(expressionHash), "_", Tools::toHexBytes(contextHash));
 }
 
 
@@ -399,7 +459,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		case CatBuiltInFunctionType::Asinh:		return generateFPMath("asinhf", &asinhf, "asinh", &asinh, arguments, context);
 		case CatBuiltInFunctionType::Acosh:		return generateFPMath("acoshf", &acoshf, "acosh", &acosh, arguments, context);
 		case CatBuiltInFunctionType::Atanh:		return generateFPMath("atanhf", &atanhf, "atanh", &atanh, arguments, context);
-		case CatBuiltInFunctionType::Atan2:		return generateFPMath("atan2", &atan2f, "atan2", &atan2, arguments, context);
+		case CatBuiltInFunctionType::Atan2:		return generateFPMath("atan2f", &atan2f, "atan2", &atan2, arguments, context);
 		case CatBuiltInFunctionType::Hypot:		return generateFPMath("hypotf", &hypotf, "hypot", &hypot, arguments, context);
 		case CatBuiltInFunctionType::Cap:
 		{
@@ -1616,12 +1676,6 @@ void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
 	passManager->add(llvm::createCFGSimplificationPass());
 
 	passManager->doInitialization();
-}
-
-
-std::string LLVMCodeGenerator::getNextFunctionName(LLVMCompileTimeContext * context)
-{
-	return Tools::append("expression_", context->catContext->getContextName(), "_", context->catContext->getNextFunctionIndex());
 }
 
 
