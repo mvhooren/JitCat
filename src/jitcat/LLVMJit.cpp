@@ -58,8 +58,11 @@ LLVMJit::~LLVMJit()
 
 LLVMJit& LLVMJit::get()
 {
-	static LLVMJit instance;
-	return instance;
+	if (instance == nullptr)
+	{
+		instance = new LLVMJit;
+	}
+	return *instance;
 }
 
 
@@ -111,6 +114,9 @@ std::shared_ptr<PrecompilationContext> LLVMJit::createLLVMPrecompilationContext(
 {
 	return std::make_shared<LLVMPrecompilationContext>();
 }
+
+
+LLVMJit* LLVMJit::instance = nullptr;
 
 
 LLVMJitInitializer::LLVMJitInitializer()

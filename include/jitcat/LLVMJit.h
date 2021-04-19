@@ -86,6 +86,7 @@ namespace jitcat::LLVM
 		std::shared_ptr<PrecompilationContext> createLLVMPrecompilationContext();
 
 	private:
+		static LLVMJit* instance;
 		//A thread-safe version of a LLVM Context. 
 		//LLVM functionality is isolated per context. For instance, modules and types created on different contexts cannot interact.
 		//Used for building LLVM IR modules.
