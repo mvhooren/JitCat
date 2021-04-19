@@ -767,7 +767,7 @@ llvm::Constant* LLVMCodeGeneratorHelper::createZeroInitialisedConstant(llvm::Typ
 	else if (type == LLVMTypes::floatType)		return createConstant(0.0f);
 	else if (type == LLVMTypes::doubleType)		return createConstant(0.0);
 	else if (type == LLVMTypes::intType)		return createConstant(0);
-	else if (type == LLVMTypes::longintType)	return createConstant(0ULL);
+	else if (type == LLVMTypes::longintType)	return createConstant((uint64_t)0);
 	else if (type == LLVMTypes::charType)		return createCharConstant(0);
 	else if (type == LLVMTypes::voidType)		return (llvm::Constant*)nullptr;
 	else if (type->isArrayTy())					return createZeroInitialisedArrayConstant(static_cast<llvm::ArrayType*>(type));

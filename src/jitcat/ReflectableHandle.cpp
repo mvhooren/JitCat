@@ -95,7 +95,7 @@ void ReflectableHandle::setReflectable(unsigned char* other, TypeInfo* reflectab
 ReflectableHandle& jitcat::Reflection::ReflectableHandle::operator=(std::nullptr_t other)
 {
 	assert(other == nullptr);
-	setReflectable(nullptr, false);
+	setReflectable(nullptr, nullptr);
 	return *this;
 }
 
