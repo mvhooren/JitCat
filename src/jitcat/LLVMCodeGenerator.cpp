@@ -317,7 +317,8 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpressi
 	{
 		if (!lookupResult)
 		{
-			lookupResult.takeError();
+			llvm::Error llvmError = lookupResult.takeError();
+			(void)llvmError;
 		}
 		llvm::Function* function = generateExpressionFunction(expression, context, functionName);
 		//To silence unused variable warning in release builds.
@@ -344,7 +345,8 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 	{	
 		if (!lookupResult)
 		{
-			lookupResult.takeError();
+			llvm::Error llvmError = lookupResult.takeError();
+			(void)llvmError;
 		}
 		llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
 		//To silence unused variable warning in release builds.
