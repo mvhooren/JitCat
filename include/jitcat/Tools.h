@@ -45,7 +45,7 @@ namespace jitcat::Tools
 		}
 		static inline uint64_t stringToUInt64(const StringT& string)
 		{
-			return _atoi64(string.c_str());
+			return atoll(string.c_str());
 		}
 		static inline float stringToFloat(const StringT& string)
 		{

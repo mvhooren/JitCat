@@ -2008,7 +2008,7 @@ bool CatGenericType::moveConstruct(unsigned char* targetBuffer, std::size_t targ
 					else
 					{
 						new (targetBuffer) ReflectableHandle(*otherHandle);
-						reinterpret_cast<ReflectableHandle*>(sourceBuffer)->setReflectable(nullptr, false);
+						reinterpret_cast<ReflectableHandle*>(sourceBuffer)->setReflectable(nullptr, nullptr);
 					}
 				} break;
 				case TypeOwnershipSemantics::Shared: //Shared pointers not yet implemented
