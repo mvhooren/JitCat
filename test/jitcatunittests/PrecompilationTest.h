@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "jitcat/LLVMJit.h"
 #include "jitcat/PrecompilationContext.h"
 
 #include <memory>

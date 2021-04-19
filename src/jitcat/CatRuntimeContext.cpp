@@ -392,7 +392,9 @@ Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& low
 
 void CatRuntimeContext::setCodeGenerator(std::shared_ptr<LLVM::LLVMCodeGenerator> codeGenerator_)
 {
-	codeGenerator = codeGenerator_;
+	#ifdef ENABLE_LLVM
+		codeGenerator = codeGenerator_;
+	#endif
 }
 
 

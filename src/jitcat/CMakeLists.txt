@@ -150,11 +150,7 @@ set(Source_Cat_CodeGeneration_LLVM
 	${JitCatHeaderPath}/LLVMCompileOptions.h
 	${JitCatHeaderPath}/LLVMCompileTimeContext.h
 	${JitCatHeaderPath}/LLVMForwardDeclares.h
-	${JitCatHeaderPath}/LLVMJit.h
-	${JitCatHeaderPath}/LLVMJitHeaderImplementation.h
 	${JitCatHeaderPath}/LLVMMemoryManager.h
-	LLVMPrecompilationContext.cpp
-	${JitCatHeaderPath}/LLVMPrecompilationContext.h
 	LLVMPreGeneratedExpression.cpp
 	${JitCatHeaderPath}/LLVMPreGeneratedExpression.h
 	LLVMTypes.cpp
@@ -163,6 +159,10 @@ set(Source_Cat_CodeGeneration_LLVM
 
 if(LLVM_ENABLED)
 	list(APPEND Source_Cat_CodeGeneration_LLVM 
+		${JitCatHeaderPath}/LLVMJit.h
+		${JitCatHeaderPath}/LLVMJitHeaderImplementation.h
+		LLVMPrecompilationContext.cpp
+		${JitCatHeaderPath}/LLVMPrecompilationContext.h
 		LLVMCodeGenerator.cpp
 		LLVMCodeGeneratorHelper.cpp
 		LLVMCompileTimeContext.cpp
