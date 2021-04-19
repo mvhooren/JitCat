@@ -120,19 +120,22 @@ namespace jitcat
 			{
 				runtimeContext = &CatRuntimeContext::defaultContext;
 			}
-			if constexpr (Configuration::enableLLVM)
+			else if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
 			{
-				if constexpr (!std::is_same<void, ExpressionResultT>::value)
+				if (Configuration::enableLLVM || getValueFunc != &getDefaultValue)
 				{
-					return getValueFunc(runtimeContext);
-				}
-				else
-				{
-					getValueFunc(runtimeContext);
-					return;
+					if constexpr (!std::is_same<void, ExpressionResultT>::value)
+					{
+						return getValueFunc(runtimeContext);
+					}
+					else
+					{
+						getValueFunc(runtimeContext);
+						return;
+					}
 				}
 			}
-			else
+			if constexpr (!Configuration::enableLLVM)
 			{
 				if (parseResult.success)
 				{
@@ -154,6 +157,7 @@ namespace jitcat
 					return ExpressionResultT();
 				}
 			}
+			return ExpressionResultT();
 		}
 	}
 

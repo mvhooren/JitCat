@@ -58,9 +58,9 @@ ExpressionAssignAny::ExpressionAssignAny(CatRuntimeContext* compileContext, cons
 
 bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::any value, const CatGenericType& valueType)
 {
-	if constexpr (Configuration::enableLLVM)
+	if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
 	{
-		if (parseResult.astRootNode != nullptr)
+		if (Configuration::enableLLVM || nativeFunctionAddress != 0)
 		{
 			const CatGenericType myType = getType();
 			std::any convertedValue = value;
@@ -97,10 +97,10 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 				assert(false);
 				return false;
 			}
+			return !hasError();
 		}
-		return !hasError();
 	}
-	else
+	if constexpr (!Configuration::enableLLVM)
 	{
 		return assignInterpretedValue(runtimeContext, value, valueType);
 	}

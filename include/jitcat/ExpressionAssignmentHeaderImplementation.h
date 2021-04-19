@@ -63,12 +63,15 @@ inline bool ExpressionAssignment<ExpressionT>::assignValue(CatRuntimeContext* ru
 	{
 		runtimeContext = &CatRuntimeContext::defaultContext;
 	}
-	if constexpr (Configuration::enableLLVM)
+	if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
 	{
-		assignValueFunc(runtimeContext, value);
-		return !hasError();
+		if (Configuration::enableLLVM || assignValueFunc != &defaultAssignFunction)
+		{
+			assignValueFunc(runtimeContext, value);
+			return !hasError();
+		}
 	}
-	else
+	if constexpr (!Configuration::enableLLVM)
 	{
 		return assignInterpretedValue(runtimeContext, value);
 	}

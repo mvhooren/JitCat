@@ -9,6 +9,7 @@
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/ExpressionHelperFunctions.h"
 #include "jitcat/LLVMCodeGenerator.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 
@@ -33,6 +34,7 @@ LLVMPrecompilationContext::~LLVMPrecompilationContext()
 
 void LLVMPrecompilationContext::finishPrecompilation()
 {
+	codeGenerator->generateExpressionSymbolEnumerationFunction(compiledFunctions);
 	codeGenerator->emitModuleToObjectFile("PrecompiledJitCatExpressions.obj");
 }
 
@@ -43,11 +45,11 @@ void LLVMPrecompilationContext::precompileExpression(const CatTypedExpression* e
 	compileContext->catContext = context;
 	std::shared_ptr<LLVMCodeGenerator> oldGenerator = context->getCodeGenerator();
 	context->setCodeGenerator(codeGenerator);
-	const std::string expressionName = codeGenerator->getUniqueExpressionFunctionName(expressionStr, compileContext.get(), false);
+	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, false);
 	if (compiledFunctions.find(expressionName) == compiledFunctions.end())
 	{
-		compiledFunctions.insert(expressionName);
 		llvm::Function* function = codeGenerator->generateExpressionFunction(expression, compileContext.get(), expressionName);
+		compiledFunctions.insert(std::make_pair(expressionName, function));
 	}
 	context->setCodeGenerator(oldGenerator);
 }
@@ -59,11 +61,11 @@ void LLVMPrecompilationContext::precompileAssignmentExpression(const CatAssignab
 	compileContext->catContext = context;
 	std::shared_ptr<LLVMCodeGenerator> oldGenerator = context->getCodeGenerator();
 	context->setCodeGenerator(codeGenerator);
-	const std::string expressionName = codeGenerator->getUniqueExpressionFunctionName(expressionStr, compileContext.get(), true);
+	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, true);
 	if (compiledFunctions.find(expressionName) == compiledFunctions.end())
 	{
-		compiledFunctions.insert(expressionName);
 		llvm::Function* function = codeGenerator->generateExpressionAssignFunction(expression, compileContext.get(), expressionName);
+		compiledFunctions.insert(std::make_pair(expressionName, function));
 	}
 	context->setCodeGenerator(oldGenerator);
 }

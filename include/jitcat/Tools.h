@@ -222,6 +222,7 @@ namespace jitcat::Tools
 	std::string toHexBytes(std::size_t number, bool spaced = false);
 	std::string toHexBytes(const unsigned char* data, int length, bool spaced = false);
 
+	std::size_t reverseBytes(std::size_t value);
 	std::size_t hashCombine(std::size_t firstHash, std::size_t secondHash);
 
 	template <typename EnumT>

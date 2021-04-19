@@ -14,6 +14,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/ExpressionHelperFunctions.h"
 #include "jitcat/Document.h"
 #include "jitcat/JitCat.h"
 #ifdef ENABLE_LLVM
@@ -327,9 +328,25 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 
 void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 {
-#ifdef ENABLE_LLVM
 	if (!isConstant)
 	{
+		if constexpr (Configuration::usePreCompiledExpressions)
+		{
+			//Can't use precompiled expressions if there is a precompilation context 
+			//because the expression would not be pre-compiled.
+			if (context->getPrecompilationContext() == nullptr)
+			{
+				//Lookup the symbol for the expression by its unique name.
+				uintptr_t symbolAddress = JitCat::getPrecompiledSymbol(ExpressionHelperFunctions::getUniqueExpressionFunctionName(expression, context, expectAssignable));
+				if (symbolAddress != 0)
+				{
+					handleCompiledFunction(symbolAddress);
+					return;
+				}
+			}
+		}
+#ifdef ENABLE_LLVM
+
 		LLVMCompileTimeContext llvmCompileContext(context, false);
 		llvmCompileContext.options.enableDereferenceNullChecks = true;
 		intptr_t functionAddress = 0;
@@ -358,8 +375,8 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 		{
 			assert(false);
 		}
-	}
 #endif //ENABLE_LLVM
+	}
 }
 
 

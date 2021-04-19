@@ -12,7 +12,7 @@
 
 #include <memory>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 
 
 namespace jitcat::LLVM
@@ -36,6 +36,6 @@ namespace jitcat::LLVM
 		std::unique_ptr<LLVMCompileTimeContext> compileContext;
 		std::shared_ptr<LLVMCodeGenerator> codeGenerator;
 
-		std::unordered_set<std::string> compiledFunctions;
+		std::unordered_map<std::string, llvm::Function*> compiledFunctions;
 	};
 };

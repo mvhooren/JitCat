@@ -31,13 +31,18 @@ namespace jitcat::LLVM
 	//This class contains static functions that are called directly from jitted code. 
 	//They represent some of the built-in/intrinsic functions available in JitCat.
 	//It is a run-time library of sorts.
+
+	namespace CatLinkedIntrinsics
+	{
+		extern "C" unsigned char* _jc_getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
+	};
+
 	class LLVMCatIntrinsics
 	{
 		LLVMCatIntrinsics();
 		~LLVMCatIntrinsics() = delete;
 
 	public:
-		static unsigned char* getScopePointerFromContext(CatRuntimeContext* context, int scopeId);
 		static bool stringEquals(const Configuration::CatString& left, const Configuration::CatString& right);
 		static bool stringNotEquals(const Configuration::CatString& left, const Configuration::CatString& right);
 		static void stringAssign(Configuration::CatString* left, const Configuration::CatString& right);

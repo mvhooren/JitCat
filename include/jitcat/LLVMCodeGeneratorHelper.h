@@ -114,6 +114,7 @@ namespace jitcat::LLVM
 		llvm::Constant* createConstant(float constant);
 		llvm::Constant* createConstant(bool constant);
 		llvm::Constant* createNullPtrConstant(llvm::PointerType* pointerType);
+		llvm::Constant* createZeroTerminatedStringConstant(const std::string& value);
 		llvm::Value* createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType = LLVMTypes::pointerType);
 		llvm::Constant* createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType);
 		llvm::Value* constantToValue(llvm::Constant* constant) const;

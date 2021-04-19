@@ -24,6 +24,7 @@ namespace jitcat::Parser
 }
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 
@@ -45,6 +46,7 @@ namespace jitcat
 		std::unique_ptr<Parser::SLRParseResult> parseFull(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
 		std::shared_ptr<PrecompilationContext> createPrecompilationContext() const;
 
+		static uintptr_t getPrecompiledSymbol(const std::string& name);
 
 		//This will clean up as much memory as possible, library features will be broken after this is called.
 		//The type registry will be cleared.
@@ -52,8 +54,11 @@ namespace jitcat
 		static void destroy();
 
 	private:
-		static JitCat* instance;
+		static void enumerationCallback(const char* name, uintptr_t address);
 
+	private:
+		static JitCat* instance;
+		static std::unordered_map<std::string, uintptr_t> precompiledSymbols;
 		std::unique_ptr<Tokenizer::CatTokenizer> tokenizer;
 		
 		std::unique_ptr<Grammar::CatGrammar> expressionGrammar;

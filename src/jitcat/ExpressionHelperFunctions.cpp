@@ -46,3 +46,16 @@ ExpressionBase* ExpressionHelperFunctions::createExpression(const CatGenericType
 	else if (type.isStringPtrType())	return new Expression<Configuration::CatString*>(expressionText);
 	else								return nullptr;
 }
+
+
+std::string jitcat::ExpressionHelperFunctions::getUniqueExpressionFunctionName(const std::string& expression, CatRuntimeContext* context, bool isAssignExpression)
+{
+	std::hash<std::string> stringHash;
+	std::size_t expressionHash = stringHash(expression);
+	std::size_t contextHash = context->getContextHash();
+	if (isAssignExpression)
+		return Tools::append("expressionAssign_", Tools::toHexBytes(expressionHash), "_", Tools::toHexBytes(contextHash));
+	else 
+		return Tools::append("expression_", Tools::toHexBytes(expressionHash), "_", Tools::toHexBytes(contextHash));
+}
+

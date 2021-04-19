@@ -471,6 +471,29 @@ std::string jitcat::Tools::toHexBytes(const unsigned char* data, int length, boo
 }
 
 
+std::size_t jitcat::Tools::reverseBytes(std::size_t value)
+{
+	if constexpr (sizeof(std::size_t) == 8)
+	{
+		char buffer[8];
+		memcpy(buffer, &value, 8);
+		std::swap(buffer[7], buffer[0]);
+		std::swap(buffer[6], buffer[1]);
+		std::swap(buffer[5], buffer[2]);
+		std::swap(buffer[4], buffer[3]);
+		return *reinterpret_cast<std::size_t*>(buffer);
+	}
+	else
+	{
+		char buffer[4];
+		memcpy(buffer, &value, 4);
+		std::swap(buffer[3], buffer[0]);
+		std::swap(buffer[2], buffer[1]);
+		return *reinterpret_cast<std::size_t*>(buffer);
+	}
+}
+
+
 std::size_t jitcat::Tools::hashCombine(std::size_t firstHash, std::size_t secondHash)
 {
 	if constexpr (sizeof(std::size_t) == 8)

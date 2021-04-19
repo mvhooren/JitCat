@@ -12,6 +12,7 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/CustomTypeMemberFunctionInfo.h"
 #include "jitcat/ErrorContext.h"
+#include "jitcat/ExpressionHelperFunctions.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMCatIntrinsics.h"
@@ -305,7 +306,7 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpressi
 {
 	initContext(context);
 	createNewModule(context);
-	std::string functionName = getUniqueExpressionFunctionName(expressionStr, context, false);
+	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, false);
 
 	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
 	if (lookupResult && lookupResult.get())
@@ -332,7 +333,7 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 {
 	initContext(context);
 	createNewModule(context);
-	std::string functionName = getUniqueExpressionFunctionName(expressionStr, context, true);
+	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, true);
 
 	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
 	if (lookupResult && lookupResult.get())
@@ -379,15 +380,31 @@ void LLVMCodeGenerator::emitModuleToObjectFile(const std::string& objectFileName
 }
 
 
-std::string LLVMCodeGenerator::getUniqueExpressionFunctionName(const std::string& expression, LLVMCompileTimeContext* context, bool isAssignExpression)
+llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(const std::unordered_map<std::string, llvm::Function*>& symbols)
 {
-	std::hash<std::string> stringHash;
-	std::size_t expressionHash = stringHash(expression);
-	std::size_t contextHash = context->catContext->getContextHash();
-	if (isAssignExpression)
-		return Tools::append("expressionAssign_", Tools::toHexBytes(expressionHash), "_", Tools::toHexBytes(contextHash));
-	else 
-		return Tools::append("expression_", Tools::toHexBytes(expressionHash), "_", Tools::toHexBytes(contextHash));
+	const std::string enumerationFunctionName = "_jc_enumerate_expressions";
+	llvm::Type* functionReturnType = LLVMTypes::voidType;
+
+	std::vector<llvm::Type*> callBackParameters = {LLVMTypes::pointerType, LLVMTypes::pointerType};
+	llvm::FunctionType* callBackType = llvm::FunctionType::get(functionReturnType, callBackParameters, false);		
+
+	std::vector<llvm::Type*> parameters = {callBackType->getPointerTo()};
+	llvm::FunctionType* functionType = llvm::FunctionType::get(functionReturnType, parameters, false);		
+	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, enumerationFunctionName.c_str(), currentModule.get());
+
+	llvm::FunctionCallee callee(callBackType, function->getArg(0));
+
+	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
+	builder->SetInsertPoint(&function->getEntryBlock());
+
+	for (auto iter : symbols)
+	{
+		llvm::Constant* zeroTerminatedString = helper->createZeroTerminatedStringConstant(iter.first);
+		llvm::Value* functionPtr = helper->convertToPointer(iter.second, "functionPtr");
+		builder->CreateCall(callee, {zeroTerminatedString, functionPtr});
+	}
+	builder->CreateRetVoid();
+	return verifyAndOptimizeFunction(function);
 }
 
 
@@ -1642,7 +1659,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 		assert(argument->getName() == "RuntimeContext");
 		assert(argument->getType() == LLVMTypes::pointerType);
 		llvm::Value* scopeIdValue = context->helper->createConstant((int)scopeId);
-		llvm::Value* address = address = helper->createIntrinsicCall(context, &LLVMCatIntrinsics::getScopePointerFromContext, {argument, scopeIdValue}, "getScopePointerFromContext"); 
+		llvm::Value* address = address = helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getScopePointerFromContext, {argument, scopeIdValue}, "_jc_getScopePointerFromContext"); 
 		assert(address != nullptr);
 		parentObjectAddress = helper->convertToIntPtr(address, "CustomThis_IntPtr");
 	}

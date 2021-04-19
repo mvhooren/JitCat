@@ -863,6 +863,37 @@ llvm::Constant* LLVMCodeGeneratorHelper::createNullPtrConstant(llvm::PointerType
 }
 
 
+llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createZeroTerminatedStringConstant(const std::string& value)
+{
+    auto charType = LLVMTypes::charType;
+
+
+    //Initialize chars vector
+    std::vector<llvm::Constant *> chars(value.length());
+    for(unsigned int i = 0; i < value.size(); i++) {
+      chars[i] = llvm::ConstantInt::get(charType, value[i]);
+    }
+
+    //add a zero terminator too
+    chars.push_back(llvm::ConstantInt::get(charType, 0));
+
+    //Initialize the string from the characters
+    llvm::ArrayType* stringType = llvm::ArrayType::get(charType, chars.size());
+
+	llvm::ArrayRef ref = value;
+
+    //Create the declaration statement
+    auto globalDeclaration = (llvm::GlobalVariable*) codeGenerator->getCurrentModule()->getOrInsertGlobal(Tools::append(value, ".str"), stringType);
+    globalDeclaration->setInitializer(llvm::ConstantArray::get(stringType, chars));
+    globalDeclaration->setConstant(true);
+    globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
+    globalDeclaration->setUnnamedAddr (llvm::GlobalValue::UnnamedAddr::Global);
+
+    //Return a cast to an i8*
+    return llvm::ConstantExpr::getBitCast(globalDeclaration, charType->getPointerTo());
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType)
 {
 	llvm::Constant* constant = createIntPtrConstant(address, Tools::append(name, "_IntPtr"));

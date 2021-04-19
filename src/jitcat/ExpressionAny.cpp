@@ -59,22 +59,25 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 		{
 			runtimeContext = &CatRuntimeContext::defaultContext;
 		}
-		if constexpr (Configuration::enableLLVM)
+		if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
 		{
-			if		(valueType.isIntType())		return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isVoidType())	{reinterpret_cast<void(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext); return std::any();}
-			else if (valueType.isFloatType())	return std::any(reinterpret_cast<float(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isDoubleType())	return std::any(reinterpret_cast<double(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isBoolType())	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isReflectablePointerOrHandle())	return valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			else if (valueType.isPointerToPointerType() && valueType.getPointeeType()->isPointerToReflectableObjectType())
+			if (Configuration::enableLLVM || nativeFunctionAddress != 0)
 			{
-				return valueType.getPointeeType()->getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointerPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-			}
-			else 
-			{
-				assert(false);
-				return std::any();
+				if		(valueType.isIntType())		return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+				else if (valueType.isVoidType())	{reinterpret_cast<void(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext); return std::any();}
+				else if (valueType.isFloatType())	return std::any(reinterpret_cast<float(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+				else if (valueType.isDoubleType())	return std::any(reinterpret_cast<double(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+				else if (valueType.isBoolType())	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+				else if (valueType.isReflectablePointerOrHandle())	return valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+				else if (valueType.isPointerToPointerType() && valueType.getPointeeType()->isPointerToReflectableObjectType())
+				{
+					return valueType.getPointeeType()->getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointerPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+				}
+				else 
+				{
+					assert(false);
+					return std::any();
+				}
 			}
 		}
 		else

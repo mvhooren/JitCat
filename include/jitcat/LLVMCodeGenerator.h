@@ -24,6 +24,7 @@ namespace jitcat
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
@@ -62,7 +63,8 @@ namespace jitcat::LLVM
 
 		void emitModuleToObjectFile(const std::string& objectFileName);
 
-		std::string getUniqueExpressionFunctionName(const std::string& expression, LLVMCompileTimeContext* context, bool isAssignExpression);
+		//Generates a function that takes a callback to a function that will be called with the name and address of every symbol in the set.
+		llvm::Function* generateExpressionSymbolEnumerationFunction(const std::unordered_map<std::string, llvm::Function*>& symbols);
 
 	private:
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);

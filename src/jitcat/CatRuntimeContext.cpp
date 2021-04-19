@@ -499,7 +499,8 @@ std::size_t CatRuntimeContext::getContextHash() const
 	}
 	for (const auto& iter : staticScopes)
 	{
-		totalHash = Tools::hashCombine(totalHash, stringHasher(iter->scopeObject.getObjectType()->getTypeName()));
+		//Same as normal scopes, except we reverse the bytes of the hash so that a normal scope is unlikely to match the hash of a global scope of the same type.
+		totalHash = Tools::hashCombine(totalHash, Tools::reverseBytes(stringHasher(iter->scopeObject.getObjectType()->getTypeName())));
 	}
 	return totalHash;
 }

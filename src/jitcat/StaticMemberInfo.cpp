@@ -120,7 +120,7 @@ llvm::Value* jitcat::Reflection::StaticClassHandleMemberInfo::generateAssignCode
 #ifdef ENABLE_LLVM
 	//Create a constant with the pointer to the reflectable handle.
 	llvm::Value* reflectableHandle = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
-	//Wether or not the assigned value inherits from reflectable
+	//Whether or not the assigned value inherits from reflectable
 	llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(catType.removeIndirection().getObjectType()), Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfo"));
 	llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfoPtr"));
 	//Call function that gets the member

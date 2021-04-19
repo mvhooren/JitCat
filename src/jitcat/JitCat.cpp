@@ -11,6 +11,7 @@
 #include "jitcat/CatGrammar.h"
 #include "jitcat/CatTokenizer.h"
 #include "jitcat/CommentToken.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/Document.h"
 #include "jitcat/IdentifierToken.h"
 #include "jitcat/Lexeme.h"
@@ -35,6 +36,27 @@ using namespace jitcat::Parser;
 using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
+#ifdef _WIN32
+	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t));
+
+	extern "C" void _jc_enumerate_expressions_default(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		enumeratorCallback("default", 0);
+	}
+
+	//Make sure the jc_enumerate_expression function is weakly linked to _jc_enumerate_expressions_default
+	//Linking in a generated object file will override it with the generated _jc_enumerate_expressions function
+	//This is MSVC only:
+	#pragma comment(linker, "/alternatename:_jc_enumerate_expressions=_jc_enumerate_expressions_default")
+#else
+	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		enumeratorCallback("default", 0);
+	}	
+#endif
+
 JitCat::JitCat():
 	tokenizer(std::make_unique<CatTokenizer>()),
 	expressionGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Expression)),
@@ -45,6 +67,10 @@ JitCat::JitCat():
 	statementParser = statementGrammar->createSLRParser();
 	fullParser = fullGrammar->createSLRParser();
 	std::srand((unsigned int)time(nullptr));
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		_jc_enumerate_expressions(&enumerationCallback);
+	}
 }
 
 
@@ -108,6 +134,17 @@ std::shared_ptr<PrecompilationContext> JitCat::createPrecompilationContext() con
 }
 
 
+uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
+{
+	auto iter = precompiledSymbols.find(name);
+	if (iter != precompiledSymbols.end())
+	{
+		return iter->second;
+	}
+	return 0;
+}
+
+
 void jitcat::JitCat::destroy()
 {
 	delete instance;
@@ -119,4 +156,20 @@ void jitcat::JitCat::destroy()
 }
 
 
+void JitCat::enumerationCallback(const char * name, uintptr_t address)
+{
+	if (name == std::string("default")
+		&& address == 0)
+	{
+		std::cout << "No precompiled expression symbols found." << std::endl;
+	}
+	else
+	{
+		precompiledSymbols.insert(std::make_pair(std::string(name), address));
+	}
+}
+
+
 JitCat* JitCat::instance = nullptr;
+
+std::unordered_map<std::string, uintptr_t> JitCat::precompiledSymbols = std::unordered_map<std::string, uintptr_t>();
