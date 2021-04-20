@@ -42,9 +42,13 @@ namespace jitcat::LLVM
 	{
 	public:
 		LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerator);
-
+		
+		//Generates code for calling a static function using the provided arguments.
+		//The name should uniquely identify the function.
+		//isDirectlyLinked should be true if an extern "C" symbol exists that matches the name provided. 
+		//In that case, the symbol does not need to be provided by JitCat when precompiling.
 		template<typename ReturnT, typename ... Args>
-		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name);
+		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name, bool isDirectlyLinked);
 		llvm::Value* createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isThisCall, const std::string& mangledFunctionName, const std::string& shortFunctionName);
 		
 		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
@@ -153,12 +157,12 @@ namespace jitcat::LLVM
 						  const std::function<void (LLVMCompileTimeContext*, llvm::Value*)>& generateLoopBody);
 		
 		
-		void defineWeakSymbol(intptr_t functionAddress, const std::string& mangledFunctionName);
+		void defineWeakSymbol(LLVMCompileTimeContext* context, intptr_t functionAddress, const std::string& mangledFunctionName, bool isDirectlyLinked);
 
 	private:
 		llvm::Value* convertIndirection(llvm::Value* value, llvm::Type* expectedType);
 		llvm::Value* copyConstructIfValueType(llvm::Value* value, const CatGenericType& type, LLVMCompileTimeContext* context, const std::string& valueName);
-		llvm::Value* generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context);
+		llvm::Value* generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context, bool isDirectlyLinked);
 
 		llvm::Value* createZeroStringPtrConstant();
 		llvm::Value* createOneStringPtrConstant();
@@ -181,11 +185,11 @@ namespace jitcat::LLVM
 {
 
 	template<typename ReturnT, typename ...Args>
-	inline llvm::Value* LLVMCodeGeneratorHelper::createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args...), const std::vector<llvm::Value*>& arguments, const std::string& name)
+	inline llvm::Value* LLVMCodeGeneratorHelper::createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args...), const std::vector<llvm::Value*>& arguments, const std::string& name, bool isDirectlyLinked)
 	{
 		Reflection::StaticFunctionInfoWithArgs<ReturnT, Args...> functionInfo(name, nullptr, functionPointer);
 		std::vector<llvm::Value*> argumentsCopy = arguments;
-		return generateIntrinsicCall(&functionInfo, argumentsCopy, context);
+		return generateIntrinsicCall(&functionInfo, argumentsCopy, context, isDirectlyLinked);
 	}
 
 } //End namespace jitcat::LLVM

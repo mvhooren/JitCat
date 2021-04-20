@@ -33,12 +33,14 @@ namespace jitcat::LLVM
 		virtual void precompileAssignmentExpression(const jitcat::AST::CatAssignableExpression* expression, const std::string& expressionStr, CatRuntimeContext* context) override final;
 
 		llvm::GlobalVariable* defineGlobalScope(const std::string& globalSymbolName, LLVMCompileTimeContext* context);
+		llvm::GlobalVariable* defineGlobalFunctionPointer(const std::string& globalSymbolName, LLVMCompileTimeContext* context);
 
 	private:
 		std::unique_ptr<LLVMCompileTimeContext> compileContext;
 		std::shared_ptr<LLVMCodeGenerator> codeGenerator;
 
-		std::unordered_map<std::string, llvm::Function*> compiledFunctions;
+		std::unordered_map<std::string, llvm::Function*> compiledExpressionFunctions;
 		std::unordered_map<std::string, llvm::GlobalVariable*> globalScopes;
+		std::unordered_map<std::string, llvm::GlobalVariable*> globalFunctionPointers;
 	};
 };

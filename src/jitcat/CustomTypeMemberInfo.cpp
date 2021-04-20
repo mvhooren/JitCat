@@ -52,7 +52,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 		//Pointer to a ReflectableHandle
 		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
 		//Call function that gets the member
-		return context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_getObjectPointerFromHandle, {reflectableHandle}, "_jc_getObjectPointerFromHandle");
+		return context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_getObjectPointerFromHandle, {reflectableHandle}, "_jc_getObjectPointerFromHandle", true);
 
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
@@ -79,7 +79,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 		llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(catType.removeIndirection().getObjectType()), Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfo"));
 		llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfoPtr"));
 		//Call function that gets the member
-		context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_assignPointerToReflectableHandle, {reflectableHandle, rValue, typeInfoConstantAsIntPtr}, "_jc_assignPointerToReflectableHandle");
+		context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_assignPointerToReflectableHandle, {reflectableHandle, rValue, typeInfoConstantAsIntPtr}, "_jc_assignPointerToReflectableHandle", true);
 		return rValue;
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);

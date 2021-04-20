@@ -598,7 +598,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			if (arguments->getArgumentType(0).isIntType())
 			{
-				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::intToPrettyString, {generate(arguments->getArgument(0), context)}, "intToPrettyString");
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::intToPrettyString, {generate(arguments->getArgument(0), context)}, "intToPrettyString", false);
 			}
 			else
 			{
@@ -609,11 +609,11 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 		{
 			llvm::Value* number = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::intType, context);
 			llvm::Value* length = helper->convertType(generate(arguments->getArgument(1), context), arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::intToFixedLengthString, {number, length}, "intToFixedLengthString");
+			return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::intToFixedLengthString, {number, length}, "intToFixedLengthString", false);
 		}
 		case CatBuiltInFunctionType::Random:
 		{
-			return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomFloat, {}, "_jc_getRandomFloat");
+			return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomFloat, {}, "_jc_getRandomFloat", true);
 		}
 		case CatBuiltInFunctionType::RandomRange:
 		{
@@ -622,24 +622,24 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			if (arguments->getArgumentType(0).isBoolType()
 				&& arguments->getArgumentType(1).isBoolType())
 			{
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomBoolean, {left, right}, "_jc_getRandomBoolean");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomBoolean, {left, right}, "_jc_getRandomBoolean", true);
 			}
 			else if (arguments->getArgumentType(0).isIntType()
 					 && arguments->getArgumentType(1).isIntType())
 			{
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomInt, {left, right}, "_jc_getRandomInt");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomInt, {left, right}, "_jc_getRandomInt", true);
 			}
 			else if (arguments->getArgumentType(0).isDoubleType() || arguments->getArgumentType(1).isDoubleType())
 			{
 				llvm::Value* leftDouble = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::doubleType, context);
 				llvm::Value* rightDouble = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::doubleType, context);
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomDoubleRange, {leftDouble, rightDouble}, "_jc_getRandomDoubleRange");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomDoubleRange, {leftDouble, rightDouble}, "_jc_getRandomDoubleRange", true);
 			}
 			else
 			{
 				llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
 				llvm::Value* rightFloat = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::floatType, context);
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomFloatRange, {leftFloat, rightFloat}, "_jc_getRandomFloatRange");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getRandomFloatRange, {leftFloat, rightFloat}, "_jc_getRandomFloatRange", true);
 			}
 		}
 		case CatBuiltInFunctionType::Round:
@@ -650,13 +650,13 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			{
 				llvm::Value* leftDouble = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::doubleType, context);
 				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_roundDouble, {leftDouble, rightInt}, "_jc_roundDouble");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_roundDouble, {leftDouble, rightInt}, "_jc_roundDouble", true);
 			}
 			else
 			{
 				llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
 				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_roundFloat, {leftFloat, rightInt}, "_jc_roundFloat");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_roundFloat, {leftFloat, rightInt}, "_jc_roundFloat", true);
 			}
 		}
 		case CatBuiltInFunctionType::StringRound:
@@ -667,13 +667,13 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			{
 				llvm::Value* leftDouble = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::doubleType, context);
 				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundDoubleToString, {leftDouble, rightInt}, "roundDoubleToString");
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundDoubleToString, {leftDouble, rightInt}, "roundDoubleToString", false);
 			}
 			else
 			{
 				llvm::Value* leftFloat = helper->convertType(left, arguments->getArgument(0)->getType(), CatGenericType::floatType, context);
 				llvm::Value* rightInt = helper->convertType(right, arguments->getArgument(1)->getType(), CatGenericType::intType, context);
-				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloatToString, {leftFloat, rightInt}, "roundFloatToString");
+				return helper->createIntrinsicCall(context, &LLVMCatIntrinsics::roundFloatToString, {leftFloat, rightInt}, "roundFloatToString", false);
 			}
 		}
 		default:
@@ -1030,7 +1030,7 @@ llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* stati
 		argumentTypes.push_back(returnAllocation->getType());
 	}
 	helper->generateFunctionCallArgumentEvalatuation(expressionArguments, staticFunctionCall->getExpectedParameterTypes(), argumentList, argumentTypes, this, context);
-	helper->defineWeakSymbol(staticFunctionCall->getFunctionAddress(), staticFunctionCall->getMangledFunctionName());
+	helper->defineWeakSymbol(context, staticFunctionCall->getFunctionAddress(), staticFunctionCall->getMangledFunctionName(), false);
 	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(), staticFunctionCall->getFunctionName(), returnAllocation);
 }
 
@@ -1157,14 +1157,14 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 
 	if (!constructor->getIsCopyConstructor())
 	{
-		helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {target, typeInfoConstantAsIntPtr}, "_jc_placementConstructType");
+		helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {target, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 	}
 	else
 	{
 		CatArgumentList* arguments = constructor->getArgumentList();
 		assert(arguments != nullptr && arguments->getNumArguments() == 1);
 		llvm::Value* source = generate(arguments->getArgument(0), context);
-		helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {target, source, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType");
+		helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {target, source, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType", true);
 	}
 
 	//Generate a destructor if possible
@@ -1186,7 +1186,7 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 						llvm::Value* localPtr = builder->CreateGEP(scopeIter->second, helper->createConstant((int)iter.first), Tools::append(iter.second->getMemberName(), "_ptr"));
 						llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
 						llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
-						return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "_jc_placementDestructType");					
+						return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);					
 					}
 					assert(false);
 					return (llvm::Value*)nullptr;
@@ -1220,7 +1220,7 @@ void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatDestruct* destructo
 	llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
 	llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
 
-	helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {target, typeInfoConstantAsIntPtr}, "_jc_placementDestructType");
+	helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {target, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
 
 }
 
@@ -1477,7 +1477,7 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 				llvm::Argument* argument = function->arg_begin() + (i + parameterOffset);
 				context->blockDestructorGenerators.push_back([=]()
 						{
-							return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {argument, typeInfoConstantAsIntPtr}, "_jc_placementDestructType");					
+							return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {argument, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);					
 						});
 			}
 		}
@@ -1612,11 +1612,11 @@ llvm::Value* LLVMCodeGenerator::generateFPMath(const char* floatName, float(*flo
 {
 	if (argumentList->getArgumentType(0).isDoubleType())
 	{
-		return helper->createIntrinsicCall(context, doubleVariant, { generate(argumentList->getArgument(0), context)}, doubleName);
+		return helper->createIntrinsicCall(context, doubleVariant, { generate(argumentList->getArgument(0), context)}, doubleName, true);
 	}
 	else
 	{
-		return helper->createIntrinsicCall(context, floatVariant, { helper->convertType(generate(argumentList->getArgument(0), context), argumentList->getArgumentType(0), CatGenericType::floatType, context) }, floatName);
+		return helper->createIntrinsicCall(context, floatVariant, { helper->convertType(generate(argumentList->getArgument(0), context), argumentList->getArgumentType(0), CatGenericType::floatType, context) }, floatName, true);
 	}
 }
 
@@ -1628,13 +1628,13 @@ llvm::Value* LLVMCodeGenerator::generateFPMath(const char* floatName, float(*flo
 	{
 		llvm::Value* x = helper->convertType(generate(argumentList->getArgument(0), context), argumentList->getArgument(0)->getType(), CatGenericType::doubleType, context);
 		llvm::Value* y = helper->convertType(generate(argumentList->getArgument(1), context), argumentList->getArgument(1)->getType(), CatGenericType::doubleType, context);
-		return helper->createIntrinsicCall(context, doubleVariant, { x, y }, doubleName);
+		return helper->createIntrinsicCall(context, doubleVariant, { x, y }, doubleName, true);
 	}
 	else
 	{
 		llvm::Value* x = helper->convertType(generate(argumentList->getArgument(0), context), argumentList->getArgument(0)->getType(), CatGenericType::floatType, context);
 		llvm::Value* y = helper->convertType(generate(argumentList->getArgument(1), context), argumentList->getArgument(1)->getType(), CatGenericType::floatType, context);
-		return helper->createIntrinsicCall(context, floatVariant, { x, y }, floatName);
+		return helper->createIntrinsicCall(context, floatVariant, { x, y }, floatName, true);
 	}
 }
 
@@ -1675,7 +1675,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 		assert(argument->getName() == "RuntimeContext");
 		assert(argument->getType() == LLVMTypes::pointerType);
 		llvm::Value* scopeIdValue = context->helper->createConstant((int)scopeId);
-		llvm::Value* address = address = helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getScopePointerFromContext, {argument, scopeIdValue}, "_jc_getScopePointerFromContext"); 
+		llvm::Value* address = address = helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getScopePointerFromContext, {argument, scopeIdValue}, "_jc_getScopePointerFromContext", true); 
 		assert(address != nullptr);
 		parentObjectAddress = helper->convertToIntPtr(address, "CustomThis_IntPtr");
 	}
@@ -1854,11 +1854,11 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 		helper->createOptionalNullCheckSelect(castPointer, 
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {sretArgument, castPointer, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {sretArgument, castPointer, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType", true);
 			},
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {sretArgument, typeInfoConstantAsIntPtr}, "_jc_placementConstructType");
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {sretArgument, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 			}, context);
 
 		helper->generateBlockDestructors(context);

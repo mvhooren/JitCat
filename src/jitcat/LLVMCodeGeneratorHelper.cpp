@@ -15,6 +15,7 @@
 #include "jitcat/LLVMCodeGenerator.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMJit.h"
+#include "jitcat/LLVMPrecompilationContext.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
@@ -310,39 +311,39 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, c
 	{
 		if (toType.isBoolType())
 		{
-			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToBoolean, {valueToConvert}, "_jc_stringToBoolean");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToBoolean, {valueToConvert}, "_jc_stringToBoolean", true);
 		}
 		else if (toType.isCharType())
 		{
-			return convertType(createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt, {valueToConvert}, "_jc_stringToInt"), true, toLLVMType(toType), true, context);
+			return convertType(createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt, {valueToConvert}, "_jc_stringToInt", true), true, toLLVMType(toType), true, context);
 		}
 		else if (toType.isUCharType())
 		{
-			return convertType(createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt, {valueToConvert}, "_jc_stringToUInt"), false, toLLVMType(toType), false, context);
+			return convertType(createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt, {valueToConvert}, "_jc_stringToUInt", true), false, toLLVMType(toType), false, context);
 		}
 		else if (toType.isIntType())
 		{
-			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt, {valueToConvert}, "_jc_stringToInt");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt, {valueToConvert}, "_jc_stringToInt", true);
 		}
 		else if (toType.isUIntType())
 		{
-			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt, {valueToConvert}, "_jc_stringToUInt");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt, {valueToConvert}, "_jc_stringToUInt", true);
 		}
 		else if (toType.isInt64Type())
 		{
-			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt64, {valueToConvert}, "_jc_stringToInt64");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt64, {valueToConvert}, "_jc_stringToInt64", true);
 		}
 		else if (toType.isUInt64Type())
 		{
-			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt64, {valueToConvert}, "_jc_stringToUInt64");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt64, {valueToConvert}, "_jc_stringToUInt64", true);
 		}
 		else if (toType.isFloatType())
 		{
-			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToFloat, {valueToConvert}, "_jc_stringToFloat");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToFloat, {valueToConvert}, "_jc_stringToFloat", true);
 		}
 		else if (toType.isDoubleType())
 		{
-			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToDouble, {valueToConvert}, "_jc_stringToDouble");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToDouble, {valueToConvert}, "_jc_stringToDouble", true);
 		}
 	}
 	assert(false);
@@ -584,47 +585,47 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToString(llvm::Value* valueToConver
 {
 	if (valueToConvert->getType() == LLVMTypes::boolType)
 	{
-		return createIntrinsicCall(context, &LLVMCatIntrinsics::boolToString, {valueToConvert}, "boolToString");
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::boolToString, {valueToConvert}, "boolToString", false);
 	}
 	else if (valueToConvert->getType() == LLVMTypes::doubleType)
 	{
-		return createIntrinsicCall(context, &LLVMCatIntrinsics::doubleToString, {valueToConvert}, "doubleToString");
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::doubleToString, {valueToConvert}, "doubleToString", false);
 	}
 	else if (valueToConvert->getType() == LLVMTypes::floatType)
 	{
-		return createIntrinsicCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString");
+		return createIntrinsicCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString", false);
 	}
 	else if (valueToConvert->getType() == LLVMTypes::charType)
 	{
 		if (fromType.isSignedType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {convertType(valueToConvert, true, LLVMTypes::intType, true, context)}, "intToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {convertType(valueToConvert, true, LLVMTypes::intType, true, context)}, "intToString", false);
 		}
 		else
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::uIntToString, {convertType(valueToConvert, false, LLVMTypes::intType, false, context)}, "uIntToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::uIntToString, {convertType(valueToConvert, false, LLVMTypes::intType, false, context)}, "uIntToString", false);
 		}
 	}
 	else if (valueToConvert->getType() == LLVMTypes::intType)
 	{
 		if (fromType.isSignedType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {valueToConvert}, "intToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {valueToConvert}, "intToString", false);
 		}
 		else
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::uIntToString, {valueToConvert}, "uIntToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::uIntToString, {valueToConvert}, "uIntToString", false);
 		}
 	}
 	else if (valueToConvert->getType() == LLVMTypes::longintType)
 	{
 		if (fromType.isSignedType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::int64ToString, {valueToConvert}, "int64ToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::int64ToString, {valueToConvert}, "int64ToString", false);
 		}
 		else
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::uInt64ToString, {valueToConvert}, "uInt64ToString");
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::uInt64ToString, {valueToConvert}, "uInt64ToString", false);
 		}
 	}
 	else
@@ -962,7 +963,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext*
 		assert(objectType.isDestructible());
 		context->blockDestructorGenerators.push_back([=]()
 			{
-				return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, "_jc_placementDestructType");
+				return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
 			});
 	}
 	return objectAllocationAsIntPtr;
@@ -1034,9 +1035,9 @@ void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std
 
 
 llvm::Value* LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::CatGenericType& returnType, const std::vector<llvm::Value*>& argumentList, 
-																			   const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, 
-																			   const std::string& mangledFunctionName, const std::string& shortFunctionName,
-																			   llvm::Value* returnedObjectAllocation)
+																 const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, 
+																 const std::string& mangledFunctionName, const std::string& shortFunctionName,
+																 llvm::Value* returnedObjectAllocation)
 {
 	if (returnType.isReflectableObjectType())
 	{
@@ -1093,7 +1094,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 		{
 			if (!callData.linkDylib)
 			{
-				defineWeakSymbol(callData.functionAddress, memberFunction->getMangledName());
+				defineWeakSymbol(context, callData.functionAddress, memberFunction->getMangledName(), false);
 			}
 			else
 			{
@@ -1191,7 +1192,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			assert(returnType.isConstructible());
 			llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(returnType.getObjectType()), Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfo"));
 			llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfoPtr"));
-			createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "_jc_placementConstructType");
+			createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 			return returnedObjectAllocation;
 		};
 		return createOptionalNullCheckSelect(baseObject, notNullCodeGen, codeGenIfNull, context);
@@ -1255,18 +1256,26 @@ void LLVMCodeGeneratorHelper::generateLoop(LLVMCompileTimeContext* context,
 }
 
 
-void LLVMCodeGeneratorHelper::defineWeakSymbol(intptr_t functionAddress, const std::string& mangledFunctionName)
+void LLVMCodeGeneratorHelper::defineWeakSymbol(LLVMCompileTimeContext* context, intptr_t functionAddress, const std::string& mangledFunctionName, bool isDirectlyLinked)
 {
-	//Define the function in the runtime library.
-	llvm::JITSymbolFlags functionFlags;
-	functionFlags |= llvm::JITSymbolFlags::Callable;
-	functionFlags |= llvm::JITSymbolFlags::Exported;
-	functionFlags |= llvm::JITSymbolFlags::Absolute;
-	functionFlags |= llvm::JITSymbolFlags::Weak;
-	llvm::orc::SymbolMap intrinsicSymbols;
-	llvm::JITTargetAddress address = functionAddress;
-	intrinsicSymbols[codeGenerator->executionSession->intern(mangledFunctionName)] = llvm::JITEvaluatedSymbol(address, functionFlags);
-	llvm::cantFail(codeGenerator->runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
+	if (isDirectlyLinked || !context->isPrecompilationContext)
+	{
+		//Define the function in the runtime library.
+		llvm::JITSymbolFlags functionFlags;
+		functionFlags |= llvm::JITSymbolFlags::Callable;
+		functionFlags |= llvm::JITSymbolFlags::Exported;
+		functionFlags |= llvm::JITSymbolFlags::Absolute;
+		functionFlags |= llvm::JITSymbolFlags::Weak;
+		llvm::orc::SymbolMap intrinsicSymbols;
+		llvm::JITTargetAddress address = functionAddress;
+		intrinsicSymbols[codeGenerator->executionSession->intern(mangledFunctionName)] = llvm::JITEvaluatedSymbol(address, functionFlags);
+		llvm::cantFail(codeGenerator->runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
+	}
+	else
+	{
+		//The function needs to be defined as a global variable function pointer.
+		std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalFunctionPointer(mangledFunctionName, context);
+	}
 }
 
 
@@ -1302,17 +1311,17 @@ llvm::Value* LLVMCodeGeneratorHelper::copyConstructIfValueType(llvm::Value* valu
 		llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(type.getObjectType()), Tools::append(typeName, "_typeInfo"));
 		llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
 		assert(type.isCopyConstructible());
-		createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {copyAllocation, value, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType");
+		createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {copyAllocation, value, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType", true);
 		return copyAllocation;
 	}
 	return value;
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context)
+llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context, bool isDirectlyLinked)
 {
 	//Define the function in the runtime library.
-	defineWeakSymbol(functionInfo->getFunctionAddress(), functionInfo->getNormalFunctionName());
+	defineWeakSymbol(context, functionInfo->getFunctionAddress(), functionInfo->getNormalFunctionName(), isDirectlyLinked);
 	
 	const std::vector<CatGenericType>& argumentTypes = functionInfo->getArgumentTypes();
 	assert(arguments.size() == argumentTypes.size());
@@ -1330,7 +1339,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::
 		argumentLLVMTypes.insert(argumentLLVMTypes.begin(), returnValueAllocation->getType());
 	}
 
-	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getNormalFunctionName(), functionInfo->getNormalFunctionName(),  returnValueAllocation);
+	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getNormalFunctionName(), functionInfo->getNormalFunctionName(), returnValueAllocation);
 }
 
 

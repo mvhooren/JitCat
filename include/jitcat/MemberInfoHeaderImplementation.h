@@ -209,7 +209,7 @@ inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereference
 		std::string classTypeName = TypeNameGetter<ClassT>::get();
 		mangledNameStream << classTypeName << "* ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">::getPointer(" << baseTypeName << "*, ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">*)";
 		std::string mangledName = mangledNameStream.str();
-		context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer), mangledName);
+		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer), mangledName, false);
 		
 		llvm::Value* thisPointer = context->helper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
 		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, {parentObjectPointer, thisPointer}, false, mangledName, "getUniquePtr");

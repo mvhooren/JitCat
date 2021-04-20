@@ -309,7 +309,7 @@ void ArrayMemberFunctionInfo::createInitGeneratorFunction()
 							builder->CreateStore(parameters[1], builder->CreatePointerCast(arraySizePtr, LLVMTypes::intType->getPointerTo()));
 							llvm::Value* itemSize = context->helper->createConstant((int)arrayTypeInfo->getArrayItemType().getTypeSize());
 							llvm::Value* arraySize = builder->CreateMul(itemSize, parameters[1], "arraySizeBytes");
-							llvm::Value* arrayData = context->helper->createIntrinsicCall(context, CatLinkedIntrinsics::_jc_allocateMemory, {arraySize}, "_jc_allocateMemory");
+							llvm::Value* arrayData = context->helper->createIntrinsicCall(context, CatLinkedIntrinsics::_jc_allocateMemory, {arraySize}, "_jc_allocateMemory", true);
 							builder->CreateStore(arrayData, builder->CreatePointerCast(parameters[0], arrayData->getType()->getPointerTo()));
 							if (arrayTypeInfo->getArrayItemType().isBasicType() 
 								|| arrayTypeInfo->getArrayItemType().isPointerType()
@@ -346,7 +346,7 @@ void ArrayMemberFunctionInfo::createInitGeneratorFunction()
 											//Call the placement constructor intrinsic function
 											llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectTypeInfo), Tools::append(objectTypeInfo->getTypeName(), "_typeInfo"));
 											llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(objectTypeInfo->getTypeName(), "_typeInfoPtr"));
-											context->helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {iterator, typeInfoConstantAsIntPtr}, "_jc_placementConstructType");
+											context->helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {iterator, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 										}
 
 									});
@@ -434,7 +434,7 @@ void ArrayMemberFunctionInfo::createDestroyGeneratorFunction()
 													//Call the placement destructor intrinsic function
 													llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectTypeInfo), Tools::append(objectTypeInfo->getTypeName(), "_typeInfo"));
 													llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(objectTypeInfo->getTypeName(), "_typeInfoPtr"));
-													context->helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {iterator, typeInfoConstantAsIntPtr}, "_jc_placementDestructType");
+													context->helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {iterator, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
 												}
 											}
 											else
@@ -445,7 +445,7 @@ void ArrayMemberFunctionInfo::createDestroyGeneratorFunction()
 										});
 								}
 
-								context->helper->createIntrinsicCall(context, CatLinkedIntrinsics::_jc_freeMemory, {arrayPtr}, "_jc_freeMemory");
+								context->helper->createIntrinsicCall(context, CatLinkedIntrinsics::_jc_freeMemory, {arrayPtr}, "_jc_freeMemory", true);
 								builder->CreateStore(context->helper->createZeroInitialisedConstant(LLVMTypes::pointerType), builder->CreatePointerCast(parameters[0], LLVMTypes::pointerType->getPointerTo()));
 								builder->CreateStore(context->helper->createZeroInitialisedConstant(LLVMTypes::intType), builder->CreatePointerCast(arraySizePtr, LLVMTypes::intType->getPointerTo()));
 								return (llvm::Value*)(nullptr);

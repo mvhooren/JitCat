@@ -34,7 +34,7 @@ LLVMPrecompilationContext::~LLVMPrecompilationContext()
 
 void LLVMPrecompilationContext::finishPrecompilation()
 {
-	codeGenerator->generateExpressionSymbolEnumerationFunction(compiledFunctions);
+	codeGenerator->generateExpressionSymbolEnumerationFunction(compiledExpressionFunctions);
 	codeGenerator->generateGlobalScopesEnumerationFunction(globalScopes);
 	codeGenerator->emitModuleToObjectFile("PrecompiledJitCatExpressions.obj");
 }
@@ -47,10 +47,10 @@ void LLVMPrecompilationContext::precompileExpression(const CatTypedExpression* e
 	std::shared_ptr<LLVMCodeGenerator> oldGenerator = context->getCodeGenerator();
 	context->setCodeGenerator(codeGenerator);
 	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, false);
-	if (compiledFunctions.find(expressionName) == compiledFunctions.end())
+	if (compiledExpressionFunctions.find(expressionName) == compiledExpressionFunctions.end())
 	{
 		llvm::Function* function = codeGenerator->generateExpressionFunction(expression, compileContext.get(), expressionName);
-		compiledFunctions.insert(std::make_pair(expressionName, function));
+		compiledExpressionFunctions.insert(std::make_pair(expressionName, function));
 	}
 	context->setCodeGenerator(oldGenerator);
 }
@@ -63,10 +63,10 @@ void LLVMPrecompilationContext::precompileAssignmentExpression(const CatAssignab
 	std::shared_ptr<LLVMCodeGenerator> oldGenerator = context->getCodeGenerator();
 	context->setCodeGenerator(codeGenerator);
 	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, true);
-	if (compiledFunctions.find(expressionName) == compiledFunctions.end())
+	if (compiledExpressionFunctions.find(expressionName) == compiledExpressionFunctions.end())
 	{
 		llvm::Function* function = codeGenerator->generateExpressionAssignFunction(expression, compileContext.get(), expressionName);
-		compiledFunctions.insert(std::make_pair(expressionName, function));
+		compiledExpressionFunctions.insert(std::make_pair(expressionName, function));
 	}
 	context->setCodeGenerator(oldGenerator);
 }
@@ -83,6 +83,22 @@ llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalScope
 	{
 		llvm::GlobalVariable* global = context->helper->createGlobalPointerSymbol(globalSymbolName);
 		globalScopes.insert(std::make_pair(globalSymbolName, global));
+		return global;
+	}
+}
+
+
+llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalFunctionPointer(const std::string& globalSymbolName, LLVMCompileTimeContext* context)
+{
+	auto iter = globalFunctionPointers.find(globalSymbolName);
+	if (iter != globalFunctionPointers.end())
+	{
+		return iter->second;
+	}
+	else
+	{
+		llvm::GlobalVariable* global = context->helper->createGlobalPointerSymbol(globalSymbolName);
+		globalFunctionPointers.insert(std::make_pair(globalSymbolName, global));
 		return global;
 	}
 }

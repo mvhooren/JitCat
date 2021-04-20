@@ -50,7 +50,7 @@ namespace jitcat::Reflection
 		std::string classTypeName = TypeNameGetter<ClassT>::get();
 		mangledNameStream << classTypeName << "* StaticClassUniquePtrMemberInfo<" << classTypeName << ">::getPointer(std::unique_ptr<" << classTypeName << ">*)";
 		std::string mangledName = mangledNameStream.str();
-		context->helper->defineWeakSymbol(reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName);
+		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName, false);
 
 		return context->helper->createCall( LLVM::LLVMTypes::functionRetPtrArgPtr, {uniquePtrPtr}, false, mangledName, "getUniquePtr");
 	#else 
