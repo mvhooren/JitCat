@@ -34,9 +34,6 @@ namespace jitcat::Reflection
 		void setReflectable(unsigned char* reflectable, TypeInfo* reflectableType);
 		ReflectableHandle& operator=(std::nullptr_t other);
 
-		static unsigned char* staticGet(const ReflectableHandle& handle);
-		static void staticAssign(ReflectableHandle& handle, unsigned char* reflectable, TypeInfo* reflectableType);
-
 		//Searches through the handles to oldObject and updates them to point to newObject.
 		static void replaceCustomObjects(unsigned char* oldObject, CustomTypeInfo* oldType, unsigned char* newObject, CustomTypeInfo* newType);
 		//Will set all the handles that point to object to nullptr, and will unlinks them.

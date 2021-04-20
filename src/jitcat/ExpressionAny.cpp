@@ -80,7 +80,7 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 				}
 			}
 		}
-		else
+		if constexpr (!Configuration::enableLLVM)
 		{
 			std::any result = parseResult.getNode<CatTypedExpression>()->execute(runtimeContext);
 			runtimeContext->clearTemporaries();

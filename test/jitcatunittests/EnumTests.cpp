@@ -35,8 +35,8 @@ TEST_CASE("Enum Tests", "[enum]" )
 
 	CatRuntimeContext context("enumTests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
-	context.addScope(typeInstance, false);
+	context.addStaticScope(&reflectedObject, "enumStaticScope");	
+	context.addDynamicScope(typeInstance);
 
 	SECTION("Constant")
 	{

@@ -78,7 +78,7 @@ CatASTNodeType CatScopeBlock::getNodeType() const
 
 bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	scopeId = compiletimeContext->addScope(customType.get(), nullptr, false);
+	scopeId = compiletimeContext->addDynamicScope(customType.get(), nullptr);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
@@ -101,7 +101,7 @@ bool jitcat::AST::CatScopeBlock::typeCheck(CatRuntimeContext* compiletimeContext
 
 CatStatement* CatScopeBlock::constCollapse(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	CatScopeID collapseScopeId = compiletimeContext->addScope(customType.get(), nullptr, false);
+	CatScopeID collapseScopeId = compiletimeContext->addDynamicScope(customType.get(), nullptr);
 	assert(scopeId == collapseScopeId);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
@@ -127,7 +127,7 @@ std::any jitcat::AST::CatScopeBlock::execute(CatRuntimeContext* runtimeContext)
 		}
 	}
 	memset(scopeMem, 0, customType->getTypeSize());
-	scopeId = runtimeContext->addScope(customType.get(), scopeMem, false);
+	scopeId = runtimeContext->addDynamicScope(customType.get(), scopeMem);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 	std::any result = std::any();

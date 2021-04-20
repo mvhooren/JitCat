@@ -26,7 +26,7 @@ TEST_CASE("DevelopmentTests", "[.development]" )
 	ReflectedObject reflectedObject;
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("development_tests", &errorManager);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "devStaticScope");	
 
 	SECTION("HelloWorld")
 	{

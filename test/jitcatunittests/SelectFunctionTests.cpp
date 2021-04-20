@@ -24,7 +24,7 @@ TEST_CASE("Builtin functions test: Select", "[builtins][select]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Select", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "selectStaticScope");	
 
 	SECTION("Select_cc1")
 	{

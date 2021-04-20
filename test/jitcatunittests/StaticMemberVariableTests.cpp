@@ -25,7 +25,7 @@ TEST_CASE("Static Member Variables", "[staticmembervariables]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("staticmembervariables_tests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "staticMembersStaticScope");
 
 	SECTION("Static invalid")
 	{
@@ -176,7 +176,7 @@ TEST_CASE("Custom type static member Variables", "[staticmembervariables][custom
 	
 	CatRuntimeContext context("customtypestaticmembervariables_tests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(typeInstance, false);
+	context.addDynamicScope(typeInstance);
 
 	SECTION("Static float")
 	{
@@ -242,8 +242,8 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 
 	CatRuntimeContext context("customtypestaticmembervariables_tests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(typeInstance, false);
-	context.addScope(&reflectedObject, true);
+	context.addDynamicScope(typeInstance);
+	context.addStaticScope(&reflectedObject, "staticVarsStaticScope");
 
 	SECTION("Static invalid")
 	{

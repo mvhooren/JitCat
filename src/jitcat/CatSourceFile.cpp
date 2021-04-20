@@ -98,7 +98,7 @@ const std::vector<CatFunctionDefinition*>& CatSourceFile::getFunctionDefinitions
 bool CatSourceFile::compile(CatLib& catLib)
 {
 	CatRuntimeContext* compiletimeContext = catLib.getRuntimeContext();
-	staticScopeId = compiletimeContext->addScope(scopeType.get(), scopeInstance.getObject(), true);
+	staticScopeId = compiletimeContext->addStaticScope(scopeType.get(), scopeInstance.getObject(), name);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 	bool noErrors = true;
@@ -168,6 +168,12 @@ Reflection::CustomTypeInfo* CatSourceFile::getCustomType() const
 unsigned char* jitcat::AST::CatSourceFile::getScopeObjectInstance() const
 {
 	return scopeInstance.getObject();
+}
+
+
+const std::string& jitcat::AST::CatSourceFile::getFileName() const
+{
+	return name;
 }
 
 

@@ -37,6 +37,7 @@ using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
 #ifdef _WIN32
+
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t));
 
 	extern "C" void _jc_enumerate_expressions_default(void(*enumeratorCallback)(const char*, uintptr_t))
@@ -45,16 +46,32 @@ using namespace jitcat::Tokenizer;
 		enumeratorCallback("default", 0);
 	}
 
-	//Make sure the jc_enumerate_expression function is weakly linked to _jc_enumerate_expressions_default
-	//Linking in a generated object file will override it with the generated _jc_enumerate_expressions function
+	extern "C" void _jc_enumerate_global_scopes(void(*enumeratorCallback)(const char*, uintptr_t));
+
+	extern "C" void _jc_enumerate_global_scopes_default(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		enumeratorCallback("default", 0);
+	}
+
+
+	//Make sure these functions are weakly linked to their default alternatives
+	//Linking in a generated object file will override the weakly linked symbol.
 	//This is MSVC only:
 	#pragma comment(linker, "/alternatename:_jc_enumerate_expressions=_jc_enumerate_expressions_default")
+	#pragma comment(linker, "/alternatename:_jc_enumerate_global_scopes=_jc_enumerate_global_scopes_default")
 #else
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
 		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
 		enumeratorCallback("default", 0);
 	}	
+
+	extern "C" void _jc_enumerate_global_scopes(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		enumeratorCallback("default", 0);
+	}
 #endif
 
 JitCat::JitCat():
@@ -69,7 +86,8 @@ JitCat::JitCat():
 	std::srand((unsigned int)time(nullptr));
 	if constexpr (Configuration::usePreCompiledExpressions)
 	{
-		_jc_enumerate_expressions(&enumerationCallback);
+		_jc_enumerate_expressions(&expressionEnumerationCallback);
+		_jc_enumerate_global_scopes(&globalScopesEnumerationCallback);
 	}
 }
 
@@ -136,12 +154,26 @@ std::shared_ptr<PrecompilationContext> JitCat::createPrecompilationContext() con
 
 uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
 {
-	auto iter = precompiledSymbols.find(name);
-	if (iter != precompiledSymbols.end())
+	auto iter = precompiledExpressionSymbols.find(name);
+	if (iter != precompiledExpressionSymbols.end())
 	{
 		return iter->second;
 	}
 	return 0;
+}
+
+
+bool JitCat::setPrecompiledGlobalScopeVariable(const std::string_view variableName, unsigned char* value)
+{
+	auto iter = precompiledGlobalScopeVariables.find(variableName);
+	if (iter != precompiledGlobalScopeVariables.end())
+	{
+		uintptr_t variableAddress = iter->second;
+		unsigned char** variablePtr = reinterpret_cast<unsigned char**>(variableAddress);
+		*variablePtr = value;
+		return true;
+	}
+	return false;
 }
 
 
@@ -156,7 +188,23 @@ void jitcat::JitCat::destroy()
 }
 
 
-void JitCat::enumerationCallback(const char * name, uintptr_t address)
+std::string_view JitCat::defineGlobalScopeName(const std::string& globalName)
+{
+	auto iter = globalNames.find(globalName);
+	if (iter != globalNames.end())
+	{
+		return *iter;
+	}
+	else
+	{
+		globalNames.insert(globalName);
+		auto iter = globalNames.find(globalName);
+		return *iter;
+	}
+}
+
+
+void JitCat::expressionEnumerationCallback(const char* name, uintptr_t address)
 {
 	if (name == std::string("default")
 		&& address == 0)
@@ -165,11 +213,27 @@ void JitCat::enumerationCallback(const char * name, uintptr_t address)
 	}
 	else
 	{
-		precompiledSymbols.insert(std::make_pair(std::string(name), address));
+		precompiledExpressionSymbols.insert(std::make_pair(std::string(name), address));
+	}
+}
+
+
+void JitCat::globalScopesEnumerationCallback(const char* name, uintptr_t address)
+{
+	if (name == std::string("default")
+		&& address == 0)
+	{
+		std::cout << "No global scope symbols found." << std::endl;
+	}
+	else
+	{
+		precompiledGlobalScopeVariables.insert(std::make_pair(defineGlobalScopeName(name), address));
 	}
 }
 
 
 JitCat* JitCat::instance = nullptr;
 
-std::unordered_map<std::string, uintptr_t> JitCat::precompiledSymbols = std::unordered_map<std::string, uintptr_t>();
+std::unordered_map<std::string, uintptr_t> JitCat::precompiledExpressionSymbols = std::unordered_map<std::string, uintptr_t>();
+std::unordered_map<std::string_view, uintptr_t> JitCat::precompiledGlobalScopeVariables = std::unordered_map<std::string_view, uintptr_t>();
+std::unordered_set<std::string> JitCat::globalNames = std::unordered_set<std::string>();

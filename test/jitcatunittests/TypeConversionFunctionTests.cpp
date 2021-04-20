@@ -24,7 +24,7 @@ TEST_CASE("Builtin functions test: ToInt", "[builtins][toint]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_ToInt", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "toInStaticScope");	
 
 	SECTION("ToInt_cc")
 	{
@@ -90,7 +90,7 @@ TEST_CASE("Builtin functions test: ToFloat", "[builtins][tofloat]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_ToFloat", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "toFloatStaticScope");	
 
 	SECTION("ToFloat_cc")
 	{
@@ -156,7 +156,7 @@ TEST_CASE("Builtin functions test: ToDouble", "[builtins][todouble]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_ToDouble", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "toDoubleStaticScope");	
 
 	SECTION("ToDouble_cc")
 	{
@@ -222,7 +222,7 @@ TEST_CASE("Builtin functions test: ToBool", "[builtins][tobool]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_ToBool", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "toBoolStaticScope");	
 
 	SECTION("ToBool_cc")
 	{
@@ -318,7 +318,7 @@ TEST_CASE("Builtin functions test: ToString", "[builtins][tostring]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_ToString", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "toStringStaticScope");	
 
 	SECTION("ToString_cc")
 	{
@@ -384,7 +384,7 @@ TEST_CASE("Builtin functions test: ToPrettyString", "[builtins][toprettystring]"
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_ToPrettyString", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "toPrettyStringStaticScope");	
 
 	SECTION("ToPrettyString_cc")
 	{
@@ -450,7 +450,7 @@ TEST_CASE("Builtin functions test: ToFixedLengthString", "[builtins][tofixedleng
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_ToFixedLengthString", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "toFixedLengthStringStaticScope");	
 
 	SECTION("ToFixedLengthString_cc")
 	{

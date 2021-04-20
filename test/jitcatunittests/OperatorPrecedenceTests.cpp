@@ -25,7 +25,7 @@ TEST_CASE("Operator precedence", "[operators][precedence]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("operatorPrecedence", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "precedenceStaticScope");	
 
 	SECTION("Precedence test 1")
 	{

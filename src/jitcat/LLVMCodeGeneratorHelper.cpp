@@ -310,39 +310,39 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, c
 	{
 		if (toType.isBoolType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToBoolean, {valueToConvert}, "stringToBoolean");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToBoolean, {valueToConvert}, "_jc_stringToBoolean");
 		}
 		else if (toType.isCharType())
 		{
-			return convertType(createIntrinsicCall(context, &LLVMCatIntrinsics::stringToInt, {valueToConvert}, "stringToInt"), true, toLLVMType(toType), true, context);
+			return convertType(createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt, {valueToConvert}, "_jc_stringToInt"), true, toLLVMType(toType), true, context);
 		}
 		else if (toType.isUCharType())
 		{
-			return convertType(createIntrinsicCall(context, &LLVMCatIntrinsics::stringToUInt, {valueToConvert}, "stringToUInt"), false, toLLVMType(toType), false, context);
+			return convertType(createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt, {valueToConvert}, "_jc_stringToUInt"), false, toLLVMType(toType), false, context);
 		}
 		else if (toType.isIntType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToInt, {valueToConvert}, "stringToInt");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt, {valueToConvert}, "_jc_stringToInt");
 		}
 		else if (toType.isUIntType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToUInt, {valueToConvert}, "stringToUInt");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt, {valueToConvert}, "_jc_stringToUInt");
 		}
 		else if (toType.isInt64Type())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToInt64, {valueToConvert}, "stringToInt64");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToInt64, {valueToConvert}, "_jc_stringToInt64");
 		}
 		else if (toType.isUInt64Type())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToUInt64, {valueToConvert}, "stringToUInt64");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToUInt64, {valueToConvert}, "_jc_stringToUInt64");
 		}
 		else if (toType.isFloatType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToFloat, {valueToConvert}, "stringToFloat");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToFloat, {valueToConvert}, "_jc_stringToFloat");
 		}
 		else if (toType.isDoubleType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::stringToDouble, {valueToConvert}, "stringToDouble");
+			return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_stringToDouble, {valueToConvert}, "_jc_stringToDouble");
 		}
 	}
 	assert(false);
@@ -894,6 +894,17 @@ llvm::Constant* jitcat::LLVM::LLVMCodeGeneratorHelper::createZeroTerminatedStrin
 }
 
 
+llvm::GlobalVariable* jitcat::LLVM::LLVMCodeGeneratorHelper::createGlobalPointerSymbol(const std::string& name)
+{
+    auto globalDeclaration = (llvm::GlobalVariable*) codeGenerator->getCurrentModule()->getOrInsertGlobal(name, LLVMTypes::pointerType);
+    globalDeclaration->setInitializer(createNullPtrConstant(LLVMTypes::pointerType));
+    globalDeclaration->setConstant(false);
+    globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
+    globalDeclaration->setUnnamedAddr (llvm::GlobalValue::UnnamedAddr::Global);
+	return globalDeclaration;
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType)
 {
 	llvm::Constant* constant = createIntPtrConstant(address, Tools::append(name, "_IntPtr"));
@@ -951,7 +962,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext*
 		assert(objectType.isDestructible());
 		context->blockDestructorGenerators.push_back([=]()
 			{
-				return createIntrinsicCall(context, &LLVMCatIntrinsics::placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, "placementDestructType");
+				return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, "_jc_placementDestructType");
 			});
 	}
 	return objectAllocationAsIntPtr;
@@ -1180,7 +1191,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			assert(returnType.isConstructible());
 			llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(returnType.getObjectType()), Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfo"));
 			llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(returnType.getObjectType()->getTypeName(), "_typeInfoPtr"));
-			createIntrinsicCall(context, &LLVMCatIntrinsics::placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "placementConstructType");
+			createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "_jc_placementConstructType");
 			return returnedObjectAllocation;
 		};
 		return createOptionalNullCheckSelect(baseObject, notNullCodeGen, codeGenIfNull, context);
@@ -1291,7 +1302,7 @@ llvm::Value* LLVMCodeGeneratorHelper::copyConstructIfValueType(llvm::Value* valu
 		llvm::Constant* typeInfoConstant = createIntPtrConstant(reinterpret_cast<uintptr_t>(type.getObjectType()), Tools::append(typeName, "_typeInfo"));
 		llvm::Value* typeInfoConstantAsIntPtr = convertToPointer(typeInfoConstant, Tools::append(typeName, "_typeInfoPtr"));
 		assert(type.isCopyConstructible());
-		createIntrinsicCall(context, &LLVMCatIntrinsics::placementCopyConstructType, {copyAllocation, value, typeInfoConstantAsIntPtr}, Tools::append(typeName, "_copyConstructor"));
+		createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {copyAllocation, value, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType");
 		return copyAllocation;
 	}
 	return value;

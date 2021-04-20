@@ -89,7 +89,7 @@ bool CatForLoop::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErro
 	}
 	iteratorMember = scopeType->addIntMember(iteratorName, 0, true, false);
 
-	loopIteratorScope = compiletimeContext->addScope(scopeType.get(), nullptr, false);
+	loopIteratorScope = compiletimeContext->addDynamicScope(scopeType.get(), nullptr);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 
@@ -108,7 +108,7 @@ CatStatement* jitcat::AST::CatForLoop::constCollapse(CatRuntimeContext* compilet
 {
 	range->constCollapse(compiletimeContext, errorManager, errorContext);
 
-	CatScopeID iteratorScope = compiletimeContext->addScope(scopeType.get(), nullptr, false);
+	CatScopeID iteratorScope = compiletimeContext->addDynamicScope(scopeType.get(), nullptr);
 	assert(iteratorScope == loopIteratorScope);
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
@@ -134,7 +134,7 @@ std::any CatForLoop::execute(jitcat::CatRuntimeContext* runtimeContext)
 		}
 	}
 	scopeType->placementConstruct(scopeMem, scopeType->getTypeSize());
-	loopIteratorScope = runtimeContext->addScope(scopeType.get(), scopeMem, false);
+	loopIteratorScope = runtimeContext->addDynamicScope(scopeType.get(), scopeMem);
 	CatScope* previousScope = runtimeContext->getCurrentScope();
 	runtimeContext->setCurrentScope(this);
 	std::any returnValue;

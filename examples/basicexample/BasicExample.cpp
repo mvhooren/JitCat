@@ -57,7 +57,7 @@ int MAIN(int argc, char* argv[])
 
 	//This reflectable object will provide some variables and functions
 	ReflectionTestRoot exampleObject;
-	context.addScope(&exampleObject, true);
+	context.addStaticScope(&exampleObject, "exampleGlobal");
 
 	//Create a floating point expression and execute it.
 	//test.aFloat comes from the testObject member inside the exampleObject	and pi comes from the exampleObject itself
@@ -85,7 +85,7 @@ int MAIN(int argc, char* argv[])
 	ObjectInstance customTypeInstance(customType.get());
 
 	//Add the type to the context so we can access the variables in an expression
-	context.addScope(customTypeInstance, false);
+	context.addStaticScope(customTypeInstance, "customGlobal");
 
 	//This time we do not provide the context in the constructor so we need to call compile before calling getValue.
 	//We use the built-in function abs. A list of all built-in functions can be found in the CatBuiltInFunctionType header.

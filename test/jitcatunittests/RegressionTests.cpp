@@ -26,7 +26,7 @@ TEST_CASE("Regression testing", "[regression]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("regressionTests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "RegressionStaticScope");
 
 
 	SECTION("Crash when using select with object types.")

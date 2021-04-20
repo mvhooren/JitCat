@@ -25,7 +25,7 @@ TEST_CASE("Member Functions", "[memberfunctions]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("memberFunctions", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "memberFunctionsStaticScope");	
 
 	SECTION("Get float")
 	{
@@ -257,7 +257,7 @@ TEST_CASE("Member Functions with multiple inheritance base class", "[memberfunct
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("multiple_inheritance", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "multipleInheritanceStaticScope");	
 	SECTION("Get int")
 	{
 		Expression<float> testExpression(&context, "1 + (1 + getAMember(\"hi\"))");

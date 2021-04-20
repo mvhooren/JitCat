@@ -36,9 +36,9 @@ CatLib::~CatLib()
 }
 
 
-CatScopeID CatLib::addStaticScope(Reflection::TypeInfo* typeInfo, unsigned char* scopeObject)
+CatScopeID CatLib::addStaticScope(Reflection::TypeInfo* typeInfo, unsigned char* scopeObject, const std::string& scopeName)
 {
-	return context->addScope(typeInfo, scopeObject, true);
+	return context->addStaticScope(typeInfo, scopeObject, scopeName);
 }
 
 

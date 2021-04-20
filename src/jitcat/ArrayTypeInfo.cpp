@@ -73,7 +73,7 @@ void ArrayTypeInfo::placementDestruct(unsigned char* buffer, std::size_t bufferS
 				arrayItemType.placementDestruct(&array->arrayData[typeSize * i], typeSize);
 			}
 		}
-		LLVM::LLVMCatIntrinsics::freeMemory(array->arrayData);
+		LLVM::CatLinkedIntrinsics::_jc_freeMemory(array->arrayData);
 		if constexpr (Configuration::logJitCatObjectConstructionEvents)
 		{
 			std::cout << "(ArrayTypeInfo::placementDestruct) deallocated buffer of size " << std::dec << array->size * typeSize << ": " << std::hex << reinterpret_cast<uintptr_t>(array->arrayData) << "\n";

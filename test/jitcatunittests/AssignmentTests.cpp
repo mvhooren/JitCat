@@ -27,7 +27,7 @@ TEST_CASE("Assign tests", "[assign]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("Assign", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "assignStaticScope");
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	const char* customTypeName = "MyType";
@@ -41,7 +41,7 @@ TEST_CASE("Assign tests", "[assign]" )
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	ObjectInstance typeInstance(customType.get());
-	context.addScope(typeInstance, false);
+	context.addDynamicScope(typeInstance);
 
 	const char* customStaticTypeName = "MyStaticType";
 	TypeRegistry::get()->removeType(customStaticTypeName);
@@ -49,7 +49,7 @@ TEST_CASE("Assign tests", "[assign]" )
 	customStaticType->addObjectMember("myStaticObject", &reflectedObject, objectTypeInfo);
 	customStaticType->addObjectMember("myStaticCustomObject", typeInstance.getObject(), customType.get());
 	ObjectInstance staticTypeInstance(customStaticType.get());
-	context.addScope(staticTypeInstance, true);
+	context.addDynamicScope(staticTypeInstance);
 
 	SECTION("Assign reflected int")
 	{
@@ -162,7 +162,7 @@ TEST_CASE("Expression assign tests", "[assign][expressionassign]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("Assign", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "expressionassignStaticScope");
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	const char* customTypeName = "MyType";
@@ -176,7 +176,7 @@ TEST_CASE("Expression assign tests", "[assign][expressionassign]" )
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	ObjectInstance typeInstance(customType.get());
-	context.addScope(typeInstance, false);
+	context.addDynamicScope(typeInstance);
 
 
 	SECTION("Assign reflected int")
@@ -266,7 +266,7 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("Assign", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "expressionAnyAssignStaticScope");
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
 	const char* customTypeName = "MyType";
@@ -281,7 +281,7 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	customType->addObjectMember("myObject", &reflectedObject, objectTypeInfo);
 	customType->addObjectMember("myNullObject", &reflectedObject, objectTypeInfo);
 	ObjectInstance typeInstance(customType.get());
-	context.addScope(typeInstance, false);
+	context.addDynamicScope(typeInstance);
 
 
 	SECTION("Assign reflected int")

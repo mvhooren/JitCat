@@ -25,7 +25,7 @@ TEST_CASE("Containers tests: Vector", "[containers][vector]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("vectorContainer", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "vectorStaticScope");
 
 	SECTION("Vector get object")
 	{
@@ -132,7 +132,7 @@ TEST_CASE("Containers tests: Vector of unique_ptr", "[containers][vector]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("vectorContainer", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "uniqueVectorStaticScope");
 
 	SECTION("Vector get object")
 	{
@@ -214,7 +214,7 @@ TEST_CASE("Containers tests: Map", "[containers][map]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("mapContainer", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "mapStaticScope");	
 
 	SECTION("Map get object")
 	{
@@ -336,7 +336,7 @@ TEST_CASE("Containers tests: Map with custom comparator", "[containers][map]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("mapContainer", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "customMapStaticScope");
 
 	SECTION("Map get object")
 	{
@@ -443,7 +443,7 @@ TEST_CASE("Containers tests: Map of unique_ptr", "[containers][map]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("mapContainer", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "uniqueMapStaticScope");
 
 	SECTION("Map get object")
 	{
@@ -550,7 +550,7 @@ TEST_CASE("Containers tests: Unordered_Map", "[containers][unordered_map]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("unordered_map_container", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "unordered_mapStaticScope");	
 
 	SECTION("Unordered_Map get object")
 	{
@@ -642,7 +642,7 @@ TEST_CASE("Containers tests: Array", "[containers][array]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("arrayContainer", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "arrayStaticScope");
 
 	SECTION("Array get object")
 	{
@@ -729,7 +729,7 @@ TEST_CASE("Containers tests: Deque", "[containers][deque]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("dequeContainer", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "dequeStaticScope");
 
 	SECTION("Deque get object")
 	{

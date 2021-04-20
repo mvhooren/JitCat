@@ -53,7 +53,7 @@ JITCATVALIDATOR_API int validateExpression(const char* expression, const char* r
 		}
 		else
 		{
-			context.addScope(typeInfo, nullptr, false);
+			context.addDynamicScope(typeInfo, nullptr);
 		}
 	}
 
@@ -147,7 +147,7 @@ JITCATVALIDATOR_API int codeCompleteExpression(const char* expression, int curso
 		}
 		else
 		{
-			context.addScope(typeInfo, nullptr, false);
+			context.addDynamicScope(typeInfo, nullptr);
 		}
 	}
 

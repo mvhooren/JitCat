@@ -112,7 +112,7 @@ bool CatClassDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContex
 
 	compileTimeContext = std::move(compileTimeContext_->clone());
 	compileTimeContext->setCurrentClass(this);
-	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
+	scopeId = compileTimeContext->addDynamicScope(customType.get(), nullptr);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 
 	compileTimeContext->setCurrentClass(parentClass);
@@ -156,7 +156,7 @@ bool CatClassDefinition::defineCheck(CatRuntimeContext* compileTimeContext_, std
 
 	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
 	compileTimeContext->setCurrentClass(this);
-	scopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
+	scopeId = compileTimeContext->addDynamicScope(customType.get(), nullptr);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 	compileTimeContext->setCurrentScope(this);
 
@@ -221,7 +221,7 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext_)
 	assert(checkStatus == CheckStatus::Sized);
 	CatClassDefinition* parentClass = compileTimeContext->getCurrentClass();
 	compileTimeContext->setCurrentClass(this);
-	CatScopeID addedScopeId = compileTimeContext->addScope(customType.get(), nullptr, false);
+	CatScopeID addedScopeId = compileTimeContext->addDynamicScope(customType.get(), nullptr);
 	assert(scopeId == addedScopeId);
 	(void)addedScopeId;
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
@@ -410,7 +410,7 @@ bool CatClassDefinition::injectCode(const std::string& functionName, const std::
 			CatScopeID functionParamsScopeId = InvalidScopeID;
 			if (functionDefinition->getNumParameters() > 0)
 			{
-				functionParamsScopeId = compileTimeContext->addScope(functionDefinition->getParametersType(), nullptr, false);
+				functionParamsScopeId = compileTimeContext->addDynamicScope(functionDefinition->getParametersType(), nullptr);
 			}
 			compileTimeContext->setCurrentFunction(functionDefinition);
 			

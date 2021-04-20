@@ -25,7 +25,7 @@ TEST_CASE("Operator overloading", "[operators][overloading]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("operatorOverloading", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "overloadingStaticScope");	
 
 	SECTION("Overloading operator V4 * V4")
 	{

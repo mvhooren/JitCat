@@ -54,6 +54,8 @@ namespace jitcat::AST
 
 		unsigned char* getScopeObjectInstance() const;
 
+		const std::string& getFileName() const;
+
 	private:
 		void extractDefinitionLists();
 

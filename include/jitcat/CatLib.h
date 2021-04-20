@@ -54,8 +54,8 @@ namespace jitcat
 		//ScopeObjects are not owned/deleted by the CatLib.
 		//Adding a scope returns a ScopeID that can later be used to remove or change the scope object.
 		template<typename ReflectableType>
-		CatScopeID addStaticScope(ReflectableType* scopeObject);
-		CatScopeID addStaticScope(Reflection::TypeInfo* typeInfo, unsigned char* scopeObject);
+		CatScopeID addStaticScope(ReflectableType* scopeObject, const std::string& scopeName);
+		CatScopeID addStaticScope(Reflection::TypeInfo* typeInfo, unsigned char* scopeObject, const std::string& scopeName);
 
 		//When a static scope is removed, all source code that has already been compiled should be recompiled.
 		void removeStaticScope(CatScopeID id);
@@ -93,9 +93,9 @@ namespace jitcat
 
 
 	template<typename ReflectableType>
-	inline CatScopeID CatLib::addStaticScope(ReflectableType* scopeObject)
+	inline CatScopeID CatLib::addStaticScope(ReflectableType* scopeObject, const std::string& scopeName)
 	{
-		return context->addScope(scopeObject, true);
+		return context->addStaticScope(scopeObject, scopeName);
 	}
 
 }

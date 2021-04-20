@@ -24,7 +24,7 @@ TEST_CASE("Builtin functions test: Sin", "[builtins][sin]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Sin", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "sinStaticScope");	
 
 	SECTION("Sin_Constant")
 	{
@@ -90,7 +90,7 @@ TEST_CASE("Builtin functions test: Cos", "[builtins][cos]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Cos", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "cosStaticScope");	
 
 	SECTION("Cos_Constant")
 	{
@@ -156,7 +156,7 @@ TEST_CASE("Builtin functions test: Tan", "[builtins][tan]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Tan", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "tanStaticScope");	
 
 	SECTION("Tan_Constant")
 	{
@@ -222,7 +222,7 @@ TEST_CASE("Builtin functions test: Asin", "[builtins][asin]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Asin", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "asinStaticScope");
 
 	SECTION("Asin_Constant")
 	{
@@ -278,7 +278,7 @@ TEST_CASE("Builtin functions test: Acos", "[builtins][acos]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Acos", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "acosStaticScope");
 
 	SECTION("Acos_Constant")
 	{
@@ -334,7 +334,7 @@ TEST_CASE("Builtin functions test: Atan", "[builtins][atan]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Atan", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "atanStaticScope");
 
 	SECTION("Atan_Constant")
 	{
@@ -400,7 +400,7 @@ TEST_CASE("Builtin functions test: Sinh", "[builtins][sinh]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Sinh", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "sinhStaticScope");
 
 	SECTION("Sinh_Constant")
 	{
@@ -466,7 +466,7 @@ TEST_CASE("Builtin functions test: Cosh", "[builtins][cosh]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Cosh", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "coshStaticScope");
 
 	SECTION("Cosh_Constant")
 	{
@@ -532,7 +532,7 @@ TEST_CASE("Builtin functions test: Tanh", "[builtins][tanh]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Tanh", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "tanhStaticScope");
 
 	SECTION("Tanh_Constant")
 	{
@@ -598,7 +598,7 @@ TEST_CASE("Builtin functions test: Asinh", "[builtins][asinh]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Asinh", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "asinhStaticScope");
 
 	SECTION("Asinh_Constant")
 	{
@@ -664,7 +664,7 @@ TEST_CASE("Builtin functions test: Acosh", "[builtins][acosh]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Acosh", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "acoshStaticScope");
 
 	SECTION("Acosh_Constant")
 	{
@@ -710,7 +710,7 @@ TEST_CASE("Builtin functions test: Atanh", "[builtins][atanh]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Atanh", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "atanhStaticScope");
 
 	SECTION("Atanh_Constant")
 	{
@@ -766,7 +766,7 @@ TEST_CASE("Builtin functions test: Atan2", "[builtins][atan2]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Atan2", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "atan2StaticScope");
 
 	SECTION("Atan2_cc1")
 	{
@@ -882,7 +882,7 @@ TEST_CASE("Builtin functions test: Hypot", "[builtins][hypot]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Hypot", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "hypotStaticScope");
 
 	SECTION("Hypot_cc1")
 	{

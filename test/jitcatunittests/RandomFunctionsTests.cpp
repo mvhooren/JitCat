@@ -24,7 +24,7 @@ TEST_CASE("Builtin functions test: Random", "[builtins][rand]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Random", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "randStaticScope");	
 
 	SECTION("Random")
 	{
@@ -50,7 +50,7 @@ TEST_CASE("Builtin functions test: RandomRange", "[builtins][rand]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_RandomRange", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "randRangStaticScope");	
 
 	SECTION("RandomRange_float_constant")
 	{

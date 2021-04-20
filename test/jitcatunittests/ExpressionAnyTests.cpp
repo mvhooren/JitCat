@@ -28,7 +28,7 @@ TEST_CASE("ExpressionAny", "[ExpressionAny]")
 	CatGenericType genericType = CatGenericType(objectTypeInfo);
 	CatRuntimeContext context("expressionAny", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "expressionAnyStaticScope");	
 
 	SECTION("Literal Float")
 	{

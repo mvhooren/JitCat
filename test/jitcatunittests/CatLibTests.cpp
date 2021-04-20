@@ -26,7 +26,7 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "catlibStaticScope");
 	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
@@ -57,7 +57,7 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("Float variable")
 	{
@@ -125,7 +125,7 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "functionOverloadingStaticScope");
 
 	Tokenizer::Document source(
 		"class TestClass\n"
@@ -162,10 +162,10 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	CatRuntimeContext alternativeContext("jitlib_alternative", &errorManager);
-	alternativeContext.addScope(duplicateTestClassInfo, duplicateTestClassInstance, false);
+	alternativeContext.addDynamicScope(duplicateTestClassInfo, duplicateTestClassInstance);
 
 	SECTION("Test function")
 	{
@@ -195,7 +195,7 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "catlibLocalsStaticScope");
 
 	Tokenizer::Document source(		
 		"class TestClass\n"
@@ -233,7 +233,7 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("Local tests")
 	{
@@ -255,7 +255,7 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "ifStatementStaticScope");
 
 	Tokenizer::Document source(
 		"class TestClass\n"
@@ -369,7 +369,7 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("If tests")
 	{
@@ -433,7 +433,7 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "forLoopStaticScope");
 
 	Tokenizer::Document source(
 		"class TestClass\n"
@@ -510,7 +510,7 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("Local tests")
 	{
@@ -557,7 +557,7 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "localFunctionCallStaticScope");
 
 	Tokenizer::Document source(		
 		"class TestClass\n"
@@ -591,7 +591,7 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("Local tests")
 	{
@@ -609,7 +609,7 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "useBeforeDefinedStaticScope");
 
 	Tokenizer::Document source(		
 		"class TestClass\n"
@@ -658,7 +658,7 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("getX")
 	{
@@ -681,7 +681,7 @@ TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "catlibInheritanceStaticScope");
 
 	Tokenizer::Document source(		
 		"class TestClass\n"
@@ -734,7 +734,7 @@ TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("getX")
 	{
@@ -763,7 +763,7 @@ TEST_CASE("CatLib arrays", "[catlib][arrays]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "catlibArraysStaticScope");
 
 	Tokenizer::Document source(		
 		"class TestClass\n"
@@ -797,7 +797,7 @@ TEST_CASE("CatLib arrays", "[catlib][arrays]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("getX")
 	{

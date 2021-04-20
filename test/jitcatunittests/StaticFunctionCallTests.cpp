@@ -25,7 +25,7 @@ TEST_CASE("Static Functions", "[staticfunctions]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("staticfunctions_tests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "staticFunctionsStaticScope");	
 
 	SECTION("Global scope get float")
 	{

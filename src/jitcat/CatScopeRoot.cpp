@@ -86,7 +86,7 @@ bool CatScopeRoot::isConst() const
 
 CatStatement* CatScopeRoot::constCollapse(CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	if (compileTimeContext->isStaticScope(scopeId))
+	if (compileTimeContext->isStaticScope(scopeId) && compileTimeContext->getPrecompilationContext() == nullptr)
 	{
 		return new CatLiteral(compileTimeContext->getScopeType(scopeId)->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t>(compileTimeContext->getScopeObject(scopeId))), type, getLexeme());
 	}

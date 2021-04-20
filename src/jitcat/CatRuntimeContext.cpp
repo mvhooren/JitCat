@@ -10,10 +10,12 @@
 #include "jitcat/CustomTypeInfo.h"
 #include "jitcat/ErrorContext.h"
 #include "jitcat/ExpressionErrorManager.h"
+#include "jitcat/JitCat.h"
 #ifdef ENABLE_LLVM
 #include "jitcat/LLVMCodeGenerator.h"
 #endif
 #include "jitcat/ObjectInstance.h"
+#include "jitcat/PrecompilationContext.h"
 #include "jitcat/Tools.h"
 
 #include <cassert>
@@ -55,16 +57,16 @@ CatRuntimeContext::~CatRuntimeContext()
 }
 
 
-std::unique_ptr<CatRuntimeContext> jitcat::CatRuntimeContext::clone() const
+std::unique_ptr<CatRuntimeContext> CatRuntimeContext::clone() const
 {
 	std::unique_ptr<CatRuntimeContext> cloned = std::make_unique<CatRuntimeContext>(contextName, ownsErrorManager ? nullptr : errorManager);
 	for (auto& iter : scopes)
 	{
-		cloned->addScope(iter->scopeObject.getObjectType(), reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
+		cloned->addDynamicScope(iter->scopeObject.getObjectType(), reinterpret_cast<unsigned char*>(iter->scopeObject.get()));
 	}
 	for (auto& iter : staticScopes)
 	{
-		cloned->addScope(iter->scopeObject.getObjectType(), reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->isStatic);
+		cloned->createStaticScope(reinterpret_cast<unsigned char*>(iter->scopeObject.get()), iter->scopeObject.getObjectType(), iter->scopeName);
 	}
 	#ifdef ENABLE_LLVM
 		//This cannot be put inside a if constexpr unfortunately
@@ -79,7 +81,7 @@ std::unique_ptr<CatRuntimeContext> jitcat::CatRuntimeContext::clone() const
 }
 
 
-const char* jitcat::CatRuntimeContext::getTypeName()
+const char* CatRuntimeContext::getTypeName()
 {
 	return "CatRuntimeContext";
 }
@@ -108,18 +110,30 @@ std::string CatRuntimeContext::getContextName()
 }
 
 
-CatScopeID CatRuntimeContext::addScope(TypeInfo* typeInfo, unsigned char* scopeObject, bool isStatic)
+CatScopeID CatRuntimeContext::addDynamicScope(TypeInfo* typeInfo, unsigned char* scopeObject)
 {
 	assert(typeInfo != nullptr);
-	//If this is a static scope, scopeObject must not be nullptr.
-	assert(!isStatic || scopeObject != nullptr);
-	return createScope(scopeObject, typeInfo, isStatic);
+	return createDynamicScope(scopeObject, typeInfo);
 }
 
 
-CatScopeID CatRuntimeContext::addScope(const ObjectInstance& objectInstance, bool isStatic)
+CatScopeID CatRuntimeContext::addDynamicScope(const ObjectInstance& objectInstance)
 {
-	return addScope(objectInstance.getType(), objectInstance.getObject(), isStatic);
+	return addDynamicScope(objectInstance.getType(), objectInstance.getObject());
+}
+
+
+CatScopeID CatRuntimeContext::addStaticScope(TypeInfo* typeInfo, unsigned char* scopeObject, const std::string& staticScopeUniqueName)
+{
+	assert(typeInfo != nullptr);
+	assert(scopeObject != nullptr);
+	return createStaticScope(scopeObject, typeInfo, getGlobalNameReference(staticScopeUniqueName));
+}
+
+
+CatScopeID CatRuntimeContext::addStaticScope(const ObjectInstance& objectInstance, const std::string& staticScopeUniqueName)
+{
+	return addStaticScope(objectInstance.getType(), objectInstance.getObject(), staticScopeUniqueName);
 }
 
 
@@ -193,6 +207,14 @@ TypeInfo* CatRuntimeContext::getScopeType(CatScopeID id) const
 {
 	Scope* scope = getScope(id);
 	return scope->scopeObject.getObjectType();
+}
+
+
+const std::string_view jitcat::CatRuntimeContext::getScopeNameView(CatScopeID id) const
+{
+	Scope* scope = getScope(id);
+	assert(scope != nullptr);
+	return scope->scopeName;
 }
 
 
@@ -270,7 +292,7 @@ Reflection::StaticMemberInfo* jitcat::CatRuntimeContext::findStaticVariable(cons
 }
 
 
-Reflection::StaticConstMemberInfo* jitcat::CatRuntimeContext::findStaticConstant(const std::string& lowercaseName, CatScopeID& scopeId)
+Reflection::StaticConstMemberInfo* CatRuntimeContext::findStaticConstant(const std::string& lowercaseName, CatScopeID& scopeId)
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
@@ -318,7 +340,7 @@ MemberFunctionInfo* CatRuntimeContext::findFirstMemberFunction(const std::string
 }
 
 
-Reflection::MemberFunctionInfo* jitcat::CatRuntimeContext::findMemberFunction(const FunctionSignature* functionSignature, CatScopeID& scopeId)
+Reflection::MemberFunctionInfo* CatRuntimeContext::findMemberFunction(const FunctionSignature* functionSignature, CatScopeID& scopeId)
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
@@ -342,7 +364,7 @@ Reflection::MemberFunctionInfo* jitcat::CatRuntimeContext::findMemberFunction(co
 }
 
 
-Reflection::StaticFunctionInfo* jitcat::CatRuntimeContext::findStaticFunction(const Reflection::FunctionSignature* functionSignature, CatScopeID& scopeId)
+Reflection::StaticFunctionInfo* CatRuntimeContext::findStaticFunction(const Reflection::FunctionSignature* functionSignature, CatScopeID& scopeId)
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
@@ -366,7 +388,7 @@ Reflection::StaticFunctionInfo* jitcat::CatRuntimeContext::findStaticFunction(co
 }
 
 
-Reflection::TypeInfo* jitcat::CatRuntimeContext::findType(const std::string& lowercaseName, CatScopeID& scopeId)
+Reflection::TypeInfo* CatRuntimeContext::findType(const std::string& lowercaseName, CatScopeID& scopeId)
 {
 	for (int i = (int)scopes.size() - 1; i >= 0; i--)
 	{
@@ -418,13 +440,13 @@ int CatRuntimeContext::getNextFunctionIndex()
 }
 
 
-void jitcat::CatRuntimeContext::setCurrentFunction(AST::CatFunctionDefinition* function)
+void CatRuntimeContext::setCurrentFunction(AST::CatFunctionDefinition* function)
 {
 	currentFunctionDefinition = function;
 }
 
 
-AST::CatFunctionDefinition* jitcat::CatRuntimeContext::getCurrentFunction() const
+AST::CatFunctionDefinition* CatRuntimeContext::getCurrentFunction() const
 {
 	return currentFunctionDefinition;
 }
@@ -436,25 +458,25 @@ void jitcat::CatRuntimeContext::setCurrentClass(AST::CatClassDefinition* current
 }
 
 
-AST::CatClassDefinition* jitcat::CatRuntimeContext::getCurrentClass() const
+AST::CatClassDefinition* CatRuntimeContext::getCurrentClass() const
 {
 	return currentClassDefinition;
 }
 
 
-void jitcat::CatRuntimeContext::setCurrentScope(CatScope* scope)
+void CatRuntimeContext::setCurrentScope(CatScope* scope)
 {
 	currentScope = scope;
 }
 
 
-CatScope* jitcat::CatRuntimeContext::getCurrentScope() const
+CatScope* CatRuntimeContext::getCurrentScope() const
 {
 	return currentScope;
 }
 
 
-unsigned char* jitcat::CatRuntimeContext::getCurrentScopeObject() const
+unsigned char* CatRuntimeContext::getCurrentScopeObject() const
 {
 	if (currentScope != nullptr)
 	{
@@ -464,26 +486,26 @@ unsigned char* jitcat::CatRuntimeContext::getCurrentScopeObject() const
 }
 
 
-bool jitcat::CatRuntimeContext::getIsReturning() const
+bool CatRuntimeContext::getIsReturning() const
 {
 	return returning;
 }
 
 
-void jitcat::CatRuntimeContext::setReturning(bool isReturning)
+void CatRuntimeContext::setReturning(bool isReturning)
 {
 	returning = isReturning;
 }
 
 
-std::any& jitcat::CatRuntimeContext::addTemporary(const std::any& value)
+std::any& CatRuntimeContext::addTemporary(const std::any& value)
 {
 	temporaries.emplace_back(std::make_unique<std::any>(value));
 	return *temporaries.back().get();
 }
 
 
-void jitcat::CatRuntimeContext::clearTemporaries()
+void CatRuntimeContext::clearTemporaries()
 {
 	temporaries.clear();
 }
@@ -518,23 +540,27 @@ std::shared_ptr<PrecompilationContext> CatRuntimeContext::getPrecompilationConte
 }
 
 
-CatScopeID CatRuntimeContext::createScope(unsigned char* scopeObject, TypeInfo* type, bool isStatic)
+CatScopeID CatRuntimeContext::createDynamicScope(unsigned char* scopeObject, TypeInfo* type)
 {
-	Scope* scope = new Scope(type, scopeObject, isStatic);
-	if (!isStatic)
-	{
-		scopes.emplace_back(scope);
-		return static_cast<CatScopeID>((int)scopes.size() - 1) - currentStackFrameOffset;
-	}
-	else
-	{
-		staticScopes.emplace_back(scope);
-		return static_cast<CatScopeID>(InvalidScopeID - (int)staticScopes.size());
-	}
+	Scope* scope = new Scope(type, scopeObject, false, Tools::empty);
+	scopes.emplace_back(scope);
+	return static_cast<CatScopeID>((int)scopes.size() - 1) - currentStackFrameOffset;
 }
 
 
-CatRuntimeContext::Scope* jitcat::CatRuntimeContext::getScope(CatScopeID scopeId) const
+CatScopeID CatRuntimeContext::createStaticScope(unsigned char* scopeObject, TypeInfo* type, const std::string_view& staticScopeUniqueName)
+{
+	Scope* scope = new Scope(type, scopeObject, true, staticScopeUniqueName);
+	staticScopes.emplace_back(scope);
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		JitCat::get()->setPrecompiledGlobalScopeVariable(staticScopeUniqueName, scopeObject);
+	}
+	return static_cast<CatScopeID>(InvalidScopeID - (int)staticScopes.size());
+}
+
+
+CatRuntimeContext::Scope* CatRuntimeContext::getScope(CatScopeID scopeId) const
 {
 	//A break / crash in this function usually means that the CatRuntimeContext that was provided when
 	//calling the expression does not contain the same number of scopes as the CatRuntimeContext that
@@ -554,6 +580,12 @@ CatRuntimeContext::Scope* jitcat::CatRuntimeContext::getScope(CatScopeID scopeId
 		return scopes[scopeId].get();
 	}
 	return nullptr;
+}
+
+
+const std::string_view jitcat::CatRuntimeContext::getGlobalNameReference(const std::string& globalName)
+{
+	return JitCat::defineGlobalScopeName(globalName);
 }
 
 

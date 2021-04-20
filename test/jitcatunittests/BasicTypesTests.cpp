@@ -25,7 +25,7 @@ TEST_CASE("Floating Point Tests", "[float][operators]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("floatTests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "floatStaticScope");	
 	SECTION("Constant")
 	{
 		Expression<float> testExpression(&context, "42.0f");
@@ -328,7 +328,7 @@ TEST_CASE("Double Floating Point Tests", "[double][operators]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("doubleTests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "doubleStaticScope");	
 	SECTION("Constant")
 	{
 		Expression<double> testExpression(&context, "42.0");
@@ -586,7 +586,7 @@ TEST_CASE("Integer Tests", "[int][operators]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("intTests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "intStaticScope");	
 
 	SECTION("Constant")
 	{
@@ -758,7 +758,7 @@ TEST_CASE("Boolean Tests", "[bool][operators]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("boolTests", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "boolStaticScope");	
 
 	SECTION("True Constant")
 	{

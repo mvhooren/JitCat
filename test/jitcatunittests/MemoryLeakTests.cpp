@@ -26,7 +26,7 @@ TEST_CASE("Basic memory leak test", "[memory]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("memberFunctions", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "memoryStaticScope");	
 
 
 	SECTION("Get TestVector4")
@@ -57,7 +57,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 	ExpressionErrorManager errorManager;
 
 	CatLib library("TestLib");
-	library.addStaticScope(&reflectedObject);
+	library.addStaticScope(&reflectedObject, "catlibMemoryStaticScope");
 	Tokenizer::Document source(
 		"class TestClass\n"
 		"{\n"
@@ -104,7 +104,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 
 	CatRuntimeContext context("jitlib", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(testClassInfo, testClassInstance, false);
+	context.addDynamicScope(testClassInfo, testClassInstance);
 
 	SECTION("Get TestVector4")
 	{

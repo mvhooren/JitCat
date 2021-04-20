@@ -15,6 +15,7 @@ namespace llvm
 	class ConstantFolder;
 	class Function;
 	class FunctionType;
+	class GlobalVariable;
 	class IRBuilderDefaultInserter;
 	template<typename T, typename Inserter>
 	class IRBuilder;

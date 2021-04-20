@@ -25,7 +25,7 @@ TEST_CASE("Indirection tests", "[indirection]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("indirection", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "indirectionStaticScope");	
 
 	SECTION("NestedSelfObject String")
 	{

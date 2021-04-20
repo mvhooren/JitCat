@@ -24,7 +24,7 @@ TEST_CASE("Builtin functions test: Abs", "[builtins][abs]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Abs", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "absStaticScope");	
 
 	SECTION("Abs_Constant")
 	{
@@ -110,7 +110,7 @@ TEST_CASE("Builtin functions test: Sqrt", "[builtins][sqrt]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Sqrt", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "sqrtStaticScope");	
 
 	SECTION("Sqrt_Constant")
 	{
@@ -191,7 +191,7 @@ TEST_CASE("Builtin functions test: Round", "[builtins][round]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Round", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "roundStaticScope");	
 
 	SECTION("Round_cc1")
 	{
@@ -221,32 +221,32 @@ TEST_CASE("Builtin functions test: Round", "[builtins][round]" )
 	SECTION("Round_float1")
 	{
 		Expression<float> testExpression(&context, "round(aFloat, 0)");
-		doChecks(LLVMCatIntrinsics::roundFloat(reflectedObject.aFloat, 0), false, false, false, testExpression, context);
+		doChecks(CatLinkedIntrinsics::_jc_roundFloat(reflectedObject.aFloat, 0), false, false, false, testExpression, context);
 	}
 	SECTION("Round_float2")
 	{
 		Expression<float> testExpression(&context, "round(aFloat, 1.0f)");
-		doChecks(LLVMCatIntrinsics::roundFloat(reflectedObject.aFloat, 1), false, false, false, testExpression, context);
+		doChecks(CatLinkedIntrinsics::_jc_roundFloat(reflectedObject.aFloat, 1), false, false, false, testExpression, context);
 	}
 	SECTION("Round_float3")
 	{
 		Expression<float> testExpression(&context, "round(aFloat, 2)");
-		doChecks(LLVMCatIntrinsics::roundFloat(reflectedObject.aFloat, 2), false, false, false, testExpression, context);
+		doChecks(CatLinkedIntrinsics::_jc_roundFloat(reflectedObject.aFloat, 2), false, false, false, testExpression, context);
 	}
 	SECTION("Round_double1")
 	{
 		Expression<double> testExpression(&context, "round(aDouble, 0)");
-		doChecks(LLVMCatIntrinsics::roundDouble(reflectedObject.aDouble, 0), false, false, false, testExpression, context);
+		doChecks(CatLinkedIntrinsics::_jc_roundDouble(reflectedObject.aDouble, 0), false, false, false, testExpression, context);
 	}
 	SECTION("Round_double2")
 	{
 		Expression<double> testExpression(&context, "round(aDouble, 1.0f)");
-		doChecks(LLVMCatIntrinsics::roundDouble(reflectedObject.aDouble, 1), false, false, false, testExpression, context);
+		doChecks(CatLinkedIntrinsics::_jc_roundDouble(reflectedObject.aDouble, 1), false, false, false, testExpression, context);
 	}
 	SECTION("Round_double3")
 	{
 		Expression<double> testExpression(&context, "round(aDouble, 2)");
-		doChecks(LLVMCatIntrinsics::roundDouble(reflectedObject.aDouble, 2), false, false, false, testExpression, context);
+		doChecks(CatLinkedIntrinsics::_jc_roundDouble(reflectedObject.aDouble, 2), false, false, false, testExpression, context);
 	}
 	SECTION("Round_int")
 	{
@@ -297,7 +297,7 @@ TEST_CASE("Builtin functions test: Cap", "[builtins][cap]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Cap", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "CapStaticScope");	
 
 	SECTION("Cap_cc1")
 	{
@@ -428,7 +428,7 @@ TEST_CASE("Builtin functions test: Min", "[builtins][min]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Min", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "MinStaticScope");	
 
 	SECTION("Min_cc1")
 	{
@@ -544,7 +544,7 @@ TEST_CASE("Builtin functions test: Max", "[builtins][max]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Max", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "MaxStaticScope");	
 
 	SECTION("Max_cc1")
 	{
@@ -660,7 +660,7 @@ TEST_CASE("Builtin functions test: Log10", "[builtins][log10]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Log10", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "Log10StaticScope");	
 
 	SECTION("Log10_Constant")
 	{
@@ -741,7 +741,7 @@ TEST_CASE("Builtin functions test: Ln", "[builtins][ln]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Ln", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "lnStaticScope");
 
 	SECTION("Ln_Constant")
 	{
@@ -822,7 +822,7 @@ TEST_CASE("Builtin functions test: Exp", "[builtins][exp]")
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Exp", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
+	context.addStaticScope(&reflectedObject, "expStaticScope");
 
 	SECTION("Exp_Constant")
 	{
@@ -888,7 +888,7 @@ TEST_CASE("Builtin functions test: Pow", "[builtins][pow]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Pow", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "powStaticScope");	
 
 	SECTION("Pow_cc1")
 	{
@@ -999,7 +999,7 @@ TEST_CASE("Builtin functions test: Ceil", "[builtins][ceil]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Ceil", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "ceilStaticScope");	
 
 	SECTION("Ceil_Constant")
 	{
@@ -1080,7 +1080,7 @@ TEST_CASE("Builtin functions test: Floor", "[builtins][floor]" )
 	ExpressionErrorManager errorManager;
 	CatRuntimeContext context("builtinTests_Floor", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);	
+	context.addStaticScope(&reflectedObject, "floorStaticScope");	
 
 	SECTION("Floor_Constant")
 	{

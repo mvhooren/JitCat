@@ -121,7 +121,7 @@ bool CatFunctionDefinition::defineCheck(CatRuntimeContext* compileTimeContext, s
 
 	if (parameters->getNumParameters() > 0)
 	{
-		parametersScopeId = compileTimeContext->addScope(parameters->getCustomType(), nullptr, false);
+		parametersScopeId = compileTimeContext->addDynamicScope(parameters->getCustomType(), nullptr);
 	}
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 	compileTimeContext->setCurrentScope(this);
@@ -166,7 +166,7 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 
 	if (parameters->getNumParameters() > 0)
 	{
-		parametersScopeId = compileTimeContext->addScope(parameters->getCustomType(), nullptr, false);
+		parametersScopeId = compileTimeContext->addDynamicScope(parameters->getCustomType(), nullptr);
 	}
 	CatScope* previousScope = compileTimeContext->getCurrentScope();
 	compileTimeContext->setCurrentScope(this);
@@ -393,7 +393,7 @@ bool CatFunctionDefinition::getAllControlPathsReturn() const
 
 CatScopeID CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance) const
 {
-	return runtimeContext->addScope(parameters->getCustomType(), instance, false);
+	return runtimeContext->addDynamicScope(parameters->getCustomType(), instance);
 }
 
 

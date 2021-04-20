@@ -100,18 +100,6 @@ ReflectableHandle& jitcat::Reflection::ReflectableHandle::operator=(std::nullptr
 }
 
 
-unsigned char* ReflectableHandle::staticGet(const ReflectableHandle& handle)
-{
-	return handle.get();
-}
-
-
-void ReflectableHandle::staticAssign(ReflectableHandle& handle, unsigned char* reflectable, TypeInfo* reflectableType)
-{
-	handle.setReflectable(reflectable, reflectableType);
-}
-
-
 void ReflectableHandle::replaceCustomObjects(unsigned char* oldObject, CustomTypeInfo* oldType, unsigned char* newObject, CustomTypeInfo* newType)
 {
 	//All the handles that now point to oldObject should be updated to point to newObject

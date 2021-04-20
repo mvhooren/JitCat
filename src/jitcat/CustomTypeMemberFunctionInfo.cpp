@@ -43,7 +43,7 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
 	 {
 		 CustomObject* baseReflectable = std::any_cast<CustomObject*>(base);
 		 runtimeContext->pushStackFrame();
-		 CatScopeID scope = runtimeContext->addScope(thisType.getObjectType(), reinterpret_cast<unsigned char*>(baseReflectable), false);
+		 CatScopeID scope = runtimeContext->addDynamicScope(thisType.getObjectType(), reinterpret_cast<unsigned char*>(baseReflectable));
 		 std::any result = functionDefinition->executeFunctionWithArguments(runtimeContext, parameters);
 		 runtimeContext->removeScope(scope);
 		 runtimeContext->popStackFrame();

@@ -72,9 +72,9 @@ TEST_CASE("Custom Types", "[customtypes]")
 
 	CatRuntimeContext context("customTypes", &errorManager);
 	context.setPrecompilationContext(Precompilation::precompContext);
-	context.addScope(&reflectedObject, true);
-	context.addScope(customType2.get(), nullptr, false);
-	context.addScope(typeInstance, false);
+	context.addStaticScope(&reflectedObject, "customTypesStaticScope");
+	context.addDynamicScope(customType2.get(), nullptr);
+	context.addDynamicScope(typeInstance);
 
 	SECTION("Float Variable")
 	{

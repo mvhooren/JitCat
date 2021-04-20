@@ -9,6 +9,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/Reflectable.h"
+#include "jitcat/ReflectableHandle.h"
 #include "jitcat/Tools.h"
 
 #include <cmath>
@@ -18,39 +19,154 @@ using namespace jitcat::LLVM;
 using namespace jitcat::Reflection;
 
 
-unsigned char* LLVM::CatLinkedIntrinsics::_jc_getScopePointerFromContext(CatRuntimeContext* context, int scopeId)
+unsigned char* CatLinkedIntrinsics::_jc_getScopePointerFromContext(CatRuntimeContext* context, int scopeId)
 {
 	return context->getScopeObject((CatScopeID)scopeId);
 }
 
 
-bool LLVMCatIntrinsics::stringEquals(const Configuration::CatString& left, const Configuration::CatString& right)
-{
-	return left == right;
-}
-
-
-bool LLVMCatIntrinsics::stringNotEquals(const Configuration::CatString& left, const Configuration::CatString& right)
-{
-	return left != right;
-}
-
-
-void LLVMCatIntrinsics::stringAssign(Configuration::CatString* left, const Configuration::CatString& right)
-{
-	(*left) = right;
-}
-
-
-bool LLVMCatIntrinsics::stringToBoolean(const Configuration::CatString& value)
+bool CatLinkedIntrinsics::_jc_stringToBoolean(const Configuration::CatString& value)
 {
 	return value == Tools::StringConstants<Configuration::CatString>::trueStr || Tools::StringConstants<Configuration::CatString>::stringToInt(value) > 0;
 }
 
 
-Configuration::CatString LLVMCatIntrinsics::stringAppend(const Configuration::CatString& left, const Configuration::CatString& right)
+double CatLinkedIntrinsics::_jc_stringToDouble(const Configuration::CatString& string)
 {
-	return left + right;
+	return Tools::convert<double>(string);
+}
+
+
+float CatLinkedIntrinsics::_jc_stringToFloat(const Configuration::CatString& string)
+{
+	return Tools::convert<float>(string);
+}
+
+
+int CatLinkedIntrinsics::_jc_stringToInt(const Configuration::CatString& string)
+{
+	return Tools::convert<int>(string);
+}
+
+
+unsigned int CatLinkedIntrinsics::_jc_stringToUInt(const Configuration::CatString& string)
+{
+	return Tools::convert<unsigned int>(string);
+}
+
+
+int64_t CatLinkedIntrinsics::_jc_stringToInt64(const Configuration::CatString& string)
+{
+	return Tools::convert<int64_t>(string);
+}
+
+
+uint64_t CatLinkedIntrinsics::_jc_stringToUInt64(const Configuration::CatString& string)
+{
+	return Tools::convert<uint64_t>(string);
+}
+
+
+float CatLinkedIntrinsics::_jc_getRandomFloat()
+{
+	return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+}
+
+
+bool CatLinkedIntrinsics::_jc_getRandomBoolean(bool first, bool second)
+{
+	return (std::rand() % 2) == 1 ? first : second;
+}
+
+
+int CatLinkedIntrinsics::_jc_getRandomInt(int min, int max)
+{
+	if (min > max)
+	{
+		std::swap(min, max);
+	}
+	return min + (std::rand() % (max - min + 1));
+}
+
+
+float CatLinkedIntrinsics::_jc_getRandomFloatRange(float min, float max)
+{
+	if (min > max)
+	{
+		std::swap(min, max);
+	}
+	float random = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+	return min + random * (max - min);
+}
+
+
+double CatLinkedIntrinsics::_jc_getRandomDoubleRange(double min, double max)
+{
+	if (min > max)
+	{
+		std::swap(min, max);
+	}
+	double random = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
+	return min + random * (max - min);
+}
+
+
+float CatLinkedIntrinsics::_jc_roundFloat(float number, int decimals)
+{
+	double multiplier = std::pow(10.0f, decimals);
+	return (float)(std::floor(number * multiplier + 0.5f) / multiplier);
+}
+
+
+double CatLinkedIntrinsics::_jc_roundDouble(double number, int decimals)
+{
+	double multiplier = std::pow(10.0, decimals);
+	return std::floor(number * multiplier + 0.5) / multiplier;
+}
+
+
+void CatLinkedIntrinsics::_jc_placementCopyConstructType(unsigned char* target, unsigned char* source, Reflection::TypeInfo* type)
+{
+	if (target != source)
+	{
+		type->copyConstruct(target, type->getTypeSize(), source, type->getTypeSize());
+	}
+}
+
+
+void CatLinkedIntrinsics::_jc_placementConstructType(unsigned char* address, Reflection::TypeInfo* type)
+{
+	type->placementConstruct(address, type->getTypeSize());
+}
+
+
+void CatLinkedIntrinsics::_jc_placementDestructType(unsigned char* address, TypeInfo* type)
+{
+	type->placementDestruct(address, type->getTypeSize());
+}
+
+
+unsigned char* CatLinkedIntrinsics::_jc_allocateMemory(std::size_t size)
+{
+	return new unsigned char[size];
+}
+
+
+void CatLinkedIntrinsics::_jc_freeMemory(unsigned char* memory)
+{
+	delete[] memory;
+}
+
+
+unsigned char* CatLinkedIntrinsics::_jc_getObjectPointerFromHandle(const Reflection::ReflectableHandle& handle)
+{
+	return handle.get();
+}
+
+
+void CatLinkedIntrinsics::_jc_assignPointerToReflectableHandle(Reflection::ReflectableHandle& handle, unsigned char* reflectable, TypeInfo* reflectableType)
+{
+	handle.setReflectable(reflectable, reflectableType);
 }
 
 
@@ -78,16 +194,6 @@ Configuration::CatString LLVMCatIntrinsics::floatToString(float number)
 	return Tools::StringConstants<Configuration::CatString>::makeString(number);
 }
 
-double LLVMCatIntrinsics::stringToDouble(const Configuration::CatString& string)
-{
-	return Tools::convert<double>(string);
-}
-
-
-float LLVMCatIntrinsics::stringToFloat(const Configuration::CatString& string)
-{
-	return Tools::convert<float>(string);
-}
 
 
 Configuration::CatString LLVMCatIntrinsics::intToString(int number)
@@ -111,30 +217,6 @@ Configuration::CatString LLVMCatIntrinsics::int64ToString(int64_t number)
 Configuration::CatString LLVMCatIntrinsics::uInt64ToString(uint64_t number)
 {
 	return Tools::StringConstants<Configuration::CatString>::makeString(number);
-}
-
-
-int LLVMCatIntrinsics::stringToInt(const Configuration::CatString& string)
-{
-	return Tools::convert<int>(string);
-}
-
-
-unsigned int LLVMCatIntrinsics::stringToUInt(const Configuration::CatString& string)
-{
-	return Tools::convert<unsigned int>(string);
-}
-
-
-int64_t LLVMCatIntrinsics::stringToInt64(const Configuration::CatString& string)
-{
-	return Tools::convert<int64_t>(string);
-}
-
-
-uint64_t LLVMCatIntrinsics::stringToUInt64(const Configuration::CatString& string)
-{
-	return Tools::convert<uint64_t>(string);
 }
 
 
@@ -179,64 +261,6 @@ Configuration::CatString LLVMCatIntrinsics::intToFixedLengthString(int number, i
 }
 
 
-float LLVMCatIntrinsics::getRandomFloat()
-{
-	return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-}
-
-
-bool LLVMCatIntrinsics::getRandomBoolean(bool first, bool second)
-{
-	return (std::rand() % 2) == 1 ? first : second;
-}
-
-
-int LLVMCatIntrinsics::getRandomInt(int min, int max)
-{
-	if (min > max)
-	{
-		std::swap(min, max);
-	}
-	return min + (std::rand() % (max - min + 1));
-}
-
-
-float LLVMCatIntrinsics::getRandomFloatRange(float min, float max)
-{
-	if (min > max)
-	{
-		std::swap(min, max);
-	}
-	float random = static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
-	return min + random * (max - min);
-}
-
-
-double LLVMCatIntrinsics::getRandomDoubleRange(double min, double max)
-{
-	if (min > max)
-	{
-		std::swap(min, max);
-	}
-	double random = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
-	return min + random * (max - min);
-}
-
-
-float LLVMCatIntrinsics::roundFloat(float number, int decimals)
-{
-	double multiplier = std::pow(10.0f, decimals);
-	return (float)(std::floor(number * multiplier + 0.5f) / multiplier);
-}
-
-
-double LLVMCatIntrinsics::roundDouble(double number, int decimals)
-{
-	double multiplier = std::pow(10.0, decimals);
-	return std::floor(number * multiplier + 0.5) / multiplier;
-}
-
-
 Configuration::CatString LLVMCatIntrinsics::roundFloatToString(float number, int decimals)
 {
 	Configuration::CatStringStream ss;
@@ -258,39 +282,6 @@ Configuration::CatString LLVMCatIntrinsics::roundDoubleToString(double number, i
 	ss << number;
 	Configuration::CatString result = ss.str();
 	return formatRoundString(result);
-}
-
-
-void LLVMCatIntrinsics::placementCopyConstructType(unsigned char* target, unsigned char* source, Reflection::TypeInfo* type)
-{
-	if (target != source)
-	{
-		type->copyConstruct(target, type->getTypeSize(), source, type->getTypeSize());
-	}
-}
-
-
-void LLVMCatIntrinsics::placementConstructType(unsigned char* address, Reflection::TypeInfo* type)
-{
-	type->placementConstruct(address, type->getTypeSize());
-}
-
-
-void LLVMCatIntrinsics::placementDestructType(unsigned char* address, TypeInfo* type)
-{
-	type->placementDestruct(address, type->getTypeSize());
-}
-
-
-unsigned char* LLVMCatIntrinsics::allocateMemory(std::size_t size)
-{
-	return new unsigned char[size];
-}
-
-
-void jitcat::LLVM::LLVMCatIntrinsics::freeMemory(unsigned char* memory)
-{
-	delete[] memory;
 }
 
 

@@ -72,13 +72,13 @@ llvm::LLVMContext& LLVMJit::getContext() const
 }
 
 
-llvm::orc::ThreadSafeContext& jitcat::LLVM::LLVMJit::getThreadSafeContext() const
+llvm::orc::ThreadSafeContext& LLVM::LLVMJit::getThreadSafeContext() const
 {
 	return *context;
 }
 
 
-std::shared_ptr<llvm::orc::SymbolStringPool> jitcat::LLVM::LLVMJit::getSymbolStringPool() const
+std::shared_ptr<llvm::orc::SymbolStringPool> LLVM::LLVMJit::getSymbolStringPool() const
 {
 	return symbolStringPool;
 }
@@ -90,7 +90,7 @@ llvm::TargetMachine& LLVMJit::getTargetMachine() const
 }
 
 
-const llvm::orc::JITTargetMachineBuilder& jitcat::LLVM::LLVMJit::getTargetMachineBuilder() const
+const llvm::orc::JITTargetMachineBuilder& LLVM::LLVMJit::getTargetMachineBuilder() const
 {
 	return targetMachineBuilder;
 }
@@ -102,7 +102,7 @@ const llvm::DataLayout& LLVMJit::getDataLayout() const
 }
 
 
-void jitcat::LLVM::LLVMJit::cleanup()
+void LLVM::LLVMJit::cleanup()
 {
 	targetMachine.reset(nullptr);
 	dataLayout.reset(nullptr);
