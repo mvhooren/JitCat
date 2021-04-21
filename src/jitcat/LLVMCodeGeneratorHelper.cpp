@@ -48,27 +48,42 @@ LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerato
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isThisCall, 
-												 const std::string& mangledFunctionName, const std::string& shortFunctionName)
+llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isThisCall, 
+												 const std::string& mangledFunctionName, const std::string& shortFunctionName, bool isDirectlyLinked)
 {
 	llvm::CallInst* callInstruction = nullptr;
-	//First try and find the function in the current module.
-	llvm::Function* function = codeGenerator->getCurrentModule()->getFunction(mangledFunctionName);
-	if (function == nullptr)
+	if (context->isPrecompilationContext && !isDirectlyLinked)
 	{
-		//If the function was not found, create the function signature and add it to the module. 
-		function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, mangledFunctionName.c_str(), codeGenerator->getCurrentModule());
-		if (Configuration::useThisCall && isThisCall)
-		{
-			function->setCallingConv(llvm::CallingConv::X86_ThisCall);
-		}
+		//When pre-compiling, most functions will be called through a function pointer that's stored in a GlobalVariable.
+		//The only exceptions are the JitCat std-lib functions that are linked directly through extern "C" functions.
+
+		//this global variable is a pointer to an int-ptr.
+		llvm::GlobalVariable* functionPointerPointer = std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalFunctionPointer(mangledFunctionName, context);
+		auto builder = getBuilder();
+		llvm::Value* functionPointer = loadPointerAtAddress(functionPointerPointer, "FunctionPointer", functionType->getPointerTo());
+		llvm::FunctionCallee callee(functionType, functionPointer);
+		callInstruction = builder->CreateCall(callee, arguments);
 	}
 	else
 	{
-		//Check if the function has the correct signature
-		assert(function->getFunctionType() == functionType);
+		//First try and find the function in the current module.
+		llvm::Function* function = codeGenerator->getCurrentModule()->getFunction(mangledFunctionName);
+		if (function == nullptr)
+		{
+			//If the function was not found, create the function signature and add it to the module. 
+			function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, mangledFunctionName.c_str(), codeGenerator->getCurrentModule());
+			if (Configuration::useThisCall && isThisCall)
+			{
+				function->setCallingConv(llvm::CallingConv::X86_ThisCall);
+			}
+		}
+		else
+		{
+			//Check if the function has the correct signature
+			assert(function->getFunctionType() == functionType);
+		}
+		callInstruction = getBuilder()->CreateCall(function, arguments);
 	}
-	callInstruction = getBuilder()->CreateCall(function, arguments);
 	if (functionType->getReturnType() != LLVMTypes::voidType)
 	{
 		callInstruction->setName(shortFunctionName + "_result");
@@ -288,6 +303,35 @@ llvm::PointerType* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& 
 void LLVMCodeGeneratorHelper::writeToPointer(llvm::Value* lValue, llvm::Value* rValue)
 {
 	codeGenerator->getBuilder()->CreateStore(rValue, lValue);
+}
+
+
+llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals, 
+																		const std::string& functionName)
+{
+	llvm::Type* functionReturnType = LLVMTypes::voidType;
+
+	std::vector<llvm::Type*> callBackParameters = {LLVMTypes::pointerType, LLVMTypes::pointerType};
+	llvm::FunctionType* callBackType = llvm::FunctionType::get(functionReturnType, callBackParameters, false);		
+
+	std::vector<llvm::Type*> parameters = {callBackType->getPointerTo()};
+	llvm::FunctionType* functionType = llvm::FunctionType::get(functionReturnType, parameters, false);		
+	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), codeGenerator->getCurrentModule());
+
+	llvm::FunctionCallee callee(callBackType, function->getArg(0));
+
+	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
+	auto builder = getBuilder();
+	builder->SetInsertPoint(&function->getEntryBlock());
+
+	for (auto iter : globals)
+	{
+		llvm::Constant* zeroTerminatedString = createZeroTerminatedStringConstant(iter.first);
+		llvm::Value* globalPtr = convertToPointer(iter.second, "globalPtr");
+		builder->CreateCall(callee, {zeroTerminatedString, globalPtr});
+	}
+	builder->CreateRetVoid();
+	return codeGenerator->verifyAndOptimizeFunction(function);
 }
 
 
@@ -931,6 +975,18 @@ llvm::Value* LLVMCodeGeneratorHelper::constantToValue(llvm::Constant* constant) 
 }
 
 
+llvm::Constant* LLVMCodeGeneratorHelper::globalVariableToConstant(llvm::GlobalVariable* global) const
+{
+	return static_cast<llvm::Constant*>(global);
+}
+
+
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::globalVariableToValue(llvm::GlobalVariable* global) const
+{
+	return static_cast<llvm::Value*>(global);
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, 
 																	   const CatGenericType& objectType, bool generateDestructorCall)
 {
@@ -1037,12 +1093,12 @@ void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std
 llvm::Value* LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::CatGenericType& returnType, const std::vector<llvm::Value*>& argumentList, 
 																 const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, 
 																 const std::string& mangledFunctionName, const std::string& shortFunctionName,
-																 llvm::Value* returnedObjectAllocation)
+																 llvm::Value* returnedObjectAllocation, bool isDirectlyLinked)
 {
 	if (returnType.isReflectableObjectType())
 	{
 		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
-		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(functionType, argumentList, false, mangledFunctionName, shortFunctionName));
+		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(context, functionType, argumentList, false, mangledFunctionName, shortFunctionName, isDirectlyLinked));
 		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
 		call->addDereferenceableAttr(1 , returnType.getTypeSize());
 		return returnedObjectAllocation;
@@ -1051,7 +1107,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::C
 	{
 		llvm::Type* returnLLVMType = toLLVMType(returnType);
 		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-		return createCall(functionType, argumentList, false, mangledFunctionName, shortFunctionName);
+		return createCall(context, functionType, argumentList, false, mangledFunctionName, shortFunctionName, isDirectlyLinked);
 	}
 }
 
@@ -1117,15 +1173,15 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			{
 				if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
 				{
-					return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), memberFunction->getMemberFunctionName(), returnedObjectAllocation);
+					return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), memberFunction->getMemberFunctionName(), returnedObjectAllocation, false);
 				}
 				else
 				{
 					llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-					llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, 
+					llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(context, functionType, argumentList, 
 																										   callData.callType == MemberFunctionCallType::ThisCall, 
 																										   memberFunction->getMangledName(), 
-																										   memberFunction->getMemberFunctionName()));
+																										   memberFunction->getMemberFunctionName(), false));
 					if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 					{
 						call->setCallingConv(llvm::CallingConv::X86_ThisCall);
@@ -1138,7 +1194,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 				argumentTypes.insert(argumentTypes.begin(), LLVMTypes::pointerType);
 				argumentList.insert(argumentList.begin(), returnedObjectAllocation);
 				return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), 
-												  memberFunction->getMemberFunctionName(), returnedObjectAllocation);
+												  memberFunction->getMemberFunctionName(), returnedObjectAllocation, false);
 			}
 			else if (returnType.isReflectableObjectType())
 			{
@@ -1156,10 +1212,10 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 					sretInsertPoint++;
 				}
 				argumentList.insert(sretInsertPoint, returnedObjectAllocation);
-				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(functionType, argumentList, 
+				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(context, functionType, argumentList, 
 																									   callData.callType == MemberFunctionCallType::ThisCall, 
 																									   memberFunction->getMangledName(), 
-																									   memberFunction->getMemberFunctionName()));
+																									   memberFunction->getMemberFunctionName(), false));
 				if (Configuration::useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 				{
 					call->setCallingConv(llvm::CallingConv::X86_ThisCall);
@@ -1318,7 +1374,8 @@ llvm::Value* LLVMCodeGeneratorHelper::copyConstructIfValueType(llvm::Value* valu
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context, bool isDirectlyLinked)
+llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, 
+															LLVMCompileTimeContext* context, bool isDirectlyLinked)
 {
 	//Define the function in the runtime library.
 	defineWeakSymbol(context, functionInfo->getFunctionAddress(), functionInfo->getNormalFunctionName(), isDirectlyLinked);
@@ -1339,7 +1396,8 @@ llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::
 		argumentLLVMTypes.insert(argumentLLVMTypes.begin(), returnValueAllocation->getType());
 	}
 
-	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getNormalFunctionName(), functionInfo->getNormalFunctionName(), returnValueAllocation);
+	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getNormalFunctionName(), 
+									  functionInfo->getNormalFunctionName(), returnValueAllocation, isDirectlyLinked);
 }
 
 

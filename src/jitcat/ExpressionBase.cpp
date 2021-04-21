@@ -337,7 +337,7 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 			if (context->getPrecompilationContext() == nullptr)
 			{
 				//Lookup the symbol for the expression by its unique name.
-				uintptr_t symbolAddress = JitCat::getPrecompiledSymbol(ExpressionHelperFunctions::getUniqueExpressionFunctionName(expression, context, expectAssignable));
+				uintptr_t symbolAddress = JitCat::get()->getPrecompiledSymbol(ExpressionHelperFunctions::getUniqueExpressionFunctionName(expression, context, expectAssignable));
 				if (symbolAddress != 0)
 				{
 					handleCompiledFunction(symbolAddress);

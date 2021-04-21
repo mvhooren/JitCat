@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "jitcat/Configuration.h"
+#include "jitcat/JitCat.h"
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
@@ -19,6 +21,18 @@
 
 namespace jitcat::Reflection
 {
+	template<typename ClassT>
+	inline StaticClassUniquePtrMemberInfo<ClassT>::StaticClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT>* memberPointer, 
+																				  const CatGenericType& type): 
+		StaticMemberInfo(memberName, type), memberPointer(memberPointer)
+	{
+		if constexpr (Configuration::usePreCompiledExpressions)
+		{
+			uintptr_t staticGetFunctionAddress = reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer);
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledGetPointerName(), staticGetFunctionAddress);
+		}
+	}
+
 	template<typename ClassT>
 	inline ClassT* StaticClassUniquePtrMemberInfo<ClassT>::getPointer(std::unique_ptr<ClassT>* info)
 	{
@@ -46,16 +60,23 @@ namespace jitcat::Reflection
 	#ifdef ENABLE_LLVM
 		llvm::Value* uniquePtrPtr = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "UniquePtrPtr");
 
-		std::ostringstream mangledNameStream;
-		std::string classTypeName = TypeNameGetter<ClassT>::get();
-		mangledNameStream << classTypeName << "* StaticClassUniquePtrMemberInfo<" << classTypeName << ">::getPointer(std::unique_ptr<" << classTypeName << ">*)";
-		std::string mangledName = mangledNameStream.str();
+		std::string mangledName = getMangledGetPointerName();
 		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName, false);
 
-		return context->helper->createCall( LLVM::LLVMTypes::functionRetPtrArgPtr, {uniquePtrPtr}, false, mangledName, "getUniquePtr");
+		return context->helper->createCall(context, LLVM::LLVMTypes::functionRetPtrArgPtr, {uniquePtrPtr}, false, mangledName, "getUniquePtr", false);
 	#else 
 		return nullptr;
 	#endif // ENABLE_LLVM
+	}
+
+
+	template<typename ClassT>
+	inline std::string StaticClassUniquePtrMemberInfo<ClassT>::getMangledGetPointerName() const
+	{
+		std::ostringstream mangledNameStream;
+		std::string classTypeName = TypeNameGetter<ClassT>::get();
+		mangledNameStream << classTypeName << "* StaticClassUniquePtrMemberInfo<" << classTypeName << ">::getPointer(std::unique_ptr<" << classTypeName << ">*)";
+		return mangledNameStream.str();
 	}
 
 

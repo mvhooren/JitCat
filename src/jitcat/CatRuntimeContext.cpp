@@ -554,7 +554,7 @@ CatScopeID CatRuntimeContext::createStaticScope(unsigned char* scopeObject, Type
 	staticScopes.emplace_back(scope);
 	if constexpr (Configuration::usePreCompiledExpressions)
 	{
-		JitCat::get()->setPrecompiledGlobalScopeVariable(staticScopeUniqueName, scopeObject);
+		JitCat::get()->setPrecompiledGlobalVariable(staticScopeUniqueName, scopeObject);
 	}
 	return static_cast<CatScopeID>(InvalidScopeID - (int)staticScopes.size());
 }
@@ -585,7 +585,7 @@ CatRuntimeContext::Scope* CatRuntimeContext::getScope(CatScopeID scopeId) const
 
 const std::string_view jitcat::CatRuntimeContext::getGlobalNameReference(const std::string& globalName)
 {
-	return JitCat::defineGlobalScopeName(globalName);
+	return JitCat::defineGlobalVariableName(globalName);
 }
 
 

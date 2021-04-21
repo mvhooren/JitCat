@@ -50,22 +50,32 @@ namespace jitcat
 		std::shared_ptr<PrecompilationContext> createPrecompilationContext() const;
 
 		static uintptr_t getPrecompiledSymbol(const std::string& name);
-		static bool setPrecompiledGlobalScopeVariable(const std::string_view variableName, unsigned char* value);
+
+		bool setPrecompiledGlobalVariable(const std::string_view variableName, unsigned char* value);
+		bool setPrecompiledLinkedFunction(const std::string mangledFunctionName, uintptr_t address);
 
 		//This will clean up as much memory as possible, library features will be broken after this is called.
 		//The type registry will be cleared.
 		//Memory used by native code generation (LLVM) will also be destroyed. 
 		static void destroy();
 
-		static std::string_view defineGlobalScopeName(const std::string& globalName);
+		static std::string_view defineGlobalVariableName(const std::string& globalName);
+
+		//Checks whether all the globals scopes and linked functions have been set to a non-null value.
+		//null values will be printed to std::out.
+		bool verifyLinkage();
 
 	private:
 		static void expressionEnumerationCallback(const char* name, uintptr_t address);
-		static void globalScopesEnumerationCallback(const char* name, uintptr_t address);
+		static void globalVariablesEnumerationCallback(const char* name, uintptr_t address);
+		static void linkedFunctionsEnumerationCallback(const char* name, uintptr_t address);
 	private:
 		static JitCat* instance;
-		static std::unordered_map<std::string, uintptr_t> precompiledExpressionSymbols;
-		static std::unordered_map<std::string_view, uintptr_t> precompiledGlobalScopeVariables;
+		static std::unordered_map<std::string, uintptr_t>* precompiledExpressionSymbols;
+		static std::unordered_map<std::string_view, uintptr_t>* precompiledGlobalVariables;
+		static std::unordered_map<std::string, uintptr_t>* precompiledLinkedFunctions;
+		static std::unordered_set<std::string>* globalNames;
+
 		std::unique_ptr<Tokenizer::CatTokenizer> tokenizer;
 		
 		std::unique_ptr<Grammar::CatGrammar> expressionGrammar;
@@ -76,7 +86,6 @@ namespace jitcat
 		std::unique_ptr<Parser::SLRParser> statementParser;
 		std::unique_ptr<Parser::SLRParser> fullParser;
 
-		static std::unordered_set<std::string> globalNames;
 	};
 
 } //End namespace jitcat

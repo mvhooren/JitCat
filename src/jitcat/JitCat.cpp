@@ -15,6 +15,7 @@
 #include "jitcat/Document.h"
 #include "jitcat/IdentifierToken.h"
 #include "jitcat/Lexeme.h"
+#include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/OneCharToken.h"
 #include "jitcat/SLRParser.h"
 #include "jitcat/ParseToken.h"
@@ -46,20 +47,29 @@ using namespace jitcat::Tokenizer;
 		enumeratorCallback("default", 0);
 	}
 
-	extern "C" void _jc_enumerate_global_scopes(void(*enumeratorCallback)(const char*, uintptr_t));
+	extern "C" void _jc_enumerate_global_variables(void(*enumeratorCallback)(const char*, uintptr_t));
 
-	extern "C" void _jc_enumerate_global_scopes_default(void(*enumeratorCallback)(const char*, uintptr_t))
+	extern "C" void _jc_enumerate_global_variables_default(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
-		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		//Notify the callback that no proper _jc_enumerate_global_scopes function implementation was found.
 		enumeratorCallback("default", 0);
 	}
 
+	extern "C" void _jc_enumerate_linked_functions(void(*enumeratorCallback)(const char*, uintptr_t));
+
+	extern "C" void _jc_enumerate_linked_functions_default(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_linked_functions function implementation was found.
+		enumeratorCallback("default", 0);
+	}
+	
 
 	//Make sure these functions are weakly linked to their default alternatives
 	//Linking in a generated object file will override the weakly linked symbol.
 	//This is MSVC only:
 	#pragma comment(linker, "/alternatename:_jc_enumerate_expressions=_jc_enumerate_expressions_default")
-	#pragma comment(linker, "/alternatename:_jc_enumerate_global_scopes=_jc_enumerate_global_scopes_default")
+	#pragma comment(linker, "/alternatename:_jc_enumerate_global_variables=_jc_enumerate_global_variables_default")
+	#pragma comment(linker, "/alternatename:_jc_enumerate_linked_functions=_jc_enumerate_linked_functions_default")
 #else
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
@@ -67,7 +77,13 @@ using namespace jitcat::Tokenizer;
 		enumeratorCallback("default", 0);
 	}	
 
-	extern "C" void _jc_enumerate_global_scopes(void(*enumeratorCallback)(const char*, uintptr_t))
+	extern "C" void _jc_enumerate_global_variables(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		enumeratorCallback("default", 0);
+	}
+
+	extern "C" void _jc_enumerate_linked_functions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
 		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
 		enumeratorCallback("default", 0);
@@ -80,6 +96,11 @@ JitCat::JitCat():
 	statementGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Statement)),
 	fullGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Full))
 {
+	globalNames = new std::unordered_set<std::string>();
+	precompiledExpressionSymbols = new std::unordered_map<std::string, uintptr_t>();
+	precompiledGlobalVariables = new std::unordered_map<std::string_view, uintptr_t>();
+	precompiledLinkedFunctions = new std::unordered_map<std::string, uintptr_t>();
+
 	expressionParser = expressionGrammar->createSLRParser();
 	statementParser = statementGrammar->createSLRParser();
 	fullParser = fullGrammar->createSLRParser();
@@ -87,7 +108,21 @@ JitCat::JitCat():
 	if constexpr (Configuration::usePreCompiledExpressions)
 	{
 		_jc_enumerate_expressions(&expressionEnumerationCallback);
-		_jc_enumerate_global_scopes(&globalScopesEnumerationCallback);
+		_jc_enumerate_global_variables(&globalVariablesEnumerationCallback);
+		_jc_enumerate_linked_functions(&linkedFunctionsEnumerationCallback);
+
+		//Link in some of the JitCat std-lib functions that can't be linked in using extern "C".
+		setPrecompiledLinkedFunction("boolToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::boolToString));
+		setPrecompiledLinkedFunction("doubleToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::doubleToString));
+		setPrecompiledLinkedFunction("floatToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::floatToString));
+		setPrecompiledLinkedFunction("intToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToString));
+		setPrecompiledLinkedFunction("uIntToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::uIntToString));
+		setPrecompiledLinkedFunction("int64ToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::int64ToString));
+		setPrecompiledLinkedFunction("uInt64ToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::uInt64ToString));
+		setPrecompiledLinkedFunction("intToPrettyString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToPrettyString));
+		setPrecompiledLinkedFunction("intToFixedLengthString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToFixedLengthString));
+		setPrecompiledLinkedFunction("roundFloatToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::roundFloatToString));
+		setPrecompiledLinkedFunction("roundDoubleToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::roundDoubleToString));
 	}
 }
 
@@ -154,8 +189,8 @@ std::shared_ptr<PrecompilationContext> JitCat::createPrecompilationContext() con
 
 uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
 {
-	auto iter = precompiledExpressionSymbols.find(name);
-	if (iter != precompiledExpressionSymbols.end())
+	auto iter = precompiledExpressionSymbols->find(name);
+	if (iter != precompiledExpressionSymbols->end())
 	{
 		return iter->second;
 	}
@@ -163,14 +198,27 @@ uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
 }
 
 
-bool JitCat::setPrecompiledGlobalScopeVariable(const std::string_view variableName, unsigned char* value)
+bool JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, unsigned char* value)
 {
-	auto iter = precompiledGlobalScopeVariables.find(variableName);
-	if (iter != precompiledGlobalScopeVariables.end())
+	auto iter = precompiledGlobalVariables->find(variableName);
+	if (iter != precompiledGlobalVariables->end())
 	{
 		uintptr_t variableAddress = iter->second;
 		unsigned char** variablePtr = reinterpret_cast<unsigned char**>(variableAddress);
 		*variablePtr = value;
+		return true;
+	} 
+	return false;
+}
+
+
+bool jitcat::JitCat::setPrecompiledLinkedFunction(const std::string mangledFunctionName, uintptr_t address)
+{
+	auto iter = precompiledLinkedFunctions->find(mangledFunctionName);
+	if (iter != precompiledLinkedFunctions->end())
+	{
+		uintptr_t* functionPtrPtr = reinterpret_cast<uintptr_t*>(iter->second);
+		*functionPtrPtr = address;
 		return true;
 	}
 	return false;
@@ -188,19 +236,42 @@ void jitcat::JitCat::destroy()
 }
 
 
-std::string_view JitCat::defineGlobalScopeName(const std::string& globalName)
+std::string_view JitCat::defineGlobalVariableName(const std::string& globalName)
 {
-	auto iter = globalNames.find(globalName);
-	if (iter != globalNames.end())
+	auto iter = globalNames->find(globalName);
+	if (iter != globalNames->end())
 	{
 		return *iter;
 	}
 	else
 	{
-		globalNames.insert(globalName);
-		auto iter = globalNames.find(globalName);
+		globalNames->insert(globalName);
+		auto iter = globalNames->find(globalName);
 		return *iter;
 	}
+}
+
+
+bool JitCat::verifyLinkage()
+{
+	bool verifySuccess = true;
+	for (auto iter : *precompiledGlobalVariables)
+	{
+		if (*reinterpret_cast<uintptr_t*>(iter.second) == 0)
+		{
+			std::cout << "JitCat linkage verification error: global scope pointer " << iter.first << " has not been set.\n";
+			verifySuccess = false;
+		}
+	}
+	for (auto iter : *precompiledLinkedFunctions)
+	{
+		if (*reinterpret_cast<uintptr_t*>(iter.second) == 0)
+		{
+			std::cout << "JitCat linkage verification error: linked function " << iter.first << " has not been set.\n";
+			verifySuccess = false;
+		}
+	}
+	return verifySuccess;
 }
 
 
@@ -213,12 +284,12 @@ void JitCat::expressionEnumerationCallback(const char* name, uintptr_t address)
 	}
 	else
 	{
-		precompiledExpressionSymbols.insert(std::make_pair(std::string(name), address));
+		precompiledExpressionSymbols->insert(std::make_pair(std::string(name), address));
 	}
 }
 
 
-void JitCat::globalScopesEnumerationCallback(const char* name, uintptr_t address)
+void JitCat::globalVariablesEnumerationCallback(const char* name, uintptr_t address)
 {
 	if (name == std::string("default")
 		&& address == 0)
@@ -227,13 +298,28 @@ void JitCat::globalScopesEnumerationCallback(const char* name, uintptr_t address
 	}
 	else
 	{
-		precompiledGlobalScopeVariables.insert(std::make_pair(defineGlobalScopeName(name), address));
+		precompiledGlobalVariables->insert(std::make_pair(defineGlobalVariableName(name), address));
+	}
+}
+
+
+void JitCat::linkedFunctionsEnumerationCallback(const char* name, uintptr_t address)
+{
+	if (name == std::string("default")
+		&& address == 0)
+	{
+		std::cout << "No global scope symbols found." << std::endl;
+	}
+	else
+	{
+		precompiledLinkedFunctions->insert(std::make_pair(name, address));
 	}
 }
 
 
 JitCat* JitCat::instance = nullptr;
 
-std::unordered_map<std::string, uintptr_t> JitCat::precompiledExpressionSymbols = std::unordered_map<std::string, uintptr_t>();
-std::unordered_map<std::string_view, uintptr_t> JitCat::precompiledGlobalScopeVariables = std::unordered_map<std::string_view, uintptr_t>();
-std::unordered_set<std::string> JitCat::globalNames = std::unordered_set<std::string>();
+std::unordered_map<std::string, uintptr_t>* JitCat::precompiledExpressionSymbols = nullptr;
+std::unordered_map<std::string_view, uintptr_t>* JitCat::precompiledGlobalVariables = nullptr;
+std::unordered_map<std::string, uintptr_t>* JitCat::precompiledLinkedFunctions = nullptr;
+std::unordered_set<std::string>* JitCat::globalNames = nullptr;

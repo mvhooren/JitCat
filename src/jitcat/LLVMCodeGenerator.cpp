@@ -411,31 +411,15 @@ llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateExpressionSymbolEnumera
 }
 
 
-llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateGlobalScopesEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals)
+llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateGlobalVariablesEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals)
 {
-	const std::string enumerationFunctionName = "_jc_enumerate_global_scopes";
-	llvm::Type* functionReturnType = LLVMTypes::voidType;
+	return helper->generateGlobalVariableEnumerationFunction(globals, "_jc_enumerate_global_variables");
+}
 
-	std::vector<llvm::Type*> callBackParameters = {LLVMTypes::pointerType, LLVMTypes::pointerType};
-	llvm::FunctionType* callBackType = llvm::FunctionType::get(functionReturnType, callBackParameters, false);		
 
-	std::vector<llvm::Type*> parameters = {callBackType->getPointerTo()};
-	llvm::FunctionType* functionType = llvm::FunctionType::get(functionReturnType, parameters, false);		
-	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, enumerationFunctionName.c_str(), currentModule.get());
-
-	llvm::FunctionCallee callee(callBackType, function->getArg(0));
-
-	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
-	builder->SetInsertPoint(&function->getEntryBlock());
-
-	for (auto iter : globals)
-	{
-		llvm::Constant* zeroTerminatedString = helper->createZeroTerminatedStringConstant(iter.first);
-		llvm::Value* globalPtr = helper->convertToPointer(iter.second, "globalsPtr");
-		builder->CreateCall(callee, {zeroTerminatedString, globalPtr});
-	}
-	builder->CreateRetVoid();
-	return verifyAndOptimizeFunction(function);
+llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateLinkedFunctionsEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& functionPointers)
+{
+	return helper->generateGlobalVariableEnumerationFunction(functionPointers, "_jc_enumerate_linked_functions");
 }
 
 
@@ -1031,7 +1015,8 @@ llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* stati
 	}
 	helper->generateFunctionCallArgumentEvalatuation(expressionArguments, staticFunctionCall->getExpectedParameterTypes(), argumentList, argumentTypes, this, context);
 	helper->defineWeakSymbol(context, staticFunctionCall->getFunctionAddress(), staticFunctionCall->getMangledFunctionName(), false);
-	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(), staticFunctionCall->getFunctionName(), returnAllocation);
+	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(), 
+											  staticFunctionCall->getFunctionName(), returnAllocation, false);
 }
 
 
@@ -1654,7 +1639,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 			//This global variable must then be set to the global scope before any precompiled expressions are executed.
 			const std::string_view scopeName = context->catContext->getScopeNameView(scopeId);
 			std::string scopeNameStr(scopeName.data(), scopeName.size());
-			parentObjectAddress = builder->CreateLoad(std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalScope(scopeNameStr, context), Tools::append(scopeNameStr, "_Ptr"));
+			parentObjectAddress = builder->CreateLoad(std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(scopeNameStr, context), Tools::append(scopeNameStr, "_Ptr"));
 		}
 		else
 		{

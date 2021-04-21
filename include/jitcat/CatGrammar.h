@@ -119,6 +119,16 @@ namespace jitcat::Grammar
 
 		static AST::ASTNode* toIdentifier(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* toFunctionCall(const Parser::ASTNodeParser& nodeParser);
+	
+	private:
+		//Tokens types:
+		static int comment;
+		static int ws;
+		static int lit;
+		static int id;
+		static int err;
+		static int one;
+		static int two;
 	};
 
 } //End namespace jitcat::Grammar

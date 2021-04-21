@@ -90,12 +90,15 @@ namespace jitcat::Reflection
 	template<typename ClassT>
 	struct StaticClassUniquePtrMemberInfo: public StaticMemberInfo
 	{
-		StaticClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT>* memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		StaticClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT>* memberPointer, const CatGenericType& type);
 		static ClassT* getPointer(std::unique_ptr<ClassT>* info);
 		inline virtual std::any getMemberReference() override final;
 		inline virtual std::any getAssignableMemberReference() override final;
 		inline virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
+	private:
+		inline std::string getMangledGetPointerName() const;
 
+	private:
 		std::unique_ptr<ClassT>* memberPointer;
 	};
 

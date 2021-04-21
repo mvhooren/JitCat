@@ -31,7 +31,6 @@ set(Source_Cat
 	CatRuntimeContext.cpp
 	${JitCatHeaderPath}/CatRuntimeContext.h
 	${JitCatHeaderPath}/CatScopeID.h
-	${JitCatHeaderPath}/CatTokenIds.h
 	CatTokenizer.cpp
 	${JitCatHeaderPath}/CatTokenizer.h
 )

@@ -35,7 +35,8 @@ LLVMPrecompilationContext::~LLVMPrecompilationContext()
 void LLVMPrecompilationContext::finishPrecompilation()
 {
 	codeGenerator->generateExpressionSymbolEnumerationFunction(compiledExpressionFunctions);
-	codeGenerator->generateGlobalScopesEnumerationFunction(globalScopes);
+	codeGenerator->generateGlobalVariablesEnumerationFunction(globalVariables);
+	codeGenerator->generateLinkedFunctionsEnumerationFunction(globalFunctionPointers);
 	codeGenerator->emitModuleToObjectFile("PrecompiledJitCatExpressions.obj");
 }
 
@@ -72,17 +73,17 @@ void LLVMPrecompilationContext::precompileAssignmentExpression(const CatAssignab
 }
 
 
-llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalScope(const std::string& globalSymbolName, LLVMCompileTimeContext* context)
+llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalVariable(const std::string& globalSymbolName, LLVMCompileTimeContext* context)
 {
-	auto iter = globalScopes.find(globalSymbolName);
-	if (iter != globalScopes.end())
+	auto iter = globalVariables.find(globalSymbolName);
+	if (iter != globalVariables.end())
 	{
 		return iter->second;
 	}
 	else
 	{
 		llvm::GlobalVariable* global = context->helper->createGlobalPointerSymbol(globalSymbolName);
-		globalScopes.insert(std::make_pair(globalSymbolName, global));
+		globalVariables.insert(std::make_pair(globalSymbolName, global));
 		return global;
 	}
 }

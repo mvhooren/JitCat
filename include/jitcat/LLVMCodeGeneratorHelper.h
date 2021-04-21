@@ -48,8 +48,12 @@ namespace jitcat::LLVM
 		//isDirectlyLinked should be true if an extern "C" symbol exists that matches the name provided. 
 		//In that case, the symbol does not need to be provided by JitCat when precompiling.
 		template<typename ReturnT, typename ... Args>
-		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, const std::string& name, bool isDirectlyLinked);
-		llvm::Value* createCall(llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, bool isThisCall, const std::string& mangledFunctionName, const std::string& shortFunctionName);
+		llvm::Value* createIntrinsicCall(LLVMCompileTimeContext* context, ReturnT (*functionPointer)(Args ...), const std::vector<llvm::Value*>& arguments, 
+										 const std::string& name, bool isDirectlyLinked);
+
+		llvm::Value* createCall(LLVMCompileTimeContext* context, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, 
+								bool isThisCall, const std::string& mangledFunctionName, const std::string& shortFunctionName,
+								bool isDirectlyLinked);
 		
 		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
 										   llvm::Type* resultType, LLVMCompileTimeContext* context); 
@@ -79,6 +83,8 @@ namespace jitcat::LLVM
 		llvm::PointerType* toLLVMPtrType(const CatGenericType& type);
 
 		void writeToPointer(llvm::Value* lValue, llvm::Value* rValue);
+
+		llvm::Function* generateGlobalVariableEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals, const std::string& functionName);
 
 		llvm::Value* convertType(llvm::Value* valueToConvert, const CatGenericType& fromType, const CatGenericType& toType, LLVMCompileTimeContext* context);
 		llvm::Value* convertType(llvm::Value* valueToConvert, bool valueIsSigned, llvm::Type* toType, bool toIsSigned, LLVMCompileTimeContext* context);
@@ -123,6 +129,8 @@ namespace jitcat::LLVM
 		llvm::Value* createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType = LLVMTypes::pointerType);
 		llvm::Constant* createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType);
 		llvm::Value* constantToValue(llvm::Constant* constant) const;
+		llvm::Constant* globalVariableToConstant(llvm::GlobalVariable* global) const;
+		llvm::Value* globalVariableToValue(llvm::GlobalVariable* global) const;
 
 		llvm::Value* createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, const CatGenericType& objectType, bool generateDestructorCall);
 		void generateBlockDestructors(LLVMCompileTimeContext* context);
@@ -143,7 +151,8 @@ namespace jitcat::LLVM
 												LLVMCompileTimeContext* context,
 												const std::string& mangledFunctionName, 
 												const std::string& shortFunctionName,
-												llvm::Value* returnedObjectAllocation);
+												llvm::Value* returnedObjectAllocation,
+												bool isDirectlyLinked);
 
 		llvm::Value* generateMemberFunctionCall(jitcat::Reflection::MemberFunctionInfo* memberFunction, const jitcat::AST::CatTypedExpression* base, 
 											    const std::vector<const jitcat::AST::CatTypedExpression*>& arguments, 

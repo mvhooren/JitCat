@@ -48,7 +48,7 @@ namespace jitcat::AST
 		bool isDeterministic() const;
 		bool checkArgumentCount(std::size_t count) const;
 		
-		static std::vector<std::string> functionTable;
+		static const std::vector<std::string>& getFunctionTable();
 
 	private:
 		std::unique_ptr<CatArgumentList> arguments;

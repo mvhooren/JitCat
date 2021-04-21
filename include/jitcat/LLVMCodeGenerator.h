@@ -66,7 +66,9 @@ namespace jitcat::LLVM
 		//Generates a function that takes a callback to a function that will be called with the name and address of every symbol in the set.
 		llvm::Function* generateExpressionSymbolEnumerationFunction(const std::unordered_map<std::string, llvm::Function*>& symbols);
 		//Generates a function that takes a callback to a function that will be called with the name and address of every global in the set.
-		llvm::Function* generateGlobalScopesEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals);
+		llvm::Function* generateGlobalVariablesEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals);
+		//Generates a function that takes a callback to a function that will be called with the name and address of every linked function in the set.
+		llvm::Function* generateLinkedFunctionsEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& functionPointers);
 
 	private:
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);

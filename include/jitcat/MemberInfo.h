@@ -91,13 +91,16 @@ namespace jitcat::Reflection
 	template<typename BaseT, typename ClassT>
 	struct ClassUniquePtrMemberInfo: public TypeMemberInfo
 	{
-		ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT> BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT> BaseT::* memberPointer, const CatGenericType& type);
 		static ClassT* getPointer(BaseT* parentObject, ClassUniquePtrMemberInfo<BaseT, ClassT>* info);
 		inline virtual std::any getMemberReference(unsigned char* base) override final;
 		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 
 		inline virtual unsigned long long getOrdinal() const override final;
+	private:
+		inline std::string getMangledGetPointerName() const;
+		inline std::string getGlobalThisVariableName() const;
 
 	private:
 		std::unique_ptr<ClassT> BaseT::* memberPointer;

@@ -798,7 +798,7 @@ bool CatBuiltInFunctionCall::isBuiltInFunction(const char* functionName, int num
 
 const std::vector<std::string>& CatBuiltInFunctionCall::getAllBuiltInFunctions()
 {
-	return functionTable;
+	return getFunctionTable();
 }
 
 
@@ -860,8 +860,56 @@ bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 }
 
 
+const std::vector<std::string>& jitcat::AST::CatBuiltInFunctionCall::getFunctionTable()
+{
+	static std::vector<std::string> functionTable = 
+	{
+		 "toVoid",				//CatBuiltInFunctionType::ToVoid
+		 "toInt",				//CatBuiltInFunctionType::ToInt
+		 "toDouble",			//CatBuiltInFunctionType::ToDouble
+		 "toFloat",				//CatBuiltInFunctionType::ToFloat
+		 "toBool",				//CatBuiltInFunctionType::ToBool
+		 "toString",			//CatBuiltInFunctionType::ToString
+		 "toPrettyString",		//CatBuiltInFunctionType::ToPrettyString
+		 "toFixedLengthString",	//CatBuiltInFunctionType::ToFixedLengthString
+		 "sin",					//CatBuiltInFunctionType::Sin
+		 "cos",					//CatBuiltInFunctionType::Cos
+		 "tan",					//CatBuiltInFunctionType::Tan
+		 "asin",				//CatBuiltInFunctionType::Asin
+		 "acos",				//CatBuiltInFunctionType::Acos
+		 "atan",				//CatBuiltInFunctionType::Atan
+		 "sinh",				//CatBuiltInFunctionType::Sinh
+		 "cosh",				//CatBuiltInFunctionType::Cosh
+		 "tanh",				//CatBuiltInFunctionType::Tanh
+		 "asinh",				//CatBuiltInFunctionType::Asinh
+		 "acosh",				//CatBuiltInFunctionType::Acosh
+		 "atanh",				//CatBuiltInFunctionType::Atanh
+		 "atan2",				//CatBuiltInFunctionType::Atan2
+		 "hypot",				//CatBuiltInFunctionType::Hypot
+		 "rand",				//CatBuiltInFunctionType::Random
+		 "rand",				//CatBuiltInFunctionType::RandomRange
+		 "round",				//CatBuiltInFunctionType::Round
+		 "stringRound",			//CatBuiltInFunctionType::StringRound
+		 "abs",					//CatBuiltInFunctionType::Abs
+		 "cap",					//CatBuiltInFunctionType::Cap
+		 "min",					//CatBuiltInFunctionType::Min 
+		 "max",					//CatBuiltInFunctionType::Max
+		 "log10",				//CatBuiltInFunctionType::Log10
+		 "ln",					//CatBuiltInFunctionType::Ln
+		 "exp",					//CatBuiltInFunctionType::Exp
+		 "sqrt",				//CatBuiltInFunctionType::Sqrt
+		 "pow",					//CatBuiltInFunctionType::Pow
+		 "ceil",				//CatBuiltInFunctionType::Ceil
+		 "floor",				//CatBuiltInFunctionType::Floor
+		 "select"				//CatBuiltInFunctionType::Select
+	};
+	return functionTable;
+}
+
+
 CatBuiltInFunctionType CatBuiltInFunctionCall::toFunction(const char* functionName, int numArguments)
 {
+	const std::vector<std::string>& functionTable = getFunctionTable();
 	for (unsigned int i = 0; i < (unsigned int)CatBuiltInFunctionType::Count; i++)
 	{
 		if (Tools::equalsWhileIgnoringCase(functionTable[i], functionName))
@@ -879,46 +927,3 @@ CatBuiltInFunctionType CatBuiltInFunctionCall::toFunction(const char* functionNa
 	}
 	return CatBuiltInFunctionType::Invalid;
 }
-
-
-std::vector<std::string> CatBuiltInFunctionCall::functionTable = 	
-{
-	 "toVoid",				//CatBuiltInFunctionType::ToVoid
-	 "toInt",				//CatBuiltInFunctionType::ToInt
-	 "toDouble",			//CatBuiltInFunctionType::ToDouble
-	 "toFloat",				//CatBuiltInFunctionType::ToFloat
-	 "toBool",				//CatBuiltInFunctionType::ToBool
-	 "toString",			//CatBuiltInFunctionType::ToString
-	 "toPrettyString",		//CatBuiltInFunctionType::ToPrettyString
-	 "toFixedLengthString",	//CatBuiltInFunctionType::ToFixedLengthString
-	 "sin",					//CatBuiltInFunctionType::Sin
-	 "cos",					//CatBuiltInFunctionType::Cos
-	 "tan",					//CatBuiltInFunctionType::Tan
-	 "asin",				//CatBuiltInFunctionType::Asin
-	 "acos",				//CatBuiltInFunctionType::Acos
-	 "atan",				//CatBuiltInFunctionType::Atan
-	 "sinh",				//CatBuiltInFunctionType::Sinh
-	 "cosh",				//CatBuiltInFunctionType::Cosh
-	 "tanh",				//CatBuiltInFunctionType::Tanh
-	 "asinh",				//CatBuiltInFunctionType::Asinh
-	 "acosh",				//CatBuiltInFunctionType::Acosh
-	 "atanh",				//CatBuiltInFunctionType::Atanh
-	 "atan2",				//CatBuiltInFunctionType::Atan2
-	 "hypot",				//CatBuiltInFunctionType::Hypot
-	 "rand",				//CatBuiltInFunctionType::Random
-	 "rand",				//CatBuiltInFunctionType::RandomRange
-	 "round",				//CatBuiltInFunctionType::Round
-	 "stringRound",			//CatBuiltInFunctionType::StringRound
-	 "abs",					//CatBuiltInFunctionType::Abs
-	 "cap",					//CatBuiltInFunctionType::Cap
-	 "min",					//CatBuiltInFunctionType::Min 
-	 "max",					//CatBuiltInFunctionType::Max
-	 "log10",				//CatBuiltInFunctionType::Log10
-	 "ln",					//CatBuiltInFunctionType::Ln
-	 "exp",					//CatBuiltInFunctionType::Exp
-	 "sqrt",				//CatBuiltInFunctionType::Sqrt
-	 "pow",					//CatBuiltInFunctionType::Pow
-	 "ceil",				//CatBuiltInFunctionType::Ceil
-	 "floor",				//CatBuiltInFunctionType::Floor
-	 "select"				//CatBuiltInFunctionType::Select
-};

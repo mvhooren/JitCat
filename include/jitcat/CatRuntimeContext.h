@@ -235,7 +235,7 @@ namespace jitcat
 	{
 		assert(scopeObject != nullptr);
 		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ReflectableType>();
-		return createStaticScope(reinterpret_cast<unsigned char*>(scopeObject), typeInfo, JitCat::defineGlobalScopeName(staticScopeUniqueName));
+		return createStaticScope(reinterpret_cast<unsigned char*>(scopeObject), typeInfo, JitCat::defineGlobalVariableName(staticScopeUniqueName));
 	}
 
 } //End namespace jitcat

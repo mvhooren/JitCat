@@ -7,10 +7,14 @@
 
 #pragma once
 
+#include "jitcat/CatRuntimeContext.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
+#include "jitcat/LLVMPrecompilationContext.h"
 #include "jitcat/LLVMTypes.h"
+#include "jitcat/JitCat.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
@@ -165,6 +169,19 @@ inline unsigned long long ClassObjectMemberInfo<BaseT, ClassT>::getOrdinal() con
 
 
 template<typename BaseT, typename ClassT>
+inline ClassUniquePtrMemberInfo<BaseT, ClassT>::ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT> BaseT::* memberPointer, 
+		const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer)
+{
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		uintptr_t staticPointerGetAddress = reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer);
+		JitCat::get()->setPrecompiledLinkedFunction(getMangledGetPointerName(), staticPointerGetAddress);
+		JitCat::get()->setPrecompiledGlobalVariable(getGlobalThisVariableName(), reinterpret_cast<unsigned char*>(this));
+	}
+}
+
+
+template<typename BaseT, typename ClassT>
 inline ClassT* ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer(BaseT* parentObject, ClassUniquePtrMemberInfo<BaseT, ClassT>* info)
  {
 	std::unique_ptr<ClassT> BaseT::* memberPointer = info->memberPointer;
@@ -197,22 +214,28 @@ template<typename BaseT, typename ClassT>
 inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	llvm::Constant* thisPointerAsInt = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr");
+	llvm::Value* thisPointerAsInt;
+	if (!context->isPrecompilationContext)
+	{
+		thisPointerAsInt = context->helper->constantToValue(context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr"));
+	}
+	else
+	{
+		auto precompContext = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext());
+		llvm::Constant* globalAddress = context->helper->globalVariableToConstant(precompContext->defineGlobalVariable(getGlobalThisVariableName(), context));
+		thisPointerAsInt = context->helper->loadPointerAtAddress(globalAddress, "ClassUniquePtrMemberInfoIntPtr");
+	}
 	if (!context->helper->isPointer(parentObjectPointer))
 	{
 		parentObjectPointer = context->helper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr");
 	}
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		std::ostringstream mangledNameStream;
-		std::string baseTypeName = TypeNameGetter<BaseT>::get();
-		std::string classTypeName = TypeNameGetter<ClassT>::get();
-		mangledNameStream << classTypeName << "* ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">::getPointer(" << baseTypeName << "*, ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">*)";
-		std::string mangledName = mangledNameStream.str();
+		std::string mangledName = getMangledGetPointerName();
 		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer), mangledName, false);
 		
 		llvm::Value* thisPointer = context->helper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
-		return context->helper->createCall(LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, {parentObjectPointer, thisPointer}, false, mangledName, "getUniquePtr");
+		return context->helper->createCall(context, LLVM::LLVMTypes::functionRetPtrArgPtr_Ptr, {parentObjectPointer, thisPointer}, false, mangledName, "getUniquePtr", false);
 	};
 	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
 #else 
@@ -225,6 +248,28 @@ template<typename BaseT, typename ClassT>
 inline unsigned long long ClassUniquePtrMemberInfo<BaseT, ClassT>::getOrdinal() const
 {
 	return getOffset(memberPointer);
+}
+
+
+template<typename BaseT, typename ClassT>
+inline std::string ClassUniquePtrMemberInfo<BaseT, ClassT>::getMangledGetPointerName() const
+{
+	std::ostringstream mangledNameStream;
+	std::string baseTypeName = TypeNameGetter<BaseT>::get();
+	std::string classTypeName = TypeNameGetter<ClassT>::get();
+	mangledNameStream << classTypeName << "* ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">::getPointer(" << baseTypeName << "*, ClassUniquePtrMemberInfo<" << baseTypeName << ", " << classTypeName << ">*)";
+	return mangledNameStream.str();
+}
+
+
+template<typename BaseT, typename ClassT>
+inline std::string ClassUniquePtrMemberInfo<BaseT, ClassT>::getGlobalThisVariableName() const
+{
+	std::ostringstream variableNameStream;
+	std::string baseTypeName = TypeNameGetter<BaseT>::get();
+	std::string classTypeName = TypeNameGetter<ClassT>::get();
+	variableNameStream << "ClassUniquePtrMemberInfo<" << baseTypeName << "," << classTypeName << ">*";
+	return variableNameStream.str();
 }
 
 

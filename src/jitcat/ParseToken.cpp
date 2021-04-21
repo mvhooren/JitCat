@@ -35,8 +35,6 @@ const Lexeme& ParseToken::getLexeme() const
 
 int ParseToken::getNextTokenID()
 {
+	static int nextTokenID = 0;
 	return nextTokenID++;
 }
-
-
-int ParseToken::nextTokenID = 0;

@@ -8,6 +8,7 @@
 
 #include "jitcat/Configuration.h"
 #include "jitcat/FunctionNameMangler.h"
+#include "jitcat/JitCat.h"
 #include "jitcat/TypeConversionCastHelper.h"
 #include "jitcat/TypeTraits.h"
 #include "jitcat/MemberFunctionInfo.h"
@@ -33,6 +34,11 @@ namespace jitcat::Reflection
 		int dummy[] = { 0, ((void)addParameterTypeInfo<TFunctionArguments>(), 0) ... };
 		//To silence unused variable warnings.
 		(void)dummy;
+		//Link the function to the pre-compiled expressions
+		if constexpr (Configuration::usePreCompiledExpressions)
+		{
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
+		}
 	}
 
 
@@ -82,6 +88,10 @@ namespace jitcat::Reflection
 	inline std::string MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
+		if constexpr (sizeof(function) != Configuration::basicMemberFunctionPointerSize)
+		{
+			baseName = Tools::append(baseName, "_static");
+		}
 		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
 	}
 
@@ -120,6 +130,11 @@ namespace jitcat::Reflection
 		int dummy[] = { 0, ((void)addParameterTypeInfo<TFunctionArguments>(), 0) ... };
 		//To silence unused variable warnings.
 		(void)dummy;
+		//Link the function to the pre-compiled expressions
+		if constexpr (Configuration::usePreCompiledExpressions)
+		{
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
+		}
 	}
 
 
@@ -169,6 +184,10 @@ namespace jitcat::Reflection
 	inline std::string ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
+		if constexpr (sizeof(function) != Configuration::basicMemberFunctionPointerSize)
+		{
+			baseName = Tools::append(baseName, "_static");
+		}
 		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
 	}
 
@@ -206,6 +225,11 @@ namespace jitcat::Reflection
 		int dummy[] = { 0, ((void)addParameterTypeInfo<TFunctionArguments>(), 0) ... };
 		//To silence unused variable warnings.
 		(void)dummy;
+		//Link the function to the pre-compiled expressions
+		if constexpr (Configuration::usePreCompiledExpressions)
+		{
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
+		}
 	}
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>

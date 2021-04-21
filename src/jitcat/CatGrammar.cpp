@@ -9,19 +9,22 @@
 #include "jitcat/ASTNodeParser.h"
 #include "jitcat/CatASTNodes.h"
 #include "jitcat/CatScopeRoot.h"
-#include "jitcat/CatTokenIds.h"
+#include "jitcat/CommentToken.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/ConstantToken.h"
+#include "jitcat/ErrorToken.h"
+#include "jitcat/IdentifierToken.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/OneCharToken.h"
 #include "jitcat/Tools.h"
+#include "jitcat/TwoCharToken.h"
+#include "jitcat/WhitespaceToken.h"
 
 #include <stdlib.h>
 #include <type_traits>
 
 using namespace jitcat;
 using namespace jitcat::AST;
-using namespace jitcat::Cat;
 using namespace jitcat::Grammar;
 using namespace jitcat::Parser;
 using namespace jitcat::Reflection;
@@ -31,6 +34,15 @@ using namespace jitcat::Tokenizer;
 CatGrammar::CatGrammar(TokenizerBase* tokenizer, CatGrammarType grammarType):
 	GrammarBase(tokenizer)
 {
+	//Initialize the token id's
+	comment = Tokenizer::CommentToken::getID();
+	ws = Tokenizer::WhitespaceToken::getID();
+	lit = Tokenizer::ConstantToken::getID();
+	id = Tokenizer::IdentifierToken::getID();
+	err = Tokenizer::ErrorToken::getID();
+	one = Tokenizer::OneCharToken::getID();
+	two = Tokenizer::TwoCharToken::getID();
+
 	Prod rootProduction;
 	switch (grammarType)
 	{
@@ -581,7 +593,7 @@ ASTNode* CatGrammar::infixOperator(const ASTNodeParser& nodeParser)
 	}
 
 	CatInfixOperatorType operatorType = CatInfixOperatorType::Plus;
-	if (infix->getTokenID() == Cat::one)
+	if (infix->getTokenID() == one)
 	{
 		switch ((OneChar)infix->getTokenSubType())
 		{
@@ -595,7 +607,7 @@ ASTNode* CatGrammar::infixOperator(const ASTNodeParser& nodeParser)
 			case OneChar::Smaller:		operatorType = CatInfixOperatorType::Smaller;		break;
 		}
 	}
-	else if (infix->getTokenID() == Cat::two)
+	else if (infix->getTokenID() == two)
 	{
 		switch ((TwoChar)infix->getTokenSubType())
 		{
@@ -617,7 +629,7 @@ ASTNode* CatGrammar::prefixOperator(const ASTNodeParser& nodeParser)
 {
 	const ParseToken* prefix = nodeParser.getTerminalByIndex(0);
 	CatPrefixOperator::Operator op = CatPrefixOperator::Operator::Not;
-	if (prefix->getTokenID() == Cat::one)
+	if (prefix->getTokenID() == one)
 	{
 		switch ((OneChar)prefix->getTokenSubType())
 		{
@@ -657,7 +669,7 @@ AST::ASTNode* CatGrammar::toOperatorNewArray(const Parser::ASTNodeParser& nodePa
 ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 {
 	const ParseToken* literalToken = nodeParser.getTerminalByIndex(0);
-	if (literalToken->getTokenID() == Cat::lit)
+	if (literalToken->getTokenID() == lit)
 	{
 		switch ((ConstantType)literalToken->getTokenSubType())
 		{
@@ -697,7 +709,7 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 			}			
 		}
 	}
-	else if (literalToken->getTokenID() == Cat::id && (Identifier)literalToken->getTokenSubType() == Identifier::Null)
+	else if (literalToken->getTokenID() == id && (Identifier)literalToken->getTokenSubType() == Identifier::Null)
 	{
 		return new CatLiteral(nullptr, CatGenericType::nullptrType, nodeParser.getStackLexeme());
 	}
@@ -779,3 +791,12 @@ AST::ASTNode* jitcat::Grammar::CatGrammar::toFunctionCall(const Parser::ASTNodeP
 	delete functionOrConstructor;
 	return astNode;
 }
+
+
+int CatGrammar::comment = 0;
+int CatGrammar::ws = 0;
+int CatGrammar::lit = 0;
+int CatGrammar::id = 0;
+int CatGrammar::err = 0;
+int CatGrammar::one = 0;
+int CatGrammar::two = 0;

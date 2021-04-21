@@ -36,10 +36,6 @@ namespace jitcat::Tokenizer
 
 	protected:	
 		static int getNextTokenID();
-
-	private:
-		static int nextTokenID;
-
 	protected:
 		Lexeme lexeme;
 	};
