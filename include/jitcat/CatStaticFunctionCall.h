@@ -31,7 +31,7 @@ namespace jitcat::AST
 		const CatArgumentList* getArguments() const;
 		uintptr_t getFunctionAddress() const;
 		const std::string& getFunctionName() const;
-		const std::string& getMangledFunctionName() const;
+		std::string getMangledFunctionName() const;
 
 		// Inherited via CatTypedExpression
 		virtual CatASTNode* copy() const override final;
@@ -53,7 +53,6 @@ namespace jitcat::AST
 		std::unique_ptr<CatStaticScope> parentScope;
 		std::string name;
 		std::string lowerCaseName;
-		std::string mangledName;
 
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatArgumentList> arguments;

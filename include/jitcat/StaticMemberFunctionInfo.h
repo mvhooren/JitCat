@@ -53,6 +53,7 @@ namespace jitcat::Reflection
 		virtual const CatGenericType& getParameterType(int index) const override;
 
 		const std::string& getNormalFunctionName() const;
+		std::string getMangledFunctionName() const;
 
 	private:
 		TypeInfo* parentType;

@@ -49,27 +49,34 @@ CatStaticFunctionCall::CatStaticFunctionCall(const CatStaticFunctionCall& other)
 }
 
 
-const CatArgumentList* jitcat::AST::CatStaticFunctionCall::getArguments() const
+const CatArgumentList* CatStaticFunctionCall::getArguments() const
 {
 	return arguments.get();
 }
 
 
-uintptr_t jitcat::AST::CatStaticFunctionCall::getFunctionAddress() const
+uintptr_t CatStaticFunctionCall::getFunctionAddress() const
 {
 	return staticFunctionInfo->getFunctionAddress();
 }
 
 
-const std::string& jitcat::AST::CatStaticFunctionCall::getFunctionName() const
+const std::string& CatStaticFunctionCall::getFunctionName() const
 {
 	return name;
 }
 
 
-const std::string& jitcat::AST::CatStaticFunctionCall::getMangledFunctionName() const
+std::string CatStaticFunctionCall::getMangledFunctionName() const
 {
-	return mangledName;
+	if (staticFunctionInfo != nullptr)
+	{
+		return staticFunctionInfo->getMangledFunctionName();
+	}
+	else
+	{
+		return "";
+	}
 }
 
 
@@ -108,7 +115,6 @@ std::any CatStaticFunctionCall::execute(CatRuntimeContext* runtimeContext)
 
 bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionErrorManager* errorManager, void* errorContext)
 {
-	mangledName = "";
 	if (!parentScope->typeCheck(compiletimeContext, errorManager, errorContext)
 		|| !arguments->typeCheck(compiletimeContext, errorManager, errorContext))
 	{
@@ -160,12 +166,6 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			return false;
 		}
 		returnType = staticFunctionInfo->getReturnType();
-		std::string qualifiedParent;
-		if (TypeInfo* functionParentType = staticFunctionInfo->getParentType(); functionParentType != nullptr)
-		{
-			qualifiedParent = functionParentType->getQualifiedTypeName();
-		}
-		mangledName = FunctionNameMangler::getMangledFunctionName(returnType, name, staticFunctionInfo->getArgumentTypes(), false, qualifiedParent);
 		return true;
 	}
 	else

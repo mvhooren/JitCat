@@ -69,12 +69,13 @@ namespace jitcat
 		static void expressionEnumerationCallback(const char* name, uintptr_t address);
 		static void globalVariablesEnumerationCallback(const char* name, uintptr_t address);
 		static void linkedFunctionsEnumerationCallback(const char* name, uintptr_t address);
+
 	private:
 		static JitCat* instance;
-		static std::unordered_map<std::string, uintptr_t>* precompiledExpressionSymbols;
-		static std::unordered_map<std::string_view, uintptr_t>* precompiledGlobalVariables;
-		static std::unordered_map<std::string, uintptr_t>* precompiledLinkedFunctions;
-		static std::unordered_set<std::string>* globalNames;
+		static std::unordered_map<std::string, uintptr_t>& getPrecompiledExpressionSymbols();
+		static std::unordered_map<std::string_view, uintptr_t>& getPrecompiledGlobalVariables();
+		static std::unordered_map<std::string, uintptr_t>& getPrecompiledLinkedFunctions();
+		static std::unordered_set<std::string>& getGlobalNames();
 
 		std::unique_ptr<Tokenizer::CatTokenizer> tokenizer;
 		

@@ -96,11 +96,6 @@ JitCat::JitCat():
 	statementGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Statement)),
 	fullGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Full))
 {
-	globalNames = new std::unordered_set<std::string>();
-	precompiledExpressionSymbols = new std::unordered_map<std::string, uintptr_t>();
-	precompiledGlobalVariables = new std::unordered_map<std::string_view, uintptr_t>();
-	precompiledLinkedFunctions = new std::unordered_map<std::string, uintptr_t>();
-
 	expressionParser = expressionGrammar->createSLRParser();
 	statementParser = statementGrammar->createSLRParser();
 	fullParser = fullGrammar->createSLRParser();
@@ -189,8 +184,9 @@ std::shared_ptr<PrecompilationContext> JitCat::createPrecompilationContext() con
 
 uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
 {
-	auto iter = precompiledExpressionSymbols->find(name);
-	if (iter != precompiledExpressionSymbols->end())
+	auto& precompiledExpressionSymbols = getPrecompiledExpressionSymbols();
+	auto iter = precompiledExpressionSymbols.find(name);
+	if (iter != precompiledExpressionSymbols.end())
 	{
 		return iter->second;
 	}
@@ -200,8 +196,9 @@ uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
 
 bool JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, unsigned char* value)
 {
-	auto iter = precompiledGlobalVariables->find(variableName);
-	if (iter != precompiledGlobalVariables->end())
+	auto& precompiledGlobalVariables = getPrecompiledGlobalVariables();
+	auto iter = precompiledGlobalVariables.find(variableName);
+	if (iter != precompiledGlobalVariables.end())
 	{
 		uintptr_t variableAddress = iter->second;
 		unsigned char** variablePtr = reinterpret_cast<unsigned char**>(variableAddress);
@@ -214,8 +211,9 @@ bool JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, u
 
 bool jitcat::JitCat::setPrecompiledLinkedFunction(const std::string mangledFunctionName, uintptr_t address)
 {
-	auto iter = precompiledLinkedFunctions->find(mangledFunctionName);
-	if (iter != precompiledLinkedFunctions->end())
+	auto& precompiledLinkedFunctions = getPrecompiledLinkedFunctions();
+	auto iter = precompiledLinkedFunctions.find(mangledFunctionName);
+	if (iter != precompiledLinkedFunctions.end())
 	{
 		uintptr_t* functionPtrPtr = reinterpret_cast<uintptr_t*>(iter->second);
 		*functionPtrPtr = address;
@@ -238,15 +236,16 @@ void jitcat::JitCat::destroy()
 
 std::string_view JitCat::defineGlobalVariableName(const std::string& globalName)
 {
-	auto iter = globalNames->find(globalName);
-	if (iter != globalNames->end())
+	auto& globalNames = getGlobalNames();
+	auto iter = globalNames.find(globalName);
+	if (iter != globalNames.end())
 	{
 		return *iter;
 	}
 	else
 	{
-		globalNames->insert(globalName);
-		auto iter = globalNames->find(globalName);
+		globalNames.insert(globalName);
+		auto iter = globalNames.find(globalName);
 		return *iter;
 	}
 }
@@ -255,7 +254,7 @@ std::string_view JitCat::defineGlobalVariableName(const std::string& globalName)
 bool JitCat::verifyLinkage()
 {
 	bool verifySuccess = true;
-	for (auto iter : *precompiledGlobalVariables)
+	for (auto iter : getPrecompiledGlobalVariables())
 	{
 		if (*reinterpret_cast<uintptr_t*>(iter.second) == 0)
 		{
@@ -263,7 +262,7 @@ bool JitCat::verifyLinkage()
 			verifySuccess = false;
 		}
 	}
-	for (auto iter : *precompiledLinkedFunctions)
+	for (auto iter : getPrecompiledLinkedFunctions())
 	{
 		if (*reinterpret_cast<uintptr_t*>(iter.second) == 0)
 		{
@@ -284,7 +283,7 @@ void JitCat::expressionEnumerationCallback(const char* name, uintptr_t address)
 	}
 	else
 	{
-		precompiledExpressionSymbols->insert(std::make_pair(std::string(name), address));
+		getPrecompiledExpressionSymbols().insert(std::make_pair(std::string(name), address));
 	}
 }
 
@@ -298,7 +297,7 @@ void JitCat::globalVariablesEnumerationCallback(const char* name, uintptr_t addr
 	}
 	else
 	{
-		precompiledGlobalVariables->insert(std::make_pair(defineGlobalVariableName(name), address));
+		getPrecompiledGlobalVariables().insert(std::make_pair(JitCat::defineGlobalVariableName(name), address));
 	}
 }
 
@@ -312,14 +311,37 @@ void JitCat::linkedFunctionsEnumerationCallback(const char* name, uintptr_t addr
 	}
 	else
 	{
-		precompiledLinkedFunctions->insert(std::make_pair(name, address));
+		getPrecompiledLinkedFunctions().insert(std::make_pair(name, address));
 	}
 }
 
 
-JitCat* JitCat::instance = nullptr;
+std::unordered_map<std::string, uintptr_t>& JitCat::getPrecompiledExpressionSymbols()
+{
+	static std::unordered_map<std::string, uintptr_t> precompiledExpressionSymbols;
+	return precompiledExpressionSymbols;
+}
 
-std::unordered_map<std::string, uintptr_t>* JitCat::precompiledExpressionSymbols = nullptr;
-std::unordered_map<std::string_view, uintptr_t>* JitCat::precompiledGlobalVariables = nullptr;
-std::unordered_map<std::string, uintptr_t>* JitCat::precompiledLinkedFunctions = nullptr;
-std::unordered_set<std::string>* JitCat::globalNames = nullptr;
+
+std::unordered_map<std::string_view, uintptr_t>& JitCat::getPrecompiledGlobalVariables()
+{
+	static std::unordered_map<std::string_view, uintptr_t> precompiledGlobalVariables;
+	return precompiledGlobalVariables;
+}
+
+
+std::unordered_map<std::string, uintptr_t>& JitCat::getPrecompiledLinkedFunctions()
+{
+	static std::unordered_map<std::string, uintptr_t> precompiledLinkedFunctions;
+	return precompiledLinkedFunctions;
+}
+
+
+std::unordered_set<std::string>& JitCat::getGlobalNames()
+{
+	static std::unordered_set<std::string> globalNames;
+	return globalNames;
+}
+
+
+JitCat* JitCat::instance = nullptr;

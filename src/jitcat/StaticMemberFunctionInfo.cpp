@@ -7,17 +7,19 @@
 
 
 #include "jitcat/StaticMemberFunctionInfo.h"
+#include "jitcat/Tools.h"
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
 
 StaticFunctionInfo::StaticFunctionInfo(const std::string& memberFunctionName, TypeInfo* parentType, const CatGenericType& returnType): 
-			parentType(parentType),
-			memberFunctionName(memberFunctionName), 
-			lowerCaseFunctionName(Tools::toLowerCase(memberFunctionName)),
-			returnType(returnType),
-			visibility(MemberVisibility::Public)
-{}
+	parentType(parentType),
+	memberFunctionName(memberFunctionName), 
+	lowerCaseFunctionName(Tools::toLowerCase(memberFunctionName)),
+	returnType(returnType),
+	visibility(MemberVisibility::Public)
+{
+}
 
 
 MemberVisibility StaticFunctionInfo::getVisibility() const
@@ -26,7 +28,7 @@ MemberVisibility StaticFunctionInfo::getVisibility() const
 }
 
 
-const CatGenericType& jitcat::Reflection::StaticFunctionInfo::getArgumentType(std::size_t argumentIndex) const
+const CatGenericType& StaticFunctionInfo::getArgumentType(std::size_t argumentIndex) const
 {
 	if (argumentIndex < argumentTypes.size())
 	{
@@ -39,7 +41,7 @@ const CatGenericType& jitcat::Reflection::StaticFunctionInfo::getArgumentType(st
 }
 
 
-TypeInfo* jitcat::Reflection::StaticFunctionInfo::getParentType() const
+TypeInfo* Reflection::StaticFunctionInfo::getParentType() const
 {
 	return parentType;
 }
@@ -62,7 +64,18 @@ const CatGenericType& StaticFunctionInfo::getParameterType(int index) const
 	return argumentTypes[index];
 }
 
-const std::string& jitcat::Reflection::StaticFunctionInfo::getNormalFunctionName() const
+const std::string& StaticFunctionInfo::getNormalFunctionName() const
 {
 	return memberFunctionName;
+}
+
+
+std::string StaticFunctionInfo::getMangledFunctionName() const
+{
+	std::string baseName;
+	if (parentType != nullptr)
+	{
+		baseName = parentType->getQualifiedTypeName();
+	}
+	return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, false, baseName);
 }
