@@ -30,7 +30,8 @@ namespace jitcat::Reflection
 	struct StaticMemberInfo
 	{
 		StaticMemberInfo(): visibility(MemberVisibility::Private) {}
-		StaticMemberInfo(const std::string& memberName, const CatGenericType& type): catType(type), visibility(MemberVisibility::Public), memberName(memberName)  {}
+		StaticMemberInfo(const std::string& memberName, const CatGenericType& type, const char* parentTypeName);
+
 		virtual ~StaticMemberInfo() {};
 		virtual std::any getMemberReference();
 		virtual std::any getAssignableMemberReference();
@@ -40,7 +41,7 @@ namespace jitcat::Reflection
 
 		CatGenericType catType;
 		MemberVisibility visibility;
-
+		const char* parentTypeName;
 		std::string memberName;
 	};
 
@@ -48,13 +49,16 @@ namespace jitcat::Reflection
 	//Implements a StaticMemberInfo for class/struct pointer types that are reflectable.
 	struct StaticClassPointerMemberInfo: public StaticMemberInfo
 	{
-		StaticClassPointerMemberInfo(const std::string& memberName, unsigned char** memberPointer, const CatGenericType& type);
+		StaticClassPointerMemberInfo(const std::string& memberName, unsigned char** memberPointer, const CatGenericType& type, const char* parentTypeName);
 
 		virtual std::any getMemberReference() override final;
 		virtual std::any getAssignableMemberReference() override final;
 		virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
 		virtual llvm::Value* generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
+		std::string getStaticMemberPointerVariableName() const;
+
+	private:
 		unsigned char** memberPointer;
 	};
 
@@ -62,26 +66,32 @@ namespace jitcat::Reflection
 	//Implements a StaticMemberInfo for class/struct pointer types that are reflectable.
 	struct StaticClassHandleMemberInfo: public StaticMemberInfo
 	{
-		StaticClassHandleMemberInfo(const std::string& memberName, ReflectableHandle* memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		StaticClassHandleMemberInfo(const std::string& memberName, ReflectableHandle* memberPointer, const CatGenericType& type, const char* parentTypeName);
 
 		virtual std::any getMemberReference() override final;
 		virtual std::any getAssignableMemberReference() override final;
 		virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
 		virtual llvm::Value* generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
+		std::string getStaticMemberPointerVariableName() const;
+
+	private:
 		ReflectableHandle* memberPointer;
 	};
 
 	//Implements a StaticMemberInfo for class/struct types that are reflectable.
 	struct StaticClassObjectMemberInfo: public StaticMemberInfo
 	{
-		StaticClassObjectMemberInfo(const std::string& memberName, unsigned char* memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		StaticClassObjectMemberInfo(const std::string& memberName, unsigned char* memberPointer, const CatGenericType& type, const char* parentTypeName);
 
 		virtual std::any getMemberReference() override final;
 		virtual std::any getAssignableMemberReference() override final;
 
 		virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
 
+		std::string getStaticMemberPointerVariableName() const;
+
+	private:
 		unsigned char* memberPointer;
 	};
 
@@ -90,11 +100,15 @@ namespace jitcat::Reflection
 	template<typename ClassT>
 	struct StaticClassUniquePtrMemberInfo: public StaticMemberInfo
 	{
-		StaticClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT>* memberPointer, const CatGenericType& type);
+		StaticClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT>* memberPointer, const CatGenericType& type, const char* parentTypeName);
+
 		static ClassT* getPointer(std::unique_ptr<ClassT>* info);
 		inline virtual std::any getMemberReference() override final;
 		inline virtual std::any getAssignableMemberReference() override final;
 		inline virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
+
+		std::string getStaticMemberPointerVariableName() const;
+
 	private:
 		inline std::string getMangledGetPointerName() const;
 
@@ -107,7 +121,7 @@ namespace jitcat::Reflection
 	template<typename BasicT>
 	struct StaticBasicTypeMemberInfo: public StaticMemberInfo
 	{
-		StaticBasicTypeMemberInfo(const std::string& memberName, BasicT* memberPointer, const CatGenericType& type): StaticMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		StaticBasicTypeMemberInfo(const std::string& memberName, BasicT* memberPointer, const CatGenericType& type, const char* parentTypeName);
 	
 		inline virtual std::any getMemberReference() override final;
 		inline virtual std::any getAssignableMemberReference() override final;
@@ -115,6 +129,9 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
+		std::string getStaticMemberPointerVariableName() const;
+
+	private:
 		BasicT* memberPointer;
 	};
 }

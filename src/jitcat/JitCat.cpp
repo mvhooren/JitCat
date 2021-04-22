@@ -63,6 +63,13 @@ using namespace jitcat::Tokenizer;
 		enumeratorCallback("default", 0);
 	}
 	
+	extern "C" void _jc_initialize_string_pool(void(*stringInitializerCallback)(const char*, uintptr_t));
+
+	extern "C" void _jc_initialize_string_pool_default(void(*stringInitializerCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_initialize_string_pool function implementation was found.
+		stringInitializerCallback("default", 0);
+	}
 
 	//Make sure these functions are weakly linked to their default alternatives
 	//Linking in a generated object file will override the weakly linked symbol.
@@ -70,6 +77,7 @@ using namespace jitcat::Tokenizer;
 	#pragma comment(linker, "/alternatename:_jc_enumerate_expressions=_jc_enumerate_expressions_default")
 	#pragma comment(linker, "/alternatename:_jc_enumerate_global_variables=_jc_enumerate_global_variables_default")
 	#pragma comment(linker, "/alternatename:_jc_enumerate_linked_functions=_jc_enumerate_linked_functions_default")
+	#pragma comment(linker, "/alternatename:_jc_initialize_string_pool=_jc_initialize_string_pool_default")
 #else
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
@@ -102,6 +110,7 @@ JitCat::JitCat():
 	std::srand((unsigned int)time(nullptr));
 	if constexpr (Configuration::usePreCompiledExpressions)
 	{
+		_jc_initialize_string_pool(&stringPoolInitializationCallback);
 		_jc_enumerate_expressions(&expressionEnumerationCallback);
 		_jc_enumerate_global_variables(&globalVariablesEnumerationCallback);
 		_jc_enumerate_linked_functions(&linkedFunctionsEnumerationCallback);
@@ -196,12 +205,18 @@ uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
 
 bool JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, unsigned char* value)
 {
+	return setPrecompiledGlobalVariable(variableName, reinterpret_cast<uintptr_t>(value));
+}
+
+
+bool jitcat::JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, uintptr_t value)
+{
 	auto& precompiledGlobalVariables = getPrecompiledGlobalVariables();
 	auto iter = precompiledGlobalVariables.find(variableName);
 	if (iter != precompiledGlobalVariables.end())
 	{
 		uintptr_t variableAddress = iter->second;
-		unsigned char** variablePtr = reinterpret_cast<unsigned char**>(variableAddress);
+		uintptr_t* variablePtr = reinterpret_cast<uintptr_t*>(variableAddress);
 		*variablePtr = value;
 		return true;
 	} 
@@ -279,7 +294,7 @@ void JitCat::expressionEnumerationCallback(const char* name, uintptr_t address)
 	if (name == std::string("default")
 		&& address == 0)
 	{
-		std::cout << "No precompiled expression symbols found." << std::endl;
+		std::cout << "_jc_enumerate_expressions function symbol not found." << std::endl;
 	}
 	else
 	{
@@ -293,7 +308,7 @@ void JitCat::globalVariablesEnumerationCallback(const char* name, uintptr_t addr
 	if (name == std::string("default")
 		&& address == 0)
 	{
-		std::cout << "No global scope symbols found." << std::endl;
+		std::cout << "_jc_enumerate_global_variables function symbol not found." << std::endl;
 	}
 	else
 	{
@@ -307,11 +322,26 @@ void JitCat::linkedFunctionsEnumerationCallback(const char* name, uintptr_t addr
 	if (name == std::string("default")
 		&& address == 0)
 	{
-		std::cout << "No global scope symbols found." << std::endl;
+		std::cout << "_jc_enumerate_linked_functions function symbol not found." << std::endl;
 	}
 	else
 	{
 		getPrecompiledLinkedFunctions().insert(std::make_pair(name, address));
+	}
+}
+
+
+void JitCat::stringPoolInitializationCallback(const char* stringValue, uintptr_t address)
+{
+	if (stringValue == std::string("default")
+		&& address == 0)
+	{
+		std::cout << "_jc_initialize_string_pool function symbol not found." << std::endl;
+	}
+	else
+	{
+		Configuration::CatString** stringPoolEntry = reinterpret_cast<Configuration::CatString**>(address);
+		*stringPoolEntry = new Configuration::CatString(stringValue);
 	}
 }
 

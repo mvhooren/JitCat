@@ -2501,6 +2501,7 @@ const CatGenericType& CatGenericType::getBasicType(BasicType type)
 	
 }
 
+const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void); 
 const CatGenericType CatGenericType::charType		= CatGenericType(BasicType::Char, true);
 const CatGenericType CatGenericType::uCharType		= CatGenericType(BasicType::UChar, true);
 const CatGenericType CatGenericType::intType		= CatGenericType(BasicType::Int, true);
@@ -2514,7 +2515,6 @@ const CatGenericType CatGenericType::stringType		= TypeTraits<Configuration::Cat
 const CatGenericType CatGenericType::stringWeakPtrType = TypeTraits<Configuration::CatString>::toGenericType().toPointer(TypeOwnershipSemantics::Weak, false, false);
 const CatGenericType CatGenericType::stringConstantValuePtrType = TypeTraits<Configuration::CatString>::toGenericType().toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::stringMemberValuePtrType = TypeTraits<Configuration::CatString>::toGenericType().copyWithFlags(true, false).toPointer(TypeOwnershipSemantics::Value, true, false);
-const CatGenericType CatGenericType::voidType		= CatGenericType(BasicType::Void);
 const std::unique_ptr<TypeInfo, Reflection::TypeInfoDeleter> CatGenericType::nullptrTypeInfo = makeTypeInfo<TypeInfo>("nullptr", 0, std::make_unique<NullptrTypeCaster>());
 const CatGenericType CatGenericType::nullptrType	= CatGenericType(nullptrTypeInfo.get(), false, true).toPointer(TypeOwnershipSemantics::Value, false, true);
 const CatGenericType CatGenericType::unknownType	= CatGenericType();

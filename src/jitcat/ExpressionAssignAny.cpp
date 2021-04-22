@@ -64,7 +64,7 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 		{
 			const CatGenericType myType = getType();
 			std::any convertedValue = value;
-			if (valueType.isBasicType() || valueType.isStringType())
+			if ((valueType.isBasicType() || valueType.isStringType()) && myType.isValidType())
 			{
 				convertedValue = myType.convertToType(value, valueType);
 			}
@@ -94,7 +94,6 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 			}
 			else
 			{
-				assert(false);
 				return false;
 			}
 			return !hasError();

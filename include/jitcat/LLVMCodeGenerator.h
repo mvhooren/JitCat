@@ -69,6 +69,9 @@ namespace jitcat::LLVM
 		llvm::Function* generateGlobalVariablesEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals);
 		//Generates a function that takes a callback to a function that will be called with the name and address of every linked function in the set.
 		llvm::Function* generateLinkedFunctionsEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& functionPointers);
+		//Generates a function that takes a callback to a function that will be called with the value and address of every string in the string pool.
+		//The callback function should then construct a string at the address using the provided value
+		llvm::Function* generateStringPoolInitializationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& stringGlobals);
 
 	private:
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);

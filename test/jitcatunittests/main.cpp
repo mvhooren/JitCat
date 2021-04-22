@@ -18,7 +18,7 @@
 int main( int argc, char* argv[] ) 
 {
 	#ifdef ENABLE_LLVM
-		Precompilation::precompContext = jitcat::JitCat::get()->createPrecompilationContext();
+		//Precompilation::precompContext = jitcat::JitCat::get()->createPrecompilationContext();
 	#endif
 	int result = Catch::Session().run( argc, argv );
 

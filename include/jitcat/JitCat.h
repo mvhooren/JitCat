@@ -52,6 +52,7 @@ namespace jitcat
 		static uintptr_t getPrecompiledSymbol(const std::string& name);
 
 		bool setPrecompiledGlobalVariable(const std::string_view variableName, unsigned char* value);
+		bool setPrecompiledGlobalVariable(const std::string_view variableName, uintptr_t value);
 		bool setPrecompiledLinkedFunction(const std::string mangledFunctionName, uintptr_t address);
 
 		//This will clean up as much memory as possible, library features will be broken after this is called.
@@ -69,6 +70,7 @@ namespace jitcat
 		static void expressionEnumerationCallback(const char* name, uintptr_t address);
 		static void globalVariablesEnumerationCallback(const char* name, uintptr_t address);
 		static void linkedFunctionsEnumerationCallback(const char* name, uintptr_t address);
+		static void stringPoolInitializationCallback(const char* stringValue, uintptr_t address);
 
 	private:
 		static JitCat* instance;

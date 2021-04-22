@@ -37,6 +37,7 @@ void LLVMPrecompilationContext::finishPrecompilation()
 	codeGenerator->generateExpressionSymbolEnumerationFunction(compiledExpressionFunctions);
 	codeGenerator->generateGlobalVariablesEnumerationFunction(globalVariables);
 	codeGenerator->generateLinkedFunctionsEnumerationFunction(globalFunctionPointers);
+	codeGenerator->generateStringPoolInitializationFunction(stringPool);
 	codeGenerator->emitModuleToObjectFile("PrecompiledJitCatExpressions.obj");
 }
 
@@ -73,7 +74,7 @@ void LLVMPrecompilationContext::precompileAssignmentExpression(const CatAssignab
 }
 
 
-llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalVariable(const std::string& globalSymbolName, LLVMCompileTimeContext* context)
+llvm::GlobalVariable* LLVMPrecompilationContext::defineGlobalVariable(const std::string& globalSymbolName, LLVMCompileTimeContext* context)
 {
 	auto iter = globalVariables.find(globalSymbolName);
 	if (iter != globalVariables.end())
@@ -89,7 +90,7 @@ llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalVaria
 }
 
 
-llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalFunctionPointer(const std::string& globalSymbolName, LLVMCompileTimeContext* context)
+llvm::GlobalVariable* LLVMPrecompilationContext::defineGlobalFunctionPointer(const std::string& globalSymbolName, LLVMCompileTimeContext* context)
 {
 	auto iter = globalFunctionPointers.find(globalSymbolName);
 	if (iter != globalFunctionPointers.end())
@@ -100,6 +101,22 @@ llvm::GlobalVariable* jitcat::LLVM::LLVMPrecompilationContext::defineGlobalFunct
 	{
 		llvm::GlobalVariable* global = context->helper->createGlobalPointerSymbol(globalSymbolName);
 		globalFunctionPointers.insert(std::make_pair(globalSymbolName, global));
+		return global;
+	}
+}
+
+
+llvm::GlobalVariable* LLVMPrecompilationContext::defineGlobalString(const std::string& stringValue, LLVMCompileTimeContext* context)
+{
+	auto iter = stringPool.find(stringValue);
+	if (iter != stringPool.end())
+	{
+		return iter->second;
+	}
+	else
+	{
+		llvm::GlobalVariable* global = context->helper->createGlobalPointerSymbol(Tools::append(stringValue, ".str"));
+		stringPool.insert(std::make_pair(stringValue, global));
 		return global;
 	}
 }

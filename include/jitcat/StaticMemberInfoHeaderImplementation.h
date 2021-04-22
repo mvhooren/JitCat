@@ -23,8 +23,9 @@ namespace jitcat::Reflection
 {
 	template<typename ClassT>
 	inline StaticClassUniquePtrMemberInfo<ClassT>::StaticClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT>* memberPointer, 
-																				  const CatGenericType& type): 
-		StaticMemberInfo(memberName, type), memberPointer(memberPointer)
+																				  const CatGenericType& type, const char* parentTypeName): 
+		StaticMemberInfo(memberName, type, parentTypeName), 
+		memberPointer(memberPointer)
 	{
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
@@ -58,7 +59,7 @@ namespace jitcat::Reflection
 	inline llvm::Value* StaticClassUniquePtrMemberInfo<ClassT>::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 	{
 	#ifdef ENABLE_LLVM
-		llvm::Value* uniquePtrPtr = context->helper->createPtrConstant(reinterpret_cast<uintptr_t>(memberPointer), "UniquePtrPtr");
+		llvm::Value* uniquePtrPtr = context->helper->createPtrConstant(context, reinterpret_cast<uintptr_t>(memberPointer), "UniquePtrPtr");
 
 		std::string mangledName = getMangledGetPointerName();
 		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName, false);
@@ -71,6 +72,13 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT>
+	inline std::string StaticClassUniquePtrMemberInfo<ClassT>::getStaticMemberPointerVariableName() const
+	{
+		return Tools::append("pointerTo:", parentTypeName, "::", memberName);
+	}
+
+
+	template<typename ClassT>
 	inline std::string StaticClassUniquePtrMemberInfo<ClassT>::getMangledGetPointerName() const
 	{
 		std::ostringstream mangledNameStream;
@@ -79,6 +87,18 @@ namespace jitcat::Reflection
 		return mangledNameStream.str();
 	}
 
+
+	template<typename BasicT>
+	inline StaticBasicTypeMemberInfo<BasicT>::StaticBasicTypeMemberInfo(const std::string& memberName, BasicT* memberPointer,
+																		const CatGenericType& type, const char* parentTypeName): 
+		StaticMemberInfo(memberName, type, parentTypeName), 
+		memberPointer(memberPointer)
+	{
+		if constexpr (Configuration::usePreCompiledExpressions)
+		{
+			JitCat::get()->setPrecompiledGlobalVariable(getStaticMemberPointerVariableName(), reinterpret_cast<uintptr_t>(memberPointer));
+		}
+	}
 
 	template<typename BasicT>
 	inline std::any StaticBasicTypeMemberInfo<BasicT>::getMemberReference()
@@ -98,7 +118,18 @@ namespace jitcat::Reflection
 	inline llvm::Value* StaticBasicTypeMemberInfo<BasicT>::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 	{
 		#ifdef ENABLE_LLVM
-			llvm::Constant* addressValue = context->helper->createIntPtrConstant(reinterpret_cast<std::intptr_t>(memberPointer), memberName + "_IntPtr");
+
+			llvm::Value* addressValue;
+			if (!context->isPrecompilationContext)
+			{
+				addressValue = context->helper->constantToValue(context->helper->createIntPtrConstant(context, reinterpret_cast<std::intptr_t>(memberPointer), memberName + "_IntPtr"));
+			}
+			else
+			{
+				llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+				addressValue = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
+			}
+			
 			return context->helper->loadBasicType(context->helper->toLLVMType(catType), addressValue, memberName);
 		#else 
 			return nullptr;
@@ -110,12 +141,28 @@ namespace jitcat::Reflection
 	inline llvm::Value* StaticBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 	{
 	#ifdef ENABLE_LLVM
-		llvm::Constant* addressIntValue = context->helper->createIntPtrConstant(reinterpret_cast<std::intptr_t>(memberPointer), memberName + "_IntPtr");
+		llvm::Value* addressIntValue;
+		if (!context->isPrecompilationContext)
+		{
+			addressIntValue = context->helper->constantToValue(context->helper->createIntPtrConstant(context, reinterpret_cast<std::intptr_t>(memberPointer), memberName + "_IntPtr"));
+		}
+		else
+		{
+			llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+			addressIntValue = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
+		}
 		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
 		context->helper->writeToPointer(addressValue, rValue);
 		return rValue;
 	#else 
 		return nullptr;
 	#endif // ENABLE_LLVM
+	}
+
+
+	template<typename BasicT>
+	inline std::string StaticBasicTypeMemberInfo<BasicT>::getStaticMemberPointerVariableName() const
+	{
+		return Tools::append("pointerTo:", parentTypeName, "::", memberName);
 	}
 }

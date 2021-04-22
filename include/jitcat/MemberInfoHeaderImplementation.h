@@ -45,6 +45,18 @@ inline unsigned long long getOffset(MemberT BaseT::* memberPointer)
 
 
 template<typename BaseT, typename ClassT>
+inline ClassPointerMemberInfo<BaseT, ClassT>::ClassPointerMemberInfo(const std::string& memberName, ClassT* BaseT::* memberPointer, const CatGenericType& type): 
+	TypeMemberInfo(memberName, type), 
+	memberPointer(memberPointer)
+{
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), getMemberPointerOffset());
+	}
+}
+
+
+template<typename BaseT, typename ClassT>
 inline std::any ClassPointerMemberInfo<BaseT, ClassT>::getMemberReference(unsigned char* base)
 {
 	BaseT* baseObject = reinterpret_cast<BaseT*>(base);
@@ -82,7 +94,7 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateDereferenceCo
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		return context->helper->loadPointerAtAddress(addressValue, memberName);
@@ -101,7 +113,7 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateAssignCode(ll
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
@@ -119,6 +131,25 @@ template<typename BaseT, typename ClassT>
 inline unsigned long long ClassPointerMemberInfo<BaseT, ClassT>::getOrdinal() const
 {
 	return getMemberPointerOffset();
+}
+
+
+template<typename BaseT, typename ClassT>
+inline std::string ClassPointerMemberInfo<BaseT, ClassT>::getMemberOffsetName() const
+{
+	return Tools::append("offsetTo ", TypeNameGetter<BaseT>::get(), "::", memberName);
+}
+
+
+template<typename BaseT, typename ClassT>
+inline ClassObjectMemberInfo<BaseT, ClassT>::ClassObjectMemberInfo(const std::string& memberName, ClassT BaseT::* memberPointer, const CatGenericType& type): 
+	TypeMemberInfo(memberName, type), 
+	memberPointer(memberPointer) 
+{
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), getOffset(memberPointer));
+	}
 }
 
 
@@ -147,10 +178,10 @@ template<typename BaseT, typename ClassT>
 inline llvm::Value* ClassObjectMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	unsigned long long offset = getOffset(memberPointer);;
+	unsigned long long offset = getOffset(memberPointer);
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
-		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_Ptr");
 		return context->helper->convertToPointer(addressValue, memberName);
@@ -169,8 +200,17 @@ inline unsigned long long ClassObjectMemberInfo<BaseT, ClassT>::getOrdinal() con
 
 
 template<typename BaseT, typename ClassT>
+inline std::string ClassObjectMemberInfo<BaseT, ClassT>::getMemberOffsetName() const
+{
+	return Tools::append("offsetTo ", TypeNameGetter<BaseT>::get(), "::", memberName);
+}
+
+
+template<typename BaseT, typename ClassT>
 inline ClassUniquePtrMemberInfo<BaseT, ClassT>::ClassUniquePtrMemberInfo(const std::string& memberName, std::unique_ptr<ClassT> BaseT::* memberPointer, 
-		const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer)
+																		 const CatGenericType& type): 
+	TypeMemberInfo(memberName, type), 
+	memberPointer(memberPointer)
 {
 	if constexpr (Configuration::usePreCompiledExpressions)
 	{
@@ -217,7 +257,7 @@ inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereference
 	llvm::Value* thisPointerAsInt;
 	if (!context->isPrecompilationContext)
 	{
-		thisPointerAsInt = context->helper->constantToValue(context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr"));
+		thisPointerAsInt = context->helper->constantToValue(context->helper->createIntPtrConstant(context, reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr"));
 	}
 	else
 	{
@@ -274,6 +314,18 @@ inline std::string ClassUniquePtrMemberInfo<BaseT, ClassT>::getGlobalThisVariabl
 
 
 template<typename BaseT, typename BasicT>
+inline BasicTypeMemberInfo<BaseT, BasicT>::BasicTypeMemberInfo(const std::string& memberName, BasicT BaseT::* memberPointer, const CatGenericType& type):
+	TypeMemberInfo(memberName, type),
+	memberPointer(memberPointer)
+{
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), getMemberPointerOffset());
+	}
+}
+
+
+template<typename BaseT, typename BasicT>
 inline std::any BasicTypeMemberInfo<BaseT, BasicT>::getMemberReference(unsigned char* base)
 {
 	BaseT* objectPointer = reinterpret_cast<BaseT*>(base);
@@ -313,7 +365,7 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateDereferenceCode(
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{	
-		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		return context->helper->loadBasicType(context->helper->toLLVMType(catType), addressValue, memberName);
@@ -332,7 +384,7 @@ inline llvm::Value* BasicTypeMemberInfo<BaseT, BasicT>::generateAssignCode(llvm:
 	unsigned long long offset = getMemberPointerOffset();
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{	
-		llvm::Constant* memberOffset = context->helper->createIntPtrConstant(offset, "offsetTo_" + memberName);
+		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
 		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
@@ -349,6 +401,13 @@ template<typename BaseT, typename BasicT>
 inline unsigned long long BasicTypeMemberInfo<BaseT, BasicT>::getOrdinal() const
 {
 	return getMemberPointerOffset();
+}
+
+
+template<typename BaseT, typename BasicT>
+inline std::string BasicTypeMemberInfo<BaseT, BasicT>::getMemberOffsetName() const
+{
+	return Tools::append("offsetTo ", TypeNameGetter<BaseT>::get(), "::", memberName);
 }
 
 

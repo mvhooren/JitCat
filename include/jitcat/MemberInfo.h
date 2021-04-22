@@ -55,7 +55,7 @@ namespace jitcat::Reflection
 	template<typename BaseT, typename ClassT>
 	struct ClassPointerMemberInfo: public TypeMemberInfo
 	{
-		ClassPointerMemberInfo(const std::string& memberName, ClassT* BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		ClassPointerMemberInfo(const std::string& memberName, ClassT* BaseT::* memberPointer, const CatGenericType& type);
 
 		inline virtual std::any getMemberReference(unsigned char* base) override final;
 		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
@@ -64,6 +64,9 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 
 		inline virtual unsigned long long getOrdinal() const override final;
+	
+	private:
+		inline std::string getMemberOffsetName() const;
 
 	private:
 		ClassT* BaseT::* memberPointer;
@@ -73,7 +76,7 @@ namespace jitcat::Reflection
 	template<typename BaseT, typename ClassT>
 	struct ClassObjectMemberInfo: public TypeMemberInfo
 	{
-		ClassObjectMemberInfo(const std::string& memberName, ClassT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		ClassObjectMemberInfo(const std::string& memberName, ClassT BaseT::* memberPointer, const CatGenericType& type);
 
 		inline virtual std::any getMemberReference(unsigned char* base) override final;
 		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
@@ -81,6 +84,9 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 
 		inline virtual unsigned long long getOrdinal() const override final;
+	
+	private:
+		inline std::string getMemberOffsetName() const;
 
 	private:
 		ClassT BaseT::* memberPointer;
@@ -112,7 +118,7 @@ namespace jitcat::Reflection
 	template<typename BaseT, typename BasicT>
 	struct BasicTypeMemberInfo: public TypeMemberInfo
 	{
-		BasicTypeMemberInfo(const std::string& memberName, BasicT BaseT::* memberPointer, const CatGenericType& type): TypeMemberInfo(memberName, type), memberPointer(memberPointer) {}
+		BasicTypeMemberInfo(const std::string& memberName, BasicT BaseT::* memberPointer, const CatGenericType& type);
 	
 		inline virtual std::any getMemberReference(unsigned char* base) override final;
 		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
@@ -121,6 +127,9 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual llvm::Value* generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const override final;
 		inline virtual unsigned long long getOrdinal() const override final;
+
+	private:
+		inline std::string getMemberOffsetName() const;
 
 	private:
 		BasicT BaseT::* memberPointer;

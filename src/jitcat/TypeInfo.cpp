@@ -8,6 +8,7 @@
 #include "jitcat/TypeInfo.h"
 #include "jitcat/Configuration.h"
 #include "jitcat/FunctionSignature.h"
+#include "jitcat/JitCat.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/MemberFunctionInfo.h"
 #include "jitcat/StaticConstMemberInfo.h"
@@ -31,6 +32,11 @@ TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<T
 	parentType(nullptr),
 	typeSize(typeSize)
 {
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		std::string typeNameGlobal = Tools::append("_TypeInfo:", getTypeName());
+		JitCat::get()->setPrecompiledGlobalVariable(typeNameGlobal, reinterpret_cast<uintptr_t>(this));
+	}
 }
 
 

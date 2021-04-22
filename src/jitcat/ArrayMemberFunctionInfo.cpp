@@ -344,8 +344,7 @@ void ArrayMemberFunctionInfo::createInitGeneratorFunction()
 										else
 										{
 											//Call the placement constructor intrinsic function
-											llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectTypeInfo), Tools::append(objectTypeInfo->getTypeName(), "_typeInfo"));
-											llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(objectTypeInfo->getTypeName(), "_typeInfoPtr"));
+											llvm::Value* typeInfoConstantAsIntPtr = context->helper->createTypeInfoGlobalValue(context, objectTypeInfo); 
 											context->helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {iterator, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 										}
 
@@ -432,8 +431,7 @@ void ArrayMemberFunctionInfo::createDestroyGeneratorFunction()
 												else
 												{
 													//Call the placement destructor intrinsic function
-													llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectTypeInfo), Tools::append(objectTypeInfo->getTypeName(), "_typeInfo"));
-													llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(objectTypeInfo->getTypeName(), "_typeInfoPtr"));
+													llvm::Value* typeInfoConstantAsIntPtr = context->helper->createTypeInfoGlobalValue(context, objectTypeInfo);
 													context->helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {iterator, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
 												}
 											}

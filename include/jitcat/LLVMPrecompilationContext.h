@@ -34,6 +34,7 @@ namespace jitcat::LLVM
 
 		llvm::GlobalVariable* defineGlobalVariable(const std::string& globalSymbolName, LLVMCompileTimeContext* context);
 		llvm::GlobalVariable* defineGlobalFunctionPointer(const std::string& globalSymbolName, LLVMCompileTimeContext* context);
+		llvm::GlobalVariable* defineGlobalString(const std::string& stringValue, LLVMCompileTimeContext* context);
 
 	private:
 		std::unique_ptr<LLVMCompileTimeContext> compileContext;
@@ -42,5 +43,6 @@ namespace jitcat::LLVM
 		std::unordered_map<std::string, llvm::Function*> compiledExpressionFunctions;
 		std::unordered_map<std::string, llvm::GlobalVariable*> globalVariables;
 		std::unordered_map<std::string, llvm::GlobalVariable*> globalFunctionPointers;
+		std::unordered_map<std::string, llvm::GlobalVariable*> stringPool;
 	};
 };

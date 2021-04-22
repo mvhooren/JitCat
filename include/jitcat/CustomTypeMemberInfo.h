@@ -16,9 +16,13 @@ namespace jitcat::Reflection
 
 	struct CustomMemberInfo: public TypeMemberInfo
 	{
-		CustomMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): TypeMemberInfo(memberName, type), memberOffset(memberOffset) {}
+		CustomMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type, const char* parentTypeName); 
 		virtual unsigned long long getOrdinal() const override final;
 
+	protected:
+		std::string getMemberOffsetVariableName() const;
+
+		const char* parentTypeName;
 		std::size_t memberOffset;
 	};
 
@@ -26,7 +30,7 @@ namespace jitcat::Reflection
 	template<typename BasicT>
 	struct CustomBasicTypeMemberInfo: public CustomMemberInfo
 	{
-		CustomBasicTypeMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): CustomMemberInfo(memberName, memberOffset, type) {}
+		CustomBasicTypeMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type, const char* parentTypeName): CustomMemberInfo(memberName, memberOffset, type, parentTypeName) {}
 
 		inline virtual std::any getMemberReference(unsigned char* base) override final;
 		inline virtual std::any getAssignableMemberReference(unsigned char* base) override final;
@@ -40,7 +44,7 @@ namespace jitcat::Reflection
 	//Implements a TypeMemberInfo for class/struct pointer types that are reflectable.
 	struct CustomTypeObjectMemberInfo: public CustomMemberInfo
 	{
-		CustomTypeObjectMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): CustomMemberInfo(memberName, memberOffset, type) {}
+		CustomTypeObjectMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type, const char* parentTypeName): CustomMemberInfo(memberName, memberOffset, type, parentTypeName) {}
 
 		virtual std::any getMemberReference(unsigned char* base) override final;
 		virtual std::any getAssignableMemberReference(unsigned char* base) override final;
@@ -54,7 +58,7 @@ namespace jitcat::Reflection
 	//Implements a TypeMemberInfo for class/struct inline data types that are reflectable.
 	struct CustomTypeObjectDataMemberInfo: public CustomMemberInfo
 	{
-		CustomTypeObjectDataMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type): CustomMemberInfo(memberName, memberOffset, type) {}
+		CustomTypeObjectDataMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type, const char* parentTypeName): CustomMemberInfo(memberName, memberOffset, type, parentTypeName) {}
 
 		virtual std::any getMemberReference(unsigned char* base) override final;
 		virtual std::any getAssignableMemberReference(unsigned char* base) override final;

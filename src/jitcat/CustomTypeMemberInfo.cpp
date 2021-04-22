@@ -5,8 +5,10 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
+#include "jitcat/Configuration.h"
 #include "jitcat/CustomTypeMemberInfo.h"
 #include "jitcat/CustomObject.h"
+#include "jitcat/JitCat.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 
 #include <cassert>
@@ -14,6 +16,30 @@
 
 using namespace jitcat;
 using namespace jitcat::Reflection;
+
+
+CustomMemberInfo::CustomMemberInfo(const std::string& memberName, std::size_t memberOffset, const CatGenericType& type, const char* parentTypeName): 
+	TypeMemberInfo(memberName, type), 
+	parentTypeName(parentTypeName),
+	memberOffset(memberOffset)
+{
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetVariableName(), memberOffset);
+	}
+}
+
+
+unsigned long long CustomMemberInfo::getOrdinal() const
+{
+	return memberOffset;
+}
+
+
+std::string CustomMemberInfo::getMemberOffsetVariableName() const
+{
+	return Tools::append("offsetTo ", parentTypeName, "::", memberName);
+}
 
 
 std::any CustomTypeObjectMemberInfo::getMemberReference(unsigned char* base)
@@ -46,7 +72,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Constant* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Value* memberOffsetValue = context->helper->createOffsetGlobalValue(context, getMemberOffsetVariableName(), memberOffset);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a ReflectableHandle
@@ -70,14 +96,13 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Constant* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Value* memberOffsetValue = context->helper->createOffsetGlobalValue(context, getMemberOffsetVariableName(), memberOffset);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a ReflectableHandle
 		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
 		//Type info of the object that will be assigned
-		llvm::Constant* typeInfoConstant = context->helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(catType.removeIndirection().getObjectType()), Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfo"));
-		llvm::Value* typeInfoConstantAsIntPtr = context->helper->convertToPointer(typeInfoConstant, Tools::append(catType.removeIndirection().getObjectTypeName(), "_typeInfoPtr"));
+		llvm::Value* typeInfoConstantAsIntPtr = context->helper->createTypeInfoGlobalValue(context, catType.removeIndirection().getObjectType());
 		//Call function that gets the member
 		context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_assignPointerToReflectableHandle, {reflectableHandle, rValue, typeInfoConstantAsIntPtr}, "_jc_assignPointerToReflectableHandle", true);
 		return rValue;
@@ -100,7 +125,7 @@ void CustomTypeObjectMemberInfo::assign(std::any& base, std::any& valueToSet)
 }
 
 
-std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getMemberReference(unsigned char* base)
+std::any CustomTypeObjectDataMemberInfo::getMemberReference(unsigned char* base)
 {
 	if (base != nullptr)
 	{
@@ -111,7 +136,7 @@ std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getMemberReference(
 }
 
 
-std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getAssignableMemberReference(unsigned char* base)
+std::any CustomTypeObjectDataMemberInfo::getAssignableMemberReference(unsigned char* base)
 {
 	if (base != nullptr)
 	{
@@ -123,7 +148,7 @@ std::any jitcat::Reflection::CustomTypeObjectDataMemberInfo::getAssignableMember
 }
 
 
-llvm::Value* jitcat::Reflection::CustomTypeObjectDataMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
+llvm::Value* CustomTypeObjectDataMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
@@ -131,7 +156,7 @@ llvm::Value* jitcat::Reflection::CustomTypeObjectDataMemberInfo::generateDerefer
 		//Convert to int so we can add the offset
 		llvm::Value* dataPointerAsInt = context->helper->convertToIntPtr(parentObjectPointer, "data_IntPtr");
 		//Create a constant with the offset of this member relative to the the data pointer
-		llvm::Constant* memberOffsetValue = context->helper->createIntPtrConstant((unsigned long long)memberOffset, "offsetTo_" + memberName);
+		llvm::Value* memberOffsetValue = context->helper->createOffsetGlobalValue(context, getMemberOffsetVariableName(), memberOffset);
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a Reflectable
@@ -146,7 +171,7 @@ llvm::Value* jitcat::Reflection::CustomTypeObjectDataMemberInfo::generateDerefer
 }
 
 
-llvm::Value* jitcat::Reflection::CustomTypeObjectDataMemberInfo::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
+llvm::Value* CustomTypeObjectDataMemberInfo::generateAssignCode(llvm::Value* parentObjectPointer, llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 	assert(false);
 	return nullptr;
@@ -158,8 +183,3 @@ void jitcat::Reflection::CustomTypeObjectDataMemberInfo::assign(std::any& base, 
 	assert(false);
 }
 
-
-unsigned long long jitcat::Reflection::CustomMemberInfo::getOrdinal() const
-{
-	return memberOffset;
-}

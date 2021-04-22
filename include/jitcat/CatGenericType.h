@@ -245,6 +245,7 @@ namespace jitcat
 		static const CatGenericType& getBasicType(BasicType type);
 
 	public:
+		static const CatGenericType voidType;
 		static const CatGenericType charType;
 		static const CatGenericType uCharType;
 		static const CatGenericType intType;
@@ -259,7 +260,6 @@ namespace jitcat
 		static const CatGenericType stringWeakPtrType;
 		static const CatGenericType stringConstantValuePtrType;
 		static const CatGenericType stringMemberValuePtrType;
-		static const CatGenericType voidType;
 		static const std::unique_ptr<Reflection::TypeInfo, Reflection::TypeInfoDeleter> nullptrTypeInfo;
 		static const CatGenericType nullptrType;
 		static const CatGenericType unknownType;

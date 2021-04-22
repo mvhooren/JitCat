@@ -19,6 +19,7 @@ namespace jitcat
 	{
 		class CustomTypeInfo;
 		class StaticFunctionInfo;
+		class TypeInfo;
 		struct MemberFunctionInfo;
 	}
 }
@@ -107,11 +108,15 @@ namespace jitcat::LLVM
 		llvm::Value* loadBasicType(llvm::Type* type, llvm::Constant* addressValue, const std::string& name);
 		llvm::Value* loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* loadPointerAtAddress(llvm::Constant* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
+		llvm::Value* loadPointerAtAddress(llvm::GlobalVariable* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* createAdd(llvm::Value* value1, llvm::Value* value2, const std::string& name);
 		llvm::Value* createAdd(llvm::Value* value1, llvm::Constant* value2, const std::string& name);
 
+		llvm::Value* createOffsetGlobalValue(LLVMCompileTimeContext* context, const std::string& globalName, std::uintptr_t value);
+		llvm::Value* createTypeInfoGlobalValue(LLVMCompileTimeContext* context, Reflection::TypeInfo* typeInfo);
+
 		llvm::Constant* createZeroInitialisedConstant(llvm::Type* type);
-		llvm::Constant* createIntPtrConstant(unsigned long long constant, const std::string& name);
+		llvm::Constant* createIntPtrConstant(LLVMCompileTimeContext* context, unsigned long long constant, const std::string& name);
 		llvm::Constant* createCharConstant(char constant);
 		llvm::Constant* createUCharConstant(unsigned char constant);
 		llvm::Constant* createConstant(char constant);
@@ -126,7 +131,7 @@ namespace jitcat::LLVM
 		llvm::Constant* createNullPtrConstant(llvm::PointerType* pointerType);
 		llvm::Constant* createZeroTerminatedStringConstant(const std::string& value);
 		llvm::GlobalVariable* createGlobalPointerSymbol(const std::string& name);
-		llvm::Value* createPtrConstant(unsigned long long address, const std::string& name, llvm::PointerType* pointerType = LLVMTypes::pointerType);
+		llvm::Value* createPtrConstant(LLVMCompileTimeContext* context, unsigned long long address, const std::string& name, llvm::PointerType* pointerType = LLVMTypes::pointerType);
 		llvm::Constant* createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType);
 		llvm::Value* constantToValue(llvm::Constant* constant) const;
 		llvm::Constant* globalVariableToConstant(llvm::GlobalVariable* global) const;
@@ -173,8 +178,8 @@ namespace jitcat::LLVM
 		llvm::Value* copyConstructIfValueType(llvm::Value* value, const CatGenericType& type, LLVMCompileTimeContext* context, const std::string& valueName);
 		llvm::Value* generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context, bool isDirectlyLinked);
 
-		llvm::Value* createZeroStringPtrConstant();
-		llvm::Value* createOneStringPtrConstant();
+		llvm::Value* createZeroStringPtrConstant(LLVMCompileTimeContext* context);
+		llvm::Value* createOneStringPtrConstant(LLVMCompileTimeContext* context);
 
 	private:
 		LLVMCodeGenerator* codeGenerator;

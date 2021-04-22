@@ -77,7 +77,7 @@ namespace jitcat::Reflection
 			}
 
 			CatGenericType enumType = TypeTraits<EnumT>::toGenericType().copyWithFlags(isWritable, isConst);
-			TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<EnumT>(memberName, offset, enumType);
+			TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<EnumT>(memberName, offset, enumType, getTypeName());
 			std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 			TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 			return memberInfo;			

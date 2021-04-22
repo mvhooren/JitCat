@@ -83,24 +83,28 @@ namespace jitcat::Reflection
 					  || std::is_same<MemberT, bool>::value
 					  || std::is_enum<MemberT>::value)
 		{
-			memberInfo = new StaticBasicTypeMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticBasicTypeMemberInfo<MemberT>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType(), getTypeName());
 		}
 		else if constexpr (TypeTraits<MemberT>::isUniquePtr())
 		{
-			memberInfo = new StaticClassUniquePtrMemberInfo<typename TypeTraits<MemberT>::type>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType());
+			memberInfo = new StaticClassUniquePtrMemberInfo<typename TypeTraits<MemberT>::type>(identifier, const_cast<MemberT*>(member), TypeTraits<MemberT>::toGenericType(), getTypeName());
 		}
 		else if constexpr (std::is_same<MemberT, ReflectableHandle>::value)
 		{
 			CatGenericType handleType = TypeTraits<MemberT>::toGenericType().toHandle(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst);
-			memberInfo = new StaticClassHandleMemberInfo(identifier, const_cast<MemberT*>(member), handleType);
+			memberInfo = new StaticClassHandleMemberInfo(identifier, const_cast<MemberT*>(member), handleType, getTypeName());
 		}
 		else if constexpr (std::is_pointer<MemberT>::value)
 		{
-			memberInfo = new StaticClassPointerMemberInfo(identifier, reinterpret_cast<unsigned char**>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType().toPointer(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst));
+			memberInfo = new StaticClassPointerMemberInfo(identifier, reinterpret_cast<unsigned char**>(const_cast<MemberT*>(member)), 
+														  TypeTraits<MemberT>::toGenericType().toPointer(Reflection::TypeOwnershipSemantics::Weak, isWritable, isConst), 
+														  getTypeName());
 		}
 		else if constexpr (std::is_class<MemberT>::value)
 		{
-			memberInfo = new StaticClassObjectMemberInfo(identifier, reinterpret_cast<unsigned char*>(const_cast<MemberT*>(member)), TypeTraits<MemberT>::toGenericType().toPointer(Reflection::TypeOwnershipSemantics::Value, isWritable, isConst));
+			memberInfo = new StaticClassObjectMemberInfo(identifier, reinterpret_cast<unsigned char*>(const_cast<MemberT*>(member)), 
+														 TypeTraits<MemberT>::toGenericType().toPointer(Reflection::TypeOwnershipSemantics::Value, isWritable, isConst), 
+														 getTypeName());
 		}
 		else
 		{

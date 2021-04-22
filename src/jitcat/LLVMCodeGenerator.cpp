@@ -383,7 +383,7 @@ void LLVMCodeGenerator::emitModuleToObjectFile(const std::string& objectFileName
 }
 
 
-llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(const std::unordered_map<std::string, llvm::Function*>& symbols)
+llvm::Function* LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(const std::unordered_map<std::string, llvm::Function*>& symbols)
 {
 	const std::string enumerationFunctionName = "_jc_enumerate_expressions";
 	llvm::Type* functionReturnType = LLVMTypes::voidType;
@@ -411,15 +411,21 @@ llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateExpressionSymbolEnumera
 }
 
 
-llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateGlobalVariablesEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals)
+llvm::Function* LLVMCodeGenerator::generateGlobalVariablesEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals)
 {
 	return helper->generateGlobalVariableEnumerationFunction(globals, "_jc_enumerate_global_variables");
 }
 
 
-llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateLinkedFunctionsEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& functionPointers)
+llvm::Function* LLVMCodeGenerator::generateLinkedFunctionsEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& functionPointers)
 {
 	return helper->generateGlobalVariableEnumerationFunction(functionPointers, "_jc_enumerate_linked_functions");
+}
+
+
+llvm::Function* LLVMCodeGenerator::generateStringPoolInitializationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& stringGlobals)
+{
+	return helper->generateGlobalVariableEnumerationFunction(stringGlobals, "_jc_initialize_string_pool");
 }
 
 
@@ -928,19 +934,44 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 	else if (literalType.isStringPtrType())
 	{
 		Configuration::CatString* stringPtr = std::any_cast<Configuration::CatString*>(literal->getValue());
-		return helper->createPtrConstant(reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress");
+		if (!context->isPrecompilationContext)
+		{
+			return helper->createPtrConstant(context, reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress");
+		}
+		else
+		{
+			llvm::GlobalVariable* stringPtrPtr = std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalString(*stringPtr, context);
+			return helper->loadPointerAtAddress(stringPtrPtr, "stringLiteralAddress");
+		}
 	}
 	else if (literalType.isStringValueType())
 	{
 		Configuration::CatString stringValue = std::any_cast<Configuration::CatString>(literal->getValue());
-		const Configuration::CatString* stringPtr = StringConstantPool::getString(stringValue);
-		return helper->createPtrConstant(reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress");
+
+		if (!context->isPrecompilationContext)
+		{
+			const Configuration::CatString* stringPtr = StringConstantPool::getString(stringValue);
+			return helper->createPtrConstant(context, reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress");
+		}
+		else
+		{
+			llvm::GlobalVariable* stringPtrPtr = std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalString(stringValue, context);
+			return helper->loadPointerAtAddress(stringPtrPtr, "stringLiteralAddress");
+		}
 	}
 	else if (literalType.isPointerToReflectableObjectType())
 	{
-		uintptr_t pointerConstant = literalType.getRawPointer(literal->getValue());
-		llvm::Value* reflectableAddress = helper->createIntPtrConstant(pointerConstant, "literalObjectAddress");
-		return builder->CreateIntToPtr(reflectableAddress, LLVMTypes::pointerType);
+		if (!context->isPrecompilationContext)
+		{
+			uintptr_t pointerConstant = literalType.getRawPointer(literal->getValue());
+			llvm::Value* reflectableAddress = helper->createIntPtrConstant(context, pointerConstant, "literalObjectAddress");
+			return builder->CreateIntToPtr(reflectableAddress, LLVMTypes::pointerType);
+		}
+		else
+		{
+			assert(false && "pointer literals are not allowed when pre-compiling");
+			return nullptr;
+		}
 	}
 	else if (literalType.isEnumType())
 	{
@@ -1137,8 +1168,7 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 		objectType = assignable->getType().getPointeeType()->getObjectType();
 	}
 
-	llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
-	llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
+	llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, objectType);
 
 	if (!constructor->getIsCopyConstructor())
 	{
@@ -1169,8 +1199,7 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 					if (scopeIter != context->scopeValues.end())
 					{
 						llvm::Value* localPtr = builder->CreateGEP(scopeIter->second, helper->createConstant((int)iter.first), Tools::append(iter.second->getMemberName(), "_ptr"));
-						llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
-						llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
+						llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, objectType);
 						return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {localPtr, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);					
 					}
 					assert(false);
@@ -1185,7 +1214,7 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 }
 
 
-void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatDestruct* destructor, LLVMCompileTimeContext* context)
+void LLVMCodeGenerator::generate(const AST::CatDestruct* destructor, LLVMCompileTimeContext* context)
 {
 	CatAssignableExpression* assignable = destructor->getAssignable();
 	assert(assignable != nullptr 
@@ -1202,8 +1231,7 @@ void jitcat::LLVM::LLVMCodeGenerator::generate(const AST::CatDestruct* destructo
 	{
 		objectType = assignable->getType().getPointeeType()->getObjectType();
 	}
-	llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(objectType), Tools::append(objectType->getTypeName(), "_typeInfo"));
-	llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(objectType->getTypeName(), "_typeInfoPtr"));
+	llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, objectType);
 
 	helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {target, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
 
@@ -1457,8 +1485,7 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 		{
 			if (functionDefinition->getParameterType(i).isReflectableObjectType())
 			{
-				llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(functionDefinition->getParameterType(i).getObjectType()), Tools::append(functionDefinition->getParameterType(i).getObjectType()->getTypeName(), "_typeInfo"));
-				llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(functionDefinition->getParameterType(i).getObjectType()->getTypeName(), "_typeInfoPtr"));
+				llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, functionDefinition->getParameterType(i).getObjectType());
 				llvm::Argument* argument = function->arg_begin() + (i + parameterOffset);
 				context->blockDestructorGenerators.push_back([=]()
 						{
@@ -1726,7 +1753,7 @@ uint64_t LLVMCodeGenerator::getSymbolAddress(const std::string& name, llvm::orc:
 }
 
 
-llvm::FunctionType* jitcat::LLVM::LLVMCodeGenerator::createFunctionType(bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes)
+llvm::FunctionType* LLVMCodeGenerator::createFunctionType(bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes)
 {
 	//Define the parameters for the function.
 	//If the function returns an object by value, the object is returned through an object pointer parameter and the function returns void.
@@ -1769,7 +1796,7 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 }
 
 
-llvm::Function* jitcat::LLVM::LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, llvm::FunctionType* functionType, bool isThisCall, const CatGenericType& returnType, const std::vector<std::string>& parameterNames)
+llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& functionName, llvm::FunctionType* functionType, bool isThisCall, const CatGenericType& returnType, const std::vector<std::string>& parameterNames)
 {
 	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), currentModule.get());
@@ -1826,8 +1853,7 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 	//If it is some other type, just return the value.
 	if (returnType.isReflectableObjectType())
 	{
-		llvm::Constant* typeInfoConstant = helper->createIntPtrConstant(reinterpret_cast<uintptr_t>(returnType.getObjectType()), Tools::append(returnType.toString(), "_typeInfo"));
-		llvm::Value* typeInfoConstantAsIntPtr = helper->convertToPointer(typeInfoConstant, Tools::append(returnType.toString(), "_typeInfoPtr"));
+		llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, returnType.getObjectType());
 		assert(returnType.isCopyConstructible());
 		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, LLVMTypes::pointerType, Tools::append(returnType.toString(), "_ObjectPointerCast"));
 
@@ -1872,19 +1898,19 @@ void LLVMCodeGenerator::link(CustomTypeInfo* customType)
 }
 
 
-llvm::Module* jitcat::LLVM::LLVMCodeGenerator::getCurrentModule() const
+llvm::Module* LLVMCodeGenerator::getCurrentModule() const
 {
 	return currentModule.get();
 }
 
 
-llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* jitcat::LLVM::LLVMCodeGenerator::getBuilder() const
+llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* LLVMCodeGenerator::getBuilder() const
 {
 	return builder.get();
 }
 
 
-llvm::Value* jitcat::LLVM::LLVMCodeGenerator::booleanCast(llvm::Value* boolean)
+llvm::Value* LLVMCodeGenerator::booleanCast(llvm::Value* boolean)
 {
 	return builder->CreateCast(llvm::Instruction::CastOps::ZExt ,boolean, LLVMTypes::boolType);
 }
