@@ -95,6 +95,7 @@ namespace jitcat::LLVM
 		llvm::Value* convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type = LLVMTypes::pointerType);
 		llvm::Value* convertToIntPtr(llvm::Value* llvmPointer, const std::string& name);
+		llvm::PointerType* getPointerTo(llvm::Type* type) const;
 
 		static bool isPointer(llvm::Type* type);
 		static bool isIntPtr(llvm::Type* type);

@@ -91,7 +91,7 @@ llvm::Value* StaticClassPointerMemberInfo::generateDereferenceCode(LLVM::LLVMCom
 	else
 	{
 		llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
-		return context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
+		return context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName(), context->helper->getPointerTo(LLVM::LLVMTypes::pointerTypeAsType));
 	}
 #else 
 	return nullptr;

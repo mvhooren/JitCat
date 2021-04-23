@@ -108,7 +108,7 @@ namespace jitcat::Reflection
 		inline virtual llvm::Value* generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const override final;
 
 		std::string getStaticMemberPointerVariableName() const;
-
+	
 	private:
 		inline std::string getMangledGetPointerName() const;
 

@@ -30,7 +30,7 @@ TEST_CASE("Assign tests", "[assign]" )
 	context.addStaticScope(&reflectedObject, "assignStaticScope");
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
-	const char* customTypeName = "MyType";
+	const char* customTypeName = "AssignType";
 	TypeRegistry::get()->removeType(customTypeName);
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName);
 	TypeRegistry::get()->registerType(customTypeName, customType.get());
@@ -43,7 +43,7 @@ TEST_CASE("Assign tests", "[assign]" )
 	ObjectInstance typeInstance(customType.get());
 	context.addDynamicScope(typeInstance);
 
-	const char* customStaticTypeName = "MyStaticType";
+	const char* customStaticTypeName = "MyStaticAssignType";
 	TypeRegistry::get()->removeType(customStaticTypeName);
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customStaticType = makeTypeInfo<CustomTypeInfo>(customStaticTypeName);
 	customStaticType->addObjectMember("myStaticObject", &reflectedObject, objectTypeInfo);
@@ -165,7 +165,7 @@ TEST_CASE("Expression assign tests", "[assign][expressionassign]" )
 	context.addStaticScope(&reflectedObject, "expressionassignStaticScope");
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
-	const char* customTypeName = "MyType";
+	const char* customTypeName = "ExpressionassignType";
 	TypeRegistry::get()->removeType(customTypeName);
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName);
 	TypeRegistry::get()->registerType(customTypeName, customType.get());
@@ -269,7 +269,7 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 	context.addStaticScope(&reflectedObject, "expressionAnyAssignStaticScope");
 
 	TypeInfo* objectTypeInfo = TypeRegistry::get()->registerType<ReflectedObject>();
-	const char* customTypeName = "MyType";
+	const char* customTypeName = "ExpressionassignAnyType";
 	TypeRegistry::get()->removeType(customTypeName);
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName);
 	TypeRegistry::get()->registerType(customTypeName, customType.get());

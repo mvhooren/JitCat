@@ -222,7 +222,7 @@ TEST_CASE("Static member variable in scope", "[staticmembervariables]" )
 
 	ExpressionErrorManager errorManager;
 
-	const char* customTypeName2 = "MyStaticType";
+	const char* customTypeName2 = "MyStaticType2";
 	TypeRegistry::get()->removeType(customTypeName2);
 	std::unique_ptr<CustomTypeInfo, TypeInfoDeleter> customType = makeTypeInfo<CustomTypeInfo>(customTypeName2);
 	TypeRegistry::get()->registerType(customTypeName2, customType.get());

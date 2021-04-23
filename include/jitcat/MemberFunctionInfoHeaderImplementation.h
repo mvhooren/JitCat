@@ -38,6 +38,7 @@ namespace jitcat::Reflection
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
+			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(), reinterpret_cast<uintptr_t>(this));
 		}
 	}
 
@@ -134,6 +135,7 @@ namespace jitcat::Reflection
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
+			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(), reinterpret_cast<uintptr_t>(this));
 		}
 	}
 

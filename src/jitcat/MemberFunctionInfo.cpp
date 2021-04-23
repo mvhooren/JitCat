@@ -100,6 +100,12 @@ std::string jitcat::Reflection::MemberFunctionInfo::getMangledName() const
 }
 
 
+std::string jitcat::Reflection::MemberFunctionInfo::getMangledFunctionInfoName() const
+{
+	return Tools::append("_FunctionInfo:", getMangledName());
+}
+
+
 void MemberFunctionInfo::addParameterType(const CatGenericType& type)
 {
 	argumentTypes.push_back(type);

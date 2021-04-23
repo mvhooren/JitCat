@@ -88,6 +88,8 @@ namespace jitcat::Reflection
 		virtual int getNumParameters() const override final; 
 		virtual const CatGenericType& getParameterType(int index) const override final;
 		virtual std::string getMangledName() const;
+		std::string getMangledFunctionInfoName() const;
+
 		template<typename ArgumentT>
 		inline void addParameterTypeInfo();
 

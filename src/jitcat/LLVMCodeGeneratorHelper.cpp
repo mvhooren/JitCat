@@ -685,9 +685,16 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue
 	{
 		return addressValue;
 	}
-	llvm::Value* intToPtr =  codeGenerator->getBuilder()->CreateIntToPtr(addressValue, type);
-	intToPtr->setName(name);
-	return intToPtr;
+	else if (addressValue->getType()->isPointerTy())
+	{
+		return codeGenerator->getBuilder()->CreatePointerCast(addressValue, type, name);
+	}
+	else
+	{
+		llvm::Value* intToPtr =  codeGenerator->getBuilder()->CreateIntToPtr(addressValue, type);
+		intToPtr->setName(name);
+		return intToPtr;
+	}
 }
 
 
@@ -702,6 +709,12 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToIntPtr(llvm::Value* llvmPointer, 
 	llvm::Value* ptrToInt = codeGenerator->getBuilder()->CreatePtrToInt(llvmPointer, LLVMTypes::uintPtrType);
 	ptrToInt->setName(name);
 	return ptrToInt;
+}
+
+
+llvm::PointerType* jitcat::LLVM::LLVMCodeGeneratorHelper::getPointerTo(llvm::Type* type) const
+{
+	return type->getPointerTo();
 }
 
 
@@ -748,6 +761,10 @@ llvm::Value* LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Valu
 	if (!addressValue->getType()->isPointerTy())
 	{
 		addressAsPointer = builder->CreateIntToPtr(addressValue, llvm::PointerType::getUnqual(type));
+	}
+	else if (addressValue->getType() != type->getPointerTo())
+	{
+		addressAsPointer = builder->CreatePointerCast(addressAsPointer, type->getPointerTo(), "cast");
 	}
 	addressAsPointer->setName(name + "_Ptr");
 	llvm::LoadInst* load = builder->CreateLoad(addressAsPointer);
@@ -825,7 +842,8 @@ llvm::Value* LLVMCodeGeneratorHelper::createOffsetGlobalValue(LLVMCompileTimeCon
 	else
 	{
 		llvm::GlobalVariable* memberOffsetPtr = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(globalName, context);
-		return loadBasicType(LLVMTypes::uintPtrType, memberOffsetPtr, globalName);
+		llvm::Value* intPtr = getBuilder()->CreatePointerCast(memberOffsetPtr, LLVMTypes::uintPtrType->getPointerTo(), "intptr");
+		return loadBasicType(LLVMTypes::uintPtrType, intPtr, globalName);
 	}
 }
 
@@ -1056,10 +1074,11 @@ llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext*
 	{
 		Reflection::TypeInfo* typeInfo = objectType.getObjectType();
 		assert(typeInfo != nullptr);
-		llvm::Value* typeInfoConstantAsIntPtr = createTypeInfoGlobalValue(context, typeInfo);
+		
 		assert(objectType.isDestructible());
 		context->blockDestructorGenerators.push_back([=]()
 			{
+				llvm::Value* typeInfoConstantAsIntPtr = createTypeInfoGlobalValue(context, typeInfo);
 				return createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {objectAllocationAsIntPtr, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
 			});
 	}
@@ -1180,8 +1199,17 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 		if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
 		{
 			//Add an argument that contains a pointer to a MemberFunctionInfo object.
-			llvm::Value* memberFunctionAddressValue = compileContext->helper->createIntPtrConstant(context, callData.functionInfoStructAddress, "MemberFunctionInfo_IntPtr");
-			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionAddressValue, "MemberFunctionInfo_Ptr");
+			llvm::Value* memberFunctionInfoAddressValue = nullptr;
+			if (!context->isPrecompilationContext)
+			{
+				memberFunctionInfoAddressValue = createIntPtrConstant(context, callData.functionInfoStructAddress, "MemberFunctionInfo_IntPtr");
+			}
+			else
+			{
+				llvm::GlobalVariable* functionInfoGlobal = createGlobalPointerSymbol(memberFunction->getMangledFunctionInfoName());
+				memberFunctionInfoAddressValue = loadPointerAtAddress(functionInfoGlobal, "MemberFunctionInfo_IntPtr");
+			}
+			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
 			argumentList.push_back(memberFunctionPtrValue);
 			argumentTypes.push_back(LLVMTypes::pointerType);
 		}

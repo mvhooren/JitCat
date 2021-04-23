@@ -31,6 +31,7 @@ namespace jitcat::Reflection
 		{
 			uintptr_t staticGetFunctionAddress = reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer);
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledGetPointerName(), staticGetFunctionAddress);
+			JitCat::get()->setPrecompiledGlobalVariable(getStaticMemberPointerVariableName(), reinterpret_cast<uintptr_t>(memberPointer));
 		}
 	}
 
@@ -59,7 +60,16 @@ namespace jitcat::Reflection
 	inline llvm::Value* StaticClassUniquePtrMemberInfo<ClassT>::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 	{
 	#ifdef ENABLE_LLVM
-		llvm::Value* uniquePtrPtr = context->helper->createPtrConstant(context, reinterpret_cast<uintptr_t>(memberPointer), "UniquePtrPtr");
+		llvm::Value* uniquePtrPtr = nullptr;
+		if (!context->isPrecompilationContext)
+		{
+			uniquePtrPtr = context->helper->createPtrConstant(context, reinterpret_cast<uintptr_t>(memberPointer), "UniquePtrPtr");
+		}
+		else
+		{
+			llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+			uniquePtrPtr = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
+		}
 
 		std::string mangledName = getMangledGetPointerName();
 		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName, false);

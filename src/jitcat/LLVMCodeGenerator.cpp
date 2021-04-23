@@ -1485,10 +1485,10 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 		{
 			if (functionDefinition->getParameterType(i).isReflectableObjectType())
 			{
-				llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, functionDefinition->getParameterType(i).getObjectType());
 				llvm::Argument* argument = function->arg_begin() + (i + parameterOffset);
 				context->blockDestructorGenerators.push_back([=]()
 						{
+							llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, functionDefinition->getParameterType(i).getObjectType());
 							return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {argument, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);					
 						});
 			}
