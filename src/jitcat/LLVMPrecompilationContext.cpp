@@ -42,13 +42,27 @@ void LLVMPrecompilationContext::finishPrecompilation()
 }
 
 
-void LLVMPrecompilationContext::precompileExpression(const CatTypedExpression* expression, const std::string& expressionStr, CatRuntimeContext* context)
+void LLVMPrecompilationContext::precompileSourceFile(const jitcat::AST::CatSourceFile* sourceFile, jitcat::CatLib* catLib, CatRuntimeContext* context)
 {
 	compileContext->clearState();
 	compileContext->catContext = context;
 	std::shared_ptr<LLVMCodeGenerator> oldGenerator = context->getCodeGenerator();
 	context->setCodeGenerator(codeGenerator);
-	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, false);
+	CatLib* previousLib = compileContext->currentLib;
+	compileContext->currentLib = catLib;
+	codeGenerator->generate(sourceFile, compileContext.get());
+	context->setCodeGenerator(oldGenerator);
+	compileContext->currentLib = previousLib;
+}
+
+
+void LLVMPrecompilationContext::precompileExpression(const CatTypedExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, CatRuntimeContext* context)
+{
+	compileContext->clearState();
+	compileContext->catContext = context;
+	std::shared_ptr<LLVMCodeGenerator> oldGenerator = context->getCodeGenerator();
+	context->setCodeGenerator(codeGenerator);
+	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, false, expectedType);
 	if (compiledExpressionFunctions.find(expressionName) == compiledExpressionFunctions.end())
 	{
 		llvm::Function* function = codeGenerator->generateExpressionFunction(expression, compileContext.get(), expressionName);
@@ -58,13 +72,13 @@ void LLVMPrecompilationContext::precompileExpression(const CatTypedExpression* e
 }
 
 
-void LLVMPrecompilationContext::precompileAssignmentExpression(const CatAssignableExpression* expression, const std::string& expressionStr, CatRuntimeContext* context)
+void LLVMPrecompilationContext::precompileAssignmentExpression(const CatAssignableExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, CatRuntimeContext* context)
 {
 	compileContext->clearState();
 	compileContext->catContext = context;
 	std::shared_ptr<LLVMCodeGenerator> oldGenerator = context->getCodeGenerator();
 	context->setCodeGenerator(codeGenerator);
-	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, true);
+	const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, compileContext->catContext, true, expectedType);
 	if (compiledExpressionFunctions.find(expressionName) == compiledExpressionFunctions.end())
 	{
 		llvm::Function* function = codeGenerator->generateExpressionAssignFunction(expression, compileContext.get(), expressionName);

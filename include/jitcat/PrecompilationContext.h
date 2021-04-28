@@ -11,10 +11,14 @@
 
 namespace jitcat
 {
+	class CatGenericType;
+	class CatLib;
 	class CatRuntimeContext;
+
 	namespace AST
 	{
 		class CatAssignableExpression;
+		class CatSourceFile;
 		class CatTypedExpression;
 	}
 
@@ -31,8 +35,9 @@ namespace jitcat
 		PrecompilationContext() {};
 		virtual ~PrecompilationContext() {};
 
-		virtual void precompileExpression(const AST::CatTypedExpression* expression, const std::string& expressionStr, CatRuntimeContext* context) = 0;
-		virtual void precompileAssignmentExpression(const AST::CatAssignableExpression* expression, const std::string& expressionStr, CatRuntimeContext* context) = 0;
+		virtual void precompileSourceFile(const jitcat::AST::CatSourceFile* sourceFile, jitcat::CatLib* catLib, CatRuntimeContext* context) = 0;
+		virtual void precompileExpression(const AST::CatTypedExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, CatRuntimeContext* context) = 0;
+		virtual void precompileAssignmentExpression(const AST::CatAssignableExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, CatRuntimeContext* context) = 0;
 
 		//Call this when all expressions have been compiled that should be precompiled.
 		//This will emit the precompiled files.

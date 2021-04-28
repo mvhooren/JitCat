@@ -29,8 +29,9 @@ namespace jitcat::LLVM
 		// Inherited via PrecompilationContext
 		virtual void finishPrecompilation() override final;
 
-		virtual void precompileExpression(const jitcat::AST::CatTypedExpression* expression, const std::string& expressionStr, CatRuntimeContext* context) override final;
-		virtual void precompileAssignmentExpression(const jitcat::AST::CatAssignableExpression* expression, const std::string& expressionStr, CatRuntimeContext* context) override final;
+		virtual void precompileSourceFile(const jitcat::AST::CatSourceFile* sourceFile,  jitcat::CatLib* catLib, CatRuntimeContext* context) override final;
+		virtual void precompileExpression(const jitcat::AST::CatTypedExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, CatRuntimeContext* context) override final;
+		virtual void precompileAssignmentExpression(const jitcat::AST::CatAssignableExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, CatRuntimeContext* context) override final;
 
 		llvm::GlobalVariable* defineGlobalVariable(const std::string& globalSymbolName, LLVMCompileTimeContext* context);
 		llvm::GlobalVariable* defineGlobalFunctionPointer(const std::string& globalSymbolName, LLVMCompileTimeContext* context);

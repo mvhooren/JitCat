@@ -48,10 +48,13 @@ ExpressionBase* ExpressionHelperFunctions::createExpression(const CatGenericType
 }
 
 
-std::string jitcat::ExpressionHelperFunctions::getUniqueExpressionFunctionName(const std::string& expression, CatRuntimeContext* context, bool isAssignExpression)
+std::string jitcat::ExpressionHelperFunctions::getUniqueExpressionFunctionName(const std::string& expression, CatRuntimeContext* context, bool isAssignExpression, const CatGenericType& expectedReturnType)
 {
 	std::hash<std::string> stringHash;
 	std::size_t expressionHash = stringHash(expression);
+	std::string returnType = expectedReturnType.toString();
+	std::size_t returnTypeHash = stringHash(returnType);
+	expressionHash = Tools::hashCombine(expressionHash, returnTypeHash);
 	std::size_t contextHash = context->getContextHash();
 	if (isAssignExpression)
 		return Tools::append("expressionAssign_", Tools::toHexBytes(expressionHash), "_", Tools::toHexBytes(contextHash));

@@ -56,10 +56,10 @@ namespace jitcat::LLVM
 		llvm::Function* generateExpressionAssignFunction(const AST::CatAssignableExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
 	
 		//Generates a function that returns the value of the expression.
-		intptr_t generateAndGetFunctionAddress(const AST::CatTypedExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context);
+		intptr_t generateAndGetFunctionAddress(const AST::CatTypedExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, LLVMCompileTimeContext* context);
 
 		//Generates a function that takes a parameter that will be assigned to the result of the expression. Expression must be of an assignable type (lValue).
-		intptr_t generateAndGetAssignFunctionAddress(const jitcat::AST::CatAssignableExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context);
+		intptr_t generateAndGetAssignFunctionAddress(const jitcat::AST::CatAssignableExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, LLVMCompileTimeContext* context);
 
 		void emitModuleToObjectFile(const std::string& objectFileName);
 

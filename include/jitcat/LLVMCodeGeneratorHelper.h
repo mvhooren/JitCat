@@ -179,16 +179,9 @@ namespace jitcat::LLVM
 		llvm::Value* copyConstructIfValueType(llvm::Value* value, const CatGenericType& type, LLVMCompileTimeContext* context, const std::string& valueName);
 		llvm::Value* generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context, bool isDirectlyLinked);
 
-		llvm::Value* createZeroStringPtrConstant(LLVMCompileTimeContext* context);
-		llvm::Value* createOneStringPtrConstant(LLVMCompileTimeContext* context);
-
 	private:
 		LLVMCodeGenerator* codeGenerator;
 		llvm::LLVMContext& llvmContext;
-
-		static const std::string emptyString;
-		static const std::string oneString;
-		static const std::string zeroString;
 	};
 
 }

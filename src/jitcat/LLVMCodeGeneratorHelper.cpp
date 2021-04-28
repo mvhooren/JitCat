@@ -1206,7 +1206,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			}
 			else
 			{
-				llvm::GlobalVariable* functionInfoGlobal = createGlobalPointerSymbol(memberFunction->getMangledFunctionInfoName());
+				llvm::GlobalVariable* functionInfoGlobal = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(memberFunction->getMangledFunctionInfoName(), context);
 				memberFunctionInfoAddressValue = loadPointerAtAddress(functionInfoGlobal, "MemberFunctionInfo_IntPtr");
 			}
 			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
@@ -1466,20 +1466,3 @@ llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::
 	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getNormalFunctionName(), 
 									  functionInfo->getNormalFunctionName(), returnValueAllocation, isDirectlyLinked);
 }
-
-
-llvm::Value* LLVMCodeGeneratorHelper::createZeroStringPtrConstant(LLVMCompileTimeContext* context)
-{
-	return createPtrConstant(context, reinterpret_cast<uintptr_t>(&zeroString), "ZeroString", LLVMTypes::pointerType);
-}
-
-
-llvm::Value* LLVMCodeGeneratorHelper::createOneStringPtrConstant(LLVMCompileTimeContext* context)
-{
-	return createPtrConstant(context, reinterpret_cast<uintptr_t>(&oneString), "OneString", LLVMTypes::pointerType);
-}
-
-
-const Configuration::CatString LLVMCodeGeneratorHelper::emptyString = Configuration::CatString();
-const Configuration::CatString LLVMCodeGeneratorHelper::zeroString = "0";
-const Configuration::CatString LLVMCodeGeneratorHelper::oneString = "1";

@@ -23,11 +23,12 @@ using namespace jitcat;
 using namespace AST;
 using namespace Reflection;
 
-CatLib::CatLib(const std::string& libName):
+CatLib::CatLib(const std::string& libName, std::shared_ptr<PrecompilationContext> precompilationContext):
 	name(libName),
 	errorManager(std::make_unique<ExpressionErrorManager>()),
 	context(std::make_unique<CatRuntimeContext>(libName, errorManager.get()))
 {
+	context->setPrecompilationContext(precompilationContext);
 }
 
 

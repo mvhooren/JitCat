@@ -158,7 +158,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 	//typeCheck may have changed parseResult.success
 	if (parseResult.success && !isConstant)
 	{
-		compileToNativeCode(context);
+		compileToNativeCode(context, expectedType);
 	}
 	if (!parseResult.success)
 	{
@@ -326,7 +326,7 @@ void ExpressionBase::handleParseErrors(CatRuntimeContext* context)
 }
 
 
-void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
+void ExpressionBase::compileToNativeCode(CatRuntimeContext* context, const CatGenericType& expectedType)
 {
 	if (!isConstant)
 	{
@@ -337,7 +337,7 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 			if (context->getPrecompilationContext() == nullptr)
 			{
 				//Lookup the symbol for the expression by its unique name.
-				uintptr_t symbolAddress = JitCat::get()->getPrecompiledSymbol(ExpressionHelperFunctions::getUniqueExpressionFunctionName(expression, context, expectAssignable));
+				uintptr_t symbolAddress = JitCat::get()->getPrecompiledSymbol(ExpressionHelperFunctions::getUniqueExpressionFunctionName(expression, context, expectAssignable, expectedType));
 				if (symbolAddress != 0)
 				{
 					handleCompiledFunction(symbolAddress);
@@ -353,18 +353,18 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context)
 		codeGenerator = context->getCodeGenerator();
 		if (!expectAssignable)
 		{
- 			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult.getNode<CatTypedExpression>(), expression, &llvmCompileContext);
+ 			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult.getNode<CatTypedExpression>(), expression, expectedType, &llvmCompileContext);
 			if (context->getPrecompilationContext() != nullptr)
 			{
-				context->getPrecompilationContext()->precompileExpression(parseResult.getNode<CatTypedExpression>(), expression, context);
+				context->getPrecompilationContext()->precompileExpression(parseResult.getNode<CatTypedExpression>(), expression, expectedType, context);
 			}
 		}
 		else if (parseResult.getNode<CatTypedExpression>()->isAssignable())
 		{
-			functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult.getNode<CatAssignableExpression>(), expression, &llvmCompileContext);
+			functionAddress = codeGenerator->generateAndGetAssignFunctionAddress(parseResult.getNode<CatAssignableExpression>(), expression, expectedType, &llvmCompileContext);
 			if (context->getPrecompilationContext() != nullptr)
 			{
-				context->getPrecompilationContext()->precompileAssignmentExpression(parseResult.getNode<CatAssignableExpression>(), expression, context);
+				context->getPrecompilationContext()->precompileAssignmentExpression(parseResult.getNode<CatAssignableExpression>(), expression, expectedType, context);
 			}
 		}
 		if (functionAddress != 0)

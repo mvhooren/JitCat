@@ -19,7 +19,7 @@ namespace jitcat
 {
 	class CatGenericType;
 	class ExpressionErrorManager;
-
+	class PrecompilationContext;
 	namespace AST
 	{
 		class CatSourceFile;
@@ -40,7 +40,7 @@ namespace jitcat
 	class CatLib
 	{
 	public:
-		CatLib(const std::string& libName);
+		CatLib(const std::string& libName, std::shared_ptr<PrecompilationContext> precompilationContext);
 		~CatLib();
 
 		//addStaticScope adds a scope containing types, variables and/or functions that can be used by source files compiled by this CatLib. 

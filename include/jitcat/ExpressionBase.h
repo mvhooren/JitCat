@@ -71,7 +71,7 @@ namespace jitcat
 		void constCollapse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext);
 		void typeCheck(const CatGenericType& expectedType, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext);
 		void handleParseErrors(CatRuntimeContext* context);
-		void compileToNativeCode(CatRuntimeContext* context);
+		void compileToNativeCode(CatRuntimeContext* context, const CatGenericType& expectedType);
 		void calculateLiteralStatus();
 
 	protected:

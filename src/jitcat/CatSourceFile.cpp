@@ -146,6 +146,11 @@ bool CatSourceFile::compile(CatLib& catLib)
 		llvmContext.options.enableDereferenceNullChecks = true;
 		llvmContext.currentLib = &catLib;
 		compiletimeContext->getCodeGenerator()->generate(this, &llvmContext);
+		if (compiletimeContext->getPrecompilationContext() != nullptr)
+		{
+			compiletimeContext->getPrecompilationContext()->precompileSourceFile(this, &catLib, compiletimeContext);
+		}
+
 	}
 #endif
 

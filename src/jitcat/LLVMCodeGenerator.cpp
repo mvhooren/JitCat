@@ -303,11 +303,11 @@ llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(const CatAss
 }
 
 
-intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context)
+intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, LLVMCompileTimeContext* context)
 {
 	initContext(context);
 	createNewModule(context);
-	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, false);
+	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, false, expectedType);
 
 	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
 	if (lookupResult && lookupResult.get())
@@ -331,11 +331,11 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpressi
 }
 
 
-intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssignableExpression* expression, const std::string& expressionStr, LLVMCompileTimeContext* context)
+intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssignableExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, LLVMCompileTimeContext* context)
 {
 	initContext(context);
 	createNewModule(context);
-	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, true);
+	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, true, expectedType);
 
 	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
 	if (lookupResult && lookupResult.get())

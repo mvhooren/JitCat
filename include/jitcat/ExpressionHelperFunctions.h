@@ -27,7 +27,7 @@ namespace jitcat
 		static bool canBeAssigned(const CatGenericType& targetType, const CatGenericType& sourceType);
 		static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText, CatRuntimeContext* compileContext);
 		static ExpressionBase* createExpression(const CatGenericType& type, const std::string& expressionText);
-		static std::string getUniqueExpressionFunctionName(const std::string& expression, CatRuntimeContext* context, bool isAssignExpression);
+		static std::string getUniqueExpressionFunctionName(const std::string& expression, CatRuntimeContext* context, bool isAssignExpression, const CatGenericType& expectedReturnType);
 	};
 
 

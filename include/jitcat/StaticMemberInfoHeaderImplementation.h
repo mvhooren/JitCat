@@ -67,7 +67,7 @@ namespace jitcat::Reflection
 		}
 		else
 		{
-			llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+			llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 			uniquePtrPtr = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
 		}
 
@@ -136,7 +136,7 @@ namespace jitcat::Reflection
 			}
 			else
 			{
-				llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+				llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 				addressValue = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
 			}
 			
@@ -158,7 +158,7 @@ namespace jitcat::Reflection
 		}
 		else
 		{
-			llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+			llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 			addressIntValue = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
 		}
 		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));

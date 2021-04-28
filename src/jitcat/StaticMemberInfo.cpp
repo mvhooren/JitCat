@@ -90,7 +90,7 @@ llvm::Value* StaticClassPointerMemberInfo::generateDereferenceCode(LLVM::LLVMCom
 	}
 	else
 	{
-		llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 		return context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName(), context->helper->getPointerTo(LLVM::LLVMTypes::pointerTypeAsType));
 	}
 #else 
@@ -110,7 +110,7 @@ llvm::Value* StaticClassPointerMemberInfo::generateAssignCode(llvm::Value* rValu
 	}
 	else
 	{
-		llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 		pointerAddress = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
 	}
 	
@@ -165,7 +165,7 @@ llvm::Value* StaticClassHandleMemberInfo::generateDereferenceCode(LLVM::LLVMComp
 	}
 	else
 	{
-		llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 		reflectableHandle = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
 	}
 
@@ -187,7 +187,7 @@ llvm::Value* StaticClassHandleMemberInfo::generateAssignCode(llvm::Value* rValue
 	}
 	else
 	{
-		llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 		reflectableHandle = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
 	}
 	//Whether or not the assigned value inherits from reflectable
@@ -242,7 +242,7 @@ llvm::Value* StaticClassObjectMemberInfo::generateDereferenceCode(LLVM::LLVMComp
 		}
 		else
 		{
-			llvm::GlobalVariable* globalVariable = context->helper->createGlobalPointerSymbol(getStaticMemberPointerVariableName());
+			llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
 			objectPointer = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
 		}
 
