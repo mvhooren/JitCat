@@ -130,10 +130,13 @@ void Reflectable::removeObserver(ReflectableHandle* observer)
 	}
 	observer->setPreviousHandle(nullptr);
 	observer->setNextHandle(nullptr);
-	assert(!hasHandle(observer));
-	if (firstHandle != nullptr)
-	{	
-		assert(validateHandles(firstHandle->getObjectType()));
+	if constexpr (Configuration::enableHandleVerificationAsserts)
+	{
+		assert(!hasHandle(observer));
+		if (firstHandle != nullptr)
+		{	
+			assert(validateHandles(firstHandle->getObjectType()));
+		}
 	}
 }
 
