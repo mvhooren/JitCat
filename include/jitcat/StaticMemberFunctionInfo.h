@@ -52,6 +52,8 @@ namespace jitcat::Reflection
 		virtual int getNumParameters() const override;
 		virtual const CatGenericType& getParameterType(int index) const override;
 
+		virtual bool getNeverReturnsNull() const;
+
 		const std::string& getNormalFunctionName() const;
 		std::string getMangledFunctionName() const;
 
@@ -80,6 +82,8 @@ namespace jitcat::Reflection
 
 		virtual std::size_t getNumberOfArguments() const override final;
 		inline virtual uintptr_t getFunctionAddress() const override final;
+
+		virtual bool getNeverReturnsNull() const override final;
 
 	private:
 		ReturnT (*function)(TFunctionArguments...);

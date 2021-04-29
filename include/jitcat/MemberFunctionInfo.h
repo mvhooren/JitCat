@@ -43,21 +43,23 @@ namespace jitcat::Reflection
 
 	struct MemberFunctionCallData
 	{
-		MemberFunctionCallData(): functionAddress(0), functionInfoStructAddress(0), callType(MemberFunctionCallType::Unknown), inlineFunctionGenerator(nullptr), linkDylib(false) {}
+		MemberFunctionCallData(): functionAddress(0), functionInfoStructAddress(0), callType(MemberFunctionCallType::Unknown), inlineFunctionGenerator(nullptr), linkDylib(false), nonNullResult(false) {}
 		MemberFunctionCallData(uintptr_t functionAddress, uintptr_t functionInfoStructAddress, 
 							   const std::function<llvm::Value*(LLVM::LLVMCompileTimeContext* context, const std::vector<llvm::Value*>&)>* inlineFunctionGenerator,
-							   MemberFunctionCallType callType, bool linkDylib): 
+							   MemberFunctionCallType callType, bool linkDylib, bool nonNullResult): 
 			functionAddress(functionAddress), 
 			functionInfoStructAddress(functionInfoStructAddress),
 			inlineFunctionGenerator(inlineFunctionGenerator),
 			callType(callType),
-			linkDylib(linkDylib)
+			linkDylib(linkDylib),
+			nonNullResult(nonNullResult)
 		{}
 		const uintptr_t functionAddress;
 		const uintptr_t functionInfoStructAddress;
 		const std::function<llvm::Value*(LLVM::LLVMCompileTimeContext* context, const std::vector<llvm::Value*>&)>* inlineFunctionGenerator;
 		const MemberFunctionCallType callType;
 		const bool linkDylib;
+		const bool nonNullResult;
 	};
 
 

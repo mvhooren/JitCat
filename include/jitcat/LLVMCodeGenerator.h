@@ -132,6 +132,8 @@ namespace jitcat::LLVM
 
 		llvm::Value* booleanCast(llvm::Value* boolean);
 
+		static void createOptimisationPasses(llvm::legacy::FunctionPassManager* passManager);
+
 	private:
 		//ExecutionSession represents a running JIT program
 		std::unique_ptr<llvm::orc::ExecutionSession> executionSession;

@@ -46,6 +46,7 @@
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
+#include <llvm/Transforms/Utils.h>
 
 using namespace jitcat;
 using namespace jitcat::AST;
@@ -164,16 +165,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	// Create a new pass manager attached to it.
 	passManager = std::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
 
-	// Do simple "peephole" and bit-twiddling optimizations.
-	passManager->add(llvm::createInstructionCombiningPass());
-	// Reassociate expressions.
-	passManager->add(llvm::createReassociatePass());
-	// Eliminate Common SubExpressions.
-	passManager->add(llvm::createGVNPass());
-	// Simplify the control flow graph (deleting unreachable blocks, etc).
-	passManager->add(llvm::createCFGSimplificationPass());
-
-	passManager->doInitialization();
+	createOptimisationPasses(passManager.get());
 
 }
 
@@ -1027,7 +1019,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatMemberFunctionCall* memberFunc
 
 llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* staticFunctionCall, LLVMCompileTimeContext* context)
 {
-	const CatArgumentList* arguments = staticFunctionCall-> getArguments();
+	const CatArgumentList* arguments = staticFunctionCall->getArguments();
 	std::vector<const CatTypedExpression*> expressionArguments;
 	for (std::size_t i = 0; i < arguments->getNumArguments(); i++)
 	{
@@ -1047,7 +1039,7 @@ llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* stati
 	helper->generateFunctionCallArgumentEvalatuation(expressionArguments, staticFunctionCall->getExpectedParameterTypes(), argumentList, argumentTypes, this, context);
 	helper->defineWeakSymbol(context, staticFunctionCall->getFunctionAddress(), staticFunctionCall->getMangledFunctionName(), false);
 	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(), 
-											  staticFunctionCall->getFunctionName(), returnAllocation, false);
+											  staticFunctionCall->getFunctionName(), returnAllocation, false, staticFunctionCall->getFunctionNeverReturnsNull());
 }
 
 
@@ -1666,7 +1658,11 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 			//This global variable must then be set to the global scope before any precompiled expressions are executed.
 			const std::string_view scopeName = context->catContext->getScopeNameView(scopeId);
 			std::string scopeNameStr(scopeName.data(), scopeName.size());
-			parentObjectAddress = builder->CreateLoad(std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(scopeNameStr, context), Tools::append(scopeNameStr, "_Ptr"));
+			llvm::LoadInst* loadedGlobal = builder->CreateLoad(std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(scopeNameStr, context), Tools::append(scopeNameStr, "_Ptr"));
+			llvm::MDNode *MD = llvm::MDNode::get(LLVMJit::get().getContext(), llvm::None);
+			loadedGlobal->setMetadata(llvm::LLVMContext::MD_nonnull, MD);
+			parentObjectAddress = loadedGlobal;
+			
 		}
 		else
 		{
@@ -1688,6 +1684,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 		assert(argument->getType() == LLVMTypes::pointerType);
 		llvm::Value* scopeIdValue = context->helper->createConstant((int)scopeId);
 		llvm::Value* address = address = helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getScopePointerFromContext, {argument, scopeIdValue}, "_jc_getScopePointerFromContext", true); 
+	
 		assert(address != nullptr);
 		parentObjectAddress = helper->convertToIntPtr(address, "CustomThis_IntPtr");
 	}
@@ -1711,16 +1708,7 @@ void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
 	// Create a new pass manager attached to it.
 	passManager = std::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
 
-	// Do simple "peephole" optimizations and bit-twiddling optzns.
-	passManager->add(llvm::createInstructionCombiningPass());
-	// Reassociate expressions.
-	passManager->add(llvm::createReassociatePass());
-	// Eliminate Common SubExpressions.
-	passManager->add(llvm::createGVNPass());
-	// Simplify the control flow graph (deleting unreachable blocks, etc).
-	passManager->add(llvm::createCFGSimplificationPass());
-
-	passManager->doInitialization();
+	createOptimisationPasses(passManager.get());
 }
 
 
@@ -1913,6 +1901,24 @@ llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* LLVMCodeG
 llvm::Value* LLVMCodeGenerator::booleanCast(llvm::Value* boolean)
 {
 	return builder->CreateCast(llvm::Instruction::CastOps::ZExt ,boolean, LLVMTypes::boolType);
+}
+
+
+void LLVMCodeGenerator::createOptimisationPasses(llvm::legacy::FunctionPassManager* passManager)
+{
+	// Do simple "peephole" and bit-twiddling optimizations.
+	passManager->add(llvm::createInstructionCombiningPass());
+	// Reassociate expressions.
+	passManager->add(llvm::createReassociatePass());
+	// Eliminate Common SubExpressions.
+	passManager->add(llvm::createGVNPass());
+	// Simplify the control flow graph (deleting unreachable blocks, etc).
+	passManager->add(llvm::createCFGSimplificationPass());
+	// Move some alloca's to registers
+	passManager->add(llvm::createPromoteMemoryToRegisterPass());
+
+	//Initialize the passManager
+	passManager->doInitialization();
 }
 
 

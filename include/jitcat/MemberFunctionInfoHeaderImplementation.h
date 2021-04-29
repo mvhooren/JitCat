@@ -81,7 +81,7 @@ namespace jitcat::Reflection
 			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
 			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
 		}
-		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), nullptr, callType, false);
+		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), nullptr, callType, false, !std::is_pointer_v<ReturnT>);
 	}
 
 
@@ -178,7 +178,7 @@ namespace jitcat::Reflection
 			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
 			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
 		}
-		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), nullptr, callType, false);
+		return MemberFunctionCallData(functionPtr, reinterpret_cast<uintptr_t>(this), nullptr, callType, false, !std::is_pointer_v<ReturnT>);
 	}
 
 
@@ -259,7 +259,7 @@ namespace jitcat::Reflection
 	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
-		return MemberFunctionCallData(pointer, reinterpret_cast<uintptr_t>(this), nullptr, MemberFunctionCallType::PseudoMemberCall, false);
+		return MemberFunctionCallData(pointer, reinterpret_cast<uintptr_t>(this), nullptr, MemberFunctionCallType::PseudoMemberCall, false, !std::is_pointer_v<ReturnT>);
 	}
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>

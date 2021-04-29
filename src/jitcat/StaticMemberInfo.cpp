@@ -84,15 +84,8 @@ std::any StaticClassPointerMemberInfo::getAssignableMemberReference()
 llvm::Value* StaticClassPointerMemberInfo::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	if (!context->isPrecompilationContext)
-	{
-		return context->helper->createPtrConstant(context, reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName, context->helper->toLLVMPtrType(*catType.getPointeeType()));
-	}
-	else
-	{
-		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-		return context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName(), context->helper->getPointerTo(LLVM::LLVMTypes::pointerTypeAsType));
-	}
+	llvm::Value* staticPtr = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
+	return context->helper->convertToPointer(staticPtr, memberName + "_Ptr", context->helper->toLLVMPtrType(*catType.getPointeeType()));
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -103,17 +96,7 @@ llvm::Value* StaticClassPointerMemberInfo::generateAssignCode(llvm::Value* rValu
 {
 #ifdef ENABLE_LLVM
 
-	llvm::Value* pointerAddress;
-	if (!context->isPrecompilationContext)
-	{
-		pointerAddress = context->helper->createPtrConstant(context, reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName, context->helper->toLLVMPtrType(*catType.getPointeeType()));
-	}
-	else
-	{
-		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-		pointerAddress = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
-	}
-	
+	llvm::Value* pointerAddress = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 	llvm::Value* addressValue = context->helper->convertToPointer(pointerAddress, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
 	context->helper->writeToPointer(addressValue, rValue);
 	return rValue;
@@ -157,17 +140,7 @@ llvm::Value* StaticClassHandleMemberInfo::generateDereferenceCode(LLVM::LLVMComp
 {
 #ifdef ENABLE_LLVM
 	//Create a constant with the pointer to the reflectable handle.
-	llvm::Value* reflectableHandle;
-
-	if (!context->isPrecompilationContext)
-	{
-		reflectableHandle = context->helper->createPtrConstant(context, reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
-	}
-	else
-	{
-		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-		reflectableHandle = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
-	}
+	llvm::Value* reflectableHandle = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 
 	//Call function that gets the value
 	return context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_getObjectPointerFromHandle, {reflectableHandle}, "_jc_getObjectPointerFromHandle", true);
@@ -180,16 +153,7 @@ llvm::Value* StaticClassHandleMemberInfo::generateDereferenceCode(LLVM::LLVMComp
 llvm::Value* StaticClassHandleMemberInfo::generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	llvm::Value* reflectableHandle;
-	if (!context->isPrecompilationContext)
-	{
-		reflectableHandle = context->helper->createPtrConstant(context, reinterpret_cast<uintptr_t>(memberPointer), "ReflectableHandle");
-	}
-	else
-	{
-		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-		reflectableHandle = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
-	}
+	llvm::Value* reflectableHandle = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 	//Whether or not the assigned value inherits from reflectable
 	llvm::Value* typeInfoConstantAsIntPtr = context->helper->createTypeInfoGlobalValue(context, catType.removeIndirection().getObjectType());
 	//Call function that gets the member
@@ -235,16 +199,7 @@ llvm::Value* StaticClassObjectMemberInfo::generateDereferenceCode(LLVM::LLVMComp
 {
 #ifdef ENABLE_LLVM
 
-		llvm::Value* objectPointer;
-		if (!context->isPrecompilationContext)
-		{
-			objectPointer = context->helper->constantToValue(context->helper->createIntPtrConstant(context, reinterpret_cast<intptr_t>(memberPointer), "pointerTo_" + memberName));
-		}
-		else
-		{
-			llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-			objectPointer = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
-		}
+		llvm::Value* objectPointer =  context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 
 		return context->helper->convertToPointer(objectPointer, memberName);
 #else 

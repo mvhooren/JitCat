@@ -60,16 +60,7 @@ namespace jitcat::Reflection
 	inline llvm::Value* StaticClassUniquePtrMemberInfo<ClassT>::generateDereferenceCode(LLVM::LLVMCompileTimeContext* context) const
 	{
 	#ifdef ENABLE_LLVM
-		llvm::Value* uniquePtrPtr = nullptr;
-		if (!context->isPrecompilationContext)
-		{
-			uniquePtrPtr = context->helper->createPtrConstant(context, reinterpret_cast<uintptr_t>(memberPointer), "UniquePtrPtr");
-		}
-		else
-		{
-			llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-			uniquePtrPtr = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
-		}
+		llvm::Value* uniquePtrPtr = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 
 		std::string mangledName = getMangledGetPointerName();
 		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName, false);
@@ -129,16 +120,7 @@ namespace jitcat::Reflection
 	{
 		#ifdef ENABLE_LLVM
 
-			llvm::Value* addressValue;
-			if (!context->isPrecompilationContext)
-			{
-				addressValue = context->helper->constantToValue(context->helper->createIntPtrConstant(context, reinterpret_cast<std::intptr_t>(memberPointer), memberName + "_IntPtr"));
-			}
-			else
-			{
-				llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-				addressValue = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
-			}
+			llvm::Value* addressValue = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 			
 			return context->helper->loadBasicType(context->helper->toLLVMType(catType), addressValue, memberName);
 		#else 
@@ -151,16 +133,7 @@ namespace jitcat::Reflection
 	inline llvm::Value* StaticBasicTypeMemberInfo<BasicT>::generateAssignCode(llvm::Value* rValue, LLVM::LLVMCompileTimeContext* context) const
 	{
 	#ifdef ENABLE_LLVM
-		llvm::Value* addressIntValue;
-		if (!context->isPrecompilationContext)
-		{
-			addressIntValue = context->helper->constantToValue(context->helper->createIntPtrConstant(context, reinterpret_cast<std::intptr_t>(memberPointer), memberName + "_IntPtr"));
-		}
-		else
-		{
-			llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(getStaticMemberPointerVariableName(), context);
-			addressIntValue = context->helper->loadPointerAtAddress(globalVariable, getStaticMemberPointerVariableName());
-		}
+		llvm::Value* addressIntValue = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
 		context->helper->writeToPointer(addressValue, rValue);
 		return rValue;

@@ -61,6 +61,12 @@ uintptr_t CatStaticFunctionCall::getFunctionAddress() const
 }
 
 
+bool jitcat::AST::CatStaticFunctionCall::getFunctionNeverReturnsNull() const
+{
+	return staticFunctionInfo->getNeverReturnsNull();
+}
+
+
 const std::string& CatStaticFunctionCall::getFunctionName() const
 {
 	return name;

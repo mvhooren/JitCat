@@ -30,6 +30,7 @@ namespace jitcat::AST
 		
 		const CatArgumentList* getArguments() const;
 		uintptr_t getFunctionAddress() const;
+		bool getFunctionNeverReturnsNull() const;
 		const std::string& getFunctionName() const;
 		std::string getMangledFunctionName() const;
 

@@ -10,6 +10,7 @@
 
 #include "jitcat/TypeTraits.h"
 #include "jitcat/TypeConversionCastHelper.h"
+#include "StaticMemberFunctionInfo.h"
 
 
 namespace jitcat::Reflection
@@ -61,6 +62,13 @@ namespace jitcat::Reflection
 		memcpy(&pointer, &function, sizeof(uintptr_t));
 		static_assert(sizeof(function) == sizeof(uintptr_t), "Unsupported function pointer.");
 		return pointer;
+	}
+
+
+	template<typename ReturnT, class ...TFunctionArguments>
+	inline bool StaticFunctionInfoWithArgs<ReturnT, TFunctionArguments...>::getNeverReturnsNull() const
+	{
+		return std::is_pointer_v<ReturnT>;
 	}
 
 

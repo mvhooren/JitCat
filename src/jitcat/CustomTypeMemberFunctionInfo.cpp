@@ -55,7 +55,7 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
 
  MemberFunctionCallData CustomTypeMemberFunctionInfo::getFunctionAddress() const
  {
-	 return MemberFunctionCallData(nativeAddress, reinterpret_cast<uintptr_t>(this), nullptr, MemberFunctionCallType::ThisCall, true);
+	 return MemberFunctionCallData(nativeAddress, reinterpret_cast<uintptr_t>(this), nullptr, MemberFunctionCallType::ThisCall, true, !returnType.isPointerType());
  }
 
 

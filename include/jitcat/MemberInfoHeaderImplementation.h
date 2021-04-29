@@ -254,17 +254,7 @@ template<typename BaseT, typename ClassT>
 inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
-	llvm::Value* thisPointerAsInt;
-	if (!context->isPrecompilationContext)
-	{
-		thisPointerAsInt = context->helper->constantToValue(context->helper->createIntPtrConstant(context, reinterpret_cast<uintptr_t>(this), "ClassUniquePtrMemberInfoIntPtr"));
-	}
-	else
-	{
-		auto precompContext = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext());
-		llvm::Constant* globalAddress = context->helper->globalVariableToConstant(precompContext->defineGlobalVariable(getGlobalThisVariableName(), context));
-		thisPointerAsInt = context->helper->loadPointerAtAddress(globalAddress, "ClassUniquePtrMemberInfoIntPtr");
-	}
+	llvm::Value* thisPointerAsInt = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(this), context, getGlobalThisVariableName());
 	if (!context->helper->isPointer(parentObjectPointer))
 	{
 		parentObjectPointer = context->helper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr");

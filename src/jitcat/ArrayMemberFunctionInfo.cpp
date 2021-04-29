@@ -158,7 +158,7 @@ std::any ArrayMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::a
 
 MemberFunctionCallData ArrayMemberFunctionInfo::getFunctionAddress() const
 {
-	return MemberFunctionCallData(0, 0, inlineFunctionGenerator.get(), MemberFunctionCallType::InlineFunctionGenerator, false);
+	return MemberFunctionCallData(0, 0, inlineFunctionGenerator.get(), MemberFunctionCallType::InlineFunctionGenerator, false, !arrayTypeInfo->getArrayItemType().isPointerType() );
 }
 
 

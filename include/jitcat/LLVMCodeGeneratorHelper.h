@@ -89,6 +89,9 @@ namespace jitcat::LLVM
 
 		llvm::Value* convertType(llvm::Value* valueToConvert, const CatGenericType& fromType, const CatGenericType& toType, LLVMCompileTimeContext* context);
 		llvm::Value* convertType(llvm::Value* valueToConvert, bool valueIsSigned, llvm::Type* toType, bool toIsSigned, LLVMCompileTimeContext* context);
+
+		llvm::Value* generateStaticPointerVariable(uintptr_t valueWhenJitCompiling, LLVMCompileTimeContext* context, const std::string& name);
+
 	private:
 		llvm::Value* convertToString(llvm::Value* valueToConvert, const CatGenericType& fromType, LLVMCompileTimeContext* context);
 	public:
@@ -158,7 +161,8 @@ namespace jitcat::LLVM
 												const std::string& mangledFunctionName, 
 												const std::string& shortFunctionName,
 												llvm::Value* returnedObjectAllocation,
-												bool isDirectlyLinked);
+												bool isDirectlyLinked,
+												bool resultIsNonNull);
 
 		llvm::Value* generateMemberFunctionCall(jitcat::Reflection::MemberFunctionInfo* memberFunction, const jitcat::AST::CatTypedExpression* base, 
 											    const std::vector<const jitcat::AST::CatTypedExpression*>& arguments, 

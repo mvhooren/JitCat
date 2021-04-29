@@ -64,6 +64,13 @@ const CatGenericType& StaticFunctionInfo::getParameterType(int index) const
 	return argumentTypes[index];
 }
 
+
+bool StaticFunctionInfo::getNeverReturnsNull() const
+{
+	return false;
+}
+
+
 const std::string& StaticFunctionInfo::getNormalFunctionName() const
 {
 	return memberFunctionName;

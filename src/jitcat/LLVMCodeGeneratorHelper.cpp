@@ -625,6 +625,23 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, b
 }
 
 
+llvm::Value* LLVMCodeGeneratorHelper::generateStaticPointerVariable(uintptr_t valueWhenJitCompiling, LLVMCompileTimeContext* context, const std::string& name)
+{
+	if (!context->isPrecompilationContext)
+	{
+		return context->helper->createPtrConstant(context, valueWhenJitCompiling, "pointerTo_" + name);
+	}
+	else
+	{
+		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(name, context);
+		llvm::Value* loadedPointer = context->helper->loadPointerAtAddress(globalVariable, name, LLVM::LLVMTypes::pointerType);
+		llvm::MDNode* metaData = llvm::MDNode::get(LLVMJit::get().getContext(), llvm::None);
+		static_cast<llvm::LoadInst*>(loadedPointer)->setMetadata(llvm::LLVMContext::MD_nonnull, metaData);
+		return loadedPointer;
+	}
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::convertToString(llvm::Value* valueToConvert, const CatGenericType& fromType, LLVMCompileTimeContext* context)
 {
 	if (valueToConvert->getType() == LLVMTypes::boolType)
@@ -1057,7 +1074,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext*
 	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
 	llvm::AllocaInst* objectAllocation = builder->CreateAlloca(llvmObjectType, 0, nullptr);
 	objectAllocation->setName(name);
-	
+
 	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, LLVMTypes::pointerType);
 
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
@@ -1153,7 +1170,7 @@ void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std
 llvm::Value* LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::CatGenericType& returnType, const std::vector<llvm::Value*>& argumentList, 
 																 const std::vector<llvm::Type*>& argumentTypes, LLVMCompileTimeContext* context, 
 																 const std::string& mangledFunctionName, const std::string& shortFunctionName,
-																 llvm::Value* returnedObjectAllocation, bool isDirectlyLinked)
+																 llvm::Value* returnedObjectAllocation, bool isDirectlyLinked, bool resultIsNonNull)
 {
 	if (returnType.isReflectableObjectType())
 	{
@@ -1167,7 +1184,12 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::C
 	{
 		llvm::Type* returnLLVMType = toLLVMType(returnType);
 		llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
-		return createCall(context, functionType, argumentList, false, mangledFunctionName, shortFunctionName, isDirectlyLinked);
+		llvm::CallInst* callInstruction = static_cast<llvm::CallInst*>(createCall(context, functionType, argumentList, false, mangledFunctionName, shortFunctionName, isDirectlyLinked));
+		if (resultIsNonNull && callInstruction->getType()->isPointerTy())
+		{
+			callInstruction->addAttribute(llvm::AttributeList::ReturnIndex, llvm::Attribute::NonNull);
+		}
+		return callInstruction;
 	}
 }
 
@@ -1199,16 +1221,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 		if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
 		{
 			//Add an argument that contains a pointer to a MemberFunctionInfo object.
-			llvm::Value* memberFunctionInfoAddressValue = nullptr;
-			if (!context->isPrecompilationContext)
-			{
-				memberFunctionInfoAddressValue = createIntPtrConstant(context, callData.functionInfoStructAddress, "MemberFunctionInfo_IntPtr");
-			}
-			else
-			{
-				llvm::GlobalVariable* functionInfoGlobal = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(memberFunction->getMangledFunctionInfoName(), context);
-				memberFunctionInfoAddressValue = loadPointerAtAddress(functionInfoGlobal, "MemberFunctionInfo_IntPtr");
-			}
+			llvm::Value* memberFunctionInfoAddressValue = context->helper->generateStaticPointerVariable(callData.functionInfoStructAddress, context, memberFunction->getMangledFunctionInfoName());
 			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
 			argumentList.push_back(memberFunctionPtrValue);
 			argumentTypes.push_back(LLVMTypes::pointerType);
@@ -1242,7 +1255,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			{
 				if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
 				{
-					return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), memberFunction->getMemberFunctionName(), returnedObjectAllocation, false);
+					return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), memberFunction->getMemberFunctionName(), returnedObjectAllocation, false, callData.nonNullResult);
 				}
 				else
 				{
@@ -1255,6 +1268,10 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 					{
 						call->setCallingConv(llvm::CallingConv::X86_ThisCall);
 					}
+					if (callData.nonNullResult && call->getType()->isPointerTy())
+					{
+						call->addAttribute(llvm::AttributeList::ReturnIndex, llvm::Attribute::NonNull);
+					}
 					return static_cast<llvm::Value*>(call);
 				}
 			}
@@ -1263,7 +1280,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 				argumentTypes.insert(argumentTypes.begin(), LLVMTypes::pointerType);
 				argumentList.insert(argumentList.begin(), returnedObjectAllocation);
 				return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(), 
-												  memberFunction->getMemberFunctionName(), returnedObjectAllocation, false);
+												  memberFunction->getMemberFunctionName(), returnedObjectAllocation, false, callData.nonNullResult);
 			}
 			else if (returnType.isReflectableObjectType())
 			{
@@ -1281,6 +1298,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 					sretInsertPoint++;
 				}
 				argumentList.insert(sretInsertPoint, returnedObjectAllocation);
+				
 				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(context, functionType, argumentList, 
 																									   callData.callType == MemberFunctionCallType::ThisCall, 
 																									   memberFunction->getMangledName(), 
@@ -1464,5 +1482,5 @@ llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::
 	}
 
 	return generateStaticFunctionCall(functionInfo->getReturnType(), arguments, argumentLLVMTypes, context, functionInfo->getNormalFunctionName(), 
-									  functionInfo->getNormalFunctionName(), returnValueAllocation, isDirectlyLinked);
+									  functionInfo->getNormalFunctionName(), returnValueAllocation, isDirectlyLinked, false);
 }
