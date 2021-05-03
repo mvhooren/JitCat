@@ -314,6 +314,7 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpressi
 	}
 	else
 	{
+		llvm::handleAllErrors(lookupResult.takeError(), [](const llvm::orc::SymbolsNotFound& err){});
 		llvm::Function* function = generateExpressionFunction(expression, context, functionName);
 		//To silence unused variable warning in release builds.
 		(void)function;
@@ -336,6 +337,7 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 	}
 	else
 	{	
+		llvm::handleAllErrors(lookupResult.takeError(), [](const llvm::orc::SymbolsNotFound& err){});
 		llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
 		//To silence unused variable warning in release builds.
 		(void)function;
