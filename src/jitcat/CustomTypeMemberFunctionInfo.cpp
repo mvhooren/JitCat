@@ -59,9 +59,9 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
  }
 
 
- std::string CustomTypeMemberFunctionInfo::getMangledName() const
+ std::string CustomTypeMemberFunctionInfo::getMangledName(bool sRetBeforeThis) const
  {
-	return functionDefinition->getMangledFunctionName();
+	return functionDefinition->getMangledFunctionName(sRetBeforeThis);
  }
 
 

@@ -31,29 +31,13 @@ namespace Configuration
 	//Sret is used when a function returns a structure by value. Om windows/msvc a class member funtion's
 	//first argument will be the 'this' pointer and the second argument will be the sret pointer if applicable.
 	//On linux/clang/gcc this is the other way around.
-	static constexpr bool sretBeforeThis = 
+	//Note that this configuration option is applicable to the current process only. 
+	//When compiling, the sretBeforeThis option from the LLVMTargetConfig is used instead (to enable cross-compilation).
+	static constexpr bool sretBeforeThisForCurrentProcess = 
 #ifdef WIN32
 		false;
 #else
 		true;
-#endif
-
-	//Determines who is responsible for destroying temporary argument values that are passed to a function.
-	//In the Windows/MSVC ABI, the callee is responsible for destroying temporaries.
-	//On Linux/GCC/Clang, which use the Itanium C++ ABI, the caller is responsible.
-	static constexpr bool callerDestroysTemporaryArguments = 
-#ifdef WIN32
-		false;
-#else
-		true;
-#endif
-
-	//Sets the calling convention for member function calls. Similar to the sretBeforeThis option.
-	static constexpr bool useThisCall = 
-#ifdef WIN32
-		true;
-#else
-		false;
 #endif
 
 	//The assumed size of a normal member function pointer.
@@ -67,14 +51,6 @@ namespace Configuration
 		false;
 #else
 		//function IR cannot be dumped in release builds
-		false;
-#endif
-
-	//Enable some workarounds on Windows/MSVC required for finding function symbols after their code has been generated.
-	static constexpr bool enableSymbolSearchWorkaround =
-#ifdef WIN32
-		true;
-#else
 		false;
 #endif
 

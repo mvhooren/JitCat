@@ -78,7 +78,7 @@ namespace jitcat::AST
 		virtual const std::string& getLowerCaseFunctionName() const override final;
 		const std::string& getFunctionName() const;
 		//This function name disambiguates between overloaded functions based on return type and argument types.
-		const std::string& getMangledFunctionName() const;
+		std::string getMangledFunctionName(bool sRetBeforeThis) const;
 
 		CatScopeBlock* getScopeBlock() const;
 		CatScopeBlock* getEpilogBlock() const;
@@ -93,12 +93,11 @@ namespace jitcat::AST
 
 	private:
 		CatScopeID pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance) const;
-		void updateMangledName();
 
 	private:
 		std::string name;
 		std::string lowerCaseName;
-		std::string mangledName;
+
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatTypeNode> type;
 		std::optional<bool> allControlPathsReturn;

@@ -19,6 +19,7 @@
 #ifdef ENABLE_LLVM
 	#include "jitcat/LLVMCodeGenerator.h"
 	#include "jitcat/LLVMCompileTimeContext.h"
+	#include "jitcat/LLVMJit.h"
 #endif
 
 #include <cassert>
@@ -142,7 +143,7 @@ bool CatSourceFile::compile(CatLib& catLib)
 #ifdef ENABLE_LLVM
 	if (noErrors)
 	{
-		LLVM::LLVMCompileTimeContext llvmContext(compiletimeContext, false);
+		LLVM::LLVMCompileTimeContext llvmContext(compiletimeContext, LLVM::LLVMJit::get().getJitTargetConfig(), false);
 		llvmContext.options.enableDereferenceNullChecks = true;
 		llvmContext.currentLib = &catLib;
 		compiletimeContext->getCodeGenerator()->generate(this, &llvmContext);

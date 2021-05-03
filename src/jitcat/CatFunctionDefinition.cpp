@@ -149,7 +149,6 @@ bool CatFunctionDefinition::defineCheck(CatRuntimeContext* compileTimeContext, s
 	}
 
 	errorManager->compiledWithoutErrors(this);
-	updateMangledName();
 	return true;
 }
 
@@ -220,7 +219,6 @@ bool CatFunctionDefinition::typeCheck(CatRuntimeContext* compileTimeContext)
 		return false;
 	}
 	errorManager->compiledWithoutErrors(this);
-	updateMangledName();
 	return true;
 }
 
@@ -328,7 +326,6 @@ void CatFunctionDefinition::setFunctionVisibility(Reflection::MemberVisibility f
 void CatFunctionDefinition::setParentClass(const CatClassDefinition* classDefinition)
 {
 	parentClass = classDefinition;
-	updateMangledName();
 }
 
 
@@ -338,15 +335,25 @@ const std::string& CatFunctionDefinition::getLowerCaseFunctionName() const
 }
 
 
-const std::string & CatFunctionDefinition::getFunctionName() const
+const std::string& CatFunctionDefinition::getFunctionName() const
 {
 	return name;
 }
 
 
-const std::string& CatFunctionDefinition::getMangledFunctionName() const
+std::string CatFunctionDefinition::getMangledFunctionName(bool sRetBeforeThis) const
 {
-	return mangledName;
+	std::vector<CatGenericType> parameterTypes;
+	for (int i = 0; i < parameters->getNumParameters(); ++i)
+	{
+		parameterTypes.push_back(parameters->getParameterType(i)->getType());
+	}
+	std::string qualifiedParent;
+	if (parentClass != nullptr)
+	{
+		qualifiedParent = parentClass->getQualifiedName();
+	}
+	return FunctionNameMangler::getMangledFunctionName(type->getType(), name, parameterTypes, true, qualifiedParent, sRetBeforeThis);
 }
 
 
@@ -394,20 +401,4 @@ bool CatFunctionDefinition::getAllControlPathsReturn() const
 CatScopeID CatFunctionDefinition::pushScope(CatRuntimeContext* runtimeContext, unsigned char* instance) const
 {
 	return runtimeContext->addDynamicScope(parameters->getCustomType(), instance);
-}
-
-
-void CatFunctionDefinition::updateMangledName()
-{
-	std::vector<CatGenericType> parameterTypes;
-	for (int i = 0; i < parameters->getNumParameters(); ++i)
-	{
-		parameterTypes.push_back(parameters->getParameterType(i)->getType());
-	}
-	std::string qualifiedParent;
-	if (parentClass != nullptr)
-	{
-		qualifiedParent = parentClass->getQualifiedName();
-	}
-	mangledName = FunctionNameMangler::getMangledFunctionName(type->getType(), name, parameterTypes, true, qualifiedParent);
 }

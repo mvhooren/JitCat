@@ -12,7 +12,8 @@
 using namespace jitcat;
 using namespace jitcat::FunctionNameMangler;
 
-std::string jitcat::FunctionNameMangler::getMangledFunctionName(const CatGenericType& returnType_, const std::string& functionName, const std::vector<CatGenericType>& parameterTypes, bool isThisCall, const std::string& qualifiedParentClassName)
+std::string FunctionNameMangler::getMangledFunctionName(const CatGenericType& returnType_, const std::string& functionName, const std::vector<CatGenericType>& parameterTypes, 
+														bool isThisCall, const std::string& qualifiedParentClassName, bool sRetBeforeThis)
 {
 	const CatGenericType* returnType = &returnType_;
 	std::vector<std::string> parameterNames;
@@ -20,7 +21,7 @@ std::string jitcat::FunctionNameMangler::getMangledFunctionName(const CatGeneric
 	{
 		returnType = &CatGenericType::voidType;
 		
-		if (Configuration::sretBeforeThis)
+		if (sRetBeforeThis)
 		{
 			parameterNames.push_back(Tools::append("__sret ", returnType_.toString()));
 		}
@@ -28,7 +29,7 @@ std::string jitcat::FunctionNameMangler::getMangledFunctionName(const CatGeneric
 		{
 			parameterNames.push_back(Tools::append("__this ", qualifiedParentClassName));
 		}
-		if (!Configuration::sretBeforeThis)
+		if (!sRetBeforeThis)
 		{
 			parameterNames.push_back(Tools::append("__sret ", returnType_.toString()));
 		}

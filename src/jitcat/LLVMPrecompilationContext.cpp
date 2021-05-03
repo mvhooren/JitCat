@@ -12,6 +12,7 @@
 #include "jitcat/ExpressionHelperFunctions.h"
 #include "jitcat/LLVMCodeGenerator.h"
 #include "jitcat/LLVMCompileTimeContext.h"
+#include "jitcat/LLVMJit.h"
 
 
 using namespace jitcat;
@@ -20,8 +21,8 @@ using namespace jitcat::LLVM;
 
 
 LLVMPrecompilationContext::LLVMPrecompilationContext():
-	codeGenerator(std::make_shared<LLVMCodeGenerator>("Precompilation")),
-	compileContext(std::make_unique<LLVMCompileTimeContext>(nullptr, true))
+	codeGenerator(std::make_shared<LLVMCodeGenerator>("Precompilation", LLVM::LLVMJit::get().getJitTargetConfig())),
+	compileContext(std::make_unique<LLVMCompileTimeContext>(nullptr, LLVM::LLVMJit::get().getJitTargetConfig(), true))
 {
 	compileContext->options.enableDereferenceNullChecks = true;
 }

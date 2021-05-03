@@ -73,11 +73,11 @@ const std::string& CatStaticFunctionCall::getFunctionName() const
 }
 
 
-std::string CatStaticFunctionCall::getMangledFunctionName() const
+std::string CatStaticFunctionCall::getMangledFunctionName(bool sRetBeforeThis) const
 {
 	if (staticFunctionInfo != nullptr)
 	{
-		return staticFunctionInfo->getMangledFunctionName();
+		return staticFunctionInfo->getMangledFunctionName(sRetBeforeThis);
 	}
 	else
 	{

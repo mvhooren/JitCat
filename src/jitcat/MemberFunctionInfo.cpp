@@ -94,15 +94,15 @@ const CatGenericType& jitcat::Reflection::MemberFunctionInfo::getParameterType(i
 }
 
 
-std::string jitcat::Reflection::MemberFunctionInfo::getMangledName() const
+std::string jitcat::Reflection::MemberFunctionInfo::getMangledName(bool sRetBeforeThis) const
 {
 	return memberFunctionName;
 }
 
 
-std::string jitcat::Reflection::MemberFunctionInfo::getMangledFunctionInfoName() const
+std::string jitcat::Reflection::MemberFunctionInfo::getMangledFunctionInfoName(bool sRetBeforeThis) const
 {
-	return Tools::append("_FunctionInfo:", getMangledName());
+	return Tools::append("_FunctionInfo:", getMangledName(sRetBeforeThis));
 }
 
 
@@ -167,7 +167,7 @@ inline bool DeferredMemberFunctionInfo::isDeferredFunctionCall()
 }
 
 
-std::string jitcat::Reflection::DeferredMemberFunctionInfo::getMangledName() const
+std::string jitcat::Reflection::DeferredMemberFunctionInfo::getMangledName(bool sRetBeforeThis) const
 {
-	return deferredFunction->getMangledName();
+	return deferredFunction->getMangledName(sRetBeforeThis);
 }

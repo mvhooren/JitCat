@@ -55,7 +55,7 @@ namespace jitcat::Reflection
 		virtual bool getNeverReturnsNull() const;
 
 		const std::string& getNormalFunctionName() const;
-		std::string getMangledFunctionName() const;
+		std::string getMangledFunctionName(bool sRetBeforeThis) const;
 
 	private:
 		TypeInfo* parentType;

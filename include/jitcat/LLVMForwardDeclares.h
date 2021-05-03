@@ -13,6 +13,7 @@ namespace llvm
 	class CallInst;
 	class Constant;
 	class ConstantFolder;
+	class DataLayout;
 	class Function;
 	class FunctionType;
 	class GlobalVariable;
@@ -22,6 +23,7 @@ namespace llvm
 	class LLVMContext;
 	class Module;
 	class PointerType;
+	class TargetMachine;
 	class Type;
 	class Value;
 

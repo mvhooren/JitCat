@@ -50,7 +50,7 @@ namespace jitcat::LLVM
 	class LLVMCodeGenerator;
 	class LLVMJit;
 	class LLVMPrecompilationContext;
-
+	class LLVMTargetConfig;
 
 	class LLVMJitInitializer
 	{
@@ -76,10 +76,7 @@ namespace jitcat::LLVM
 		llvm::orc::ThreadSafeContext& getThreadSafeContext() const;
 		std::shared_ptr<llvm::orc::SymbolStringPool> getSymbolStringPool() const;
 
-		llvm::TargetMachine& getTargetMachine() const;
-		const llvm::orc::JITTargetMachineBuilder& getTargetMachineBuilder() const;
-		
-		const llvm::DataLayout& getDataLayout() const;
+		const LLVMTargetConfig* getJitTargetConfig() const;
 
 		void cleanup();
 
@@ -92,14 +89,11 @@ namespace jitcat::LLVM
 		//Used for building LLVM IR modules.
 		std::unique_ptr<llvm::orc::ThreadSafeContext> context;
 
+		//Target configuration for JIT code generation.
+		std::unique_ptr<LLVMTargetConfig> jitTargetConfig;
+
 		//A string pool that is shared among executionSessions. It stores symbol names.
 		std::shared_ptr<llvm::orc::SymbolStringPool> symbolStringPool;
-		//A helper class for building the target machine information.
-		llvm::orc::JITTargetMachineBuilder targetMachineBuilder;
-		//Contains all the target specific information for the machine that we are compiling for. Among other things, the target CPU type.
-		std::unique_ptr<llvm::TargetMachine> targetMachine;
-		//Specifies the layout of structs and the type of name mangling used based on the target machine as well as endianness.
-		std::unique_ptr<const llvm::DataLayout> dataLayout;
 	};
 
 

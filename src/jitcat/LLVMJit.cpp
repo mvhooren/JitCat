@@ -9,6 +9,7 @@
 #include "jitcat/Configuration.h"
 #include "jitcat/LLVMPrecompilationContext.h"
 #include "jitcat/LLVMTypes.h"
+#include "jitcat/LLVMTargetConfig.h"
 #include "jitcat/Tools.h"
 
 
@@ -20,11 +21,9 @@ using namespace jitcat::LLVM;
 
 LLVMJit::LLVMJit():
 	context(std::make_unique<llvm::orc::ThreadSafeContext>(std::make_unique<llvm::LLVMContext>())),
-	targetMachineBuilder(llvm::cantFail(llvm::orc::JITTargetMachineBuilder::detectHost())),
-	targetMachine(llvm::cantFail(targetMachineBuilder.createTargetMachine())),
-	dataLayout(std::make_unique<llvm::DataLayout>(llvm::cantFail(targetMachineBuilder.getDefaultDataLayoutForTarget()))),
 	symbolStringPool(std::make_shared<llvm::orc::SymbolStringPool>())
 {
+	jitTargetConfig = LLVMTargetConfig::createJITTargetConfig();
 	LLVMTypes::doubleType = llvm::Type::getDoubleTy(*context->getContext());
 	LLVMTypes::floatType = llvm::Type::getFloatTy(*context->getContext());
 	LLVMTypes::intType = llvm::Type::getInt32Ty(*context->getContext());
@@ -84,28 +83,14 @@ std::shared_ptr<llvm::orc::SymbolStringPool> LLVM::LLVMJit::getSymbolStringPool(
 }
 
 
-llvm::TargetMachine& LLVMJit::getTargetMachine() const
+const LLVMTargetConfig* jitcat::LLVM::LLVMJit::getJitTargetConfig() const
 {
-	return *targetMachine;
-}
-
-
-const llvm::orc::JITTargetMachineBuilder& LLVM::LLVMJit::getTargetMachineBuilder() const
-{
-	return targetMachineBuilder;
-}
-
-
-const llvm::DataLayout& LLVMJit::getDataLayout() const
-{
-	return *dataLayout;
+	return jitTargetConfig.get();
 }
 
 
 void LLVM::LLVMJit::cleanup()
 {
-	targetMachine.reset(nullptr);
-	dataLayout.reset(nullptr);
 	context.reset(nullptr);
 }
 

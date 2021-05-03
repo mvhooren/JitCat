@@ -17,7 +17,9 @@ namespace jitcat
 	
 namespace FunctionNameMangler
 {
-	std::string getMangledFunctionName(const CatGenericType& returnType, const std::string& functionName, const std::vector<CatGenericType>& parameterTypes, bool isThisCall, const std::string& qualifiedParentClassName);
+	std::string getMangledFunctionName(const CatGenericType& returnType, const std::string& functionName, 
+									   const std::vector<CatGenericType>& parameterTypes, bool isThisCall, 
+									   const std::string& qualifiedParentClassName, bool sRetBeforeThis);
 }
 
 }

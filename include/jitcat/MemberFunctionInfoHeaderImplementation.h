@@ -37,8 +37,8 @@ namespace jitcat::Reflection
 		//Link the function to the pre-compiled expressions
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
-			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
-			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(), reinterpret_cast<uintptr_t>(this));
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress().functionAddress);
+			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(Configuration::sretBeforeThisForCurrentProcess), reinterpret_cast<uintptr_t>(this));
 		}
 	}
 
@@ -86,14 +86,14 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::string MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
+	inline std::string MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
 		if constexpr (sizeof(function) != Configuration::basicMemberFunctionPointerSize)
 		{
 			baseName = Tools::append(baseName, "_static");
 		}
-		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
+		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName, sRetBeforeThis);
 	}
 
 
@@ -134,8 +134,8 @@ namespace jitcat::Reflection
 		//Link the function to the pre-compiled expressions
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
-			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
-			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(), reinterpret_cast<uintptr_t>(this));
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress().functionAddress);
+			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(Configuration::sretBeforeThisForCurrentProcess), reinterpret_cast<uintptr_t>(this));
 		}
 	}
 
@@ -183,14 +183,14 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::string ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
+	inline std::string ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
 		if constexpr (sizeof(function) != Configuration::basicMemberFunctionPointerSize)
 		{
 			baseName = Tools::append(baseName, "_static");
 		}
-		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
+		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName, sRetBeforeThis);
 	}
 
 
@@ -230,7 +230,7 @@ namespace jitcat::Reflection
 		//Link the function to the pre-compiled expressions
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
-			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(), getFunctionAddress().functionAddress);
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress().functionAddress);
 		}
 	}
 
@@ -263,10 +263,10 @@ namespace jitcat::Reflection
 	}
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::string PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName() const
+	inline std::string PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
-		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName);
+		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName, sRetBeforeThis);
 	}
 
 

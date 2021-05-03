@@ -77,12 +77,12 @@ const std::string& StaticFunctionInfo::getNormalFunctionName() const
 }
 
 
-std::string StaticFunctionInfo::getMangledFunctionName() const
+std::string StaticFunctionInfo::getMangledFunctionName(bool sRetBeforeThis) const
 {
 	std::string baseName;
 	if (parentType != nullptr)
 	{
 		baseName = parentType->getQualifiedTypeName();
 	}
-	return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, false, baseName);
+	return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, false, baseName, sRetBeforeThis);
 }

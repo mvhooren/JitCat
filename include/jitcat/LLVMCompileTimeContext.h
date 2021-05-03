@@ -30,11 +30,11 @@ namespace jitcat
 namespace jitcat::LLVM
 {
 	class LLVMCodeGeneratorHelper;
-
+	class LLVMTargetConfig;
 
 	struct LLVMCompileTimeContext
 	{
-		LLVMCompileTimeContext(CatRuntimeContext* catContext, bool isPrecompilationContext);
+		LLVMCompileTimeContext(CatRuntimeContext* catContext, const LLVMTargetConfig* targetConfig, bool isPrecompilationContext);
 
 		CatRuntimeContext* catContext;
 		bool isPrecompilationContext;
@@ -42,6 +42,8 @@ namespace jitcat::LLVM
 		void clearState();
 
 		CatLib* currentLib;
+
+		const LLVMTargetConfig* targetConfig;
 		const AST::CatClassDefinition* currentClass;
 		const AST::CatScopeBlock* currentScope;
 		const AST::CatFunctionDefinition* currentFunctionDefinition;

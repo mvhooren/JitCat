@@ -32,7 +32,7 @@ namespace jitcat::AST
 		uintptr_t getFunctionAddress() const;
 		bool getFunctionNeverReturnsNull() const;
 		const std::string& getFunctionName() const;
-		std::string getMangledFunctionName() const;
+		std::string getMangledFunctionName(bool sRetBeforeThis) const;
 
 		// Inherited via CatTypedExpression
 		virtual CatASTNode* copy() const override final;

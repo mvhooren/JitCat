@@ -12,7 +12,8 @@
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/JitCat.h"
 #ifdef ENABLE_LLVM
-#include "jitcat/LLVMCodeGenerator.h"
+	#include "jitcat/LLVMCodeGenerator.h"
+	#include "jitcat/LLVMJit.h"
 #endif
 #include "jitcat/ObjectInstance.h"
 #include "jitcat/PrecompilationContext.h"
@@ -425,7 +426,7 @@ std::shared_ptr<LLVMCodeGenerator> CatRuntimeContext::getCodeGenerator()
 #ifdef ENABLE_LLVM
 	if (codeGenerator == nullptr)
 	{
-		codeGenerator = std::make_shared<LLVMCodeGenerator>(contextName);
+		codeGenerator = std::make_shared<LLVMCodeGenerator>(contextName, LLVM::LLVMJit::get().getJitTargetConfig());
 	}
 	return codeGenerator;
 #else

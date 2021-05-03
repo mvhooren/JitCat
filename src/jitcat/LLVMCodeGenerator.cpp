@@ -17,6 +17,7 @@
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMJit.h"
+#include "jitcat/LLVMTargetConfig.h"
 #include "jitcat/LLVMMemoryManager.h"
 #include "jitcat/LLVMPrecompilationContext.h"
 #include "jitcat/LLVMPreGeneratedExpression.h"
@@ -77,14 +78,15 @@ struct ScopeChecker
 #define ScopeCheck(expression) ScopeChecker checker(expression)
 #endif
 
-LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
+LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name, const LLVMTargetConfig* targetConfig):
+	targetConfig(targetConfig),
 	executionSession(std::make_unique<llvm::orc::ExecutionSession>(LLVMJit::get().getSymbolStringPool())),
 	currentModule(std::make_unique<llvm::Module>("JitCat", LLVMJit::get().getContext())),
 	builder(std::make_unique<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>>(LLVMJit::get().getContext())),
 	objectLinkLayer(std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(*executionSession.get(),
 															[]() {	return memoryManager->createExpressionAllocator();})),
-	mangler(std::make_unique<llvm::orc::MangleAndInterner>(*executionSession, LLVMJit::get().getDataLayout())),
-	compileLayer(std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(LLVMJit::get().getTargetMachineBuilder())))
+	mangler(std::make_unique<llvm::orc::MangleAndInterner>(*executionSession, targetConfig->getDataLayout())),
+	compileLayer(std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(llvm::cantFail(targetConfig->getTargetMachineBuilder()))))
 {
 	helper = std::make_unique<LLVMCodeGeneratorHelper>(this);
 	llvm::orc::SymbolMap intrinsicSymbols;
@@ -94,7 +96,6 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	functionFlags |= llvm::JITSymbolFlags::Callable;
 	functionFlags |= llvm::JITSymbolFlags::Exported;
 	functionFlags |= llvm::JITSymbolFlags::Absolute;
-
 
 	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
 	intrinsicSymbols[executionSession->intern("_fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodl), functionFlags);
@@ -152,15 +153,15 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name):
 	dylib = &executionSession->createJITDylib(Tools::append(name, "_", 0));
 	dylib->addToSearchOrder(*runtimeLibraryDyLib);
 
-	if constexpr (Configuration::enableSymbolSearchWorkaround)
+	if (targetConfig->enableSymbolSearchWorkaround)
 	{
 		objectLinkLayer->setAutoClaimResponsibilityForObjectSymbols(true);
 		objectLinkLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
 	}
 
-	std::string targetTriple = LLVMJit::get().getTargetMachine().getTargetTriple().str();
+	std::string targetTriple = targetConfig->getTargetMachine().getTargetTriple().str();
 	currentModule->setTargetTriple(targetTriple);
-	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
+	currentModule->setDataLayout(targetConfig->getDataLayout());
 
 	// Create a new pass manager attached to it.
 	passManager = std::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
@@ -364,7 +365,7 @@ void LLVMCodeGenerator::emitModuleToObjectFile(const std::string& objectFileName
 	  return;
 	}
 
-	if (LLVMJit::get().getTargetMachine().addPassesToEmitFile(pass, dest, nullptr, FileType)) 
+	if (targetConfig->getTargetMachine().addPassesToEmitFile(pass, dest, nullptr, FileType)) 
 	{
 	  llvm::errs() << "TargetMachine can't emit a file of this type";
 	  return;
@@ -1037,8 +1038,8 @@ llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* stati
 		argumentTypes.push_back(returnAllocation->getType());
 	}
 	helper->generateFunctionCallArgumentEvalatuation(expressionArguments, staticFunctionCall->getExpectedParameterTypes(), argumentList, argumentTypes, this, context);
-	helper->defineWeakSymbol(context, staticFunctionCall->getFunctionAddress(), staticFunctionCall->getMangledFunctionName(), false);
-	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(), 
+	helper->defineWeakSymbol(context, staticFunctionCall->getFunctionAddress(), staticFunctionCall->getMangledFunctionName(targetConfig->sretBeforeThis), false);
+	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(targetConfig->sretBeforeThis), 
 											  staticFunctionCall->getFunctionName(), returnAllocation, false, staticFunctionCall->getFunctionNeverReturnsNull());
 }
 
@@ -1432,7 +1433,7 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 {
 	ScopeCheck(context);
 	assert(context->currentLib != nullptr);
-	const std::string& name = functionDefinition->getMangledFunctionName();
+	const std::string& name = functionDefinition->getMangledFunctionName(targetConfig->sretBeforeThis);
 	CatGenericType returnType = functionDefinition->getReturnTypeNode()->getType();
 	std::vector<CatGenericType> parameterTypes;
 	std::vector<std::string> parameterNames;
@@ -1468,7 +1469,7 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 	}
 	
 	
-	if (!Configuration::callerDestroysTemporaryArguments)
+	if (!targetConfig->callerDestroysTemporaryArguments)
 	{
 		int parameterOffset = 0;
 		if (isThisCall)								parameterOffset++;
@@ -1501,7 +1502,7 @@ llvm::Function* LLVMCodeGenerator::generate(const AST::CatFunctionDefinition* fu
 		if (returnType.isReflectableObjectType())
 		{
 			auto argIter = function->arg_begin();
-			if (Configuration::sretBeforeThis)
+			if (targetConfig->sretBeforeThis)
 			{
 				argIter++;
 			}
@@ -1696,14 +1697,15 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 void LLVMCodeGenerator::initContext(LLVMCompileTimeContext* context)
 {
 	context->helper = helper.get();
+	context->targetConfig = targetConfig;
 }
 
 
 void LLVMCodeGenerator::createNewModule(LLVMCompileTimeContext* context)
 {
 	currentModule.reset(new llvm::Module(context->catContext->getContextName(), LLVMJit::get().getContext()));
-	currentModule->setTargetTriple(LLVMJit::get().getTargetMachine().getTargetTriple().str());
-	currentModule->setDataLayout(LLVMJit::get().getDataLayout());
+	currentModule->setTargetTriple(targetConfig->getTargetMachine().getTargetTriple().str());
+	currentModule->setDataLayout(targetConfig->getDataLayout());
 
 	// Create a new pass manager attached to it.
 	passManager = std::make_unique<llvm::legacy::FunctionPassManager>(currentModule.get());
@@ -1788,7 +1790,7 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 {
 	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), currentModule.get());
-	if (isThisCall && Configuration::useThisCall)
+	if (isThisCall && targetConfig->useThisCall)
 	{
 		function->setCallingConv(llvm::CallingConv::X86_ThisCall);
 	}
@@ -1797,7 +1799,7 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 	llvm::Argument* currentArg = function->arg_begin();
 	if (returnType.isReflectableObjectType())
 	{
-		if (!isThisCall || Configuration::sretBeforeThis)
+		if (!isThisCall || targetConfig->sretBeforeThis)
 		{
 			currentArg->setName(Tools::append(returnType.getObjectTypeName(), "__sret"));
 			function->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
@@ -1808,7 +1810,7 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 			currentArg->setName("__this");
 		}
 		currentArg++;
-		if (isThisCall && Configuration::sretBeforeThis)
+		if (isThisCall && targetConfig->sretBeforeThis)
 		{
 			currentArg->setName("__this");
 			currentArg++;
@@ -1846,7 +1848,7 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, LLVMTypes::pointerType, Tools::append(returnType.toString(), "_ObjectPointerCast"));
 
 		llvm::Argument* sretArgument = function->arg_begin();
-		if (context->currentClass != nullptr && !Configuration::sretBeforeThis)
+		if (context->currentClass != nullptr && !targetConfig->sretBeforeThis)
 		{
 			++sretArgument;
 		}
@@ -1880,7 +1882,7 @@ void LLVMCodeGenerator::link(CustomTypeInfo* customType)
 	}
 	for (auto& iter : customType->getMemberFunctions())
 	{
-		const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->getFunctionDefinition()->getMangledFunctionName();
+		const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->getFunctionDefinition()->getMangledFunctionName(targetConfig->sretBeforeThis);
 		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->setFunctionNativeAddress((intptr_t)getSymbolAddress(mangledName, *dylib));
 	}
 }

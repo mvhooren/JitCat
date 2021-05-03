@@ -31,7 +31,7 @@ namespace jitcat::Reflection
 		
 		virtual MemberFunctionCallData getFunctionAddress() const override final;
 
-		virtual std::string getMangledName() const override final;
+		virtual std::string getMangledName(bool sRetBeforeThis) const override final;
 
 		const AST::CatFunctionDefinition* getFunctionDefinition() const;
 

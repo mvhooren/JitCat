@@ -457,8 +457,8 @@ TEST_CASE("Containers tests: Map of unique_ptr", "[containers][map]")
 	}
 	SECTION("Map get size")
 	{
-		Expression<int> testExpression(&context, "reflectableObjectsMapCustomCompare.size()");
-		doChecks((int)reflectedObject.reflectableObjectsMapCustomCompare.size(), false, false, false, testExpression, context);
+		Expression<int> testExpression(&context, "reflectableUniqueObjectsMap.size()");
+		doChecks((int)reflectedObject.reflectableUniqueObjectsMap.size(), false, false, false, testExpression, context);
 	}
 	SECTION("Map get object, string index")
 	{

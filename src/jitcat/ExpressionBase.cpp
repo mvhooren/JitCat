@@ -20,6 +20,7 @@
 #ifdef ENABLE_LLVM
 	#include "jitcat/LLVMCodeGenerator.h"
 	#include "jitcat/LLVMCompileTimeContext.h"
+	#include "jitcat/LLVMJit.h"
 #endif
 #include "jitcat/PrecompilationContext.h"
 #include "jitcat/SLRParseResult.h"
@@ -347,7 +348,7 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context, const CatGe
 		}
 #ifdef ENABLE_LLVM
 
-		LLVMCompileTimeContext llvmCompileContext(context, false);
+		LLVMCompileTimeContext llvmCompileContext(context, LLVM::LLVMJit::get().getJitTargetConfig(), false);
 		llvmCompileContext.options.enableDereferenceNullChecks = true;
 		intptr_t functionAddress = 0;
 		codeGenerator = context->getCodeGenerator();

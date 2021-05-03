@@ -7,7 +7,7 @@
 
 #pragma once
 
-
+#include "jitcat/Configuration.h"
 #include "jitcat/TypeTraits.h"
 #include "jitcat/TypeConversionCastHelper.h"
 #include "StaticMemberFunctionInfo.h"
@@ -35,7 +35,7 @@ namespace jitcat::Reflection
 		//Link the function to the pre-compiled expressions
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
-			JitCat::get()->setPrecompiledLinkedFunction(getMangledFunctionName(), getFunctionAddress());
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledFunctionName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress());
 		}
 	}
 

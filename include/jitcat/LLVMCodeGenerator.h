@@ -33,6 +33,7 @@ namespace jitcat::LLVM
 	class LLVMCodeGeneratorHelper;
 	struct LLVMCompileTimeContext;
 	class LLVMMemoryManager;
+	class LLVMTargetConfig;
 
 	//A code generator for the LLVM backend. 
 	//Create one code generator per module / translation unit.
@@ -41,7 +42,7 @@ namespace jitcat::LLVM
 	{
 		friend class LLVMCodeGeneratorHelper;
 	public:
-		LLVMCodeGenerator(const std::string& name);
+		LLVMCodeGenerator(const std::string& name, const LLVMTargetConfig* targetConfig);
 		~LLVMCodeGenerator();
 
 		void generate(const AST::CatSourceFile* sourceFile, LLVMCompileTimeContext* context);
@@ -135,6 +136,7 @@ namespace jitcat::LLVM
 		static void createOptimisationPasses(llvm::legacy::FunctionPassManager* passManager);
 
 	private:
+		const LLVMTargetConfig* targetConfig;
 		//ExecutionSession represents a running JIT program
 		std::unique_ptr<llvm::orc::ExecutionSession> executionSession;
 		//A module represents a "translation unit".

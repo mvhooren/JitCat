@@ -11,7 +11,7 @@ using namespace jitcat;
 using namespace jitcat::LLVM;
 
 
-LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext, bool isPrecompilationContext):
+LLVMCompileTimeContext::LLVMCompileTimeContext(CatRuntimeContext* catContext, const LLVMTargetConfig* targetConfig, bool isPrecompilationContext):
 	catContext(catContext),
 	isPrecompilationContext(isPrecompilationContext),
 	currentLib(nullptr),
