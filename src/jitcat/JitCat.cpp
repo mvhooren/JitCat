@@ -87,14 +87,20 @@ using namespace jitcat::Tokenizer;
 
 	extern "C" void _jc_enumerate_global_variables(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
-		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		//Notify the callback that no proper _jc_enumerate_global_variables function implementation was found.
 		enumeratorCallback("default", 0);
 	}
 
 	extern "C" void _jc_enumerate_linked_functions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
-		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		//Notify the callback that no proper _jc_enumerate_linked_functions function implementation was found.
 		enumeratorCallback("default", 0);
+	}
+	
+	extern "C" void _jc_initialize_string_pool(void(*stringInitializerCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_initialize_string_pool function implementation was found.
+		enumeratorCallback("default", 0);		
 	}
 #endif
 
