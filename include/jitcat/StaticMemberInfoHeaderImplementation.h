@@ -16,6 +16,9 @@
 #include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeTools.h"
+#ifdef ENABLE_LLVM
+	#include "jitcat/LLVMTargetConfig.h"
+#endif
 #include "StaticMemberInfo.h"
 
 
