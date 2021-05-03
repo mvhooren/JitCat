@@ -10,10 +10,13 @@
 
 namespace jitcat::LLVM
 {
-	//These are the targets that JitCat has pre-defined configurations.
-	//An exception is LLVMTarget::CurrentMachine, the configuration of which is determined at runtime.
+	//These are the targets that JitCat has pre-defined configurations for.
+	//An exception is LLVMTarget::CurrentMachine and CurrentMachineJIT, the configuration of these are determined at runtime.
 	enum class LLVMTarget
 	{
+		//JIT target:
+		CurrentMachineJIT,
+		//Precompilation targets:
 		CurrentMachine,
 		Windows_X64,
 		Playstation4,

@@ -65,44 +65,21 @@ LLVMTargetConfig::~LLVMTargetConfig()
 
 std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createJITTargetConfig()
 {
-	constexpr bool isWin32 = 
-#ifdef WIN32
-		true;
-#else
-		false;
-#endif
-
-	bool sretBeforeThis = !isWin32;
-	bool callerDestroysTemporaryArguments =  !isWin32;
-	bool useThisCall = isWin32;
-	bool enableSymbolSearchWorkaround = isWin32;
-	
-	unsigned int defaultCallingConvention = llvm::CallingConv::C;
-	#ifdef _WIN64
-		defaultCallingConvention = llvm::CallingConv::Win64;
-	#endif
+	return createTargetConfigForCurrentMachine(true);
+}
 
 
-	std::string targetTripple = llvm::sys::getProcessTriple();
-	std::string cpuName = llvm::sys::getHostCPUName();
-
-	llvm::SubtargetFeatures features;
-
-	llvm::StringMap<bool> featureMap;
-	llvm::sys::getHostCPUFeatures(featureMap);
-	for (auto &Feature : featureMap)
+std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createConfigForPreconfiguredTarget(LLVMTarget target)
+{
+	switch (target)
 	{
-		features.AddFeature(Feature.first(), Feature.second);
+		case LLVMTarget::CurrentMachine:		return createTargetConfigForCurrentMachine(false);
+		case LLVMTarget::CurrentMachineJIT:		return createTargetConfigForCurrentMachine(true);
+		case LLVMTarget::Windows_X64:			return createGenericWindowsx64Target();
+		case LLVMTarget::Playstation4:			return createPS4Target();
+		case LLVMTarget::XboxOne:				return createXboxOneTarget();
 	}
-
-	llvm::TargetOptions options;
-	options.EmulatedTLS = true;
-	options.ExplicitEmulatedTLS = true;
-
-	return std::make_unique<LLVMTargetConfig>(true, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
-											  enableSymbolSearchWorkaround, sizeof(uintptr_t) == 8, (unsigned int)sizeof(bool) * 8,
-											  defaultCallingConvention, targetTripple, cpuName, 
-											  options, features, llvm::CodeGenOpt::Level::Default);
+	return nullptr;
 }
 
 
@@ -134,4 +111,146 @@ llvm::Expected<const llvm::orc::JITTargetMachineBuilder&> LLVMTargetConfig::getT
 const LLVMTypes& LLVMTargetConfig::getLLVMTypes() const
 {
 	return *llvmTypes.get();
+}
+
+
+std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createTargetConfigForCurrentMachine(bool isJITTarget)
+{
+	constexpr bool isWin32 = 
+	#ifdef WIN32
+			true;
+	#else
+			false;
+	#endif
+
+	bool sretBeforeThis = !isWin32;
+	bool callerDestroysTemporaryArguments =  !isWin32;
+	bool useThisCall = isWin32;
+	bool enableSymbolSearchWorkaround = isWin32;
+	
+	unsigned int defaultCallingConvention = llvm::CallingConv::C;
+	#ifdef _WIN64
+		defaultCallingConvention = llvm::CallingConv::Win64;
+	#endif
+
+
+	std::string targetTripple = llvm::sys::getProcessTriple();
+	std::string cpuName = llvm::sys::getHostCPUName();
+
+	llvm::SubtargetFeatures features;
+
+	llvm::StringMap<bool> featureMap;
+	llvm::sys::getHostCPUFeatures(featureMap);
+	for (auto &Feature : featureMap)
+	{
+		features.AddFeature(Feature.first(), Feature.second);
+	}
+
+	llvm::TargetOptions options;
+	if (isJITTarget)
+	{
+		options.EmulatedTLS = true;
+		options.ExplicitEmulatedTLS = true;
+	}
+
+	return std::make_unique<LLVMTargetConfig>(isJITTarget, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
+											  enableSymbolSearchWorkaround, sizeof(uintptr_t) == 8, (unsigned int)sizeof(bool) * 8,
+											  defaultCallingConvention, targetTripple, cpuName, 
+											  options, features, llvm::CodeGenOpt::Level::Default);	
+}
+
+
+std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createGenericWindowsx64Target()
+{
+	constexpr bool isWin32 = true;
+
+	bool sretBeforeThis = !isWin32;
+	bool callerDestroysTemporaryArguments =  !isWin32;
+	bool useThisCall = isWin32;
+	bool enableSymbolSearchWorkaround = isWin32;
+	
+	unsigned int defaultCallingConvention = llvm::CallingConv::Win64;
+
+	std::string targetTripple = "x86_64-pc-windows-msvc";
+	std::string cpuName = "x86-64";
+
+	//Use the default features of x86-64
+	llvm::SubtargetFeatures features;
+	//Don't specify any additional options
+	llvm::TargetOptions options;
+
+	return std::make_unique<LLVMTargetConfig>(false, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
+											  enableSymbolSearchWorkaround, true, 8,
+											  defaultCallingConvention, targetTripple, cpuName, 
+											  options, features, llvm::CodeGenOpt::Level::Default);		
+}
+
+
+std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createXboxOneTarget()
+{
+	constexpr bool isWin32 = true;
+
+	bool sretBeforeThis = !isWin32;
+	bool callerDestroysTemporaryArguments =  !isWin32;
+	bool useThisCall = isWin32;
+	bool enableSymbolSearchWorkaround = isWin32;
+	
+	unsigned int defaultCallingConvention = llvm::CallingConv::X86_FastCall;
+
+	std::string targetTripple = "x86_64-pc-win32";
+	std::string cpuName = "btver2";
+
+	//Use the default features of btver2
+	llvm::SubtargetFeatures features;
+	//Don't specify any additional options
+	llvm::TargetOptions options;
+	options.UnsafeFPMath = true;
+	options.NoInfsFPMath = true;
+	options.NoNaNsFPMath = true;
+	options.UnsafeFPMath = true;
+	options.NoSignedZerosFPMath = true;
+	options.ThreadModel = llvm::ThreadModel::POSIX;
+	options.DebuggerTuning = llvm::DebuggerKind::Default;
+	options.DataSections = true;
+	return std::make_unique<LLVMTargetConfig>(false, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
+											  enableSymbolSearchWorkaround, true, 8,
+											  defaultCallingConvention, targetTripple, cpuName, 
+											  options, features, llvm::CodeGenOpt::Level::Default, 
+											  llvm::Reloc::Model::PIC_, llvm::CodeModel::Small);	
+
+}
+
+
+std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createPS4Target()
+{
+	constexpr bool isWin32 = true;
+
+	bool sretBeforeThis = !isWin32;
+	bool callerDestroysTemporaryArguments =  !isWin32;
+	bool useThisCall = isWin32;
+	bool enableSymbolSearchWorkaround = isWin32;
+	
+	unsigned int defaultCallingConvention = llvm::CallingConv::X86_FastCall;
+
+	std::string targetTripple = "x86_64-scei-ps4";
+	std::string cpuName = "btver2";
+
+	//Use the default features of btver2
+	llvm::SubtargetFeatures features;
+	//Don't specify any additional options
+	llvm::TargetOptions options;
+	options.UnsafeFPMath = true;
+	options.RelaxELFRelocations = true;
+	options.NoInfsFPMath = true;
+	options.NoNaNsFPMath = true;
+	options.UnsafeFPMath = true;
+	options.NoSignedZerosFPMath = true;
+	options.ThreadModel = llvm::ThreadModel::POSIX;
+	options.DebuggerTuning = llvm::DebuggerKind::SCE;
+	options.DataSections = true;
+	return std::make_unique<LLVMTargetConfig>(false, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
+											  enableSymbolSearchWorkaround, true, 8,
+											  defaultCallingConvention, targetTripple, cpuName, 
+											  options, features, llvm::CodeGenOpt::Level::Default, 
+											  llvm::Reloc::Model::PIC_, llvm::CodeModel::Small);
 }

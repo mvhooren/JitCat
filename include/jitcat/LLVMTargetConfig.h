@@ -43,7 +43,7 @@ namespace jitcat::LLVM
 		~LLVMTargetConfig();
 		
 		static std::unique_ptr<LLVMTargetConfig> createJITTargetConfig();
-		//static std::unique_ptr<LLVMTargetConfig> createConfigForPreconfiguredTarget(LLVMTarget target);
+		static std::unique_ptr<LLVMTargetConfig> createConfigForPreconfiguredTarget(LLVMTarget target);
 
 		llvm::TargetMachine& getTargetMachine() const;
 		const llvm::DataLayout& getDataLayout() const;
@@ -51,6 +51,12 @@ namespace jitcat::LLVM
 		llvm::Expected<const llvm::orc::JITTargetMachineBuilder&> getTargetMachineBuilder() const;
 
 		const LLVMTypes& getLLVMTypes() const;
+
+	private:
+		static std::unique_ptr<LLVMTargetConfig> createTargetConfigForCurrentMachine(bool isJITTarget);
+		static std::unique_ptr<LLVMTargetConfig> createGenericWindowsx64Target();
+		static std::unique_ptr<LLVMTargetConfig> createXboxOneTarget();
+		static std::unique_ptr<LLVMTargetConfig> createPS4Target();
 
 	public:
 		//Wether or not JIT compilation is supported on the target
