@@ -17,9 +17,8 @@ namespace jitcat::Reflection
 	class ReflectableHandle;
 	class TypeInfo;
 }
+
 #include "jitcat/Configuration.h"
-#include "jitcat/LLVMForwardDeclares.h"
-#include "jitcat/LLVMTypes.h"
 #include <string>
 #include <vector>
 
