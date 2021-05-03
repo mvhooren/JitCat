@@ -5,8 +5,6 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
-#pragma once
-
 #include "jitcat/Configuration.h"
 #include "jitcat/LLVMTargetConfig.h"
 #include "jitcat/LLVMTypes.h"
