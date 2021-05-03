@@ -13,7 +13,6 @@
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMPrecompilationContext.h"
-#include "jitcat/LLVMTypes.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/MemberInfo.h"
 #include "jitcat/STLTypeReflectors.h"
@@ -21,6 +20,7 @@
 #include "jitcat/TypeTools.h"
 #ifdef ENABLE_LLVM
 	#include "jitcat/LLVMTargetConfig.h"
+	#include "jitcat/LLVMTypes.h"
 #endif
 
 #include <sstream>

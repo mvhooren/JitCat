@@ -156,10 +156,6 @@ std::size_t Reflectable::getNumReflectableHandles() const
 
 bool Reflectable::validateHandles(TypeInfo* reflectableType)
 {
-	if (this == nullptr)
-	{
-		return true;
-	}
 	const ReflectableHandle* currentHandle = firstHandle;
 	while (currentHandle != nullptr)
 	{

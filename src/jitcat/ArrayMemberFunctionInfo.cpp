@@ -8,11 +8,11 @@
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
 #include "jitcat/LLVMPreGeneratedExpression.h"
-#include "jitcat/LLVMTypes.h"
 #ifdef ENABLE_LLVM
 	#include <llvm/IR/IRBuilder.h>
 	#include <llvm/IR/MDBuilder.h>
 	#include "jitcat/LLVMTargetConfig.h"
+	#include "jitcat/LLVMTypes.h"
 #endif
 #include <cassert>
 

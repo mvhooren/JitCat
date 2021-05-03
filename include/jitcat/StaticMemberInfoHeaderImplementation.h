@@ -12,12 +12,12 @@
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
 #include "jitcat/LLVMCompileTimeContext.h"
-#include "jitcat/LLVMTypes.h"
 #include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeTools.h"
 #ifdef ENABLE_LLVM
 	#include "jitcat/LLVMTargetConfig.h"
+	#include "jitcat/LLVMTypes.h"
 #endif
 #include "StaticMemberInfo.h"
 

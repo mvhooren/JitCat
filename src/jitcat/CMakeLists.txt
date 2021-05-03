@@ -152,10 +152,7 @@ set(Source_Cat_CodeGeneration_LLVM
 	${JitCatHeaderPath}/LLVMMemoryManager.h
 	LLVMPreGeneratedExpression.cpp
 	${JitCatHeaderPath}/LLVMPreGeneratedExpression.h
-	
 	${JitCatHeaderPath}/LLVMTarget.h
-	LLVMTypes.cpp
-	${JitCatHeaderPath}/LLVMTypes.h
 )
 
 if(LLVM_ENABLED)
@@ -170,7 +167,9 @@ if(LLVM_ENABLED)
 		LLVMJit.cpp
 		LLVMMemoryManager.cpp
 		${JitCatHeaderPath}/LLVMTargetConfig.h
-		LLVMTargetConfig.cpp)
+		LLVMTargetConfig.cpp
+		LLVMTypes.cpp
+		${JitCatHeaderPath}/LLVMTypes.h)
 endif()
 
 set(Source_Cat_Expression
