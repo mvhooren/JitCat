@@ -100,7 +100,7 @@ using namespace jitcat::Tokenizer;
 	extern "C" void _jc_initialize_string_pool(void(*stringInitializerCallback)(const char*, uintptr_t))
 	{
 		//Notify the callback that no proper _jc_initialize_string_pool function implementation was found.
-		enumeratorCallback("default", 0);		
+		stringInitializerCallback("default", 0);		
 	}
 #endif
 
