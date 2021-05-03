@@ -65,7 +65,7 @@ namespace jitcat::Reflection
 		std::string mangledName = getMangledGetPointerName();
 		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer), mangledName, false);
 
-		return context->helper->createCall(context, LLVM::LLVMTypes::functionRetPtrArgPtr, {uniquePtrPtr}, false, mangledName, "getUniquePtr", false);
+		return context->helper->createCall(context, context->targetConfig->getLLVMTypes().functionRetPtrArgPtr, {uniquePtrPtr}, false, mangledName, "getUniquePtr", false);
 	#else 
 		return nullptr;
 	#endif // ENABLE_LLVM

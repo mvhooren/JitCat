@@ -6,23 +6,38 @@
 */
 
 #include "jitcat/LLVMTypes.h"
+#include "jitcat/LLVMJit.h"
 
 using namespace jitcat::LLVM;
 
 
-llvm::Type* LLVMTypes::doubleType = nullptr;
-llvm::Type* LLVMTypes::floatType = nullptr;
-llvm::Type* LLVMTypes::intType = nullptr;
-llvm::Type* LLVMTypes::longintType = nullptr;
-llvm::Type* LLVMTypes::charType = nullptr;
-llvm::Type* LLVMTypes::boolType = nullptr;
-llvm::Type* LLVMTypes::bool1Type = nullptr;
-llvm::PointerType* LLVMTypes::pointerType = nullptr;
-llvm::Type* LLVMTypes::pointerTypeAsType = nullptr;
-llvm::Type* LLVMTypes::uintPtrType = nullptr;
-llvm::Type* LLVMTypes::voidType = nullptr;
+LLVMTypes::LLVMTypes(bool is64BitPlatform, unsigned int sizeOfBoolInBits)
+{
+	llvm::LLVMContext& llvmContext = LLVMJit::get().getContext();
+	doubleType = llvm::Type::getDoubleTy(llvmContext);
+	floatType = llvm::Type::getFloatTy(llvmContext);
+	intType = llvm::Type::getInt32Ty(llvmContext);
+	longintType = llvm::Type::getInt64Ty(llvmContext);
+	charType = llvm::Type::getInt8Ty(llvmContext);
+	boolType = llvm::Type::getIntNTy(llvmContext, sizeOfBoolInBits);
+	bool1Type = llvm::Type::getInt1Ty(llvmContext);
+	pointerType = llvm::Type::getInt8PtrTy(llvmContext);
+	pointerTypeAsType = static_cast<llvm::Type*>(pointerType);
+	if (is64BitPlatform)
+	{
+		uintPtrType = llvm::Type::getInt64Ty(llvmContext);
+	}
+	else
+	{
+		uintPtrType = llvm::Type::getInt32Ty(llvmContext);
+	}
+	voidType = llvm::Type::getVoidTy(llvmContext);
 
-llvm::FunctionType* LLVMTypes::functionRetPtrArgPtr = nullptr;
-llvm::FunctionType* LLVMTypes::functionRetPtrArgPtr_Ptr = nullptr;
-llvm::FunctionType* LLVMTypes::functionRetPtrArgPtr_StringPtr = nullptr;
-llvm::FunctionType* LLVMTypes::functionRetPtrArgPtr_Int = nullptr;
+	functionRetPtrArgPtr = llvm::FunctionType::get(pointerType, {pointerType}, false);
+	functionRetPtrArgPtr_Ptr = llvm::FunctionType::get(pointerType, {pointerType, pointerType}, false);
+}
+
+
+LLVMTypes::~LLVMTypes()
+{
+}

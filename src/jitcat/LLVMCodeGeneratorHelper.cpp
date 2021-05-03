@@ -44,6 +44,7 @@ using namespace jitcat::Reflection;
 
 LLVMCodeGeneratorHelper::LLVMCodeGeneratorHelper(LLVMCodeGenerator* codeGenerator):
 	codeGenerator(codeGenerator),
+	llvmTypes(codeGenerator->targetConfig->getLLVMTypes()),
 	llvmContext(LLVMJit::get().getContext())
 {
 }
@@ -85,7 +86,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context
 		}
 		callInstruction = getBuilder()->CreateCall(function, arguments);
 	}
-	if (functionType->getReturnType() != LLVMTypes::voidType)
+	if (functionType->getReturnType() != llvmTypes.voidType)
 	{
 		callInstruction->setName(shortFunctionName + "_result");
 	}
@@ -113,7 +114,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createNullCheckSelect(llvm::Value* valueTo
 {
 	auto builder = codeGenerator->getBuilder();
 	llvm::Value* isNotNull = nullptr;
-	if (valueToCheck->getType() != LLVMTypes::boolType)
+	if (valueToCheck->getType() != llvmTypes.boolType)
 	{
 		std::string name = "IsNotNull";
 		if (valueToCheck->getName() != "")
@@ -145,7 +146,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createNullCheckSelect(llvm::Value* valueTo
 
 	currentFunction->getBasicBlockList().push_back(elseBlock);
 	builder->SetInsertPoint(elseBlock);
-	if (thenResult != nullptr && thenResult->getType() != LLVMTypes::voidType)
+	if (thenResult != nullptr && thenResult->getType() != llvmTypes.voidType)
 	{
 		llvm::Value* elseResult = codeGenIfNull(context);
 		builder->CreateBr(continuationBlock);
@@ -256,22 +257,22 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 
 llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 {
-	if		(type.isFloatType())						return LLVMTypes::floatType;
-	else if	(type.isDoubleType())						return LLVMTypes::doubleType;
-	else if (type.isCharType())							return LLVMTypes::charType;
-	else if (type.isUCharType())						return LLVMTypes::charType;
-	else if (type.isIntType())							return LLVMTypes::intType;
-	else if (type.isUIntType())							return LLVMTypes::intType;
-	else if (type.isInt64Type())						return LLVMTypes::longintType;
-	else if (type.isUInt64Type())						return LLVMTypes::longintType;
-	else if (type.isBoolType())							return LLVMTypes::boolType;
-	else if (type.isReflectableHandleType())			return LLVMTypes::pointerType;
-	else if (type.isVoidType())							return LLVMTypes::voidType;
+	if		(type.isFloatType())						return llvmTypes.floatType;
+	else if	(type.isDoubleType())						return llvmTypes.doubleType;
+	else if (type.isCharType())							return llvmTypes.charType;
+	else if (type.isUCharType())						return llvmTypes.charType;
+	else if (type.isIntType())							return llvmTypes.intType;
+	else if (type.isUIntType())							return llvmTypes.intType;
+	else if (type.isInt64Type())						return llvmTypes.longintType;
+	else if (type.isUInt64Type())						return llvmTypes.longintType;
+	else if (type.isBoolType())							return llvmTypes.boolType;
+	else if (type.isReflectableHandleType())			return llvmTypes.pointerType;
+	else if (type.isVoidType())							return llvmTypes.voidType;
 	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
 	else if (type.isReflectableObjectType())			
 	{
 		//This is a compound type. For now, just create a pointer type.
-		return LLVMTypes::pointerType;
+		return llvmTypes.pointerType;
 	}
 	else if (type.isPointerType())
 	{
@@ -283,7 +284,7 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 		}
 		else
 		{
-			return LLVMTypes::pointerType;
+			return llvmTypes.pointerType;
 		}
 
 	}
@@ -291,7 +292,7 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	{
 		//Unknown type. Add it to this function.
 		assert(false);
-		return LLVMTypes::voidType;
+		return llvmTypes.voidType;
 	}
 }
 
@@ -310,9 +311,9 @@ void LLVMCodeGeneratorHelper::writeToPointer(llvm::Value* lValue, llvm::Value* r
 llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals, 
 																		const std::string& functionName)
 {
-	llvm::Type* functionReturnType = LLVMTypes::voidType;
+	llvm::Type* functionReturnType = llvmTypes.voidType;
 
-	std::vector<llvm::Type*> callBackParameters = {LLVMTypes::pointerType, LLVMTypes::pointerType};
+	std::vector<llvm::Type*> callBackParameters = {llvmTypes.pointerType, llvmTypes.pointerType};
 	llvm::FunctionType* callBackType = llvm::FunctionType::get(functionReturnType, callBackParameters, false);		
 
 	std::vector<llvm::Type*> parameters = {callBackType->getPointerTo()};
@@ -403,16 +404,16 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, b
 	{
 		return valueToConvert;
 	}
-	if (toType == LLVMTypes::boolType)
+	if (toType == llvmTypes.boolType)
 	{
 		//to 'boolean' type
-		if (valueToConvert->getType() == LLVMTypes::boolType)
+		if (valueToConvert->getType() == llvmTypes.boolType)
 		{
 			return valueToConvert;
 		}
-		else if (valueToConvert->getType() == LLVMTypes::charType
-				|| valueToConvert->getType() == LLVMTypes::intType
-				|| valueToConvert->getType() == LLVMTypes::longintType)
+		else if (valueToConvert->getType() == llvmTypes.charType
+				|| valueToConvert->getType() == llvmTypes.intType
+				|| valueToConvert->getType() == llvmTypes.longintType)
 		{
 			int bitWidth = static_cast<llvm::IntegerType*>( valueToConvert->getType())->getBitWidth();
 			if (valueIsSigned)
@@ -426,196 +427,196 @@ llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, b
 				return codeGenerator->booleanCast(builder->CreateICmpUGT(valueToConvert, zero, "GreaterThanZero"));
 			}
 		}
-		else if (valueToConvert->getType() == LLVMTypes::floatType)
+		else if (valueToConvert->getType() == llvmTypes.floatType)
 		{
 			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0f));
 			return codeGenerator->booleanCast(builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero"));
 		}
-		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		else if (valueToConvert->getType() == llvmTypes.doubleType)
 		{
 			llvm::Value* zero = llvm::ConstantFP::get(llvmContext, llvm::APFloat(0.0));
 			return codeGenerator->booleanCast(builder->CreateFCmpUGT(valueToConvert, zero, "FGreaterThanZero"));
 		}
 	}
-	else if (toType == LLVMTypes::charType)
+	else if (toType == llvmTypes.charType)
 	{
 		//to int type
-		if (valueToConvert->getType() == LLVMTypes::charType)
+		if (valueToConvert->getType() == llvmTypes.charType)
 		{
 			//Sign conversion, no actual work is needed.
 			return valueToConvert;
 		}
-		else if (valueToConvert->getType() == LLVMTypes::intType
-				 || valueToConvert->getType() == LLVMTypes::longintType)
+		else if (valueToConvert->getType() == llvmTypes.intType
+				 || valueToConvert->getType() == llvmTypes.longintType)
 		{
 			//Trunc works for both signed and unsigned values
-			return builder->CreateTrunc(valueToConvert, LLVMTypes::charType, "TruncateToChar");
+			return builder->CreateTrunc(valueToConvert, llvmTypes.charType, "TruncateToChar");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::boolType)
+		else if (valueToConvert->getType() == llvmTypes.boolType)
 		{
-			return builder->CreateZExt(valueToConvert, LLVMTypes::charType, "ZeroExtended");
+			return builder->CreateZExt(valueToConvert, llvmTypes.charType, "ZeroExtended");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::floatType)
-		{
-			if (toIsSigned)
-			{
-				return builder->CreateFPToSI(valueToConvert, LLVMTypes::charType, "FloatToChar");
-			}
-			else
-			{
-				return builder->CreateFPToUI(valueToConvert, LLVMTypes::charType, "FloatToUChar");
-			}
-		}
-		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		else if (valueToConvert->getType() == llvmTypes.floatType)
 		{
 			if (toIsSigned)
 			{
-				return builder->CreateFPToSI(valueToConvert, LLVMTypes::charType, "DoubleToChar");
+				return builder->CreateFPToSI(valueToConvert, llvmTypes.charType, "FloatToChar");
 			}
 			else
 			{
-				return builder->CreateFPToUI(valueToConvert, LLVMTypes::charType, "DoubleToUChar");
+				return builder->CreateFPToUI(valueToConvert, llvmTypes.charType, "FloatToUChar");
+			}
+		}
+		else if (valueToConvert->getType() == llvmTypes.doubleType)
+		{
+			if (toIsSigned)
+			{
+				return builder->CreateFPToSI(valueToConvert, llvmTypes.charType, "DoubleToChar");
+			}
+			else
+			{
+				return builder->CreateFPToUI(valueToConvert, llvmTypes.charType, "DoubleToUChar");
 			}
 		}
 	}
-	else if (toType == LLVMTypes::intType)
+	else if (toType == llvmTypes.intType)
 	{
 		//to int type
-		if (valueToConvert->getType() == LLVMTypes::intType)
+		if (valueToConvert->getType() == llvmTypes.intType)
 		{
 			//Sign conversion, no actual work is needed.
 			return valueToConvert;
 		}
-		else if (valueToConvert->getType() == LLVMTypes::charType)
+		else if (valueToConvert->getType() == llvmTypes.charType)
 		{
 			//char to int
 			if (toIsSigned && valueIsSigned)
 			{
-				return builder->CreateSExt(valueToConvert, LLVMTypes::intType, "SignExtended");
+				return builder->CreateSExt(valueToConvert, llvmTypes.intType, "SignExtended");
 			}
 			else
 			{
-				return builder->CreateZExt(valueToConvert, LLVMTypes::intType, "ZeroExtended");
+				return builder->CreateZExt(valueToConvert, llvmTypes.intType, "ZeroExtended");
 			}
 		}
-		else if (valueToConvert->getType() == LLVMTypes::longintType)
+		else if (valueToConvert->getType() == llvmTypes.longintType)
 		{
 			//Trunc works for both signed and unsigned values
-			return builder->CreateTrunc(valueToConvert, LLVMTypes::intType, "LongToInt");
+			return builder->CreateTrunc(valueToConvert, llvmTypes.intType, "LongToInt");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::boolType)
+		else if (valueToConvert->getType() == llvmTypes.boolType)
 		{
-			return builder->CreateZExt(valueToConvert, LLVMTypes::intType, "ZeroExtended");
+			return builder->CreateZExt(valueToConvert, llvmTypes.intType, "ZeroExtended");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::floatType)
-		{
-			if (toIsSigned)
-			{
-				return builder->CreateFPToSI(valueToConvert, LLVMTypes::intType, "FloatToInt");
-			}
-			else
-			{
-				return builder->CreateFPToUI(valueToConvert, LLVMTypes::intType, "FloatToUInt");
-			}
-		}
-		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		else if (valueToConvert->getType() == llvmTypes.floatType)
 		{
 			if (toIsSigned)
 			{
-				return builder->CreateFPToSI(valueToConvert, LLVMTypes::intType, "DoubleToInt");
+				return builder->CreateFPToSI(valueToConvert, llvmTypes.intType, "FloatToInt");
 			}
 			else
 			{
-				return builder->CreateFPToUI(valueToConvert, LLVMTypes::intType, "DoubleToInt");
+				return builder->CreateFPToUI(valueToConvert, llvmTypes.intType, "FloatToUInt");
+			}
+		}
+		else if (valueToConvert->getType() == llvmTypes.doubleType)
+		{
+			if (toIsSigned)
+			{
+				return builder->CreateFPToSI(valueToConvert, llvmTypes.intType, "DoubleToInt");
+			}
+			else
+			{
+				return builder->CreateFPToUI(valueToConvert, llvmTypes.intType, "DoubleToInt");
 			}
 		}
 	}
-	else if (toType == LLVMTypes::longintType)
+	else if (toType == llvmTypes.longintType)
 	{
-		if (valueToConvert->getType() == LLVMTypes::longintType)
+		if (valueToConvert->getType() == llvmTypes.longintType)
 		{
 			return valueToConvert;
 		}
-		else if (valueToConvert->getType() == LLVMTypes::boolType)
+		else if (valueToConvert->getType() == llvmTypes.boolType)
 		{
-			return builder->CreateZExt(valueToConvert, LLVMTypes::longintType, "ZeroExtendedLong");
+			return builder->CreateZExt(valueToConvert, llvmTypes.longintType, "ZeroExtendedLong");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::intType
-				 || valueToConvert->getType() == LLVMTypes::charType)
+		else if (valueToConvert->getType() == llvmTypes.intType
+				 || valueToConvert->getType() == llvmTypes.charType)
 		{
 			if (valueIsSigned && toIsSigned)
 			{
-				return builder->CreateSExt(valueToConvert, LLVMTypes::longintType, "SignedToLong");
+				return builder->CreateSExt(valueToConvert, llvmTypes.longintType, "SignedToLong");
 			}
 			else
 			{
-				return builder->CreateZExt(valueToConvert, LLVMTypes::longintType, "UnsignedToLong");
+				return builder->CreateZExt(valueToConvert, llvmTypes.longintType, "UnsignedToLong");
 			}
 		}
-		else if (valueToConvert->getType() == LLVMTypes::floatType)
+		else if (valueToConvert->getType() == llvmTypes.floatType)
 		{
-			return builder->CreateFPToSI(valueToConvert, LLVMTypes::longintType, "FloatToLong");
+			return builder->CreateFPToSI(valueToConvert, llvmTypes.longintType, "FloatToLong");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		else if (valueToConvert->getType() == llvmTypes.doubleType)
 		{
-			return builder->CreateFPToSI(valueToConvert, LLVMTypes::longintType, "DoubleToLong");
+			return builder->CreateFPToSI(valueToConvert, llvmTypes.longintType, "DoubleToLong");
 		}
 	}
-	else if (toType == LLVMTypes::floatType)
+	else if (toType == llvmTypes.floatType)
 	{
 		//to float type
-		if (valueToConvert->getType() == LLVMTypes::floatType)
+		if (valueToConvert->getType() == llvmTypes.floatType)
 		{
 			return valueToConvert;
 		}
-		else if (valueToConvert->getType() == LLVMTypes::doubleType)
+		else if (valueToConvert->getType() == llvmTypes.doubleType)
 		{
-			return builder->CreateFPCast(valueToConvert, LLVMTypes::floatType, "DoubleToFloat");
+			return builder->CreateFPCast(valueToConvert, llvmTypes.floatType, "DoubleToFloat");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::boolType)
+		else if (valueToConvert->getType() == llvmTypes.boolType)
 		{
-			return builder->CreateUIToFP(valueToConvert, LLVMTypes::floatType, "BoolToFloat");
+			return builder->CreateUIToFP(valueToConvert, llvmTypes.floatType, "BoolToFloat");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::charType
-				 || valueToConvert->getType() == LLVMTypes::intType
-				 || valueToConvert->getType() == LLVMTypes::longintType)
+		else if (valueToConvert->getType() == llvmTypes.charType
+				 || valueToConvert->getType() == llvmTypes.intType
+				 || valueToConvert->getType() == llvmTypes.longintType)
 		{
 			if (valueIsSigned)
 			{
-				return builder->CreateSIToFP(valueToConvert, LLVMTypes::floatType, "SignedToFloat");
+				return builder->CreateSIToFP(valueToConvert, llvmTypes.floatType, "SignedToFloat");
 			}
 			else
 			{
-				return builder->CreateUIToFP(valueToConvert, LLVMTypes::floatType, "UnsignedToFloat");
+				return builder->CreateUIToFP(valueToConvert, llvmTypes.floatType, "UnsignedToFloat");
 			}
 		}
 	}
-	else if (toType == LLVMTypes::doubleType)
+	else if (toType == llvmTypes.doubleType)
 	{
 		//to float type
-		if (valueToConvert->getType() == LLVMTypes::doubleType)
+		if (valueToConvert->getType() == llvmTypes.doubleType)
 		{
 			return valueToConvert;
 		}
-		else if (valueToConvert->getType() == LLVMTypes::floatType)
+		else if (valueToConvert->getType() == llvmTypes.floatType)
 		{
-			return builder->CreateFPCast(valueToConvert, LLVMTypes::doubleType, "FloatToDouble");
+			return builder->CreateFPCast(valueToConvert, llvmTypes.doubleType, "FloatToDouble");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::boolType)
+		else if (valueToConvert->getType() == llvmTypes.boolType)
 		{
-			return builder->CreateUIToFP(valueToConvert, LLVMTypes::doubleType, "BoolToDouble");
+			return builder->CreateUIToFP(valueToConvert, llvmTypes.doubleType, "BoolToDouble");
 		}
-		else if (valueToConvert->getType() == LLVMTypes::charType
-				 || valueToConvert->getType() == LLVMTypes::intType
-				 || valueToConvert->getType() == LLVMTypes::longintType)
+		else if (valueToConvert->getType() == llvmTypes.charType
+				 || valueToConvert->getType() == llvmTypes.intType
+				 || valueToConvert->getType() == llvmTypes.longintType)
 		{
 			if (valueIsSigned)
 			{
-				return builder->CreateSIToFP(valueToConvert, LLVMTypes::doubleType, "SignedToDouble");
+				return builder->CreateSIToFP(valueToConvert, llvmTypes.doubleType, "SignedToDouble");
 			}
 			else
 			{
-				return builder->CreateUIToFP(valueToConvert, LLVMTypes::doubleType, "UnsignedToDouble");
+				return builder->CreateUIToFP(valueToConvert, llvmTypes.doubleType, "UnsignedToDouble");
 			}
 		}
 	}
@@ -635,7 +636,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticPointerVariable(uintptr_t va
 	else
 	{
 		llvm::GlobalVariable* globalVariable = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(name, context);
-		llvm::Value* loadedPointer = context->helper->loadPointerAtAddress(globalVariable, name, LLVM::LLVMTypes::pointerType);
+		llvm::Value* loadedPointer = context->helper->loadPointerAtAddress(globalVariable, name, llvmTypes.pointerType);
 		llvm::MDNode* metaData = llvm::MDNode::get(LLVMJit::get().getContext(), llvm::None);
 		static_cast<llvm::LoadInst*>(loadedPointer)->setMetadata(llvm::LLVMContext::MD_nonnull, metaData);
 		return loadedPointer;
@@ -645,30 +646,30 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticPointerVariable(uintptr_t va
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToString(llvm::Value* valueToConvert, const CatGenericType& fromType, LLVMCompileTimeContext* context)
 {
-	if (valueToConvert->getType() == LLVMTypes::boolType)
+	if (valueToConvert->getType() == llvmTypes.boolType)
 	{
 		return createIntrinsicCall(context, &LLVMCatIntrinsics::boolToString, {valueToConvert}, "boolToString", false);
 	}
-	else if (valueToConvert->getType() == LLVMTypes::doubleType)
+	else if (valueToConvert->getType() == llvmTypes.doubleType)
 	{
 		return createIntrinsicCall(context, &LLVMCatIntrinsics::doubleToString, {valueToConvert}, "doubleToString", false);
 	}
-	else if (valueToConvert->getType() == LLVMTypes::floatType)
+	else if (valueToConvert->getType() == llvmTypes.floatType)
 	{
 		return createIntrinsicCall(context, &LLVMCatIntrinsics::floatToString, {valueToConvert}, "floatToString", false);
 	}
-	else if (valueToConvert->getType() == LLVMTypes::charType)
+	else if (valueToConvert->getType() == llvmTypes.charType)
 	{
 		if (fromType.isSignedType())
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {convertType(valueToConvert, true, LLVMTypes::intType, true, context)}, "intToString", false);
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::intToString, {convertType(valueToConvert, true, llvmTypes.intType, true, context)}, "intToString", false);
 		}
 		else
 		{
-			return createIntrinsicCall(context, &LLVMCatIntrinsics::uIntToString, {convertType(valueToConvert, false, LLVMTypes::intType, false, context)}, "uIntToString", false);
+			return createIntrinsicCall(context, &LLVMCatIntrinsics::uIntToString, {convertType(valueToConvert, false, llvmTypes.intType, false, context)}, "uIntToString", false);
 		}
 	}
-	else if (valueToConvert->getType() == LLVMTypes::intType)
+	else if (valueToConvert->getType() == llvmTypes.intType)
 	{
 		if (fromType.isSignedType())
 		{
@@ -679,7 +680,7 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToString(llvm::Value* valueToConver
 			return createIntrinsicCall(context, &LLVMCatIntrinsics::uIntToString, {valueToConvert}, "uIntToString", false);
 		}
 	}
-	else if (valueToConvert->getType() == LLVMTypes::longintType)
+	else if (valueToConvert->getType() == llvmTypes.longintType)
 	{
 		if (fromType.isSignedType())
 		{
@@ -699,6 +700,10 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToString(llvm::Value* valueToConver
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
+	if (type == nullptr)
+	{
+		type = llvmTypes.pointerType;
+	}
 	if (addressValue->getType() == type)
 	{
 		return addressValue;
@@ -718,13 +723,17 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type)
 {
+	if (type == nullptr)
+	{
+		type = llvmTypes.pointerType;
+	}
 	return convertToPointer(static_cast<llvm::Value*>(addressConstant), name, type);
 }
 
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToIntPtr(llvm::Value* llvmPointer, const std::string& name)
 {
-	llvm::Value* ptrToInt = codeGenerator->getBuilder()->CreatePtrToInt(llvmPointer, LLVMTypes::uintPtrType);
+	llvm::Value* ptrToInt = codeGenerator->getBuilder()->CreatePtrToInt(llvmPointer, llvmTypes.uintPtrType);
 	ptrToInt->setName(name);
 	return ptrToInt;
 }
@@ -738,37 +747,37 @@ llvm::PointerType* jitcat::LLVM::LLVMCodeGeneratorHelper::getPointerTo(llvm::Typ
 
 bool LLVMCodeGeneratorHelper::isPointer(llvm::Type* type)
 {
-	return type == LLVMTypes::pointerType;
+	return type == llvmTypes.pointerType;
 }
 
 
 bool LLVMCodeGeneratorHelper::isIntPtr(llvm::Type* type)
 {
-	return type == LLVMTypes::uintPtrType;
+	return type == llvmTypes.uintPtrType;
 }
 
 
 bool LLVMCodeGeneratorHelper::isInt(llvm::Type* type)
 {
-	return type == LLVMTypes::intType;
+	return type == llvmTypes.intType;
 }
 
 
 bool LLVMCodeGeneratorHelper::isPointer(llvm::Value* value)
 {
-	return value->getType() == LLVMTypes::pointerType;
+	return value->getType() == llvmTypes.pointerType;
 }
 
 
 bool LLVMCodeGeneratorHelper::isIntPtr(llvm::Value* value)
 {
-	return value->getType() == LLVMTypes::uintPtrType;
+	return value->getType() == llvmTypes.uintPtrType;
 }
 
 
 bool LLVMCodeGeneratorHelper::isInt(llvm::Value* value)
 {
-	return value->getType() == LLVMTypes::intType;
+	return value->getType() == llvmTypes.intType;
 }
 
 
@@ -798,6 +807,10 @@ llvm::Value* LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Cons
 
 llvm::Value* LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
+	if (type == nullptr)
+	{
+		type = llvmTypes.pointerType;
+	}
 	auto builder = codeGenerator->getBuilder();
 	llvm::Value* addressAsPointer = nullptr;
 	if (!addressValue->getType()->isPointerTy())
@@ -860,8 +873,8 @@ llvm::Value* LLVMCodeGeneratorHelper::createOffsetGlobalValue(LLVMCompileTimeCon
 	else
 	{
 		llvm::GlobalVariable* memberOffsetPtr = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(globalName, context);
-		llvm::Value* intPtr = getBuilder()->CreatePointerCast(memberOffsetPtr, LLVMTypes::uintPtrType->getPointerTo(), "intptr");
-		return loadBasicType(LLVMTypes::uintPtrType, intPtr, globalName);
+		llvm::Value* intPtr = getBuilder()->CreatePointerCast(memberOffsetPtr, llvmTypes.uintPtrType->getPointerTo(), "intptr");
+		return loadBasicType(llvmTypes.uintPtrType, intPtr, globalName);
 	}
 }
 
@@ -884,13 +897,13 @@ llvm::Value* LLVMCodeGeneratorHelper::createTypeInfoGlobalValue(LLVMCompileTimeC
 
 llvm::Constant* LLVMCodeGeneratorHelper::createZeroInitialisedConstant(llvm::Type* type)
 {
-	if		(type == LLVMTypes::boolType)		return createConstant(false);
-	else if (type == LLVMTypes::floatType)		return createConstant(0.0f);
-	else if (type == LLVMTypes::doubleType)		return createConstant(0.0);
-	else if (type == LLVMTypes::intType)		return createConstant(0);
-	else if (type == LLVMTypes::longintType)	return createConstant((uint64_t)0);
-	else if (type == LLVMTypes::charType)		return createCharConstant(0);
-	else if (type == LLVMTypes::voidType)		return (llvm::Constant*)nullptr;
+	if		(type == llvmTypes.boolType)		return createConstant(false);
+	else if (type == llvmTypes.floatType)		return createConstant(0.0f);
+	else if (type == llvmTypes.doubleType)		return createConstant(0.0);
+	else if (type == llvmTypes.intType)		return createConstant(0);
+	else if (type == llvmTypes.longintType)	return createConstant((uint64_t)0);
+	else if (type == llvmTypes.charType)		return createCharConstant(0);
+	else if (type == llvmTypes.voidType)		return (llvm::Constant*)nullptr;
 	else if (type->isArrayTy())					return createZeroInitialisedArrayConstant(static_cast<llvm::ArrayType*>(type));
 	else if (type->isPointerTy())
 	{
@@ -987,7 +1000,7 @@ llvm::Constant* LLVMCodeGeneratorHelper::createNullPtrConstant(llvm::PointerType
 
 llvm::Constant* LLVMCodeGeneratorHelper::createZeroTerminatedStringConstant(const std::string& value)
 {
-    auto charType = LLVMTypes::charType;
+    auto charType = llvmTypes.charType;
 
 
     //Initialize chars vector
@@ -1018,8 +1031,8 @@ llvm::Constant* LLVMCodeGeneratorHelper::createZeroTerminatedStringConstant(cons
 
 llvm::GlobalVariable* LLVMCodeGeneratorHelper::createGlobalPointerSymbol(const std::string& name)
 {
-    auto globalDeclaration = (llvm::GlobalVariable*) codeGenerator->getCurrentModule()->getOrInsertGlobal(name, LLVMTypes::pointerType);
-    globalDeclaration->setInitializer(createNullPtrConstant(LLVMTypes::pointerType));
+    auto globalDeclaration = (llvm::GlobalVariable*) codeGenerator->getCurrentModule()->getOrInsertGlobal(name, llvmTypes.pointerType);
+    globalDeclaration->setInitializer(createNullPtrConstant(llvmTypes.pointerType));
     globalDeclaration->setConstant(false);
     globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
     globalDeclaration->setUnnamedAddr (llvm::GlobalValue::UnnamedAddr::Global);
@@ -1069,14 +1082,14 @@ llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext*
 																	   const CatGenericType& objectType, bool generateDestructorCall)
 {
 	auto builder = codeGenerator->getBuilder();
-	llvm::Type* llvmObjectType = llvm::ArrayType::get(LLVMTypes::charType, objectType.getTypeSize());
+	llvm::Type* llvmObjectType = llvm::ArrayType::get(llvmTypes.charType, objectType.getTypeSize());
 	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
 	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
 	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
 	llvm::AllocaInst* objectAllocation = builder->CreateAlloca(llvmObjectType, 0, nullptr);
 	objectAllocation->setName(name);
 
-	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, LLVMTypes::pointerType);
+	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, llvmTypes.pointerType);
 
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
 
@@ -1175,7 +1188,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::C
 {
 	if (returnType.isReflectableObjectType())
 	{
-		llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
+		llvm::FunctionType* functionType = llvm::FunctionType::get(llvmTypes.voidType, argumentTypes, false);
 		llvm::CallInst* call = static_cast<llvm::CallInst*>(createCall(context, functionType, argumentList, false, mangledFunctionName, shortFunctionName, isDirectlyLinked));
 		call->addParamAttr(0, llvm::Attribute::AttrKind::StructRet);
 		call->addDereferenceableAttr(1 , returnType.getTypeSize());
@@ -1218,14 +1231,14 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 		llvm::Value* functionThis = compileContext->helper->convertToPointer(baseObject, memberFunction->getMemberFunctionName() + "_This_Ptr");
 		argumentList.push_back(functionThis);
 		std::vector<llvm::Type*> argumentTypes;
-		argumentTypes.push_back(LLVMTypes::pointerType);
+		argumentTypes.push_back(llvmTypes.pointerType);
 		if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
 		{
 			//Add an argument that contains a pointer to a MemberFunctionInfo object.
 			llvm::Value* memberFunctionInfoAddressValue = context->helper->generateStaticPointerVariable(callData.functionInfoStructAddress, context, memberFunction->getMangledFunctionInfoName(context->targetConfig->sretBeforeThis));
 			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
 			argumentList.push_back(memberFunctionPtrValue);
-			argumentTypes.push_back(LLVMTypes::pointerType);
+			argumentTypes.push_back(llvmTypes.pointerType);
 		}
 		generateFunctionCallArgumentEvalatuation(arguments, memberFunction->getArgumentTypes(), argumentList, argumentTypes, codeGenerator, context);
 
@@ -1278,7 +1291,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			}
 			else if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
 			{
-				argumentTypes.insert(argumentTypes.begin(), LLVMTypes::pointerType);
+				argumentTypes.insert(argumentTypes.begin(), llvmTypes.pointerType);
 				argumentList.insert(argumentList.begin(), returnedObjectAllocation);
 				return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(context->targetConfig->sretBeforeThis), 
 												  memberFunction->getMemberFunctionName(), returnedObjectAllocation, false, callData.nonNullResult);
@@ -1290,9 +1303,9 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 				{
 					sretTypeInsertPoint++;
 				}
-				argumentTypes.insert(sretTypeInsertPoint, LLVMTypes::pointerType);
+				argumentTypes.insert(sretTypeInsertPoint, llvmTypes.pointerType);
 
-				llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, argumentTypes, false);
+				llvm::FunctionType* functionType = llvm::FunctionType::get(llvmTypes.voidType, argumentTypes, false);
 				auto sretInsertPoint = argumentList.begin();
 				if (!codeGenerator->targetConfig->sretBeforeThis && callData.callType == MemberFunctionCallType::ThisCall)
 				{

@@ -10,7 +10,9 @@
 #include "jitcat/CustomObject.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/LLVMCodeGeneratorHelper.h"
-
+#ifdef ENABLE_LLVM
+	#include "jitcat/LLVMTargetConfig.h"
+#endif
 #include <cassert>
 
 
@@ -81,7 +83,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 		return context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_getObjectPointerFromHandle, {reflectableHandle}, "_jc_getObjectPointerFromHandle", true);
 
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
 #else 
 	return nullptr;
 #endif //ENABLE_LLVM
@@ -107,7 +109,7 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 		context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_assignPointerToReflectableHandle, {reflectableHandle, rValue, typeInfoConstantAsIntPtr}, "_jc_assignPointerToReflectableHandle", true);
 		return rValue;
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
 #else
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -164,7 +166,7 @@ llvm::Value* CustomTypeObjectDataMemberInfo::generateDereferenceCode(llvm::Value
 		//Call function that gets the member
 		return reflectable;
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, LLVM::LLVMTypes::pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
 #else 
 	return nullptr;
 #endif //ENABLE_LLVM

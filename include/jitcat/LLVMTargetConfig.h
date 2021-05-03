@@ -23,13 +23,14 @@
 
 namespace jitcat::LLVM
 {
+	class LLVMTypes;
 	//This class contains all the target-specific information that is needed by LLVM for code generation,
 	//both for JIT compilation and pre-compilation.
 	class LLVMTargetConfig
 	{
 	public:
-		LLVMTargetConfig(bool isJITTarget, bool sretBeforeThis, 
-						 bool useThisCall, bool callerDestroysTemporaryArguments, bool enableSymbolSearchWorkaround, 
+		LLVMTargetConfig(bool isJITTarget, bool sretBeforeThis, bool useThisCall, bool callerDestroysTemporaryArguments, 
+						 bool enableSymbolSearchWorkaround, bool is64BitTarget, unsigned int sizeOfBoolInBits, 
 						 unsigned int defaultLLVMCallingConvention, const std::string& targetTripple, const std::string& cpuName,
 						 const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures, 
 						 llvm::CodeGenOpt::Level optimizationLevel,
@@ -49,10 +50,15 @@ namespace jitcat::LLVM
 
 		llvm::Expected<const llvm::orc::JITTargetMachineBuilder&> getTargetMachineBuilder() const;
 
+		const LLVMTypes& getLLVMTypes() const;
+
 	public:
 		//Wether or not JIT compilation is supported on the target
 		const bool isJITTarget;
-
+		
+		//64 bit target if true, 32 bit target if false.
+		const bool is64BitTarget;
+		
 		//Determines the ordering of the 'this' argument and the 'sret' argument in a member function.
 		//Sret is used when a function returns a structure by value. Om windows/msvc a class member funtion's
 		//first argument will be the 'this' pointer and the second argument will be the sret pointer if applicable.
@@ -69,13 +75,17 @@ namespace jitcat::LLVM
 
 		//Enable some workarounds on Windows/MSVC required for finding function symbols after their code has been generated.
 		const bool enableSymbolSearchWorkaround;
-
+		
+		//Size, int bits, of a boolean.
+		const unsigned int sizeOfBoolInBits;
+		
 		//The default calling convention to use when generating code for a function call.
 		//May be overridden by the X86_ThisCall calling convention if useThisCall is true.
 		//Must be one of the calling conventions defined by llvm in llvm::CallingConv.
 		const unsigned int defaultLLVMCallingConvention;
 
 	private:
+		std::unique_ptr<LLVMTypes> llvmTypes;
 		//The target tripple that identifies CPU architecture, OS and compiler compatibility
 		const std::string targetTripple;
 		//The name of the target CPU

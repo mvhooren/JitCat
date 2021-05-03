@@ -9,6 +9,7 @@
 
 #include "jitcat/Configuration.h"
 #include "jitcat/LLVMTargetConfig.h"
+#include "jitcat/LLVMTypes.h"
 
 #include <llvm/IR/CallingConv.h>
 #include <llvm/Support/Host.h>
@@ -19,18 +20,21 @@ using namespace jitcat;
 using namespace jitcat::LLVM;
 
 
-LLVMTargetConfig::LLVMTargetConfig(	bool isJITTarget, bool sretBeforeThis, 
-									bool useThisCall, bool callerDestroysTemporaryArguments, bool enableSymbolSearchWorkaround, 
-									unsigned int defaultLLVMCallingConvention, const std::string& targetTripple, const std::string& cpuName, 
-									const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures,
-									llvm::CodeGenOpt::Level optimizationLevel, 
-									llvm::Optional<llvm::Reloc::Model> relocationModel,	llvm::Optional<llvm::CodeModel::Model> codeModel):
+LLVMTargetConfig::LLVMTargetConfig(bool isJITTarget, bool sretBeforeThis, bool useThisCall, bool callerDestroysTemporaryArguments, 
+								   bool enableSymbolSearchWorkaround, bool is64BitTarget, unsigned int sizeOfBoolInBits, 
+								   unsigned int defaultLLVMCallingConvention, const std::string& targetTripple, const std::string& cpuName,
+								   const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures, 
+								   llvm::CodeGenOpt::Level optimizationLevel, llvm::Optional<llvm::Reloc::Model> relocationModel,
+								   llvm::Optional<llvm::CodeModel::Model> codeModel):
 	isJITTarget(isJITTarget),
+	is64BitTarget(is64BitTarget),
 	sretBeforeThis(sretBeforeThis),
 	useThisCall(useThisCall),
 	callerDestroysTemporaryArguments(callerDestroysTemporaryArguments),
 	enableSymbolSearchWorkaround(enableSymbolSearchWorkaround),
+	sizeOfBoolInBits(sizeOfBoolInBits),
 	defaultLLVMCallingConvention(defaultLLVMCallingConvention),
+	llvmTypes(std::make_unique<LLVMTypes>(is64BitTarget, sizeOfBoolInBits)),
 	targetTripple(targetTripple),
 	cpuName(cpuName),
 	targetOptions(targetOptions),
@@ -96,9 +100,9 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createJITTargetConfig()
 	options.ExplicitEmulatedTLS = true;
 
 	return std::make_unique<LLVMTargetConfig>(true, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
-											  enableSymbolSearchWorkaround, 
+											  enableSymbolSearchWorkaround, sizeof(uintptr_t) == 8, (unsigned int)sizeof(bool) * 8,
 											  defaultCallingConvention, targetTripple, cpuName, 
-											  options, features, llvm::CodeGenOpt::Level::None);
+											  options, features, llvm::CodeGenOpt::Level::Default);
 }
 
 
@@ -124,4 +128,10 @@ llvm::Expected<const llvm::orc::JITTargetMachineBuilder&> LLVMTargetConfig::getT
 	{
 		return llvm::make_error<llvm::StringError>("Not a JIT target configuration.", llvm::inconvertibleErrorCode());
 	}
+}
+
+
+const LLVMTypes& LLVMTargetConfig::getLLVMTypes() const
+{
+	return *llvmTypes.get();
 }

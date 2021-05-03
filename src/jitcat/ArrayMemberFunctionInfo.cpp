@@ -12,6 +12,7 @@
 #ifdef ENABLE_LLVM
 	#include <llvm/IR/IRBuilder.h>
 	#include <llvm/IR/MDBuilder.h>
+	#include "jitcat/LLVMTargetConfig.h"
 #endif
 #include <cassert>
 
@@ -184,7 +185,7 @@ void ArrayMemberFunctionInfo::createIndexGeneratorFunction()
 						llvm::Value* arraySizePtr = context->helper->createAdd(parameters[0], offset, "arraySizeAddr");
 						llvm::Value* arraySizeIntPtr = context->helper->convertToIntPtr(arraySizePtr, "arraySizeIntAddr");
 						//Get size of the array
-						llvm::Value* size = context->helper->loadBasicType(LLVMTypes::intType, arraySizeIntPtr, "getSize");
+						llvm::Value* size = context->helper->loadBasicType(context->targetConfig->getLLVMTypes().intType, arraySizeIntPtr, "getSize");
 						//Check that index is less than size
 						llvm::Value* lessThanSize = builder->CreateICmpSLT(parameters[1],size, "LessThanSize");
 						//&& the two checks
@@ -259,8 +260,8 @@ void ArrayMemberFunctionInfo::createSizeGeneratorFunction()
 						//Get a pointer to the size of the array
 						llvm::Value* arraySizePtr = context->helper->createAdd(parameters[0], offset, "arraySizeAddr");
 						//Get size of the array
-						return context->helper->loadBasicType(LLVMTypes::intType, arraySizePtr, "getSize");
-					}, LLVMTypes::intType, context);
+						return context->helper->loadBasicType(context->targetConfig->getLLVMTypes().intType, arraySizePtr, "getSize");
+					}, context->targetConfig->getLLVMTypes().intType, context);
 			});
 
 	}
@@ -306,7 +307,7 @@ void ArrayMemberFunctionInfo::createInitGeneratorFunction()
 						{
 							//Generate non-zero size code
 							//Allocate memory and call constructors
-							builder->CreateStore(parameters[1], builder->CreatePointerCast(arraySizePtr, LLVMTypes::intType->getPointerTo()));
+							builder->CreateStore(parameters[1], builder->CreatePointerCast(arraySizePtr, context->targetConfig->getLLVMTypes().intType->getPointerTo()));
 							llvm::Value* itemSize = context->helper->createConstant((int)arrayTypeInfo->getArrayItemType().getTypeSize());
 							llvm::Value* arraySize = builder->CreateMul(itemSize, parameters[1], "arraySizeBytes");
 							llvm::Value* arrayData = context->helper->createIntrinsicCall(context, CatLinkedIntrinsics::_jc_allocateMemory, {arraySize}, "_jc_allocateMemory", true);
@@ -357,15 +358,15 @@ void ArrayMemberFunctionInfo::createInitGeneratorFunction()
 						{
 							//Generate zero (or negative) size code
 							//Set size and pointer to null
-							builder->CreateStore(context->helper->createZeroInitialisedConstant(LLVMTypes::pointerType), builder->CreatePointerCast(parameters[0], LLVMTypes::pointerType->getPointerTo()));
-							builder->CreateStore(context->helper->createZeroInitialisedConstant(LLVMTypes::intType), builder->CreatePointerCast(arraySizePtr, LLVMTypes::intType->getPointerTo()));
+							builder->CreateStore(context->helper->createZeroInitialisedConstant(context->targetConfig->getLLVMTypes().pointerType), builder->CreatePointerCast(parameters[0], context->targetConfig->getLLVMTypes().pointerType->getPointerTo()));
+							builder->CreateStore(context->helper->createZeroInitialisedConstant(context->targetConfig->getLLVMTypes().intType), builder->CreatePointerCast(arraySizePtr, context->targetConfig->getLLVMTypes().intType->getPointerTo()));
 							builder->CreateBr(continuationBlock);
 						}
 						currentFunction->getBasicBlockList().push_back(continuationBlock);
 						builder->SetInsertPoint(continuationBlock);
 						return (llvm::Value*)(nullptr);
 					},
-					LLVMTypes::voidType, context);
+					context->targetConfig->getLLVMTypes().voidType, context);
 			});
 	}
 	#endif
@@ -393,13 +394,13 @@ void ArrayMemberFunctionInfo::createDestroyGeneratorFunction()
 						llvm::Value* offset = context->helper->createConstant((int)sizeof(ArrayTypeInfo::Array::arrayData));
 						//Get a pointer to the size of the array
 						llvm::Value* arraySizePtr = context->helper->createAdd(parameters[0], offset, "arraySizeAddr");
-						arraySizePtr = builder->CreatePointerCast(arraySizePtr, LLVMTypes::intType->getPointerTo());
+						arraySizePtr = builder->CreatePointerCast(arraySizePtr, context->targetConfig->getLLVMTypes().intType->getPointerTo());
 						llvm::Value* arraySize = builder->CreateLoad(arraySizePtr, "arraySize");
 						llvm::Value* notEmpty = builder->CreateICmpSGT(arraySize, context->helper->createConstant((int)0), "notEmpty");
 						//The array is not empty
 						context->helper->createOptionalNullCheckSelect(notEmpty, [&](LLVM::LLVMCompileTimeContext* context)
 							{
-								llvm::Value* arrayPtr = builder->CreateLoad(builder->CreatePointerCast(parameters[0], LLVMTypes::pointerType->getPointerTo()), "arrayDataPtr");
+								llvm::Value* arrayPtr = builder->CreateLoad(builder->CreatePointerCast(parameters[0], context->targetConfig->getLLVMTypes().pointerType->getPointerTo()), "arrayDataPtr");
 								if (!arrayTypeInfo->getArrayItemType().isBasicType()
 									&& !arrayTypeInfo->getArrayItemType().isEnumType()
 									&& !(arrayTypeInfo->getArrayItemType().isPointerType() && arrayTypeInfo->getArrayItemType().getOwnershipSemantics() == TypeOwnershipSemantics::Weak))
@@ -444,13 +445,13 @@ void ArrayMemberFunctionInfo::createDestroyGeneratorFunction()
 								}
 
 								context->helper->createIntrinsicCall(context, CatLinkedIntrinsics::_jc_freeMemory, {arrayPtr}, "_jc_freeMemory", true);
-								builder->CreateStore(context->helper->createZeroInitialisedConstant(LLVMTypes::pointerType), builder->CreatePointerCast(parameters[0], LLVMTypes::pointerType->getPointerTo()));
-								builder->CreateStore(context->helper->createZeroInitialisedConstant(LLVMTypes::intType), builder->CreatePointerCast(arraySizePtr, LLVMTypes::intType->getPointerTo()));
+								builder->CreateStore(context->helper->createZeroInitialisedConstant(context->targetConfig->getLLVMTypes().pointerType), builder->CreatePointerCast(parameters[0], context->targetConfig->getLLVMTypes().pointerType->getPointerTo()));
+								builder->CreateStore(context->helper->createZeroInitialisedConstant(context->targetConfig->getLLVMTypes().intType), builder->CreatePointerCast(arraySizePtr, context->targetConfig->getLLVMTypes().intType->getPointerTo()));
 								return (llvm::Value*)(nullptr);
-							}, LLVMTypes::voidType, context);
+							}, context->targetConfig->getLLVMTypes().voidType, context);
 						return (llvm::Value*)(nullptr);
 					},
-					LLVMTypes::voidType, context);
+					context->targetConfig->getLLVMTypes().voidType, context);
 			});
 	}
 	#endif

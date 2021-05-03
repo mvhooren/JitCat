@@ -262,8 +262,8 @@ llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(const CatAss
 	//Define the parameters for the function.
 	//Assign functions will always have two parameters: a CatRuntimeContext* and a value that will be assigned to the result of the assignable expression.
 	//It will always return void.
-	std::vector<llvm::Type*> parameters = {LLVMTypes::pointerType, helper->toLLVMType(expression->getType())};
-	llvm::FunctionType* functionType = llvm::FunctionType::get(LLVMTypes::voidType, parameters, false);		
+	std::vector<llvm::Type*> parameters = {targetConfig->getLLVMTypes().pointerType, helper->toLLVMType(expression->getType())};
+	llvm::FunctionType* functionType = llvm::FunctionType::get(targetConfig->getLLVMTypes().voidType, parameters, false);		
 
 	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, name.c_str(), currentModule.get());
@@ -379,9 +379,9 @@ void LLVMCodeGenerator::emitModuleToObjectFile(const std::string& objectFileName
 llvm::Function* LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(const std::unordered_map<std::string, llvm::Function*>& symbols)
 {
 	const std::string enumerationFunctionName = "_jc_enumerate_expressions";
-	llvm::Type* functionReturnType = LLVMTypes::voidType;
+	llvm::Type* functionReturnType = targetConfig->getLLVMTypes().voidType;
 
-	std::vector<llvm::Type*> callBackParameters = {LLVMTypes::pointerType, LLVMTypes::pointerType};
+	std::vector<llvm::Type*> callBackParameters = {targetConfig->getLLVMTypes().pointerType, targetConfig->getLLVMTypes().pointerType};
 	llvm::FunctionType* callBackType = llvm::FunctionType::get(functionReturnType, callBackParameters, false);		
 
 	std::vector<llvm::Type*> parameters = {callBackType->getPointerTo()};
@@ -450,7 +450,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatBuiltInFunctionCall* functionC
 			llvm::Value* conditionValue = helper->convertType(generate(arguments->getArgument(0), context), arguments->getArgument(0)->getType(), CatGenericType::boolType, context);
 			llvm::Value* trueValue = generate(arguments->getArgument(1), context);
 			llvm::Value* falseValue = helper->convertType(generate(arguments->getArgument(2), context), arguments->getArgument(2)->getType(), arguments->getArgument(1)->getType(), context);
-			return builder->CreateSelect(builder->CreateTrunc(conditionValue, LLVMTypes::bool1Type), trueValue, falseValue);
+			return builder->CreateSelect(builder->CreateTrunc(conditionValue, targetConfig->getLLVMTypes().bool1Type), trueValue, falseValue);
 		}
 		case CatBuiltInFunctionType::Abs:
 		{
@@ -958,7 +958,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 		{
 			uintptr_t pointerConstant = literalType.getRawPointer(literal->getValue());
 			llvm::Value* reflectableAddress = helper->createIntPtrConstant(context, pointerConstant, "literalObjectAddress");
-			return builder->CreateIntToPtr(reflectableAddress, LLVMTypes::pointerType);
+			return builder->CreateIntToPtr(reflectableAddress, targetConfig->getLLVMTypes().pointerType);
 		}
 		else
 		{
@@ -1252,8 +1252,8 @@ void LLVMCodeGenerator::generate(const AST::CatVariableDeclaration* variableDecl
 
 void LLVMCodeGenerator::generate(const AST::CatIfStatement* ifStatement, LLVMCompileTimeContext* context)
 {
-	llvm::Value* conditionValue = builder->CreateTrunc(generate(ifStatement->getConditionExpression(), context), LLVMTypes::bool1Type);
-	assert(conditionValue->getType() == LLVMTypes::bool1Type);
+	llvm::Value* conditionValue = builder->CreateTrunc(generate(ifStatement->getConditionExpression(), context), targetConfig->getLLVMTypes().bool1Type);
+	assert(conditionValue->getType() == targetConfig->getLLVMTypes().bool1Type);
 	llvm::BasicBlock* thenBlock = llvm::BasicBlock::Create(helper->getContext(), "then", context->currentFunction);
 	llvm::BasicBlock* elseBlock = llvm::BasicBlock::Create(helper->getContext(), "else");
 	bool allIfControlPathsReturn = ifStatement->getAllControlPathsReturn();
@@ -1682,7 +1682,7 @@ llvm::Value* LLVMCodeGenerator::getBaseAddress(CatScopeID scopeId, LLVMCompileTi
 			argument = context->currentFunction->arg_begin() + 1;
 		}
 		assert(argument->getName() == "RuntimeContext");
-		assert(argument->getType() == LLVMTypes::pointerType);
+		assert(argument->getType() == targetConfig->getLLVMTypes().pointerType);
 		llvm::Value* scopeIdValue = context->helper->createConstant((int)scopeId);
 		llvm::Value* address = address = helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_getScopePointerFromContext, {argument, scopeIdValue}, "_jc_getScopePointerFromContext", true); 
 	
@@ -1755,12 +1755,12 @@ llvm::FunctionType* LLVMCodeGenerator::createFunctionType(bool isThisCall, const
 
 	if (isThisCall)
 	{
-		parameters.push_back(LLVMTypes::pointerType);
+		parameters.push_back(targetConfig->getLLVMTypes().pointerType);
 	}
 	if (returnType.isReflectableObjectType())
 	{
-		parameters.push_back(LLVMTypes::pointerType);
-		functionReturnType = LLVMTypes::voidType;
+		parameters.push_back(targetConfig->getLLVMTypes().pointerType);
+		functionReturnType = targetConfig->getLLVMTypes().voidType;
 	}
 	else
 	{
@@ -1845,7 +1845,7 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 	{
 		llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, returnType.getObjectType());
 		assert(returnType.isCopyConstructible());
-		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, LLVMTypes::pointerType, Tools::append(returnType.toString(), "_ObjectPointerCast"));
+		llvm::Value* castPointer = builder->CreatePointerCast(expressionValue, targetConfig->getLLVMTypes().pointerType, Tools::append(returnType.toString(), "_ObjectPointerCast"));
 
 		llvm::Argument* sretArgument = function->arg_begin();
 		if (context->currentClass != nullptr && !targetConfig->sretBeforeThis)
@@ -1902,7 +1902,7 @@ llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>* LLVMCodeG
 
 llvm::Value* LLVMCodeGenerator::booleanCast(llvm::Value* boolean)
 {
-	return builder->CreateCast(llvm::Instruction::CastOps::ZExt ,boolean, LLVMTypes::boolType);
+	return builder->CreateCast(llvm::Instruction::CastOps::ZExt ,boolean, targetConfig->getLLVMTypes().boolType);
 }
 
 

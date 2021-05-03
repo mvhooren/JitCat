@@ -146,7 +146,7 @@ JitCat* JitCat::get()
 }
 
 
-std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+std::unique_ptr<Parser::SLRParseResult> JitCat::parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
 	std::vector<std::unique_ptr<ParseToken>> tokens;
 	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
@@ -155,7 +155,7 @@ std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseExpression(Tokenize
 }
 
 
-std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseStatement(Tokenizer::Document* statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+std::unique_ptr<Parser::SLRParseResult> JitCat::parseStatement(Tokenizer::Document* statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
 	std::vector<std::unique_ptr<ParseToken>> tokens;
 	OneCharToken* eofToken = new OneCharToken(statement->createLexeme(statement->getDocumentSize(), 0), OneChar::Eof);
@@ -164,7 +164,7 @@ std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseStatement(Tokenizer
 }
 
 
-std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseFull(Tokenizer::Document* expression, std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+std::unique_ptr<Parser::SLRParseResult> JitCat::parseFull(Tokenizer::Document* expression, std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
 	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
 	tokenizer->tokenize(expression, tokens, eofToken);	
@@ -172,7 +172,7 @@ std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseFull(Tokenizer::Doc
 }
 
 
-std::unique_ptr<Parser::SLRParseResult> jitcat::JitCat::parseFull(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+std::unique_ptr<Parser::SLRParseResult> JitCat::parseFull(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
 	std::vector<std::unique_ptr<ParseToken>> tokens;
 	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
@@ -209,7 +209,7 @@ bool JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, u
 }
 
 
-bool jitcat::JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, uintptr_t value)
+bool JitCat::setPrecompiledGlobalVariable(const std::string_view variableName, uintptr_t value)
 {
 	auto& precompiledGlobalVariables = getPrecompiledGlobalVariables();
 	auto iter = precompiledGlobalVariables.find(variableName);
@@ -224,7 +224,7 @@ bool jitcat::JitCat::setPrecompiledGlobalVariable(const std::string_view variabl
 }
 
 
-bool jitcat::JitCat::setPrecompiledLinkedFunction(const std::string mangledFunctionName, uintptr_t address)
+bool JitCat::setPrecompiledLinkedFunction(const std::string mangledFunctionName, uintptr_t address)
 {
 	auto& precompiledLinkedFunctions = getPrecompiledLinkedFunctions();
 	auto iter = precompiledLinkedFunctions.find(mangledFunctionName);
@@ -238,7 +238,7 @@ bool jitcat::JitCat::setPrecompiledLinkedFunction(const std::string mangledFunct
 }
 
 
-void jitcat::JitCat::destroy()
+void JitCat::destroy()
 {
 	delete instance;
 	instance = nullptr;
