@@ -318,6 +318,7 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpressi
 		if (!lookupResult)
 		{
 			llvm::Error llvmError = lookupResult.takeError();
+			llvmError.operator bool();
 			(void)llvmError;
 		}
 		llvm::Function* function = generateExpressionFunction(expression, context, functionName);
@@ -346,6 +347,7 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 		if (!lookupResult)
 		{
 			llvm::Error llvmError = lookupResult.takeError();
+			llvmError.operator bool();
 			(void)llvmError;
 		}
 		llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
