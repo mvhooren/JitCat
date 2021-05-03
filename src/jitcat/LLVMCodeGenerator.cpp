@@ -308,19 +308,12 @@ intptr_t LLVMCodeGenerator::generateAndGetFunctionAddress(const CatTypedExpressi
 	createNewModule(context);
 	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, false, expectedType);
 
-	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
-	if (lookupResult && lookupResult.get())
+	if (auto lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName)))
 	{
 		return (intptr_t)lookupResult.get().getAddress();
 	}
 	else
 	{
-		if (!lookupResult)
-		{
-			llvm::Error llvmError = lookupResult.takeError();
-			llvmError.operator bool();
-			(void)llvmError;
-		}
 		llvm::Function* function = generateExpressionFunction(expression, context, functionName);
 		//To silence unused variable warning in release builds.
 		(void)function;
@@ -337,19 +330,12 @@ intptr_t LLVMCodeGenerator::generateAndGetAssignFunctionAddress(const CatAssigna
 	createNewModule(context);
 	std::string functionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, context->catContext, true, expectedType);
 
-	llvm::Expected<llvm::JITEvaluatedSymbol> lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName));
-	if (lookupResult && lookupResult.get())
+	if (auto lookupResult = executionSession->lookup({dylib}, mangler->operator()(functionName)))
 	{
 		return (intptr_t)lookupResult.get().getAddress();
 	}
 	else
 	{	
-		if (!lookupResult)
-		{
-			llvm::Error llvmError = lookupResult.takeError();
-			llvmError.operator bool();
-			(void)llvmError;
-		}
 		llvm::Function* function = generateExpressionAssignFunction(expression, context, functionName);
 		//To silence unused variable warning in release builds.
 		(void)function;
