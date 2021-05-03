@@ -23,7 +23,7 @@ using namespace jitcat::LLVM;
 LLVMTargetConfig::LLVMTargetConfig(bool isJITTarget, bool sretBeforeThis, bool useThisCall, bool callerDestroysTemporaryArguments, 
 								   bool enableSymbolSearchWorkaround, bool is64BitTarget, unsigned int sizeOfBoolInBits, 
 								   unsigned int defaultLLVMCallingConvention, const std::string& targetTripple, const std::string& cpuName,
-								   const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures, 
+								   std::string objectFileExtension, const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures, 
 								   llvm::CodeGenOpt::Level optimizationLevel, llvm::Optional<llvm::Reloc::Model> relocationModel,
 								   llvm::Optional<llvm::CodeModel::Model> codeModel):
 	isJITTarget(isJITTarget),
@@ -37,6 +37,7 @@ LLVMTargetConfig::LLVMTargetConfig(bool isJITTarget, bool sretBeforeThis, bool u
 	llvmTypes(std::make_unique<LLVMTypes>(is64BitTarget, sizeOfBoolInBits)),
 	targetTripple(targetTripple),
 	cpuName(cpuName),
+	objectFileExtension(objectFileExtension),
 	targetOptions(targetOptions),
 	subtargetFeatures(subtargetFeatures),
 	optimizationLevel(optimizationLevel),
@@ -133,7 +134,11 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createTargetConfigForCurrent
 		defaultCallingConvention = llvm::CallingConv::Win64;
 	#endif
 
-
+	const char* objectFileExtension = "o";
+	if (isWin32)
+	{
+		objectFileExtension = "obj";
+	}
 	std::string targetTripple = llvm::sys::getProcessTriple();
 	std::string cpuName = llvm::sys::getHostCPUName();
 
@@ -155,7 +160,7 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createTargetConfigForCurrent
 
 	return std::make_unique<LLVMTargetConfig>(isJITTarget, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
 											  enableSymbolSearchWorkaround, sizeof(uintptr_t) == 8, (unsigned int)sizeof(bool) * 8,
-											  defaultCallingConvention, targetTripple, cpuName, 
+											  defaultCallingConvention, targetTripple, cpuName, objectFileExtension,
 											  options, features, llvm::CodeGenOpt::Level::Default);	
 }
 
@@ -181,7 +186,7 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createGenericWindowsx64Targe
 
 	return std::make_unique<LLVMTargetConfig>(false, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
 											  enableSymbolSearchWorkaround, true, 8,
-											  defaultCallingConvention, targetTripple, cpuName, 
+											  defaultCallingConvention, targetTripple, cpuName, "obj",
 											  options, features, llvm::CodeGenOpt::Level::Default);		
 }
 
@@ -214,7 +219,7 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createXboxOneTarget()
 	options.DataSections = true;
 	return std::make_unique<LLVMTargetConfig>(false, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
 											  enableSymbolSearchWorkaround, true, 8,
-											  defaultCallingConvention, targetTripple, cpuName, 
+											  defaultCallingConvention, targetTripple, cpuName, "obj",
 											  options, features, llvm::CodeGenOpt::Level::Default, 
 											  llvm::Reloc::Model::PIC_, llvm::CodeModel::Small);	
 
@@ -249,8 +254,8 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createPS4Target()
 	options.DebuggerTuning = llvm::DebuggerKind::SCE;
 	options.DataSections = true;
 	return std::make_unique<LLVMTargetConfig>(false, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
-											  enableSymbolSearchWorkaround, true, 8,
-											  defaultCallingConvention, targetTripple, cpuName, 
+											  enableSymbolSearchWorkaround, true, 8, 
+											  defaultCallingConvention, targetTripple, cpuName, "o", 
 											  options, features, llvm::CodeGenOpt::Level::Default, 
 											  llvm::Reloc::Model::PIC_, llvm::CodeModel::Small);
 }

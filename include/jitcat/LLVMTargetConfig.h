@@ -32,7 +32,7 @@ namespace jitcat::LLVM
 		LLVMTargetConfig(bool isJITTarget, bool sretBeforeThis, bool useThisCall, bool callerDestroysTemporaryArguments, 
 						 bool enableSymbolSearchWorkaround, bool is64BitTarget, unsigned int sizeOfBoolInBits, 
 						 unsigned int defaultLLVMCallingConvention, const std::string& targetTripple, const std::string& cpuName,
-						 const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures, 
+						 std::string objectFileExtension, const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures, 
 						 llvm::CodeGenOpt::Level optimizationLevel,
 						 llvm::Optional<llvm::Reloc::Model> relocationModel = llvm::Optional<llvm::Reloc::Model>(),
 						 llvm::Optional<llvm::CodeModel::Model> codeModel = llvm::Optional<llvm::CodeModel::Model>());
@@ -96,6 +96,8 @@ namespace jitcat::LLVM
 		const std::string targetTripple;
 		//The name of the target CPU
 		const std::string cpuName;
+		//The file extension for object files that are generated when pre-compiling
+		const std::string objectFileExtension;
 
 		//Contains all the target specific information for the machine that we are compiling for. Among other things, the target CPU type.
 		std::unique_ptr<llvm::TargetMachine> targetMachine;

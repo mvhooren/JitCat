@@ -397,7 +397,8 @@ llvm::Function* LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(c
 	{
 		llvm::Constant* zeroTerminatedString = helper->createZeroTerminatedStringConstant(iter.first);
 		llvm::Value* functionPtr = helper->convertToPointer(iter.second, "functionPtr");
-		builder->CreateCall(callee, {zeroTerminatedString, functionPtr});
+		llvm::CallInst* callInst = builder->CreateCall(callee, {zeroTerminatedString, functionPtr});
+		callInst->setCallingConv(targetConfig->defaultLLVMCallingConvention);
 	}
 	builder->CreateRetVoid();
 	return verifyAndOptimizeFunction(function);
@@ -1793,6 +1794,10 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 	if (isThisCall && targetConfig->useThisCall)
 	{
 		function->setCallingConv(llvm::CallingConv::X86_ThisCall);
+	}
+	else
+	{
+		function->setCallingConv(targetConfig->defaultLLVMCallingConvention);
 	}
 	//Attributes and names for the parameters can now be set on the function signature.
 	//When returning a string, the StructRet attribute is set to indicate that the parameter is used for returning a structure by value.

@@ -78,6 +78,10 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context
 			{
 				function->setCallingConv(llvm::CallingConv::X86_ThisCall);
 			}
+			else
+			{
+				function->setCallingConv(context->targetConfig->defaultLLVMCallingConvention);
+			}
 		}
 		else
 		{
@@ -90,6 +94,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context
 	{
 		callInstruction->setName(shortFunctionName + "_result");
 	}
+	callInstruction->setCallingConv(context->targetConfig->defaultLLVMCallingConvention);
 	return callInstruction;
 }
 
@@ -309,7 +314,7 @@ void LLVMCodeGeneratorHelper::writeToPointer(llvm::Value* lValue, llvm::Value* r
 
 
 llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& globals, 
-																		const std::string& functionName)
+																				   const std::string& functionName)
 {
 	llvm::Type* functionReturnType = llvmTypes.voidType;
 
@@ -330,7 +335,8 @@ llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFuncti
 	{
 		llvm::Constant* zeroTerminatedString = createZeroTerminatedStringConstant(iter.first);
 		llvm::Value* globalPtr = convertToPointer(iter.second, "globalPtr");
-		builder->CreateCall(callee, {zeroTerminatedString, globalPtr});
+		llvm::CallInst* callInst = builder->CreateCall(callee, {zeroTerminatedString, globalPtr});
+		callInst->setCallingConv(codeGenerator->targetConfig->defaultLLVMCallingConvention);
 	}
 	builder->CreateRetVoid();
 	return codeGenerator->verifyAndOptimizeFunction(function);
