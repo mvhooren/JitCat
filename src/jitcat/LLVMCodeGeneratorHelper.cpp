@@ -213,7 +213,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value*
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, 
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(unsigned int intrinsic, const CatGenericType& parameterType, 
 													llvm::Value* argument, const CatGenericType& argumentType, 
 													LLVMCompileTimeContext* context)
 {
@@ -227,7 +227,7 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, 
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(unsigned int intrinsic, const CatGenericType& overload1Type, 
 													llvm::Value* argument1, const CatGenericType& argument1Type, 
 													llvm::Value* argument2, const CatGenericType& argument2Type, 
 													LLVMCompileTimeContext * context)
@@ -243,7 +243,7 @@ llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsi
 }
 
 
-llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameter1Type, const CatGenericType& parameter2Type, 
+llvm::Value* LLVMCodeGeneratorHelper::callIntrinsic(unsigned int intrinsic, const CatGenericType& parameter1Type, const CatGenericType& parameter2Type, 
 													llvm::Value* argument1, const CatGenericType& argument1Type, 
 													llvm::Value* argument2, const CatGenericType& argument2Type,
 													LLVMCompileTimeContext* context)

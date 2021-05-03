@@ -70,14 +70,14 @@ namespace jitcat::LLVM
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
 												   std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context); 
 
-		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& parameterType, 
+		llvm::Value* callIntrinsic(unsigned int intrinsic, const CatGenericType& parameterType, 
 								   llvm::Value* argument, const CatGenericType& argumentType, 
 								   LLVMCompileTimeContext* context);
-		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, 
+		llvm::Value* callIntrinsic(unsigned int intrinsic, const CatGenericType& overload1Type, 
 								   llvm::Value* argument1, const CatGenericType& argument1Type, 
 								   llvm::Value* argument2, const CatGenericType& argument2Type, 
 								   LLVMCompileTimeContext* context);
-		llvm::Value* callIntrinsic(llvm::Intrinsic::ID intrinsic, const CatGenericType& overload1Type, const CatGenericType& overload2Type, 
+		llvm::Value* callIntrinsic(unsigned int intrinsic, const CatGenericType& overload1Type, const CatGenericType& overload2Type, 
 								   llvm::Value* argument1, const CatGenericType& argument1Type, 
 								    llvm::Value* argument2, const CatGenericType& argument2Type, LLVMCompileTimeContext* context);
 		llvm::Type* toLLVMType(const CatGenericType& type);

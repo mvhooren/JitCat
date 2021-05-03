@@ -27,11 +27,6 @@ namespace llvm
 	class Type;
 	class Value;
 
-	namespace Intrinsic 
-	{
-		typedef unsigned ID;
-	};
-
 	namespace legacy
 	{
 		class FunctionPassManager;
