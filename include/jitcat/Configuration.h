@@ -107,7 +107,7 @@ namespace Configuration
 	static constexpr bool defaultFloatingPointLiteralIsDouble = false;
 
 	//The locale for when numbers are converted to strings.
-	static std::locale localeForStringConversions = std::locale("");
+	static std::locale localeForStringConversions = std::locale("en_US.UTF8");
 };
 
 } //namespace jitcat
