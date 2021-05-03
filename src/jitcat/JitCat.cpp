@@ -181,16 +181,6 @@ std::unique_ptr<Parser::SLRParseResult> JitCat::parseFull(Tokenizer::Document* e
 }
 
 
-std::shared_ptr<PrecompilationContext> JitCat::createPrecompilationContext() const
-{
-	#ifdef ENABLE_LLVM
-		return LLVM::LLVMJit::get().createLLVMPrecompilationContext();
-	#else
-		return nullptr;
-	#endif
-}
-
-
 uintptr_t JitCat::getPrecompiledSymbol(const std::string& name)
 {
 	auto& precompiledExpressionSymbols = getPrecompiledExpressionSymbols();

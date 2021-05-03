@@ -14,6 +14,10 @@
 #include "jitcat/Configuration.h"
 #include "jitcat/JitCat.h"
 #include "jitcat/Tools.h"
+#ifdef ENABLE_LLVM
+	#include "jitcat/LLVMTargetConfig.h"
+	#include "jitcat/LLVMPrecompilationContext.h"
+#endif
 
 #include "PrecompilationTest.h"
 
@@ -42,10 +46,20 @@ int main( int argc, char* argv[] )
 		return returnCode;
 	}
 	
-	if (jitcat::Configuration::enableLLVM && precompile)
-	{
-		Precompilation::precompContext = jitcat::JitCat::get()->createPrecompilationContext();
-	}
+	#ifdef ENABLE_LLVM
+		std::unique_ptr<jitcat::LLVM::LLVMTargetConfig> precompilationTargetWindows; 
+		std::unique_ptr<jitcat::LLVM::LLVMTargetConfig> precompilationTargetPS4; 
+		std::unique_ptr<jitcat::LLVM::LLVMTargetConfig> precompilationTargetXboxOne; 
+		if (precompile)
+		{
+			precompilationTargetWindows = jitcat::LLVM::LLVMTargetConfig::createConfigForPreconfiguredTarget(jitcat::LLVM::LLVMTarget::Windows_X64);
+			precompilationTargetPS4 = jitcat::LLVM::LLVMTargetConfig::createConfigForPreconfiguredTarget(jitcat::LLVM::LLVMTarget::Playstation4);
+			precompilationTargetXboxOne = jitcat::LLVM::LLVMTargetConfig::createConfigForPreconfiguredTarget(jitcat::LLVM::LLVMTarget::XboxOne);
+			Precompilation::precompContext = std::make_shared<jitcat::LLVM::LLVMPrecompilationContext>(precompilationTargetWindows.get(), "PrecompiledExpressions_Windows_x64");
+			std::static_pointer_cast<jitcat::LLVM::LLVMPrecompilationContext>(Precompilation::precompContext)->addTarget(precompilationTargetPS4.get(), "PrecompiledExpressions_PS4");
+			std::static_pointer_cast<jitcat::LLVM::LLVMPrecompilationContext>(Precompilation::precompContext)->addTarget(precompilationTargetXboxOne.get(), "PrecompiledExpressions_XboxOne");
+		}
+	#endif
 
 	int result = session.run();
 

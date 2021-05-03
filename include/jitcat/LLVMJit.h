@@ -80,7 +80,6 @@ namespace jitcat::LLVM
 
 		void cleanup();
 
-		std::shared_ptr<PrecompilationContext> createLLVMPrecompilationContext();
 	private:
 		void initJitTarget();
 

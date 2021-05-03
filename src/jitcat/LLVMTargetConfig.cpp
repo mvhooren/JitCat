@@ -228,7 +228,7 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createXboxOneTarget()
 
 std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createPS4Target()
 {
-	constexpr bool isWin32 = true;
+	constexpr bool isWin32 = false;
 
 	bool sretBeforeThis = !isWin32;
 	bool callerDestroysTemporaryArguments =  !isWin32;

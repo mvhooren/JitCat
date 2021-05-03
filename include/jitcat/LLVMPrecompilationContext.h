@@ -19,12 +19,29 @@ namespace jitcat::LLVM
 {
 	class LLVMCodeGenerator;
 	struct LLVMCompileTimeContext;
+	class LLVMTargetConfig;
 
 	class LLVMPrecompilationContext: public PrecompilationContext
 	{
+		struct PrecompilationTarget
+		{
+			PrecompilationTarget(const std::string& outputFileNameWithoutExtension, LLVMTargetConfig* targetConfig);
+			~PrecompilationTarget();
+			std::string outputFileNameWithoutExtension;
+			LLVMTargetConfig* targetConfig;
+			std::unique_ptr<LLVMCompileTimeContext> compileContext;
+			std::shared_ptr<LLVMCodeGenerator> codeGenerator;
+
+			std::unordered_map<std::string, llvm::Function*> compiledExpressionFunctions;
+			std::unordered_map<std::string, llvm::GlobalVariable*> globalVariables;
+			std::unordered_map<std::string, llvm::GlobalVariable*> globalFunctionPointers;
+			std::unordered_map<std::string, llvm::GlobalVariable*> stringPool;
+		};
 	public:
-		LLVMPrecompilationContext();
+		LLVMPrecompilationContext(LLVMTargetConfig* targetConfig, const std::string& outputFileNameWithoutExtension);
 		~LLVMPrecompilationContext();
+
+		void addTarget(LLVMTargetConfig* targetConfig, const std::string& outputFileNameWithoutExtension);
 
 		// Inherited via PrecompilationContext
 		virtual void finishPrecompilation() override final;
@@ -38,12 +55,7 @@ namespace jitcat::LLVM
 		llvm::GlobalVariable* defineGlobalString(const std::string& stringValue, LLVMCompileTimeContext* context);
 
 	private:
-		std::unique_ptr<LLVMCompileTimeContext> compileContext;
-		std::shared_ptr<LLVMCodeGenerator> codeGenerator;
-
-		std::unordered_map<std::string, llvm::Function*> compiledExpressionFunctions;
-		std::unordered_map<std::string, llvm::GlobalVariable*> globalVariables;
-		std::unordered_map<std::string, llvm::GlobalVariable*> globalFunctionPointers;
-		std::unordered_map<std::string, llvm::GlobalVariable*> stringPool;
+		PrecompilationTarget* currentTarget;
+		std::vector<std::unique_ptr<PrecompilationTarget>> precompilationTargets;
 	};
 };

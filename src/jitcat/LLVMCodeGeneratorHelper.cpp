@@ -1420,7 +1420,7 @@ void LLVMCodeGeneratorHelper::generateLoop(LLVMCompileTimeContext* context,
 
 void LLVMCodeGeneratorHelper::defineWeakSymbol(LLVMCompileTimeContext* context, intptr_t functionAddress, const std::string& mangledFunctionName, bool isDirectlyLinked)
 {
-	if (isDirectlyLinked || !context->isPrecompilationContext)
+	if (!context->isPrecompilationContext)
 	{
 		//Define the function in the runtime library.
 		llvm::JITSymbolFlags functionFlags;
@@ -1433,7 +1433,7 @@ void LLVMCodeGeneratorHelper::defineWeakSymbol(LLVMCompileTimeContext* context, 
 		intrinsicSymbols[codeGenerator->executionSession->intern(mangledFunctionName)] = llvm::JITEvaluatedSymbol(address, functionFlags);
 		llvm::cantFail(codeGenerator->runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
 	}
-	else
+	else if (!isDirectlyLinked)
 	{
 		//The function needs to be defined as a global variable function pointer.
 		std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalFunctionPointer(mangledFunctionName, context);

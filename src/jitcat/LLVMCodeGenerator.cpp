@@ -80,83 +80,86 @@ struct ScopeChecker
 
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name, const LLVMTargetConfig* targetConfig):
 	targetConfig(targetConfig),
-	executionSession(std::make_unique<llvm::orc::ExecutionSession>(LLVMJit::get().getSymbolStringPool())),
 	currentModule(std::make_unique<llvm::Module>("JitCat", LLVMJit::get().getContext())),
-	builder(std::make_unique<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>>(LLVMJit::get().getContext())),
-	objectLinkLayer(std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(*executionSession.get(),
-															[]() {	return memoryManager->createExpressionAllocator();})),
-	mangler(std::make_unique<llvm::orc::MangleAndInterner>(*executionSession, targetConfig->getDataLayout())),
-	compileLayer(std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(llvm::cantFail(targetConfig->getTargetMachineBuilder()))))
+	builder(std::make_unique<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>>(LLVMJit::get().getContext()))
 {
 	helper = std::make_unique<LLVMCodeGeneratorHelper>(this);
-	llvm::orc::SymbolMap intrinsicSymbols;
-	runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary");
+	if (targetConfig->isJITTarget)
+	{
+		executionSession = std::make_unique<llvm::orc::ExecutionSession>(LLVMJit::get().getSymbolStringPool());
+		objectLinkLayer = std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(*executionSession.get(),
+																				[]() {	return memoryManager->createExpressionAllocator();});
+		mangler = std::make_unique<llvm::orc::MangleAndInterner>(*executionSession, targetConfig->getDataLayout());
+		compileLayer = std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(llvm::cantFail(targetConfig->getTargetMachineBuilder())));
+		llvm::orc::SymbolMap intrinsicSymbols;
+		runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary");
 
-	llvm::JITSymbolFlags functionFlags;
-	functionFlags |= llvm::JITSymbolFlags::Callable;
-	functionFlags |= llvm::JITSymbolFlags::Exported;
-	functionFlags |= llvm::JITSymbolFlags::Absolute;
+		llvm::JITSymbolFlags functionFlags;
+		functionFlags |= llvm::JITSymbolFlags::Callable;
+		functionFlags |= llvm::JITSymbolFlags::Exported;
+		functionFlags |= llvm::JITSymbolFlags::Absolute;
 
-	intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodl), functionFlags);
-	double(*fmodPtr)(double, double) = &fmod;
-	intrinsicSymbols[executionSession->intern("fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(fmodPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("fmodf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&fmodl), functionFlags);
+		double(*fmodPtr)(double, double) = &fmod;
+		intrinsicSymbols[executionSession->intern("fmod")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(fmodPtr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("sinf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinl), functionFlags);
-	double(*sinPtr)(double) = &sin;
-	intrinsicSymbols[executionSession->intern("sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(sinPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("sinf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&sinl), functionFlags);
+		double(*sinPtr)(double) = &sin;
+		intrinsicSymbols[executionSession->intern("sin")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(sinPtr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("cosf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosl), functionFlags);
-	double(*cosPtr)(double) = &cos;
-	intrinsicSymbols[executionSession->intern("cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(cosPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("cosf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&cosl), functionFlags);
+		double(*cosPtr)(double) = &cos;
+		intrinsicSymbols[executionSession->intern("cos")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(cosPtr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("log10f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10f), functionFlags);
-	intrinsicSymbols[executionSession->intern("_log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10l), functionFlags);
-	double(*log10Ptr)(double) = &log10;
-	intrinsicSymbols[executionSession->intern("log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(log10Ptr), functionFlags);
+		intrinsicSymbols[executionSession->intern("log10f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10f), functionFlags);
+		intrinsicSymbols[executionSession->intern("_log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&log10l), functionFlags);
+		double(*log10Ptr)(double) = &log10;
+		intrinsicSymbols[executionSession->intern("log10")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(log10Ptr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("logf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logl), functionFlags);
-	double(*logPtr)(double) = &log;
-	intrinsicSymbols[executionSession->intern("log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(logPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("logf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&logl), functionFlags);
+		double(*logPtr)(double) = &log;
+		intrinsicSymbols[executionSession->intern("log")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(logPtr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("expf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expl), functionFlags);
-	double(*expPtr)(double) = &exp;
-	intrinsicSymbols[executionSession->intern("exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(expPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("expf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&expl), functionFlags);
+		double(*expPtr)(double) = &exp;
+		intrinsicSymbols[executionSession->intern("exp")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(expPtr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("exp2f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&exp2f), functionFlags);
-	intrinsicSymbols[executionSession->intern("_exp2")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&exp2l), functionFlags);
-	double(*exp2Ptr)(double) = &exp2;
-	intrinsicSymbols[executionSession->intern("exp2")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(exp2Ptr), functionFlags);
+		intrinsicSymbols[executionSession->intern("exp2f")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&exp2f), functionFlags);
+		intrinsicSymbols[executionSession->intern("_exp2")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&exp2l), functionFlags);
+		double(*exp2Ptr)(double) = &exp2;
+		intrinsicSymbols[executionSession->intern("exp2")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(exp2Ptr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("powf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powl), functionFlags);
-	double(*powPtr)(double, double) = &pow;
-	intrinsicSymbols[executionSession->intern("pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(powPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("powf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&powl), functionFlags);
+		double(*powPtr)(double, double) = &pow;
+		intrinsicSymbols[executionSession->intern("pow")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(powPtr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("ceilf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceilf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceill), functionFlags);
-	double(*ceilPtr)(double) = &ceil;
-	intrinsicSymbols[executionSession->intern("ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(ceilPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("ceilf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceilf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&ceill), functionFlags);
+		double(*ceilPtr)(double) = &ceil;
+		intrinsicSymbols[executionSession->intern("ceil")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(ceilPtr), functionFlags);
 
-	intrinsicSymbols[executionSession->intern("floorf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorf), functionFlags);
-	intrinsicSymbols[executionSession->intern("_floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorl), functionFlags);
-	double(*floorPtr)(double) = &floor;
-	intrinsicSymbols[executionSession->intern("floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(floorPtr), functionFlags);
+		intrinsicSymbols[executionSession->intern("floorf")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorf), functionFlags);
+		intrinsicSymbols[executionSession->intern("_floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorl), functionFlags);
+		double(*floorPtr)(double) = &floor;
+		intrinsicSymbols[executionSession->intern("floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(floorPtr), functionFlags);
 	
 
-	llvm::cantFail(runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
+		llvm::cantFail(runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));
 
-	dylib = &executionSession->createJITDylib(Tools::append(name, "_", 0));
-	dylib->addToSearchOrder(*runtimeLibraryDyLib);
+		dylib = &executionSession->createJITDylib(Tools::append(name, "_", 0));
+		dylib->addToSearchOrder(*runtimeLibraryDyLib);
 
-	if (targetConfig->enableSymbolSearchWorkaround)
-	{
-		objectLinkLayer->setAutoClaimResponsibilityForObjectSymbols(true);
-		objectLinkLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+		if (targetConfig->enableSymbolSearchWorkaround)
+		{
+			objectLinkLayer->setAutoClaimResponsibilityForObjectSymbols(true);
+			objectLinkLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+		}
 	}
 
 	std::string targetTriple = targetConfig->getTargetMachine().getTargetTriple().str();
@@ -195,8 +198,11 @@ void LLVMCodeGenerator::generate(const AST::CatSourceFile* sourceFile, LLVMCompi
 		generate(iter, context);
 	}
 	context->catContext->removeScope(staticScopeId);
-	llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
-	link(sourceFile->getCustomType());
+	if (!context->isPrecompilationContext)
+	{
+		llvm::cantFail(compileLayer->add(*dylib, llvm::orc::ThreadSafeModule(std::move(currentModule), LLVMJit::get().getThreadSafeContext())));
+		link(sourceFile->getCustomType());
+	}
 }
 
 

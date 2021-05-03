@@ -90,14 +90,16 @@ namespace jitcat::LLVM
 		//Must be one of the calling conventions defined by llvm in llvm::CallingConv.
 		const unsigned int defaultLLVMCallingConvention;
 
+		//The file extension for object files that are generated when pre-compiling
+		const std::string objectFileExtension;
+
 	private:
 		std::unique_ptr<LLVMTypes> llvmTypes;
 		//The target tripple that identifies CPU architecture, OS and compiler compatibility
 		const std::string targetTripple;
 		//The name of the target CPU
 		const std::string cpuName;
-		//The file extension for object files that are generated when pre-compiling
-		const std::string objectFileExtension;
+
 
 		//Contains all the target specific information for the machine that we are compiling for. Among other things, the target CPU type.
 		std::unique_ptr<llvm::TargetMachine> targetMachine;

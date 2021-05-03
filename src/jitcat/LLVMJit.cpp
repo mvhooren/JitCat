@@ -73,12 +73,6 @@ void LLVM::LLVMJit::cleanup()
 }
 
 
-std::shared_ptr<PrecompilationContext> LLVMJit::createLLVMPrecompilationContext()
-{
-	return std::make_shared<LLVMPrecompilationContext>();
-}
-
-
 void LLVMJit::initJitTarget()
 {
 	jitTargetConfig = LLVMTargetConfig::createJITTargetConfig();
