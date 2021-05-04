@@ -17,7 +17,7 @@
 
 #include <memory>
 #include <string>
-#ifdef WIN32
+#ifdef _WIN32
 	#include <tchar.h>
 	#define MAIN _tmain
 #else

@@ -34,7 +34,7 @@ namespace Configuration
 	//Note that this configuration option is applicable to the current process only. 
 	//When compiling, the sretBeforeThis option from the LLVMTargetConfig is used instead (to enable cross-compilation).
 	static constexpr bool sretBeforeThisForCurrentProcess = 
-#ifdef WIN32
+#ifdef _WIN32
 		false;
 #else
 		true;
@@ -57,7 +57,7 @@ namespace Configuration
 	//Enable the registration of function unwind tables on Windows
 	//This will improve callstacks while debugging and profiling jitted code.
 	static constexpr bool enableWin32ExperimentalUnwindTableRegistration =
-#ifdef WIN32
+#ifdef _WIN32
 		false;
 #else
 		false;
@@ -107,7 +107,7 @@ namespace Configuration
 	static constexpr bool defaultFloatingPointLiteralIsDouble = false;
 
 	//The locale for when numbers are converted to strings.
-	static std::locale localeForStringConversions = std::locale("en_US.UTF8");
+	static std::locale localeForStringConversions = std::locale("C");
 };
 
 } //namespace jitcat

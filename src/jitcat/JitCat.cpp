@@ -265,22 +265,24 @@ std::string_view JitCat::defineGlobalVariableName(const std::string& globalName)
 bool JitCat::verifyLinkage()
 {
 	bool verifySuccess = true;
-	for (auto iter : getPrecompiledGlobalVariables())
-	{
-		if (*reinterpret_cast<uintptr_t*>(iter.second) == 0)
-		{
-			std::cout << "JitCat linkage verification error: global scope pointer " << iter.first << " has not been set.\n";
-			verifySuccess = false;
-		}
-	}
+	std::size_t correctLinkCount = 0;
+	std::size_t incorrectLinkCount = 0;
+	std::cout << "Verifying JitCat function linkage...\n";
 	for (auto iter : getPrecompiledLinkedFunctions())
 	{
 		if (*reinterpret_cast<uintptr_t*>(iter.second) == 0)
 		{
 			std::cout << "JitCat linkage verification error: linked function " << iter.first << " has not been set.\n";
 			verifySuccess = false;
+			incorrectLinkCount++;
+		}
+		else
+		{
+			correctLinkCount++;
 		}
 	}
+	std::cout << correctLinkCount << " linked successfully.\n";
+	std::cout << incorrectLinkCount << " not linked.\n";
 	return verifySuccess;
 }
 
