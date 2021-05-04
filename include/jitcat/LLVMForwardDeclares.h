@@ -39,5 +39,6 @@ namespace llvm
 		class IRCompileLayer;
 		class ExecutionSession;
 		class MangleAndInterner;
+		class JITTargetMachineBuilder;
 	};
 };

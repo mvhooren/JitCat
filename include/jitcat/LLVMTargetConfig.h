@@ -10,12 +10,6 @@
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/LLVMTarget.h"
 
-#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
-#include <llvm/Support/CodeGen.h>
-#include <llvm/Target/TargetOptions.h>
-#include <llvm/MC/SubtargetFeature.h>
-
-
 #include <memory>
 #include <optional>
 #include <string>
@@ -23,6 +17,7 @@
 
 namespace jitcat::LLVM
 {
+	struct LLVMTargetConfigOptions;
 	class LLVMTypes;
 	//This class contains all the target-specific information that is needed by LLVM for code generation,
 	//both for JIT compilation and pre-compilation.
@@ -31,11 +26,7 @@ namespace jitcat::LLVM
 	public:
 		LLVMTargetConfig(bool isJITTarget, bool sretBeforeThis, bool useThisCall, bool callerDestroysTemporaryArguments, 
 						 bool enableSymbolSearchWorkaround, bool is64BitTarget, unsigned int sizeOfBoolInBits, 
-						 unsigned int defaultLLVMCallingConvention, const std::string& targetTripple, const std::string& cpuName,
-						 std::string objectFileExtension, const llvm::TargetOptions& targetOptions, const llvm::SubtargetFeatures& subtargetFeatures, 
-						 llvm::CodeGenOpt::Level optimizationLevel,
-						 llvm::Optional<llvm::Reloc::Model> relocationModel = llvm::Optional<llvm::Reloc::Model>(),
-						 llvm::Optional<llvm::CodeModel::Model> codeModel = llvm::Optional<llvm::CodeModel::Model>());
+						 std::string objectFileExtension, std::unique_ptr<LLVMTargetConfigOptions> llvmOptions);
 
 		LLVMTargetConfig(const LLVMTargetConfig&) = delete;
 		LLVMTargetConfig& operator=(const LLVMTargetConfig&) = delete;
@@ -48,9 +39,11 @@ namespace jitcat::LLVM
 		llvm::TargetMachine& getTargetMachine() const;
 		const llvm::DataLayout& getDataLayout() const;
 
-		llvm::Expected<const llvm::orc::JITTargetMachineBuilder&> getTargetMachineBuilder() const;
+		llvm::orc::JITTargetMachineBuilder* getTargetMachineBuilder() const;
 
 		const LLVMTypes& getLLVMTypes() const;
+
+		const LLVMTargetConfigOptions& getOptions() const;
 
 	private:
 		static std::unique_ptr<LLVMTargetConfig> createTargetConfigForCurrentMachine(bool isJITTarget);
@@ -85,34 +78,10 @@ namespace jitcat::LLVM
 		//Size, int bits, of a boolean.
 		const unsigned int sizeOfBoolInBits;
 		
-		//The default calling convention to use when generating code for a function call.
-		//May be overridden by the X86_ThisCall calling convention if useThisCall is true.
-		//Must be one of the calling conventions defined by llvm in llvm::CallingConv.
-		const unsigned int defaultLLVMCallingConvention;
-
 		//The file extension for object files that are generated when pre-compiling
 		const std::string objectFileExtension;
 
 	private:
-		std::unique_ptr<LLVMTypes> llvmTypes;
-		//The target tripple that identifies CPU architecture, OS and compiler compatibility
-		const std::string targetTripple;
-		//The name of the target CPU
-		const std::string cpuName;
-
-
-		//Contains all the target specific information for the machine that we are compiling for. Among other things, the target CPU type.
-		std::unique_ptr<llvm::TargetMachine> targetMachine;
-		//Specifies the layout of structs and the type of name mangling used based on the target machine as well as endianness.
-		std::unique_ptr<const llvm::DataLayout> dataLayout;
-
-		//Target specific options
-		const llvm::TargetOptions targetOptions;
-		const llvm::SubtargetFeatures subtargetFeatures;
-		const llvm::CodeGenOpt::Level optimizationLevel;
-		const llvm::Optional<llvm::Reloc::Model> relocationModel;
-		const llvm::Optional<llvm::CodeModel::Model> codeModel;
-
-		llvm::Optional<llvm::orc::JITTargetMachineBuilder> targetMachineBuilder;
+		std::unique_ptr<LLVMTargetConfigOptions> llvmOptions;
 	};
 };

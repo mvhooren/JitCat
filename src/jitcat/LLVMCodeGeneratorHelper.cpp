@@ -17,6 +17,7 @@
 #include "jitcat/LLVMJit.h"
 #include "jitcat/LLVMPrecompilationContext.h"
 #include "jitcat/LLVMTargetConfig.h"
+#include "jitcat/LLVMTargetConfigOptions.h"
 #include "jitcat/LLVMTypes.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
@@ -80,7 +81,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context
 			}
 			else
 			{
-				function->setCallingConv(context->targetConfig->defaultLLVMCallingConvention);
+				function->setCallingConv(context->targetConfig->getOptions().defaultLLVMCallingConvention);
 			}
 		}
 		else
@@ -94,7 +95,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context
 	{
 		callInstruction->setName(shortFunctionName + "_result");
 	}
-	callInstruction->setCallingConv(context->targetConfig->defaultLLVMCallingConvention);
+	callInstruction->setCallingConv(context->targetConfig->getOptions().defaultLLVMCallingConvention);
 	return callInstruction;
 }
 
@@ -336,7 +337,7 @@ llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFuncti
 		llvm::Constant* zeroTerminatedString = createZeroTerminatedStringConstant(iter.first);
 		llvm::Value* globalPtr = convertToPointer(iter.second, "globalPtr");
 		llvm::CallInst* callInst = builder->CreateCall(callee, {zeroTerminatedString, globalPtr});
-		callInst->setCallingConv(codeGenerator->targetConfig->defaultLLVMCallingConvention);
+		callInst->setCallingConv(codeGenerator->targetConfig->getOptions().defaultLLVMCallingConvention);
 	}
 	builder->CreateRetVoid();
 	return codeGenerator->verifyAndOptimizeFunction(function);
@@ -906,8 +907,8 @@ llvm::Constant* LLVMCodeGeneratorHelper::createZeroInitialisedConstant(llvm::Typ
 	if		(type == llvmTypes.boolType)		return createConstant(false);
 	else if (type == llvmTypes.floatType)		return createConstant(0.0f);
 	else if (type == llvmTypes.doubleType)		return createConstant(0.0);
-	else if (type == llvmTypes.intType)		return createConstant(0);
-	else if (type == llvmTypes.longintType)	return createConstant((uint64_t)0);
+	else if (type == llvmTypes.intType)			return createConstant(0);
+	else if (type == llvmTypes.longintType)		return createConstant((uint64_t)0);
 	else if (type == llvmTypes.charType)		return createCharConstant(0);
 	else if (type == llvmTypes.voidType)		return (llvm::Constant*)nullptr;
 	else if (type->isArrayTy())					return createZeroInitialisedArrayConstant(static_cast<llvm::ArrayType*>(type));

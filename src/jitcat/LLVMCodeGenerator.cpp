@@ -18,6 +18,7 @@
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/LLVMJit.h"
 #include "jitcat/LLVMTargetConfig.h"
+#include "jitcat/LLVMTargetConfigOptions.h"
 #include "jitcat/LLVMMemoryManager.h"
 #include "jitcat/LLVMPrecompilationContext.h"
 #include "jitcat/LLVMPreGeneratedExpression.h"
@@ -90,7 +91,7 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name, const LLVMTargetCo
 		objectLinkLayer = std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(*executionSession.get(),
 																				[]() {	return memoryManager->createExpressionAllocator();});
 		mangler = std::make_unique<llvm::orc::MangleAndInterner>(*executionSession, targetConfig->getDataLayout());
-		compileLayer = std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(llvm::cantFail(targetConfig->getTargetMachineBuilder())));
+		compileLayer = std::make_unique<llvm::orc::IRCompileLayer>(*executionSession.get(), *(objectLinkLayer.get()), std::make_unique<llvm::orc::ConcurrentIRCompiler>(*targetConfig->getTargetMachineBuilder()));
 		llvm::orc::SymbolMap intrinsicSymbols;
 		runtimeLibraryDyLib = &executionSession->createJITDylib("runtimeLibrary");
 
@@ -394,7 +395,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(c
 		llvm::Constant* zeroTerminatedString = helper->createZeroTerminatedStringConstant(iter.first);
 		llvm::Value* functionPtr = helper->convertToPointer(iter.second, "functionPtr");
 		llvm::CallInst* callInst = builder->CreateCall(callee, {zeroTerminatedString, functionPtr});
-		callInst->setCallingConv(targetConfig->defaultLLVMCallingConvention);
+		callInst->setCallingConv(targetConfig->getOptions().defaultLLVMCallingConvention);
 	}
 	builder->CreateRetVoid();
 	return verifyAndOptimizeFunction(function);
@@ -1793,7 +1794,7 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 	}
 	else
 	{
-		function->setCallingConv(targetConfig->defaultLLVMCallingConvention);
+		function->setCallingConv(targetConfig->getOptions().defaultLLVMCallingConvention);
 	}
 	//Attributes and names for the parameters can now be set on the function signature.
 	//When returning a string, the StructRet attribute is set to indicate that the parameter is used for returning a structure by value.

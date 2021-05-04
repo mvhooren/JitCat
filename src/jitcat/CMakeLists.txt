@@ -168,6 +168,7 @@ if(LLVM_ENABLED)
 		LLVMMemoryManager.cpp
 		${JitCatHeaderPath}/LLVMTargetConfig.h
 		LLVMTargetConfig.cpp
+		${JitCatHeaderPath}/LLVMTargetConfigOptions.h
 		LLVMTypes.cpp
 		${JitCatHeaderPath}/LLVMTypes.h)
 endif()
