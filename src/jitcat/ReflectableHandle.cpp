@@ -20,9 +20,9 @@ using namespace jitcat::Reflection;
 
 ReflectableHandle::ReflectableHandle():
 	reflectable(nullptr),
-	previousHandle(nullptr),
+	reflectableType(nullptr),
 	nextHandle(nullptr),
-	reflectableType(nullptr)
+	previousHandle(nullptr)
 {
 }
 
@@ -30,8 +30,8 @@ ReflectableHandle::ReflectableHandle():
 ReflectableHandle::ReflectableHandle(unsigned char* reflectable, TypeInfo* reflectableType):
 	reflectable(reflectable),
 	reflectableType(reflectableType),
-	previousHandle(nullptr),
-	nextHandle(nullptr)
+	nextHandle(nullptr),
+	previousHandle(nullptr)
 {
 	assert(reflectable == nullptr || reflectableType != nullptr);
 	registerObserver();
@@ -40,9 +40,9 @@ ReflectableHandle::ReflectableHandle(unsigned char* reflectable, TypeInfo* refle
 
 ReflectableHandle::ReflectableHandle(const ReflectableHandle& other):
 	reflectable(other.reflectable),
-	previousHandle(nullptr),
+	reflectableType(other.reflectableType),
 	nextHandle(nullptr),
-	reflectableType(other.reflectableType)
+	previousHandle(nullptr)
 {
 	registerObserver();
 }
@@ -386,9 +386,13 @@ ReflectableHandle* ReflectableHandle::getFirstHandle(unsigned char* object, Hand
 			{
 				return iter->second;
 			}
+			else
+			{
+				return nullptr;
+			}
 		} break;
+		default:	return nullptr;
 	}
-	return nullptr;
 }
 
 
@@ -414,6 +418,7 @@ void ReflectableHandle::setFirstHandle(unsigned char* object, ReflectableHandle*
 				customObjectObservers->insert(std::make_pair(object, handle));
 			}
 		} break;
+		default: break;
 	}
 }
 

@@ -32,6 +32,7 @@ namespace jitcat
 		Reflection::TypeInfo* nullTypeInfo = nullptr;
 		static std::unique_ptr<CatGenericType> type(std::make_unique<CatGenericType>(nullTypeInfo));
 		Reflection::TypeInfo* typeInfo = Reflection::TypeRegistry::get()->registerType<ObjectT>(type->getTypeInfoToSet());
+		(void)typeInfo;
 		return *type.get();
 	}
 

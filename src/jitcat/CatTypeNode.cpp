@@ -59,9 +59,9 @@ CatTypeNode::CatTypeNode(CatStaticScope* parentScope, const std::string& name, c
 
 CatTypeNode::CatTypeNode(std::unique_ptr<CatTypeNode> arrayItemType, Reflection::TypeOwnershipSemantics arrayOwnershipSemantics, const Tokenizer::Lexeme& lexeme):
 	CatASTNode(lexeme),
-	arrayItemType(std::move(arrayItemType)),
 	ownershipSemantics(arrayOwnershipSemantics),
-	isArrayType(true)
+	isArrayType(true),
+	arrayItemType(std::move(arrayItemType))
 {
 	assert(this->arrayItemType != nullptr);
 	knownType = this->arrayItemType->isKnownType();
@@ -197,7 +197,7 @@ bool CatTypeNode::defineCheck(CatRuntimeContext* compileTimeContext, ExpressionE
 					{
 						std::ostringstream errorStream;
 						errorStream << "Recursive dependency detected.\n";
-						for (i = i; i < loopDetectionStack.size(); ++i)
+						for (/*i = i*/; i < loopDetectionStack.size(); ++i)
 						{
 							switch (loopDetectionStack[i]->getNodeType())
 							{

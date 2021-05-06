@@ -103,6 +103,7 @@ CatStatement* CatScopeBlock::constCollapse(CatRuntimeContext* compiletimeContext
 {
 	CatScopeID collapseScopeId = compiletimeContext->addDynamicScope(customType.get(), nullptr);
 	assert(scopeId == collapseScopeId);
+	(void)collapseScopeId;
 	CatScope* previousScope = compiletimeContext->getCurrentScope();
 	compiletimeContext->setCurrentScope(this);
 

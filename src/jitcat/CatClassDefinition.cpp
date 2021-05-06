@@ -110,7 +110,7 @@ bool CatClassDefinition::typeGatheringCheck(CatRuntimeContext* compileTimeContex
 	assert(checkStatus == CheckStatus::Unchecked);
 	CatClassDefinition* parentClass = compileTimeContext_->getCurrentClass();
 
-	compileTimeContext = std::move(compileTimeContext_->clone());
+	compileTimeContext = compileTimeContext_->clone();
 	compileTimeContext->setCurrentClass(this);
 	scopeId = compileTimeContext->addDynamicScope(customType.get(), nullptr);
 	CatScope* previousScope = compileTimeContext->getCurrentScope();

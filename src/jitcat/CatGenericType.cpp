@@ -31,10 +31,10 @@ using namespace jitcat::Tools;
 CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, TypeInfo* nestedType, Reflection::TypeOwnershipSemantics ownershipSemantics, CatGenericType* pointee, bool writable, bool constant):
 	specificType(specificType),
 	basicType(basicType),
-	nestedType(nestedType),
-	ownershipSemantics(ownershipSemantics),
 	writable(writable),
-	constant(constant)
+	constant(constant),
+	nestedType(nestedType),
+	ownershipSemantics(ownershipSemantics)
 {
 	if (pointee != nullptr)
 	{
@@ -46,10 +46,10 @@ CatGenericType::CatGenericType(SpecificType specificType, BasicType basicType, T
 CatGenericType::CatGenericType(BasicType basicType, bool writable, bool constant):
 	specificType(SpecificType::Basic),
 	basicType(basicType),
-	nestedType(nullptr),
-	ownershipSemantics(TypeOwnershipSemantics::Value),
 	writable(writable),
-	constant(constant)
+	constant(constant),
+	nestedType(nullptr),
+	ownershipSemantics(TypeOwnershipSemantics::Value)
 {
 }
 
@@ -57,20 +57,20 @@ CatGenericType::CatGenericType(BasicType basicType, bool writable, bool constant
 CatGenericType::CatGenericType():
 	specificType(SpecificType::None),
 	basicType(BasicType::None),
-	nestedType(nullptr),
-	ownershipSemantics(TypeOwnershipSemantics::Weak),
 	writable(false),
-	constant(false)
+	constant(false),
+	nestedType(nullptr),
+	ownershipSemantics(TypeOwnershipSemantics::Weak)
 {
 }
 
 
 CatGenericType::CatGenericType(const CatGenericType& enumUnderlyingType, Reflection::TypeInfo* enumValuesType, bool writable, bool constant):
 	specificType(SpecificType::Enum),
-	nestedType(enumValuesType),
-	ownershipSemantics(TypeOwnershipSemantics::Value),
 	writable(writable),
-	constant(constant)
+	constant(constant),
+	nestedType(enumValuesType),
+	ownershipSemantics(TypeOwnershipSemantics::Value)
 {
 	assert(enumUnderlyingType.isBasicType());
 	basicType = enumUnderlyingType.basicType;
@@ -80,10 +80,10 @@ CatGenericType::CatGenericType(const CatGenericType& enumUnderlyingType, Reflect
 CatGenericType::CatGenericType(TypeInfo* reflectableType, bool writable, bool constant):
 	specificType(SpecificType::ReflectableObject),
 	basicType(BasicType::None),
-	nestedType(reflectableType),
-	ownershipSemantics(TypeOwnershipSemantics::Value),
 	writable(writable),
-	constant(constant)
+	constant(constant),
+	nestedType(reflectableType),
+	ownershipSemantics(TypeOwnershipSemantics::Value)
 {
 }
 
@@ -91,11 +91,11 @@ CatGenericType::CatGenericType(TypeInfo* reflectableType, bool writable, bool co
 CatGenericType::CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, bool isHandle, bool writable, bool constant) :
 	specificType(isHandle ? SpecificType::ReflectableHandle : SpecificType::Pointer),
 	basicType(BasicType::None),
-	nestedType(nullptr),
-	ownershipSemantics(ownershipSemantics),
-	pointeeType(std::make_unique<CatGenericType>(pointee)),
 	writable(writable),
-	constant(constant)
+	constant(constant),
+	nestedType(nullptr),
+	pointeeType(std::make_unique<CatGenericType>(pointee)),
+	ownershipSemantics(ownershipSemantics)
 {
 }
 
@@ -103,10 +103,10 @@ CatGenericType::CatGenericType(const CatGenericType& pointee, Reflection::TypeOw
 CatGenericType::CatGenericType(const CatGenericType& other):
 	specificType(other.specificType),
 	basicType(other.basicType),
-	nestedType(other.nestedType),
-	ownershipSemantics(other.ownershipSemantics),
 	writable(other.writable),
-	constant(other.constant)
+	constant(other.constant),
+	nestedType(other.nestedType),
+	ownershipSemantics(other.ownershipSemantics)
 {
 	if (other.pointeeType != nullptr)
 	{

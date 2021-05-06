@@ -12,8 +12,8 @@ using namespace jitcat::Parser;
 
 
 SLRParseResult::SLRParseResult():
-	success(false),
-	astRootNode(nullptr)
+	astRootNode(nullptr),
+	success(false)
 {
 }
 
@@ -24,8 +24,8 @@ SLRParseResult::~SLRParseResult()
 
 
 SLRParseResult::SLRParseResult(SLRParseResult&& other):
-	success(other.success),
-	astRootNode(std::move(other.astRootNode))
+	astRootNode(std::move(other.astRootNode)),
+	success(other.success)
 {
 }
 

@@ -31,6 +31,7 @@ namespace jitcat
 
 #include <functional>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 
