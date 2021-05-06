@@ -53,13 +53,13 @@ CustomTypeMemberFunctionInfo::CustomTypeMemberFunctionInfo(AST::CatFunctionDefin
  }
 
 
- MemberFunctionCallData CustomTypeMemberFunctionInfo::getFunctionAddress() const
+ MemberFunctionCallData CustomTypeMemberFunctionInfo::getFunctionAddress(FunctionType functionType) const
  {
 	 return MemberFunctionCallData(nativeAddress, reinterpret_cast<uintptr_t>(this), nullptr, MemberFunctionCallType::ThisCall, true, !returnType.isPointerType());
  }
 
 
- std::string CustomTypeMemberFunctionInfo::getMangledName(bool sRetBeforeThis) const
+ std::string CustomTypeMemberFunctionInfo::getMangledName(bool sRetBeforeThis, FunctionType functionType) const
  {
 	return functionDefinition->getMangledFunctionName(sRetBeforeThis);
  }

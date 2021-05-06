@@ -66,7 +66,7 @@ namespace jitcat
 	{
 		if (context == nullptr)
 		{
-			context = &CatRuntimeContext::defaultContext;
+			context = &CatRuntimeContext::getDefaultContext();
 			context->getErrorManager()->clear();
 		}
 		if (!parse(context, context->getErrorManager(), this, TypeTraits<ExpressionResultT>::toGenericType()))
@@ -118,7 +118,7 @@ namespace jitcat
 		{
 			if (runtimeContext == nullptr)
 			{
-				runtimeContext = &CatRuntimeContext::defaultContext;
+				runtimeContext = &CatRuntimeContext::getDefaultContext();
 			}
 			else if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
 			{
@@ -180,7 +180,7 @@ namespace jitcat
 		{
 			if (runtimeContext == nullptr)
 			{
-				runtimeContext = &CatRuntimeContext::defaultContext;
+				runtimeContext = &CatRuntimeContext::getDefaultContext();
 			}
 			if constexpr (!std::is_same<void, ExpressionResultT>::value)
 			{

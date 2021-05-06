@@ -541,6 +541,13 @@ std::shared_ptr<PrecompilationContext> CatRuntimeContext::getPrecompilationConte
 }
 
 
+CatRuntimeContext& CatRuntimeContext::getDefaultContext()
+{
+	static CatRuntimeContext defaultContext("default", nullptr);
+	return defaultContext;
+}
+
+
 CatScopeID CatRuntimeContext::createDynamicScope(unsigned char* scopeObject, TypeInfo* type)
 {
 	Scope* scope = new Scope(type, scopeObject, false, Tools::empty);
@@ -590,4 +597,3 @@ const std::string_view jitcat::CatRuntimeContext::getGlobalNameReference(const s
 }
 
 
-CatRuntimeContext CatRuntimeContext::defaultContext("default", nullptr);

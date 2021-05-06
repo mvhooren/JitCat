@@ -11,6 +11,7 @@
 #include "jitcat/CatAssignableExpression.h"
 #include "jitcat/CatTypedExpression.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/ExpressionErrorManager.h"
 #include "ExpressionAssignment.h"
 
 namespace jitcat
@@ -61,7 +62,7 @@ inline bool ExpressionAssignment<ExpressionT>::assignValue(CatRuntimeContext* ru
 {
 	if (runtimeContext == nullptr)
 	{
-		runtimeContext = &CatRuntimeContext::defaultContext;
+		runtimeContext = &CatRuntimeContext::getDefaultContext();
 	}
 	if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
 	{
@@ -108,7 +109,7 @@ inline void ExpressionAssignment<ExpressionT>::compile(CatRuntimeContext* contex
 {
 	if (context == nullptr)
 	{
-		context = &CatRuntimeContext::defaultContext;
+		context = &CatRuntimeContext::getDefaultContext();
 		context->getErrorManager()->clear();
 	}
 	CatGenericType expectedType = TypeTraits<ExpressionT>::toGenericType();

@@ -44,7 +44,7 @@ namespace jitcat::Reflection
 
 		virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 
-		virtual MemberFunctionCallData getFunctionAddress() const override final;
+		virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
 
 	private:
 		void createIndexGeneratorFunction();

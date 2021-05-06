@@ -29,9 +29,9 @@ namespace jitcat::Reflection
 
 		virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 		
-		virtual MemberFunctionCallData getFunctionAddress() const override final;
+		virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
 
-		virtual std::string getMangledName(bool sRetBeforeThis) const override final;
+		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
 
 		const AST::CatFunctionDefinition* getFunctionDefinition() const;
 

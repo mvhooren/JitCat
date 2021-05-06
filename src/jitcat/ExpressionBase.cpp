@@ -135,7 +135,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 {
 	if (context == nullptr)
 	{
-		context = &CatRuntimeContext::defaultContext;
+		context = &CatRuntimeContext::getDefaultContext();
 		context->getErrorManager()->clear();
 	}
 	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());

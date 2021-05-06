@@ -62,6 +62,13 @@ namespace jitcat::Reflection
 		const bool nonNullResult;
 	};
 
+	enum class FunctionType
+	{
+		Auto,
+		Member,
+		Static
+	};
+
 
 	struct MemberFunctionInfo: public FunctionSignature
 	{
@@ -83,14 +90,14 @@ namespace jitcat::Reflection
 
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const { return std::any(); }
 		virtual std::size_t getNumberOfArguments() const { return argumentTypes.size(); }
-		inline virtual MemberFunctionCallData getFunctionAddress() const {return MemberFunctionCallData();}
+		inline virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const {return MemberFunctionCallData();}
 		inline virtual bool isDeferredFunctionCall() {return false;}
 		// Inherited via FunctionSignature
 		virtual const std::string& getLowerCaseFunctionName() const override final;
 		virtual int getNumParameters() const override final; 
 		virtual const CatGenericType& getParameterType(int index) const override final;
-		virtual std::string getMangledName(bool sRetBeforeThis) const;
-		std::string getMangledFunctionInfoName(bool sRetBeforeThis) const;
+		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const;
+		std::string getMangledFunctionInfoName(bool sRetBeforeThis, FunctionType functionType) const;
 
 		template<typename ArgumentT>
 		inline void addParameterTypeInfo();
@@ -119,9 +126,9 @@ namespace jitcat::Reflection
 		virtual ~DeferredMemberFunctionInfo();
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const override final;
 		virtual std::size_t getNumberOfArguments() const override final;
-		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
+		inline virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
 		inline virtual bool isDeferredFunctionCall() override final;
-		virtual std::string getMangledName(bool sRetBeforeThis) const override final;
+		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
 
 	private:
 		TypeMemberInfo* baseMember;
@@ -141,8 +148,8 @@ namespace jitcat::Reflection
 
 		inline virtual std::size_t getNumberOfArguments() const override final;
 		static inline ReturnT staticExecute(ClassT* base, MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
-		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
-		virtual std::string getMangledName(bool sRetBeforeThis) const override final;
+		inline virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
+		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
 
 	private:
 		ReturnT (ClassT::*function)(TFunctionArguments...);
@@ -160,8 +167,8 @@ namespace jitcat::Reflection
 
 		inline virtual std::size_t getNumberOfArguments() const override final;
 		static inline ReturnT staticExecute(ClassT* base, ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
-		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
-		virtual std::string getMangledName(bool sRetBeforeThis) const override final;
+		inline virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
+		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
 
 	private:
 		ReturnT (ClassT::*function)(TFunctionArguments...) const;
@@ -179,8 +186,8 @@ namespace jitcat::Reflection
 
 		virtual inline std::size_t getNumberOfArguments() const override final;
 		static inline ReturnT staticExecute(ClassT* base, PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
-		inline virtual MemberFunctionCallData getFunctionAddress() const override final;
-		virtual std::string getMangledName(bool sRetBeforeThis) const override final;
+		inline virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
+		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
 
 	private:
 		ReturnT (*function)(ClassT*, TFunctionArguments...);

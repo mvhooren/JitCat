@@ -468,7 +468,7 @@ void CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t buffe
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
-			reinterpret_cast<void(*)(unsigned char*)>(defaultConstructorFunction->getFunctionAddress().functionAddress)(buffer);
+			reinterpret_cast<void(*)(unsigned char*)>(defaultConstructorFunction->getFunctionAddress(FunctionType::Auto).functionAddress)(buffer);
 		}
 		else
 		{
@@ -499,8 +499,8 @@ void CustomTypeInfo::placementDestruct(unsigned char* buffer, std::size_t buffer
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
-			assert(destructorFunction->getFunctionAddress().functionAddress != 0);
-			reinterpret_cast<void(*)(unsigned char*)>(destructorFunction->getFunctionAddress().functionAddress)(buffer);
+			assert(destructorFunction->getFunctionAddress(FunctionType::Auto).functionAddress != 0);
+			reinterpret_cast<void(*)(unsigned char*)>(destructorFunction->getFunctionAddress(FunctionType::Auto).functionAddress)(buffer);
 		}
 		else
 		{

@@ -57,7 +57,7 @@ const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 	{
 		if (runtimeContext == nullptr)
 		{
-			runtimeContext = &CatRuntimeContext::defaultContext;
+			runtimeContext = &CatRuntimeContext::getDefaultContext();
 		}
 		if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
 		{
@@ -117,7 +117,7 @@ void ExpressionAny::compile(CatRuntimeContext* context)
 {
 	if (context == nullptr)
 	{
-		context = &CatRuntimeContext::defaultContext;
+		context = &CatRuntimeContext::getDefaultContext();
 		context->getErrorManager()->clear();
 	}
 	if (parse(context, context->getErrorManager(), this, CatGenericType()) && isConstant)

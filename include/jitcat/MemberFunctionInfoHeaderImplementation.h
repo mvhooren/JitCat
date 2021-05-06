@@ -37,8 +37,9 @@ namespace jitcat::Reflection
 		//Link the function to the pre-compiled expressions
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
-			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress().functionAddress);
-			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(Configuration::sretBeforeThisForCurrentProcess), reinterpret_cast<uintptr_t>(this));
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Auto), getFunctionAddress(FunctionType::Auto).functionAddress);
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Static), getFunctionAddress(FunctionType::Static).functionAddress);
+			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Member), reinterpret_cast<uintptr_t>(this));
 		}
 	}
 
@@ -67,16 +68,21 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline MemberFunctionCallData MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getFunctionAddress() const
+	inline MemberFunctionCallData MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getFunctionAddress(FunctionType functionType) const
 	{
 		uintptr_t functionPtr = 0;
 		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
-		if constexpr (sizeof(function) == Configuration::basicMemberFunctionPointerSize)
+		std::size_t functionPtrSize = sizeof(function);
+		if (functionType != FunctionType::Static
+			&& (functionPtrSize == Configuration::basicMemberFunctionPointerSize 
+			    || functionType == FunctionType::Member
+			    || (functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
+   				    && reinterpret_cast<const uintptr_t*>(&function)[1] == 0)))
 		{
 			memcpy(&functionPtr, &function, sizeof(uintptr_t));
 			callType = MemberFunctionCallType::ThisCall;
 		}
-		else
+		else 
 		{
 			functionPtr = reinterpret_cast<uintptr_t>(&staticExecute);
 			callType = MemberFunctionCallType::ThisCallThroughStaticFunction;
@@ -86,10 +92,15 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::string MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis) const
+	inline std::string MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis, FunctionType functionType) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
-		if constexpr (sizeof(function) != Configuration::basicMemberFunctionPointerSize)
+		std::size_t functionPtrSize = sizeof(function);
+		if (functionType != FunctionType::Member
+			&& (functionType == FunctionType::Static
+				|| (functionPtrSize != Configuration::basicMemberFunctionPointerSize
+				 && !(functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
+				 && reinterpret_cast<const uintptr_t*>(&function)[1] == 0))))
 		{
 			baseName = Tools::append(baseName, "_static");
 		}
@@ -134,8 +145,9 @@ namespace jitcat::Reflection
 		//Link the function to the pre-compiled expressions
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
-			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress().functionAddress);
-			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(Configuration::sretBeforeThisForCurrentProcess), reinterpret_cast<uintptr_t>(this));
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Auto), getFunctionAddress(FunctionType::Auto).functionAddress);
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Static), getFunctionAddress(FunctionType::Static).functionAddress);
+			JitCat::get()->setPrecompiledGlobalVariable(getMangledFunctionInfoName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Member), reinterpret_cast<uintptr_t>(this));
 		}
 	}
 
@@ -164,11 +176,16 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline MemberFunctionCallData ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getFunctionAddress() const
+	inline MemberFunctionCallData ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getFunctionAddress(FunctionType functionType) const
 	{
 		uintptr_t functionPtr = 0;
 		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
-		if constexpr (sizeof(function) == Configuration::basicMemberFunctionPointerSize)
+		std::size_t functionPtrSize = sizeof(function);
+		if (functionType != FunctionType::Static
+			&& (functionPtrSize == Configuration::basicMemberFunctionPointerSize 
+			    || functionType == FunctionType::Member
+			    || (functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
+   				    && reinterpret_cast<const uintptr_t*>(&function)[1] == 0)))
 		{
 			memcpy(&functionPtr, &function, sizeof(uintptr_t));
 			callType = MemberFunctionCallType::ThisCall;
@@ -183,10 +200,15 @@ namespace jitcat::Reflection
 
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::string ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis) const
+	inline std::string ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis, FunctionType functionType) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
-		if constexpr (sizeof(function) != Configuration::basicMemberFunctionPointerSize)
+		std::size_t functionPtrSize = sizeof(function);
+		if (functionType != FunctionType::Member
+			&& (functionType == FunctionType::Static
+				|| (functionPtrSize != Configuration::basicMemberFunctionPointerSize
+				 && !(functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
+				 && reinterpret_cast<const uintptr_t*>(&function)[1] == 0))))
 		{
 			baseName = Tools::append(baseName, "_static");
 		}
@@ -230,7 +252,7 @@ namespace jitcat::Reflection
 		//Link the function to the pre-compiled expressions
 		if constexpr (Configuration::usePreCompiledExpressions)
 		{
-			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress().functionAddress);
+			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Auto), getFunctionAddress(FunctionType::Auto).functionAddress);
 		}
 	}
 
@@ -255,7 +277,7 @@ namespace jitcat::Reflection
 	}
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline MemberFunctionCallData PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getFunctionAddress() const
+	inline MemberFunctionCallData PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getFunctionAddress(FunctionType functionType) const
 	{
 		uintptr_t pointer = 0;
 		memcpy(&pointer, &function, sizeof(uintptr_t));
@@ -263,7 +285,7 @@ namespace jitcat::Reflection
 	}
 
 	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
-	inline std::string PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis) const
+	inline std::string PseudoMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis, FunctionType functionType) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
 		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName, sRetBeforeThis);

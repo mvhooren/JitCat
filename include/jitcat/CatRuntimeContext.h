@@ -183,14 +183,14 @@ namespace jitcat
 		void setPrecompilationContext(std::shared_ptr<PrecompilationContext> precompilationContext);
 		std::shared_ptr<PrecompilationContext> getPrecompilationContext() const;
 
+		static CatRuntimeContext& getDefaultContext();
+
 	private:
 		CatScopeID createDynamicScope(unsigned char* scopeObject, Reflection::TypeInfo* type);
 		CatScopeID createStaticScope(unsigned char* scopeObject, Reflection::TypeInfo* type, const std::string_view& staticScopeUniqueName);
 		CatRuntimeContext::Scope* getScope(CatScopeID scopeId) const;
 		const std::string_view getGlobalNameReference(const std::string& globalName);
 
-	public:
-		static CatRuntimeContext defaultContext;
 	private:
 		int nextFunctionIndex;
 		AST::CatFunctionDefinition* currentFunctionDefinition;

@@ -1232,7 +1232,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 	
 	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
 	{
-		MemberFunctionCallData callData = memberFunction->getFunctionAddress();
+		MemberFunctionCallData callData = memberFunction->getFunctionAddress(FunctionType::Auto);
 		assert(callData.functionAddress != 0 || callData.linkDylib || callData.inlineFunctionGenerator != nullptr);
 		std::vector<llvm::Value*> argumentList;
 		llvm::Value* functionThis = compileContext->helper->convertToPointer(baseObject, memberFunction->getMemberFunctionName() + "_This_Ptr");
@@ -1242,7 +1242,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 		if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
 		{
 			//Add an argument that contains a pointer to a MemberFunctionInfo object.
-			llvm::Value* memberFunctionInfoAddressValue = context->helper->generateStaticPointerVariable(callData.functionInfoStructAddress, context, memberFunction->getMangledFunctionInfoName(context->targetConfig->sretBeforeThis));
+			llvm::Value* memberFunctionInfoAddressValue = context->helper->generateStaticPointerVariable(callData.functionInfoStructAddress, context, memberFunction->getMangledFunctionInfoName(context->targetConfig->sretBeforeThis, FunctionType::Member));
 			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
 			argumentList.push_back(memberFunctionPtrValue);
 			argumentTypes.push_back(llvmTypes.pointerType);
@@ -1253,7 +1253,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 		{
 			if (!callData.linkDylib)
 			{
-				defineWeakSymbol(context, callData.functionAddress, memberFunction->getMangledName(context->targetConfig->sretBeforeThis), false);
+				defineWeakSymbol(context, callData.functionAddress, memberFunction->getMangledName(context->targetConfig->sretBeforeThis, FunctionType::Auto), false);
 			}
 			else
 			{
@@ -1276,14 +1276,14 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			{
 				if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
 				{
-					return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(context->targetConfig->sretBeforeThis), memberFunction->getMemberFunctionName(), returnedObjectAllocation, false, callData.nonNullResult);
+					return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(context->targetConfig->sretBeforeThis, FunctionType::Auto), memberFunction->getMemberFunctionName(), returnedObjectAllocation, false, callData.nonNullResult);
 				}
 				else
 				{
 					llvm::FunctionType* functionType = llvm::FunctionType::get(returnLLVMType, argumentTypes, false);
 					llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(context, functionType, argumentList, 
 																										   callData.callType == MemberFunctionCallType::ThisCall, 
-																										   memberFunction->getMangledName(context->targetConfig->sretBeforeThis), 
+																										   memberFunction->getMangledName(context->targetConfig->sretBeforeThis, FunctionType::Auto), 
 																										   memberFunction->getMemberFunctionName(), false));
 					if (codeGenerator->targetConfig->useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 					{
@@ -1300,7 +1300,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			{
 				argumentTypes.insert(argumentTypes.begin(), llvmTypes.pointerType);
 				argumentList.insert(argumentList.begin(), returnedObjectAllocation);
-				return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(context->targetConfig->sretBeforeThis), 
+				return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(context->targetConfig->sretBeforeThis, FunctionType::Auto), 
 												  memberFunction->getMemberFunctionName(), returnedObjectAllocation, false, callData.nonNullResult);
 			}
 			else if (returnType.isReflectableObjectType())
@@ -1322,7 +1322,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 				
 				llvm::CallInst* call = static_cast<llvm::CallInst*>(compileContext->helper->createCall(context, functionType, argumentList, 
 																									   callData.callType == MemberFunctionCallType::ThisCall, 
-																									   memberFunction->getMangledName(context->targetConfig->sretBeforeThis), 
+																									   memberFunction->getMangledName(context->targetConfig->sretBeforeThis, FunctionType::Auto), 
 																									   memberFunction->getMemberFunctionName(), false));
 				if (codeGenerator->targetConfig->useThisCall && callData.callType == MemberFunctionCallType::ThisCall)
 				{
