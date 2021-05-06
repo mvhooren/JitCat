@@ -37,7 +37,7 @@ using namespace jitcat::Parser;
 using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t));
 
@@ -78,6 +78,30 @@ using namespace jitcat::Tokenizer;
 	#pragma comment(linker, "/alternatename:_jc_enumerate_global_variables=_jc_enumerate_global_variables_default")
 	#pragma comment(linker, "/alternatename:_jc_enumerate_linked_functions=_jc_enumerate_linked_functions_default")
 	#pragma comment(linker, "/alternatename:_jc_initialize_string_pool=_jc_initialize_string_pool_default")
+#elif defined(__clang__) || defined(__GNUC__)
+	__attribute__((weak)) extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
+		enumeratorCallback("default", 0);
+	}	
+
+	__attribute__((weak)) extern "C" void _jc_enumerate_global_variables(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_global_variables function implementation was found.
+		enumeratorCallback("default", 0);
+	}
+
+	__attribute__((weak)) extern "C" void _jc_enumerate_linked_functions(void(*enumeratorCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_enumerate_linked_functions function implementation was found.
+		enumeratorCallback("default", 0);
+	}
+	
+	__attribute__((weak)) extern "C" void _jc_initialize_string_pool(void(*stringInitializerCallback)(const char*, uintptr_t))
+	{
+		//Notify the callback that no proper _jc_initialize_string_pool function implementation was found.
+		stringInitializerCallback("default", 0);		
+	}	
 #else
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
@@ -267,12 +291,12 @@ bool JitCat::verifyLinkage()
 	bool verifySuccess = true;
 	std::size_t correctLinkCount = 0;
 	std::size_t incorrectLinkCount = 0;
-	std::cout << "Verifying JitCat function linkage...\n";
+	std::cerr << "Verifying JitCat function linkage...\n";
 	for (auto iter : getPrecompiledLinkedFunctions())
 	{
 		if (*reinterpret_cast<uintptr_t*>(iter.second) == 0)
 		{
-			std::cout << "JitCat linkage verification error: linked function " << iter.first << " has not been set.\n";
+			std::cerr << "JitCat linkage verification error: linked function " << iter.first << " has not been set.\n";
 			verifySuccess = false;
 			incorrectLinkCount++;
 		}
@@ -281,8 +305,8 @@ bool JitCat::verifyLinkage()
 			correctLinkCount++;
 		}
 	}
-	std::cout << correctLinkCount << " linked successfully.\n";
-	std::cout << incorrectLinkCount << " not linked.\n";
+	std::cerr << correctLinkCount << " linked successfully.\n";
+	std::cerr << incorrectLinkCount << " not linked.\n";
 	return verifySuccess;
 }
 
