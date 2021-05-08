@@ -18,8 +18,6 @@ steps:
     inputs:
       cmakeArgs: '--build . --config Release'
 
-  - task: BatchScript@1
+  - script: 'build/Release/test/jitcatunittests/JitCatUnitTests'
     displayName: 'Catch2 Unit Tests'
-    inputs:
-      filename: build/Release/test/jitcatunittests/JitCatUnitTests'
-    continueOnError: true
+    failOnStderr: true
