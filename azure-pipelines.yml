@@ -34,8 +34,6 @@ jobs:
   continueOnError: true
   steps:
     - checkout: none
-    - download: current
-      artifact: 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: 'Build_GCC_UnitTests'
