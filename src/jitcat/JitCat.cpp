@@ -78,7 +78,7 @@ using namespace jitcat::Tokenizer;
 	#pragma comment(linker, "/alternatename:_jc_enumerate_global_variables=_jc_enumerate_global_variables_default")
 	#pragma comment(linker, "/alternatename:_jc_enumerate_linked_functions=_jc_enumerate_linked_functions_default")
 	#pragma comment(linker, "/alternatename:_jc_initialize_string_pool=_jc_initialize_string_pool_default")
-#elif defined(__clang__) || defined(__GNUC__)
+#elif defined(__clang__)
 	__attribute__((weak)) extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
 		//Notify the callback that no proper _jc_enumerate_expressions function implementation was found.
