@@ -18,10 +18,10 @@ steps:
     inputs:
       cmakeArgs: '--build . --config Release'
 
-  - script: 'build/Release/test/jitcatunittests/JitCatUnitTests'
+  - script: 'build/test/jitcatunittests/JitCatUnitTests'
     displayName: 'Catch2 Unit Tests'
     failOnStderr: true
-    enabled: false
+    enabled: true
 
   - script: 'tree ..'
     displayName: 'Directory structure'
