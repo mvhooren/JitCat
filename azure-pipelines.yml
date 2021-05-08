@@ -23,7 +23,7 @@ steps:
     failOnStderr: true
     enabled: false
 
-- script: 'tree -d ..'
+- script: 'tree ..'
     displayName: 'Directory structure'
     failOnStderr: false
     enabled: true
