@@ -37,7 +37,7 @@ jobs:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: 'Build_GCC_UnitTests'
-        path: 
+        path: '$(Build.SourcesDirectory)/bin'
     - script: 'tree ..'
       displayName: 'Directory structure'
       failOnStderr: false
