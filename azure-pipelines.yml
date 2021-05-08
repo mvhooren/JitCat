@@ -8,7 +8,7 @@ pool:
   vmImage: 'Ubuntu-18.04'
 
 jobs:
-- job: 'Build-GCC'
+- job: 'Build_GCC'
   displayName: 'Release build of JitCat on Linux with GCC'
   steps:
     - task: CMake@1
@@ -21,9 +21,9 @@ jobs:
       inputs:
         cmakeArgs: '--build . --config Release'
 
-- job: 'Test-GCC'
+- job: 'Test_GCC'
   displayName: 'Test release build of JitCat on Linux, built with GCC'
-  dependsOn: 'Build-GCC'
+  dependsOn: 'Build_GCC'
   continueOnError: true
   steps:
     - script: 'build/test/jitcatunittests/JitCatUnitTests'
@@ -31,9 +31,9 @@ jobs:
       failOnStderr: true
       enabled: true
 
-- job: 'DirectoryListing-GCC'
+- job: 'DirectoryListing_GCC'
   displayName: 'Directory and file tree of output'
-  dependsOn: 'Build-GCC'
+  dependsOn: 'Build_GCC'
   steps:
     - script: 'tree .'
       displayName: 'Directory structure'
