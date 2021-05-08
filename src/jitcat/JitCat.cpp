@@ -8,6 +8,7 @@
 #include "jitcat/JitCat.h"
 
 #include "jitcat/CatASTNodes.h"
+#include "jitcat/CatGenericType.h"
 #include "jitcat/CatGrammar.h"
 #include "jitcat/CatTokenizer.h"
 #include "jitcat/CommentToken.h"
@@ -263,6 +264,8 @@ void JitCat::destroy()
 	delete instance;
 	instance = nullptr;
 	TypeRegistry::get()->recreate();
+	CatGenericType::nullptrType = CatGenericType();
+	CatGenericType::nullptrTypeInfo = nullptr;
 	#ifdef ENABLE_LLVM
 		LLVMJit::get().cleanup();
 	#endif
