@@ -7,24 +7,36 @@ trigger:
 pool:
   vmImage: 'Ubuntu-18.04'
 
-steps:
-  - task: CMake@1
-    displayName: 'CMake'
-    inputs:
-      cmakeArgs: '..'
+jobs:
+- job: 'Build-GCC'
+  displayName: 'Release build of JitCat on Linux with GCC'
+  steps:
+    - task: CMake@1
+      displayName: 'CMake'
+      inputs:
+        cmakeArgs: '..'
 
-  - task: CMake@1
-    displayName: 'CMake'
-    inputs:
-      cmakeArgs: '--build . --config Release'
+    - task: CMake@1
+      displayName: 'CMake'
+      inputs:
+        cmakeArgs: '--build . --config Release'
 
-  - script: 'build/test/jitcatunittests/JitCatUnitTests'
-    displayName: 'Catch2 Unit Tests'
-    failOnStderr: true
-    enabled: true
+- job: 'Test-GCC'
+  displayName: 'Test release build of JitCat on Linux, built with GCC'
+  dependsOn: 'Build-GCC'
+  continueOnError: true
+  steps:
+    - script: 'build/test/jitcatunittests/JitCatUnitTests'
+      displayName: 'Catch2 Unit Tests'
+      failOnStderr: true
+      enabled: true
 
-  - script: 'tree ..'
-    displayName: 'Directory structure'
-    failOnStderr: false
-    enabled: false
+- job: 'DirectoryListing-GCC'
+  displayName: 'Directory and file tree of output'
+  dependsOn: 'Build-GCC'
+  steps:
+    - script: 'tree .'
+      displayName: 'Directory structure'
+      failOnStderr: false
+      enabled: false
 
