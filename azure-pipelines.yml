@@ -37,15 +37,21 @@ jobs:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifact: 'Build_GCC_UnitTests'
-        path: $(Build.SourcesDirectory)/bin
+        path: 
     - script: 'tree ..'
       displayName: 'Directory structure'
       failOnStderr: false
       enabled: true  
     - script: 'chmod a+x bin/JitCatUnitTests'
       displayName: 'Set executable permission on JitCatUnitTests'
-    - script: 'bin/JitCatUnitTests'
+    - script: 'bin/JitCatUnitTests -o Tests.xml -r junit'
       displayName: 'Catch2 Unit Tests'
       failOnStderr: true
-      enabled: true
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'Tests.xml'
+        searchFolder: '$(Build.SourcesDirectory)/bin'
+        failTaskOnFailedTests: true
+        testRunTitle: 'GCC_Release_JitCatUnitTests'
 
