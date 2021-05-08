@@ -260,8 +260,8 @@ namespace jitcat
 		static const CatGenericType stringWeakPtrType;
 		static const CatGenericType stringConstantValuePtrType;
 		static const CatGenericType stringMemberValuePtrType;
-		static const std::unique_ptr<Reflection::TypeInfo, Reflection::TypeInfoDeleter> nullptrTypeInfo;
-		static const CatGenericType nullptrType;
+		static std::unique_ptr<Reflection::TypeInfo, Reflection::TypeInfoDeleter> nullptrTypeInfo;
+		static CatGenericType nullptrType;
 		static const CatGenericType unknownType;
 
 		static const std::unique_ptr<Reflection::TypeCaster> charTypeCaster;
