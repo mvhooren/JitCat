@@ -24,9 +24,9 @@ jobs:
       displayName: 'Directory structure'
       failOnStderr: false
       enabled: true  
-    - publish: $(Build.SourcesDirectory)/build
-      artifact: Build_GCC_Output
-      displayName: 'Output of GCC Build'
+    - publish: '$(Build.SourcesDirectory)/build/test/jitcatunittests/JitCatUnitTests'
+      artifact: 'Build_GCC_UnitTests'
+      displayName: 'Publish GCC Build of JitCatUnitTests'
 
 - job: 'Test_GCC'
   displayName: 'Test release build of JitCat on Linux, built with GCC'
@@ -35,12 +35,16 @@ jobs:
   steps:
     - checkout: none
     - download: current
-      artifact: Build_GCC_Output
-    - script: 'tree .'
+      artifact: 
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: 'Build_GCC_UnitTests'
+        path: $(Build.SourcesDirectory)/bin
+    - script: 'tree ..'
       displayName: 'Directory structure'
       failOnStderr: false
       enabled: true  
-    - script: 'build/test/jitcatunittests/JitCatUnitTests'
+    - script: 'bin/JitCatUnitTests'
       displayName: 'Catch2 Unit Tests'
       failOnStderr: true
       enabled: true
