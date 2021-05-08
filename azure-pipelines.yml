@@ -26,5 +26,5 @@ steps:
   - script: 'tree ..'
     displayName: 'Directory structure'
     failOnStderr: false
-    enabled: true
+    enabled: false
 
