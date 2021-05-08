@@ -19,17 +19,19 @@ jobs:
     - task: CMake@1
       displayName: 'CMake'
       inputs:
-        cmakeArgs: '--build . --config Release'
+        cmakeArgs: '--build . --config Release -j2'
 
 - job: 'Test_GCC'
   displayName: 'Test release build of JitCat on Linux, built with GCC'
   dependsOn: 'Build_GCC'
   continueOnError: true
   steps:
+    - checkout: none
+    - download: current
     - script: 'tree .'
       displayName: 'Directory structure'
       failOnStderr: false
-      enabled: false  
+      enabled: true  
     - script: 'build/test/jitcatunittests/JitCatUnitTests'
       displayName: 'Catch2 Unit Tests'
       failOnStderr: true
