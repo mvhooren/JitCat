@@ -26,6 +26,10 @@ jobs:
   dependsOn: 'Build_GCC'
   continueOnError: true
   steps:
+    - script: 'tree .'
+      displayName: 'Directory structure'
+      failOnStderr: false
+      enabled: false  
     - script: 'build/test/jitcatunittests/JitCatUnitTests'
       displayName: 'Catch2 Unit Tests'
       failOnStderr: true
