@@ -11,7 +11,7 @@ steps:
   - task: CMake@1
     displayName: 'CMake'
     inputs:
-      cmakeArgs: '.'
+      cmakeArgs: '..'
 
   - task: CMake@1
     displayName: 'CMake'
