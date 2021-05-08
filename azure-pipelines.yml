@@ -21,3 +21,10 @@ steps:
   - script: 'build/Release/test/jitcatunittests/JitCatUnitTests'
     displayName: 'Catch2 Unit Tests'
     failOnStderr: true
+    enabled: false
+
+- script: 'tree -d ..'
+    displayName: 'Directory structure'
+    failOnStderr: false
+    enabled: true
+
