@@ -36,6 +36,8 @@ TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<T
 	{
 		std::string typeNameGlobal = Tools::append("_TypeInfo:", getTypeName());
 		JitCat::get()->setPrecompiledGlobalVariable(typeNameGlobal, reinterpret_cast<uintptr_t>(this));
+		std::string typeSizeGLobal = Tools::append("__sizeOf:", getTypeName());
+		JitCat::get()->setPrecompiledGlobalVariable(typeSizeGLobal, typeSize);
 	}
 }
 

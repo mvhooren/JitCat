@@ -658,7 +658,11 @@ unsigned char* CustomTypeInfo::increaseDataSize(std::size_t amount)
 	std::size_t oldSize = typeSize;
 	increaseDataSize(defaultData, amount, typeSize);
 	typeSize += amount;
-
+	if constexpr (Configuration::usePreCompiledExpressions)
+	{
+		std::string typeSizeGlobal = Tools::append("__sizeOf:", getTypeName());
+		JitCat::get()->setPrecompiledGlobalVariable(typeSizeGlobal, typeSize);
+	}
 	std::set<unsigned char*> oldInstances = instances;
 	std::set<unsigned char*>::iterator end = oldInstances.end();
 	instances.clear();

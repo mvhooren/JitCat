@@ -151,6 +151,7 @@ namespace jitcat::Reflection
 		inline virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
 		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
 
+		bool shouldUseStaticFunction(FunctionType functionType) const;
 	private:
 		ReturnT (ClassT::*function)(TFunctionArguments...);
 	};
@@ -169,6 +170,8 @@ namespace jitcat::Reflection
 		static inline ReturnT staticExecute(ClassT* base, ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>* functionInfo, TFunctionArguments... args);
 		inline virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
 		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
+
+		bool shouldUseStaticFunction(FunctionType functionType) const;
 
 	private:
 		ReturnT (ClassT::*function)(TFunctionArguments...) const;

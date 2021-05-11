@@ -1086,15 +1086,16 @@ llvm::Value* LLVMCodeGeneratorHelper::globalVariableToValue(llvm::GlobalVariable
 
 
 llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext* context, const std::string& name, 
-																	   const CatGenericType& objectType, bool generateDestructorCall)
+														const CatGenericType& objectType, bool generateDestructorCall)
 {
 	auto builder = codeGenerator->getBuilder();
-	llvm::Type* llvmObjectType = llvm::ArrayType::get(llvmTypes.charType, objectType.getTypeSize());
 	llvm::BasicBlock* previousInsertBlock = builder->GetInsertBlock();
 	bool currentBlockIsEntryBlock = &context->currentFunction->getEntryBlock() == previousInsertBlock;
 	builder->SetInsertPoint(&context->currentFunction->getEntryBlock(), context->currentFunction->getEntryBlock().begin());
-	llvm::AllocaInst* objectAllocation = builder->CreateAlloca(llvmObjectType, 0, nullptr);
-	objectAllocation->setName(name);
+	
+	llvm::Value* arraySizeVariable = context->helper->createOffsetGlobalValue(context, Tools::append("__sizeOf:", objectType.toString()), objectType.getTypeSize());
+
+	llvm::AllocaInst* objectAllocation = builder->CreateAlloca(llvmTypes.charType, arraySizeVariable, name);
 
 	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, llvmTypes.pointerType);
 

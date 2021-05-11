@@ -36,6 +36,10 @@ namespace jitcat::LLVM
 		//Specifies the layout of structs and the type of name mangling used based on the target machine as well as endianness.
 		std::unique_ptr<const llvm::DataLayout> dataLayout;
 
+		bool strongStackProtection = false;
+		bool explicitEnableTailCalls = false;
+		bool nonLeafFramePointer = false;
+
 		//Target specific options
 		llvm::TargetOptions targetOptions;
 		llvm::SubtargetFeatures subtargetFeatures;

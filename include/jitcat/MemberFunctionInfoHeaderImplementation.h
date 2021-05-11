@@ -72,12 +72,7 @@ namespace jitcat::Reflection
 	{
 		uintptr_t functionPtr = 0;
 		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
-		std::size_t functionPtrSize = sizeof(function);
-		if (functionType != FunctionType::Static
-			&& (functionPtrSize == Configuration::basicMemberFunctionPointerSize 
-			    || functionType == FunctionType::Member
-			    || (functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
-   				    && reinterpret_cast<const uintptr_t*>(&function)[1] == 0)))
+		if (shouldUseStaticFunction(functionType))
 		{
 			memcpy(&functionPtr, &function, sizeof(uintptr_t));
 			callType = MemberFunctionCallType::ThisCall;
@@ -95,16 +90,42 @@ namespace jitcat::Reflection
 	inline std::string MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis, FunctionType functionType) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
-		std::size_t functionPtrSize = sizeof(function);
-		if (functionType != FunctionType::Member
-			&& (functionType == FunctionType::Static
-				|| (functionPtrSize != Configuration::basicMemberFunctionPointerSize
-				 && !(functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
-				 && reinterpret_cast<const uintptr_t*>(&function)[1] == 0))))
+		if (shouldUseStaticFunction(functionType))
 		{
 			baseName = Tools::append(baseName, "_static");
 		}
 		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName, sRetBeforeThis);
+	}
+
+
+	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
+	inline bool MemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::shouldUseStaticFunction(FunctionType functionType) const
+	{
+		//Non-member functions do not have weird function-pointers and can always be called directly
+		if (functionType != FunctionType::Member)
+		{
+			return false;
+		}
+		//Polymorphic classes have virtual functions and a v-table.
+		//To be on the safe size, it's best to call member functions through the static function.
+		if constexpr (std::is_polymorphic_v<ClassT>)
+		{
+			return true;
+		}
+		else
+		{
+			//If the size of the function pointer is larger than an ordinary pointer, we should call it through the static function
+			//An exception is when the function pointer is twice the size, and the extra data is zero.
+			std::size_t functionPtrSize = sizeof(function);
+			if (sizeof(function) != Configuration::basicMemberFunctionPointerSize
+				&& !(functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
+					 && reinterpret_cast<const uintptr_t*>(&function)[1] == 0))
+			{
+				return true;
+			}
+
+			return false;
+		}
 	}
 
 
@@ -180,12 +201,7 @@ namespace jitcat::Reflection
 	{
 		uintptr_t functionPtr = 0;
 		MemberFunctionCallType callType = MemberFunctionCallType::Unknown;
-		std::size_t functionPtrSize = sizeof(function);
-		if (functionType != FunctionType::Static
-			&& (functionPtrSize == Configuration::basicMemberFunctionPointerSize 
-			    || functionType == FunctionType::Member
-			    || (functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
-   				    && reinterpret_cast<const uintptr_t*>(&function)[1] == 0)))
+		if (shouldUseStaticFunction(functionType))
 		{
 			memcpy(&functionPtr, &function, sizeof(uintptr_t));
 			callType = MemberFunctionCallType::ThisCall;
@@ -203,16 +219,42 @@ namespace jitcat::Reflection
 	inline std::string ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::getMangledName(bool sRetBeforeThis, FunctionType functionType) const
 	{
 		std::string baseName = TypeTraits<ClassT>::toGenericType().getObjectType()->getQualifiedTypeName();
-		std::size_t functionPtrSize = sizeof(function);
-		if (functionType != FunctionType::Member
-			&& (functionType == FunctionType::Static
-				|| (functionPtrSize != Configuration::basicMemberFunctionPointerSize
-				 && !(functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
-				 && reinterpret_cast<const uintptr_t*>(&function)[1] == 0))))
+		if (shouldUseStaticFunction(functionType))
 		{
 			baseName = Tools::append(baseName, "_static");
 		}
 		return FunctionNameMangler::getMangledFunctionName(returnType, memberFunctionName, argumentTypes, true, baseName, sRetBeforeThis);
+	}
+
+
+	template<typename ClassT, typename ReturnT, class ...TFunctionArguments>
+	inline bool ConstMemberFunctionInfoWithArgs<ClassT, ReturnT, TFunctionArguments...>::shouldUseStaticFunction(FunctionType functionType) const
+	{
+		//Non-member functions do not have weird function-pointers and can always be called directly
+		if (functionType != FunctionType::Member)
+		{
+			return false;
+		}
+		//Polymorphic classes have virtual functions and a v-table.
+		//To be on the safe size, it's best to call member functions through the static function.
+		if constexpr (std::is_polymorphic_v<ClassT>)
+		{
+			return true;
+		}
+		else
+		{
+			//If the size of the function pointer is larger than an ordinary pointer, we should call it through the static function
+			//An exception is when the function pointer is twice the size, and the extra data is zero.
+			std::size_t functionPtrSize = sizeof(function);
+			if (sizeof(function) != Configuration::basicMemberFunctionPointerSize
+				&& !(functionPtrSize == 2 * Configuration::basicMemberFunctionPointerSize 
+					 && reinterpret_cast<const uintptr_t*>(&function)[1] == 0))
+			{
+				return true;
+			}
+
+			return false;
+		}
 	}
 
 
