@@ -235,7 +235,7 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createPS4Target()
 	llvmOptions->codeModel = llvm::CodeModel::Small;
 	llvmOptions->relocationModel = llvm::Reloc::Model::PIC_;
 
-	llvmOptions->strongStackProtection = true;
+	llvmOptions->strongStackProtection = false;
 	llvmOptions->explicitEnableTailCalls = true;
 	llvmOptions->nonLeafFramePointer = true;
 
