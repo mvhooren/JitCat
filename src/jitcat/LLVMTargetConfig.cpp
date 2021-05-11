@@ -197,9 +197,6 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createXboxOneTarget()
 	llvmOptions->defaultLLVMCallingConvention = llvm::CallingConv::X86_FastCall;
 
 	llvmOptions->targetOptions.UnsafeFPMath = true;
-	llvmOptions->targetOptions.NoInfsFPMath = true;
-	llvmOptions->targetOptions.NoNaNsFPMath = true;
-	llvmOptions->targetOptions.UnsafeFPMath = true;
 	llvmOptions->targetOptions.NoSignedZerosFPMath = true;
 	llvmOptions->targetOptions.ThreadModel = llvm::ThreadModel::POSIX;
 	llvmOptions->targetOptions.DebuggerTuning = llvm::DebuggerKind::Default;
@@ -216,28 +213,31 @@ std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createXboxOneTarget()
 
 std::unique_ptr<LLVMTargetConfig> LLVMTargetConfig::createPS4Target()
 {
-	constexpr bool isWin32 = false;
 	std::unique_ptr<LLVMTargetConfigOptions> llvmOptions = std::make_unique<LLVMTargetConfigOptions>();
 
-	bool sretBeforeThis = !isWin32;
-	bool callerDestroysTemporaryArguments =  !isWin32;
-	bool useThisCall = isWin32;
-	bool enableSymbolSearchWorkaround = isWin32;
+	bool sretBeforeThis = true;
+	bool callerDestroysTemporaryArguments = true;
+	bool useThisCall = false;
+	bool enableSymbolSearchWorkaround = false;
 
 	llvmOptions->targetTripple = "x86_64-scei-ps4";
 	llvmOptions->cpuName = "btver2";
-	llvmOptions->defaultLLVMCallingConvention  = llvm::CallingConv::X86_FastCall;
-	llvmOptions->targetOptions.UnsafeFPMath = true;
+	llvmOptions->defaultLLVMCallingConvention  = llvm::CallingConv::X86_64_SysV;
 	llvmOptions->targetOptions.RelaxELFRelocations = true;
-	llvmOptions->targetOptions.NoInfsFPMath = true;
-	llvmOptions->targetOptions.NoNaNsFPMath = true;
 	llvmOptions->targetOptions.UnsafeFPMath = true;
-	llvmOptions->targetOptions.NoSignedZerosFPMath = true;
+	llvmOptions->targetOptions.NoNaNsFPMath = true;
+	llvmOptions->targetOptions.NoInfsFPMath = true;
+	llvmOptions->targetOptions.NoTrappingFPMath = false;
+	
 	llvmOptions->targetOptions.ThreadModel = llvm::ThreadModel::POSIX;
 	llvmOptions->targetOptions.DebuggerTuning = llvm::DebuggerKind::SCE;
 	llvmOptions->targetOptions.DataSections = true;
 	llvmOptions->codeModel = llvm::CodeModel::Small;
 	llvmOptions->relocationModel = llvm::Reloc::Model::PIC_;
+
+	llvmOptions->strongStackProtection = true;
+	llvmOptions->explicitEnableTailCalls = true;
+	llvmOptions->nonLeafFramePointer = true;
 
 	return std::make_unique<LLVMTargetConfig>(false, sretBeforeThis, useThisCall, callerDestroysTemporaryArguments, 
 											  enableSymbolSearchWorkaround, true, 8, 

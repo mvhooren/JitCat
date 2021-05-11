@@ -242,6 +242,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionFunction(const CatTypedExpr
 	llvm::Function* function = generateFunctionPrototype(name, false, expressionType, {TypeTraits<CatRuntimeContext*>::toGenericType()}, {"RuntimeContext"});
 	
 	function->addFnAttr(llvm::Attribute::UWTable);
+	function->addFnAttr(llvm::Attribute::NoInline);
 	//Now, generate code for the function
 	context->currentFunction = function;
 	
@@ -271,11 +272,20 @@ llvm::Function* LLVMCodeGenerator::generateExpressionAssignFunction(const CatAss
 	//It will always return void.
 	std::vector<llvm::Type*> parameters = {targetConfig->getLLVMTypes().pointerType, helper->toLLVMType(expression->getType())};
 	llvm::FunctionType* functionType = llvm::FunctionType::get(targetConfig->getLLVMTypes().voidType, parameters, false);		
-
 	//Create the function signature. No code is yet associated with the function at this time.
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, name.c_str(), currentModule.get());
+	function->setCallingConv(targetConfig->getOptions().defaultLLVMCallingConvention);
+	
+	if (targetConfig->getOptions().explicitEnableTailCalls)		function->addFnAttr("disable-tail-calls", "false");
+	if (targetConfig->getOptions().nonLeafFramePointer)			function->addFnAttr("frame-pointer", "non-leaf");
+	if (targetConfig->getOptions().strongStackProtection)		
+	{
+		function->addFnAttr(llvm::Attribute::StackProtectStrong);
+		function->addFnAttr("stack-protector-buffer-size", "8");
+	}
 
 	function->addFnAttr(llvm::Attribute::UWTable);
+	function->addFnAttr(llvm::Attribute::NoInline);
 	//Name the parameters
 	llvm::Argument* argIter = function->arg_begin();
 	argIter->setName("RuntimeContext");
@@ -1835,6 +1845,13 @@ llvm::Function* LLVMCodeGenerator::generateFunctionPrototype(const std::string& 
 		currentArg->setName(parameterNames[i]);
 		currentArg++;
 	}
+	if (targetConfig->getOptions().explicitEnableTailCalls)		function->addFnAttr("disable-tail-calls", "false");
+	if (targetConfig->getOptions().nonLeafFramePointer)			function->addFnAttr("frame-pointer", "non-leaf");
+	if (targetConfig->getOptions().strongStackProtection)		
+	{
+		function->addFnAttr(llvm::Attribute::StackProtectStrong);
+		function->addFnAttr("stack-protector-buffer-size", "8");
+	}
 	return function;
 }
 
@@ -1864,6 +1881,11 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {sretArgument, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 			}, context);
 
+		helper->generateBlockDestructors(context);
+		builder->CreateRetVoid();
+	}
+	else if (returnType.isVoidType())
+	{
 		helper->generateBlockDestructors(context);
 		builder->CreateRetVoid();
 	}
