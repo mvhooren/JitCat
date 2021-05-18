@@ -85,7 +85,7 @@ void LLVMPrecompilationContext::precompileExpression(const CatTypedExpression* e
 		const std::string expressionName = ExpressionHelperFunctions::getUniqueExpressionFunctionName(expressionStr, currentTarget->compileContext->catContext, false, expectedType);
 		if (currentTarget->compiledExpressionFunctions.find(expressionName) == currentTarget->compiledExpressionFunctions.end())
 		{
-			llvm::Function* function = currentTarget->codeGenerator->generateExpressionFunction(expression, currentTarget->compileContext.get(), expressionName);
+			llvm::Function* function = currentTarget->codeGenerator->generateExpressionFunction(expression, currentTarget->compileContext.get(), expressionName, expectedType.isValidType());
 			currentTarget->compiledExpressionFunctions.insert(std::make_pair(expressionName, function));
 		}
 	}

@@ -45,6 +45,21 @@ namespace jitcat
 		virtual void resetCompiledFunctionToDefault() override final;
 
 	private:
+		const std::any (ExpressionAny::*getValuePtr)(CatRuntimeContext* runtimeContext);
+
+		const std::any getExecuteVoidValue(CatRuntimeContext* runtimeContext);
+		const std::any getExecuteBoolValue(CatRuntimeContext* runtimeContext);
+		const std::any getExecuteIntValue(CatRuntimeContext* runtimeContext);
+		const std::any getExecuteFloatValue(CatRuntimeContext* runtimeContext);
+		const std::any getExecuteDoubleValue(CatRuntimeContext* runtimeContext);
+		const std::any getExecuteReflectablePtrValue(CatRuntimeContext* runtimeContext);
+		const std::any getExecutePtrPtrValue(CatRuntimeContext* runtimeContext);
+
+		const std::any getExecuteInterpretedValue(CatRuntimeContext* runtimeContext);
+		const std::any getCachedValue(CatRuntimeContext* runtimeContext);
+		const std::any getDefaultValue(CatRuntimeContext* runtimeContext);
+
+	private:
 		std::any cachedValue;
 		uintptr_t nativeFunctionAddress;
 	};

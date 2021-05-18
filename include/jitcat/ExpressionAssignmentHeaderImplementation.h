@@ -127,7 +127,14 @@ inline void ExpressionAssignment<ExpressionT>::compile(CatRuntimeContext* contex
 template<typename ExpressionT>
 inline void ExpressionAssignment<ExpressionT>::handleCompiledFunction(uintptr_t functionAddress)
 {
-	assignValueFunc = reinterpret_cast<void(*)(CatRuntimeContext*, typename TypeTraits<ExpressionT>::functionParameterType)>(functionAddress);
+	if (functionAddress != 0)
+	{
+		assignValueFunc = reinterpret_cast<void(*)(CatRuntimeContext*, typename TypeTraits<ExpressionT>::functionParameterType)>(functionAddress);
+	}
+	else 
+	{
+		assignValueFunc = &ExpressionAssignment<ExpressionT>::defaultAssignFunction;
+	}
 }
 
 

@@ -55,14 +55,16 @@ namespace jitcat
 		virtual void handleCompiledFunction(uintptr_t functionAddress) override final;
 		virtual void resetCompiledFunctionToDefault() override final;
 
+		const ExpressionResultT (Expression<ExpressionResultT>::*getValuePtr)(CatRuntimeContext* runtimeContext);
+		const ExpressionResultT getExecuteInterpretedValue(CatRuntimeContext* runtimeContext);
+		const ExpressionResultT getCachedValue(CatRuntimeContext* runtimeContext);
+		const ExpressionResultT getDefaultValue(CatRuntimeContext* runtimeContext);
+
 	private:
 		CatGenericType getExpectedCatType() const;
 		static inline ExpressionResultT getActualValue(const std::any& catValue);
-		static inline const ExpressionResultT getDefaultValue(CatRuntimeContext*);
 
 	private:
-		const ExpressionResultT (*getValueFunc)(CatRuntimeContext* runtimeContext);
-
 		//If the expression is a constant, then the value is cached for performance;
 		typename TypeTraits<ExpressionResultT>::cachedType cachedValue;
 	};

@@ -13,6 +13,7 @@
 #include "jitcat/CatPrefixOperator.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/CatTypedExpression.h"
+#include "jitcat/Configuration.h"
 #include "jitcat/ExpressionErrorManager.h"
 #include "jitcat/ExpressionHelperFunctions.h"
 #include "jitcat/Document.h"
@@ -339,8 +340,9 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context, const CatGe
 			{
 				//Lookup the symbol for the expression by its unique name.
 				uintptr_t symbolAddress = JitCat::get()->getPrecompiledSymbol(ExpressionHelperFunctions::getUniqueExpressionFunctionName(expression, context, expectAssignable, expectedType));
-				if (symbolAddress != 0)
+				if (symbolAddress != 0 || !Configuration::enableLLVM)
 				{
+					//Expressions are expected to handle the case where symbolAddress == 0 and llvm is not available to JIT-compile the function.
 					handleCompiledFunction(symbolAddress);
 					return;
 				}
@@ -354,7 +356,7 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context, const CatGe
 		codeGenerator = context->getCodeGenerator();
 		if (!expectAssignable)
 		{
- 			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult.getNode<CatTypedExpression>(), expression, expectedType, &llvmCompileContext);
+ 			functionAddress = codeGenerator->generateAndGetFunctionAddress(parseResult.getNode<CatTypedExpression>(), expression, expectedType, &llvmCompileContext, expectedType.isValidType());
 			if (context->getPrecompilationContext() != nullptr)
 			{
 				context->getPrecompilationContext()->precompileExpression(parseResult.getNode<CatTypedExpression>(), expression, expectedType, context);

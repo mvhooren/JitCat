@@ -20,6 +20,7 @@ using namespace jitcat::AST;
 
 
 ExpressionAny::ExpressionAny():
+	getValuePtr(&ExpressionAny::getDefaultValue),
 	nativeFunctionAddress(0)
 {
 }
@@ -27,6 +28,7 @@ ExpressionAny::ExpressionAny():
 
 ExpressionAny::ExpressionAny(const char* expression):
 	ExpressionBase(expression),
+	getValuePtr(&ExpressionAny::getDefaultValue),
 	nativeFunctionAddress(0)
 {
 }
@@ -34,6 +36,7 @@ ExpressionAny::ExpressionAny(const char* expression):
 
 ExpressionAny::ExpressionAny(const std::string& expression):
 	ExpressionBase(expression),
+	getValuePtr(&ExpressionAny::getDefaultValue),
 	nativeFunctionAddress(0)
 {
 }
@@ -41,6 +44,7 @@ ExpressionAny::ExpressionAny(const std::string& expression):
 
 ExpressionAny::ExpressionAny(CatRuntimeContext* compileContext, const std::string& expression):
 	ExpressionBase(compileContext, expression),
+	getValuePtr(&ExpressionAny::getDefaultValue),
 	nativeFunctionAddress(0)
 {
 	compile(compileContext);
@@ -49,48 +53,7 @@ ExpressionAny::ExpressionAny(CatRuntimeContext* compileContext, const std::strin
 
 const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 {
-	if (isConstant)
-	{
-		return cachedValue;
-	}
-	else if (parseResult.astRootNode != nullptr)
-	{
-		if (runtimeContext == nullptr)
-		{
-			runtimeContext = &CatRuntimeContext::getDefaultContext();
-		}
-		if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
-		{
-			if (Configuration::enableLLVM || nativeFunctionAddress != 0)
-			{
-				if		(valueType.isIntType())		return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				else if (valueType.isVoidType())	{reinterpret_cast<void(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext); return std::any();}
-				else if (valueType.isFloatType())	return std::any(reinterpret_cast<float(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				else if (valueType.isDoubleType())	return std::any(reinterpret_cast<double(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				else if (valueType.isBoolType())	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				else if (valueType.isReflectablePointerOrHandle())	return valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				else if (valueType.isPointerToPointerType() && valueType.getPointeeType()->isPointerToReflectableObjectType())
-				{
-					return valueType.getPointeeType()->getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointerPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
-				}
-				else 
-				{
-					assert(false);
-					return std::any();
-				}
-			}
-		}
-		if constexpr (!Configuration::enableLLVM)
-		{
-			std::any result = parseResult.getNode<CatTypedExpression>()->execute(runtimeContext);
-			runtimeContext->clearTemporaries();
-			return result;
-		}
-	}
-	else
-	{
-		return std::any();
-	}
+	return (this->*getValuePtr)(runtimeContext);
 }
 
 
@@ -120,9 +83,21 @@ void ExpressionAny::compile(CatRuntimeContext* context)
 		context = &CatRuntimeContext::getDefaultContext();
 		context->getErrorManager()->clear();
 	}
-	if (parse(context, context->getErrorManager(), this, CatGenericType()) && isConstant)
+	if (parse(context, context->getErrorManager(), this, CatGenericType()))
 	{
-		cachedValue = parseResult.getNode<CatTypedExpression>()->execute(context);
+		if (isConstant)
+		{
+			cachedValue = parseResult.getNode<CatTypedExpression>()->execute(context);
+			getValuePtr = &ExpressionAny::getCachedValue;
+		}
+		else if (!Configuration::enableLLVM && !Configuration::usePreCompiledExpressions)
+		{
+			getValuePtr = &ExpressionAny::getExecuteInterpretedValue;
+		}
+	}
+	else
+	{
+		resetCompiledFunctionToDefault();
 	}
 }
 
@@ -130,10 +105,104 @@ void ExpressionAny::compile(CatRuntimeContext* context)
 void ExpressionAny::handleCompiledFunction(uintptr_t functionAddress)
 {
 	nativeFunctionAddress = functionAddress;
+	if (nativeFunctionAddress == 0)
+	{
+		getValuePtr = &ExpressionAny::getExecuteInterpretedValue;
+	}
+	else
+	{
+		if		(valueType.isIntType())						getValuePtr = &ExpressionAny::getExecuteIntValue;
+		else if (valueType.isVoidType())					getValuePtr = &ExpressionAny::getExecuteVoidValue;
+		else if (valueType.isFloatType())					getValuePtr = &ExpressionAny::getExecuteFloatValue;
+		else if (valueType.isDoubleType())					getValuePtr = &ExpressionAny::getExecuteDoubleValue;
+		else if (valueType.isBoolType())					getValuePtr = &ExpressionAny::getExecuteBoolValue;
+		else if (valueType.isReflectablePointerOrHandle())	getValuePtr = &ExpressionAny::getExecuteReflectablePtrValue;
+		else if (valueType.isPointerToPointerType() && valueType.getPointeeType()->isPointerToReflectableObjectType())
+		{
+			getValuePtr = &ExpressionAny::getExecutePtrPtrValue;
+		}
+		else 
+		{
+			assert(false);
+			getValuePtr = &ExpressionAny::getDefaultValue;
+		}
+	}
 }
 
 
-void jitcat::ExpressionAny::resetCompiledFunctionToDefault()
+void ExpressionAny::resetCompiledFunctionToDefault()
 {
 	nativeFunctionAddress = 0;
+	getValuePtr = &ExpressionAny::getDefaultValue;
+}
+
+
+const std::any jitcat::ExpressionAny::getExecuteVoidValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	reinterpret_cast<void(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext); 
+	return std::any();
+}
+
+
+const std::any jitcat::ExpressionAny::getExecuteBoolValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	return std::any(reinterpret_cast<bool(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+}
+
+
+const std::any jitcat::ExpressionAny::getExecuteIntValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	return std::any(reinterpret_cast<int(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+}
+
+
+const std::any jitcat::ExpressionAny::getExecuteFloatValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	return std::any(reinterpret_cast<float(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+}
+
+
+const std::any jitcat::ExpressionAny::getExecuteDoubleValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	return std::any(reinterpret_cast<double(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+}
+
+
+const std::any jitcat::ExpressionAny::getExecuteReflectablePtrValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	return valueType.getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+}
+
+
+const std::any jitcat::ExpressionAny::getExecutePtrPtrValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	return valueType.getPointeeType()->getPointeeType()->getObjectType()->getTypeCaster()->castFromRawPointerPointer(reinterpret_cast<uintptr_t(*)(CatRuntimeContext*)>(nativeFunctionAddress)(runtimeContext));
+}
+
+
+const std::any ExpressionAny::getExecuteInterpretedValue(CatRuntimeContext* runtimeContext)
+{
+	if (runtimeContext == nullptr)	runtimeContext = &CatRuntimeContext::getDefaultContext();
+	std::any result = parseResult.getNode<CatTypedExpression>()->execute(runtimeContext);
+	runtimeContext->clearTemporaries();
+	return result;
+}
+
+
+const std::any ExpressionAny::getCachedValue(CatRuntimeContext* runtimeContext)
+{
+	return cachedValue;
+}
+
+
+const std::any ExpressionAny::getDefaultValue(CatRuntimeContext* runtimeContext)
+{
+	return std::any();
 }

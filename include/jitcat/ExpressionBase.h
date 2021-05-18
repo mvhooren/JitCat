@@ -40,7 +40,7 @@ namespace jitcat
 		ExpressionBase(CatRuntimeContext* compileContext, const std::string& expression, bool expectAssignable = false);
 		ExpressionBase(const ExpressionBase& other) = delete;
 		virtual ~ExpressionBase();
-
+	
 		//Sets the expression text for this Expression
 		//If compileContext == nullptr, compile needs to be called afterwards to compile the expression text
 		void setExpression(const std::string& expression, CatRuntimeContext* compileContext);

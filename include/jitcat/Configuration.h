@@ -112,7 +112,7 @@ namespace Configuration
 	//Precompiled expressions need to match the ABI version of the jitcat library.
 	//If the version does not match, the precompiled expressions will not be used and
 	//an error will be generated. 
-	static const int jitcatABIVersion = 3;
+	static const int jitcatABIVersion = 4;
 };
 
 } //namespace jitcat

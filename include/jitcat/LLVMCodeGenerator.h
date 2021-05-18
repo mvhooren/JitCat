@@ -52,12 +52,13 @@ namespace jitcat::LLVM
 		//Wraps an expression into a function that returns the expression's computed value.
 		//The function has one parameter, the CatRuntimeContext. 
 		//If the function returns a string, it will have 2 parameters where the first parameter is a pointer to a pre-allocated string. (marked sret)
-		llvm::Function* generateExpressionFunction(const AST::CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
+		llvm::Function* generateExpressionFunction(const AST::CatTypedExpression* expression, LLVMCompileTimeContext* context, const std::string& name, bool generateThisCall);
 
 		llvm::Function* generateExpressionAssignFunction(const AST::CatAssignableExpression* expression, LLVMCompileTimeContext* context, const std::string& name);
 	
 		//Generates a function that returns the value of the expression.
-		intptr_t generateAndGetFunctionAddress(const AST::CatTypedExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, LLVMCompileTimeContext* context);
+		intptr_t generateAndGetFunctionAddress(const AST::CatTypedExpression* expression, const std::string& expressionStr, 
+											   const CatGenericType& expectedType, LLVMCompileTimeContext* context, bool generateThisCall);
 
 		//Generates a function that takes a parameter that will be assigned to the result of the expression. Expression must be of an assignable type (lValue).
 		intptr_t generateAndGetAssignFunctionAddress(const jitcat::AST::CatAssignableExpression* expression, const std::string& expressionStr, const CatGenericType& expectedType, LLVMCompileTimeContext* context);
@@ -126,7 +127,7 @@ namespace jitcat::LLVM
 		llvm::FunctionType* createFunctionType(bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes);
 		llvm::Function* generateFunctionPrototype(const std::string& functionName, bool isThisCall, const CatGenericType& returnType, const std::vector<CatGenericType>& parameterTypes, const std::vector<std::string>& parameterNames);
 		llvm::Function* generateFunctionPrototype(const std::string& functionName, llvm::FunctionType* functionType, bool isThisCall, const CatGenericType& returnType, const std::vector<std::string>& parameterNames);
-		void generateFunctionReturn(const CatGenericType& returnType, llvm::Value* expressionValue, llvm::Function* function, LLVMCompileTimeContext* context);
+		void generateFunctionReturn(const CatGenericType& returnType, llvm::Value* expressionValue, llvm::Function* function, LLVMCompileTimeContext* context, bool hasThisArgument);
 
 		void link(Reflection::CustomTypeInfo* customType);
 
