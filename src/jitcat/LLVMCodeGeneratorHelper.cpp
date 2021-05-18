@@ -325,6 +325,7 @@ llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFuncti
 	std::vector<llvm::Type*> parameters = {callBackType->getPointerTo()};
 	llvm::FunctionType* functionType = llvm::FunctionType::get(functionReturnType, parameters, false);		
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, functionName.c_str(), codeGenerator->getCurrentModule());
+	function->setCallingConv(codeGenerator->targetConfig->getOptions().defaultLLVMCallingConvention);
 
 	llvm::FunctionCallee callee(callBackType, function->getArg(0));
 
@@ -648,6 +649,20 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticPointerVariable(uintptr_t va
 		static_cast<llvm::LoadInst*>(loadedPointer)->setMetadata(llvm::LLVMContext::MD_nonnull, metaData);
 		return loadedPointer;
 	}
+}
+
+
+llvm::Function* jitcat::LLVM::LLVMCodeGeneratorHelper::generateConstIntFunction(int value, const std::string& name)
+{
+	llvm::FunctionType* functionType = llvm::FunctionType::get(llvmTypes.intType, {}, false);		
+	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, name.c_str(), codeGenerator->getCurrentModule());
+	function->setCallingConv(codeGenerator->targetConfig->getOptions().defaultLLVMCallingConvention);
+
+	llvm::BasicBlock::Create(LLVMJit::get().getContext(), "entry", function);
+	auto builder = getBuilder();
+	builder->SetInsertPoint(&function->getEntryBlock());
+	builder->CreateRet(createConstant(value));
+	return codeGenerator->verifyAndOptimizeFunction(function);
 }
 
 

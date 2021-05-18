@@ -93,6 +93,9 @@ namespace jitcat::LLVM
 
 		llvm::Value* generateStaticPointerVariable(uintptr_t valueWhenJitCompiling, LLVMCompileTimeContext* context, const std::string& name);
 
+		//Generates a function that returns a constant integer
+		llvm::Function* generateConstIntFunction(int value, const std::string& name);
+
 	private:
 		llvm::Value* convertToString(llvm::Value* valueToConvert, const CatGenericType& fromType, LLVMCompileTimeContext* context);
 	public:

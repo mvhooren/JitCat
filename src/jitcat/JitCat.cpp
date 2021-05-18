@@ -72,6 +72,13 @@ using namespace jitcat::Tokenizer;
 		stringInitializerCallback("default", 0);
 	}
 
+	extern "C" int _jc_get_jitcat_abi_version();
+
+	extern "C" int _jc_get_jitcat_abi_version_default()
+	{
+		return -1;
+	}
+
 	//Make sure these functions are weakly linked to their default alternatives
 	//Linking in a generated object file will override the weakly linked symbol.
 	//This is MSVC only:
@@ -79,6 +86,7 @@ using namespace jitcat::Tokenizer;
 	#pragma comment(linker, "/alternatename:_jc_enumerate_global_variables=_jc_enumerate_global_variables_default")
 	#pragma comment(linker, "/alternatename:_jc_enumerate_linked_functions=_jc_enumerate_linked_functions_default")
 	#pragma comment(linker, "/alternatename:_jc_initialize_string_pool=_jc_initialize_string_pool_default")
+	#pragma comment(linker, "/alternatename:_jc_get_jitcat_abi_version=_jc_get_jitcat_abi_version_default")
 #elif defined(__clang__)
 	__attribute__((weak)) extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
@@ -102,7 +110,12 @@ using namespace jitcat::Tokenizer;
 	{
 		//Notify the callback that no proper _jc_initialize_string_pool function implementation was found.
 		stringInitializerCallback("default", 0);		
-	}	
+	}
+
+	__attribute__((weak)) extern "C" int _jc_get_jitcat_abi_version_default()
+	{
+		return -1;
+	}
 #else
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t))
 	{
@@ -127,6 +140,11 @@ using namespace jitcat::Tokenizer;
 		//Notify the callback that no proper _jc_initialize_string_pool function implementation was found.
 		stringInitializerCallback("default", 0);		
 	}
+
+	extern "C" int _jc_get_jitcat_abi_version_default()
+	{
+		return -1;
+	}
 #endif
 
 JitCat::JitCat():
@@ -141,23 +159,30 @@ JitCat::JitCat():
 	std::srand((unsigned int)time(nullptr));
 	if constexpr (Configuration::usePreCompiledExpressions)
 	{
-		_jc_initialize_string_pool(&stringPoolInitializationCallback);
-		_jc_enumerate_expressions(&expressionEnumerationCallback);
-		_jc_enumerate_global_variables(&globalVariablesEnumerationCallback);
-		_jc_enumerate_linked_functions(&linkedFunctionsEnumerationCallback);
+		if (_jc_get_jitcat_abi_version() == Configuration::jitcatABIVersion)
+		{
+			_jc_initialize_string_pool(&stringPoolInitializationCallback);
+			_jc_enumerate_expressions(&expressionEnumerationCallback);
+			_jc_enumerate_global_variables(&globalVariablesEnumerationCallback);
+			_jc_enumerate_linked_functions(&linkedFunctionsEnumerationCallback);
 
-		//Link in some of the JitCat std-lib functions that can't be linked in using extern "C".
-		setPrecompiledLinkedFunction("boolToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::boolToString));
-		setPrecompiledLinkedFunction("doubleToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::doubleToString));
-		setPrecompiledLinkedFunction("floatToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::floatToString));
-		setPrecompiledLinkedFunction("intToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToString));
-		setPrecompiledLinkedFunction("uIntToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::uIntToString));
-		setPrecompiledLinkedFunction("int64ToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::int64ToString));
-		setPrecompiledLinkedFunction("uInt64ToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::uInt64ToString));
-		setPrecompiledLinkedFunction("intToPrettyString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToPrettyString));
-		setPrecompiledLinkedFunction("intToFixedLengthString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToFixedLengthString));
-		setPrecompiledLinkedFunction("roundFloatToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::roundFloatToString));
-		setPrecompiledLinkedFunction("roundDoubleToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::roundDoubleToString));
+			//Link in some of the JitCat std-lib functions that can't be linked in using extern "C".
+			setPrecompiledLinkedFunction("boolToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::boolToString));
+			setPrecompiledLinkedFunction("doubleToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::doubleToString));
+			setPrecompiledLinkedFunction("floatToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::floatToString));
+			setPrecompiledLinkedFunction("intToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToString));
+			setPrecompiledLinkedFunction("uIntToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::uIntToString));
+			setPrecompiledLinkedFunction("int64ToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::int64ToString));
+			setPrecompiledLinkedFunction("uInt64ToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::uInt64ToString));
+			setPrecompiledLinkedFunction("intToPrettyString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToPrettyString));
+			setPrecompiledLinkedFunction("intToFixedLengthString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::intToFixedLengthString));
+			setPrecompiledLinkedFunction("roundFloatToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::roundFloatToString));
+			setPrecompiledLinkedFunction("roundDoubleToString", reinterpret_cast<uintptr_t>(&LLVMCatIntrinsics::roundDoubleToString));
+		}
+		else 
+		{
+			std::cout << "Error: Precompiled expressions jitcat abi version mismatch. Precompiled expressions cannot be used. Current version: " << Configuration::jitcatABIVersion << " version of precompiled expressions: " << _jc_get_jitcat_abi_version() << "\n";
+		}
 	}
 }
 

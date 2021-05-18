@@ -73,6 +73,8 @@ namespace jitcat::LLVM
 		//Generates a function that takes a callback to a function that will be called with the value and address of every string in the string pool.
 		//The callback function should then construct a string at the address using the provided value
 		llvm::Function* generateStringPoolInitializationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& stringGlobals);
+		//Generates a function that returns an int with the jitcat ABI version from Configuration.h
+		llvm::Function* generateJitCatABIVersionFunction();
 
 	private:
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);

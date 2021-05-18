@@ -47,6 +47,7 @@ void LLVMPrecompilationContext::finishPrecompilation()
 		iter->codeGenerator->generateGlobalVariablesEnumerationFunction(iter->globalVariables);
 		iter->codeGenerator->generateLinkedFunctionsEnumerationFunction(iter->globalFunctionPointers);
 		iter->codeGenerator->generateStringPoolInitializationFunction(iter->stringPool);
+		iter->codeGenerator->generateJitCatABIVersionFunction();
 		iter->codeGenerator->emitModuleToObjectFile(Tools::append(iter->outputFileNameWithoutExtension, ".", iter->targetConfig->objectFileExtension));
 	}
 }

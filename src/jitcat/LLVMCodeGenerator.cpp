@@ -394,6 +394,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(c
 	std::vector<llvm::Type*> parameters = {callBackType->getPointerTo()};
 	llvm::FunctionType* functionType = llvm::FunctionType::get(functionReturnType, parameters, false);		
 	llvm::Function* function = llvm::Function::Create(functionType, llvm::Function::LinkageTypes::ExternalLinkage, enumerationFunctionName.c_str(), currentModule.get());
+	function->setCallingConv(targetConfig->getOptions().defaultLLVMCallingConvention);
 
 	llvm::FunctionCallee callee(callBackType, function->getArg(0));
 
@@ -427,6 +428,12 @@ llvm::Function* LLVMCodeGenerator::generateLinkedFunctionsEnumerationFunction(co
 llvm::Function* LLVMCodeGenerator::generateStringPoolInitializationFunction(const std::unordered_map<std::string, llvm::GlobalVariable*>& stringGlobals)
 {
 	return helper->generateGlobalVariableEnumerationFunction(stringGlobals, "_jc_initialize_string_pool");
+}
+
+
+llvm::Function* LLVMCodeGenerator::generateJitCatABIVersionFunction()
+{
+	return helper->generateConstIntFunction(Configuration::jitcatABIVersion, "_jc_get_jitcat_abi_version");
 }
 
 
