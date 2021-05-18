@@ -112,7 +112,7 @@ using namespace jitcat::Tokenizer;
 		stringInitializerCallback("default", 0);		
 	}
 
-	__attribute__((weak)) extern "C" int _jc_get_jitcat_abi_version_default()
+	__attribute__((weak)) extern "C" int _jc_get_jitcat_abi_version()
 	{
 		return -1;
 	}
@@ -141,7 +141,7 @@ using namespace jitcat::Tokenizer;
 		stringInitializerCallback("default", 0);		
 	}
 
-	extern "C" int _jc_get_jitcat_abi_version_default()
+	extern "C" int _jc_get_jitcat_abi_version()
 	{
 		return -1;
 	}
