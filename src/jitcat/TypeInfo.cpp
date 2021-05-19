@@ -398,7 +398,6 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 		{
 			std::string catTypeName = memberType.toString();
 			enumerator->addVariable(iter->second->getMemberName(), catTypeName, iter->second->getType().isWritable(), iter->second->getType().isConst());
-			break;
 		}
 		else if (memberType.isPointerToReflectableObjectType() || memberType.isReflectableHandleType())
 		{
