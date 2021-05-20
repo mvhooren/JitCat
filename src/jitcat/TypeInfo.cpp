@@ -394,7 +394,7 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 	for (auto iter = members.begin(); iter != last; ++iter)
 	{
 		const CatGenericType& memberType = iter->second->getType();
-		if (memberType.isBasicType())
+		if (memberType.isBasicType() || memberType.isStringType() || memberType.isEnumType())
 		{
 			std::string catTypeName = memberType.toString();
 			enumerator->addVariable(iter->second->getMemberName(), catTypeName, iter->second->getType().isWritable(), iter->second->getType().isConst());
