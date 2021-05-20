@@ -183,6 +183,26 @@ std::size_t jitcat::Tools::roundUp(std::size_t size, std::size_t multiple)
 	return size + multiple - remainder;
 }
 
+std::string jitcat::Tools::replaceInString(const std::string & original, const std::string & toReplace, const std::string & replacement)
+{
+	std::string workingString = original;
+	typename std::string::size_type lastPosition = std::string::npos;
+	do
+	{
+		typename std::string::size_type position = workingString.find(toReplace);
+		if (position == std::string::npos || position == lastPosition)
+		{
+			return workingString;
+		}
+		else
+		{
+			workingString.replace(position, toReplace.size(), replacement);
+		}
+		lastPosition = position;
+	} while (true);
+
+}
+
 
 std::string jitcat::Tools::toLowerCase(const char* text)
 {

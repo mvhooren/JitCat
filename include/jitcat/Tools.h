@@ -207,6 +207,8 @@ namespace jitcat::Tools
 	uintptr_t alignPointer(uintptr_t pointer, std::size_t alignment);
 	std::size_t roundUp(std::size_t size, std::size_t multiple);
 
+	std::string replaceInString(const std::string& original, const std::string& toReplace, const std::string& replacement);
+	
 	bool equalsWhileIgnoringCase(const std::string& text1, const std::string& text2);
 	bool equalsWhileIgnoringCase(const std::string& text1, const char* text2);
 	bool equalsWhileIgnoringCase(const char* text1, const std::string& text2);
