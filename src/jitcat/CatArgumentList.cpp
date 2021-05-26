@@ -126,6 +126,11 @@ CatTypedExpression* CatArgumentList::releaseArgument(std::size_t argumentIndex)
 	return arguments[argumentIndex].release();
 }
 
+std::unique_ptr<CatTypedExpression>& jitcat::AST::CatArgumentList::getArgumentReference(std::size_t argumentIndex)
+{
+	return arguments[argumentIndex];
+}
+
 
 const CatTypedExpression* CatArgumentList::getArgument(std::size_t argumentIndex) const
 {

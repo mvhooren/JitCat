@@ -403,11 +403,6 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 				{
 					return arguments->executeArgument(1, runtimeContext);
 				}
-				else if (arguments->getArgumentType(2).isScalarType())
-				{
-					std::any argumentValue = arguments->executeArgument(2, runtimeContext);
-					return arguments->getArgumentType(1).convertToType(argumentValue, arguments->getArgumentType(2));
-				}
 				else
 				{
 					return arguments->executeArgument(2, runtimeContext);
@@ -695,8 +690,23 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 			{
 				if (arguments->getArgumentType(0).isBoolType())
 				{
-					if (arguments->getArgumentType(1).compare(arguments->getArgumentType(2), false, false)
-						|| (arguments->getArgumentType(1).isScalarType() && arguments->getArgumentType(2).isScalarType()))
+					if (arguments->getArgumentType(1).isScalarType() && arguments->getArgumentType(2).isScalarType())
+					{
+						returnType = CatGenericType::getWidestBasicType(arguments->getArgumentType(1), arguments->getArgumentType(2));
+						bool typeConversion1 = ASTHelper::doTypeConversion(arguments->getArgumentReference(1), returnType);
+						bool typeConversion2 = ASTHelper::doTypeConversion(arguments->getArgumentReference(2), returnType);
+						if (typeConversion1 || typeConversion2)
+						{
+							bool success = arguments->typeCheck(compiletimeContext, errorManager, errorContext);
+							assert(success);
+							if (!success)
+							{
+								return false;
+							}
+						}
+						
+					}
+					else if (arguments->getArgumentType(1).compare(arguments->getArgumentType(2), false, false))
 					{
 						returnType = arguments->getArgumentType(1);
 					}

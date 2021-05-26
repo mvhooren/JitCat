@@ -37,6 +37,8 @@ namespace jitcat::AST
 		bool getArgumentIsConst(std::size_t argumentIndex) const;
 		Tokenizer::Lexeme getArgumentLexeme(std::size_t argumentIndex) const;
 		CatTypedExpression* releaseArgument(std::size_t argumentIndex);
+		std::unique_ptr<CatTypedExpression>& getArgumentReference(std::size_t argumentIndex);
+
 		const CatTypedExpression* getArgument(std::size_t argumentIndex) const;
 
 		void addArgument(std::unique_ptr<CatTypedExpression> argument);
