@@ -294,6 +294,19 @@ TEST_CASE("Expression any assign tests", "[assign][expressionassign]")
 		ExpressionAssignAny testExpression(&context, "aFloat");
 		checkAnyAssignExpression(reflectedObject.aFloat, 11.0f, false, testExpression, context);
 	}
+	SECTION("Assign reflected float with bad value")
+	{
+		ExpressionAssignAny testExpression(&context, "aFloat");
+		if (doCommonChecks(&testExpression, false, false, false, context))
+		{
+			float originalValue = reflectedObject.aFloat;
+			testExpression.assignValue(&context, &reflectedObject.nestedObject, jitcat::TypeTraits<TestObjects::NestedReflectedObject*>::toGenericType());
+			CHECK(reflectedObject.aFloat == originalValue);
+			testExpression.assignInterpretedValue(&context, &reflectedObject.nestedObject, jitcat::TypeTraits<TestObjects::NestedReflectedObject*>::toGenericType());
+			CHECK(reflectedObject.aFloat == originalValue);
+		}
+
+	}
 	SECTION("Assign reflected double")
 	{
 		ExpressionAssignAny testExpression(&context, "aDouble");

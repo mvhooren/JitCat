@@ -62,7 +62,7 @@ bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::an
 	{
 		if (Configuration::enableLLVM || nativeFunctionAddress != 0)
 		{
-			const CatGenericType myType = getType();
+			const CatGenericType& myType = getType();
 			std::any convertedValue = value;
 			if ((valueType.isBasicType() || valueType.isStringType()) && myType.isValidType())
 			{
@@ -141,10 +141,22 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 		else
 		{
 			std::any target = assignable->executeAssignable(runtimeContext);
-			value = getType().convertToType(value, rValueType);
-			jitcat::AST::ASTHelper::doAssignment(target, value, getType().toWritable().toPointer(), rValueType);
-			runtimeContext->clearTemporaries();
-			return true;
+			const CatGenericType& myType = getType();
+			if ((rValueType.isBasicType() || rValueType.isStringType()) && myType.isValidType())
+			{
+				jitcat::AST::ASTHelper::doAssignment(target, myType.convertToType(value, rValueType), getType().toWritable().toPointer(), myType);
+				return true;
+			}
+			else if (!rValueType.isBasicType() && !rValueType.isStringType() && !myType.compare(rValueType, false, false))
+			{
+				return false;
+			}
+			else
+			{
+				jitcat::AST::ASTHelper::doAssignment(target, value, getType().toWritable().toPointer(), rValueType);
+				runtimeContext->clearTemporaries();
+				return true;
+			}
 		}
 	}
 	return false;
