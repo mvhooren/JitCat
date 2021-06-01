@@ -165,6 +165,12 @@ int CatRuntimeContext::getNumScopes() const
 }
 
 
+int CatRuntimeContext::getNumStaticScopes() const
+{
+	return (int)staticScopes.size();
+}
+
+
 void CatRuntimeContext::removeScope(CatScopeID id)
 {
 	if (id < InvalidScopeID)

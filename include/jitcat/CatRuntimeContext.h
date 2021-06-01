@@ -122,6 +122,8 @@ namespace jitcat
 
 
 		int getNumScopes() const;
+		int getNumStaticScopes() const;
+
 		//When a scope is removed, any expressions that were compiled using this context should be recompiled.
 		void removeScope(CatScopeID id);
 		//If the ScopeID refers to a static scope, any expressions that were compiled using this context should be recompiled.

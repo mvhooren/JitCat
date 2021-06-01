@@ -82,16 +82,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 				{
 					if (i == 0)
 					{
-						//search in the runtime context
-						for (int i = context->getNumScopes() - 1; i >= 0; i--)
-						{
-							TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
-							if (typeInfo != nullptr)
-							{
-								addOptionsFromTypeInfo(typeInfo, results, memberPrefix, expression, completionOffset, expressionTailEnd);
-							}
-						}
-						addOptionsFromBuiltIn(results, memberPrefix, expression, completionOffset);
+						addOptionsFromGlobalScope(memberPrefix, expression, expressionTailEnd, completionOffset, context, results);
 					}
 				}
 				else if (currentMemberInfo != nullptr && currentMemberInfo->getType().isPointerToReflectableObjectType())
@@ -154,16 +145,7 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	}
 	if (!foundValidAutoCompletion && isGlobalScopeAutoCompletable(tokens, startingTokenIndex))
 	{
-		//search in the runtime context
-		for (int i = context->getNumScopes() - 1; i >= 0; i--)
-		{
-			TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
-			if (typeInfo != nullptr)
-			{
-				addOptionsFromTypeInfo(typeInfo, results, "", expression, cursorPosition, expressionTailEnd);
-			}
-		}
-		addOptionsFromBuiltIn(results, "", expression, cursorPosition);
+		addOptionsFromGlobalScope("", expression, expressionTailEnd, cursorPosition, context, results);
 	}
 
 	std::sort(std::begin(results), std::end(results), [](const AutoCompletion::AutoCompletionEntry& a, const AutoCompletion::AutoCompletionEntry& b) 
@@ -276,6 +258,33 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 		std::reverse(subExpressions.begin(), subExpressions.end());
 	}
 	return subExpressions;
+}
+
+
+void AutoCompletion::addOptionsFromGlobalScope(const std::string& prefix, const std::string& expression, const std::string& expressionTailEnd, 
+											   std::size_t completionOffset, CatRuntimeContext* context, std::vector<AutoCompletionEntry>& entries)
+{
+	//search in dynamic scopes of the runtime context
+	for (int i = context->getNumScopes() - 1; i >= 0; i--)
+	{
+		TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
+		if (typeInfo != nullptr)
+		{
+			addOptionsFromTypeInfo(typeInfo, entries, prefix, expression, completionOffset, expressionTailEnd);
+		}
+	}
+
+	//search in static scopes of the runtime context
+	for (int i = InvalidScopeID - context->getNumStaticScopes(); i < InvalidScopeID; ++i)
+	{
+		TypeInfo* typeInfo = context->getScopeType((CatScopeID)i);
+		if (typeInfo != nullptr)
+		{
+			addOptionsFromTypeInfo(typeInfo, entries, prefix, expression, completionOffset, expressionTailEnd);
+		}
+	}
+
+	addOptionsFromBuiltIn(entries, prefix, expression, completionOffset);
 }
 
 

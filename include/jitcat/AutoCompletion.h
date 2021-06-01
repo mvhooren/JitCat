@@ -51,6 +51,9 @@ namespace jitcat
 	private:
 		static std::vector<Tokenizer::IdentifierToken*> getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
 
+		static void AutoCompletion::addOptionsFromGlobalScope(const std::string& prefix, const std::string& expression, const std::string& expressionTailEnd, 
+															  std::size_t completionOffset, CatRuntimeContext* context, std::vector<AutoCompletionEntry>& entries);
+
 		static int findStartTokenIndex(const jitcat::Tokenizer::Document& doc, int cursorPosition, const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens);
 
 		static void addOptionsFromTypeInfo(Reflection::TypeInfo* typeInfo, std::vector<AutoCompletion::AutoCompletionEntry>& results, 
