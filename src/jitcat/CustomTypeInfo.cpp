@@ -558,7 +558,7 @@ void CustomTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targ
 			{
 				continue;
 			}
-			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second)->getOrdinal();
+			unsigned long long memberOffset = static_cast<CustomMemberInfo*>(iter->second)->getOrdinal();
 			iter->second->getType().moveConstruct(&targetBuffer[memberOffset], 
 												  iter->second->getType().getTypeSize(), 
 												  &sourceBuffer[memberOffset], 
@@ -725,7 +725,7 @@ void CustomTypeInfo::createDataCopy(const unsigned char* sourceData, std::size_t
 			{
 				continue;
 			}
-			std::size_t memberOffset = static_cast<CustomMemberInfo*>(iter->second)->getOrdinal();
+			unsigned long long memberOffset = static_cast<CustomMemberInfo*>(iter->second)->getOrdinal();
 			iter->second->getType().copyConstruct(&copyData[memberOffset], iter->second->getType().getTypeSize(), 
 												  &sourceData[memberOffset], iter->second->getType().getTypeSize());
 		}
