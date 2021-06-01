@@ -144,7 +144,8 @@ bool ExpressionAssignAny::assignInterpretedValue(CatRuntimeContext* runtimeConte
 			const CatGenericType& myType = getType();
 			if ((rValueType.isBasicType() || rValueType.isStringType()) && myType.isValidType())
 			{
-				jitcat::AST::ASTHelper::doAssignment(target, myType.convertToType(value, rValueType), getType().toWritable().toPointer(), myType);
+				std::any convertedValue = myType.convertToType(value, rValueType);
+				jitcat::AST::ASTHelper::doAssignment(target, convertedValue, getType().toWritable().toPointer(), myType);
 				return true;
 			}
 			else if (!rValueType.isBasicType() && !rValueType.isStringType() && !myType.compare(rValueType, false, false))
