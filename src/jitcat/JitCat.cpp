@@ -38,7 +38,7 @@ using namespace jitcat::Parser;
 using namespace jitcat::Reflection;
 using namespace jitcat::Tokenizer;
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(_WIN64)
 
 	extern "C" void _jc_enumerate_expressions(void(*enumeratorCallback)(const char*, uintptr_t));
 
