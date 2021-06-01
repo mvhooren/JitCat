@@ -1325,7 +1325,7 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 		}
 	}
 	assert(false);
-	return valueType.createDefault();
+	return createDefault();
 }
 
 
@@ -1463,13 +1463,13 @@ bool CatGenericType::convertToBoolean(std::any value, const CatGenericType& valu
 
 Configuration::CatString CatGenericType::convertToString(std::any value, const CatGenericType& valueType)
 {
-	if (valueType.isStringType())
-	{
-		return *std::any_cast<Configuration::CatString*>(value);
-	}
-	else if (valueType == CatGenericType::stringType)
+	if (valueType.isStringValueType())
 	{
 		return std::any_cast<Configuration::CatString>(value);
+	}
+	else if (valueType.isStringPtrType())
+	{
+		return *std::any_cast<Configuration::CatString*>(value);
 	}
 	else
 	{
