@@ -183,7 +183,8 @@ ArrayTypeInfo& ArrayTypeInfo::createArrayTypeOf(const CatGenericType& arrayItemT
 
 void ArrayTypeInfo::deleteArrayTypeOfType(const CatGenericType& arrayItemType)
 {
-	for (int i = 0; i < arrayTypes.size(); i++)
+	int size = (int)arrayTypes.size();
+	for (int i = 0; i < size; i++)
 	{
 		if (arrayTypes[i]->getArrayItemType().compare(arrayItemType, true, true))
 		{

@@ -53,6 +53,8 @@ namespace jitcat::AST
 		//This inserts a CatIndirectionConversion before the CatTypedExpression contained in uPtr.
 		static bool doIndirectionConversion(std::unique_ptr<CatTypedExpression>& uPtr, const CatGenericType& expectedType, bool allowAddressOf, IndirectionConversionMode& conversionMode);
 
+		static bool makeSameLeastIndirection(std::unique_ptr<CatTypedExpression>& expression1, std::unique_ptr<CatTypedExpression>& expression2);
+
 		static std::any doAssignment(CatAssignableExpression* target, CatTypedExpression* source, CatRuntimeContext* context);
 		static std::any doGetArgument(CatTypedExpression* argument, const CatGenericType& parameterType, CatRuntimeContext* context);
 

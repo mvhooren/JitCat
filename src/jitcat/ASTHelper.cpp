@@ -114,6 +114,48 @@ bool ASTHelper::doIndirectionConversion(std::unique_ptr<CatTypedExpression>& uPt
 }
 
 
+bool ASTHelper::makeSameLeastIndirection(std::unique_ptr<CatTypedExpression>& expression1, std::unique_ptr<CatTypedExpression>& expression2)
+{
+	int expr1Indirection = 0;
+	expression1->getType().removeIndirection(expr1Indirection);
+	int expr2Indirection = 0;
+	expression2->getType().removeIndirection(expr2Indirection);
+	//we should conert the argument with the highest level of indirection to the same level of indirection as the other argument.
+	if (expr1Indirection != expr2Indirection)
+	{
+		if (expr1Indirection > expr2Indirection)
+		{
+			const CatGenericType* expr1Type = &expression1->getType();
+			while (expr1Indirection > expr2Indirection)
+			{
+				expr1Type = expr1Type->getPointeeType();
+				expr1Indirection--;
+			}
+			IndirectionConversionMode mode;
+			if (ASTHelper::doIndirectionConversion(expression1, *expr1Type, false, mode))
+			{
+				return true;
+			}
+		}
+		else
+		{
+			const CatGenericType* expr2Type = &expression2->getType();
+			while (expr2Indirection > expr1Indirection)
+			{
+				expr2Type = expr2Type->getPointeeType();
+				expr2Indirection--;
+			}
+			IndirectionConversionMode mode;
+			if (ASTHelper::doIndirectionConversion(expression2, *expr2Type, false, mode))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
 std::any ASTHelper::doAssignment(CatAssignableExpression* target, CatTypedExpression* source, CatRuntimeContext* context)
 {
 	CatGenericType targetType = target->getAssignableType();

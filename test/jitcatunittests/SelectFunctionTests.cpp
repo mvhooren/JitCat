@@ -101,6 +101,11 @@ TEST_CASE("Builtin functions test: Select", "[builtins][select]" )
 		Expression<std::string> testExpression(&context, "select(text == numberString, text, numberString)");
 		doChecks(std::string("123.4"), false, false, false, testExpression, context);
 	}
+	SECTION("Select_string4")
+	{
+		Expression<std::string> testExpression(&context, "select(text == numberString, \"bla\" + text, numberString)");
+		doChecks(std::string("123.4"), false, false, false, testExpression, context);
+	}
 	SECTION("Select_noarg")
 	{
 		Expression<std::string> testExpression(&context, "select()");

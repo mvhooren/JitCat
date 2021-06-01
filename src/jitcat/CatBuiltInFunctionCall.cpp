@@ -690,6 +690,11 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 			{
 				if (arguments->getArgumentType(0).isBoolType())
 				{
+					if (ASTHelper::makeSameLeastIndirection(arguments->getArgumentReference(1), arguments->getArgumentReference(2))
+						&& !arguments->typeCheck(compiletimeContext, errorManager, errorContext))
+					{
+						return false;
+					}
 					if (arguments->getArgumentType(1).isScalarType() && arguments->getArgumentType(2).isScalarType())
 					{
 						returnType = CatGenericType::getWidestBasicType(arguments->getArgumentType(1), arguments->getArgumentType(2));
