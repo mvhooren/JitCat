@@ -80,7 +80,6 @@ namespace jitcat
 		static std::unordered_map<std::string, uintptr_t>& getPrecompiledLinkedFunctions();
 		static std::unordered_set<std::string>& getGlobalNames();
 
-		bool hasPrecompiledExpressions;
 
 		std::unique_ptr<Tokenizer::CatTokenizer> tokenizer;
 		
@@ -92,6 +91,7 @@ namespace jitcat
 		std::unique_ptr<Parser::SLRParser> statementParser;
 		std::unique_ptr<Parser::SLRParser> fullParser;
 
+		bool hasPrecompiledExpressions;
 	};
 
 } //End namespace jitcat
