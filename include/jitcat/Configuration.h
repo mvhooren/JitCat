@@ -24,9 +24,6 @@ namespace Configuration
 	using CatStringStream	= std::stringstream;
 	using CatStringOStream	= std::ostringstream;
 
-	//Defines whether or not to look for precompiled expressions that have been linked into the program.
-	static constexpr bool usePreCompiledExpressions = false;
-
 	//Determines the ordering of the 'this' argument and the 'sret' argument in a member function.
 	//Sret is used when a function returns a structure by value. Om windows/msvc a class member funtion's
 	//first argument will be the 'this' pointer and the second argument will be the sret pointer if applicable.

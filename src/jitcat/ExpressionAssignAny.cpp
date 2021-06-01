@@ -58,7 +58,7 @@ ExpressionAssignAny::ExpressionAssignAny(CatRuntimeContext* compileContext, cons
 
 bool ExpressionAssignAny::assignValue(CatRuntimeContext* runtimeContext, std::any value, const CatGenericType& valueType)
 {
-	if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
+	if (Configuration::enableLLVM || JitCat::get()->getHasPrecompiledExpression())
 	{
 		if (Configuration::enableLLVM || nativeFunctionAddress != 0)
 		{

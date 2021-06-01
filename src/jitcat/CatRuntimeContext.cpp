@@ -560,7 +560,7 @@ CatScopeID CatRuntimeContext::createStaticScope(unsigned char* scopeObject, Type
 {
 	Scope* scope = new Scope(type, scopeObject, true, staticScopeUniqueName);
 	staticScopes.emplace_back(scope);
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
 		JitCat::get()->setPrecompiledGlobalVariable(staticScopeUniqueName, scopeObject);
 	}

@@ -332,7 +332,7 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context, const CatGe
 {
 	if (!isConstant)
 	{
-		if constexpr (Configuration::usePreCompiledExpressions)
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
 			//Can't use precompiled expressions if there is a precompilation context 
 			//because the expression would not be pre-compiled.

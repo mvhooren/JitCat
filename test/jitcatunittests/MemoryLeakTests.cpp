@@ -53,13 +53,13 @@ TEST_CASE("Basic memory leak test", "[memory]" )
 //Tests memory leaks in catlib code.
 TEST_CASE("CatLib memory leak tests", "[catlib][memory]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{

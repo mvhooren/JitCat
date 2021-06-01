@@ -9,6 +9,7 @@
 #include "jitcat/CatLib.h"
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Configuration.h"
+#include "jitcat/JitCat.h"
 #include "jitcat/TypeInfo.h"
 #include "PrecompilationTest.h"
 #include "TestHelperFunctions.h"
@@ -22,13 +23,13 @@ using namespace TestObjects;
 //Tests simple variable initialization and access.
 TEST_CASE("CatLib basic tests", "[catlib]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -137,13 +138,13 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 //Tests overloaded funcion functionality.
 TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -224,13 +225,13 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 //Tests local variable functionality.
 TEST_CASE("CatLib local variable tests", "[catlib][locals]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -300,13 +301,13 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 //Tests if-statement functionality.
 TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -494,13 +495,13 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 //Tests for-loop functionality.
 TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -634,13 +635,13 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 
 TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -702,13 +703,13 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 
 TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -790,13 +791,13 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 
 TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -887,13 +888,13 @@ TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" )
 
 TEST_CASE("CatLib arrays", "[catlib][arrays]" ) 
 {
-	bool enableTest = !Configuration::usePreCompiledExpressions && Precompilation::precompContext == nullptr;
+	bool enableTest = !JitCat::get()->getHasPrecompiledExpression() && Precompilation::precompContext == nullptr;
 
 	if (!enableTest)
 	{
-		if (Configuration::usePreCompiledExpressions )
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because Configuration::usePreCompiledExpressions is enabled and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{

@@ -62,7 +62,7 @@ StaticClassPointerMemberInfo::StaticClassPointerMemberInfo(const std::string& me
 	StaticMemberInfo(memberName, type, parentTypeName), 
 	memberPointer(memberPointer)
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
 		JitCat::get()->setPrecompiledGlobalVariable(getStaticMemberPointerVariableName(), reinterpret_cast<uintptr_t>(memberPointer));
 	}
@@ -117,7 +117,7 @@ StaticClassHandleMemberInfo::StaticClassHandleMemberInfo(const std::string& memb
 			StaticMemberInfo(memberName, type, parentTypeName), 
 			memberPointer(memberPointer) 
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
 		JitCat::get()->setPrecompiledGlobalVariable(getStaticMemberPointerVariableName(), reinterpret_cast<uintptr_t>(memberPointer));
 	}
@@ -176,7 +176,7 @@ StaticClassObjectMemberInfo::StaticClassObjectMemberInfo(const std::string& memb
 			StaticMemberInfo(memberName, type, parentTypeName),
 			memberPointer(memberPointer) 
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
 		JitCat::get()->setPrecompiledGlobalVariable(getStaticMemberPointerVariableName(), reinterpret_cast<uintptr_t>(memberPointer));
 	}

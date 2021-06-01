@@ -35,7 +35,7 @@ namespace jitcat::Reflection
 		//To silence unused variable warnings.
 		(void)dummy;
 		//Link the function to the pre-compiled expressions
-		if constexpr (Configuration::usePreCompiledExpressions)
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Auto), getFunctionAddress(FunctionType::Auto).functionAddress);
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Static), getFunctionAddress(FunctionType::Static).functionAddress);
@@ -164,7 +164,7 @@ namespace jitcat::Reflection
 		//To silence unused variable warnings.
 		(void)dummy;
 		//Link the function to the pre-compiled expressions
-		if constexpr (Configuration::usePreCompiledExpressions)
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Auto), getFunctionAddress(FunctionType::Auto).functionAddress);
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Static), getFunctionAddress(FunctionType::Static).functionAddress);
@@ -292,7 +292,7 @@ namespace jitcat::Reflection
 		//To silence unused variable warnings.
 		(void)dummy;
 		//Link the function to the pre-compiled expressions
-		if constexpr (Configuration::usePreCompiledExpressions)
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledName(Configuration::sretBeforeThisForCurrentProcess, FunctionType::Auto), getFunctionAddress(FunctionType::Auto).functionAddress);
 		}

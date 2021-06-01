@@ -64,7 +64,7 @@ inline bool ExpressionAssignment<ExpressionT>::assignValue(CatRuntimeContext* ru
 	{
 		runtimeContext = &CatRuntimeContext::getDefaultContext();
 	}
-	if constexpr (Configuration::enableLLVM || Configuration::usePreCompiledExpressions)
+	if (Configuration::enableLLVM || JitCat::get()->getHasPrecompiledExpression())
 	{
 		if (Configuration::enableLLVM || assignValueFunc != &defaultAssignFunction)
 		{

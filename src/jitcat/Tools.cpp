@@ -518,12 +518,12 @@ std::size_t jitcat::Tools::hashCombine(std::size_t firstHash, std::size_t second
 {
 	if constexpr (sizeof(std::size_t) == 8)
 	{
-		const std::size_t kMul = 0x9ddfea08eb382d69ULL;
-		std::size_t a = (firstHash ^ secondHash) * kMul;
+		const unsigned long long kMul = 0x9ddfea08eb382d69ULL;
+		unsigned long long a = (firstHash ^ secondHash) * kMul;
 		a ^= (a >> 47);
-		std::size_t b = (secondHash ^ a) * kMul;
+		unsigned long long b = (secondHash ^ a) * kMul;
 		b ^= (b >> 47);
-		secondHash = b * kMul;
+		secondHash = (std::size_t)(b * kMul);
 		return secondHash;
 	}
 	else

@@ -32,7 +32,7 @@ TypeInfo::TypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<T
 	parentType(nullptr),
 	typeSize(typeSize)
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
 		std::string typeNameGlobal = Tools::append("_TypeInfo:", getTypeName());
 		JitCat::get()->setPrecompiledGlobalVariable(typeNameGlobal, reinterpret_cast<uintptr_t>(this));

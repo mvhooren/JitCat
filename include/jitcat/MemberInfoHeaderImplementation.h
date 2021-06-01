@@ -52,9 +52,9 @@ inline ClassPointerMemberInfo<BaseT, ClassT>::ClassPointerMemberInfo(const std::
 	TypeMemberInfo(memberName, type), 
 	memberPointer(memberPointer)
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
-		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), getMemberPointerOffset());
+		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), (uintptr_t)getMemberPointerOffset());
 	}
 }
 
@@ -149,9 +149,9 @@ inline ClassObjectMemberInfo<BaseT, ClassT>::ClassObjectMemberInfo(const std::st
 	TypeMemberInfo(memberName, type), 
 	memberPointer(memberPointer) 
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
-		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), getOffset(memberPointer));
+		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), (uintptr_t)getOffset(memberPointer));
 	}
 }
 
@@ -215,7 +215,7 @@ inline ClassUniquePtrMemberInfo<BaseT, ClassT>::ClassUniquePtrMemberInfo(const s
 	TypeMemberInfo(memberName, type), 
 	memberPointer(memberPointer)
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
 		uintptr_t staticPointerGetAddress = reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer);
 		JitCat::get()->setPrecompiledLinkedFunction(getMangledGetPointerName(), staticPointerGetAddress);
@@ -311,9 +311,9 @@ inline BasicTypeMemberInfo<BaseT, BasicT>::BasicTypeMemberInfo(const std::string
 	TypeMemberInfo(memberName, type),
 	memberPointer(memberPointer)
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
-		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), getMemberPointerOffset());
+		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetName(), (uintptr_t)getMemberPointerOffset());
 	}
 }
 

@@ -83,7 +83,7 @@ namespace jitcat
 				}
 				getValuePtr = &Expression<ExpressionResultT>::getCachedValue;
 			}
-			else if (!Configuration::enableLLVM && !Configuration::usePreCompiledExpressions)
+			else if (!Configuration::enableLLVM && !JitCat::get()->getHasPrecompiledExpression())
 			{
 				getValuePtr = &Expression<ExpressionResultT>::getExecuteInterpretedValue;
 			}

@@ -30,7 +30,7 @@ namespace jitcat::Reflection
 		StaticMemberInfo(memberName, type, parentTypeName), 
 		memberPointer(memberPointer)
 	{
-		if constexpr (Configuration::usePreCompiledExpressions)
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
 			uintptr_t staticGetFunctionAddress = reinterpret_cast<uintptr_t>(&StaticClassUniquePtrMemberInfo<ClassT>::getPointer);
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledGetPointerName(), staticGetFunctionAddress);
@@ -98,7 +98,7 @@ namespace jitcat::Reflection
 		StaticMemberInfo(memberName, type, parentTypeName), 
 		memberPointer(memberPointer)
 	{
-		if constexpr (Configuration::usePreCompiledExpressions)
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
 			JitCat::get()->setPrecompiledGlobalVariable(getStaticMemberPointerVariableName(), reinterpret_cast<uintptr_t>(memberPointer));
 		}

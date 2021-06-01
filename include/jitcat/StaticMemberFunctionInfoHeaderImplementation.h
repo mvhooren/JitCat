@@ -33,7 +33,7 @@ namespace jitcat::Reflection
 		//To silence unused variable warnings.
 		(void)dummy;
 		//Link the function to the pre-compiled expressions
-		if constexpr (Configuration::usePreCompiledExpressions)
+		if (JitCat::get()->getHasPrecompiledExpression())
 		{
 			JitCat::get()->setPrecompiledLinkedFunction(getMangledFunctionName(Configuration::sretBeforeThisForCurrentProcess), getFunctionAddress());
 		}

@@ -25,7 +25,7 @@ CustomMemberInfo::CustomMemberInfo(const std::string& memberName, std::size_t me
 	parentTypeName(parentTypeName),
 	memberOffset(memberOffset)
 {
-	if constexpr (Configuration::usePreCompiledExpressions)
+	if (JitCat::get()->getHasPrecompiledExpression())
 	{
 		JitCat::get()->setPrecompiledGlobalVariable(getMemberOffsetVariableName(), memberOffset);
 	}

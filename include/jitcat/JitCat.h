@@ -65,6 +65,8 @@ namespace jitcat
 		//null values will be printed to std::out.
 		bool verifyLinkage();
 
+		bool getHasPrecompiledExpression() const;
+
 	private:
 		static void expressionEnumerationCallback(const char* name, uintptr_t address);
 		static void globalVariablesEnumerationCallback(const char* name, uintptr_t address);
@@ -77,6 +79,8 @@ namespace jitcat
 		static std::unordered_map<std::string_view, uintptr_t>& getPrecompiledGlobalVariables();
 		static std::unordered_map<std::string, uintptr_t>& getPrecompiledLinkedFunctions();
 		static std::unordered_set<std::string>& getGlobalNames();
+
+		bool hasPrecompiledExpressions;
 
 		std::unique_ptr<Tokenizer::CatTokenizer> tokenizer;
 		
