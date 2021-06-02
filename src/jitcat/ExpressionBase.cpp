@@ -139,6 +139,11 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 		context = &CatRuntimeContext::getDefaultContext();
 		context->getErrorManager()->clear();
 	}
+	//If this expressions is compiled multiple times, we need to clear any errors that were previously generated.
+	if (errorManagerHandle.getIsValid())
+	{
+		reinterpret_cast<ExpressionErrorManager*>(errorManagerHandle.get())->errorSourceDeleted(this);
+	}
 	errorManagerHandle.setReflectable(reinterpret_cast<unsigned char*>(errorManager), TypeRegistry::get()->registerType<ExpressionErrorManager>());
 
 	isConstant = false;
