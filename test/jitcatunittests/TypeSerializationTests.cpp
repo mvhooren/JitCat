@@ -24,7 +24,7 @@ using namespace jitcat::Reflection;
 using namespace TestObjects;
 
 
-TEST_CASE("Type Serialization Tests", "[serialization]" ) 
+TEST_CASE("Type Serialization Tests", "[serialization][.]" ) 
 {
 	//clear the type registry
 	//TypeRegistry::get()->recreate();
