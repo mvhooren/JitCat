@@ -128,6 +128,7 @@ const char* ExpressionErrorManager::getTypeName()
 void ExpressionErrorManager::deleteErrorsFromSource(void* errorSource)
 {
 	errors.erase(errorSource);
+	errorsRevision++;
 }
 
 
