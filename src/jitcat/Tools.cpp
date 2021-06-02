@@ -183,7 +183,8 @@ std::size_t jitcat::Tools::roundUp(std::size_t size, std::size_t multiple)
 	return size + multiple - remainder;
 }
 
-std::string jitcat::Tools::replaceInString(const std::string & original, const std::string & toReplace, const std::string & replacement)
+
+std::string jitcat::Tools::replaceInString(const std::string& original, const std::string& toReplace, const std::string& replacement)
 {
 	std::string workingString = original;
 	typename std::string::size_type lastPosition = std::string::npos;
@@ -201,6 +202,69 @@ std::string jitcat::Tools::replaceInString(const std::string & original, const s
 		lastPosition = position;
 	} while (true);
 
+}
+
+
+std::string jitcat::Tools::toXMLCompatible(const std::string& text)
+{
+	std::string escaped = text;
+	for (std::size_t i = 0; i < escaped.size(); ++i)
+	{
+		switch (escaped[i])
+		{
+			case '>':	escaped.replace(i, 1, "&gt;"); i += 3; break;
+			case '<':	escaped.replace(i, 1, "&lt;"); i += 3; break;
+			case '&':	escaped.replace(i, 1, "&amp;"); i += 4; break;
+			case '"':	escaped.replace(i, 1, "&quot;"); i += 5; break;
+			case '\'':	escaped.replace(i, 1, "&apos;"); i += 5; break;
+			default: continue;
+		}
+	}
+	return escaped;
+}
+
+
+std::string jitcat::Tools::fromXMLCompatible(const std::string& text)
+{
+	std::ostringstream unescaped;
+	for (std::size_t i = 0; i < text.size(); ++i)
+	{
+		if (text[i] == '&')
+		{
+			int textSizeRemaining = (int)text.size() - (int)i;
+			if (textSizeRemaining >= 4)
+			{
+				if (text[i + 2] == 't' && text[i + 3] == ';')
+				{
+					if (text[i + 1] == 'g')
+					{
+						unescaped << ">"; i += 3; continue;
+					}
+					else if (text[i + 1] == 'l')
+					{
+						unescaped << "<"; i += 3; continue;
+					}
+				}
+				else if (textSizeRemaining >= 5 && text[i + 4] == ';' && text[i + 1] == 'a' && text[i + 2] == 'm' && text[i + 3] == 'p')
+				{
+					unescaped << "&"; i += 4; continue;
+				}
+				else if (textSizeRemaining >= 6 && text[i + 5] == ';' && text[i + 3] == 'o')
+				{
+					if (text[i + 1] == 'q' && text[i + 2] == 'u' && text[i + 4] == 't')
+					{
+						unescaped << "\""; i += 5; continue;
+					}
+					else if (text[i + 1] == 'a' && text[i + 2] == 'p' && text[i + 4] == 's')
+					{
+						unescaped << "\""; i += 5; continue;
+					}
+				}
+			}
+		}
+		unescaped << text[i];
+	}
+	return unescaped.str();
 }
 
 

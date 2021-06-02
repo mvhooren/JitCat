@@ -1482,6 +1482,8 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 {
 	SpecificType specificType = SpecificType::None;
 	BasicType basicType = BasicType::None;
+	TypeOwnershipSemantics ownership = TypeOwnershipSemantics::Value;
+	CatGenericType pointee;
 	std::string objectTypeName = "";
 	std::string containerItemTypeName = "";
 	bool writable = false;
@@ -1497,13 +1499,17 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 			{
 				specificType = toSpecificType(contents.c_str());
 			}
-			else if (tagName == "BasicType")
+			else if (tagName == "BasicType" || tagName == "UnderlyingType")
 			{
 				basicType = toBasicType(contents.c_str());
 			}
-			else if (tagName == "ObjectTypeName")
+			else if (tagName == "ObjectTypeName" || tagName == "EnumTypeName")
 			{
-				objectTypeName = contents;
+				objectTypeName = Tools::fromXMLCompatible(contents);
+			}
+			else if (tagName == "Ownership")
+			{
+				ownership = toOwnership(contents.c_str());
 			}
 			else
 			{
@@ -1525,6 +1531,10 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 				return CatGenericType::unknownType;
 			}
 		}
+		else if (tagType == XMLLineType::OpenTag && tagName == "PointeeType")
+		{
+			pointee = CatGenericType::readFromXML(xmlFile, "PointeeType", typeInfos);
+		}
 		else if (tagType == XMLLineType::CloseTag && tagName == closingTag)
 		{
 			switch (specificType)
@@ -1543,14 +1553,39 @@ CatGenericType CatGenericType::readFromXML(std::ifstream& xmlFile, const std::st
 					if (objectTypeName != "")
 					{
 						TypeInfo* objectType = XMLHelper::findOrCreateTypeInfo(objectTypeName, typeInfos);
-						//QQQ store and load ownership semantics
-						return CatGenericType(objectType, TypeOwnershipSemantics::Weak, writable, constant);
+						return CatGenericType(objectType, writable, constant);
 					}
 					else
 					{
 						return CatGenericType::unknownType;
 					}
 					break;
+				case SpecificType::Pointer:
+				{
+					if (pointee.isValidType())
+					{
+						return CatGenericType(pointee, ownership, false, writable, constant);
+					}
+					else
+					{
+						return CatGenericType::unknownType;
+					}
+					break;
+				}
+				case SpecificType::Enum:
+				{
+					if (objectTypeName != "")
+					{
+						TypeInfo* objectType = XMLHelper::findOrCreateTypeInfo(objectTypeName, typeInfos);
+						CatGenericType underlyingType(basicType, writable, constant);
+						return CatGenericType(underlyingType, objectType, writable, constant);
+					}
+					else
+					{
+						return CatGenericType::unknownType;
+					}
+					break;
+				}
 				case SpecificType::None:
 					return CatGenericType();
 				default: 
@@ -1575,15 +1610,34 @@ void CatGenericType::writeToXML(std::ofstream& xmlFile, const char* linePrefixCh
 	{
 		xmlFile << linePrefixCharacters << "<writable/>\n";
 	}
+	if (ownershipSemantics != TypeOwnershipSemantics::Value)
+	{
+		xmlFile << linePrefixCharacters << "<Ownership>" << toString(ownershipSemantics) << "</Ownership>\n";		
+	}
 	if (isBasicType() || isVoidType())
 	{
-		xmlFile << linePrefixCharacters << "<Type>BasicType</Type>\n";		
-		xmlFile << linePrefixCharacters << "<BasicType>" << toString(basicType) << "</BasicType>\n";		
+		xmlFile << linePrefixCharacters << "<Type>basic</Type>\n";		
+		xmlFile << linePrefixCharacters << "<BasicType>" << toString(basicType) << "</BasicType>\n";	
+	}
+	else if (specificType == SpecificType::Pointer
+		     || specificType == SpecificType::ReflectableHandle)
+	{
+		xmlFile << linePrefixCharacters << "<Type>pointer</Type>\n";
+		xmlFile << linePrefixCharacters << "<PointeeType>\n";
+		std::string prefix = Tools::append("\t", linePrefixCharacters);
+		pointeeType->writeToXML(xmlFile, prefix.c_str());
+		xmlFile << linePrefixCharacters << "</PointeeType>\n";
+	}
+	else if (specificType == SpecificType::Enum)
+	{
+		xmlFile << linePrefixCharacters << "<Type>enum</Type>\n";		
+		xmlFile << linePrefixCharacters << "<UnderlyingType>" << toString(basicType) << "</UnderlyingType>\n";
+		xmlFile << linePrefixCharacters << "<EnumTypeName>" << Tools::toXMLCompatible(getObjectTypeName()) << "</EnumTypeName>\n";		
 	}
 	else if (isReflectableObjectType())
 	{
-		xmlFile << linePrefixCharacters << "<Type>ObjectType</Type>\n";		
-		xmlFile << linePrefixCharacters << "<ObjectTypeName>" << getObjectTypeName() << "</ObjectTypeName>\n";		
+		xmlFile << linePrefixCharacters << "<Type>object</Type>\n";		
+		xmlFile << linePrefixCharacters << "<ObjectTypeName>" << Tools::toXMLCompatible(getObjectTypeName()) << "</ObjectTypeName>\n";		
 	}
 	else
 	{
@@ -2463,7 +2517,7 @@ const char* CatGenericType::toString(SpecificType type)
 }
 
 
-CatGenericType::SpecificType CatGenericType::toSpecificType(const char * value)
+CatGenericType::SpecificType CatGenericType::toSpecificType(const char* value)
 {
 	std::string str(value);
 	std::size_t length = str.length();
@@ -2479,6 +2533,39 @@ CatGenericType::SpecificType CatGenericType::toSpecificType(const char * value)
 		}
 	}
 	return SpecificType::None;
+}
+
+
+const char* CatGenericType::toString(Reflection::TypeOwnershipSemantics ownership)
+{
+	switch (ownership)
+	{
+		case TypeOwnershipSemantics::Owned:		return "owned";
+		case TypeOwnershipSemantics::Shared:	return "shared";
+		case TypeOwnershipSemantics::Value:		return "value";
+		case TypeOwnershipSemantics::Weak:		return "weak";
+		default:
+		case TypeOwnershipSemantics::None:		return "none";
+	}
+}
+
+
+TypeOwnershipSemantics CatGenericType::toOwnership(const char* value)
+{
+	std::string str(value);
+	std::size_t length = str.length();
+	for (std::size_t i = 0; i < length; i++)
+	{
+		str[i] = std::tolower(str[i], Configuration::localeForStringConversions);
+	}
+	for (int i = 0; i < (int)TypeOwnershipSemantics::Count; i++)
+	{
+		if (str == toString((TypeOwnershipSemantics)i))
+		{
+			return (TypeOwnershipSemantics)i;
+		}
+	}
+	return TypeOwnershipSemantics::None;
 }
 
 

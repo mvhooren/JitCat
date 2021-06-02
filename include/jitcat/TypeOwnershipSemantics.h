@@ -15,7 +15,8 @@ namespace jitcat::Reflection
 		Value,
 		Owned,
 		Shared,
-		Weak
+		Weak,
+		Count
 	};
 
 }

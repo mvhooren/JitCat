@@ -209,6 +209,9 @@ namespace jitcat::Tools
 
 	std::string replaceInString(const std::string& original, const std::string& toReplace, const std::string& replacement);
 	
+	std::string toXMLCompatible(const std::string& text);
+	std::string fromXMLCompatible(const std::string& text);
+
 	bool equalsWhileIgnoringCase(const std::string& text1, const std::string& text2);
 	bool equalsWhileIgnoringCase(const std::string& text1, const char* text2);
 	bool equalsWhileIgnoringCase(const char* text1, const std::string& text2);

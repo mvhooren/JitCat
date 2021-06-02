@@ -160,7 +160,7 @@ bool TypeRegistry::loadRegistryFromXML(const std::string& filepath)
 
 						if (tagType == XMLLineType::OpenCloseWithContent && tagName == "Name" && contents != "" && currentTypeInfo == nullptr)
 						{
-							currentTypeInfo = XMLHelper::findOrCreateTypeInfo(contents, typeInfos);
+							currentTypeInfo = XMLHelper::findOrCreateTypeInfo(Tools::fromXMLCompatible(contents), typeInfos);
 						}
 						else if (currentTypeInfo != nullptr && tagType == XMLLineType::OpenTag)
 						{
@@ -247,7 +247,7 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 		{
 			xmlFile << "\t\t<custom/>\n";
 		}*/
-		xmlFile << "\t\t<Name>" << iter.second->getTypeName() << "</Name>\n";
+		xmlFile << "\t\t<Name>" << Tools::toXMLCompatible(iter.second->getTypeName()) << "</Name>\n";
 		if (iter.second->getMembers().size() > 0)
 		{
 			xmlFile << "\t\t<Members>\n";
@@ -268,7 +268,7 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 			for (auto& member : iter.second->getMemberFunctions())
 			{
 				xmlFile << "\t\t\t<MemberFunction>\n";
-				xmlFile << "\t\t\t\t<Name>" << member.second->getMemberFunctionName() << "</Name>\n";		
+				xmlFile << "\t\t\t\t<Name>" << Tools::toXMLCompatible(member.second->getMemberFunctionName()) << "</Name>\n";		
 				xmlFile << "\t\t\t\t<ReturnType>\n";
 				member.second->getReturnType().writeToXML(xmlFile, "\t\t\t\t\t");
 				xmlFile << "\t\t\t\t</ReturnType>\n";

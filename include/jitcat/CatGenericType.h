@@ -242,6 +242,8 @@ namespace jitcat
 		static BasicType getWidestType(BasicType lType, BasicType rType);
 		static const char* toString(SpecificType type);
 		static SpecificType toSpecificType(const char* value);
+		static const char* toString(Reflection::TypeOwnershipSemantics ownership);
+		static Reflection::TypeOwnershipSemantics toOwnership(const char* value);
 		static const CatGenericType& getBasicType(BasicType type);
 
 	public:

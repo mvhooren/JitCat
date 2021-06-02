@@ -52,6 +52,10 @@ set(Source_Helper
 	TestVector4.h
 )
 
+set(Source_TypeSerializationTests
+	TypeSerializationTests.cpp
+)
+
 set(Source_CatLibTests
 	CatLibTests.cpp
 )
@@ -68,6 +72,7 @@ set(Source_Root
 source_group(BuiltInFunctionTests FILES	${Source_BuiltInFunctionTests})
 source_group(GeneralTests FILES	${Source_GeneralTests})
 source_group(Helper FILES	${Source_Helper})
+source_group(TypeSerializationTests FILES ${Source_TypeSerializationTests})
 source_group(CatLibTests FILES ${Source_CatLibTests})
 source_group(RegressionTests FILES	${Source_RegressionTests})
 source_group("" FILES ${Source_Root})
@@ -76,6 +81,7 @@ add_executable(JitCatUnitTests
 	${Source_BuiltInFunctionTests}
 	${Source_GeneralTests}
 	${Source_Helper}
+	${Source_TypeSerializationTests}
 	${Source_CatLibTests}
 	${Source_RegressionTests}
 	${Source_Root}
