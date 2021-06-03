@@ -40,6 +40,7 @@ namespace jitcat::Reflection
 		
 		MemberVisibility getVisibility() const;
 
+		void addParameter(const CatGenericType& type);
 		template<typename ArgumentT>
 		inline void addParameterTypeInfo();
 

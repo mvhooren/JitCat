@@ -115,20 +115,69 @@ bool XMLHelper::readMember(std::ifstream& xmlFile, TypeInfo* currentTypeInfo, st
 }
 
 
-bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos)
+bool XMLHelper::readStaticMember(std::ifstream& xmlFile, TypeInfo* currentTypeInfo, std::map<std::string, TypeInfo*>& typeInfos, const char* parentTypeName)
 {
-	MemberFunctionInfo* functionInfo = nullptr;
+	std::string currentMemberName = "";
+	CatGenericType currentMemberType;
+	XMLLineType tagType;
+	std::string contents;
+	std::string tagName = XMLHelper::readXMLLine(xmlFile, tagType, contents);
+	if (tagType == XMLLineType::OpenCloseWithContent)
+	{
+		if (tagName == "Name")
+		{
+			currentMemberName = contents;
+			currentMemberType = CatGenericType::readFromXML(xmlFile, "StaticMember", typeInfos);
+			if (currentMemberName != "" && currentMemberType.isValidType())
+			{
+				currentTypeInfo->addDeserializedStaticMember(new StaticMemberInfo(currentMemberName, currentMemberType, parentTypeName));
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+	return false;
+
+}
+
+
+bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos, bool isStatic)
+{
 	std::string functionName = "";
+	CatGenericType returnType;
+	std::vector<CatGenericType> argumentTypes;
 	while (true)
 	{
 		XMLLineType tagType;
 		std::string contents;
 		std::string tagName = XMLHelper::readXMLLine(xmlFile, tagType, contents);
-		if (tagType == XMLLineType::CloseTag && tagName == "MemberFunction")
+		if (tagType == XMLLineType::CloseTag 
+			&& ((!isStatic && tagName == "MemberFunction") 
+				|| (isStatic && tagName == "StaticMemberFunction")))
 		{
-			if (functionInfo != nullptr)
+			if (returnType.isValidType() && functionName != "")
 			{
-				currentType->addDeserializedMemberFunction(functionInfo);
+				if (!isStatic)
+				{
+					MemberFunctionInfo* memberFunction = new MemberFunctionInfo(functionName, returnType);
+					for (auto& iter: argumentTypes)
+					{
+						memberFunction->addParameterType(iter);
+					}
+					currentType->addDeserializedMemberFunction(memberFunction);
+				}
+				else
+				{
+					StaticFunctionInfo* staticFunction = new StaticFunctionInfo(functionName, currentType, returnType);
+					for (auto& iter: argumentTypes)
+					{
+						staticFunction->addParameter(iter);
+					}
+					currentType->addDeserializedStaticMemberFunction(staticFunction);
+				}
 				return true;
 			}
 			else
@@ -151,16 +200,8 @@ bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType
 		{
 			if (tagName == "ReturnType")
 			{
-				if (functionInfo != nullptr)
-				{
-					return false;
-				}
-				CatGenericType returnType = CatGenericType::readFromXML(xmlFile, "ReturnType", typeInfos);
-				if (returnType.isValidType())
-				{
-					functionInfo = new MemberFunctionInfo(functionName, returnType);
-				}
-				else
+				returnType = CatGenericType::readFromXML(xmlFile, "ReturnType", typeInfos);
+				if (!returnType.isValidType())
 				{
 					return false;
 				}
@@ -169,12 +210,12 @@ bool XMLHelper::readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType
 			{
 				continue;
 			}
-			else if (tagName == "Argument" && functionInfo != nullptr)
+			else if (tagName == "Argument")
 			{
 				CatGenericType argumentType = CatGenericType::readFromXML(xmlFile, "Argument", typeInfos);
 				if (argumentType.isValidType())
 				{
-					functionInfo->addParameterType(argumentType);
+					argumentTypes.push_back(argumentType);
 				}
 				else
 				{

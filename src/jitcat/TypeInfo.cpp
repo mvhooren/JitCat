@@ -153,10 +153,24 @@ void TypeInfo::addDeserializedMember(TypeMemberInfo* memberInfo)
 }
 
 
+void TypeInfo::addDeserializedStaticMember(StaticMemberInfo* staticMemberInfo)
+{
+	std::string lowerCaseMemberName = Tools::toLowerCase(staticMemberInfo->memberName);
+	staticMembers.emplace(lowerCaseMemberName,  staticMemberInfo);
+}
+
+
 void TypeInfo::addDeserializedMemberFunction(MemberFunctionInfo* memberFunction)
 {
 	std::string lowerCaseMemberFunctionName = Tools::toLowerCase(memberFunction->getMemberFunctionName());
 	memberFunctions.emplace(lowerCaseMemberFunctionName, memberFunction);
+}
+
+
+void TypeInfo::addDeserializedStaticMemberFunction(StaticFunctionInfo* staticFunction)
+{
+	std::string lowerCaseMemberFunctionName = Tools::toLowerCase(staticFunction->getNormalFunctionName());
+	staticFunctions.emplace(lowerCaseMemberFunctionName, staticFunction);
 }
 
 
@@ -458,6 +472,12 @@ const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& TypeInfo::getMembe
 }
 
 
+const std::map<std::string, std::unique_ptr<StaticMemberInfo>>& jitcat::Reflection::TypeInfo::getStaticMembers() const
+{
+	return staticMembers;
+}
+
+
 const std::map<unsigned long long, TypeMemberInfo*>& jitcat::Reflection::TypeInfo::getMembersByOrdinal() const
 {
 	return membersByOrdinal;
@@ -467,6 +487,12 @@ const std::map<unsigned long long, TypeMemberInfo*>& jitcat::Reflection::TypeInf
 const std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>>& TypeInfo::getMemberFunctions() const
 {
 	return memberFunctions;
+}
+
+
+const std::multimap<std::string, std::unique_ptr<StaticFunctionInfo>>& TypeInfo::getStaticMemberFunctions() const
+{
+	return staticFunctions;
 }
 
 

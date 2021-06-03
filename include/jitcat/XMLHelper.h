@@ -34,8 +34,10 @@ namespace jitcat::Reflection
 	public:
 		static std::string readXMLLine(std::ifstream& xmlFile, XMLLineType& tagType, std::string& contents);
 		static bool readMember(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos);
-		static bool readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos);
+		static bool readStaticMember(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos, const char* parentTypeName);
+		static bool readMemberFunction(std::ifstream& xmlFile, TypeInfo* currentType, std::map<std::string, TypeInfo*>& typeInfos, bool isStatic);
 		static TypeInfo* findOrCreateTypeInfo(const std::string& typeName, std::map<std::string, TypeInfo*>& typeInfos);
+
 
 	private:
 		static std::vector<const char*> staticNames;

@@ -95,7 +95,9 @@ namespace jitcat::Reflection
 		bool removeType(const std::string& typeName);
 
 		void addDeserializedMember(TypeMemberInfo* memberInfo);
+		void addDeserializedStaticMember(StaticMemberInfo* staticMemberInfo);
 		void addDeserializedMemberFunction(MemberFunctionInfo* memberFunction);
+		void addDeserializedStaticMemberFunction(StaticFunctionInfo* staticFunction);
 
 		//Returns the size of the type in bytes
 		std::size_t getTypeSize() const;
@@ -157,8 +159,10 @@ namespace jitcat::Reflection
 
 		//Beware that these lists are case insensitive because the keys have been converted to lower case
 		const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;
+		const std::map<std::string, std::unique_ptr<StaticMemberInfo>>& getStaticMembers() const;
 		const std::map<unsigned long long, TypeMemberInfo*>& getMembersByOrdinal() const;
 		const std::multimap<std::string, std::unique_ptr<MemberFunctionInfo>>& getMemberFunctions() const;
+		const std::multimap<std::string, std::unique_ptr<StaticFunctionInfo>>& getStaticMemberFunctions() const;
 		const std::map<std::string, TypeInfo*>& getTypes() const;
 
 		//May be nullptr when type info was read from XML

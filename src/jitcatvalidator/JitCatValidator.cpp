@@ -196,7 +196,6 @@ JITCATVALIDATOR_API void destroyCompletionResult(CodeCompletionSuggestions* resu
 
 JITCATVALIDATOR_API int loadTypeInfo(const char* path)
 {
-	TypeRegistry::recreate();
 	if (TypeRegistry::get()->loadRegistryFromXML(path))
 	{
 		return 1;

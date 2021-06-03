@@ -28,6 +28,12 @@ MemberVisibility StaticFunctionInfo::getVisibility() const
 }
 
 
+void StaticFunctionInfo::addParameter(const CatGenericType& type)
+{
+	argumentTypes.push_back(type);
+}
+
+
 const CatGenericType& StaticFunctionInfo::getArgumentType(std::size_t argumentIndex) const
 {
 	if (argumentIndex < argumentTypes.size())

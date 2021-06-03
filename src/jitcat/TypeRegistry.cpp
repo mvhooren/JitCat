@@ -8,6 +8,7 @@
 #include "jitcat/TypeRegistry.h"
 #include "jitcat/ReflectedEnumTypeInfo.h"
 #include "jitcat/ReflectedTypeInfo.h"
+#include "jitcat/StaticMemberInfo.h"
 #include "jitcat/TypeInfo.h"
 #include "jitcat/XMLHelper.h"
 
@@ -114,7 +115,9 @@ enum class XMLReadState
 	ReadingRegistry,
 	ReadingType,
 	ReadingMembers,
+	ReadingStaticMembers,
 	ReadingMemberFunctions,
+	ReadingStaticMemberFunctions
 };
 
 
@@ -131,6 +134,11 @@ bool TypeRegistry::loadRegistryFromXML(const std::string& filepath)
 		TypeInfo* currentTypeInfo = nullptr;
 
 		std::map<std::string, TypeInfo*> typeInfos;
+		auto iter = types.find("string");
+		if (iter != types.end())
+		{
+			typeInfos["string"] = iter->second;
+		}
 		if (tagType == XMLLineType::OpenTag && tagName == "TypeRegistry")
 		{
 			XMLReadState readState = XMLReadState::ReadingRegistry;
@@ -168,9 +176,17 @@ bool TypeRegistry::loadRegistryFromXML(const std::string& filepath)
 							{
 								readState = XMLReadState::ReadingMembers;
 							}
+							else if (tagName == "StaticMembers")
+							{
+								readState = XMLReadState::ReadingStaticMembers;
+							}
 							else if (tagName == "MemberFunctions")
 							{
 								readState = XMLReadState::ReadingMemberFunctions;
+							}
+							else if (tagName == "StaticMemberFunctions")
+							{
+								readState = XMLReadState::ReadingStaticMemberFunctions;
 							}
 							else
 							{
@@ -209,6 +225,24 @@ bool TypeRegistry::loadRegistryFromXML(const std::string& filepath)
 							return false;
 						}
 					} break;
+					case XMLReadState::ReadingStaticMembers:
+					{
+						if (tagType == XMLLineType::CloseTag && tagName == "StaticMembers")
+						{
+							readState = XMLReadState::ReadingType;
+						}
+						else if (tagType == XMLLineType::OpenTag && tagName == "StaticMember")
+						{
+							if (!XMLHelper::readStaticMember(xmlFile, currentTypeInfo, typeInfos, currentTypeInfo->getTypeName()))
+							{
+								return false;
+							}
+						}
+						else
+						{
+							return false;
+						}
+					} break;
 					case XMLReadState::ReadingMemberFunctions:
 					{
 						if (tagType == XMLLineType::CloseTag && tagName == "MemberFunctions")
@@ -217,7 +251,25 @@ bool TypeRegistry::loadRegistryFromXML(const std::string& filepath)
 						}
 						else if (tagType == XMLLineType::OpenTag && tagName == "MemberFunction")
 						{
-							if (!XMLHelper::readMemberFunction(xmlFile, currentTypeInfo, typeInfos))
+							if (!XMLHelper::readMemberFunction(xmlFile, currentTypeInfo, typeInfos, false))
+							{
+								return false;
+							}
+						}
+						else
+						{
+							return false;
+						}
+					} break;
+					case XMLReadState::ReadingStaticMemberFunctions:
+					{
+						if (tagType == XMLLineType::CloseTag && tagName == "StaticMemberFunctions")
+						{
+							readState = XMLReadState::ReadingType;
+						}
+						else if (tagType == XMLLineType::OpenTag && tagName == "StaticMemberFunction")
+						{
+							if (!XMLHelper::readMemberFunction(xmlFile, currentTypeInfo, typeInfos, true))
 							{
 								return false;
 							}
@@ -242,11 +294,9 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 	xmlFile << "<TypeRegistry>\n";
 	for (auto& iter : types)
 	{
+		if (iter.first == "string") continue;
+
 		xmlFile << "\t<Type>\n";
-		/*if (iter.second->isCustomType())
-		{
-			xmlFile << "\t\t<custom/>\n";
-		}*/
 		xmlFile << "\t\t<Name>" << Tools::toXMLCompatible(iter.second->getTypeName()) << "</Name>\n";
 		if (iter.second->getMembers().size() > 0)
 		{
@@ -261,6 +311,20 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 				xmlFile << "\t\t\t</Member>\n";
 			}
 			xmlFile << "\t\t</Members>\n";
+		}
+		if (iter.second->getStaticMembers().size() > 0)
+		{
+			xmlFile << "\t\t<StaticMembers>\n";
+			for (auto& member : iter.second->getStaticMembers())
+			{
+				xmlFile << "\t\t\t<StaticMember>\n";
+				xmlFile << "\t\t\t\t<Name>" << member.second->memberName << "</Name>\n";
+
+				member.second->catType.writeToXML(xmlFile, "\t\t\t\t");
+			
+				xmlFile << "\t\t\t</StaticMember>\n";
+			}
+			xmlFile << "\t\t</StaticMembers>\n";
 		}
 		if (iter.second->getMemberFunctions().size() > 0)
 		{
@@ -283,6 +347,28 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 				xmlFile << "\t\t\t</MemberFunction>\n";
 			}
 			xmlFile << "\t\t</MemberFunctions>\n";
+		}
+		if (iter.second->getStaticMemberFunctions().size() > 0)
+		{
+			xmlFile << "\t\t<StaticMemberFunctions>\n";
+			for (auto& member : iter.second->getStaticMemberFunctions())
+			{
+				xmlFile << "\t\t\t<StaticMemberFunction>\n";
+				xmlFile << "\t\t\t\t<Name>" << Tools::toXMLCompatible(member.second->getNormalFunctionName()) << "</Name>\n";		
+				xmlFile << "\t\t\t\t<ReturnType>\n";
+				member.second->getReturnType().writeToXML(xmlFile, "\t\t\t\t\t");
+				xmlFile << "\t\t\t\t</ReturnType>\n";
+				xmlFile << "\t\t\t\t<Arguments>\n";
+				for (auto& argument : member.second->getArgumentTypes())
+				{
+					xmlFile << "\t\t\t\t\t<Argument>\n";
+					argument.writeToXML(xmlFile, "\t\t\t\t\t\t");
+					xmlFile << "\t\t\t\t\t</Argument>\n";
+				}
+				xmlFile << "\t\t\t\t</Arguments>\n";
+				xmlFile << "\t\t\t</StaticMemberFunction>\n";
+			}
+			xmlFile << "\t\t</StaticMemberFunctions>\n";
 		}
 		xmlFile << "\t</Type>\n";
 	}
