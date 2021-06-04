@@ -47,27 +47,29 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 		startingTokenIndex--;
 	}
 	std::string expressionTailEnd = "";
-	std::vector<IdentifierToken*> subExpression = getSubExpressionToAutoComplete(tokens, startingTokenIndex, expressionTailEnd);
+	std::vector<std::pair<const IdentifierToken*, bool>> subExpression = getSubExpressionToAutoComplete(tokens, startingTokenIndex, expressionTailEnd);
 
 	std::vector<AutoCompletion::AutoCompletionEntry> results;
 	int last = (int)subExpression.size() - 1;
 	TypeMemberInfo* currentMemberInfo = nullptr;
 	MemberFunctionInfo* currentFunctionInfo = nullptr;
 	bool foundValidAutoCompletion = false;
+	bool autoCompleteOnArray = false;
 	if (last >= 0)
 	{
 		for (unsigned int i = 0; i <= (unsigned int)last; i++)
 		{
 			std::string lowercaseIdentifier;
 			std::size_t identifierOffset;
-			if (subExpression[i] != nullptr)
+			if (subExpression[i].first != nullptr)
 			{
-				lowercaseIdentifier = Tools::toLowerCase(subExpression[i]->getLexeme());
-				identifierOffset = subExpression[i]->getLexeme().data() - doc.getDocumentData().c_str();
+				lowercaseIdentifier = Tools::toLowerCase(subExpression[i].first->getLexeme());
+				identifierOffset = subExpression[i].first->getLexeme().data() - doc.getDocumentData().c_str();
+				autoCompleteOnArray = subExpression[i].second;
 			}
 			else if (i > 0)
 			{
-				identifierOffset = (subExpression[i - 1]->getLexeme().data() - doc.getDocumentData().c_str()) + subExpression[i - 1]->getLexeme().length();
+				identifierOffset = (subExpression[i - 1].first->getLexeme().data() - doc.getDocumentData().c_str()) + subExpression[i - 1].first->getLexeme().length();
 			}
 			else
 			{
@@ -85,13 +87,13 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 						addOptionsFromGlobalScope(memberPrefix, expression, expressionTailEnd, completionOffset, context, results);
 					}
 				}
-				else if (currentMemberInfo != nullptr && currentMemberInfo->getType().isPointerToReflectableObjectType())
+				else if (currentMemberInfo != nullptr)
 				{
-					addOptionsFromTypeInfo(currentMemberInfo->getType().getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					autoCompleteOnType(currentMemberInfo->getType(), autoCompleteOnArray, memberPrefix, expression, completionOffset, expressionTailEnd, results);
 				}
-				else if (currentFunctionInfo != nullptr && currentFunctionInfo->getReturnType().isPointerToReflectableObjectType())
+				else if (currentFunctionInfo != nullptr && currentFunctionInfo->getReturnType().removeIndirection().isReflectableObjectType())
 				{
-					addOptionsFromTypeInfo(currentFunctionInfo->getReturnType().getPointeeType()->getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+					autoCompleteOnType(currentFunctionInfo->getReturnType(), autoCompleteOnArray, memberPrefix, expression, completionOffset, expressionTailEnd, results);
 				}
 				else
 				{
@@ -102,38 +104,36 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			{
 				CatScopeID scopeId;
 				currentMemberInfo = context->findVariable(lowercaseIdentifier, scopeId);
-				if (currentMemberInfo == nullptr)
+				if (!autoCompleteOnArray || currentMemberInfo == nullptr)
 				{
-					currentFunctionInfo = context->findFirstMemberFunction(lowercaseIdentifier, scopeId);
-				}
-			}
-			else if (currentMemberInfo != nullptr && currentMemberInfo->getType().isPointerToReflectableObjectType())
-			{
-				TypeMemberInfo* currentMember = currentMemberInfo;
-				currentMemberInfo = currentMemberInfo->getType().getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
-				if (currentMemberInfo == nullptr)
-				{
-					currentFunctionInfo = currentMember->getType().getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
-					if (currentFunctionInfo == nullptr)
-					{
-						//failed
-						break;
-					}
-				}
-			}
-			else if (currentFunctionInfo != nullptr && currentFunctionInfo->getReturnType().isPointerToReflectableObjectType())
-			{
-				MemberFunctionInfo* currentFunction = currentFunctionInfo;
-				std::string inheritedHostClassName;
-				currentFunctionInfo = currentFunctionInfo->getReturnType().getPointeeType()->getObjectType()->getFirstMemberFunctionInfo(lowercaseIdentifier);
-				if (currentFunctionInfo == nullptr)
-				{
-					currentMemberInfo = currentFunction->getReturnType().getPointeeType()->getObjectType()->getMemberInfo(lowercaseIdentifier);
 					if (currentMemberInfo == nullptr)
 					{
-						//failed
-						break;
+						currentFunctionInfo = context->findFirstMemberFunction(lowercaseIdentifier, scopeId);
 					}
+				}
+				else if (currentMemberInfo->getType().removeIndirection().isReflectableObjectType())
+				{
+					TypeInfo* objectType = currentMemberInfo->getType().removeIndirection().getObjectType();
+					auto arrayIndices = objectType->getMemberFunctionsByName("[]");
+					if (arrayIndices.size() > 0)
+					{
+						currentMemberInfo = nullptr;
+						currentFunctionInfo = arrayIndices[0];
+					}
+				}
+			}
+			else if (currentMemberInfo != nullptr && currentMemberInfo->getType().removeIndirection().isReflectableObjectType())
+			{
+				if (!traverseType(currentMemberInfo->getType(), currentMemberInfo, currentFunctionInfo, lowercaseIdentifier, autoCompleteOnArray))
+				{
+					break;
+				}
+			}
+			else if (currentFunctionInfo != nullptr && currentFunctionInfo->getReturnType().removeIndirection().isReflectableObjectType())
+			{
+				if (!traverseType(currentFunctionInfo->getReturnType(), currentMemberInfo, currentFunctionInfo, lowercaseIdentifier, autoCompleteOnArray))
+				{
+					break;
 				}
 			}
 			else
@@ -164,23 +164,24 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 }
 
 
-std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd)
+std::vector<std::pair<const IdentifierToken*, bool>> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd)
 {
 	bool readTailEnd = false;
 	//Tokenize the entire expression, then find the token at the cursorPosition, then backtrack from there to find the 
 	//list of consecutive member dereferences/scopes
 	if (startingTokenIndex < 0)
 	{
-		return std::vector<IdentifierToken*>();
+		return std::vector<std::pair<const IdentifierToken*, bool>>();
 	}
 	ParseToken* startingToken = tokens[(unsigned int)startingTokenIndex].get();
-	std::vector<IdentifierToken*> subExpressions;
+	std::vector<std::pair<const IdentifierToken*, bool>> subExpressions;
 	if (startingToken->getTokenID() == IdentifierToken::getID()
 		|| (startingToken->getTokenID() == OneCharToken::getID() 
 		   && startingToken->getTokenSubType() == static_cast<typename std::underlying_type<OneChar>::type>(OneChar::Dot)))
 	{
 		int currentUnmatchedCloseBrackets = 0;
 		int currentUnmatchedCloseParenthesis = 0;
+		int totalOpenBrackets = 0;
 
 		bool backtrackingDone = false;
 		for (int i = startingTokenIndex; i >= 0 && !backtrackingDone; i--)
@@ -216,6 +217,7 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 						{
 							backtrackingDone = true;
 						}
+						totalOpenBrackets++;
 						break;
 					case OneChar::BracketClose:
 						currentUnmatchedCloseBrackets++;
@@ -223,7 +225,7 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 					case OneChar::Dot:
 						if (i == startingTokenIndex)
 						{
-							subExpressions.push_back(nullptr);
+							subExpressions.push_back(std::make_pair((const Tokenizer::IdentifierToken*)nullptr, false));
 						}
 						continue;
 						break;
@@ -242,7 +244,8 @@ std::vector<IdentifierToken*> AutoCompletion::getSubExpressionToAutoComplete(con
 			}
 			else if (tokens[i]->getTokenID() == IdentifierToken::getID())
 			{
-				subExpressions.push_back(static_cast<IdentifierToken*>(tokens[i].get()));
+				subExpressions.push_back(std::make_pair(static_cast<IdentifierToken*>(tokens[i].get()), totalOpenBrackets > 0));
+				totalOpenBrackets = 0;
 			}
 			else if (tokens[i]->getTokenID() == WhitespaceToken::getID()
 					 || tokens[i]->getTokenID() == CommentToken::getID())
@@ -327,11 +330,6 @@ void AutoCompletion::addOptionsFromTypeInfo(TypeInfo* typeInfo, std::vector<Auto
 				std::string newExpression = originalExpression;
 				std::string replacement = iter.second->getMemberName();
 				int numberOfCharactersToAdd = (int)replacement.size();
-				/*if (expressionTailEnd.size() == 0 && iter.second->catType.isContainerType())
-				{
-					numberOfCharactersToAdd++;
-					replacement += "[";
-				}*/
 				newExpression.replace(prefixOffset, lowercasePrefix.size(), replacement);
 				results.push_back(AutoCompletionEntry(newExpression, iter.second->getMemberName(), findLocation == 0, prefixOffset + numberOfCharactersToAdd));
 			}
@@ -415,6 +413,75 @@ bool AutoCompletion::isGlobalScopeAutoCompletable(const std::vector<std::unique_
 		return false;
 	}
 	return true;
+}
+
+
+bool AutoCompletion::autoCompleteOnType(const CatGenericType& type, bool completeOnArrayIndex, const std::string& memberPrefix, 
+										const std::string& expression, std::size_t completionOffset, const std::string& expressionTailEnd, 
+										 std::vector<AutoCompletion::AutoCompletionEntry>& results)
+{
+	const CatGenericType& nakedType = type.removeIndirection();
+	if (!nakedType.isReflectableObjectType())
+	{
+		return false;
+	}
+	TypeInfo* typeInfo = nakedType.getObjectType();
+	if (completeOnArrayIndex && typeInfo->getMemberFunctionsByName("[]").size() > 0)
+	{
+		MemberFunctionInfo* memberFunctionInfo = typeInfo->getMemberFunctionsByName("[]")[0];
+		const CatGenericType& returnType = memberFunctionInfo->getReturnType().removeIndirection();
+		if (returnType.isReflectableObjectType())
+		{
+			addOptionsFromTypeInfo(returnType.getObjectType(), results, memberPrefix, expression, completionOffset, expressionTailEnd);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		addOptionsFromTypeInfo(typeInfo, results, memberPrefix, expression, completionOffset, expressionTailEnd);
+		return true;
+	}
+}
+
+
+bool AutoCompletion::traverseType(const CatGenericType& type, Reflection::TypeMemberInfo*& currentMemberInfo, Reflection::MemberFunctionInfo*& currentFunctionInfo, 
+								  const std::string& lowerCaseIdentifier, bool traverseOnArrayIndex)
+{
+	if (type.removeIndirection().isReflectableObjectType())
+	{
+		TypeInfo* objectType = type.removeIndirection().getObjectType();
+		if (traverseOnArrayIndex)
+		{
+			auto arrayIndices = objectType->getMemberFunctionsByName("[]");
+			if (arrayIndices.size() > 0)
+			{
+				return traverseType(arrayIndices[0]->getReturnType(), currentMemberInfo, currentFunctionInfo, lowerCaseIdentifier, false);
+			}
+		}
+		else
+		{
+			currentMemberInfo = objectType->getMemberInfo(lowerCaseIdentifier);
+			if (currentMemberInfo == nullptr)
+			{
+				currentFunctionInfo = objectType->getFirstMemberFunctionInfo(lowerCaseIdentifier);
+
+				if (currentFunctionInfo == nullptr)
+				{
+					//failed
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 

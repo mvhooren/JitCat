@@ -16,6 +16,8 @@ namespace jitcat::Tokenizer
 namespace jitcat::Reflection
 {
 	class TypeInfo;
+	struct TypeMemberInfo;
+	struct MemberFunctionInfo;
 }
 
 #include <memory>
@@ -24,6 +26,7 @@ namespace jitcat::Reflection
 
 namespace jitcat
 {
+	class CatGenericType;
 	class CatRuntimeContext;
 
 
@@ -49,7 +52,7 @@ namespace jitcat
 		static std::vector<AutoCompletionEntry> autoComplete(const std::string& expression, std::size_t cursorPosition, CatRuntimeContext* context);
 
 	private:
-		static std::vector<Tokenizer::IdentifierToken*> getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
+		static std::vector<std::pair<const Tokenizer::IdentifierToken*, bool>> getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
 
 		static void addOptionsFromGlobalScope(const std::string& prefix, const std::string& expression, const std::string& expressionTailEnd, 
 											  std::size_t completionOffset, CatRuntimeContext* context, std::vector<AutoCompletionEntry>& entries);
@@ -62,6 +65,14 @@ namespace jitcat
 		static void addIfPartialMatch(const std::string& text, std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
 
 		static bool isGlobalScopeAutoCompletable(const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, int startingTokenIndex);
+
+		static bool autoCompleteOnType(const CatGenericType& type, bool completeOnArrayIndex, const std::string& memberPrefix, 
+									   const std::string& expression, std::size_t completionOffset, const std::string& expressionTailEnd, 
+									    std::vector<AutoCompletion::AutoCompletionEntry>& results);
+
+		static bool traverseType(const CatGenericType& type, Reflection::TypeMemberInfo*& currentMemberInfo, 
+								 Reflection::MemberFunctionInfo*& currentFunctionInfo, const std::string& lowerCaseIdentifier,
+								 bool traverseOnArrayIndex);
 	};
 
 } //End namespace jitcat
