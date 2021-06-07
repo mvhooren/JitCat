@@ -158,8 +158,8 @@ bool ASTHelper::makeSameLeastIndirection(std::unique_ptr<CatTypedExpression>& ex
 
 std::any ASTHelper::doAssignment(CatAssignableExpression* target, CatTypedExpression* source, CatRuntimeContext* context)
 {
-	CatGenericType targetType = target->getAssignableType();
-	CatGenericType sourceType = source->getType();
+	const CatGenericType& targetType = target->getAssignableType();
+	const CatGenericType* sourceType = &source->getType();
 
 	std::any targetValue = target->executeAssignable(context);
 	std::any sourceValue;
@@ -167,17 +167,17 @@ std::any ASTHelper::doAssignment(CatAssignableExpression* target, CatTypedExpres
 	if ((targetType.isPointerToHandleType() || targetType.isPointerToPointerType())
 		 &&	(   targetType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Owned
 		    || targetType.getPointeeType()->getOwnershipSemantics() == TypeOwnershipSemantics::Shared)
-		&& (sourceType.getOwnershipSemantics() == TypeOwnershipSemantics::Owned))
+		&& (sourceType->getOwnershipSemantics() == TypeOwnershipSemantics::Owned))
 	{
 		sourceValue = static_cast<CatAssignableExpression*>(source)->executeAssignable(context);
-		sourceType = static_cast<CatAssignableExpression*>(source)->getAssignableType();
+		sourceType = &static_cast<CatAssignableExpression*>(source)->getAssignableType();
 	}
 	else
 	{
 		sourceValue = source->execute(context);
 	}
 
-	return doAssignment(targetValue, sourceValue, targetType, sourceType);
+	return doAssignment(targetValue, sourceValue, targetType, *sourceType);
 }
 
 
