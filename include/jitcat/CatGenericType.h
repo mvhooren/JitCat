@@ -69,6 +69,7 @@ namespace jitcat
 		CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, 
 					   bool isHandle, bool writable = false, bool constant = false);
 		CatGenericType(const CatGenericType& other);
+		~CatGenericType();
 
 		CatGenericType& operator=(const CatGenericType& other);
 

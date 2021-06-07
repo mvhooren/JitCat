@@ -115,6 +115,11 @@ CatGenericType::CatGenericType(const CatGenericType& other):
 }
 
 
+CatGenericType::~CatGenericType()
+{
+}
+
+
 CatGenericType& CatGenericType::operator=(const CatGenericType& other)
 {
 	specificType = other.specificType;
