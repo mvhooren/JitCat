@@ -15,9 +15,7 @@ namespace jitcat::Reflection
 	enum class NamespaceType
 	{
 		Category,
-		Object,
-		Map,
-		Vector
+		Object
 	};
 
 	class VariableEnumerator
