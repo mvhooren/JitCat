@@ -176,6 +176,12 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 }
 
 
+void ExpressionBase::discardAST()
+{
+	parseResult.astRootNode = nullptr;
+}
+
+
 void ExpressionBase::constCollapse(CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext)
 {
 	CatTypedExpression* newExpression = static_cast<CatTypedExpression*>(parseResult.getNode<CatTypedExpression>()->constCollapse(context, errorManager, errorContext));
@@ -349,6 +355,10 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context, const CatGe
 				{
 					//Expressions are expected to handle the case where symbolAddress == 0 and llvm is not available to JIT-compile the function.
 					handleCompiledFunction(symbolAddress);
+					if (symbolAddress != 0 && JitCat::get()->getDiscardASTAfterNativeCodeCompilation())
+					{
+						discardAST();
+					}
 					return;
 				}
 			}
@@ -378,6 +388,10 @@ void ExpressionBase::compileToNativeCode(CatRuntimeContext* context, const CatGe
 		if (functionAddress != 0)
 		{
 			handleCompiledFunction(functionAddress);
+			if (JitCat::get()->getDiscardASTAfterNativeCodeCompilation())
+			{
+				discardAST();
+			}
 		}
 		else
 		{
@@ -410,3 +424,4 @@ void jitcat::ExpressionBase::calculateLiteralStatus()
 		}
 	}
 }
+

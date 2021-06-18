@@ -45,6 +45,9 @@ int main( int argc, char* argv[] )
 		// Indicates a command line error
 		return returnCode;
 	}
+
+	//Keep expression ASTs after native code compilation so that we can also test the interpreter.
+	jitcat::JitCat::get()->setDiscardASTAfterNativeCodeCompilation(false);
 	
 	#ifdef ENABLE_LLVM
 		std::unique_ptr<jitcat::LLVM::LLVMTargetConfig> precompilationTargetWindows; 

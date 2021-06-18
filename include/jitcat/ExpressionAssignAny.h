@@ -48,7 +48,7 @@ namespace jitcat
 		//Returns true if assignment was successful
 		bool assignValue(CatRuntimeContext* runtimeContext, std::any value, const CatGenericType& valueType);
 
-
+		//This function will only work if either native code compilation is disabled or DiscardASTAfterNativeCodeCompilation is set to false (see JitCat.h).
 		template<typename T>
 		bool assignInterpretedValue(CatRuntimeContext* runtimeContext, T* value, const CatGenericType& valueType)
 		{
@@ -58,6 +58,7 @@ namespace jitcat
 		//Same as assignValue but will always execute the expression using the interpreter.
 		//Should always behave the same as assignValue. Used for testing the interpreter when the LLVM backend is enabled.
 		//Returns true if assignment was successful
+		//This function will only work if either native code compilation is disabled or DiscardASTAfterNativeCodeCompilation is set to false (see JitCat.h).
 		bool assignInterpretedValue(CatRuntimeContext* runtimeContext, std::any value, const CatGenericType& valueType);
 
 

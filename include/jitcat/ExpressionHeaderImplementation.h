@@ -82,6 +82,7 @@ namespace jitcat
 					cachedValue = getActualValue(parseResult.getNode<AST::CatTypedExpression>()->execute(context));
 				}
 				getValuePtr = &Expression<ExpressionResultT>::getCachedValue;
+				discardAST();
 			}
 			else if (!Configuration::enableLLVM && !JitCat::get()->getHasPrecompiledExpression())
 			{

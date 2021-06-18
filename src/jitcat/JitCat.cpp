@@ -152,7 +152,8 @@ JitCat::JitCat():
 	expressionGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Expression)),
 	statementGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Statement)),
 	fullGrammar(std::make_unique<CatGrammar>(tokenizer.get(), CatGrammarType::Full)),
-	hasPrecompiledExpressions(false)
+	hasPrecompiledExpressions(false),
+	discardASTAfterNativeCodeCompilation(true)
 {
 	expressionParser = expressionGrammar->createSLRParser();
 	statementParser = statementGrammar->createSLRParser();
@@ -341,6 +342,18 @@ bool JitCat::verifyLinkage()
 bool JitCat::getHasPrecompiledExpression() const
 {
 	return hasPrecompiledExpressions;
+}
+
+
+void JitCat::setDiscardASTAfterNativeCodeCompilation(bool discard)
+{
+	discardASTAfterNativeCodeCompilation = discard;
+}
+
+
+bool JitCat::getDiscardASTAfterNativeCodeCompilation() const
+{
+	return discardASTAfterNativeCodeCompilation;
 }
 
 

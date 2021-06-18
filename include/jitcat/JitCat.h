@@ -67,6 +67,12 @@ namespace jitcat
 
 		bool getHasPrecompiledExpression() const;
 
+		//Discarding the AST after native code compilation is enabled by default.
+		//After an expression is compiled to native code, its AST can be discared, freeing some memory.
+		//Usually this is preferred, but enabling this will disable some functions like Expression::getInterpretedValue.
+		void setDiscardASTAfterNativeCodeCompilation(bool discard);
+		bool getDiscardASTAfterNativeCodeCompilation() const;
+
 	private:
 		static void expressionEnumerationCallback(const char* name, uintptr_t address);
 		static void globalVariablesEnumerationCallback(const char* name, uintptr_t address);
@@ -92,6 +98,7 @@ namespace jitcat
 		std::unique_ptr<Parser::SLRParser> fullParser;
 
 		bool hasPrecompiledExpressions;
+		bool discardASTAfterNativeCodeCompilation;
 	};
 
 } //End namespace jitcat

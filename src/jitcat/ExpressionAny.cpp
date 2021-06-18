@@ -89,6 +89,7 @@ void ExpressionAny::compile(CatRuntimeContext* context)
 		{
 			cachedValue = parseResult.getNode<CatTypedExpression>()->execute(context);
 			getValuePtr = &ExpressionAny::getCachedValue;
+			discardAST();
 		}
 		else if (!Configuration::enableLLVM && !JitCat::get()->getHasPrecompiledExpression())
 		{

@@ -47,6 +47,7 @@ namespace jitcat
 		//Same as assignValue but will always execute the expression using the interpreter.
 		//Should always behave the same as assignValue. Used for testing the interpreter when the LLVM backend is enabled.
 		//Returns true if assignment was successful
+		//This function will only work if either native code compilation is disabled or DiscardASTAfterNativeCodeCompilation is set to false (see JitCat.h).
 		bool assignInterpretedValue(CatRuntimeContext* runtimeContext, typename TypeTraits<ExpressionT>::functionParameterType value);
 
 		//Parses the expression, checks for errors and compiles the expression to native code if the LLVM backend is enabled.

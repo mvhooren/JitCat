@@ -36,6 +36,7 @@ namespace jitcat
 
 		//Same as getValue but will always execute the expression using the interpreter.
 		//Should always return the same value as getValue. Used for testing the interpreter when the LLVM backend is enabled.
+		//This function will only work if either native code compilation is disabled or DiscardASTAfterNativeCodeCompilation is set to false (see JitCat.h).
 		const std::any getInterpretedValue(CatRuntimeContext* runtimeContext);
 
 		virtual void compile(CatRuntimeContext* context) override final;
