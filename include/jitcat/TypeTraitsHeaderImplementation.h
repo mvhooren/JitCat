@@ -106,8 +106,7 @@ namespace jitcat
 			CatGenericType pointeeType = TypeTraits<PointerT>::toGenericType();
 			if (type.get() == nullptr)
 			{
-				type = std::make_unique<CatGenericType>(nullptr, Reflection::TypeOwnershipSemantics::Weak, false);
-				type->setPointeeType(std::make_unique<CatGenericType>(pointeeType));
+				type = std::make_unique<CatGenericType>(pointeeType, Reflection::TypeOwnershipSemantics::Weak, false, false, false, false);
 			}
 		}
 		return *type.get();
@@ -117,14 +116,32 @@ namespace jitcat
 	template <typename RefT>
 	inline const CatGenericType& TypeTraits<const RefT&>::toGenericType()
 	{
-		return TypeTraits<RefT*>::toGenericType();
+		static std::unique_ptr<CatGenericType> type;
+		if (type == nullptr)
+		{
+			CatGenericType pointeeType = TypeTraits<RefT>::toGenericType();
+			if (type.get() == nullptr)
+			{
+				type = std::make_unique<CatGenericType>(pointeeType, Reflection::TypeOwnershipSemantics::Weak, false, false, false, true);
+			}
+		}
+		return *type.get();
 	}
 	
 
 	template <typename RefT>
 	inline const CatGenericType& TypeTraits<RefT&>::toGenericType()
 	{
-		return TypeTraits<RefT*>::toGenericType();
+		static std::unique_ptr<CatGenericType> type;
+		if (type == nullptr)
+		{
+			CatGenericType pointeeType = TypeTraits<RefT>::toGenericType();
+			if (type.get() == nullptr)
+			{
+				type = std::make_unique<CatGenericType>(pointeeType, Reflection::TypeOwnershipSemantics::Weak, false, true, false, true);
+			}
+		}
+		return *type.get();
 	}
 
 
@@ -132,12 +149,13 @@ namespace jitcat
 	const CatGenericType& TypeTraits<PointerRefT*&>::toGenericType()
 	{
 		static std::unique_ptr<CatGenericType> type;
-		if (type.get() == nullptr)
+		if (type == nullptr)
 		{
-			//Instead directly constructing the static type object. First construct it with a nullptr for the object type.
-			//This is done to prevent recursion deadlock.
-			type = std::make_unique<CatGenericType>(nullptr, Reflection::TypeOwnershipSemantics::Weak, false);
-			type->setPointeeType(std::make_unique<CatGenericType>(TypeTraits<PointerRefT*>::toGenericType()));
+			CatGenericType pointeeType = TypeTraits<PointerRefT*>::toGenericType();
+			if (type.get() == nullptr)
+			{
+				type = std::make_unique<CatGenericType>(pointeeType, Reflection::TypeOwnershipSemantics::Weak, false, true, false, true);
+			}
 		}
 		return *type.get();
 	}

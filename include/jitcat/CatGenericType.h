@@ -59,15 +59,15 @@ namespace jitcat
 		};
 
 		CatGenericType(SpecificType specificType, BasicType basicType, Reflection::TypeInfo* nestedType, 
-					   Reflection::TypeOwnershipSemantics ownershipSemantics, CatGenericType* pointeeType, bool writable, bool constant);
+					   Reflection::TypeOwnershipSemantics ownershipSemantics, CatGenericType* pointeeType, bool writable, bool constant, bool nonNull);
 		CatGenericType(BasicType catType, bool writable = false, bool constant = false);
 
 	public:
 		CatGenericType();
 		CatGenericType(const CatGenericType& enumUnderlyingType, Reflection::TypeInfo* enumValuesType, bool writable = false, bool constant = false);
-		CatGenericType(Reflection::TypeInfo* reflectableType, bool writable = false, bool constant = false);
+		CatGenericType(Reflection::TypeInfo* reflectableType, bool writable = false, bool constant = false, bool isNonNull = false);
 		CatGenericType(const CatGenericType& pointee, Reflection::TypeOwnershipSemantics ownershipSemantics, 
-					   bool isHandle, bool writable = false, bool constant = false);
+					   bool isHandle, bool writable = false, bool constant = false, bool isNonNull = false);
 		CatGenericType(const CatGenericType& other);
 		~CatGenericType();
 
@@ -108,6 +108,7 @@ namespace jitcat
 		bool isPointerType() const;
 		bool isPointerToPointerType() const;
 		bool isPointerToHandleType() const;
+		bool isNonNullPointerType() const;
 		bool isAssignableType() const;
 		bool isNullptrType() const;
 		
@@ -124,6 +125,8 @@ namespace jitcat
 		CatGenericType copyWithFlags(bool writable, bool constant) const;
 		//Copies the type but sets all modifiers (const, writable) to false.
 		CatGenericType toUnmodified() const;
+		//Copies the type but sets the non-null flag to true (for pointers only)
+		CatGenericType toNonNull() const;
 		//Copies the type but sets the writable flag to false.
 		CatGenericType toUnwritable() const;
 		//Copies the type but sets the writable flag to true.
@@ -281,17 +284,16 @@ namespace jitcat
 	private:
 		SpecificType specificType;
 		BasicType basicType;
-
+		Reflection::TypeOwnershipSemantics ownershipSemantics;
 		//Type modifiers/flags. These are not taken into account when comparing CatGenericType objects using operator ==.
-		bool writable;
-		bool constant;
+		unsigned writable : 1;
+		unsigned constant : 1;
+		unsigned nonNull : 1;
 
 		//not owned
 		Reflection::TypeInfo* nestedType;
 
 		std::unique_ptr<CatGenericType> pointeeType;
-
-		Reflection::TypeOwnershipSemantics ownershipSemantics;
 	};
 
 

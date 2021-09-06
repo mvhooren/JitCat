@@ -340,7 +340,7 @@ void ArrayMemberFunctionInfo::createInitGeneratorFunction()
 											}
 											assert(functionInfo != nullptr);
 											LLVMPreGeneratedExpression preGeneratedBase(iterator, arrayTypeInfo->getArrayItemType().toPointer(TypeOwnershipSemantics::Value, true, false));
-											context->helper->generateMemberFunctionCall(functionInfo, &preGeneratedBase, {}, context);
+											context->helper->generateMemberFunctionCall(functionInfo, &preGeneratedBase, {}, {}, context);
 										}
 										else
 										{
@@ -427,7 +427,7 @@ void ArrayMemberFunctionInfo::createDestroyGeneratorFunction()
 													}
 													assert(functionInfo != nullptr);
 													LLVMPreGeneratedExpression preGeneratedBase(iterator, arrayTypeInfo->getArrayItemType().toPointer(TypeOwnershipSemantics::Value, true, false));
-													context->helper->generateMemberFunctionCall(functionInfo, &preGeneratedBase, {}, context);
+													context->helper->generateMemberFunctionCall(functionInfo, &preGeneratedBase, {}, {}, context);
 												}
 												else
 												{

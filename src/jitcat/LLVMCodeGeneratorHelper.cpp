@@ -100,6 +100,32 @@ llvm::Value* LLVMCodeGeneratorHelper::createCall(LLVMCompileTimeContext* context
 }
 
 
+llvm::Value* LLVMCodeGeneratorHelper::createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
+															const CatGenericType& returnType, llvm::Value* returnedObjectAllocation, LLVMCompileTimeContext* context)
+{
+	llvm::Type* resultType = toLLVMType(returnType);
+	if (returnType.isReflectableObjectType())
+	{
+		resultType = resultType->getPointerTo();
+	}
+	if (returnType.isReflectableObjectType())
+	{
+		auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
+		{
+			assert(returnType.isConstructible());
+			llvm::Value* typeInfoConstantAsIntPtr = createTypeInfoGlobalValue(context, returnType.getObjectType());
+			createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
+			return returnedObjectAllocation;
+		};
+		return createNullCheckSelect(valueToCheck, codeGenIfNotNull, codeGenIfNull, context);
+	}
+	else
+	{
+		return createNullCheckSelect(valueToCheck, codeGenIfNotNull, resultType, context);
+	}
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value* (LLVMCompileTimeContext*)> codeGenIfNotNull, llvm::Type* resultType, LLVMCompileTimeContext* context)
 {
 	auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
@@ -180,6 +206,32 @@ llvm::Value* LLVMCodeGeneratorHelper::createNullCheckSelect(llvm::Value* valueTo
 
 
 llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
+																	const CatGenericType& returnType, llvm::Value* returnedObjectAllocation, LLVMCompileTimeContext* context)
+{
+	llvm::Type* resultType = toLLVMType(returnType);
+	if (returnType.isReflectableObjectType())
+	{
+		resultType = resultType->getPointerTo();
+	}
+	if (returnType.isReflectableObjectType())
+	{
+		auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
+		{
+			assert(returnType.isConstructible());
+			llvm::Value* typeInfoConstantAsIntPtr = createTypeInfoGlobalValue(context, returnType.getObjectType());
+			createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
+			return returnedObjectAllocation;
+		};
+		return createOptionalNullCheckSelect(valueToCheck, codeGenIfNotNull, codeGenIfNull, context);
+	}
+	else
+	{
+		return createOptionalNullCheckSelect(valueToCheck, codeGenIfNotNull, resultType, context);
+	}
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
 																	llvm::Type* resultType, LLVMCompileTimeContext* context)
 {
 	if (context->options.enableDereferenceNullChecks)
@@ -1181,7 +1233,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateFunctionCallReturnValueAllocation(
 
 
 void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std::vector<const jitcat::AST::CatTypedExpression*>& arguments,
-																	   const std::vector<CatGenericType>& expectedArgumentTypes, 
+																	   const std::vector<CatGenericType>& expectedArgumentTypes,
 																	   std::vector<llvm::Value*>& generatedArguments,
 																	   std::vector<llvm::Type*>& generatedArgumentTypes,
 																	   LLVMCodeGenerator* generator, LLVMCompileTimeContext* context)
@@ -1201,6 +1253,31 @@ void LLVMCodeGeneratorHelper::generateFunctionCallArgumentEvalatuation(const std
 		generatedArguments.push_back(argumentValue);
 		generatedArgumentTypes.push_back(generatedArguments.back()->getType());
 	}
+}
+
+
+llvm::Value* LLVMCodeGeneratorHelper::generateFunctionCallArgumentNullChecks(const std::vector<llvm::Value*>& arguments, 
+																			 const std::vector<int> argumentIndicesToNullCheck,
+																			 int argumentsOffset,
+																			 LLVMCodeGenerator* generator, LLVMCompileTimeContext* context)
+{
+	llvm::Value* nullCheckAggregate = nullptr;
+	for (auto iter : argumentIndicesToNullCheck)
+	{
+		int index = iter + argumentsOffset;
+		assert(index < (int)arguments.size());
+		assert(arguments[index]->getType()->isPointerTy());
+		llvm::Value* isNotNull = generator->builder->CreateIsNotNull(arguments[index], arguments[index]->getName());
+		if (nullCheckAggregate == nullptr)
+		{
+			nullCheckAggregate = isNotNull;
+		}
+		else
+		{
+			nullCheckAggregate = generator->builder->CreateAnd(nullCheckAggregate, isNotNull);
+		}
+	}
+	return nullCheckAggregate;
 }
 
 
@@ -1233,6 +1310,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticFunctionCall(const jitcat::C
 
 llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::MemberFunctionInfo* memberFunction, const AST::CatTypedExpression* base, 
 																const std::vector<const AST::CatTypedExpression*>& arguments, 
+																const std::vector<int>& argumentsToCheckForNull,
 																LLVMCompileTimeContext* context)
 {
 	const CatGenericType& returnType = memberFunction->getReturnType();
@@ -1245,26 +1323,27 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 	}
 	//If the member function call returns an object by value, we must allocate the object on the stack.
 	llvm::Value* returnedObjectAllocation = generateFunctionCallReturnValueAllocation(returnType, memberFunction->getMemberFunctionName(), context);
-	
-	auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+	MemberFunctionCallData callData = memberFunction->getFunctionAddress(FunctionType::Auto);
+	assert(callData.functionAddress != 0 || callData.linkDylib || callData.inlineFunctionGenerator != nullptr);
+	std::vector<llvm::Value*> argumentList;
+	llvm::Value* functionThis = context->helper->convertToPointer(baseObject, memberFunction->getMemberFunctionName() + "_This_Ptr");
+	argumentList.push_back(functionThis);
+	std::vector<llvm::Type*> argumentTypes;
+	argumentTypes.push_back(llvmTypes.pointerType);
+	if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
 	{
-		MemberFunctionCallData callData = memberFunction->getFunctionAddress(FunctionType::Auto);
-		assert(callData.functionAddress != 0 || callData.linkDylib || callData.inlineFunctionGenerator != nullptr);
-		std::vector<llvm::Value*> argumentList;
-		llvm::Value* functionThis = compileContext->helper->convertToPointer(baseObject, memberFunction->getMemberFunctionName() + "_This_Ptr");
-		argumentList.push_back(functionThis);
-		std::vector<llvm::Type*> argumentTypes;
+		//Add an argument that contains a pointer to a MemberFunctionInfo object.
+		llvm::Value* memberFunctionInfoAddressValue = context->helper->generateStaticPointerVariable(callData.functionInfoStructAddress, context, memberFunction->getMangledFunctionInfoName(context->targetConfig->sretBeforeThis, FunctionType::Member));
+		llvm::Value* memberFunctionPtrValue = context->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
+		argumentList.push_back(memberFunctionPtrValue);
 		argumentTypes.push_back(llvmTypes.pointerType);
-		if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
-		{
-			//Add an argument that contains a pointer to a MemberFunctionInfo object.
-			llvm::Value* memberFunctionInfoAddressValue = context->helper->generateStaticPointerVariable(callData.functionInfoStructAddress, context, memberFunction->getMangledFunctionInfoName(context->targetConfig->sretBeforeThis, FunctionType::Member));
-			llvm::Value* memberFunctionPtrValue = compileContext->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
-			argumentList.push_back(memberFunctionPtrValue);
-			argumentTypes.push_back(llvmTypes.pointerType);
-		}
-		generateFunctionCallArgumentEvalatuation(arguments, memberFunction->getArgumentTypes(), argumentList, argumentTypes, codeGenerator, context);
+	}
+	int offset = (int)argumentList.size();
+	generateFunctionCallArgumentEvalatuation(arguments, memberFunction->getArgumentTypes(), argumentList, argumentTypes, codeGenerator, context);
+	llvm::Value* argumentNullCheck = generateFunctionCallArgumentNullChecks(argumentList, argumentsToCheckForNull, offset, codeGenerator, context);
 
+	auto notNullCodeGen = [&](LLVMCompileTimeContext* compileContext)
+	{
 		if (callData.callType != MemberFunctionCallType::InlineFunctionGenerator)
 		{
 			if (!callData.linkDylib)
@@ -1359,26 +1438,15 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			return (*callData.inlineFunctionGenerator)(context, argumentList);
 		}
 	};
-
-	llvm::Type* resultType = toLLVMType(returnType);
-	if (returnType.isReflectableObjectType())
+	if (argumentNullCheck != nullptr)
 	{
-		resultType = resultType->getPointerTo();
-	}
-	if (returnType.isReflectableObjectType())
-	{
-		auto codeGenIfNull = [=](LLVMCompileTimeContext* context)
-		{
-			assert(returnType.isConstructible());
-			llvm::Value* typeInfoConstantAsIntPtr = createTypeInfoGlobalValue(context, returnType.getObjectType());
-			createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {returnedObjectAllocation, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
-			return returnedObjectAllocation;
-		};
-		return createOptionalNullCheckSelect(baseObject, notNullCodeGen, codeGenIfNull, context);
+		llvm::Value* baseNotNull = getBuilder()->CreateIsNotNull(baseObject, baseObject->getName());
+		llvm::Value* bothNotNull = getBuilder()->CreateAnd(baseNotNull, argumentNullCheck);
+		return createOptionalNullCheckSelect(bothNotNull, notNullCodeGen, returnType, returnedObjectAllocation, context);
 	}
 	else
 	{
-		return createOptionalNullCheckSelect(baseObject, notNullCodeGen, resultType, context);
+		return createOptionalNullCheckSelect(baseObject, notNullCodeGen, returnType, returnedObjectAllocation, context);
 	}
 }
 

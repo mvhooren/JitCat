@@ -56,14 +56,18 @@ namespace jitcat::LLVM
 		llvm::Value* createCall(LLVMCompileTimeContext* context, llvm::FunctionType* functionType, const std::vector<llvm::Value*>& arguments, 
 								bool isThisCall, const std::string& mangledFunctionName, const std::string& shortFunctionName,
 								bool isDirectlyLinked);
-		
+
+		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
+										   const CatGenericType& returnType, llvm::Value* returnObjectAllocation, LLVMCompileTimeContext* context); 
 		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
 										   llvm::Type* resultType, LLVMCompileTimeContext* context); 
 		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
 										   llvm::PointerType* resultType, LLVMCompileTimeContext* context); 
 		llvm::Value* createNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
 										   std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNull, LLVMCompileTimeContext* context); 
-		
+
+		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
+												   const CatGenericType& returnType, llvm::Value* returnObjectAllocation, LLVMCompileTimeContext* context); 
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull,
 												   llvm::Type* resultType, LLVMCompileTimeContext* context); 
 		llvm::Value* createOptionalNullCheckSelect(llvm::Value* valueToCheck, std::function<llvm::Value*(LLVMCompileTimeContext*)> codeGenIfNotNull, 
@@ -157,6 +161,10 @@ namespace jitcat::LLVM
 													  std::vector<llvm::Value*>& generatedArguments,
 													  std::vector<llvm::Type*>& generatedArgumentTypes,
 													  LLVMCodeGenerator* generator, LLVMCompileTimeContext* context);
+		llvm::Value* generateFunctionCallArgumentNullChecks(const std::vector<llvm::Value*>& arguments,
+															const std::vector<int> argumentIndicesToNullCheck,
+															int argumentsOffset,
+															LLVMCodeGenerator* generator, LLVMCompileTimeContext* context);
 
 		llvm::Value* generateStaticFunctionCall(const jitcat::CatGenericType& returnType, 
 												const std::vector<llvm::Value*>& argumentList, 
@@ -170,6 +178,7 @@ namespace jitcat::LLVM
 
 		llvm::Value* generateMemberFunctionCall(jitcat::Reflection::MemberFunctionInfo* memberFunction, const jitcat::AST::CatTypedExpression* base, 
 											    const std::vector<const jitcat::AST::CatTypedExpression*>& arguments, 
+												const std::vector<int>& argumentsToCheckForNull,
 												LLVMCompileTimeContext* context);
 
 		//Generates a simple loop

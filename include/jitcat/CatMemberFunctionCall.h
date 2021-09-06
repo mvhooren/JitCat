@@ -51,6 +51,7 @@ namespace jitcat::AST
 		void setFunctionName(const std::string& name);
 		void setBase(std::unique_ptr<CatTypedExpression> newBase);
 		const Tokenizer::Lexeme& getNameLexeme() const;
+		const std::vector<int>& getArgumentsToCheckForNull() const;
 
 	private:
 		Reflection::MemberFunctionInfo* memberFunctionInfo;
@@ -60,6 +61,7 @@ namespace jitcat::AST
 		std::unique_ptr<CatTypedExpression> base;
 		std::unique_ptr<CatArgumentList> arguments;
 		CatGenericType returnType;
+		std::vector<int> argumentsToCheckForNull;
 
 		// Inherited via FunctionSignature
 		virtual const std::string& getLowerCaseFunctionName() const override;

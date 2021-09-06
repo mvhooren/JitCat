@@ -113,9 +113,18 @@ std::any CatStaticFunctionCall::execute(CatRuntimeContext* runtimeContext)
 	std::vector<std::any> argumentValues;
 	argumentValues.reserve(arguments->getNumArguments());
 	arguments->executeAllArguments(argumentValues, staticFunctionInfo->getArgumentTypes(), runtimeContext);
-	std::any value = staticFunctionInfo->call(runtimeContext, argumentValues);
-	runtimeContext->setReturning(wasReturning);
-	return value;
+	bool isNonNull = arguments->checkArgumentsForNull(argumentsToCheckForNull, argumentValues);
+	if (isNonNull)
+	{
+		std::any value = staticFunctionInfo->call(runtimeContext, argumentValues);
+		runtimeContext->setReturning(wasReturning);
+		return value;
+	}
+	else
+	{
+		runtimeContext->setReturning(wasReturning);
+		return returnType.createDefault();
+	}
 }
 
 
@@ -171,6 +180,14 @@ bool CatStaticFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 		{
 			return false;
 		}
+		argumentsToCheckForNull.clear();
+		for (unsigned int i = 0; i < numArgumentsSupplied; ++i)
+		{
+			if (staticFunctionInfo->getArgumentType(i).isNonNullPointerType() && !arguments->getArgumentType(i).isNonNullPointerType())
+			{
+				argumentsToCheckForNull.push_back(i);
+			}
+		}
 		returnType = staticFunctionInfo->getReturnType();
 		return true;
 	}
@@ -210,6 +227,12 @@ const CatGenericType& jitcat::AST::CatStaticFunctionCall::getFunctionParameterTy
 const std::vector<CatGenericType>& jitcat::AST::CatStaticFunctionCall::getExpectedParameterTypes() const
 {
 	return staticFunctionInfo->getArgumentTypes();
+}
+
+
+const std::vector<int>& jitcat::AST::CatStaticFunctionCall::getArgumentsToCheckForNull() const
+{
+	return argumentsToCheckForNull;
 }
 
 

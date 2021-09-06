@@ -51,6 +51,8 @@ namespace jitcat::AST
 
 		bool applyIndirectionConversions(const std::vector<CatGenericType>& expectedTypes, const std::string& functionName, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
 
+		bool checkArgumentsForNull(std::vector<int>& argumentsToCheckForNull, std::vector<std::any>& argumentValues);
+
 	private:
 		std::vector<std::unique_ptr<CatTypedExpression>> arguments;
 		std::vector<CatGenericType> argumentTypes;

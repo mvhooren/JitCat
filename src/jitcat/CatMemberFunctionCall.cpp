@@ -94,9 +94,18 @@ std::any CatMemberFunctionCall::executeWithBase(CatRuntimeContext* runtimeContex
 		std::vector<std::any> argumentValues;
 		argumentValues.reserve(arguments->getNumArguments());
 		arguments->executeAllArguments(argumentValues, memberFunctionInfo->getArgumentTypes(), runtimeContext);
-		std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
-		runtimeContext->setReturning(wasReturning);
-		return value;
+		bool isNonNull = arguments->checkArgumentsForNull(argumentsToCheckForNull, argumentValues);
+		if (isNonNull)
+		{
+			std::any value = memberFunctionInfo->call(runtimeContext, baseValue, argumentValues);
+			runtimeContext->setReturning(wasReturning);
+			return value;
+		}
+		else
+		{
+			runtimeContext->setReturning(wasReturning);
+			return returnType.createDefault();
+		}
 	}
 	assert(false);
 	return std::any();
@@ -173,6 +182,15 @@ bool CatMemberFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Exp
 			if (!arguments->applyIndirectionConversions(memberFunctionInfo->getArgumentTypes(), functionName, compiletimeContext, errorManager, errorContext))
 			{
 				return false;
+			}
+
+			argumentsToCheckForNull.clear();
+			for (unsigned int i = 0; i < arguments->getNumArguments(); ++i)
+			{
+				if (memberFunctionInfo->getArgumentType(i).isNonNullPointerType() && !arguments->getArgumentType(i).isNonNullPointerType())
+				{
+					argumentsToCheckForNull.push_back(i);
+				}
 			}
 
 			returnType = memberFunctionInfo->getReturnType();
@@ -261,6 +279,12 @@ void CatMemberFunctionCall::setBase(std::unique_ptr<CatTypedExpression> newBase)
 const Tokenizer::Lexeme& CatMemberFunctionCall::getNameLexeme() const
 {
 	return nameLexeme;
+}
+
+
+const std::vector<int>& CatMemberFunctionCall::getArgumentsToCheckForNull() const
+{
+	return argumentsToCheckForNull;
 }
 
 

@@ -15,7 +15,7 @@ namespace jitcat::Reflection
 
 #include <memory>
 #include <string>
-
+#include <vector>
 
 namespace jitcat::AST
 {
@@ -47,6 +47,7 @@ namespace jitcat::AST
 		const CatGenericType& getFunctionParameterType(std::size_t index) const;
 
 		const std::vector<CatGenericType>& getExpectedParameterTypes() const;
+		const std::vector<int>& getArgumentsToCheckForNull() const;
 
 	private:
 		Reflection::StaticFunctionInfo* staticFunctionInfo;
@@ -58,6 +59,8 @@ namespace jitcat::AST
 		Tokenizer::Lexeme nameLexeme;
 		std::unique_ptr<CatArgumentList> arguments;
 		CatGenericType returnType;
+		
+		std::vector<int> argumentsToCheckForNull;
 
 		// Inherited via FunctionSignature
 		virtual const std::string& getLowerCaseFunctionName() const override;

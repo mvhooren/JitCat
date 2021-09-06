@@ -213,3 +213,28 @@ bool CatArgumentList::applyIndirectionConversions(const std::vector<CatGenericTy
 	}
 	return true;
 }
+
+
+bool CatArgumentList::checkArgumentsForNull(std::vector<int>& argumentsToCheckForNull, std::vector<std::any>& argumentValues)
+{
+	for (auto iter : argumentsToCheckForNull)
+	{
+		const CatGenericType& argumentType = getArgumentType(iter);
+		if (argumentType.isPointerToReflectableObjectType())
+		{
+			if (argumentType.removeIndirection().getTypeCaster()->isNullPtr(argumentValues[iter]))
+			{
+				return false;
+			}
+		}
+		else if (argumentType.isPointerToPointerType() 
+				 && !argumentType.getPointeeType()->getPointeeType()->isPointerType())
+		{
+			if (argumentType.removeIndirection().getTypeCaster()->isNullPtrPtr(argumentValues[iter]))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}

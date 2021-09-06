@@ -1031,7 +1031,8 @@ llvm::Value* LLVMCodeGenerator::generate(const CatMemberFunctionCall* memberFunc
 	{
 		expressionArguments.push_back(arguments->getArgument(i));
 	}
-	return helper->generateMemberFunctionCall(memberFunctionCall->getMemberFunctionInfo(), memberFunctionCall->getBase(), expressionArguments, context);
+	return helper->generateMemberFunctionCall(memberFunctionCall->getMemberFunctionInfo(), memberFunctionCall->getBase(), 
+											  expressionArguments, memberFunctionCall->getArgumentsToCheckForNull(), context);
 }
 
 
@@ -1054,10 +1055,26 @@ llvm::Value* LLVMCodeGenerator::generate(const AST::CatStaticFunctionCall* stati
 		argumentList.push_back(returnAllocation);
 		argumentTypes.push_back(returnAllocation->getType());
 	}
+	int argumentsOffset = (int)argumentList.size();
 	helper->generateFunctionCallArgumentEvalatuation(expressionArguments, staticFunctionCall->getExpectedParameterTypes(), argumentList, argumentTypes, this, context);
+	llvm::Value* argumentsNullCheck = helper->generateFunctionCallArgumentNullChecks(argumentList, staticFunctionCall->getArgumentsToCheckForNull(), argumentsOffset, this, context);
 	helper->defineWeakSymbol(context, staticFunctionCall->getFunctionAddress(), staticFunctionCall->getMangledFunctionName(targetConfig->sretBeforeThis), false);
-	return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(targetConfig->sretBeforeThis), 
-											  staticFunctionCall->getFunctionName(), returnAllocation, false, staticFunctionCall->getFunctionNeverReturnsNull());
+	if (argumentsNullCheck != nullptr)
+	{
+		//There are arguments that had to be checked for null
+		auto notNullCodeGen = [=](LLVMCompileTimeContext* compileContext)
+		{
+			return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(targetConfig->sretBeforeThis), 
+													  staticFunctionCall->getFunctionName(), returnAllocation, false, staticFunctionCall->getFunctionNeverReturnsNull());
+		};
+		return helper->createOptionalNullCheckSelect(argumentsNullCheck, notNullCodeGen, returnType, returnAllocation, context);
+	}
+	else
+	{
+		
+		return helper->generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, staticFunctionCall->getMangledFunctionName(targetConfig->sretBeforeThis), 
+												  staticFunctionCall->getFunctionName(), returnAllocation, false, staticFunctionCall->getFunctionNeverReturnsNull());
+	}
 }
 
 
@@ -1577,8 +1594,17 @@ llvm::Value* LLVMCodeGenerator::generateAssign(const CatAssignableExpression* ex
 		MemberFunctionInfo* functionInfo = expression->getType().getPointeeType()->getObjectType()->getMemberFunctionInfo(signature);
 		if (functionInfo != nullptr)
 		{
+			std::vector<int> argumentsToCheckForNull;
+			const std::vector<CatGenericType>& argumentTypes = functionInfo->getArgumentTypes();
+			for (int i = 0; i < (int)argumentTypes.size(); ++i)
+			{
+				if (argumentTypes[i].isNonNullPointerType())
+				{
+					argumentsToCheckForNull.push_back(i);
+				}
+			}
 			LLVMPreGeneratedExpression preGenerated(rValue, expression->getType().removeIndirection().toPointer());
-			return helper->generateMemberFunctionCall(functionInfo, expression, {&preGenerated}, context);
+			return helper->generateMemberFunctionCall(functionInfo, expression, {&preGenerated}, argumentsToCheckForNull, context);
 		}
 		assert(false);
 	}

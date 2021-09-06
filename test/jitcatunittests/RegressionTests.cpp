@@ -61,6 +61,11 @@ TEST_CASE("Regression testing", "[regression]")
 		Expression<void> testExpression(&context, "0");
 		doCommonChecks(&testExpression, false, true, true, context);
 	}
+	SECTION("Null reference")
+	{
+		Expression<std::string> testExpression(&context, "addToString(nullObject.text, 5.0f)");
+		doChecks(std::string(""), false, false, false, testExpression, context);
+	}
 	SECTION("Floating point literal with no decimal digits")
 	{
 		ExpressionAny testExpression(&context, "1.");
