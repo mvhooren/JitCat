@@ -112,7 +112,10 @@ namespace jitcat
 		bool isAssignableType() const;
 		bool isNullptrType() const;
 		
+		// Returns true if the object can be memcpy-ed.
 		bool isTriviallyCopyable() const;
+		// Returns true if the object can be constructed by zeroing its memory.
+		bool isTriviallyConstructable() const;
 		bool isWritable() const;
 		bool isConst() const;
 

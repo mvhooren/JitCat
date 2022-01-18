@@ -29,7 +29,7 @@ TEST_CASE("CatLib basic tests", "[catlib]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -144,7 +144,7 @@ TEST_CASE("CatLib function overloading tests", "[catlib][function_overloading]" 
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -231,7 +231,7 @@ TEST_CASE("CatLib local variable tests", "[catlib][locals]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -307,7 +307,7 @@ TEST_CASE("CatLib if statement tests", "[catlib][if-statement][control-flow]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -501,7 +501,7 @@ TEST_CASE("CatLib for loop tests", "[catlib][for-loop][control-flow]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -641,7 +641,7 @@ TEST_CASE("CatLib local function call tests", "[catlib][local_function_call]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -709,7 +709,7 @@ TEST_CASE("CatLib use before defined", "[catlib][use_before_defined]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -797,7 +797,7 @@ TEST_CASE("CatLib inheritance", "[.][catlib][inheritance]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -894,7 +894,7 @@ TEST_CASE("CatLib arrays", "[catlib][arrays]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{
@@ -918,9 +918,22 @@ TEST_CASE("CatLib arrays", "[catlib][arrays]" )
 			"	{\n"
 			"		floats[0] = 12.34f;\n"
 			"	}\n"
-			"	float getFloat()\n"
+			"	float getFloat(int index)\n"
 			"	{\n"
-			"		return floats[0];\n"
+			"		return floats[index];\n"
+			"	}\n"
+			"	void setFloat(float value)\n"
+			"	{\n"
+			"		floats[1] = value;\n"
+			"	}\n"
+			"	void addFloat(float value)\n"
+			"	{\n"
+			"		floats.resize(floats.size() + 1);\n"
+			"		floats[floats.size() - 1] = value;\n"
+			"	}\n"
+			"	int getSize()\n"
+			"	{\n"
+			"		return floats.size();\n"
 			"	}\n"
 			"}\n"
 
@@ -945,10 +958,40 @@ TEST_CASE("CatLib arrays", "[catlib][arrays]" )
 
 		SECTION("getX")
 		{
-			Expression<float> testExpression1(&context, "getFloat()");
+			Expression<float> testExpression1(&context, "getFloat(0)");
 			doChecks(12.34f, false, false, false, testExpression1, context);
 		}
+		SECTION("setX")
+		{
+			Expression<void> testExpression1(&context, "setFloat(11.12f)");
+			doCommonChecks(&testExpression1, false, false, false, context);
+			testExpression1.getValue(&context);
+			Expression<float> testExpression2(&context, "getFloat(1)");
+			doChecks(11.12f, false, false, false, testExpression2, context);
+		}
+		SECTION("getS")
+		{
+			Expression<int> testExpression1(&context, "getSize()");
+			doChecks(3, false, false, false, testExpression1, context);
+		}
+		SECTION("resizeArray")
+		{
+			Expression<void> testExpression1(&context, "addFloat(32.0f)");
+			doCommonChecks(&testExpression1, false, false, false, context);
+			testExpression1.getValue(&context);
 
+			Expression<float> testExpression5(&context, "getFloat(0)");
+			doChecks(12.34f, false, false, false, testExpression5, context);
+			testExpression1.getInterpretedValue(&context);
+			Expression<int> testExpression2(&context, "getSize()");
+			doChecks(5, false, false, false, testExpression2, context);
+			Expression<float> testExpression3(&context, "getFloat(3)");
+			doChecks(32.0f, false, false, false, testExpression3, context);
+			Expression<float> testExpression4(&context, "getFloat(4)");
+			doChecks(32.0f, false, false, false, testExpression4, context);
+			Expression<float> testExpression6(&context, "getFloat(0)");
+			doChecks(12.34f, false, false, false, testExpression6, context);
+		}
 		testClassInfo->destruct(testClassInstance);
 	}
 }

@@ -134,6 +134,15 @@ void CatLinkedIntrinsics::_jc_placementCopyConstructType(unsigned char* target, 
 }
 
 
+void CatLinkedIntrinsics::_jc_placementMoveConstructType(unsigned char* target, unsigned char* source, Reflection::TypeInfo* type)
+{
+	if (target != source)
+	{
+		type->moveConstruct(target, type->getTypeSize(), source, type->getTypeSize());
+	}
+}
+
+
 void CatLinkedIntrinsics::_jc_placementConstructType(unsigned char* address, Reflection::TypeInfo* type)
 {
 	type->placementConstruct(address, type->getTypeSize());

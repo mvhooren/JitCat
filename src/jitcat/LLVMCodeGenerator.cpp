@@ -149,6 +149,9 @@ LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name, const LLVMTargetCo
 		intrinsicSymbols[executionSession->intern("_floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&floorl), functionFlags);
 		double(*floorPtr)(double) = &floor;
 		intrinsicSymbols[executionSession->intern("floor")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(floorPtr), functionFlags);
+
+		intrinsicSymbols[executionSession->intern("memset")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&memset), functionFlags);
+		intrinsicSymbols[executionSession->intern("memcpy")] = llvm::JITEvaluatedSymbol(reinterpret_cast<llvm::JITTargetAddress>(&memcpy), functionFlags);
 	
 
 		llvm::cantFail(runtimeLibraryDyLib->define(llvm::orc::absoluteSymbols(intrinsicSymbols)));

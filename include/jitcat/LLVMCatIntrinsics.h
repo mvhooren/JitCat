@@ -55,6 +55,7 @@ namespace jitcat::LLVM
 		extern "C" float _jc_roundFloat(float number, int decimals);
 		extern "C" double _jc_roundDouble(double number, int decimals);
 		extern "C" void _jc_placementCopyConstructType(unsigned char* target, unsigned char* source, Reflection::TypeInfo* type);
+		extern "C" void _jc_placementMoveConstructType(unsigned char* target, unsigned char* source, Reflection::TypeInfo * type);
 		extern "C" void _jc_placementConstructType(unsigned char* address, Reflection::TypeInfo* type);
 		extern "C" void _jc_placementDestructType(unsigned char* address, Reflection::TypeInfo* type);
 		extern "C" unsigned char* _jc_allocateMemory(std::size_t size);

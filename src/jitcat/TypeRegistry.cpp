@@ -378,7 +378,7 @@ void TypeRegistry::exportRegistyToXML(const std::string& filepath)
 
 
 std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction,
-												bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
+												bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable, bool triviallyConstructable,
 												std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 												std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
@@ -394,6 +394,7 @@ std::unique_ptr<TypeInfo, TypeInfoDeleter> TypeRegistry::createTypeInfo(const ch
 		static_cast<ReflectedTypeInfo*>(typeInfo.get())->enableMoveConstruction();
 	}
 	static_cast<ReflectedTypeInfo*>(typeInfo.get())->setTriviallyCopyable(triviallyCopyable);
+	static_cast<ReflectedTypeInfo*>(typeInfo.get())->setTriviallyConstructable(triviallyConstructable);
 	return typeInfo;
 }
 

@@ -73,6 +73,7 @@ namespace jitcat::Reflection
 		virtual bool getAllowMoveConstruction() const override final;
 
 		virtual bool isTriviallyCopyable() const override final;
+		virtual bool isTriviallyConstructable() const override final;
 
 	private:
 		CatGenericType underlyingType;

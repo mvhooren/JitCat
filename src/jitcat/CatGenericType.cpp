@@ -427,6 +427,12 @@ bool CatGenericType::isTriviallyCopyable() const
 }
 
 
+bool CatGenericType::isTriviallyConstructable() const
+{
+	return isBasicType() || (isReflectableObjectType() && nestedType->isTriviallyConstructable()) || isEnumType();
+}
+
+
 bool CatGenericType::isWritable() const
 {
 	return writable || (isPointerToReflectableObjectType() && ownershipSemantics == TypeOwnershipSemantics::Value && pointeeType->isWritable());

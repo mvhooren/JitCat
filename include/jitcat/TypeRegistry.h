@@ -62,7 +62,7 @@ namespace jitcat::Reflection
 	private:
 		//This function exists to prevent circular includes via TypeInfo.h
 		static std::unique_ptr<TypeInfo, TypeInfoDeleter> createTypeInfo(const char* typeName, std::size_t typeSize, std::unique_ptr<TypeCaster> typeCaster, bool allowConstruction, 
-												 bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable,
+												 bool allowCopyConstruction, bool allowMoveConstruction, bool triviallyCopyable, bool triviallyConstructable,
 												 std::function<void(unsigned char* buffer, std::size_t bufferSize)>& placementConstructor,
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& copyConstructor,
 												 std::function<void(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize)>& moveConstructor,
@@ -165,9 +165,8 @@ namespace jitcat::Reflection
 				//When a type within JitCat is triviallyCopyable it implies that it is also trivially destructible.
 				//This is not always true for C++ types and so we also need to check for is_trivially_destructible.
 				constexpr bool triviallyCopyable = std::is_trivially_copyable<ReflectableT>::value && std::is_trivially_destructible<ReflectableT>::value;
-
 				
-				std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, std::move(typeCaster), isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable,
+				std::unique_ptr<jitcat::Reflection::TypeInfo, TypeInfoDeleter> typeInfo = createTypeInfo(typeName, typeSize, std::move(typeCaster), isConstructible, isCopyConstructible || triviallyCopyable, isMoveConstructible || triviallyCopyable, triviallyCopyable, false,
 																					  placementConstructor, copyConstructor, moveConstructor, placementDestructor);
 				types[lowerTypeName] = typeInfo.get();
 				if (typeInfoToSet != nullptr)

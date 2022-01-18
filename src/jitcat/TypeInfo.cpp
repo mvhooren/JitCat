@@ -466,6 +466,12 @@ bool TypeInfo::isTriviallyCopyable() const
 }
 
 
+bool Reflection::TypeInfo::isTriviallyConstructable() const
+{
+	return false;
+}
+
+
 const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& TypeInfo::getMembers() const
 {
 	return members;

@@ -31,6 +31,7 @@ CustomTypeInfo::CustomTypeInfo(const char* typeName, HandleTrackingMethod tracki
 	classDefinition(nullptr),
 	defaultData(new unsigned char[0]),
 	triviallyCopyable(true),
+	triviallyConstructable(true),
 	defaultConstructorFunction(nullptr),
 	destructorFunction(nullptr),
 	dylib(nullptr)
@@ -48,6 +49,7 @@ CustomTypeInfo::CustomTypeInfo(AST::CatClassDefinition* classDefinition, HandleT
 	classDefinition(classDefinition),
 	defaultData(new unsigned char[0]),
 	triviallyCopyable(true),
+	triviallyConstructable(true),
 	defaultConstructorFunction(nullptr),
 	destructorFunction(nullptr),
 	dylib(nullptr)
@@ -164,6 +166,7 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable, bool isConst)
 {
 	triviallyCopyable = false;
+	triviallyConstructable = false;
 	unsigned char* data = increaseDataSize(sizeof(Configuration::CatString));
 	unsigned int offset = (unsigned int)(data - defaultData);
 	if (defaultData == nullptr)
@@ -188,11 +191,12 @@ TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, c
 
 TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics, bool isWritable, bool isConst)
 {
-	triviallyCopyable = false;
 	std::size_t offset = 0;
 	TypeMemberInfo* memberInfo = nullptr;
 	if (ownershipSemantics != TypeOwnershipSemantics::Value)
 	{
+		triviallyCopyable = false;
+		triviallyConstructable = false;
 		CatGenericType type = CatGenericType(objectTypeInfo, isWritable, isConst).toHandle(ownershipSemantics, isWritable, isConst);
 		offset = addReflectableHandle(defaultValue, objectTypeInfo);
 		objectTypeInfo->addDependentType(this);
@@ -219,6 +223,7 @@ TypeMemberInfo* CustomTypeInfo::addDataObjectMember(const std::string& memberNam
 	if (objectTypeInfo != this)
 	{
 		triviallyCopyable = triviallyCopyable && objectTypeInfo->isTriviallyCopyable();
+		triviallyConstructable = triviallyConstructable && objectTypeInfo->isTriviallyConstructable();
 		unsigned char* data = increaseDataSize(objectTypeInfo->getTypeSize());
 		unsigned int offset = (unsigned int)(data - defaultData);
 		if (defaultData == nullptr)
@@ -578,6 +583,12 @@ void CustomTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targ
 bool CustomTypeInfo::isTriviallyCopyable() const
 {
 	return triviallyCopyable;
+}
+
+
+bool Reflection::CustomTypeInfo::isTriviallyConstructable() const
+{
+	return triviallyConstructable;
 }
 
 

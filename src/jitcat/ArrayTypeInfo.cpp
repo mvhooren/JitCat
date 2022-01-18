@@ -18,6 +18,7 @@ ArrayTypeInfo::ArrayTypeInfo(CatGenericType arrayItemType):
 	memberFunctions.emplace("__init", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Init, this));
 	memberFunctions.emplace("__destroy", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Destroy, this));
 	memberFunctions.emplace("size", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Size, this));
+	memberFunctions.emplace("resize", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Resize, this));
 	memberFunctions.emplace("[]", std::make_unique<ArrayMemberFunctionInfo>(ArrayMemberFunctionInfo::Operation::Index, this));
 	arrayItemType.addDependentType(this);
 }
@@ -133,6 +134,12 @@ void ArrayTypeInfo::moveConstruct(unsigned char* targetBuffer, std::size_t targe
 	target->arrayData = source->arrayData;
 	source->size = 0;
 	source->arrayData = nullptr;
+}
+
+
+bool Reflection::ArrayTypeInfo::isTriviallyConstructable() const
+{
+	return true;
 }
 
 

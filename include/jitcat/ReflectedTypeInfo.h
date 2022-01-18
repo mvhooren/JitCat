@@ -82,7 +82,8 @@ namespace jitcat::Reflection
 		ReflectedTypeInfo& disableMoveConstruction();
 
 		//Set weither or not the type is trivially copyable.
-		void setTriviallyCopyable(bool triviallyCopyable_);
+		void setTriviallyCopyable(bool trivial);
+		void setTriviallyConstructable(bool trivial);
 
 		//Set weither or not custom types can inherit from this type.
 		ReflectedTypeInfo& enableInheritance();
@@ -114,6 +115,7 @@ namespace jitcat::Reflection
 		virtual bool getAllowMoveConstruction() const override final;
 
 		virtual bool isTriviallyCopyable() const override final;
+		virtual bool isTriviallyConstructable() const override final;
 
 
 	private:
@@ -128,6 +130,7 @@ namespace jitcat::Reflection
 		bool allowMoveConstruction;
 		bool allowInheritance;
 		bool triviallyCopyable;
+		bool triviallyConstructable;
 	};
 
 }

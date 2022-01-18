@@ -96,3 +96,16 @@ bool ReflectedEnumTypeInfo::isTriviallyCopyable() const
 {
     return underlyingType.isTriviallyCopyable();
 }
+
+
+bool Reflection::ReflectedEnumTypeInfo::isTriviallyConstructable() const
+{
+    for (int i = 0; i < defaultValueSize; ++i)
+    {
+        if (defaultValueBuffer[i] != 0)
+        {
+            return false;
+        }
+    }
+    return underlyingType.isTriviallyConstructable();
+}

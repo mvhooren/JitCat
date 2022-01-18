@@ -156,6 +156,8 @@ namespace jitcat::Reflection
 
 		//Returns true if the type can be copied using memcpy without adverse side effects.
 		virtual bool isTriviallyCopyable() const;
+		//Returns true if the type can be constructed through zero-initialisation.
+		virtual bool isTriviallyConstructable() const;
 
 		//Beware that these lists are case insensitive because the keys have been converted to lower case
 		const std::map<std::string, std::unique_ptr<TypeMemberInfo>>& getMembers() const;

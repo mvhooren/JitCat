@@ -139,6 +139,7 @@ namespace jitcat::Reflection
 		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 
 		virtual bool isTriviallyCopyable() const override final;
+		virtual bool isTriviallyConstructable() const override final;
 
 		virtual bool canBeDeleted() const override final;
 
@@ -172,6 +173,7 @@ namespace jitcat::Reflection
 		std::vector<std::unique_ptr<unsigned char>> staticData;
 
 		bool triviallyCopyable;
+		bool triviallyConstructable;
 
 		MemberFunctionInfo* defaultConstructorFunction;
 		MemberFunctionInfo* destructorFunction;

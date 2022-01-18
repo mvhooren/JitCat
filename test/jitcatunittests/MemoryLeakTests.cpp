@@ -59,7 +59,7 @@ TEST_CASE("CatLib memory leak tests", "[catlib][memory]" )
 	{
 		if (JitCat::get()->getHasPrecompiledExpression())
 		{
-			WARN("CatLib tests are disabled because precompiled expressiosn have been found and CatLib does not yet support precompilation");
+			WARN("CatLib tests are disabled because precompiled expressions have been found and CatLib does not yet support precompilation");
 		}
 		else
 		{

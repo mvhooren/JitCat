@@ -39,6 +39,7 @@ namespace jitcat::Reflection
 		virtual void placementDestruct(unsigned char* buffer, std::size_t bufferSize) override final;
 		virtual void copyConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, const unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
 		virtual void moveConstruct(unsigned char* targetBuffer, std::size_t targetBufferSize, unsigned char* sourceBuffer, std::size_t sourceBufferSize) override final;
+		virtual bool isTriviallyConstructable() const override final;
 
 		virtual bool getAllowInheritance() const override final;
 		virtual bool inheritTypeCheck(CatRuntimeContext* context, AST::CatClassDefinition* childClass, ExpressionErrorManager* errorManager, void* errorContext) override final;

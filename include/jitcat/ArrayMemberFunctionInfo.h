@@ -16,6 +16,10 @@
 #include <memory>
 #include <vector>
 
+namespace llvm
+{
+	class Value;
+}
 
 namespace jitcat::LLVM
 {
@@ -35,7 +39,8 @@ namespace jitcat::Reflection
 			Index,
 			Size,
 			Init,
-			Destroy
+			Destroy,
+			Resize
 		};
 
 		static const char* toString(Operation operation);
@@ -47,10 +52,26 @@ namespace jitcat::Reflection
 		virtual MemberFunctionCallData getFunctionAddress(FunctionType functionType) const override final;
 
 	private:
+		void doInit(std::any& base, const std::vector<std::any>& parameters) const;
+		void doDestroy(std::any& base, const std::vector<std::any>& parameters) const;
+		void doResize(std::any& base, const std::vector<std::any>& parameters) const;
+		
+		static llvm::Value* generateArraySizePtr(LLVM::LLVMCompileTimeContext* context, llvm::Value* arrayPointer);
+		static llvm::Value* generateGetArraySize(LLVM::LLVMCompileTimeContext* context, llvm::Value* arrayPointer);
+		
+		static void generateInitEmptyArray(LLVM::LLVMCompileTimeContext* context, llvm::Value* arrayPointer, llvm::Value* arraySizePointer);
+		static void generateAllocateArray(LLVM::LLVMCompileTimeContext* context, ArrayTypeInfo* arrayType, llvm::Value* arrayPointer, llvm::Value* arraySizePointer, llvm::Value* arraySizeElements,
+										  llvm::Value*& arrayData, llvm::Value*& arraySizeBytes, llvm::Value*& arrayItemSizeBytes);
+		static void generateConstructArray(LLVM::LLVMCompileTimeContext* context, ArrayTypeInfo* arrayType, llvm::Value* arrayData, llvm::Value* arraySizeBytes, llvm::Value* arrayItemSizeBytes);
+		static void generateDestroyArray(LLVM::LLVMCompileTimeContext* context, ArrayTypeInfo* arrayType, llvm::Value* arrayData, llvm::Value* arraySizeElements);
+		static void generateFreeArray(LLVM::LLVMCompileTimeContext* context, llvm::Value* arrayPointer, llvm::Value* arrayData, llvm::Value* arraySizePointer);
+		static void generateMoveArrayElements(LLVM::LLVMCompileTimeContext* context, ArrayTypeInfo* arrayType, llvm::Value* targetArrayData, llvm::Value* sourceArrayData, llvm::Value* numItemsToMove, llvm::Value* itemSize);
+
 		void createIndexGeneratorFunction();
 		void createSizeGeneratorFunction();
 		void createInitGeneratorFunction();
 		void createDestroyGeneratorFunction();
+		void createResizeGeneratorFunction();
 
 		llvm::Type* getIndexReturnType(LLVM::LLVMCodeGeneratorHelper* codeGeneratorHelper) const;
 

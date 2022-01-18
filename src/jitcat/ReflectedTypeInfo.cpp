@@ -26,7 +26,8 @@ jitcat::Reflection::ReflectedTypeInfo::ReflectedTypeInfo(const char* typeName, s
 	allowCopyConstruction(false),
 	allowMoveConstruction(false),
 	allowInheritance(allowConstruction),
-	triviallyCopyable(false)
+	triviallyCopyable(false),
+	triviallyConstructable(false)
 {
 }
 
@@ -81,9 +82,15 @@ ReflectedTypeInfo& ReflectedTypeInfo::disableMoveConstruction()
 }
 
 
-void ReflectedTypeInfo::setTriviallyCopyable(bool triviallyCopyable_)
+void ReflectedTypeInfo::setTriviallyCopyable(bool trivial)
 {
-	triviallyCopyable = triviallyCopyable_;
+	triviallyCopyable = trivial;
+}
+
+
+void Reflection::ReflectedTypeInfo::setTriviallyConstructable(bool trivial)
+{
+	triviallyConstructable = trivial;
 }
 
 
@@ -211,4 +218,10 @@ bool ReflectedTypeInfo::getAllowMoveConstruction() const
 bool ReflectedTypeInfo::isTriviallyCopyable() const
 {
 	return triviallyCopyable;
+}
+
+
+bool Reflection::ReflectedTypeInfo::isTriviallyConstructable() const
+{
+	return triviallyConstructable;
 }
