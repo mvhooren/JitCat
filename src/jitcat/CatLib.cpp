@@ -23,9 +23,9 @@ using namespace jitcat;
 using namespace AST;
 using namespace Reflection;
 
-CatLib::CatLib(const std::string& libName, std::shared_ptr<PrecompilationContext> precompilationContext):
+CatLib::CatLib(const std::string& libName, std::shared_ptr<PrecompilationContext> precompilationContext, std::function<void(const std::string&, int, int, int)> errorHandler):
 	name(libName),
-	errorManager(std::make_unique<ExpressionErrorManager>()),
+	errorManager(std::make_unique<ExpressionErrorManager>(errorHandler)),
 	context(std::make_unique<CatRuntimeContext>(libName, errorManager.get()))
 {
 	context->setPrecompilationContext(precompilationContext);

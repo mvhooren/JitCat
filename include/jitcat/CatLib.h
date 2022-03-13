@@ -10,6 +10,7 @@
 #include "jitcat/CatRuntimeContext.h"
 #include "jitcat/Document.h"
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -40,7 +41,7 @@ namespace jitcat
 	class CatLib
 	{
 	public:
-		CatLib(const std::string& libName, std::shared_ptr<PrecompilationContext> precompilationContext);
+		CatLib(const std::string& libName, std::shared_ptr<PrecompilationContext> precompilationContext, std::function<void(const std::string&, int, int, int)> errorHandler = {});
 		~CatLib();
 
 		//addStaticScope adds a scope containing types, variables and/or functions that can be used by source files compiled by this CatLib. 
