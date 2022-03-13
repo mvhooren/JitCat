@@ -24,7 +24,6 @@ namespace jitcat::Reflection
 	//Reflectable can optionally be inherited by any class that wants to reflect its members.
 	//Its main task is that it will make sure that any references created by the scripting 
 	//system will be set to null when the Reflectable is destroyed.
-	//It does this without any data members.
 	//If an object is being reflected, but it did not inherit from Reflectable, then 
 	//the destruct/placementDestruct should be called manually when the object is destroyed if 
 	//any handles might possibly have been created for it.
