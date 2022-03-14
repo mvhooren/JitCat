@@ -9,22 +9,10 @@
 #include "jitcat/Document.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/ParseHelper.h"
+#include "jitcat/Tools.h"
 
 using namespace jitcat::Tokenizer;
 
-
-IdentifierToken::IdentifierToken(const Lexeme& lexeme, Identifier subType):
-	ParseToken(lexeme),
-	subType(subType)
-{
-
-}
-
-
-int IdentifierToken::getTokenID() const 
-{
-	return getID();
-}
 
 
 const char* IdentifierToken::getTokenName() const 
@@ -33,7 +21,7 @@ const char* IdentifierToken::getTokenName() const
 }
 
 
-const char* IdentifierToken::getSubTypeName(int subType_) const
+const char* IdentifierToken::getSubTypeName(unsigned short subType_) const
 {
 	switch ((Identifier) subType_)
 	{
@@ -80,32 +68,26 @@ const char* IdentifierToken::getSubTypeName(int subType_) const
 }
 
 
-const char* IdentifierToken::getSubTypeSymbol(int subType_) const
+const char* IdentifierToken::getSubTypeSymbol(unsigned short subType_) const
 {
 	return getSubTypeName(subType_);
 }
 
 
-int IdentifierToken::getTokenSubType() const
-{
-	return (int)subType;
-}
-
-
-ParseToken* IdentifierToken::createIfMatch(Document* document, const char* currentPosition) const
+bool IdentifierToken::createIfMatch(Document& document, std::size_t& currentPosition) const
 {
 	std::size_t offset = 0;
-	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
-	std::size_t documentLength = document->getDocumentSize() - docOffset;
+	std::size_t documentLength = document.getDocumentSize() - currentPosition;
+	const char* currentCharacter = &document.getDocumentData()[currentPosition];
 	if (documentLength > 0)
 	{
-		if (ParseHelper::isAlphaNumeric(currentPosition[offset]) || currentPosition[offset] == '_')
+		if (ParseHelper::isAlphaNumeric(currentCharacter[offset]) || currentCharacter[offset] == '_')
 		{
 			offset++;
 			while (offset < documentLength
-				   && (   ParseHelper::isAlphaNumeric(currentPosition[offset])
-					   || ParseHelper::isNumber(currentPosition[offset])
-					   || currentPosition[offset] == '_')
+				   && (   ParseHelper::isAlphaNumeric(currentCharacter[offset])
+					   || ParseHelper::isNumber(currentCharacter[offset])
+					   || currentCharacter[offset] == '_')
 					   /*|| currentPosition[offset] == '.')*/)
 			{
 				offset++;
@@ -114,25 +96,21 @@ ParseToken* IdentifierToken::createIfMatch(Document* document, const char* curre
 	}
 	if (offset > 0)
 	{
-		Lexeme newLexeme = document->createLexeme(docOffset, offset);
-		for (int type = (int)Identifier::Class; type < (int)Identifier::Last; type++)
+		std::string idName(currentCharacter, offset);
+		Identifier idType = Identifier::Identifier;
+		for (unsigned short type = Tools::enumToUSHort(Identifier::Class); type < Tools::enumToUSHort(Identifier::Last); ++type)
 		{
-			if (newLexeme == getSubTypeName(type))
+			if (idName == getSubTypeName(type))
 			{
-				return new IdentifierToken(newLexeme, (Identifier)type);
+				idType = (Identifier)type;
 			}
 		}
-		return new IdentifierToken(newLexeme, Identifier::Identifier);
+		document.addToken(currentPosition, offset, id, Tools::enumToUSHort(idType));
+		currentPosition += offset;
+		return true;
 	}
 	else
 	{
-		return nullptr;
+		return false;
 	}
-}
-
-
-const int IdentifierToken::getID()
-{
-	static int ID = ParseToken::getNextTokenID(); 
-	return ID;
 }

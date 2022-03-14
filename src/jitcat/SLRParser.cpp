@@ -353,7 +353,7 @@ bool SLRParser::tryReduce(DFAState* currentState, std::vector<StackItem*>& stack
 					CatLog::log(" item: ");
 					CatLog::log(item.toString().c_str());
 					CatLog::log(" because ");
-					CatLog::log(nextToken->getTokenIfToken()->getSubTypeName(nextToken->getTokenIfToken()->getTokenSubType()));
+					CatLog::log(grammar->getTokenizer()->getTokenName(nextToken->getTokenIfToken()->tokenID, nextToken->getTokenIfToken()->subType));
 					CatLog::log(" is in the follow set of ");
 					CatLog::log(item.production->getProductionName());
 					CatLog::log("\n");
@@ -398,15 +398,15 @@ DFAState* SLRParser::canShift(DFAState* currentState, StackItem* tokenToShift) c
 			&& token != nullptr)
 		{
 			const ProductionTerminalToken* terminal = static_cast<const ProductionTerminalToken*>(transition.transitionToken); 
-			if (terminal->getTokenId() == token->getTokenID()
-				&& terminal->getTokenSubType() == token->getTokenSubType())
+			if (terminal->getTokenId() == token->tokenID
+				&& terminal->getTokenSubType() == token->subType)
 			{
 				if constexpr (Configuration::debugGrammar)
 				{
 					CatLog::log("Shift terminal, state: ");
 					CatLog::log(currentState->stateIndex);
 					CatLog::log(" terminal: ");
-					CatLog::log(token->getSubTypeSymbol(token->getTokenSubType()));
+					CatLog::log(grammar->getTokenizer()->getTokenSymbol(token->tokenID, token->subType));
 					CatLog::log("\n");
 				}
 				return transition.nextState;
@@ -462,7 +462,7 @@ void SLRParser::printStack(const std::vector<StackItem*> stack) const
 		const ParseToken* token = stack[i]->getTokenIfToken();
 		if (token != nullptr)
 		{
-			CatLog::log(token->getSubTypeSymbol(token->getTokenSubType()));
+			CatLog::log(grammar->getTokenizer()->getTokenSymbol(token->tokenID, token->subType));
 		}
 		else 
 		{
@@ -756,7 +756,7 @@ std::string jitcat::Parser::SLRParser::getShiftErrorMessage(DFAState* currentSta
 }
 
 
-std::unique_ptr<SLRParseResult> SLRParser::parse(const std::vector<std::unique_ptr<ParseToken>>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
+std::unique_ptr<SLRParseResult> SLRParser::parse(const std::vector<ParseToken>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const
 {
 	std::unique_ptr<SLRParseResult> parseResult = std::make_unique<SLRParseResult>();
 
@@ -787,15 +787,15 @@ std::unique_ptr<SLRParseResult> SLRParser::parse(const std::vector<std::unique_p
 		}
 		//Skip whitespace
 		while (tokenIndex < (int)tokens.size()
-			   && (tokens[tokenIndex]->getTokenID() == whiteSpaceTokenID
-			       || tokens[tokenIndex]->getTokenID() == commentTokenID))
+			   && (tokens[tokenIndex].tokenID == whiteSpaceTokenID
+			       || tokens[tokenIndex].tokenID == commentTokenID))
 		{
 			tokenIndex++;
 		}
 		StackItemToken* token = nullptr;
 		if (tokenIndex < (int)tokens.size())
 		{
-			token = new StackItemToken(tokens[tokenIndex].get());
+			token = new StackItemToken(&tokens[tokenIndex]);
 			token->state = nullptr;
 		}
 		bool reduced = tryReduce(currentState, parseStack, token, context);
@@ -861,7 +861,7 @@ std::unique_ptr<SLRParseResult> SLRParser::parse(const std::vector<std::unique_p
 				{
 					if (token->getTokenIfToken())
 					{
-						const Lexeme& errorLexeme = token->getTokenIfToken()->getLexeme();
+						const Lexeme& errorLexeme = token->getTokenIfToken()->lexeme;
 						errorManager->compiledWithError(getShiftErrorMessage(currentState, std::string(errorLexeme)), errorSource, context->getContextName(), errorLexeme);
 					}
 					else if (token->getProductionIfProduction())

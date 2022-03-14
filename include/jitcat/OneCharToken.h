@@ -14,22 +14,16 @@ namespace jitcat::Tokenizer
 {
 	class Document;
 
-	class OneCharToken: public ParseToken
+	class OneCharToken: public TokenFactory
 	{
 	public:
-		OneCharToken();
-		OneCharToken(const Lexeme& lexeme, OneChar subType);
-		virtual ~OneCharToken();
-		virtual int getTokenID() const;
-		virtual const char* getTokenName() const;
-		virtual const char* getSubTypeName(int subType) const;
-		virtual const char* getSubTypeSymbol(int subType) const;
-		virtual int getTokenSubType() const;
-		virtual bool isSuggestedToken(int subType) const;
-		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-		static const int getID();
-	private:
-		OneChar subType;
+		OneCharToken(unsigned short id): TokenFactory(id) {};
+		
+		virtual const char* getTokenName() const override final;
+		virtual const char* getSubTypeName(unsigned short subType) const override final;
+		virtual const char* getSubTypeSymbol(unsigned short subType) const override final;
+		virtual bool isSuggestedToken(unsigned short subType) const override final;
+		virtual bool createIfMatch(Document& document, std::size_t& currentPosition) const override final;
 	};
 
 } //End namespace jitcat::Tokenizer

@@ -12,24 +12,26 @@
 using namespace jitcat::Tokenizer;
 
 
-ParseToken* ErrorToken::createIfMatch(Document* document, const char* currentPosition) const
+bool ErrorToken::createIfMatch(Document& document, std::size_t& currentPosition) const
 {
 	std::size_t offset = 0;
-	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
-	std::size_t documentLength = document->getDocumentSize() - docOffset;
+	std::size_t documentLength = document.getDocumentSize() - currentPosition;
+	const char* currentCharacter = &document.getDocumentData()[currentPosition];
 	while (offset < documentLength
-		   && currentPosition[offset] != ' '
-		   && currentPosition[offset] != '\t'
-		   && currentPosition[offset] != '\n')
+		   && currentCharacter[offset] != ' '
+		   && currentCharacter[offset] != '\t'
+		   && currentCharacter[offset] != '\n')
 	{
 		offset++;
 	}
 	if (offset > 0)
 	{
-		return new ErrorToken(document->createLexeme(docOffset, offset));
+		document.addToken(currentPosition, offset, id, 0);
+		currentPosition += offset;
+		return true;
 	}
 	else
 	{
-		return nullptr;
+		return false;
 	}
 }

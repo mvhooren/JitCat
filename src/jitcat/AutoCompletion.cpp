@@ -39,15 +39,13 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 	Document doc(expression.c_str(), expression.size());
 
 	CatTokenizer tokenizer;
-	std::vector<std::unique_ptr<ParseToken>> tokens;
-	tokenizer.tokenize(&doc, tokens, nullptr);
+	
+	tokenizer.tokenize(doc);
+	auto tokens = doc.getTokens();
 	int startingTokenIndex = findStartTokenIndex(doc, (int)cursorPosition - 1, tokens);
-	while (startingTokenIndex >= 0 && tokens[(unsigned int)startingTokenIndex] == nullptr)
-	{
-		startingTokenIndex--;
-	}
+
 	std::string expressionTailEnd = "";
-	std::vector<std::pair<const IdentifierToken*, bool>> subExpression = getSubExpressionToAutoComplete(tokens, startingTokenIndex, expressionTailEnd);
+	std::vector<std::pair<const ParseToken*, bool>> subExpression = getSubExpressionToAutoComplete(tokens, startingTokenIndex, expressionTailEnd);
 
 	std::vector<AutoCompletion::AutoCompletionEntry> results;
 	int last = (int)subExpression.size() - 1;
@@ -63,13 +61,13 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 			std::size_t identifierOffset;
 			if (subExpression[i].first != nullptr)
 			{
-				lowercaseIdentifier = Tools::toLowerCase(subExpression[i].first->getLexeme());
-				identifierOffset = subExpression[i].first->getLexeme().data() - doc.getDocumentData().c_str();
+				lowercaseIdentifier = Tools::toLowerCase(subExpression[i].first->lexeme);
+				identifierOffset = subExpression[i].first->lexeme.data() - doc.getDocumentData().c_str();
 				autoCompleteOnArray = subExpression[i].second;
 			}
 			else if (i > 0)
 			{
-				identifierOffset = (subExpression[i - 1].first->getLexeme().data() - doc.getDocumentData().c_str()) + subExpression[i - 1].first->getLexeme().length();
+				identifierOffset = (subExpression[i - 1].first->lexeme.data() - doc.getDocumentData().c_str()) + subExpression[i - 1].first->lexeme.length();
 			}
 			else
 			{
@@ -164,20 +162,20 @@ std::vector<AutoCompletion::AutoCompletionEntry> AutoCompletion::autoComplete(co
 }
 
 
-std::vector<std::pair<const IdentifierToken*, bool>> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd)
+std::vector<std::pair<const ParseToken*, bool>> AutoCompletion::getSubExpressionToAutoComplete(const std::vector<ParseToken>& tokens, int startingTokenIndex, std::string& expressionTailEnd)
 {
 	bool readTailEnd = false;
 	//Tokenize the entire expression, then find the token at the cursorPosition, then backtrack from there to find the 
 	//list of consecutive member dereferences/scopes
 	if (startingTokenIndex < 0)
 	{
-		return std::vector<std::pair<const IdentifierToken*, bool>>();
+		return std::vector<std::pair<const ParseToken*, bool>>();
 	}
-	ParseToken* startingToken = tokens[(unsigned int)startingTokenIndex].get();
-	std::vector<std::pair<const IdentifierToken*, bool>> subExpressions;
-	if (startingToken->getTokenID() == IdentifierToken::getID()
-		|| (startingToken->getTokenID() == OneCharToken::getID() 
-		   && startingToken->getTokenSubType() == static_cast<typename std::underlying_type<OneChar>::type>(OneChar::Dot)))
+	const ParseToken* startingToken = &tokens[(unsigned int)startingTokenIndex];
+	std::vector<std::pair<const ParseToken*, bool>> subExpressions;
+	if (startingToken->tokenID == CatTokenizer::identifier
+		|| (startingToken->tokenID == CatTokenizer::oneChar 
+		   && startingToken->subType == static_cast<typename std::underlying_type<OneChar>::type>(OneChar::Dot)))
 	{
 		int currentUnmatchedCloseBrackets = 0;
 		int currentUnmatchedCloseParenthesis = 0;
@@ -188,18 +186,18 @@ std::vector<std::pair<const IdentifierToken*, bool>> AutoCompletion::getSubExpre
 		{
 			if (!readTailEnd)
 			{
-				if (tokens[i]->getTokenID() == IdentifierToken::getID() && currentUnmatchedCloseBrackets == 0 && currentUnmatchedCloseParenthesis == 0)
+				if (tokens[i].tokenID == CatTokenizer::identifier && currentUnmatchedCloseBrackets == 0 && currentUnmatchedCloseParenthesis == 0)
 				{
 					readTailEnd = true;
 				}
 				else
 				{
-					expressionTailEnd = Tools::append(tokens[i]->getLexeme(), expressionTailEnd);
+					expressionTailEnd = Tools::append(tokens[i].lexeme, expressionTailEnd);
 				}
 			}
-			if (tokens[i]->getTokenID() == OneCharToken::getID())
+			if (tokens[i].tokenID == CatTokenizer::oneChar)
 			{
-				switch (static_cast<OneChar>(tokens[i]->getTokenSubType()))
+				switch (static_cast<OneChar>(tokens[i].subType))
 				{
 					case OneChar::ParenthesesOpen:
 						currentUnmatchedCloseParenthesis--;
@@ -225,7 +223,7 @@ std::vector<std::pair<const IdentifierToken*, bool>> AutoCompletion::getSubExpre
 					case OneChar::Dot:
 						if (i == startingTokenIndex)
 						{
-							subExpressions.push_back(std::make_pair((const Tokenizer::IdentifierToken*)nullptr, false));
+							subExpressions.push_back(std::make_pair((const Tokenizer::ParseToken*)nullptr, false));
 						}
 						continue;
 						break;
@@ -242,13 +240,13 @@ std::vector<std::pair<const IdentifierToken*, bool>> AutoCompletion::getSubExpre
 				//skip
 				continue;
 			}
-			else if (tokens[i]->getTokenID() == IdentifierToken::getID())
+			else if (tokens[i].tokenID == CatTokenizer::identifier)
 			{
-				subExpressions.push_back(std::make_pair(static_cast<IdentifierToken*>(tokens[i].get()), totalOpenBrackets > 0));
+				subExpressions.push_back(std::make_pair(&tokens[i], totalOpenBrackets > 0));
 				totalOpenBrackets = 0;
 			}
-			else if (tokens[i]->getTokenID() == WhitespaceToken::getID()
-					 || tokens[i]->getTokenID() == CommentToken::getID())
+			else if (tokens[i].tokenID == CatTokenizer::whiteSpace
+					 || tokens[i].tokenID == CatTokenizer::comment)
 			{
 				//ignore whitespace and comments
 				continue;
@@ -291,14 +289,14 @@ void AutoCompletion::addOptionsFromGlobalScope(const std::string& prefix, const 
 }
 
 
-int AutoCompletion::findStartTokenIndex(const Document& doc, int cursorPosition, const std::vector<std::unique_ptr<ParseToken>>& tokens)
+int AutoCompletion::findStartTokenIndex(const Document& doc, int cursorPosition, const std::vector<ParseToken>& tokens)
 {
 	for (int i = 0; i < (int)tokens.size(); i++)
 	{
-		ParseToken* token = tokens[i].get();
+		const ParseToken* token = &tokens[i];
 		if (token != nullptr)
 		{
-			const Lexeme& lexeme = token->getLexeme();
+			const Lexeme& lexeme = token->lexeme;
 			std::size_t lexemeOffset = doc.getOffsetInDocument(lexeme);
 			if ((int)lexemeOffset <= cursorPosition
 				&& (int)(lexemeOffset + lexeme.length()) > cursorPosition)
@@ -381,14 +379,14 @@ void AutoCompletion::addIfPartialMatch(const std::string& text, std::vector<Auto
 }
 
 
-bool AutoCompletion::isGlobalScopeAutoCompletable(const std::vector<std::unique_ptr<ParseToken>>& tokens, int startingTokenIndex)
+bool AutoCompletion::isGlobalScopeAutoCompletable(const std::vector<ParseToken>& tokens, int startingTokenIndex)
 {
 	if (startingTokenIndex < 0)
 	{
 		return true;
 	}
-	ParseToken* startingToken = tokens[startingTokenIndex].get();
-	while (startingToken->getTokenID() == WhitespaceToken::getID())
+	const ParseToken* startingToken = &tokens[startingTokenIndex];
+	while (startingToken->tokenID == CatTokenizer::whiteSpace)
 	{
 		startingTokenIndex--;
 		if (startingTokenIndex < 0)
@@ -397,18 +395,18 @@ bool AutoCompletion::isGlobalScopeAutoCompletable(const std::vector<std::unique_
 		}
 		else
 		{
-			startingToken = tokens[startingTokenIndex].get();
+			startingToken = &tokens[startingTokenIndex];
 		}
 	}
 	//There are several types of token after which it does not make sense to do any autocompletion
-	if (startingToken->getTokenID() == ConstantToken::getID()
-		|| startingToken->getTokenID() == ErrorToken::getID()
-		|| startingToken->getTokenID() == IdentifierToken::getID()
-		|| startingToken->getTokenID() == CommentToken::getID()
-		|| (startingToken->getTokenID() == OneCharToken::getID()
-			&& (startingToken->getTokenSubType() == (int)OneChar::BracketClose
-				|| startingToken->getTokenSubType() == (int)OneChar::ParenthesesClose
-				|| startingToken->getTokenSubType() == (int)OneChar::Dot)))
+	if (startingToken->tokenID == CatTokenizer::constant
+		|| startingToken->tokenID == CatTokenizer::error
+		|| startingToken->tokenID == CatTokenizer::identifier
+		|| startingToken->tokenID == CatTokenizer::comment
+		|| (startingToken->tokenID == CatTokenizer::oneChar
+			&& (startingToken->subType == (unsigned short)OneChar::BracketClose
+				|| startingToken->subType == (unsigned short)OneChar::ParenthesesClose
+				|| startingToken->subType == (unsigned short)OneChar::Dot)))
 	{
 		return false;
 	}

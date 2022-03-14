@@ -73,7 +73,7 @@ namespace jitcat::Parser
 		std::string getShiftErrorMessage(DFAState* currentState, const std::string& errorTokenName) const;
 
 	public:
-		std::unique_ptr<SLRParseResult> parse(const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const;
+		std::unique_ptr<SLRParseResult> parse(const std::vector<Tokenizer::ParseToken>& tokens, int whiteSpaceTokenID, int commentTokenID, RuntimeContext* context, ExpressionErrorManager* errorManager, void* errorSource) const;
 		~SLRParser();
 
 	private:

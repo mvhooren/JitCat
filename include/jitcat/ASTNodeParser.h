@@ -16,7 +16,7 @@ namespace jitcat
 	}
 	namespace Tokenizer
 	{
-		class ParseToken;
+		struct ParseToken;
 	}
 }
 

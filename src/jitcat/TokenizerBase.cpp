@@ -23,23 +23,19 @@ TokenizerBase::~TokenizerBase()
 }
 
 
-bool TokenizerBase::tokenize(Document* document, std::vector<std::unique_ptr<ParseToken>>& tokens, ParseToken* eofToken)
+bool TokenizerBase::tokenize(Document& document)
 {
-	document->clearLineLookup();
-	const char* data = document->getDocumentData().c_str();
-	const char* position = data;
-	std::size_t size = document->getDocumentSize();
-	while (position < data + size)
+	document.clearLineLookup();
+	std::size_t currentPosition = 0;
+	std::size_t size = document.getDocumentSize();
+	while (currentPosition < size)
 	{
 		bool found = false;
 		for (unsigned int i = 0; i < tokenFactories.size(); i++)
 		{
-			ParseToken* token = tokenFactories[i]->createIfMatch(document, position);
-			if (token != nullptr)
+			if (tokenFactories[i]->createIfMatch(document, currentPosition))
 			{
 				found = true;
-				tokens.emplace_back(token);
-				position += token->getLexeme().length();
 				break;
 			}
 		}
@@ -48,13 +44,13 @@ bool TokenizerBase::tokenize(Document* document, std::vector<std::unique_ptr<Par
 			return false;
 		}
 	}
-	tokens.emplace_back(eofToken);
-	document->addNewLine((int)(position - data));
+	document.addToken(ParseToken::getEofToken(document));
+	document.addNewLine((int)currentPosition);
 	return true;
 }
 
 
-void TokenizerBase::registerTokenFactory(std::unique_ptr<ParseToken> factory)
+void TokenizerBase::registerTokenFactory(std::unique_ptr<TokenFactory>&& factory)
 {
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{
@@ -67,8 +63,10 @@ void TokenizerBase::registerTokenFactory(std::unique_ptr<ParseToken> factory)
 }
 
 
-const char* TokenizerBase::getTokenName(int tokenId, int tokenSubType) const
+const char* TokenizerBase::getTokenName(unsigned short tokenId, unsigned short tokenSubType) const
 {
+	if (tokenId == ParseToken::eofType)
+		return "eof";
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{
 		if (tokenFactories[i]->getTokenID() == tokenId)
@@ -80,8 +78,10 @@ const char* TokenizerBase::getTokenName(int tokenId, int tokenSubType) const
 }
 
 
-const char* TokenizerBase::getTokenSymbol(int tokenId, int tokenSubType) const
+const char* TokenizerBase::getTokenSymbol(unsigned short tokenId, unsigned short tokenSubType) const
 {
+	if (tokenId == ParseToken::eofType)
+		return "eof";
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{
 		if (tokenFactories[i]->getTokenID() == tokenId)
@@ -93,7 +93,7 @@ const char* TokenizerBase::getTokenSymbol(int tokenId, int tokenSubType) const
 }
 
 
-bool jitcat::Tokenizer::TokenizerBase::isSuggestedToken(int tokenId, int tokenSubType) const
+bool TokenizerBase::isSuggestedToken(unsigned short tokenId, unsigned short tokenSubType) const
 {
 	for (unsigned int i = 0; i < tokenFactories.size(); i++)
 	{
@@ -103,4 +103,10 @@ bool jitcat::Tokenizer::TokenizerBase::isSuggestedToken(int tokenId, int tokenSu
 		}
 	}
 	return false;
+}
+
+
+unsigned short jitcat::Tokenizer::TokenizerBase::getNextFactoryID() const
+{
+	return (unsigned short)tokenFactories.size();
 }

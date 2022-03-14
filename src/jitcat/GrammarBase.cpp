@@ -75,7 +75,7 @@ const Tokenizer::TokenizerBase* jitcat::Grammar::GrammarBase::getTokenizer() con
 }
 
 
-void GrammarBase::rule(int productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action)
+void GrammarBase::rule(unsigned short productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action)
 {
 	std::unique_ptr<ProductionRule> rule(std::make_unique<ProductionRule>());
 	for (auto iter : tokens)
@@ -87,7 +87,7 @@ void GrammarBase::rule(int productionId, std::initializer_list<ProductionToken*>
 }
 
 
-ProductionToken* GrammarBase::term(int tokenId, int tokenSubType)
+ProductionToken* GrammarBase::term(unsigned short tokenId, unsigned short tokenSubType)
 {
 	for (unsigned int i = 0; i < terminals.size(); i++)
 	{
@@ -103,13 +103,13 @@ ProductionToken* GrammarBase::term(int tokenId, int tokenSubType)
 }
 
 
-ProductionToken* GrammarBase::prod(int productionId)
+ProductionToken* GrammarBase::prod(unsigned short productionId)
 {
 	return new ProductionNonTerminalToken(findOrCreateProduction(productionId));
 }
 
 
-void GrammarBase::setRootProduction(int productionId, ProductionToken* eofToken)
+void GrammarBase::setRootProduction(unsigned short productionId, ProductionToken* eofToken)
 {
 	rootProduction = findOrCreateProduction(productionId);
 	rootProduction->getFollowSet().addMemberIfNotPresent(eofToken);
@@ -124,7 +124,7 @@ void GrammarBase::build()
 }
 
 
-Production* GrammarBase::findOrCreateProduction(int productionId)
+Production* GrammarBase::findOrCreateProduction(unsigned short productionId)
 {
 	Production* production;
 	if (productions.find(productionId) != productions.end())

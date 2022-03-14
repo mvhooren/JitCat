@@ -10,7 +10,7 @@
 namespace jitcat::Tokenizer
 {
 
-	enum class CommentType: int
+	enum class CommentType: unsigned short
 	{
 		SingleLine,
 		Block

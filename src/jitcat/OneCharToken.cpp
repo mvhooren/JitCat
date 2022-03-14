@@ -8,30 +8,9 @@
 #include "jitcat/OneCharToken.h"
 #include "jitcat/Document.h"
 #include "jitcat/Lexeme.h"
+#include "jitcat/Tools.h"
 
 using namespace jitcat::Tokenizer;
-
-OneCharToken::OneCharToken():
-	subType(OneChar::Unknown)
-{
-}
-
-
-OneCharToken::OneCharToken(const Lexeme& lexeme, OneChar subType):
-	ParseToken(lexeme),
-	subType((OneChar)subType)
-{
-}
-
-
-OneCharToken::~OneCharToken()
-{}
-
-
-int OneCharToken::getTokenID() const
-{
-	return getID();
-}
 
 
 const char* OneCharToken::getTokenName() const
@@ -40,7 +19,7 @@ const char* OneCharToken::getTokenName() const
 }
 
 
-const char* OneCharToken::getSubTypeName(int subType_) const
+const char* OneCharToken::getSubTypeName(unsigned short subType_) const
 {
 	switch ((OneChar) subType_)
 	{
@@ -68,12 +47,11 @@ const char* OneCharToken::getSubTypeName(int subType_) const
 		case OneChar::Not:				return "bitwise not";
 		case OneChar::Dot:				return "dot";
 		case OneChar::At:				return "at";
-		case OneChar::Eof:				return "EOF";
 	}
 }
 
 
-const char* OneCharToken::getSubTypeSymbol(int subType_) const
+const char* OneCharToken::getSubTypeSymbol(unsigned short subType_) const
 {
 	switch ((OneChar) subType_)
 	{
@@ -101,18 +79,11 @@ const char* OneCharToken::getSubTypeSymbol(int subType_) const
 		case OneChar::Not:				return "!";
 		case OneChar::Dot:				return ".";
 		case OneChar::At:				return "@";
-		case OneChar::Eof:				return "$";
 	}
 }
 
 
-int OneCharToken::getTokenSubType() const
-{
-	return (int)subType;
-}
-
-
-bool jitcat::Tokenizer::OneCharToken::isSuggestedToken(int subType_) const
+bool OneCharToken::isSuggestedToken(unsigned short subType_) const
 {
 	OneChar tokenType = static_cast<OneChar>(subType_);
 	return	   tokenType == OneChar::BraceClose 
@@ -122,14 +93,14 @@ bool jitcat::Tokenizer::OneCharToken::isSuggestedToken(int subType_) const
 }
 
 
-ParseToken* OneCharToken::createIfMatch(Document* document, const char* currentPosition) const
+bool OneCharToken::createIfMatch(Document& document, std::size_t& currentPosition) const
 {
-	std::size_t offset = currentPosition - document->getDocumentData().c_str();
-	std::size_t remainingLength = document->getDocumentSize() - offset;
+	std::size_t remainingLength = document.getDocumentSize() - currentPosition;
+	const char* currentCharacter = &document.getDocumentData()[currentPosition];
 	if (remainingLength > 0)
 	{
 		OneChar type = OneChar::Unknown;
-		switch (currentPosition[0])
+		switch (currentCharacter[0])
 		{
 			case '{':	type = OneChar::BraceOpen;			break;
 			case '}':	type = OneChar::BraceClose;			break;
@@ -156,16 +127,10 @@ ParseToken* OneCharToken::createIfMatch(Document* document, const char* currentP
 		}
 		if (type != OneChar::Unknown)
 		{
-			Lexeme newLexeme = document->createLexeme(offset, 1);
-			return new OneCharToken(newLexeme, type);
+			document.addToken(currentPosition, 1, id, Tools::enumToUSHort(type));
+			currentPosition++;
+			return true;
 		}
 	}
-	return nullptr;
+	return false;
 }
-
-
-const int OneCharToken::getID()
-{
-	static int ID = ParseToken::getNextTokenID(); 
-	return ID;
-};

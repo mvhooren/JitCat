@@ -12,20 +12,16 @@
 namespace jitcat::Tokenizer
 {
 
-	class WhitespaceToken: public ParseToken
+	class WhitespaceToken: public TokenFactory
 	{
 	public:
-		WhitespaceToken() {};
-		WhitespaceToken(const Lexeme& lexeme): ParseToken(lexeme) {};
-		virtual int getTokenID() const {return getID();};
-		virtual const char* getTokenName() const {return "Whitespace";};
-		virtual const char* getSubTypeName(int subType) const {return getTokenName();}	
-		virtual const char* getSubTypeSymbol(int subType) const {return getTokenName();};
-		virtual int getTokenSubType() const {return 0;};
-		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-		int getNumNewLines() const;
-
-		static const int getID(){static int ID = ParseToken::getNextTokenID(); return ID;};
+		WhitespaceToken(unsigned short id): TokenFactory(id) {};
+		
+		virtual const char* getTokenName() const override final{return "Whitespace";};
+		virtual const char* getSubTypeName(unsigned short subType) const override final {return getTokenName();}	
+		virtual const char* getSubTypeSymbol(unsigned short subType) const override final {return getTokenName();};
+		
+		virtual bool createIfMatch(Document& document, std::size_t& currentPosition) const override final;
 	};
 
 } //End namespace jitcat::Tokenizer

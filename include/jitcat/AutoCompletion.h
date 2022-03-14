@@ -11,7 +11,7 @@ namespace jitcat::Tokenizer
 {
 	class Document;
 	class IdentifierToken;
-	class ParseToken;
+	struct ParseToken;
 }
 namespace jitcat::Reflection
 {
@@ -52,19 +52,19 @@ namespace jitcat
 		static std::vector<AutoCompletionEntry> autoComplete(const std::string& expression, std::size_t cursorPosition, CatRuntimeContext* context);
 
 	private:
-		static std::vector<std::pair<const Tokenizer::IdentifierToken*, bool>> getSubExpressionToAutoComplete(const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
+		static std::vector<std::pair<const Tokenizer::ParseToken*, bool>> getSubExpressionToAutoComplete(const std::vector<Tokenizer::ParseToken>& tokens, int startingTokenIndex, std::string& expressionTailEnd);
 
 		static void addOptionsFromGlobalScope(const std::string& prefix, const std::string& expression, const std::string& expressionTailEnd, 
 											  std::size_t completionOffset, CatRuntimeContext* context, std::vector<AutoCompletionEntry>& entries);
 
-		static int findStartTokenIndex(const jitcat::Tokenizer::Document& doc, int cursorPosition, const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens);
+		static int findStartTokenIndex(const jitcat::Tokenizer::Document& doc, int cursorPosition, const std::vector<Tokenizer::ParseToken>& tokens);
 
 		static void addOptionsFromTypeInfo(Reflection::TypeInfo* typeInfo, std::vector<AutoCompletion::AutoCompletionEntry>& results, 
 										   const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset, const std::string& expressionTailEnd);
 		static void addOptionsFromBuiltIn(std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
 		static void addIfPartialMatch(const std::string& text, std::vector<AutoCompletion::AutoCompletionEntry>& results, const std::string& lowercasePrefix, const std::string& originalExpression, std::size_t prefixOffset);
 
-		static bool isGlobalScopeAutoCompletable(const std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, int startingTokenIndex);
+		static bool isGlobalScopeAutoCompletable(const std::vector<Tokenizer::ParseToken>& tokens, int startingTokenIndex);
 
 		static bool autoCompleteOnType(const CatGenericType& type, bool completeOnArrayIndex, const std::string& memberPrefix, 
 									   const std::string& expression, std::size_t completionOffset, const std::string& expressionTailEnd, 

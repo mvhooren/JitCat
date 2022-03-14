@@ -15,17 +15,15 @@
 namespace jitcat::Tokenizer
 {
 
-	class ConstantToken: public ParseToken
+	class ConstantToken: public TokenFactory
 	{
 	public:
-		ConstantToken();
-		ConstantToken(const Lexeme& lexeme, ConstantType subType);
-		virtual int getTokenID() const;
-		virtual const char* getTokenName() const;
-		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-		virtual const char* getSubTypeName(int subType) const;
-		virtual const char* getSubTypeSymbol(int subType) const;
-		virtual int getTokenSubType() const;
+		ConstantToken(unsigned short id): TokenFactory(id) {};
+
+		virtual const char* getTokenName() const override final;
+		virtual bool createIfMatch(Document& document, std::size_t& currentPosition) const override final;
+		virtual const char* getSubTypeName(unsigned short subType) const override final;
+		virtual const char* getSubTypeSymbol(unsigned short subType) const override final;
 	
 	private:
 		ConstantType parseConstant(const char* text, std::size_t textLength, std::size_t& offset) const;
@@ -39,11 +37,6 @@ namespace jitcat::Tokenizer
 		ConstantType parseString(const char* text, std::size_t textLength, std::size_t& offset, bool escaped) const;
 		ConstantType parseChar(const char* text, std::size_t textLength, std::size_t& offset) const;
 		ConstantType parseBool(const char* text, std::size_t textLength, std::size_t& offset) const;
-	public:
-		static const int getID();
-
-	private:
-		ConstantType subType;
 	};
 
 } //End namespace jitcat::Tokenizer

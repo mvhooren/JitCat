@@ -94,7 +94,7 @@ bool ProductionTokenSet::getIsEpsilon() const
 
 bool ProductionTokenSet::isInSet(const ParseToken* token) const
 {
-	ProductionTerminalToken terminal(nullptr, token->getTokenID(), token->getTokenSubType());
+	ProductionTerminalToken terminal(nullptr, token->tokenID, token->subType);
 	for (int i = 0; i < (int)members.size(); i++)
 	{
 		if (*members[i] == terminal)

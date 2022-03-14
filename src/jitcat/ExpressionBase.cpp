@@ -151,7 +151,7 @@ bool ExpressionBase::parse(CatRuntimeContext* context, ExpressionErrorManager* e
 
 	Document document(expression.c_str(), expression.length());
 	context->getErrorManager()->setCurrentDocument(&document);
-	parseResult = JitCat::get()->parseExpression(&document, context, errorManager, errorContext);
+	parseResult = JitCat::get()->parseExpression(document, context, errorManager, errorContext);
 
 	if (parseResult.success)
 	{

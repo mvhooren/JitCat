@@ -12,36 +12,38 @@
 using namespace jitcat::Tokenizer;
 
 
-ParseToken* WhitespaceToken::createIfMatch(Document* document, const char* currentPosition) const
+bool WhitespaceToken::createIfMatch(Document& document, std::size_t& currentPosition) const
 {
 	std::size_t offset = 0;
-	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
-	std::size_t documentLength = document->getDocumentSize() - docOffset;
+	std::size_t documentLength = document.getDocumentSize() - currentPosition;
+	const char* currentCharacter = &document.getDocumentData()[currentPosition];
 	bool seenCarriageReturn = false;
 	while (offset < documentLength
-		   && (   currentPosition[offset] == ' '
-			   || currentPosition[offset] == '\t'
-			   || currentPosition[offset] == '\n'
-			   || currentPosition[offset] == '\r'))
+		   && (	  currentCharacter[offset] == ' '
+			   || currentCharacter[offset] == '\t'
+			   || currentCharacter[offset] == '\n'
+			   || currentCharacter[offset] == '\r'))
 	{
-		if (currentPosition[offset] == '\r' && !seenCarriageReturn)
+		if (currentCharacter[offset] == '\r' && !seenCarriageReturn)
 		{
 			seenCarriageReturn = true;
 		}
-		else if (currentPosition[offset] == '\r' || currentPosition[offset] == '\n')
+		else if (currentCharacter[offset] == '\r' || currentCharacter[offset] == '\n')
 		{
 			seenCarriageReturn = false;
-			document->addNewLine((int)(docOffset + offset));
+			document.addNewLine((int)(currentPosition + offset));
 		}
 		offset++;
 		
 	}
 	if (offset > 0)
 	{
-		return new WhitespaceToken(document->createLexeme(docOffset, offset));
+		document.addToken(currentPosition, offset, id, 0);
+		currentPosition += offset;
+		return true;
 	}
 	else
 	{
-		return nullptr;
+		return false;
 	}
 }

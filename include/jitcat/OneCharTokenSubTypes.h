@@ -10,7 +10,7 @@
 namespace jitcat::Tokenizer
 {
 
-	enum class OneChar
+	enum class OneChar: unsigned short
 	{
 		Unknown,
 		BraceOpen,
@@ -34,8 +34,7 @@ namespace jitcat::Tokenizer
 		BitwiseXor,
 		Not,
 		Dot,
-		At,
-		Eof
+		At
 	};
 
 } //End namespace jitcat::Tokenizer

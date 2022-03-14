@@ -10,7 +10,7 @@
 namespace jitcat::Tokenizer
 {
 
-	enum class Identifier
+	enum class Identifier: unsigned short
 	{
 		Identifier,
 		Class,

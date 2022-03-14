@@ -12,19 +12,14 @@
 namespace jitcat::Tokenizer
 {
 
-	class ErrorToken: public ParseToken
+	class ErrorToken: public TokenFactory
 	{
 	public:
-		ErrorToken() {};
-		ErrorToken(const Lexeme& lexeme): ParseToken(lexeme) {};
-		virtual int getTokenID() const {return getID();};
-		virtual const char* getTokenName() const {return "Error";};
-		virtual const char* getSubTypeName(int subType) const {return getTokenName();};	
-		virtual const char* getSubTypeSymbol(int subType) const {return getTokenName();};	
-		virtual int getTokenSubType() const {return 0;};
-		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-
-		static const int getID(){static int ID = ParseToken::getNextTokenID(); return ID;};
+		ErrorToken(unsigned short id): TokenFactory(id) {};
+		virtual const char* getTokenName() const override final {return "Error";};
+		virtual const char* getSubTypeName(unsigned short subType) const override final {return getTokenName();};	
+		virtual const char* getSubTypeSymbol(unsigned short subType) const override final {return getTokenName();};	
+		virtual bool createIfMatch(Document& document, std::size_t& currentPosition) const override final;
 	};
 
 } //End namespace jitcat::Tokenizer

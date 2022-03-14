@@ -16,6 +16,13 @@ namespace jitcat::Tokenizer
 	{
 	public:
 		CatTokenizer();
+		static const unsigned short whiteSpace;
+		static const unsigned short comment;
+		static const unsigned short constant;
+		static const unsigned short identifier;
+		static const unsigned short twoChar;
+		static const unsigned short oneChar;
+		static const unsigned short error;
 	};
 
 } //End namespace jitcat

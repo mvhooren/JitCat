@@ -49,32 +49,32 @@ namespace jitcat
 			const Tokenizer::TokenizerBase* getTokenizer() const;
 
 		protected:
-			void rule(int productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action);
+			void rule(unsigned short productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action);
 
 			template<typename EnumT>
 			void rule(EnumT productionId, std::initializer_list<ProductionToken*> tokens, SemanticAction action);
 
-			ProductionToken* term(int tokenId, int tokenSubType);
+			ProductionToken* term(unsigned short tokenId, unsigned short tokenSubType);
 
 			template<typename TokenEnumT, typename TokenSubTypeEnumT>
 			ProductionToken* term(TokenEnumT tokenId, TokenSubTypeEnumT tokenSubType);
 
 			template<typename EnumT>
-			ProductionToken* term(int tokenId, EnumT tokenSubType);
+			ProductionToken* term(unsigned short tokenId, EnumT tokenSubType);
 
-			ProductionToken* prod(int productionId);
+			ProductionToken* prod(unsigned short productionId);
 
 			template<typename EnumT>
 			ProductionToken* prod(EnumT productionId);
 
-			void setRootProduction(int productionId, ProductionToken* eofToken);
+			void setRootProduction(unsigned short productionId, ProductionToken* eofToken);
 
 			template<typename EnumT>
 			void setRootProduction(EnumT productionId, ProductionToken* eofToken);
 
 			void build();
 		private:
-			Production* findOrCreateProduction(int productionId);
+			Production* findOrCreateProduction(unsigned short productionId);
 			void buildEpsilonContainment();
 			void buildFirstSets();
 			void buildFollowSets();
@@ -105,10 +105,10 @@ namespace jitcat
 
 
 		template<typename EnumT>
-		inline ProductionToken* GrammarBase::term(int tokenId, EnumT tokenSubType)
+		inline ProductionToken* GrammarBase::term(unsigned short tokenId, EnumT tokenSubType)
 		{
 			static_assert(std::is_enum<EnumT>::value, "Expected an enum:");
-			return term(tokenId, static_cast<typename std::underlying_type<EnumT>::type>(tokenSubType));
+			return term(tokenId, static_cast<typename std::underlying_type_t<EnumT>>(tokenSubType));
 		}
 
 

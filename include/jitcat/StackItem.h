@@ -13,7 +13,7 @@ namespace jitcat::AST
 }
 namespace jitcat::Tokenizer
 {
-	class ParseToken;
+	struct ParseToken;
 }
 namespace jitcat::Grammar
 {

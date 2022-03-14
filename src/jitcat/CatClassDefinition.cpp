@@ -401,7 +401,7 @@ bool CatClassDefinition::injectCode(const std::string& functionName, const std::
 	{
 		Tokenizer::Document doc(statement);
 		errorManager->setCurrentDocument(&doc);
-		std::unique_ptr<Parser::SLRParseResult> parseResult = JitCat::get()->parseStatement(&doc, compileTimeContext, errorManager, errorContext);
+		std::unique_ptr<Parser::SLRParseResult> parseResult = JitCat::get()->parseStatement(doc, compileTimeContext, errorManager, errorContext);
 		if (parseResult->success)
 		{
 			CatStatement* statement = static_cast<CatStatement*>(parseResult->astRootNode.release());

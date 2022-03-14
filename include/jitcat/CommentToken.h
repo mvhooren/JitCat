@@ -13,22 +13,14 @@
 namespace jitcat::Tokenizer
 {
 
-class CommentToken: public ParseToken
+class CommentToken: public TokenFactory
 {
 public:
-	CommentToken() {};
-	CommentToken(const Lexeme& lexeme, int subType): ParseToken(lexeme), subType(subType) {};
-	virtual int getTokenID() const {return getID();};
-	virtual const char* getTokenName() const {return "Comment";};
-	virtual const char* getSubTypeName(int subType) const;
-	virtual const char* getSubTypeSymbol(int subType) const;
-	virtual int getTokenSubType() const {return subType;};
-	virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const;
-
-	static const int getID();
-
-private:
-	int subType;
+	CommentToken(unsigned short tokenID): TokenFactory(tokenID) {};
+	virtual const char* getTokenName() const override final {return "Comment";};
+	virtual const char* getSubTypeName(unsigned short subType) const override final;
+	virtual const char* getSubTypeSymbol(unsigned short subType) const override final;
+	virtual bool createIfMatch(Document& document, std::size_t& currentPosition) const override final;
 };
 
 

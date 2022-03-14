@@ -23,7 +23,7 @@ namespace jitcat::Grammar
 	class CatGrammar: public GrammarBase
 	{
 		//Productions
-		enum class Prod
+		enum class Prod: unsigned short
 		{
 			Root,
 			TypeOrIdentifier,
@@ -122,13 +122,14 @@ namespace jitcat::Grammar
 	
 	private:
 		//Tokens types:
-		static int comment;
-		static int ws;
-		static int lit;
-		static int id;
-		static int err;
-		static int one;
-		static int two;
+		static unsigned short comment;
+		static unsigned short ws;
+		static unsigned short lit;
+		static unsigned short id;
+		static unsigned short err;
+		static unsigned short one;
+		static unsigned short two;
+		static unsigned short eof;
 	};
 
 } //End namespace jitcat::Grammar

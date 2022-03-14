@@ -67,8 +67,8 @@ namespace jitcat
 		//Add source code to the CatLib. 
 		//The translationUnitName is used for printing errors and generating debug information.
 		//If the source comes from an external text file, translationUnitName should refer to the file name.
-		//Returns true if the source was compiled without errors.
-		bool addSource(const std::string& translationUnitName, Tokenizer::Document& translationUnitCode);
+		//Returns the CatSourceFile AST if the source was compiled without errors, nullptr otherwise.
+		AST::CatSourceFile* addSource(const std::string& translationUnitName, Tokenizer::Document& translationUnitCode);
 
 		//Gets the name of the library.
 		const std::string& getName() const;

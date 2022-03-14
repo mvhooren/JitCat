@@ -117,6 +117,13 @@ namespace jitcat::Tools
 	}
 
 
+	template<typename EnumT>
+	inline constexpr unsigned short enumToUSHort(EnumT enumValue)
+	{
+		return static_cast<typename std::underlying_type<EnumT>::type>(enumValue);
+	}
+
+
 	template<typename... ValueTypes>
 	inline std::string append(ValueTypes&&... values)
 	{

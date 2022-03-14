@@ -202,38 +202,26 @@ JitCat* JitCat::get()
 }
 
 
-std::unique_ptr<Parser::SLRParseResult> JitCat::parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+std::unique_ptr<Parser::SLRParseResult> JitCat::parseExpression(Tokenizer::Document& expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
-	std::vector<std::unique_ptr<ParseToken>> tokens;
-	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
-	tokenizer->tokenize(expression, tokens, eofToken);
-	return expressionParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context, errorManager, errorContext);
+	tokenizer->tokenize(expression);
+	return expressionParser->parse(expression.getTokens(), CatTokenizer::whiteSpace, CatTokenizer::comment, 
+								   context, errorManager, errorContext);
 }
 
 
-std::unique_ptr<Parser::SLRParseResult> JitCat::parseStatement(Tokenizer::Document* statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+std::unique_ptr<Parser::SLRParseResult> JitCat::parseStatement(Tokenizer::Document& statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
-	std::vector<std::unique_ptr<ParseToken>> tokens;
-	OneCharToken* eofToken = new OneCharToken(statement->createLexeme(statement->getDocumentSize(), 0), OneChar::Eof);
-	tokenizer->tokenize(statement, tokens, eofToken);
-	return statementParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context, errorManager, errorContext);
+	tokenizer->tokenize(statement);
+	return statementParser->parse(statement.getTokens(), CatTokenizer::whiteSpace, CatTokenizer::comment, context, errorManager, errorContext);
 }
 
 
-std::unique_ptr<Parser::SLRParseResult> JitCat::parseFull(Tokenizer::Document* expression, std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
+std::unique_ptr<Parser::SLRParseResult> JitCat::parseFull(Tokenizer::Document& expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
 {
-	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
-	tokenizer->tokenize(expression, tokens, eofToken);	
-	return fullParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context, errorManager, errorContext);
-}
-
-
-std::unique_ptr<Parser::SLRParseResult> JitCat::parseFull(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const
-{
-	std::vector<std::unique_ptr<ParseToken>> tokens;
-	OneCharToken* eofToken = new OneCharToken(expression->createLexeme(expression->getDocumentSize(), 0), OneChar::Eof);
-	tokenizer->tokenize(expression, tokens, eofToken);	
-	return fullParser->parse(tokens, WhitespaceToken::getID(), CommentToken::getID(), context, errorManager, errorContext);
+	tokenizer->tokenize(expression);	
+	return fullParser->parse(expression.getTokens(), CatTokenizer::whiteSpace, CatTokenizer::comment, 
+							 context, errorManager, errorContext);
 }
 
 

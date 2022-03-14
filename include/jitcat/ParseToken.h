@@ -9,35 +9,42 @@
 
 #include "jitcat/Lexeme.h"
 
-#include <memory>
-
-
 namespace jitcat::Tokenizer
 {
 	class Document;
 
 
-	class ParseToken
+	struct ParseToken
 	{
 	public:
-		ParseToken();
-		ParseToken(const Lexeme& lexeme);
-		virtual ~ParseToken();
-		virtual int getTokenID() const = 0;
-		virtual const char* getTokenName() const = 0;
-		virtual const char* getSubTypeName(int subType) const = 0;	
-		virtual const char* getSubTypeSymbol(int subType) const = 0;
-		virtual int getTokenSubType() const = 0;
-		const Lexeme& getLexeme() const;
-		virtual ParseToken* createIfMatch(Document* document, const char* currentPosition) const = 0;
+		ParseToken(const Lexeme& lexeme, unsigned short tokenID, unsigned short subType):
+			lexeme(lexeme),
+			tokenID(tokenID),
+			subType(subType)
+		{};
 
-		//Returns true if this token should be suggested when a parse error occurs and this token is in the follow set.
-		virtual bool isSuggestedToken(int subType) const {return false;}
+		const Lexeme lexeme;
+		const unsigned short tokenID;
+		const unsigned short subType;
 
-	protected:	
-		static int getNextTokenID();
-	protected:
-		Lexeme lexeme;
+		static const unsigned short eofType;
+		static const ParseToken getEofToken(const Document& doc);
 	};
 
+	class TokenFactory
+	{
+	public:
+		TokenFactory(unsigned short id): id(id){};
+		unsigned short getTokenID() const {return id;};
+
+		virtual const char* getTokenName() const = 0;
+		virtual const char* getSubTypeName(unsigned short subType) const = 0;
+		virtual const char* getSubTypeSymbol(unsigned short subType) const = 0;
+		virtual bool createIfMatch(Document& document, std::size_t& currentPosition) const = 0;
+		//Returns true if this token should be suggested when a parse error occurs and this token is in the follow set.
+		virtual bool isSuggestedToken(unsigned short subType) const { return false; }
+
+	protected:
+		unsigned short id;
+	};
 } //End namespace jitcat::Tokenizer

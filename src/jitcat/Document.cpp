@@ -15,7 +15,13 @@
 using namespace jitcat::Tokenizer;
 
 
-jitcat::Tokenizer::Document::Document(const std::string& document):
+Document::Document():
+	currentLineIndex(0)
+{
+}
+
+
+Document::Document(const std::string& document):
 	document(document),
 	currentLineIndex(0)
 {
@@ -29,8 +35,27 @@ Document::Document(const char* fileData, std::size_t fileSize):
 }
 
 
+Document::Document(Document&& other) noexcept:
+	document(std::move(other.document)),
+	lineNumberLookup(std::move(other.lineNumberLookup)),
+	currentLineIndex(other.currentLineIndex),
+	tokens(std::move(other.tokens))
+{
+}
+
+
 Document::~Document()
 {
+}
+
+
+Document& Document::operator=(Document&& other) noexcept
+{
+	document = std::move(other.document);
+	lineNumberLookup = std::move(other.lineNumberLookup);
+	currentLineIndex = other.currentLineIndex;
+	tokens = std::move(other.tokens);
+	return *this;
 }
 
 
@@ -46,7 +71,7 @@ std::size_t Document::getDocumentSize() const
 }
 
 
-Lexeme jitcat::Tokenizer::Document::createLexeme(std::size_t offset, std::size_t length) const
+Lexeme Document::createLexeme(std::size_t offset, std::size_t length) const
 {
 	if (offset + length <= document.size())
 	{
@@ -56,7 +81,7 @@ Lexeme jitcat::Tokenizer::Document::createLexeme(std::size_t offset, std::size_t
 }
 
 
-std::size_t jitcat::Tokenizer::Document::getOffsetInDocument(const Lexeme& lexeme) const
+std::size_t Document::getOffsetInDocument(const Lexeme& lexeme) const
 {
 	//Check that the lexeme lies inside the document
 	if (lexeme.data() >= document.c_str() && (lexeme.data() + lexeme.size()) <= document.c_str() + document.size())
@@ -70,7 +95,7 @@ std::size_t jitcat::Tokenizer::Document::getOffsetInDocument(const Lexeme& lexem
 }
 
 
-DocumentSelection jitcat::Tokenizer::Document::toSelection(const Lexeme& lexeme) const
+DocumentSelection Document::toSelection(const Lexeme& lexeme) const
 {
 	//Check that the lexeme lies inside the document
 	assert((lexeme.data() >= document.c_str() 
@@ -82,7 +107,7 @@ DocumentSelection jitcat::Tokenizer::Document::toSelection(const Lexeme& lexeme)
 }
 
 
-std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(const Lexeme & lexeme) const
+std::tuple<int, int> Document::getLineAndColumnNumber(const Lexeme & lexeme) const
 {
 	assert((lexeme.data() >= document.c_str() 
 			   && (lexeme.data() + lexeme.size()) <= document.c_str() + document.size()));
@@ -91,7 +116,7 @@ std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(const L
 }
 
 
-std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(int offset) const
+std::tuple<int, int> Document::getLineAndColumnNumber(int offset) const
 {
 	auto iter = lineNumberLookup.upper_bound(offset);
 	if (iter != lineNumberLookup.end())
@@ -129,7 +154,7 @@ std::tuple<int, int> jitcat::Tokenizer::Document::getLineAndColumnNumber(int off
 }
 
 
-int jitcat::Tokenizer::Document::offsetToLineNumber(int offset) const
+int Document::offsetToLineNumber(int offset) const
 {
 	auto iter = lineNumberLookup.upper_bound(offset);
 	if (iter != lineNumberLookup.end())
@@ -143,22 +168,46 @@ int jitcat::Tokenizer::Document::offsetToLineNumber(int offset) const
 }
 
 
-void jitcat::Tokenizer::Document::clearLineLookup()
+void Document::clearLineLookup()
 {
 	currentLineIndex = 0;
 	lineNumberLookup.clear();
 }
 
 
-void jitcat::Tokenizer::Document::addNewLine(int offset)
+void Document::addNewLine(int offset)
 {
 	lineNumberLookup[offset] = currentLineIndex;
 	currentLineIndex++;
 }
 
 
-bool jitcat::Tokenizer::Document::isValidLexeme(const Lexeme& lexeme) const
+bool Document::isValidLexeme(const Lexeme& lexeme) const
 {
 	return  lexeme.data() >= document.c_str() 
 			 && (lexeme.data() + lexeme.size()) <= document.c_str() + document.size();
+}
+
+
+void Document::clearTokens()
+{
+	tokens.clear();
+}
+
+
+void Document::addToken(std::size_t offset, std::size_t length, unsigned short tokenID, unsigned short subType)
+{
+	tokens.emplace_back(createLexeme(offset, length), tokenID, subType);
+}
+
+
+void Document::addToken(ParseToken token)
+{
+	tokens.emplace_back(std::move(token));
+}
+
+
+const std::vector<ParseToken>& Document::getTokens() const
+{
+	return tokens;
 }

@@ -10,7 +10,7 @@
 namespace jitcat::Tokenizer
 {
 
-	enum class ConstantType
+	enum class ConstantType: unsigned short
 	{
 		Integer,
 		DoubleFloatingPoint,

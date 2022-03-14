@@ -9,9 +9,11 @@
 
 #include "jitcat/Lexeme.h"
 #include "jitcat/DocumentSelection.h"
+#include "jitcat/ParseToken.h"
 #include <map>
 #include <string>
 #include <tuple>
+#include <vector>
 
 
 namespace jitcat::Tokenizer
@@ -19,9 +21,14 @@ namespace jitcat::Tokenizer
 	class Document
 	{
 	public: 
+		Document();
 		Document(const std::string& document);
 		Document(const char* fileData, std::size_t fileSize);
+		Document(Document&& other) noexcept;
 		~Document();
+
+		Document& operator=(Document&& other) noexcept;
+
 		const std::string& getDocumentData() const;
 		std::size_t getDocumentSize() const;
 		Lexeme createLexeme(std::size_t offset, std::size_t length) const;
@@ -37,10 +44,18 @@ namespace jitcat::Tokenizer
 	
 		bool isValidLexeme(const Lexeme& lexeme) const;
 
+		void clearTokens();
+		void addToken(std::size_t offset, std::size_t length, unsigned short tokenID, unsigned short subType);
+		void addToken(ParseToken token);
+		const std::vector<ParseToken>& getTokens() const;
+
 	private:
 		std::string document;
 		//Stores a map from offsets to line numbers. 
 		std::map<int, int> lineNumberLookup;
+
+		std::vector<ParseToken> tokens;
+
 		int currentLineIndex;
 	};
 

@@ -15,11 +15,11 @@ namespace jitcat::Parser
 	class StackItemToken : public StackItem
 	{
 	public:
-		StackItemToken(Tokenizer::ParseToken* token):
+		StackItemToken(const Tokenizer::ParseToken* token):
 			token(token) {}
 			virtual const Tokenizer::ParseToken* getTokenIfToken() const {return token;}
 	private:
-		Tokenizer::ParseToken* token;
+		const Tokenizer::ParseToken* token;
 	};
 
 } //End namespace jitcat::Parser

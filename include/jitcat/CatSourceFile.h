@@ -62,8 +62,6 @@ namespace jitcat::AST
 	private:
 		std::string name;
 
-		//All definitions
-		std::vector<std::unique_ptr<CatDefinition>> definitions;
 
 		//All class definitions
 		std::vector<CatClassDefinition*> classDefinitions;
@@ -76,6 +74,8 @@ namespace jitcat::AST
 
 		CatScopeID staticScopeId;
 		std::unique_ptr<Reflection::CustomTypeInfo, Reflection::TypeInfoDeleter> scopeType;
+		//All definitions
+		std::vector<std::unique_ptr<CatDefinition>> definitions;
 		Reflection::ObjectInstance scopeInstance;
 	};
 

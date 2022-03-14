@@ -55,24 +55,23 @@ void CatLib::replaceStaticScopeObject(CatScopeID id, unsigned char* scopeObject)
 }
 
 
-bool CatLib::addSource(const std::string& translationUnitName, Tokenizer::Document& translationUnitCode)
+AST::CatSourceFile* CatLib::addSource(const std::string& translationUnitName, Tokenizer::Document& translationUnitCode)
 {
-	ErrorContext errorContext(context.get(), name);
+	ErrorContext innerContext(context.get(), translationUnitName);
 	errorManager->setCurrentDocument(&translationUnitCode);
-	std::unique_ptr<Parser::SLRParseResult> result = JitCat::get()->parseFull(&translationUnitCode, context.get(), errorManager.get(), this);
+	std::unique_ptr<Parser::SLRParseResult> result = JitCat::get()->parseFull(translationUnitCode, context.get(), errorManager.get(), this);
 	if (result->success)
-
 	{
 		CatSourceFile* sourceFile = result->releaseNode<CatSourceFile>();
 		sourceFiles.emplace_back(sourceFile);
 		if (sourceFile->compile(*this))
 		{
 			errorManager->setCurrentDocument(nullptr);
-			return true;
+			return sourceFile;
 		}
 	}
 	errorManager->setCurrentDocument(nullptr);
-	return false;
+	return nullptr;
 }
 
 

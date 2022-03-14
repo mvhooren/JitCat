@@ -108,7 +108,7 @@ Tokenizer::Lexeme jitcat::Parser::ASTNodeParser::getStackLexeme() const
 		}
 		else if (stack[i]->getTokenIfToken() != nullptr)
 		{
-			const Lexeme& tokenLexeme = stack[i]->getTokenIfToken()->getLexeme();
+			const Lexeme& tokenLexeme = stack[i]->getTokenIfToken()->lexeme;
 			itemStart = tokenLexeme.data();
 			itemEnd = itemStart + tokenLexeme.length();
 		}

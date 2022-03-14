@@ -8,31 +8,9 @@
 #include "jitcat/TwoCharToken.h"
 #include "jitcat/Document.h"
 #include "jitcat/Lexeme.h"
+#include "jitcat/Tools.h"
 
 using namespace jitcat::Tokenizer;
-
-
-TwoCharToken::TwoCharToken():
-	subType(TwoChar::Unknown)
-{
-}
-
-
-TwoCharToken::TwoCharToken(const Lexeme& lexeme, TwoChar subType):
-	ParseToken(lexeme),
-	subType(subType)
-{
-}
-
-
-TwoCharToken::~TwoCharToken()
-{}
-
-
-int TwoCharToken::getTokenID() const
-{
-	return getID();
-}
 
 
 const char* TwoCharToken::getTokenName() const
@@ -41,7 +19,7 @@ const char* TwoCharToken::getTokenName() const
 }
 
 
-const char* TwoCharToken::getSubTypeName(int subType_) const
+const char* TwoCharToken::getSubTypeName(unsigned short subType_) const
 {
 	switch ((TwoChar) subType_)
 	{
@@ -70,7 +48,7 @@ const char* TwoCharToken::getSubTypeName(int subType_) const
 }
 
 
-const char* TwoCharToken::getSubTypeSymbol(int subType_) const
+const char* TwoCharToken::getSubTypeSymbol(unsigned short subType_) const
 {
 	switch ((TwoChar)subType_)
 	{
@@ -99,20 +77,13 @@ const char* TwoCharToken::getSubTypeSymbol(int subType_) const
 }
 
 
-int TwoCharToken::getTokenSubType() const
+bool TwoCharToken::createIfMatch(Document& document, std::size_t& currentPosition) const
 {
-	return (int)subType;
-}
-
-
-ParseToken* TwoCharToken::createIfMatch(Document* document, const char* currentPosition) const
-{
-	std::size_t offset = currentPosition - document->getDocumentData().c_str();
-	std::size_t remainingLength = document->getDocumentSize() - offset;
-	
+	std::size_t remainingLength = document.getDocumentSize() - currentPosition;
+	const char* currentCharacter = &document.getDocumentData()[currentPosition];
 	if (remainingLength > 1)
 	{
-		Lexeme lex = document->createLexeme(offset, 2);
+		std::string lex(currentCharacter, 2);
 		TwoChar type = TwoChar::Unknown;
 		
 		if (lex == "==")			type = TwoChar::Equals;
@@ -137,16 +108,10 @@ ParseToken* TwoCharToken::createIfMatch(Document* document, const char* currentP
 
 		if (type != TwoChar::Unknown)
 		{
-			Lexeme newLexeme = document->createLexeme(offset, 2);
-			return new TwoCharToken(newLexeme, type);
+			document.addToken(currentPosition, 2, id, Tools::enumToUSHort(type));
+			currentPosition += 2;
+			return true;
 		}
 	}
-	return nullptr;
+	return false;
 }
-
-
-const int TwoCharToken::getID()
-{
-	static int ID = ParseToken::getNextTokenID(); 
-	return ID;
-};

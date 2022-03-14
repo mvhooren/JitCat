@@ -10,7 +10,7 @@
 namespace jitcat::Tokenizer
 {
 
-	enum class TwoChar
+	enum class TwoChar: unsigned short
 	{
 		Unknown,
 		Equals,

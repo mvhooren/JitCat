@@ -10,26 +10,9 @@
 #include "jitcat/Configuration.h"
 #include "jitcat/Lexeme.h"
 #include "jitcat/ParseHelper.h"
+#include "jitcat/Tools.h"
 
 using namespace jitcat::Tokenizer;
-
-
-ConstantToken::ConstantToken():
-	subType(ConstantType::NoType)
-{
-}
-
-ConstantToken::ConstantToken(const Lexeme& lexeme, ConstantType subType):
-	ParseToken(lexeme),
-	subType(subType)
-{
-}
-
-
-int ConstantToken::getTokenID() const
-{
-	return getID();
-}
 
 
 const char* ConstantToken::getTokenName() const
@@ -38,23 +21,25 @@ const char* ConstantToken::getTokenName() const
 }
 
 
-ParseToken* ConstantToken::createIfMatch(Document* document, const char* currentPosition) const
+bool ConstantToken::createIfMatch(Document& document, std::size_t& currentPosition) const
 {
 	std::size_t  readLength = 0;
-	ConstantType constant = parseConstant(currentPosition, document->getDocumentSize() - (currentPosition - document->getDocumentData().c_str()), readLength);
+	const char* currentCharacter = &document.getDocumentData()[currentPosition];
+	ConstantType constant = parseConstant(currentCharacter, document.getDocumentSize() - currentPosition, readLength);
 	if (constant != ConstantType::NoType)
 	{
-		Lexeme newLexeme = document->createLexeme(currentPosition - document->getDocumentData().c_str(), readLength);
-		return new ConstantToken(newLexeme, constant);
+		document.addToken(currentPosition, readLength, id, Tools::enumToUSHort(constant));
+		currentPosition += readLength;
+		return true;
 	}
 	else
 	{
-		return nullptr;
+		return false;
 	}
 }
 
 
-const char* ConstantToken::getSubTypeName(int subType_) const
+const char* ConstantToken::getSubTypeName(unsigned short subType_) const
 {
 	switch ((ConstantType) subType_)
 	{
@@ -69,15 +54,9 @@ const char* ConstantToken::getSubTypeName(int subType_) const
 }
 
 
-const char* ConstantToken::getSubTypeSymbol(int subType_) const
+const char* ConstantToken::getSubTypeSymbol(unsigned short subType_) const
 {
 	return getSubTypeName(subType_);
-}
-
-
-int ConstantToken::getTokenSubType() const
-{
-	return (int)subType;
 }
 
 
@@ -355,10 +334,4 @@ ConstantType ConstantToken::parseBool(const char* text, std::size_t textLength, 
 	{
 		return ConstantType::NoType;
 	}
-}
-
-const int ConstantToken::getID()
-{
-	static int ID = ParseToken::getNextTokenID(); 
-	return ID;
 }

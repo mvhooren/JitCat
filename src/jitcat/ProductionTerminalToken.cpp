@@ -15,7 +15,7 @@ using namespace jitcat::Grammar;
 using namespace jitcat::Tokenizer;
 
 
-ProductionTerminalToken::ProductionTerminalToken(TokenizerBase* tokenizer, int tokenId, int tokenSubType):
+ProductionTerminalToken::ProductionTerminalToken(TokenizerBase* tokenizer, unsigned short tokenId, unsigned short tokenSubType):
 	tokenId(tokenId),
 	tokenSubType(tokenSubType),
 	tokenizer(tokenizer),
@@ -34,8 +34,8 @@ ProductionTerminalToken::~ProductionTerminalToken()
 
 bool ProductionTerminalToken::matches(const ParseToken* token) const
 {
-	return token->getTokenID() == tokenId
-		   && token->getTokenSubType() == tokenSubType;
+	return token->tokenID == tokenId
+		   && token->subType == tokenSubType;
 }
 
 
@@ -94,13 +94,14 @@ const char* ProductionTerminalToken::getSymbol() const
 	}
 }
 
-int ProductionTerminalToken::getTokenId() const
+
+unsigned short ProductionTerminalToken::getTokenId() const
 {
 	return tokenId;
 }
 
 
-int ProductionTerminalToken::getTokenSubType() const
+unsigned short ProductionTerminalToken::getTokenSubType() const
 {
 	return tokenSubType;
 }

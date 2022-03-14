@@ -15,7 +15,7 @@ namespace jitcat::Tokenizer
 {
 	class CatTokenizer;
 	class Document;
-	class ParseToken;
+	struct ParseToken;
 }
 namespace jitcat::Parser
 {
@@ -43,10 +43,9 @@ namespace jitcat
 		~JitCat();
 	public:
 		static JitCat* get();
-		std::unique_ptr<Parser::SLRParseResult> parseExpression(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
-		std::unique_ptr<Parser::SLRParseResult> parseStatement(Tokenizer::Document* statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
-		std::unique_ptr<Parser::SLRParseResult> parseFull(Tokenizer::Document* expression, std::vector<std::unique_ptr<Tokenizer::ParseToken>>& tokens, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
-		std::unique_ptr<Parser::SLRParseResult> parseFull(Tokenizer::Document* expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
+		std::unique_ptr<Parser::SLRParseResult> parseExpression(Tokenizer::Document& expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
+		std::unique_ptr<Parser::SLRParseResult> parseStatement(Tokenizer::Document& statement, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
+		std::unique_ptr<Parser::SLRParseResult> parseFull(Tokenizer::Document& expression, CatRuntimeContext* context, ExpressionErrorManager* errorManager, void* errorContext) const;
 		
 		static uintptr_t getPrecompiledSymbol(const std::string& name);
 

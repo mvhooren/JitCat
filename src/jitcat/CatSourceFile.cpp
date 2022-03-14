@@ -59,6 +59,7 @@ CatSourceFile::CatSourceFile(const CatSourceFile& other):
 
 CatSourceFile::~CatSourceFile()
 {
+	scopeInstance = ObjectInstance();
 }
 
 

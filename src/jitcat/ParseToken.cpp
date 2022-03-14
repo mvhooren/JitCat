@@ -6,35 +6,15 @@
 */
 
 #include "jitcat/ParseToken.h"
-#include "jitcat/Lexeme.h"
+#include "jitcat/Document.h"
+
+#include <limits>
 
 using namespace jitcat::Tokenizer;
 
+const unsigned short ParseToken::eofType = std::numeric_limits<unsigned short>::max();
 
-ParseToken::ParseToken()
+const ParseToken ParseToken::getEofToken(const Document& doc)
 {
-}
-
-
-jitcat::Tokenizer::ParseToken::ParseToken(const Lexeme& lexeme):
-	lexeme(lexeme)
-{
-}
-
-
-ParseToken::~ParseToken()
-{
-}
-
-
-const Lexeme& ParseToken::getLexeme() const
-{
-	return lexeme;
-}
-
-
-int ParseToken::getNextTokenID()
-{
-	static int nextTokenID = 0;
-	return nextTokenID++;
+	return ParseToken(doc.createLexeme(doc.getDocumentSize(), 0), eofType, 0);;
 }

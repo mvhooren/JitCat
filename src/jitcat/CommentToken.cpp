@@ -13,7 +13,7 @@
 using namespace jitcat::Tokenizer;
 
 
-const char* CommentToken::getSubTypeName(int subType_) const
+const char* CommentToken::getSubTypeName(unsigned short subType_) const
 {
 	switch ((CommentType) subType_)
 	{
@@ -24,7 +24,7 @@ const char* CommentToken::getSubTypeName(int subType_) const
 }
 
 
-const char* CommentToken::getSubTypeSymbol(int subType_) const
+const char* CommentToken::getSubTypeSymbol(unsigned short subType_) const
 {
 	switch ((CommentType) subType_)
 	{
@@ -35,35 +35,35 @@ const char* CommentToken::getSubTypeSymbol(int subType_) const
 }
 
 
-ParseToken* CommentToken::createIfMatch(Document* document, const char* currentPosition) const
+bool CommentToken::createIfMatch(Document& document, std::size_t& currentPosition) const
 {
 	std::size_t offset = 0;
-	std::size_t docOffset = currentPosition - document->getDocumentData().c_str();
-	std::size_t documentLength = document->getDocumentSize() - docOffset;
+	std::size_t documentLength = document.getDocumentSize() - currentPosition;
+	const char* currentCharacter = &document.getDocumentData()[currentPosition];
 	CommentType subTypeToCreate = CommentType::SingleLine;
 	if (documentLength >= 2)
 	{
-		if (currentPosition[0] == '/' && currentPosition[1] == '/')
+		if (currentCharacter[0] == '/' && currentCharacter[1] == '/')
 		{
 			offset += 2;
 			while (offset < documentLength
-				   && currentPosition[offset] != '\n')
+				   && currentCharacter[offset] != '\n')
 			{
 				offset++;
 			}
 		}
-		else if (currentPosition[0] == '/' && currentPosition[1] == '*')
+		else if (currentCharacter[0] == '/' && currentCharacter[1] == '*')
 		{
 			subTypeToCreate = CommentType::Block;
 			offset += 2;
 			bool previousCharacterIsStar = false;
 			while (offset < documentLength
-				   && (!previousCharacterIsStar || currentPosition[offset] != '/'))
+				   && (!previousCharacterIsStar || currentCharacter[offset] != '/'))
 			{
-				previousCharacterIsStar = currentPosition[offset] == '*';
+				previousCharacterIsStar = currentCharacter[offset] == '*';
 				offset++;
 			}
-			if (offset <= documentLength && currentPosition[offset] == '/' && previousCharacterIsStar)
+			if (offset <= documentLength && currentCharacter[offset] == '/' && previousCharacterIsStar)
 			{
 				offset++;
 			}
@@ -73,17 +73,12 @@ ParseToken* CommentToken::createIfMatch(Document* document, const char* currentP
 
 	if (offset > 0)
 	{
-		return new CommentToken(document->createLexeme(docOffset, offset), Tools::enumToInt(subTypeToCreate));
+		document.addToken(currentPosition, offset, id, Tools::enumToUSHort(subTypeToCreate));
+		currentPosition += offset;
+		return true;
 	}
 	else
 	{
-		return nullptr;
+		return false;
 	}	
-}
-
-
-const int CommentToken::getID()
-{
-	static int ID = ParseToken::getNextTokenID(); 
-	return ID;
 }
