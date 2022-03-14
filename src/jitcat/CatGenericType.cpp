@@ -1495,6 +1495,8 @@ bool CatGenericType::convertToBoolean(std::any value, const CatGenericType& valu
 
 Configuration::CatString CatGenericType::convertToString(std::any value, const CatGenericType& valueType)
 {
+	if (!value.has_value() || !valueType.isValidType())
+		return Configuration::CatString();
 	if (valueType.isStringValueType())
 	{
 		return std::any_cast<Configuration::CatString>(value);
