@@ -295,7 +295,7 @@ bool CatClassDefinition::typeCheck(CatRuntimeContext* compileTimeContext_)
 }
 
 
-CatRuntimeContext* jitcat::AST::CatClassDefinition::getCompiletimeContext() const
+CatRuntimeContext* CatClassDefinition::getCompiletimeContext() const
 {
 	return compileTimeContext.get();
 }
@@ -332,7 +332,7 @@ const std::string& CatClassDefinition::getClassName() const
 }
 
 
-const std::string& jitcat::AST::CatClassDefinition::getQualifiedName() const
+const std::string& CatClassDefinition::getQualifiedName() const
 {
 	return qualifiedName;
 }
@@ -438,6 +438,16 @@ bool CatClassDefinition::injectCode(const std::string& functionName, const std::
 		return false;
 	}
 	return true;
+}
+
+
+void CatClassDefinition::setDylib(llvm::orc::JITDylib* generatedDylib)
+{
+	customType->setDylib(generatedDylib);
+	for (auto& iter : classDefinitions)
+	{
+		iter->setDylib(generatedDylib);
+	}
 }
 
 
@@ -564,7 +574,7 @@ bool CatClassDefinition::generateDestructor(CatRuntimeContext* compileTimeContex
 }
 
 
-bool jitcat::AST::CatClassDefinition::generateOperatorAssign(CatRuntimeContext* compileTimeContext)
+bool CatClassDefinition::generateOperatorAssign(CatRuntimeContext* compileTimeContext)
 {
 	//First check that no operator= has been defined by the user.
 

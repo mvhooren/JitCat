@@ -20,6 +20,10 @@ namespace jitcat::Reflection
 {
 	class CustomTypeInfo;
 }
+namespace llvm::orc
+{
+	class JITDylib;
+}
 
 namespace jitcat::AST
 {
@@ -68,6 +72,8 @@ namespace jitcat::AST
 		//Parses and injects code at the end of the function if it exists.
 		//Injected code must be a single statement.
 		bool injectCode(const std::string& functionName, const std::string& statement, CatRuntimeContext* compileTimeContext, ExpressionErrorManager* errorManager, void* errorContext);
+
+		void setDylib(llvm::orc::JITDylib* generatedDylib);
 
 		const std::vector<CatClassDefinition*>& getClassDefinitions() const;
 		const std::vector<CatFunctionDefinition*>& getFunctionDefinitions() const;

@@ -191,7 +191,7 @@ void LLVMCodeGenerator::generate(const AST::CatSourceFile* sourceFile, LLVMCompi
 	assert(staticScopeId == sourceFile->getScopeId());
 	for (auto& iter : sourceFile->getClassDefinitions())
 	{
-		iter->getCustomType()->setDylib(dylib);
+		iter->setDylib(dylib);
 	}
 	for (auto& iter : sourceFile->getFunctionDefinitions())
 	{
@@ -1435,6 +1435,8 @@ void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition,
 	assert(context->currentLib != nullptr);
 	const CatClassDefinition* previousClass = context->currentClass;
 	context->currentClass = classDefinition;
+	CatRuntimeContext* previousContext = context->catContext;
+	context->catContext = classDefinition->getCompiletimeContext();
 	ErrorContext errorContext(context->catContext, classDefinition->getClassName());
 	classDefinition->getCustomType()->setDylib(dylib);
 	for (auto& iter: classDefinition->getClassDefinitions())
@@ -1463,6 +1465,7 @@ void LLVMCodeGenerator::generate(const AST::CatClassDefinition* classDefinition,
 	}
 	context->currentClass = previousClass;
 	context->catContext->removeScope(classScopeId);
+	context->catContext = previousContext;
 }
 
 
