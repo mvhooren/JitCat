@@ -469,7 +469,8 @@ void CustomTypeInfo::placementConstruct(unsigned char* buffer, std::size_t buffe
 		instances.insert(buffer);
 	}
 	
-	if (defaultConstructorFunction != nullptr)
+	if (defaultConstructorFunction != nullptr
+		&& (!Configuration::enableLLVM || dylib != nullptr))
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
@@ -500,7 +501,8 @@ void CustomTypeInfo::placementDestruct(unsigned char* buffer, std::size_t buffer
 {
 	ReflectableHandle::nullifyObjectHandles(buffer, this);
 
-	if (destructorFunction != nullptr)
+	if (destructorFunction != nullptr 
+		&& (!Configuration::enableLLVM || dylib != nullptr))
 	{
 		if constexpr (Configuration::enableLLVM)
 		{
