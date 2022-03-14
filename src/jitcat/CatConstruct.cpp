@@ -113,6 +113,14 @@ bool CatConstruct::typeCheck(CatRuntimeContext* compiletimeContext, ExpressionEr
 		}
 		else if (objectTypeInfo->isArrayType())
 		{
+			// If there is no initialization, intialise with 0 size
+			if (arguments->getNumArguments() == 0)
+			{
+				std::vector<CatTypedExpression*> argumentList = { new CatLiteral(0, lexeme) };
+				arguments = std::make_unique<CatArgumentList>(lexeme, argumentList);
+				constructorStatement = std::make_unique<CatMemberFunctionCall>("init", lexeme, assignable.release(), arguments.release(), lexeme);
+				return constructorStatement->typeCheck(compiletimeContext, errorManager, errorContext);
+			}
 			if (!arguments->typeCheck(compiletimeContext, errorManager, errorContext))
 			{
 				return false;
