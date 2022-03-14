@@ -246,7 +246,7 @@ void Reflection::ArrayMemberFunctionInfo::doResize(std::any& base, const std::ve
 			// Delete all old objects that were not move/copy constructed
 			for (int i = minSize; i < oldArray.size; ++i)
 			{
-				arrayTypeInfo->placementDestruct(oldArray.arrayData + i * arrayTypeInfo->getItemSize(), arrayTypeInfo->getItemSize());
+				arrayTypeInfo->getArrayItemType().placementDestruct(oldArray.arrayData + i * arrayTypeInfo->getItemSize(), arrayTypeInfo->getItemSize());
 			}
 		}
 	}
