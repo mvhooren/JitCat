@@ -39,7 +39,7 @@ std::any ArrayTypeInfo::index(Array* array, int index)
 	}
 	else
 	{
-		return arrayItemType.createDefault();
+		return arrayItemType.toPointer().createDefault();
 	}
 }
 
