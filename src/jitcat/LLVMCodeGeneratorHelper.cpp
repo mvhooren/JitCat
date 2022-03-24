@@ -356,6 +356,10 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 
 llvm::PointerType* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& type)
 {
+	if (type.isReflectableObjectType() && type.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
+	{
+		return llvmTypes.pointerType;
+	}
 	return llvm::PointerType::get(toLLVMType(type), 0);
 }
 
@@ -1457,11 +1461,10 @@ void LLVMCodeGeneratorHelper::generateLoop(LLVMCompileTimeContext* context,
 										   llvm::Value* iteratorEndValue,
 										   const std::function<void (LLVMCompileTimeContext*, llvm::Value*)>& generateLoopBody)
 {
-	assert(false);
-	assert(iteratorBeginValue->getType()->isIntegerTy());
+	assert(iteratorBeginValue->getType()->isIntegerTy() || iteratorBeginValue->getType()->isPointerTy());
 	assert(iteratorStepValue->getType()->isIntegerTy());
-	assert(iteratorEndValue->getType()->isIntegerTy());
-
+	assert(iteratorEndValue->getType()->isIntegerTy() || iteratorBeginValue->getType()->isPointerTy());
+	assert(iteratorBeginValue->getType() == iteratorEndValue->getType());
 
 	auto helper = context->helper;
 	auto builder = helper->getBuilder();
@@ -1481,7 +1484,11 @@ void LLVMCodeGeneratorHelper::generateLoop(LLVMCompileTimeContext* context,
 
 	// Check the loop condition
 	llvm::Value* iterator = builder->CreateLoad(iteratorAlloc, "iteratorLoad");
-	llvm::Value* condition = builder->CreateICmpSLT(iterator, iteratorEndValue, "loopConditionCheck");
+	llvm::Value* condition = nullptr;
+	if (iteratorBeginValue->getType()->isIntegerTy())
+		condition = builder->CreateICmpSLT(iterator, iteratorEndValue, "loopConditionCheck");
+	else
+		condition = builder->CreateICmpULT(convertToIntPtr(iterator, "i"), convertToIntPtr(iteratorEndValue, "end"), "loopConditionCheck");
 	
 	//Jump to either the loop block, or the continuation block.
 	builder->CreateCondBr(condition, loopBlock, continueBlock);
@@ -1494,7 +1501,7 @@ void LLVMCodeGeneratorHelper::generateLoop(LLVMCompileTimeContext* context,
 	//Generate loop body
 	generateLoopBody(context, iterator);
 	//Increment iterator
-	builder->CreateStore(iteratorAlloc, builder->CreateAdd(iterator, iteratorStepValue, "incrementIterator"));
+	builder->CreateStore(createAdd(iterator, iteratorStepValue, "incrementIterator"), iteratorAlloc);
 	//Jump back to the condition
 	builder->CreateBr(conditionBlock);
 	context->currentFunction->getBasicBlockList().push_back(continueBlock);

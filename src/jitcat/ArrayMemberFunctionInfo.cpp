@@ -318,7 +318,7 @@ void ArrayMemberFunctionInfo::generateConstructArray(LLVM::LLVMCompileTimeContex
 	{
 		assert(arrayType->getArrayItemType().isReflectableObjectType());
 		//Initialize all the array items by calling the placement constructor in a for loop
-		context->helper->generateLoop(context, arrayData, arrayItemSizeBytes, builder->CreateAdd(arrayData, arraySizeBytes, "arrayEnd"),
+		context->helper->generateLoop(context, arrayData, arrayItemSizeBytes, context->helper->createAdd(arrayData, arraySizeBytes, "arrayEnd"),
 			[&](LLVMCompileTimeContext* context, llvm::Value* iterator)
 			{
 				//iterator contains pointer to item
@@ -361,7 +361,7 @@ void ArrayMemberFunctionInfo::generateDestroyArray(LLVM::LLVMCompileTimeContext*
 		//Need to call destructors
 		llvm::Value* itemSize = context->helper->createConstant((int)arrayType->getArrayItemType().getTypeSize());
 		llvm::Value* arraySizeBytes = builder->CreateMul(itemSize, arraySizeElements, "arraySizeBytes");
-		context->helper->generateLoop(context, arrayData, itemSize, builder->CreateAdd(arrayData, arraySizeBytes, "arrayEnd"),
+		context->helper->generateLoop(context, arrayData, itemSize, context->helper->createAdd(arrayData, arraySizeBytes, "arrayEnd"),
 			[&](LLVMCompileTimeContext* context, llvm::Value* iterator)
 			{
 				if (arrayType->getArrayItemType().isReflectableObjectType())
