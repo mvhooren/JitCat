@@ -1955,8 +1955,11 @@ void LLVMCodeGenerator::link(CustomTypeInfo* customType)
 	}
 	for (auto& iter : customType->getMemberFunctions())
 	{
-		const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->getFunctionDefinition()->getMangledFunctionName(targetConfig->sretBeforeThis);
-		static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->setFunctionNativeAddress((intptr_t)getSymbolAddress(mangledName, *dylib));
+		if (!iter.second->isDeferredFunctionCall())
+		{
+			const std::string& mangledName = static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->getFunctionDefinition()->getMangledFunctionName(targetConfig->sretBeforeThis);
+			static_cast<CustomTypeMemberFunctionInfo*>(iter.second.get())->setFunctionNativeAddress((intptr_t)getSymbolAddress(mangledName, *dylib));
+		}
 	}
 }
 

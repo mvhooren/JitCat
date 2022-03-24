@@ -670,7 +670,7 @@ void TypeInfo::addDeferredMembers(TypeMemberInfo* deferredMember)
 		if (memberFunction.second->getVisibility() == MemberVisibility::Public
 			|| memberFunction.second->getVisibility() == MemberVisibility::Protected)
 		{
-			memberFunctions.emplace(memberFunction.first, memberFunction.second->toDeferredMemberFunction(deferredMember));
+			memberFunctions.emplace(memberFunction.first, memberFunction.second->toDeferredMemberFunction(deferredMember, this));
 		}
 	}
 }

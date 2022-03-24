@@ -85,7 +85,7 @@ namespace jitcat::Reflection
 
 		const std::vector<CatGenericType>& getArgumentTypes() const;
 		const CatGenericType& getArgumentType(std::size_t argumentIndex) const;
-		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember) const;
+		DeferredMemberFunctionInfo* toDeferredMemberFunction(TypeMemberInfo* baseMember, TypeInfo* baseType) const;
 
 
 		inline virtual std::any call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const { return std::any(); }
@@ -116,7 +116,7 @@ namespace jitcat::Reflection
 
 	struct DeferredMemberFunctionInfo : public MemberFunctionInfo
 	{
-		DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, const MemberFunctionInfo* deferredFunction);
+		DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, TypeInfo* baseType, const MemberFunctionInfo* deferredFunction);
 
 		const TypeMemberInfo* getBaseMember() const;
 		TypeMemberInfo* getBaseMember();
@@ -131,6 +131,7 @@ namespace jitcat::Reflection
 		virtual std::string getMangledName(bool sRetBeforeThis, FunctionType functionType) const override final;
 
 	private:
+		TypeInfo* baseType;
 		TypeMemberInfo* baseMember;
 		const MemberFunctionInfo* deferredFunction;
 

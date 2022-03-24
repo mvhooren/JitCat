@@ -70,9 +70,9 @@ const CatGenericType& MemberFunctionInfo::getArgumentType(std::size_t argumentIn
 }
 
 
-DeferredMemberFunctionInfo* MemberFunctionInfo::toDeferredMemberFunction(TypeMemberInfo* baseMember) const
+DeferredMemberFunctionInfo* MemberFunctionInfo::toDeferredMemberFunction(TypeMemberInfo* baseMember, TypeInfo* baseType) const
 {
-	return new DeferredMemberFunctionInfo(baseMember, this);
+	return new DeferredMemberFunctionInfo(baseMember, baseType, this);
 }
 
 
@@ -112,8 +112,9 @@ void MemberFunctionInfo::addParameterType(const CatGenericType& type)
 }
 
 
-DeferredMemberFunctionInfo::DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, const MemberFunctionInfo* deferredFunction):
+DeferredMemberFunctionInfo::DeferredMemberFunctionInfo(TypeMemberInfo* baseMember, TypeInfo* baseType, const MemberFunctionInfo* deferredFunction):
 	MemberFunctionInfo(deferredFunction->getMemberFunctionName(), deferredFunction->getReturnType()),
+	baseType(baseType),
 	baseMember(baseMember), deferredFunction(deferredFunction)
 {
 }
@@ -144,7 +145,8 @@ DeferredMemberFunctionInfo::~DeferredMemberFunctionInfo()
 
 inline std::any DeferredMemberFunctionInfo::call(CatRuntimeContext* runtimeContext, std::any& base, const std::vector<std::any>& parameters) const
 {
-	std::any baseReferenceValue = baseMember->getMemberReference(reinterpret_cast<unsigned char*>(baseMember->getType().getRawPointer(base)));
+	uintptr_t rawPointer = baseType->getTypeCaster()->castToRawPointer(base);
+	std::any baseReferenceValue = baseMember->getMemberReference(reinterpret_cast<unsigned char*>(rawPointer));
 	return deferredFunction->call(runtimeContext, baseReferenceValue, parameters);
 }
 
