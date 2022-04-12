@@ -54,6 +54,7 @@ namespace jitcat
 			Float,
 			Double,
 			Bool,
+			Vector4f,
 			Void,
 			Count
 		};
@@ -91,12 +92,15 @@ namespace jitcat
 		bool isIntegralType() const;
 		bool isFloatType() const;
 		bool isDoubleType() const;
+		bool isVector4fType() const;
 
 		bool isStringType() const;
 		bool isStringPtrType() const;
 		bool isStringValueType() const;
 
 		bool isScalarType() const;
+		bool isVectorType() const;
+		bool isTensorType() const;
 		bool isSignedType() const;
 		bool isUnsignedType() const;
 		bool isVoidType() const;
@@ -236,6 +240,7 @@ namespace jitcat
 		static CatGenericType createUInt64Type(bool isWritable, bool isConst);
 		static CatGenericType createFloatType(bool isWritable, bool isConst);
 		static CatGenericType createDoubleType(bool isWritable, bool isConst);
+		static CatGenericType createVector4fType(bool isWritable, bool isConst);
 		static CatGenericType createBoolType(bool isWritable, bool isConst);
 		static CatGenericType createStringType(bool isWritable, bool isConst);
 		static CatGenericType createArrayType(const CatGenericType& arrayItemType, bool isWritable, bool isConst);
@@ -247,6 +252,7 @@ namespace jitcat
 		static const char* toString(BasicType type);
 		static BasicType toBasicType(const char* value);
 		static BasicType getWidestType(BasicType lType, BasicType rType);
+		static BasicType getHighestRankType(BasicType lType, BasicType rType);
 		static const char* toString(SpecificType type);
 		static SpecificType toSpecificType(const char* value);
 		static const char* toString(Reflection::TypeOwnershipSemantics ownership);
@@ -263,6 +269,7 @@ namespace jitcat
 		static const CatGenericType uInt64Type;
 		static const CatGenericType floatType;
 		static const CatGenericType doubleType;
+		static const CatGenericType vector4fType;
 		static const CatGenericType boolType;
 		static const CatGenericType stringType;
 	

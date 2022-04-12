@@ -20,6 +20,7 @@ namespace jitcat::AST
 		CatLiteral(const std::any& value, CatGenericType type, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(const Configuration::CatString& value, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme);
+		CatLiteral(float vectorValue[4], const Tokenizer::Lexeme& lexeme);
 		CatLiteral(double doubleValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(int intValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(bool boolValue, const Tokenizer::Lexeme& lexeme);

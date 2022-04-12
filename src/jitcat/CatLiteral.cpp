@@ -15,7 +15,7 @@ using namespace jitcat::AST;
 using namespace jitcat::Tools;
 
 
-jitcat::AST::CatLiteral::CatLiteral(const std::any& value, CatGenericType type, const Tokenizer::Lexeme& lexeme):
+CatLiteral::CatLiteral(const std::any& value, CatGenericType type, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	type(type),
 	value(value)
@@ -23,7 +23,7 @@ jitcat::AST::CatLiteral::CatLiteral(const std::any& value, CatGenericType type, 
 }
 
 
-jitcat::AST::CatLiteral::CatLiteral(const Configuration::CatString& value, const Tokenizer::Lexeme& lexeme): 
+CatLiteral::CatLiteral(const Configuration::CatString& value, const Tokenizer::Lexeme& lexeme): 
 	CatTypedExpression(lexeme), 
 	type(CatGenericType::stringConstantValuePtrType),
 	value(TypeTraits<const Configuration::CatString*>::getCatValue(StringConstantPool::getString(value)))
@@ -31,7 +31,7 @@ jitcat::AST::CatLiteral::CatLiteral(const Configuration::CatString& value, const
 }
 
 
-jitcat::AST::CatLiteral::CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme):
+CatLiteral::CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme), 
 	type(CatGenericType::floatType),
 	value(floatValue)
@@ -39,7 +39,15 @@ jitcat::AST::CatLiteral::CatLiteral(float floatValue, const Tokenizer::Lexeme& l
 }
 
 
-jitcat::AST::CatLiteral::CatLiteral(double doubleValue, const Tokenizer::Lexeme& lexeme):
+CatLiteral::CatLiteral(float vectorValue[4], const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme),
+	type(CatGenericType::vector4fType),
+	value(vectorValue)
+{
+}
+
+
+CatLiteral::CatLiteral(double doubleValue, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme), 
 	type(CatGenericType::doubleType),
 	value(doubleValue)

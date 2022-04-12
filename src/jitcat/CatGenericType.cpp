@@ -285,6 +285,12 @@ bool CatGenericType::isDoubleType() const
 }
 
 
+bool CatGenericType::isVector4fType() const
+{
+	return specificType == SpecificType::Basic && basicType == BasicType::Vector4f;
+}
+
+
 bool CatGenericType::isStringType() const
 {
 	return isStringPtrType() || isStringValueType();
@@ -314,6 +320,19 @@ bool CatGenericType::isScalarType() const
 							   || basicType == BasicType::UInt
 							   || basicType == BasicType::Int64
 							   || basicType == BasicType::UInt64);
+}
+
+
+bool CatGenericType::isVectorType() const
+{
+	return specificType == SpecificType::Basic
+		&& (basicType == BasicType::Vector4f);
+}
+
+
+bool CatGenericType::isTensorType() const
+{
+	return isScalarType() || isVectorType();
 }
 
 
@@ -722,13 +741,13 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 					resultInfo.setResultType(CatGenericType::stringWeakPtrType);
 					return resultInfo;
 				}
-				//Intentional lack of break
+				//Intentional fallthrough
 			case CatInfixOperatorType::Minus:
 			case CatInfixOperatorType::Multiply:
 			case CatInfixOperatorType::Divide:
-				if (isScalarType() && rightType.isScalarType())
+				if (isTensorType() && rightType.isTensorType())
 				{
-					resultInfo.setResultType(CatGenericType(getWidestType(basicType, rightType.basicType)));
+					resultInfo.setResultType(CatGenericType(getHighestRankType(basicType, rightType.basicType)));
 					return resultInfo;
 				}
 				break;
@@ -2399,6 +2418,12 @@ CatGenericType CatGenericType::createDoubleType(bool isWritable, bool isConst)
 }
 
 
+CatGenericType jitcat::CatGenericType::createVector4fType(bool isWritable, bool isConst)
+{
+	return CatGenericType(BasicType::Vector4f, isWritable, isConst);
+}
+
+
 CatGenericType CatGenericType::createBoolType(bool isWritable, bool isConst)
 {
 	return CatGenericType(BasicType::Bool, isWritable, isConst);
@@ -2536,6 +2561,24 @@ CatGenericType::BasicType CatGenericType::getWidestType(BasicType lType, BasicTy
 }
 
 
+CatGenericType::BasicType CatGenericType::getHighestRankType(BasicType lType, BasicType rType)
+{
+	if (lType == rType)
+	{
+		return lType;
+	}
+	switch (lType)
+	{
+		case BasicType::Vector4f:	return BasicType::Vector4f;
+		default:
+			if (rType == BasicType::Vector4f)
+				return BasicType::Vector4f;
+			else
+				return getWidestType(lType, rType);
+	}
+}
+
+
 const char* CatGenericType::toString(SpecificType type)
 {
 	switch (type)
@@ -2631,6 +2674,7 @@ const CatGenericType CatGenericType::int64Type		= CatGenericType(BasicType::Int6
 const CatGenericType CatGenericType::uInt64Type		= CatGenericType(BasicType::UInt64, true);
 const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Float, true);
 const CatGenericType CatGenericType::doubleType		= CatGenericType(BasicType::Double, true);
+const CatGenericType CatGenericType::vector4fType	= CatGenericType(BasicType::Vector4f, true);
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool, true);
 const CatGenericType CatGenericType::stringType		= TypeTraits<Configuration::CatString>::toGenericType();
 const CatGenericType CatGenericType::stringWeakPtrType = TypeTraits<Configuration::CatString>::toGenericType().toPointer(TypeOwnershipSemantics::Weak, false, false);

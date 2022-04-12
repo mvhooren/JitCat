@@ -46,8 +46,8 @@ namespace jitcat::Tokenizer
 		Long,
 		Float,
 		Double,
-		Vector4,
-		Matrix,
+		Vector4f,
+		Matrix4f,
 		Null,
 		Array,
 		Last

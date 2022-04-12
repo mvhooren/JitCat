@@ -60,8 +60,8 @@ const char* IdentifierToken::getSubTypeName(unsigned short subType_) const
 		case Identifier::Long:		return "long";
 		case Identifier::Float:		return "float";
 		case Identifier::Double:	return "double";
-		case Identifier::Vector4:	return "vector4";
-		case Identifier::Matrix:	return "matrix";
+		case Identifier::Vector4f:	return "vector4f";
+		case Identifier::Matrix4f:	return "matrix4f";
 		case Identifier::Null:		return "null";
 		case Identifier::Array:		return "array";
 	}

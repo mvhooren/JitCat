@@ -5,6 +5,8 @@
   Distributed under the MIT License (license terms are at http://opensource.org/licenses/MIT).
 */
 
+#include <type_traits>
+
 #include "jitcat/LLVMCatIntrinsics.h"
 #include "jitcat/CustomObject.h"
 #include "jitcat/CustomTypeMemberInfo.h"
@@ -24,7 +26,16 @@ inline std::any CustomBasicTypeMemberInfo<BasicT>::getMemberReference(unsigned c
 		BasicT& value = *reinterpret_cast<BasicT*>(&base[memberOffset]);
 		return value;
 	}
-	return BasicT();
+	if constexpr (!std::is_array_v<BasicT>)
+	{
+		return BasicT();
+	}
+	else
+	{
+		BasicT defaultValue;
+		memset(&defaultValue, 0, sizeof(defaultValue));
+		return defaultValue;
+	}
 }
 
 

@@ -52,6 +52,7 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addFloatMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
+		TypeMemberInfo* addVector4fMember(const std::string& memberName, const float defaultValue[4], bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
 		template <typename ObjectT>

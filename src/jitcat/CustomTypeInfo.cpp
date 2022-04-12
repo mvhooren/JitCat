@@ -163,6 +163,28 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 }
 
 
+TypeMemberInfo* CustomTypeInfo::addVector4fMember(const std::string& memberName, const float defaultValue[4], bool isWritable, bool isConst)
+{
+	unsigned char* data = increaseDataSize(sizeof(defaultValue));
+	memcpy(data, &defaultValue, sizeof(defaultValue));
+	unsigned int offset = (unsigned int)(data - defaultData);
+	if (defaultData == nullptr)
+	{
+		offset = 0;
+	}
+
+	std::set<unsigned char*>::iterator end = instances.end();
+	for (std::set<unsigned char*>::iterator iter = instances.begin(); iter != end; ++iter)
+	{
+		memcpy((*iter) + offset, &defaultValue, sizeof(defaultValue));
+	}
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<float[4]>(memberName, offset, CatGenericType::createVector4fType(isWritable, isConst), getTypeName());
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
 TypeMemberInfo* CustomTypeInfo::addStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable, bool isConst)
 {
 	triviallyCopyable = false;
@@ -264,6 +286,11 @@ TypeMemberInfo* CustomTypeInfo::addMember(const std::string& memberName, const C
 	else if	(type.isDoubleType())						return addDoubleMember(memberName, 0.0, type.isWritable(), type.isConst());
 	else if (type.isIntType())							return addIntMember(memberName, 0, type.isWritable(), type.isConst());
 	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
+	else if (type.isVector4fType())
+	{
+		const float zeroVector[4] = { 0.0f,0.0f,0.0f,0.0f };
+		return addVector4fMember(memberName, zeroVector, type.isWritable(), type.isConst());
+	}
 	else if (type.isStringValueType())					return addStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType());
@@ -420,7 +447,7 @@ bool CustomTypeInfo::setDefaultConstructorFunction(const std::string& constructo
 }
 
 
-bool jitcat::Reflection::CustomTypeInfo::setDestructorFunction(const std::string& destructorFunctionName)
+bool CustomTypeInfo::setDestructorFunction(const std::string& destructorFunctionName)
 {
 	SearchFunctionSignature sig(destructorFunctionName, {});
 	MemberFunctionInfo* functionInfo = getMemberFunctionInfo(sig);

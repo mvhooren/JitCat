@@ -111,6 +111,7 @@ namespace jitcat::Grammar
 		static AST::ASTNode* toOperatorNew(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* toOperatorNewArray(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* literalToken(const Parser::ASTNodeParser& nodeParser);
+		static AST::ASTNode* vectorLiteral(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* argumentListToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* functionCallToken(const Parser::ASTNodeParser& nodeParser);
 		static AST::ASTNode* memberAccessToken(const Parser::ASTNodeParser& nodeParser);

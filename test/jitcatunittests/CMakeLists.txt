@@ -58,6 +58,7 @@ set(Source_TypeSerializationTests
 
 set(Source_CatLibTests
 	CatLibTests.cpp
+	VectorTests.cpp
 )
 
 set(Source_RegressionTests
