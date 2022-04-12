@@ -10,6 +10,7 @@
 #include "jitcat/CatASTNodes.h"
 #include "jitcat/CatGenericType.h"
 #include "jitcat/CatGrammar.h"
+#include "jitcat/CatLog.h"
 #include "jitcat/CatTokenizer.h"
 #include "jitcat/CommentToken.h"
 #include "jitcat/Configuration.h"
@@ -196,7 +197,10 @@ JitCat* JitCat::get()
 {
 	if (instance == nullptr)
 	{
+		Tools::CatLogStdOut stdOutLog;
+		Tools::CatLog::addListener(&stdOutLog);
 		instance = new JitCat();
+		Tools::CatLog::removeListener(&stdOutLog);
 	}
 	return instance;
 }
