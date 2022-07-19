@@ -18,6 +18,7 @@
 #include "jitcat/STLTypeReflectors.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeTools.h"
+#include "jitcat/TypeTraits.h"
 #ifdef ENABLE_LLVM
 	#include "jitcat/LLVMTargetConfig.h"
 	#include "jitcat/LLVMTypes.h"
@@ -95,14 +96,15 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateDereferenceCo
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
+	llvm::PointerType* memberPointerType = context->helper->toLLVMPtrType(getType());
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
-		return context->helper->loadPointerAtAddress(addressValue, memberName);
+		return context->helper->loadPointerAtAddress(addressValue, memberName, memberPointerType);
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, memberPointerType, context);
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -114,16 +116,17 @@ inline llvm::Value* ClassPointerMemberInfo<BaseT, ClassT>::generateAssignCode(ll
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getMemberPointerOffset();
+	llvm::PointerType* memberPointerType = context->helper->toLLVMPtrType(getType());
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressIntValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_IntPtr");
-		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", context->helper->toLLVMPtrType(catType));
+		llvm::Value* addressValue = context->helper->convertToPointer(addressIntValue, memberName + "_Ptr", memberPointerType);
 		context->helper->writeToPointer(addressValue, rValue);
 		return rValue;
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, memberPointerType, context);
 #else
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -182,14 +185,15 @@ inline llvm::Value* ClassObjectMemberInfo<BaseT, ClassT>::generateDereferenceCod
 {
 #ifdef ENABLE_LLVM
 	unsigned long long offset = getOffset(memberPointer);
+	llvm::PointerType* memberPointerType = context->helper->toLLVMPtrType(getType());
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		llvm::Value* memberOffset = context->helper->createOffsetGlobalValue(context, getMemberOffsetName(), offset);
 		llvm::Value* parentObjectPointerInt = context->helper->convertToIntPtr(parentObjectPointer, memberName + "_Parent_IntPtr");
 		llvm::Value* addressValue = context->helper->createAdd(parentObjectPointerInt, memberOffset, memberName + "_Ptr");
-		return context->helper->convertToPointer(addressValue, memberName);
+		return context->helper->convertToPointer(addressValue, memberName, memberPointerType);
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, memberPointerType, context);
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -258,19 +262,21 @@ inline llvm::Value* ClassUniquePtrMemberInfo<BaseT, ClassT>::generateDereference
 {
 #ifdef ENABLE_LLVM
 	llvm::Value* thisPointerAsInt = context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(this), context, getGlobalThisVariableName());
+	llvm::PointerType* memberPointerType = context->helper->toLLVMPtrType(getType());
 	if (!context->helper->isPointer(parentObjectPointer))
 	{
-		parentObjectPointer = context->helper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr");
+		parentObjectPointer = context->helper->convertToPointer(parentObjectPointer, memberName + "_Parent_Ptr", context->helper->toLLVMPtrType(TypeTraits<BaseT>::toGenericType()));
 	}
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		std::string mangledName = getMangledGetPointerName();
 		context->helper->defineWeakSymbol(context, reinterpret_cast<uintptr_t>(&ClassUniquePtrMemberInfo<BaseT, ClassT>::getPointer), mangledName, false);
 		
-		llvm::Value* thisPointer = context->helper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr");
-		return context->helper->createCall(context, context->targetConfig->getLLVMTypes().functionRetPtrArgPtr_Ptr, {parentObjectPointer, thisPointer}, false, mangledName, "getUniquePtr", false);
+		llvm::Value* thisPointer = context->helper->convertToPointer(thisPointerAsInt, "ClassUniquePtrMemberInfoPtr", context->targetConfig->getLLVMTypes().pointerType);
+		llvm::Value* returnedPointer = context->helper->createCall(context, context->targetConfig->getLLVMTypes().functionRetPtrArgPtr_Ptr, {parentObjectPointer, thisPointer}, false, mangledName, "getUniquePtr", false);
+		return context->helper->convertToPointer(returnedPointer, "PointerCast", memberPointerType);
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, memberPointerType, context);
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM

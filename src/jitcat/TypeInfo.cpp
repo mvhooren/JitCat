@@ -460,6 +460,12 @@ bool TypeInfo::isArrayType() const
 }
 
 
+bool TypeInfo::isVectorType() const
+{
+    return false;
+}
+
+
 bool TypeInfo::isTriviallyCopyable() const
 {
 	return false;

@@ -282,6 +282,8 @@ set(Source_Reflection_TypeInfo
 	${JitCatHeaderPath}/TypeInfo.h
 	TypeInfoDeleter.cpp
 	${JitCatHeaderPath}/TypeInfoDeleter.h
+	VectorTypeInfo.cpp
+	${JitCatHeaderPath}/VectorTypeInfo.h
 )
 
 set(Source_Reflection_TypeInfo_Members
@@ -298,6 +300,8 @@ set(Source_Reflection_TypeInfo_Members
 	${JitCatHeaderPath}/StaticMemberInfoHeaderImplementation.h
 	TypeMemberInfo.cpp;
 	${JitCatHeaderPath}/TypeMemberInfo.h
+	VectorMemberFunctionInfo.cpp;
+	${JitCatHeaderPath}/VectorMemberFunctionInfo.h
 )
 
 set(Source_Reflection_TypeInfo_MemberFunctions

@@ -153,6 +153,8 @@ namespace jitcat::Reflection
 		virtual bool isReflectedType() const;
 		//Returns true if this is an ArrayTypeInfo.
 		virtual bool isArrayType() const;
+		//Returns true if this is a VectorTypeInfo
+		virtual bool isVectorType() const;
 
 		//Returns true if the type can be copied using memcpy without adverse side effects.
 		virtual bool isTriviallyCopyable() const;

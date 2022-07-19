@@ -69,6 +69,7 @@ std::any CustomTypeObjectMemberInfo::getAssignableMemberReference(unsigned char*
 llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
+	llvm::PointerType* memberPointerType = context->helper->toLLVMPtrType(getType());
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		//Convert to int so we can add the offset
@@ -78,12 +79,13 @@ llvm::Value* CustomTypeObjectMemberInfo::generateDereferenceCode(llvm::Value* pa
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a ReflectableHandle
-		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
+		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle", context->targetConfig->getLLVMTypes().pointerType);
 		//Call function that gets the member
-		return context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_getObjectPointerFromHandle, {reflectableHandle}, "_jc_getObjectPointerFromHandle", true);
+		llvm::Value* returnValue = context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_getObjectPointerFromHandle, {reflectableHandle}, "_jc_getObjectPointerFromHandle", true);
+		return context->helper->convertToPointer(returnValue, "CastToPointerType", memberPointerType);
 
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, memberPointerType, context);
 #else 
 	return nullptr;
 #endif //ENABLE_LLVM
@@ -102,14 +104,15 @@ llvm::Value* CustomTypeObjectMemberInfo::generateAssignCode(llvm::Value* parentO
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a ReflectableHandle
-		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle");
+		llvm::Value* reflectableHandle = context->helper->convertToPointer(addressValue, "ReflectableHandle", context->targetConfig->getLLVMTypes().pointerType);
 		//Type info of the object that will be assigned
 		llvm::Value* typeInfoConstantAsIntPtr = context->helper->createTypeInfoGlobalValue(context, catType.removeIndirection().getObjectType());
 		//Call function that gets the member
 		context->helper->createIntrinsicCall(context, &LLVM::CatLinkedIntrinsics::_jc_assignPointerToReflectableHandle, {reflectableHandle, rValue, typeInfoConstantAsIntPtr}, "_jc_assignPointerToReflectableHandle", true);
 		return rValue;
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
+	llvm::PointerType* memberPointerType = context->helper->toLLVMPtrType(getType());
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, memberPointerType, context);
 #else
 	return nullptr;
 #endif // ENABLE_LLVM
@@ -153,6 +156,7 @@ std::any CustomTypeObjectDataMemberInfo::getAssignableMemberReference(unsigned c
 llvm::Value* CustomTypeObjectDataMemberInfo::generateDereferenceCode(llvm::Value* parentObjectPointer, LLVM::LLVMCompileTimeContext* context) const
 {
 #ifdef ENABLE_LLVM
+	llvm::PointerType* memberPointerType = context->helper->toLLVMPtrType(getType());
 	auto notNullCodeGen = [=](LLVM::LLVMCompileTimeContext* compileContext)
 	{
 		//Convert to int so we can add the offset
@@ -162,11 +166,11 @@ llvm::Value* CustomTypeObjectDataMemberInfo::generateDereferenceCode(llvm::Value
 		//Add the offset to the data pointer.
 		llvm::Value* addressValue = context->helper->createAdd(dataPointerAsInt, memberOffsetValue, memberName + "_IntPtr");
 		//Pointer to a Reflectable
-		llvm::Value* reflectable = context->helper->convertToPointer(addressValue, memberName);
+		llvm::Value* reflectable = context->helper->convertToPointer(addressValue, memberName, memberPointerType);
 		//Call function that gets the member
 		return reflectable;
 	};
-	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, context->targetConfig->getLLVMTypes().pointerType, context);
+	return context->helper->createOptionalNullCheckSelect(parentObjectPointer, notNullCodeGen, memberPointerType, context);
 #else 
 	return nullptr;
 #endif //ENABLE_LLVM

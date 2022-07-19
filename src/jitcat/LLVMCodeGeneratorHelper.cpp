@@ -324,10 +324,10 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isInt64Type())						return llvmTypes.longintType;
 	else if (type.isUInt64Type())						return llvmTypes.longintType;
 	else if (type.isBoolType())							return llvmTypes.boolType;
-	else if (type.isVector4fType())						return llvmTypes.vector4fType;
 	else if (type.isReflectableHandleType())			return llvmTypes.pointerType;
 	else if (type.isVoidType())							return llvmTypes.voidType;
 	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
+	else if (type == CatGenericType::vector4fType)		return llvm::ArrayType::get(llvmTypes.floatType, 4);
 	else if (type.isReflectableObjectType())			
 	{
 		//This is a compound type. For now, just create a pointer type.
@@ -336,7 +336,8 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isPointerType())
 	{
 		if (type.getPointeeType()->isBasicType()
-			|| type.getPointeeType()->isPointerType())
+			|| type.getPointeeType()->isPointerType()
+			|| *type.getPointeeType() == CatGenericType::vector4fType)
 		{
 			llvm::Type* pointee = toLLVMType(*type.getPointeeType());
 			return pointee->getPointerTo();
@@ -359,7 +360,10 @@ llvm::PointerType* LLVMCodeGeneratorHelper::toLLVMPtrType(const CatGenericType& 
 {
 	if (type.isReflectableObjectType() && type.getOwnershipSemantics() == TypeOwnershipSemantics::Value)
 	{
-		return llvmTypes.pointerType;
+		if (type == CatGenericType::vector4fType)
+			return llvm::ArrayType::get(llvmTypes.floatType, 4)->getPointerTo();
+		else
+			return llvmTypes.pointerType;
 	}
 	return llvm::PointerType::get(toLLVMType(type), 0);
 }
@@ -393,7 +397,7 @@ llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFuncti
 	for (auto iter : globals)
 	{
 		llvm::Constant* zeroTerminatedString = createZeroTerminatedStringConstant(iter.first);
-		llvm::Value* globalPtr = convertToPointer(iter.second, "globalPtr");
+		llvm::Value* globalPtr = convertToPointer(iter.second, "globalPtr", llvmTypes.pointerType);
 		llvm::CallInst* callInst = builder->CreateCall(callee, {zeroTerminatedString, globalPtr});
 		callInst->setCallingConv(codeGenerator->targetConfig->getOptions().defaultLLVMCallingConvention);
 	}
@@ -405,7 +409,8 @@ llvm::Function* LLVMCodeGeneratorHelper::generateGlobalVariableEnumerationFuncti
 llvm::Value* LLVMCodeGeneratorHelper::convertType(llvm::Value* valueToConvert, const CatGenericType& fromType, const CatGenericType& toType, 
 																LLVMCompileTimeContext* context)
 {
-	assert(toLLVMType(fromType) == valueToConvert->getType());
+	assert(toLLVMType(fromType) == valueToConvert->getType() 
+		   || (valueToConvert->getType()->isPointerTy() && valueToConvert->getType()->getPointerElementType() == toLLVMType(fromType)));
 	if (fromType.compare(toType, false, true))
 	{
 		return valueToConvert;
@@ -696,7 +701,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateStaticPointerVariable(uintptr_t va
 {
 	if (!context->isPrecompilationContext)
 	{
-		return context->helper->createPtrConstant(context, valueWhenJitCompiling, "pointerTo_" + name);
+		return context->helper->createPtrConstant(context, valueWhenJitCompiling, "pointerTo_" + name, llvmTypes.pointerType);
 	}
 	else
 	{
@@ -779,10 +784,7 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToString(llvm::Value* valueToConver
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
-	if (type == nullptr)
-	{
-		type = llvmTypes.pointerType;
-	}
+	assert(type != nullptr);
 	if (addressValue->getType() == type)
 	{
 		return addressValue;
@@ -802,10 +804,7 @@ llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Value* addressValue
 
 llvm::Value* LLVMCodeGeneratorHelper::convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type)
 {
-	if (type == nullptr)
-	{
-		type = llvmTypes.pointerType;
-	}
+	assert(type != nullptr);
 	return convertToPointer(static_cast<llvm::Value*>(addressConstant), name, type);
 }
 
@@ -826,7 +825,7 @@ llvm::PointerType* jitcat::LLVM::LLVMCodeGeneratorHelper::getPointerTo(llvm::Typ
 
 bool LLVMCodeGeneratorHelper::isPointer(llvm::Type* type)
 {
-	return type == llvmTypes.pointerType;
+	return type->isPointerTy();
 }
 
 
@@ -844,7 +843,7 @@ bool LLVMCodeGeneratorHelper::isInt(llvm::Type* type)
 
 bool LLVMCodeGeneratorHelper::isPointer(llvm::Value* value)
 {
-	return value->getType() == llvmTypes.pointerType;
+	return value->getType()->isPointerTy();
 }
 
 
@@ -886,10 +885,7 @@ llvm::Value* LLVMCodeGeneratorHelper::loadBasicType(llvm::Type* type, llvm::Cons
 
 llvm::Value* LLVMCodeGeneratorHelper::loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type)
 {
-	if (type == nullptr)
-	{
-		type = llvmTypes.pointerType;
-	}
+	assert(type != nullptr);
 	auto builder = codeGenerator->getBuilder();
 	llvm::Value* addressAsPointer = nullptr;
 	if (!addressValue->getType()->isPointerTy())
@@ -964,12 +960,12 @@ llvm::Value* LLVMCodeGeneratorHelper::createTypeInfoGlobalValue(LLVMCompileTimeC
 	if (!context->isPrecompilationContext)
 	{
 		llvm::Constant* typeInfoConstant = createIntPtrConstant(context, reinterpret_cast<uintptr_t>(typeInfo), constantName);
-		return convertToPointer(typeInfoConstant, Tools::append(constantName, "_Ptr"));
+		return convertToPointer(typeInfoConstant, Tools::append(constantName, "_Ptr"), llvmTypes.pointerType);
 	}
 	else
 	{
 		llvm::GlobalVariable* memberOffsetPtr = std::static_pointer_cast<LLVM::LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalVariable(constantName, context);
-		return loadPointerAtAddress(memberOffsetPtr, constantName);
+		return loadPointerAtAddress(memberOffsetPtr, constantName, llvmTypes.pointerType);
 	}
 }
 
@@ -1065,7 +1061,7 @@ llvm::Constant* LLVMCodeGeneratorHelper::createConstant(float constant)
 }
 
 
-llvm::Constant* LLVMCodeGeneratorHelper::createConstant(std::array<float, 4> constant)
+llvm::GlobalVariable* LLVMCodeGeneratorHelper::createConstant(std::array<float, 4> constant)
 {
 	std::array<llvm::Constant*, 4> constants = 
 	{
@@ -1075,7 +1071,15 @@ llvm::Constant* LLVMCodeGeneratorHelper::createConstant(std::array<float, 4> con
 		createConstant(constant[3])
 	};
 	auto ref = llvm::ArrayRef(constants);
-	return llvm::ConstantArray::get(static_cast<llvm::ArrayType*>(llvmTypes.vector4fType), ref);
+	llvm::ArrayType* vectorType = llvm::ArrayType::get(llvmTypes.floatType, 4);
+ 	llvm::Constant* init = llvm::ConstantArray::get(vectorType, ref);
+
+    auto globalDeclaration = (llvm::GlobalVariable*) codeGenerator->getCurrentModule()->getOrInsertGlobal(Tools::append("ConstVector4f_", codeGenerator->getNextGlobalIndex()), vectorType);
+    globalDeclaration->setInitializer(init);
+    globalDeclaration->setConstant(true);
+    globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
+    globalDeclaration->setUnnamedAddr (llvm::GlobalValue::UnnamedAddr::Global);
+	return globalDeclaration;
 }
 
 
@@ -1183,7 +1187,7 @@ llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext*
 
 	llvm::AllocaInst* objectAllocation = builder->CreateAlloca(llvmTypes.charType, arraySizeVariable, name);
 
-	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, llvmTypes.pointerType);
+	llvm::Value* objectAllocationAsIntPtr = builder->CreatePointerCast(objectAllocation, toLLVMPtrType(objectType));
 
 	llvm::BasicBlock* updatedBlock = builder->GetInsertBlock();
 
@@ -1199,7 +1203,6 @@ llvm::Value* LLVMCodeGeneratorHelper::createObjectAllocA(LLVMCompileTimeContext*
 	{
 		Reflection::TypeInfo* typeInfo = objectType.getObjectType();
 		assert(typeInfo != nullptr);
-		
 		assert(objectType.isDestructible());
 		context->blockDestructorGenerators.push_back([=]()
 			{
@@ -1345,15 +1348,15 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 	MemberFunctionCallData callData = memberFunction->getFunctionAddress(FunctionType::Auto);
 	assert(callData.functionAddress != 0 || callData.linkDylib || callData.inlineFunctionGenerator != nullptr);
 	std::vector<llvm::Value*> argumentList;
-	llvm::Value* functionThis = context->helper->convertToPointer(baseObject, memberFunction->getMemberFunctionName() + "_This_Ptr");
+	llvm::Value* functionThis = context->helper->convertToPointer(baseObject, memberFunction->getMemberFunctionName() + "_This_Ptr", static_cast<llvm::PointerType*>(toLLVMType(base->getType())));
 	argumentList.push_back(functionThis);
 	std::vector<llvm::Type*> argumentTypes;
-	argumentTypes.push_back(llvmTypes.pointerType);
+	argumentTypes.push_back(toLLVMType(base->getType()));
 	if (callData.callType == MemberFunctionCallType::ThisCallThroughStaticFunction)
 	{
 		//Add an argument that contains a pointer to a MemberFunctionInfo object.
 		llvm::Value* memberFunctionInfoAddressValue = context->helper->generateStaticPointerVariable(callData.functionInfoStructAddress, context, memberFunction->getMangledFunctionInfoName(context->targetConfig->sretBeforeThis, FunctionType::Member));
-		llvm::Value* memberFunctionPtrValue = context->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr");
+		llvm::Value* memberFunctionPtrValue = context->helper->convertToPointer(memberFunctionInfoAddressValue, "MemberFunctionInfo_Ptr", llvmTypes.pointerType);
 		argumentList.push_back(memberFunctionPtrValue);
 		argumentTypes.push_back(llvmTypes.pointerType);
 	}
@@ -1412,7 +1415,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 			}
 			else if (callData.callType == MemberFunctionCallType::PseudoMemberCall)
 			{
-				argumentTypes.insert(argumentTypes.begin(), llvmTypes.pointerType);
+				argumentTypes.insert(argumentTypes.begin(), returnedObjectAllocation->getType());
 				argumentList.insert(argumentList.begin(), returnedObjectAllocation);
 				return generateStaticFunctionCall(returnType, argumentList, argumentTypes, context, memberFunction->getMangledName(context->targetConfig->sretBeforeThis, FunctionType::Auto), 
 												  memberFunction->getMemberFunctionName(), returnedObjectAllocation, false, callData.nonNullResult);
@@ -1424,7 +1427,7 @@ llvm::Value* LLVMCodeGeneratorHelper::generateMemberFunctionCall(Reflection::Mem
 				{
 					sretTypeInsertPoint++;
 				}
-				argumentTypes.insert(sretTypeInsertPoint, llvmTypes.pointerType);
+				argumentTypes.insert(sretTypeInsertPoint, toLLVMPtrType(returnType));
 
 				llvm::FunctionType* functionType = llvm::FunctionType::get(llvmTypes.voidType, argumentTypes, false);
 				auto sretInsertPoint = argumentList.begin();
@@ -1548,6 +1551,19 @@ void LLVMCodeGeneratorHelper::defineWeakSymbol(LLVMCompileTimeContext* context, 
 }
 
 
+llvm::Value* jitcat::LLVM::LLVMCodeGeneratorHelper::convertPointerType(llvm::Value* value, llvm::Type* expectedType)
+{
+	if (expectedType->isPointerTy()
+		&& value->getType()->isPointerTy()
+		&& static_cast<llvm::PointerType*>(expectedType)->getElementType() !=
+		   static_cast<llvm::PointerType*>(value->getType())->getElementType())
+	{
+		return convertToPointer(value, "convert", static_cast<llvm::PointerType*>(expectedType));
+	}
+	return value;
+}
+
+
 llvm::Value* LLVMCodeGeneratorHelper::convertIndirection(llvm::Value* value, llvm::Type* expectedType)
 {
 	auto builder = codeGenerator->getBuilder();
@@ -1600,7 +1616,8 @@ llvm::Value* LLVMCodeGeneratorHelper::generateIntrinsicCall(jitcat::Reflection::
 	{
 		arguments[i] = convertIndirection(arguments[i], toLLVMType(argumentTypes[i]));
 		arguments[i] = copyConstructIfValueType(arguments[i], argumentTypes[i], context, Tools::makeString(i)); 
-		argumentLLVMTypes.push_back(arguments[i]->getType());
+		arguments[i] = convertPointerType(arguments[i], toLLVMType(functionInfo->getArgumentType(i)));
+		argumentLLVMTypes.push_back(toLLVMType(functionInfo->getArgumentType(i)));
 	}
 	if (returnValueAllocation != nullptr)
 	{

@@ -479,7 +479,7 @@ void ArrayMemberFunctionInfo::createIndexGeneratorFunction()
 							{
 								//Generate in-range code
 								//Generate the code for indexing the array
-								llvm::Value* arrayStartAddress = context->helper->loadPointerAtAddress(parameters[0], "loadArrayAddress");
+								llvm::Value* arrayStartAddress = context->helper->loadPointerAtAddress(parameters[0], "loadArrayAddress", context->targetConfig->getLLVMTypes().pointerType);
 
 								llvm::Value* itemSize = context->helper->createConstant((int)arrayTypeInfo->getArrayItemType().getTypeSize());
 								llvm::Value* itemOffset = builder->CreateMul(itemSize, parameters[1], "arrayItemOffset");
@@ -627,7 +627,7 @@ void ArrayMemberFunctionInfo::createResizeGeneratorFunction()
 				
 				llvm::Value* arraySizePtr = generateArraySizePtr(context, parameters[0]);
 				llvm::Value* currentArraySize = builder->CreateLoad(arraySizePtr, "arraySize");
-				llvm::Value* currentArrayData = context->helper->loadPointerAtAddress(parameters[0], "loadArrayAddress");
+				llvm::Value* currentArrayData = context->helper->loadPointerAtAddress(parameters[0], "loadArrayAddress", context->targetConfig->getLLVMTypes().pointerType);
 				llvm::Value* isNotSameSize = builder->CreateICmpNE(currentArraySize, parameters[1]);
 
 				context->helper->createNullCheckSelect(isNotSameSize,

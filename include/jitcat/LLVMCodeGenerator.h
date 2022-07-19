@@ -77,6 +77,8 @@ namespace jitcat::LLVM
 		//Generates a function that returns an int with the jitcat ABI version from Configuration.h
 		llvm::Function* generateJitCatABIVersionFunction();
 
+		unsigned int getNextGlobalIndex();
+
 	private:
 		llvm::Value* generate(const AST::CatBuiltInFunctionCall* functionCall, LLVMCompileTimeContext* context);
 		llvm::Value* generate(const AST::CatIndirectionConversion* indirectionConversion, LLVMCompileTimeContext* context);
@@ -161,6 +163,9 @@ namespace jitcat::LLVM
 		llvm::orc::JITDylib* runtimeLibraryDyLib;
 		
 		static std::unique_ptr<LLVMMemoryManager> memoryManager;
+
+		// Used to generate unique global names.
+		unsigned int globalIndex;
 	};
 
 } //End namespace jitcat::LLVM

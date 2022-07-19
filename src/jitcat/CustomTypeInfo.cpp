@@ -286,11 +286,6 @@ TypeMemberInfo* CustomTypeInfo::addMember(const std::string& memberName, const C
 	else if	(type.isDoubleType())						return addDoubleMember(memberName, 0.0, type.isWritable(), type.isConst());
 	else if (type.isIntType())							return addIntMember(memberName, 0, type.isWritable(), type.isConst());
 	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
-	else if (type.isVector4fType())
-	{
-		const std::array<float, 4> zeroVector = { 0.0f, 0.0f, 0.0f, 0.0f };
-		return addVector4fMember(memberName, zeroVector, type.isWritable(), type.isConst());
-	}
 	else if (type.isStringValueType())					return addStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
 	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType());

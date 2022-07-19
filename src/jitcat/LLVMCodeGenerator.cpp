@@ -82,7 +82,8 @@ struct ScopeChecker
 LLVMCodeGenerator::LLVMCodeGenerator(const std::string& name, const LLVMTargetConfig* targetConfig):
 	targetConfig(targetConfig),
 	currentModule(std::make_unique<llvm::Module>("JitCat", LLVMJit::get().getContext())),
-	builder(std::make_unique<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>>(LLVMJit::get().getContext()))
+	builder(std::make_unique<llvm::IRBuilder<llvm::ConstantFolder, llvm::IRBuilderDefaultInserter>>(LLVMJit::get().getContext())),
+	globalIndex(0)
 {
 	helper = std::make_unique<LLVMCodeGeneratorHelper>(this);
 	if (targetConfig->isJITTarget)
@@ -409,7 +410,7 @@ llvm::Function* LLVMCodeGenerator::generateExpressionSymbolEnumerationFunction(c
 	for (auto iter : symbols)
 	{
 		llvm::Constant* zeroTerminatedString = helper->createZeroTerminatedStringConstant(iter.first);
-		llvm::Value* functionPtr = helper->convertToPointer(iter.second, "functionPtr");
+		llvm::Value* functionPtr = helper->convertToPointer(iter.second, "functionPtr", targetConfig->getLLVMTypes().pointerType);
 		llvm::CallInst* callInst = builder->CreateCall(callee, {zeroTerminatedString, functionPtr});
 		callInst->setCallingConv(targetConfig->getOptions().defaultLLVMCallingConvention);
 	}
@@ -439,6 +440,12 @@ llvm::Function* LLVMCodeGenerator::generateStringPoolInitializationFunction(cons
 llvm::Function* LLVMCodeGenerator::generateJitCatABIVersionFunction()
 {
 	return helper->generateConstIntFunction(Configuration::jitcatABIVersion, "_jc_get_jitcat_abi_version");
+}
+
+
+unsigned int jitcat::LLVM::LLVMCodeGenerator::getNextGlobalIndex()
+{
+	return ++globalIndex;
 }
 
 
@@ -944,18 +951,18 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 	else if	(literalType.isUInt64Type())	return helper->createConstant(std::any_cast<uint64_t>(literal->getValue()));
 	else if (literalType.isDoubleType())	return helper->createConstant(std::any_cast<double>(literal->getValue()));
 	else if (literalType.isFloatType())		return helper->createConstant(std::any_cast<float>(literal->getValue()));
-	else if (literalType.isVector4fType())	return helper->createConstant(std::any_cast<std::array<float, 4>>(literal->getValue()));
+	else if (literalType == CatGenericType::vector4fType)	return helper->createConstant(std::any_cast<std::array<float, 4>>(literal->getValue()));
 	else if (literalType.isStringPtrType())
 	{
 		Configuration::CatString* stringPtr = std::any_cast<Configuration::CatString*>(literal->getValue());
 		if (!context->isPrecompilationContext)
 		{
-			return helper->createPtrConstant(context, reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress");
+			return helper->createPtrConstant(context, reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress", targetConfig->getLLVMTypes().pointerType);
 		}
 		else
 		{
 			llvm::GlobalVariable* stringPtrPtr = std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalString(*stringPtr, context);
-			return helper->loadPointerAtAddress(stringPtrPtr, "stringLiteralAddress");
+			return helper->loadPointerAtAddress(stringPtrPtr, "stringLiteralAddress", context->targetConfig->getLLVMTypes().pointerType);
 		}
 	}
 	else if (literalType.isStringValueType())
@@ -965,12 +972,12 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 		if (!context->isPrecompilationContext)
 		{
 			const Configuration::CatString* stringPtr = StringConstantPool::getString(stringValue);
-			return helper->createPtrConstant(context, reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress");
+			return helper->createPtrConstant(context, reinterpret_cast<std::uintptr_t>(stringPtr), "stringLiteralAddress", targetConfig->getLLVMTypes().pointerType);
 		}
 		else
 		{
 			llvm::GlobalVariable* stringPtrPtr = std::static_pointer_cast<LLVMPrecompilationContext>(context->catContext->getPrecompilationContext())->defineGlobalString(stringValue, context);
-			return helper->loadPointerAtAddress(stringPtrPtr, "stringLiteralAddress");
+			return helper->loadPointerAtAddress(stringPtrPtr, "stringLiteralAddress", context->targetConfig->getLLVMTypes().pointerType);
 		}
 	}
 	else if (literalType.isPointerToReflectableObjectType())
@@ -979,7 +986,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 		{
 			uintptr_t pointerConstant = literalType.getRawPointer(literal->getValue());
 			llvm::Value* reflectableAddress = helper->createIntPtrConstant(context, pointerConstant, "literalObjectAddress");
-			return builder->CreateIntToPtr(reflectableAddress, targetConfig->getLLVMTypes().pointerType);
+			return builder->CreateIntToPtr(reflectableAddress, context->helper->toLLVMType(literalType));
 		}
 		else
 		{
@@ -1210,7 +1217,9 @@ void LLVMCodeGenerator::generate(const AST::CatConstruct* constructor, LLVMCompi
 		CatArgumentList* arguments = constructor->getArgumentList();
 		assert(arguments != nullptr && arguments->getNumArguments() == 1);
 		llvm::Value* source = generate(arguments->getArgument(0), context);
-		helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {target, source, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType", true);
+		llvm::Value* targetGeneric = context->helper->convertToPointer(target, "TargetToGenericPointer", context->targetConfig->getLLVMTypes().pointerType);
+		llvm::Value* sourceGeneric = context->helper->convertToPointer(source, "SourceToGenericPointer", context->targetConfig->getLLVMTypes().pointerType);
+		helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {targetGeneric, sourceGeneric, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType", true);
 	}
 
 	//Generate a destructor if possible
@@ -1264,7 +1273,8 @@ void LLVMCodeGenerator::generate(const AST::CatDestruct* destructor, LLVMCompile
 	}
 	llvm::Value* typeInfoConstantAsIntPtr = helper->createTypeInfoGlobalValue(context, objectType);
 
-	helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {target, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
+	llvm::Value* targetAsGenericPointer = helper->convertToPointer(target, "ToGenericPointer", targetConfig->getLLVMTypes().pointerType);
+	helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementDestructType, {targetAsGenericPointer, typeInfoConstantAsIntPtr}, "_jc_placementDestructType", true);
 
 }
 
@@ -1814,9 +1824,9 @@ llvm::FunctionType* LLVMCodeGenerator::createFunctionType(bool isThisCall, const
 	{
 		parameters.push_back(targetConfig->getLLVMTypes().pointerType);
 	}
-	if (returnType.isReflectableObjectType() || returnType.isVector4fType())
+	if (returnType.isReflectableObjectType())
 	{
-		parameters.push_back(targetConfig->getLLVMTypes().pointerType);
+		parameters.push_back(helper->toLLVMPtrType(returnType));
 		functionReturnType = targetConfig->getLLVMTypes().voidType;
 	}
 	else
@@ -1921,28 +1931,17 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 		{
 			++sretArgument;
 		}
+		llvm::Value* sretArgumentAsGenericPointer = helper->convertToPointer(sretArgument, "ToGenericPtr", targetConfig->getLLVMTypes().pointerType);
 		helper->createOptionalNullCheckSelect(castPointer, 
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {sretArgument, castPointer, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType", true);
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementCopyConstructType, {sretArgumentAsGenericPointer, castPointer, typeInfoConstantAsIntPtr}, "_jc_placementCopyConstructType", true);
 			},
 			[&](LLVMCompileTimeContext* context)
 			{
-				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {sretArgument, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
+				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {sretArgumentAsGenericPointer, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 			}, context);
 
-		helper->generateBlockDestructors(context);
-		builder->CreateRetVoid();
-	}
-	else if (returnType.isVector4fType())
-	{
-		llvm::Argument* sretArgument = function->arg_begin();
-		if (hasThisArgument && !targetConfig->sretBeforeThis)
-		{
-			++sretArgument;
-		}
-		llvm::Value* float4Ptr = builder->CreatePointerCast(sretArgument, expressionValue->getType()->getPointerTo());
-		builder->CreateStore(expressionValue, float4Ptr);
 		helper->generateBlockDestructors(context);
 		builder->CreateRetVoid();
 	}

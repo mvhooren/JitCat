@@ -54,7 +54,6 @@ namespace jitcat
 			Float,
 			Double,
 			Bool,
-			Vector4f,
 			Void,
 			Count
 		};
@@ -92,15 +91,12 @@ namespace jitcat
 		bool isIntegralType() const;
 		bool isFloatType() const;
 		bool isDoubleType() const;
-		bool isVector4fType() const;
 
 		bool isStringType() const;
 		bool isStringPtrType() const;
 		bool isStringValueType() const;
 
 		bool isScalarType() const;
-		bool isVectorType() const;
-		bool isTensorType() const;
 		bool isSignedType() const;
 		bool isUnsignedType() const;
 		bool isVoidType() const;

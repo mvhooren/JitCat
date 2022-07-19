@@ -103,8 +103,8 @@ namespace jitcat::LLVM
 	private:
 		llvm::Value* convertToString(llvm::Value* valueToConvert, const CatGenericType& fromType, LLVMCompileTimeContext* context);
 	public:
-		llvm::Value* convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type = nullptr);
-		llvm::Value* convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type = nullptr);
+		llvm::Value* convertToPointer(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type);
+		llvm::Value* convertToPointer(llvm::Constant* addressConstant, const std::string& name, llvm::PointerType* type);
 		llvm::Value* convertToIntPtr(llvm::Value* llvmPointer, const std::string& name);
 		llvm::PointerType* getPointerTo(llvm::Type* type) const;
 
@@ -118,9 +118,9 @@ namespace jitcat::LLVM
 
 		llvm::Value* loadBasicType(llvm::Type* type, llvm::Value* addressValue, const std::string& name);
 		llvm::Value* loadBasicType(llvm::Type* type, llvm::Constant* addressValue, const std::string& name);
-		llvm::Value* loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type = nullptr);
-		llvm::Value* loadPointerAtAddress(llvm::Constant* addressValue, const std::string& name, llvm::PointerType* type = nullptr);
-		llvm::Value* loadPointerAtAddress(llvm::GlobalVariable* addressValue, const std::string& name, llvm::PointerType* type = nullptr);
+		llvm::Value* loadPointerAtAddress(llvm::Value* addressValue, const std::string& name, llvm::PointerType* type);
+		llvm::Value* loadPointerAtAddress(llvm::Constant* addressValue, const std::string& name, llvm::PointerType* type);
+		llvm::Value* loadPointerAtAddress(llvm::GlobalVariable* addressValue, const std::string& name, llvm::PointerType* type);
 		llvm::Value* createAdd(llvm::Value* value1, llvm::Value* value2, const std::string& name);
 		llvm::Value* createAdd(llvm::Value* value1, llvm::Constant* value2, const std::string& name);
 
@@ -139,13 +139,14 @@ namespace jitcat::LLVM
 		llvm::Constant* createConstant(uint64_t constant);
 		llvm::Constant* createConstant(double constant);
 		llvm::Constant* createConstant(float constant);
-		llvm::Constant* createConstant(std::array<float, 4> constant);
+		llvm::GlobalVariable* createConstant(std::array<float, 4> constant);
 		llvm::Constant* createConstant(bool constant);
 		llvm::Constant* createNullPtrConstant(llvm::PointerType* pointerType);
 		llvm::Constant* createZeroTerminatedStringConstant(const std::string& value);
 		llvm::GlobalVariable* createGlobalPointerSymbol(const std::string& name);
-		llvm::Value* createPtrConstant(LLVMCompileTimeContext* context, unsigned long long address, const std::string& name, llvm::PointerType* pointerType = nullptr);
+		llvm::Value* createPtrConstant(LLVMCompileTimeContext* context, unsigned long long address, const std::string& name, llvm::PointerType* pointerType);
 		llvm::Constant* createZeroInitialisedArrayConstant(llvm::ArrayType* arrayType);
+
 		llvm::Value* constantToValue(llvm::Constant* constant) const;
 		llvm::Constant* globalVariableToConstant(llvm::GlobalVariable* global) const;
 		llvm::Value* globalVariableToValue(llvm::GlobalVariable* global) const;
@@ -193,6 +194,7 @@ namespace jitcat::LLVM
 		void defineWeakSymbol(LLVMCompileTimeContext* context, intptr_t functionAddress, const std::string& mangledFunctionName, bool isDirectlyLinked);
 
 	private:
+		llvm::Value* convertPointerType(llvm::Value* value, llvm::Type* expectedType);
 		llvm::Value* convertIndirection(llvm::Value* value, llvm::Type* expectedType);
 		llvm::Value* copyConstructIfValueType(llvm::Value* value, const CatGenericType& type, LLVMCompileTimeContext* context, const std::string& valueName);
 		llvm::Value* generateIntrinsicCall(jitcat::Reflection::StaticFunctionInfo* functionInfo, std::vector<llvm::Value*>& arguments, LLVMCompileTimeContext* context, bool isDirectlyLinked);

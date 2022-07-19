@@ -201,7 +201,7 @@ llvm::Value* StaticClassObjectMemberInfo::generateDereferenceCode(LLVM::LLVMComp
 
 		llvm::Value* objectPointer =  context->helper->generateStaticPointerVariable(reinterpret_cast<intptr_t>(memberPointer), context, getStaticMemberPointerVariableName());
 
-		return context->helper->convertToPointer(objectPointer, memberName);
+		return context->helper->convertToPointer(objectPointer, memberName, context->helper->toLLVMPtrType(catType));
 #else 
 	return nullptr;
 #endif // ENABLE_LLVM

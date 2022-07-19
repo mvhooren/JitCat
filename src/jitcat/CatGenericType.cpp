@@ -13,6 +13,7 @@
 #include "jitcat/StaticMemberFunctionInfo.h"
 #include "jitcat/Tools.h"
 #include "jitcat/TypeInfo.h"
+#include "jitcat/VectorTypeInfo.h"
 #include "jitcat/XMLHelper.h"
 
 #include <cassert>
@@ -285,12 +286,6 @@ bool CatGenericType::isDoubleType() const
 }
 
 
-bool CatGenericType::isVector4fType() const
-{
-	return specificType == SpecificType::Basic && basicType == BasicType::Vector4f;
-}
-
-
 bool CatGenericType::isStringType() const
 {
 	return isStringPtrType() || isStringValueType();
@@ -320,19 +315,6 @@ bool CatGenericType::isScalarType() const
 							   || basicType == BasicType::UInt
 							   || basicType == BasicType::Int64
 							   || basicType == BasicType::UInt64);
-}
-
-
-bool CatGenericType::isVectorType() const
-{
-	return specificType == SpecificType::Basic
-		&& (basicType == BasicType::Vector4f);
-}
-
-
-bool CatGenericType::isTensorType() const
-{
-	return isScalarType() || isVectorType();
 }
 
 
@@ -741,11 +723,12 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 					resultInfo.setResultType(CatGenericType::stringWeakPtrType);
 					return resultInfo;
 				}
-				//Intentional fallthrough
+				//Intentional fallthrough 
+				[[fallthrough]];
 			case CatInfixOperatorType::Minus:
 			case CatInfixOperatorType::Multiply:
 			case CatInfixOperatorType::Divide:
-				if (isTensorType() && rightType.isTensorType())
+				if (isScalarType() && rightType.isScalarType())
 				{
 					resultInfo.setResultType(CatGenericType(getHighestRankType(basicType, rightType.basicType)));
 					return resultInfo;
@@ -2420,7 +2403,7 @@ CatGenericType CatGenericType::createDoubleType(bool isWritable, bool isConst)
 
 CatGenericType jitcat::CatGenericType::createVector4fType(bool isWritable, bool isConst)
 {
-	return CatGenericType(BasicType::Vector4f, isWritable, isConst);
+	return CatGenericType(&VectorTypeInfo::createVectorType<float, 4>(), isWritable, isConst);
 }
 
 
@@ -2484,7 +2467,6 @@ const char* CatGenericType::toString(BasicType type)
 		case BasicType::Int64:		return "int64";
 		case BasicType::UInt64:		return "uint64";
 		case BasicType::Float:		return "float";
-		case BasicType::Vector4f:	return "vector4f";
 		case BasicType::Double:		return "double";
 		case BasicType::Bool:		return "bool";
 		case BasicType::Void:		return "void";
@@ -2568,15 +2550,7 @@ CatGenericType::BasicType CatGenericType::getHighestRankType(BasicType lType, Ba
 	{
 		return lType;
 	}
-	switch (lType)
-	{
-		case BasicType::Vector4f:	return BasicType::Vector4f;
-		default:
-			if (rType == BasicType::Vector4f)
-				return BasicType::Vector4f;
-			else
-				return getWidestType(lType, rType);
-	}
+	return getWidestType(lType, rType);
 }
 
 
@@ -2675,7 +2649,7 @@ const CatGenericType CatGenericType::int64Type		= CatGenericType(BasicType::Int6
 const CatGenericType CatGenericType::uInt64Type		= CatGenericType(BasicType::UInt64, true);
 const CatGenericType CatGenericType::floatType		= CatGenericType(BasicType::Float, true);
 const CatGenericType CatGenericType::doubleType		= CatGenericType(BasicType::Double, true);
-const CatGenericType CatGenericType::vector4fType	= CatGenericType(BasicType::Vector4f, true);
+const CatGenericType CatGenericType::vector4fType	= CatGenericType::createVector4fType(true, false);
 const CatGenericType CatGenericType::boolType		= CatGenericType(BasicType::Bool, true);
 const CatGenericType CatGenericType::stringType		= TypeTraits<Configuration::CatString>::toGenericType();
 const CatGenericType CatGenericType::stringWeakPtrType = TypeTraits<Configuration::CatString>::toGenericType().toPointer(TypeOwnershipSemantics::Weak, false, false);
