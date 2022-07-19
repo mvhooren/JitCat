@@ -176,7 +176,7 @@ namespace jitcat
 
 
 	template <typename FundamentalT>
-	const char* TypeTraits<FundamentalT, std::enable_if_t<std::is_fundamental_v<FundamentalT> && !std::is_void_v<FundamentalT> > >::getTypeName()
+	const char* TypeTraits<FundamentalT, std::enable_if_t<(std::is_fundamental_v<FundamentalT> && !std::is_void_v<FundamentalT>) || std::is_same_v<FundamentalT, std::array<float, 4>> > >::getTypeName()
 	{
 		return Reflection::TypeNameGetter<FundamentalT>::get();
 	}

@@ -16,6 +16,7 @@ LLVMTypes::LLVMTypes(bool is64BitPlatform, unsigned int sizeOfBoolInBits)
 	llvm::LLVMContext& llvmContext = LLVMJit::get().getContext();
 	doubleType = llvm::Type::getDoubleTy(llvmContext);
 	floatType = llvm::Type::getFloatTy(llvmContext);
+	vector4fType = llvm::ArrayType::get(llvm::Type::getFloatTy(llvmContext), 4);
 	intType = llvm::Type::getInt32Ty(llvmContext);
 	longintType = llvm::Type::getInt64Ty(llvmContext);
 	charType = llvm::Type::getInt8Ty(llvmContext);

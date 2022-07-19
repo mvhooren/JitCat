@@ -731,11 +731,13 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 
 AST::ASTNode* CatGrammar::vectorLiteral(const Parser::ASTNodeParser& nodeParser)
 {
-	float vectorFloats[4];
-	vectorFloats[0] = (float)atof(nodeParser.getTerminalByIndex(1)->lexeme.data());
-	vectorFloats[1] = (float)atof(nodeParser.getTerminalByIndex(3)->lexeme.data());
-	vectorFloats[2] = (float)atof(nodeParser.getTerminalByIndex(5)->lexeme.data());
-	vectorFloats[3] = (float)atof(nodeParser.getTerminalByIndex(7)->lexeme.data());
+	std::array<float, 4> vectorFloats =
+	{
+		(float)atof(nodeParser.getTerminalByIndex(1)->lexeme.data()),
+		(float)atof(nodeParser.getTerminalByIndex(3)->lexeme.data()),
+		(float)atof(nodeParser.getTerminalByIndex(5)->lexeme.data()),
+		(float)atof(nodeParser.getTerminalByIndex(7)->lexeme.data())
+	};
 	return new CatLiteral(vectorFloats, nodeParser.getStackLexeme());
 }
 

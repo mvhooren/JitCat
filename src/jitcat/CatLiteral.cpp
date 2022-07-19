@@ -39,7 +39,7 @@ CatLiteral::CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme):
 }
 
 
-CatLiteral::CatLiteral(float vectorValue[4], const Tokenizer::Lexeme& lexeme):
+CatLiteral::CatLiteral(std::array<float, 4> vectorValue, const Tokenizer::Lexeme& lexeme):
 	CatTypedExpression(lexeme),
 	type(CatGenericType::vector4fType),
 	value(vectorValue)

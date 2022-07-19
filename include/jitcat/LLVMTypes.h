@@ -27,6 +27,7 @@ namespace jitcat::LLVM
 	public:
 		llvm::Type* doubleType;
 		llvm::Type* floatType;
+		llvm::Type* vector4fType;
 		llvm::Type* intType;
 		llvm::Type* longintType;
 		llvm::Type* charType;

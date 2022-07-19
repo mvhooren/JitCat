@@ -324,6 +324,7 @@ llvm::Type* LLVMCodeGeneratorHelper::toLLVMType(const CatGenericType& type)
 	else if (type.isInt64Type())						return llvmTypes.longintType;
 	else if (type.isUInt64Type())						return llvmTypes.longintType;
 	else if (type.isBoolType())							return llvmTypes.boolType;
+	else if (type.isVector4fType())						return llvmTypes.vector4fType;
 	else if (type.isReflectableHandleType())			return llvmTypes.pointerType;
 	else if (type.isVoidType())							return llvmTypes.voidType;
 	else if (type.isEnumType())							return toLLVMType(type.getUnderlyingEnumType());
@@ -1061,6 +1062,20 @@ llvm::Constant* LLVMCodeGeneratorHelper::createConstant(double constant)
 llvm::Constant* LLVMCodeGeneratorHelper::createConstant(float constant)
 {
 	return llvm::ConstantFP::get(llvmContext, llvm::APFloat(constant));
+}
+
+
+llvm::Constant* LLVMCodeGeneratorHelper::createConstant(std::array<float, 4> constant)
+{
+	std::array<llvm::Constant*, 4> constants = 
+	{
+		createConstant(constant[0]),
+		createConstant(constant[1]),
+		createConstant(constant[2]),
+		createConstant(constant[3])
+	};
+	auto ref = llvm::ArrayRef(constants);
+	return llvm::ConstantArray::get(static_cast<llvm::ArrayType*>(llvmTypes.vector4fType), ref);
 }
 
 

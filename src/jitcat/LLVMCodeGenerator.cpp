@@ -936,6 +936,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 {
 	CatGenericType literalType = literal->getType();
 	if	(literalType.isCharType())			return helper->createConstant(std::any_cast<char>(literal->getValue()));
+	else if (literalType.isBoolType())		return helper->createConstant(std::any_cast<bool>(literal->getValue()));
 	else if	(literalType.isUCharType())		return helper->createConstant(std::any_cast<unsigned char>(literal->getValue()));
 	else if	(literalType.isIntType())		return helper->createConstant(std::any_cast<int>(literal->getValue()));
 	else if	(literalType.isUIntType())		return helper->createConstant(std::any_cast<unsigned int>(literal->getValue()));
@@ -943,7 +944,7 @@ llvm::Value* LLVMCodeGenerator::generate(const CatLiteral* literal, LLVMCompileT
 	else if	(literalType.isUInt64Type())	return helper->createConstant(std::any_cast<uint64_t>(literal->getValue()));
 	else if (literalType.isDoubleType())	return helper->createConstant(std::any_cast<double>(literal->getValue()));
 	else if (literalType.isFloatType())		return helper->createConstant(std::any_cast<float>(literal->getValue()));
-	else if (literalType.isBoolType())		return helper->createConstant(std::any_cast<bool>(literal->getValue()));
+	else if (literalType.isVector4fType())	return helper->createConstant(std::any_cast<std::array<float, 4>>(literal->getValue()));
 	else if (literalType.isStringPtrType())
 	{
 		Configuration::CatString* stringPtr = std::any_cast<Configuration::CatString*>(literal->getValue());
@@ -1813,7 +1814,7 @@ llvm::FunctionType* LLVMCodeGenerator::createFunctionType(bool isThisCall, const
 	{
 		parameters.push_back(targetConfig->getLLVMTypes().pointerType);
 	}
-	if (returnType.isReflectableObjectType())
+	if (returnType.isReflectableObjectType() || returnType.isVector4fType())
 	{
 		parameters.push_back(targetConfig->getLLVMTypes().pointerType);
 		functionReturnType = targetConfig->getLLVMTypes().voidType;
@@ -1930,6 +1931,18 @@ void LLVMCodeGenerator::generateFunctionReturn(const CatGenericType& returnType,
 				return helper->createIntrinsicCall(context, &CatLinkedIntrinsics::_jc_placementConstructType, {sretArgument, typeInfoConstantAsIntPtr}, "_jc_placementConstructType", true);
 			}, context);
 
+		helper->generateBlockDestructors(context);
+		builder->CreateRetVoid();
+	}
+	else if (returnType.isVector4fType())
+	{
+		llvm::Argument* sretArgument = function->arg_begin();
+		if (hasThisArgument && !targetConfig->sretBeforeThis)
+		{
+			++sretArgument;
+		}
+		llvm::Value* float4Ptr = builder->CreatePointerCast(sretArgument, expressionValue->getType()->getPointerTo());
+		builder->CreateStore(expressionValue, float4Ptr);
 		helper->generateBlockDestructors(context);
 		builder->CreateRetVoid();
 	}

@@ -2484,6 +2484,7 @@ const char* CatGenericType::toString(BasicType type)
 		case BasicType::Int64:		return "int64";
 		case BasicType::UInt64:		return "uint64";
 		case BasicType::Float:		return "float";
+		case BasicType::Vector4f:	return "vector4f";
 		case BasicType::Double:		return "double";
 		case BasicType::Bool:		return "bool";
 		case BasicType::Void:		return "void";

@@ -163,7 +163,7 @@ TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, boo
 }
 
 
-TypeMemberInfo* CustomTypeInfo::addVector4fMember(const std::string& memberName, const float defaultValue[4], bool isWritable, bool isConst)
+TypeMemberInfo* CustomTypeInfo::addVector4fMember(const std::string& memberName, const std::array<float, 4> defaultValue, bool isWritable, bool isConst)
 {
 	unsigned char* data = increaseDataSize(sizeof(defaultValue));
 	memcpy(data, &defaultValue, sizeof(defaultValue));
@@ -178,7 +178,7 @@ TypeMemberInfo* CustomTypeInfo::addVector4fMember(const std::string& memberName,
 	{
 		memcpy((*iter) + offset, &defaultValue, sizeof(defaultValue));
 	}
-	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<float[4]>(memberName, offset, CatGenericType::createVector4fType(isWritable, isConst), getTypeName());
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<std::array<float, 4>>(memberName, offset, CatGenericType::createVector4fType(isWritable, isConst), getTypeName());
 	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
 	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
 	return memberInfo;
@@ -288,7 +288,7 @@ TypeMemberInfo* CustomTypeInfo::addMember(const std::string& memberName, const C
 	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
 	else if (type.isVector4fType())
 	{
-		const float zeroVector[4] = { 0.0f,0.0f,0.0f,0.0f };
+		const std::array<float, 4> zeroVector = { 0.0f, 0.0f, 0.0f, 0.0f };
 		return addVector4fMember(memberName, zeroVector, type.isWritable(), type.isConst());
 	}
 	else if (type.isStringValueType())					return addStringMember(memberName, "", type.isWritable(), type.isConst());

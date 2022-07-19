@@ -28,7 +28,7 @@ namespace jitcat
 #include "jitcat/LLVMForwardDeclares.h"
 #include "jitcat/LLVMTypes.h"
 
-
+#include <array>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -139,6 +139,7 @@ namespace jitcat::LLVM
 		llvm::Constant* createConstant(uint64_t constant);
 		llvm::Constant* createConstant(double constant);
 		llvm::Constant* createConstant(float constant);
+		llvm::Constant* createConstant(std::array<float, 4> constant);
 		llvm::Constant* createConstant(bool constant);
 		llvm::Constant* createNullPtrConstant(llvm::PointerType* pointerType);
 		llvm::Constant* createZeroTerminatedStringConstant(const std::string& value);

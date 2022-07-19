@@ -65,8 +65,8 @@ TEST_CASE("Vector tests", "[catlib][vector]")
 
 		/*SECTION("Vector variable")
 		{
-			Expression<float[4]> testExpression(&context, "testVector");
-			float expected[4] = {42.0f, 43.0f, 44.0f, 45.0f};
+			Expression<std::array<float, 4>> testExpression(&context, "testVector");
+			std::array<float, 4> expected = {42.0f, 43.0f, 44.0f, 45.0f};
 			doChecks(expected, false, false, false, testExpression, context);
 		}*/
 		/*SECTION("Float variable")
