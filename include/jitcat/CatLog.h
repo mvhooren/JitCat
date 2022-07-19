@@ -54,7 +54,7 @@ namespace jitcat::Tools
 		static void removeListener(CatLogListener* listener);
 
 	private:
-		static std::vector<CatLogListener*> listeners;
+		static std::vector<CatLogListener*>& getListeners();
 	};
 
 
