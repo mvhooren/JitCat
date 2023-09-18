@@ -46,6 +46,7 @@ namespace jitcat
 
 		};
 
+		// Callback arguments: Error description, line, column, length
 		ExpressionErrorManager(std::function<void(const std::string&, int, int, int)> errorHandler = {});
 		~ExpressionErrorManager();
 
