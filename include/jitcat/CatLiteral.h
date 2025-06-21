@@ -22,6 +22,9 @@ namespace jitcat::AST
 		CatLiteral(float floatValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(double doubleValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(int intValue, const Tokenizer::Lexeme& lexeme);
+		CatLiteral(long long intValue, const Tokenizer::Lexeme& lexeme);
+		CatLiteral(unsigned int uintValue, const Tokenizer::Lexeme& lexeme);
+		CatLiteral(unsigned long long uintValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(bool boolValue, const Tokenizer::Lexeme& lexeme);
 		CatLiteral(const CatLiteral& other);
 

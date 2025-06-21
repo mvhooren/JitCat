@@ -55,6 +55,30 @@ jitcat::AST::CatLiteral::CatLiteral(int intValue, const Tokenizer::Lexeme& lexem
 }
 
 
+jitcat::AST::CatLiteral::CatLiteral(long long intValue, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme), 
+	type(CatGenericType::int64Type),
+	value(intValue)
+{
+}
+
+
+jitcat::AST::CatLiteral::CatLiteral(unsigned int uintValue, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme), 
+	type(CatGenericType::uIntType),
+	value(uintValue)
+{
+}
+
+
+jitcat::AST::CatLiteral::CatLiteral(unsigned long long uintValue, const Tokenizer::Lexeme& lexeme):
+	CatTypedExpression(lexeme), 
+	type(CatGenericType::uInt64Type),
+	value(uintValue)
+{
+}
+
+
 jitcat::AST::CatLiteral::CatLiteral(bool boolValue, const Tokenizer::Lexeme& lexeme): 
 	CatTypedExpression(lexeme), 
 	type(CatGenericType::boolType),

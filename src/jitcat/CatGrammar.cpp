@@ -678,7 +678,40 @@ ASTNode* CatGrammar::literalToken(const ASTNodeParser& nodeParser)
 			default:	return nullptr;
 			case ConstantType::Integer:
 			{
-				CatLiteral* intLiteral = new CatLiteral(atoi(literalToken->lexeme.data()), nodeParser.getStackLexeme());
+				long long valueAsLongLong = atoll(literalToken->lexeme.data());
+				char* end = nullptr;
+				uint64_t valueAsUInt64 = 0; 
+	
+				if (valueAsLongLong > 0)
+					valueAsUInt64 = strtoull(literalToken->lexeme.data(), nullptr, 10);
+
+				CatLiteral* intLiteral = nullptr;
+				if (valueAsLongLong < 0 || (uint64_t)valueAsLongLong == valueAsUInt64)
+				{
+					//long long, int or uint
+					if (valueAsLongLong < std::numeric_limits<int>::max()
+						&& valueAsLongLong > std::numeric_limits<int>::min())
+					{
+						// it is an int
+						intLiteral = new CatLiteral(static_cast<int>(valueAsLongLong), nodeParser.getStackLexeme());
+					}
+					else if (valueAsLongLong < 0 || valueAsLongLong > std::numeric_limits<unsigned int>::max())
+					{
+						// it is a long long
+						intLiteral = new CatLiteral(valueAsLongLong, nodeParser.getStackLexeme());
+					}
+					else
+					{
+						// it is an unsigned int
+						intLiteral = new CatLiteral(static_cast<unsigned int>(valueAsUInt64), nodeParser.getStackLexeme());
+					}
+				}
+				else
+				{
+					// it is a uint64_t
+					intLiteral = new CatLiteral(valueAsUInt64, nodeParser.getStackLexeme());
+				}
+
 				return intLiteral;
 			}
 			case ConstantType::DoubleFloatingPoint:
