@@ -25,6 +25,8 @@ namespace jitcat::Reflection
 
 		virtual void addFunction(const std::string& name, const std::string& prototype) = 0;
 		virtual void addVariable(const std::string& name, const std::string& typeName, bool isWritable, bool isConst) = 0;
+		virtual void addStaticVariable(const std::string& name, const std::string& typeName, bool isWritable, bool isConst) {};
+		virtual void addConstant(const std::string& name, const std::string& baseTypeName, const std::string& typeName) {};
 		virtual void enterNameSpace(const std::string& name, const std::string& typeName, NamespaceType namespaceType) = 0;
 		virtual void exitNameSpace() = 0;
 

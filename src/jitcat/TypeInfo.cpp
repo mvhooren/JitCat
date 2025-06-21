@@ -430,6 +430,39 @@ void TypeInfo::enumerateVariables(VariableEnumerator* enumerator, bool allowEmpt
 			}
 		}
 	}
+
+	auto constLast = staticConstMembers.end();
+	for (auto iter = staticConstMembers.begin(); iter != constLast; ++iter)
+	{
+		enumerator->addConstant(iter->second->getName(), getTypeName(), iter->second->getType().toString());
+	}
+
+	auto staticLast = staticMembers.end();
+	for (auto iter = staticMembers.begin(); iter != staticLast; ++iter)
+	{
+		const CatGenericType& memberType = iter->second->catType;
+		if (memberType.isBasicType() || memberType.isStringType() || memberType.isEnumType())
+		{
+			std::string catTypeName = memberType.toString();
+			enumerator->addStaticVariable(iter->second->memberName, catTypeName, iter->second->catType.isWritable(), iter->second->catType.isConst());
+		}
+		else if (memberType.isPointerToReflectableObjectType() || memberType.isReflectableHandleType())
+		{
+			std::string nestedTypeName = memberType.toString();
+			if (allowEmptyStructs || memberType.getPointeeType()->getObjectType()->getMembers().size() > 0)
+			{
+				enumerator->enterNameSpace(iter->second->memberName, nestedTypeName, NamespaceType::Object);
+				if (!Tools::isInList(enumerator->loopDetectionTypeStack, nestedTypeName))
+				{
+					enumerator->loopDetectionTypeStack.push_back(nestedTypeName);
+					memberType.getPointeeType()->getObjectType()->enumerateVariables(enumerator, allowEmptyStructs);
+					enumerator->loopDetectionTypeStack.pop_back();
+				}
+				enumerator->exitNameSpace();
+					
+			}
+		}
+	}
 }
 
 
