@@ -301,6 +301,11 @@ void ExpressionBase::typeCheck(const CatGenericType& expectedType, CatRuntimeCon
 						parseResult.astRootNode = std::make_unique<CatBuiltInFunctionCall>("toUInt64", expressionLexeme, arguments, expressionLexeme);
 						parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
 					}
+					else if (expectedType.isUIntType())
+					{
+						parseResult.astRootNode = std::make_unique<CatBuiltInFunctionCall>("toUInt", expressionLexeme, arguments, expressionLexeme);
+						parseResult.getNode<CatTypedExpression>()->typeCheck(context, errorManager, errorContext);
+					}
 					else
 					{
 						assert(false);	//Missing a conversion here?

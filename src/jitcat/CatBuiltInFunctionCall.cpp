@@ -86,6 +86,7 @@ std::any CatBuiltInFunctionCall::execute(CatRuntimeContext* runtimeContext)
 	{
 		case CatBuiltInFunctionType::ToVoid:			return std::any();
 		case CatBuiltInFunctionType::ToInt:				return CatGenericType::convertToInt(argumentValues[0], arguments->getArgumentType(0));
+		case CatBuiltInFunctionType::ToUInt:			return CatGenericType::convertToUInt(argumentValues[0], arguments->getArgumentType(0));
 		case CatBuiltInFunctionType::ToUInt64:			return CatGenericType::convertToUInt64(argumentValues[0], arguments->getArgumentType(0));
 		case CatBuiltInFunctionType::ToDouble:			return CatGenericType::convertToDouble(argumentValues[0], arguments->getArgumentType(0));
 		case CatBuiltInFunctionType::ToFloat:			return CatGenericType::convertToFloat(argumentValues[0], arguments->getArgumentType(0));
@@ -444,6 +445,7 @@ bool CatBuiltInFunctionCall::typeCheck(CatRuntimeContext* compiletimeContext, Ex
 		{
 			case CatBuiltInFunctionType::ToVoid:			returnType = CatGenericType::voidType;	break;
 			case CatBuiltInFunctionType::ToInt:				if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::intType		;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to integer: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
+			case CatBuiltInFunctionType::ToUInt:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::uIntType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to unsigned integer: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
 			case CatBuiltInFunctionType::ToUInt64:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::uInt64Type	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to uint64: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}  break;
 			case CatBuiltInFunctionType::ToDouble:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::doubleType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to double: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
 			case CatBuiltInFunctionType::ToFloat:			if (arguments->getArgumentType(0).isBasicType() || arguments->getArgumentType(0).isStringType()) { returnType = CatGenericType::floatType	;} else {errorManager->compiledWithError(Tools::append("Cannot convert type to float: ",	arguments->getArgumentType(0).toString()), errorContext, compiletimeContext->getContextName(), getLexeme()); return false;}	break;
@@ -835,6 +837,7 @@ bool CatBuiltInFunctionCall::checkArgumentCount(std::size_t count) const
 			return count == 0;
 		case CatBuiltInFunctionType::ToVoid:
 		case CatBuiltInFunctionType::ToInt:
+		case CatBuiltInFunctionType::ToUInt:
 		case CatBuiltInFunctionType::ToUInt64:
 		case CatBuiltInFunctionType::ToString:
 		case CatBuiltInFunctionType::ToPrettyString:
@@ -884,6 +887,7 @@ const std::vector<std::string>& jitcat::AST::CatBuiltInFunctionCall::getFunction
 	{
 		 "toVoid",				//CatBuiltInFunctionType::ToVoid
 		 "toInt",				//CatBuiltInFunctionType::ToInt
+		 "toUInt",				//CatBuiltInFunctionType::ToInt
 		 "toUInt64",			//CatBuiltInFunctionType::ToUInt64
 		 "toDouble",			//CatBuiltInFunctionType::ToDouble
 		 "toFloat",				//CatBuiltInFunctionType::ToFloat

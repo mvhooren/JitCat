@@ -1192,6 +1192,21 @@ std::any CatGenericType::convertToType(std::any& value, const CatGenericType& va
 					default: assert(false);
 				}
 			} break;
+			case BasicType::UInt:
+			{
+				switch (valueType.basicType)
+				{
+					case BasicType::Char:	return (unsigned int)std::any_cast<char>(value);
+					case BasicType::UChar:	return (unsigned int)std::any_cast<unsigned char>(value);
+					case BasicType::Int:	return (unsigned int)std::any_cast<int>(value);
+					case BasicType::UInt:	return (unsigned int)std::any_cast<unsigned int>(value);
+					case BasicType::Int64:	return (unsigned int)std::any_cast<int64_t>(value);
+					case BasicType::Float:	return (unsigned int)std::any_cast<float>(value);
+					case BasicType::Double:	return (unsigned int)std::any_cast<double>(value);
+					case BasicType::Bool:	return (unsigned int)std::any_cast<bool>(value) ? 1 : 0;
+					default: assert(false);
+				}
+			} break;
 			case BasicType::UInt64:
 			{
 				switch (valueType.basicType)
