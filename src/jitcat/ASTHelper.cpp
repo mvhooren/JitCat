@@ -248,6 +248,14 @@ std::any ASTHelper::doAssignment(std::any& target, std::any& source, const CatGe
 				*floatTarget = std::any_cast<float>(convertedSource);
 			}
 		}
+		else if (targetType.getPointeeType()->isUInt64Type())
+		{
+			uint64_t* uint64Target = std::any_cast<uint64_t*>(target);
+			if (uint64Target != nullptr)
+			{
+				*uint64Target = std::any_cast<uint64_t>(convertedSource);
+			}
+		}
 		else if (targetType.getPointeeType()->isDoubleType())
 		{
 			double* doubleTarget = std::any_cast<double*>(target);

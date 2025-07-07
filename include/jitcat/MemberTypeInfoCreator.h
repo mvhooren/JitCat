@@ -79,6 +79,30 @@ namespace jitcat::Reflection
 
 
 	template <>
+	class MemberTypeInfoCreator<unsigned int>
+	{
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, unsigned int ClassType::* member, bool isConst, bool isWritable) 
+		{
+			return new BasicTypeMemberInfo<ClassType, unsigned int>(memberName, member, CatGenericType::createUIntType(isWritable, isConst));
+		}
+	};
+
+
+	template <>
+	class MemberTypeInfoCreator<uint64_t>
+	{
+	public:
+		template<typename ClassType>
+		static TypeMemberInfo* getMemberInfo(const std::string& memberName, uint64_t ClassType::* member, bool isConst, bool isWritable) 
+		{
+			return new BasicTypeMemberInfo<ClassType, uint64_t>(memberName, member, CatGenericType::createUInt64Type(isWritable, isConst));
+		}
+	};
+
+
+	template <>
 	class MemberTypeInfoCreator<bool>
 	{
 	public:

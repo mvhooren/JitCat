@@ -51,13 +51,13 @@ ExpressionAny::ExpressionAny(CatRuntimeContext* compileContext, const std::strin
 }
 
 
-const std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
+std::any ExpressionAny::getValue(CatRuntimeContext* runtimeContext)
 {
 	return (this->*getValuePtr)(runtimeContext);
 }
 
 
-const std::any jitcat::ExpressionAny::getInterpretedValue(CatRuntimeContext* runtimeContext)
+std::any jitcat::ExpressionAny::getInterpretedValue(CatRuntimeContext* runtimeContext)
 {
 	if (isConstant)
 	{

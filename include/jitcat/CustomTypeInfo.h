@@ -51,6 +51,7 @@ namespace jitcat::Reflection
 		TypeMemberInfo* addDoubleMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addFloatMember(const std::string& memberName, float defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addIntMember(const std::string& memberName, int defaultValue, bool isWritable = true, bool isConst = false);
+		TypeMemberInfo* addUInt64Member(const std::string& memberName, uint64_t defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addStringMember(const std::string& memberName, const Configuration::CatString& defaultValue, bool isWritable = true, bool isConst = false);
 		TypeMemberInfo* addObjectMember(const std::string& memberName, unsigned char* defaultValue, TypeInfo* objectTypeInfo, TypeOwnershipSemantics ownershipSemantics = TypeOwnershipSemantics::Weak, bool isWritable = true, bool isConst = false);
@@ -90,7 +91,7 @@ namespace jitcat::Reflection
 			std::any anyValue = TypeTraits<ConstantT>::getCatValue(value);
 			return TypeInfo::addConstant(identifier, type, anyValue);
 		}
-		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo);
+		TypeMemberInfo* addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo, unsigned char* defaultValue);
 
 		TypeMemberInfo* addMember(const std::string& memberName, const CatGenericType& type);
 

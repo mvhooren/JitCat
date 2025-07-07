@@ -32,12 +32,12 @@ namespace jitcat
 		//Executes the expression and returns the value.
 		//To get the actual value contained in std::any, cast it using std::any_cast based on this expression's type (getType()) .
 		//Objects and stl containers are always returned as pointers.
-		const std::any getValue(CatRuntimeContext* runtimeContext);
+		std::any getValue(CatRuntimeContext* runtimeContext);
 
 		//Same as getValue but will always execute the expression using the interpreter.
 		//Should always return the same value as getValue. Used for testing the interpreter when the LLVM backend is enabled.
 		//This function will only work if either native code compilation is disabled or DiscardASTAfterNativeCodeCompilation is set to false (see JitCat.h).
-		const std::any getInterpretedValue(CatRuntimeContext* runtimeContext);
+		std::any getInterpretedValue(CatRuntimeContext* runtimeContext);
 
 		virtual void compile(CatRuntimeContext* context) override final;
 

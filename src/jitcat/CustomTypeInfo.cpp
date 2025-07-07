@@ -140,6 +140,29 @@ TypeMemberInfo* CustomTypeInfo::addIntMember(const std::string& memberName, int 
 }
 
 
+TypeMemberInfo* CustomTypeInfo::addUInt64Member(const std::string& memberName, uint64_t defaultValue, bool isWritable, bool isConst)
+{
+	unsigned char* data = increaseDataSize(sizeof(uint64_t));
+	memcpy(data, &defaultValue, sizeof(uint64_t));
+	unsigned int offset = (unsigned int)(data - defaultData);
+	if (defaultData == nullptr)
+	{
+		offset = 0;
+	}
+
+	std::set<unsigned char*>::iterator end = instances.end();
+	for (std::set<unsigned char*>::iterator iter = instances.begin(); iter != end; ++iter)
+	{
+		memcpy((*iter) + offset, &defaultValue, sizeof(uint64_t));
+	}
+
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<uint64_t>(memberName, offset, CatGenericType::createUInt64Type(isWritable, isConst), getTypeName());
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
 TypeMemberInfo* CustomTypeInfo::addBoolMember(const std::string& memberName, bool defaultValue, bool isWritable, bool isConst)
 {
 	unsigned char* data = increaseDataSize(sizeof(bool));
@@ -213,12 +236,12 @@ TypeMemberInfo* CustomTypeInfo::addObjectMember(const std::string& memberName, u
 	}
 	else
 	{
-		return addDataObjectMember(memberName, objectTypeInfo);
+		return addDataObjectMember(memberName, objectTypeInfo, defaultValue);
 	}
 }
 
 
-TypeMemberInfo* CustomTypeInfo::addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo)
+TypeMemberInfo* CustomTypeInfo::addDataObjectMember(const std::string& memberName, TypeInfo* objectTypeInfo, unsigned char* defaultValue)
 {
 	if (objectTypeInfo != this)
 	{
@@ -234,9 +257,23 @@ TypeMemberInfo* CustomTypeInfo::addDataObjectMember(const std::string& memberNam
 		std::set<unsigned char*>::iterator end = instances.end();
 		for (std::set<unsigned char*>::iterator iter = instances.begin(); iter != end; ++iter)
 		{
-			objectTypeInfo->placementConstruct((unsigned char*)(*iter) + offset, objectTypeInfo->getTypeSize());
+			if (defaultValue != nullptr && objectTypeInfo->getAllowCopyConstruction())
+			{
+				objectTypeInfo->copyConstruct((unsigned char*)(*iter) + offset, objectTypeInfo->getTypeSize(), defaultValue, objectTypeInfo->getTypeSize());
+			}
+			else
+			{
+				objectTypeInfo->placementConstruct((unsigned char*)(*iter) + offset, objectTypeInfo->getTypeSize());
+			}
 		}
-		objectTypeInfo->placementConstruct(data, objectTypeInfo->getTypeSize());
+		if (defaultValue != nullptr && objectTypeInfo->getAllowCopyConstruction())
+		{
+			objectTypeInfo->copyConstruct(data, objectTypeInfo->getTypeSize(), defaultValue, objectTypeInfo->getTypeSize());
+		}
+		else
+		{
+			objectTypeInfo->placementConstruct(data, objectTypeInfo->getTypeSize());
+		}
 		TypeMemberInfo* memberInfo = new  CustomTypeObjectDataMemberInfo(memberName, offset, CatGenericType(CatGenericType(objectTypeInfo, true, false), 
 																		 TypeOwnershipSemantics::Value, false, false, false), getTypeName());
 		std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
@@ -266,7 +303,7 @@ TypeMemberInfo* CustomTypeInfo::addMember(const std::string& memberName, const C
 	else if (type.isBoolType())							return addBoolMember(memberName, false, type.isWritable(), type.isConst());
 	else if (type.isStringValueType())					return addStringMember(memberName, "", type.isWritable(), type.isConst());
 	else if (type.isPointerToReflectableObjectType())	return addObjectMember(memberName, nullptr, type.getPointeeType()->getObjectType(), type.getOwnershipSemantics(), type.isWritable(), type.isConst());
-	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType());
+	else if (type.isReflectableObjectType())			return addDataObjectMember(memberName, type.getObjectType(), nullptr);
 	else												return nullptr;
 }
 
