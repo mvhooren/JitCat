@@ -29,7 +29,7 @@ namespace jitcat::Reflection
 
 	struct StaticMemberInfo
 	{
-		StaticMemberInfo(): visibility(MemberVisibility::Private) {}
+		StaticMemberInfo(): visibility(MemberVisibility::Private), parentTypeName("") {}
 		StaticMemberInfo(const std::string& memberName, const CatGenericType& type, const char* parentTypeName);
 
 		virtual ~StaticMemberInfo() {};

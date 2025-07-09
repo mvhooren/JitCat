@@ -140,6 +140,29 @@ TypeMemberInfo* CustomTypeInfo::addIntMember(const std::string& memberName, int 
 }
 
 
+TypeMemberInfo* CustomTypeInfo::addUIntMember(const std::string& memberName, unsigned int defaultValue, bool isWritable, bool isConst)
+{
+	unsigned char* data = increaseDataSize(sizeof(unsigned int));
+	memcpy(data, &defaultValue, sizeof(unsigned int));
+	unsigned int offset = (unsigned int)(data - defaultData);
+	if (defaultData == nullptr)
+	{
+		offset = 0;
+	}
+
+	std::set<unsigned char*>::iterator end = instances.end();
+	for (std::set<unsigned char*>::iterator iter = instances.begin(); iter != end; ++iter)
+	{
+		memcpy((*iter) + offset, &defaultValue, sizeof(unsigned int));
+	}
+
+	TypeMemberInfo* memberInfo = new CustomBasicTypeMemberInfo<unsigned int>(memberName, offset, CatGenericType::createUIntType(isWritable, isConst), getTypeName());
+	std::string lowerCaseMemberName = Tools::toLowerCase(memberName);
+	TypeInfo::addMember(lowerCaseMemberName, memberInfo);
+	return memberInfo;
+}
+
+
 TypeMemberInfo* CustomTypeInfo::addUInt64Member(const std::string& memberName, uint64_t defaultValue, bool isWritable, bool isConst)
 {
 	unsigned char* data = increaseDataSize(sizeof(uint64_t));

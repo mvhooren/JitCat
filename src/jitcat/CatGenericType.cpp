@@ -415,7 +415,8 @@ bool CatGenericType::isAssignableType() const
 
 bool CatGenericType::isNullptrType() const
 {
-	return isPointerType() && getPointeeType()->isReflectableObjectType() && getPointeeType()->getObjectType()->getTypeName() == std::string("nullptr");
+	return (isPointerType() && getPointeeType()->isReflectableObjectType() && getPointeeType()->getObjectType()->getTypeName() == std::string("nullptr"))
+			|| (isReflectableObjectType() && nestedType->getTypeName() == std::string("nullptr"));
 }
 
 
@@ -770,6 +771,16 @@ InfixOperatorResultInfo CatGenericType::getInfixOperatorResultInfo(CatInfixOpera
 	}
 	else 
 	{
+		if (oper == CatInfixOperatorType::Equals
+			|| oper == CatInfixOperatorType::NotEquals)
+		{
+			if ((isNullptrType() && rightType.isPointerType())
+				|| (isPointerType() && rightType.isNullptrType()))
+			{
+				resultInfo.setResultType(CatGenericType::boolType);
+				return resultInfo;
+			}
+		}
 		//First check if there is a member function overloading this operator.
 		MemberFunctionInfo* memberFunctionInfo = nullptr;
 		if (isReflectablePointerOrHandle())
