@@ -2371,7 +2371,6 @@ jitcat::Reflection::TypeInfo ** jitcat::CatGenericType::getTypeInfoToSet()
 
 const CatGenericType& CatGenericType::getWidestBasicType(const CatGenericType& left, const CatGenericType& right)
 {
-	assert(left.isBasicType() && right.isBasicType());
 	BasicType basicType = getWidestType(left.basicType, right.basicType);
 	if (basicType == left.basicType)	return left;
 	else								return right;

@@ -15,7 +15,7 @@ using namespace jitcat::Tools;
 
 void CatLog::log(const char* message)
 {
-	for (CatLogListener* listener : listeners)
+	for (CatLogListener* listener : getListeners())
 	{
 		listener->catLog(message);
 	}
@@ -24,31 +24,34 @@ void CatLog::log(const char* message)
 
 void CatLog::addListener(CatLogListener* listener)
 {
-	for (CatLogListener* listenerIter : listeners)
+	for (CatLogListener* listenerIter : getListeners())
 	{
 		if (listenerIter == listener)
 		{
 			return;
 		}
 	}
-	listeners.push_back(listener);
+	getListeners().push_back(listener);
 }
 
 
 void CatLog::removeListener(CatLogListener* listener)
 {
-	for (int i = 0; i < (int)listeners.size(); i++)
+	for (int i = 0; i < (int)getListeners().size(); i++)
 	{
-		if (listeners[(unsigned int)i] == listener)
+		if (getListeners()[(unsigned int)i] == listener)
 		{
-			listeners.erase(listeners.begin() + i);
+			getListeners().erase(getListeners().begin() + i);
 			i--;
 		}
 	}
 }
 
-
-std::vector<CatLogListener*> CatLog::listeners = std::vector<CatLogListener*>();
+std::vector<CatLogListener*>& CatLog::getListeners()
+{
+	static std::vector<CatLogListener*> listeners = std::vector<CatLogListener*>();
+	return listeners;
+}
 
 
 void CatLogStdOut::catLog(const char* message)
